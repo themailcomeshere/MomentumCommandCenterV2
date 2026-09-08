@@ -1,3 +1,5 @@
+using MomentumCommandCenterV2.Core.Models;
+
 namespace MomentumCommandCenterV2.Core;
 
 public sealed record TradeReview(Trade Trade, string Classification, string Finding, decimal? MfePercent, decimal? MaePercent);

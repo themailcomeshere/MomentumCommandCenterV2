@@ -1,4 +1,6 @@
 using MomentumCommandCenterV2.Core;
+using MomentumCommandCenterV2.Core.Models;
+using MomentumCommandCenterV2.Core.Models.Enums;
 using Xunit;
 namespace MomentumCommandCenterV2.Tests;
 
