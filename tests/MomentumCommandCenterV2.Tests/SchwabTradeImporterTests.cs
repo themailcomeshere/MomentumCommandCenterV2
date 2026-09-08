@@ -229,9 +229,9 @@ public sealed class SchwabTradeImporterTests
     public void Import_RejectsMissingRequiredColumn()
     {
         const string csv = """
-            Symbol,Status,Action,Price,Timing,Fill Price,Time and Date(ET)
-            NBIL,Filled,Buy,30.30,LIMIT,30.17,9:31 AM 09/08/2026
-            """;
+        Symbol,Status,Action,Price,Timing,Fill Price,Fill Price is Average
+        NBIL,Filled,Buy,30.30,LIMIT,30.17,Yes
+        """;
 
         var importer = new SchwabTradeImporter();
 
@@ -240,7 +240,7 @@ public sealed class SchwabTradeImporterTests
                 () => importer.Import(csv));
 
         Assert.Contains(
-            "Fill Price is Average",
+            "Time and Date(ET)",
             exception.Message);
     }
 
