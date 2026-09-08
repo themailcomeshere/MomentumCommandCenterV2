@@ -485,26 +485,6 @@ namespace MomentumCommandCenterV2.Infrastructure
     }
 
     /// <summary>
-    /// A single filled BUY or SELL order from Schwab.
-    /// </summary>
-    public sealed record SchwabOrder(
-        string Symbol,
-        string Action,
-        decimal FillPrice,
-        DateTimeOffset Timestamp,
-        int Quantity,
-        int SourceRowNumber);
-
-    /// <summary>
-    /// A BUY that has not yet been matched with a SELL.
-    /// </summary>
-    public sealed record OpenPosition(
-        string Symbol,
-        DateTimeOffset EntryTime,
-        decimal EntryPrice,
-        int Quantity);
-
-    /// <summary>
     /// Result of importing a Schwab order-history export.
     /// </summary>
     public sealed record SchwabImportResult(
