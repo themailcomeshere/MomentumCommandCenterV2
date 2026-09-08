@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\MomentumCommandCenterV2.Core\MomentumCommandCenterV2.Core.csproj" />
+    <ProjectReference Include="..\MomentumCommandCenterV2.Core\MomentumCommandCenterV2.Core.csproj" />
   </ItemGroup>
 
 </Project>
