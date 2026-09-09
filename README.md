@@ -23,5 +23,61 @@ Build now. Keep V1 as the control. During the next ~10 trading days, compare V1 
 ## Build
 Visual Studio 2022 + .NET 8 SDK. Open the .sln, Build Solution, then run the xUnit test project. The CLI prints the available state machine states.
 
-## Future V2 work
-Screenshot/trade import, MFE/MAE, scanner-event tracking, daily journal, V1-vs-V2 comparison, configurable scoring, exact parity with frozen ThinkScript, then a market-data adapter. Live order placement is intentionally absent.
+## Future V2 Work
+
+### Phase 1 — Historical Trade Foundation
+- [x] Schwab Order History CSV importer
+- [x] Use Schwab Fill Price rather than order/limit Price
+- [x] ET timestamp parsing
+- [x] FIFO trade matching
+- [x] Open-position detection
+- [x] Unmatched-order detection
+- [x] Trade evaluation context
+- [ ] Trade statistics and symbol-level analysis
+- [ ] Daily trading-session grouping
+
+### Phase 2 — Trade Quality Analysis
+- [ ] MFE / MAE
+- [ ] Hold-time analysis
+- [ ] Entry-to-peak analysis
+- [ ] Exit-to-peak giveback analysis
+- [ ] Runner identification
+- [ ] Early-exit detection
+- [ ] Missed-runner detection
+- [ ] Limit-price analysis
+
+### Phase 3 — Market/Scanner Correlation
+- [ ] Scanner-event tracking
+- [ ] Scan A / B / C event model
+- [ ] Momentum Active snapshot model
+- [ ] 1M / 5M signal snapshot storage
+- [ ] News/catalyst context
+- [ ] Correlate scanner state with actual fills
+
+### Phase 4 — V1 vs V2 Validation
+- [ ] Replay historical trades
+- [ ] Compare V1 decision vs V2 decision
+- [ ] Identify false exits
+- [ ] Identify missed entries
+- [ ] Identify missed runners
+- [ ] Measure drawdown
+- [ ] Do not optimize thresholds from a single trade
+
+### Phase 5 — Historical Replay Engine
+- [ ] Sequential market snapshot replay
+- [ ] Position lifecycle reconstruction
+- [ ] Signal-state transition history
+- [ ] Simulated V2 decisions
+- [ ] Compare simulated decisions with actual Schwab execution
+
+### Phase 6 — Market Data Adapter
+- [ ] Market-data abstraction
+- [ ] 1M bar ingestion
+- [ ] 5M bar ingestion
+- [ ] Indicator calculation/validation
+- [ ] Live decision snapshots
+
+### Explicitly Out of Scope
+- Automated order placement
+- Autonomous trading
+- Automatic Schwab order submission
