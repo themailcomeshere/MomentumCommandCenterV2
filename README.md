@@ -39,7 +39,7 @@ Visual Studio 2022 + .NET 8 SDK. Open the .sln, Build Solution, then run the xUn
 - [x] Open-position detection
 - [x] Unmatched-order detection
 - [x] Trade evaluation context
-- [ ] Trade statistics and symbol-level analysis
+- [x] Trade statistics and symbol-level analysis
 - [ ] Daily trading-session grouping
 
 ### Phase 2 — Trade Quality Analysis
@@ -87,6 +87,11 @@ Visual Studio 2022 + .NET 8 SDK. Open the .sln, Build Solution, then run the xUn
 - Automated order placement
 - Autonomous trading
 - Automatic Schwab order submission
+
+### Documentation
+- [ ] /docs/V2-Signal-Rules.md
+- [ ] /docs/Trade-Analysis.md
+- [ ] /docs/Validation-Plan.md
 
 
 ### What we're doing next
