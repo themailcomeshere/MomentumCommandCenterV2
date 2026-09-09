@@ -1,4 +1,4 @@
-﻿using MomentumCommandCenterV2.Infrastructure;
+﻿using MomentumCommandCenterV2.Infrastructure.Schwab;
 using Xunit;
 
 namespace MomentumCommandCenterV2.Tests;
