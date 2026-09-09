@@ -23,7 +23,6 @@ public sealed class V2SignalEngine
         // =========================================================
         // EOD
         // =========================================================
-
         if (IsEndOfDay(snapshot.Timestamp))
         {
             return Decision(
@@ -81,8 +80,7 @@ public sealed class V2SignalEngine
             reasons.Add("5M RVOL supportive");
         }
 
-        var fivePermission =
-            score >= 5;
+        var fivePermission = score >= 5;
 
         // =========================================================
         // 5M STRUCTURE
@@ -218,7 +216,67 @@ public sealed class V2SignalEngine
             }
 
             // -----------------------------------------------------
-            // REBOUND / HEALTHY RUNNER
+            // RUNNER WANING
+            //
+            // A runner is still fundamentally healthy, but the
+            // current 1M condition is becoming extended or fragile.
+            //
+            // IMPORTANT:
+            // RUNNER WANING is NEVER a SELL.
+            // -----------------------------------------------------
+
+            var runnerWaning =
+                fivePermission &&
+                fiveStructureBull &&
+                (
+                    extended ||
+                    (oneStructureWeak && !oneMomentumWeak) ||
+                    (!oneStructureWeak && oneMomentumWeak)
+                );
+
+            if (runnerWaning)
+            {
+                return Decision(
+                    SignalState.RunnerWaning,
+                    MomentumAction.HOLD,
+                    score,
+                    BuildReason(
+                        "Runner waning; trend remains intact.",
+                        reasons),
+                    fivePermission,
+                    false,
+                    true,
+                    true,
+                    false);
+            }
+
+            // -----------------------------------------------------
+            // PREPARE SELL
+            //
+            // Conditions are deteriorating, but not enough to
+            // justify a confirmed weakness / breakdown.
+            // -----------------------------------------------------
+
+            if (softDeterioration ||
+                oneStructureWeak ||
+                oneMomentumWeak)
+            {
+                return Decision(
+                    SignalState.PrepareSell,
+                    MomentumAction.PREPARE_SELL,
+                    score,
+                    BuildReason(
+                        "Conditions weakening; prepare to protect gains.",
+                        reasons),
+                    fivePermission,
+                    false,
+                    false,
+                    true,
+                    false);
+            }
+
+            // -----------------------------------------------------
+            // HEALTHY RUNNER
             // -----------------------------------------------------
 
             if (fivePermission &&
@@ -235,55 +293,6 @@ public sealed class V2SignalEngine
                     false,
                     true,
                     false,
-                    false);
-            }
-
-            // -----------------------------------------------------
-            // RUNNER WANING
-            //
-            // IMPORTANT:
-            // This is NOT a SELL.
-            // -----------------------------------------------------
-
-            if (fivePermission &&
-                (extended ||
-                 oneMomentumWeak ||
-                 oneStructureWeak))
-            {
-                return Decision(
-                    SignalState.RunnerWaning,
-                    MomentumAction.HOLD,
-                    score,
-                    BuildReason(
-                        "Runner waning.",
-                        reasons),
-                    fivePermission,
-                    false,
-                    true,
-                    true,
-                    false);
-            }
-
-            // -----------------------------------------------------
-            // PREPARE SELL
-            // -----------------------------------------------------
-
-            if (softDeterioration ||
-                extended ||
-                oneStructureWeak ||
-                oneMomentumWeak)
-            {
-                return Decision(
-                    SignalState.PrepareSell,
-                    MomentumAction.PREPARE_SELL,
-                    score,
-                    BuildReason(
-                        "Conditions weakening; prepare to protect gains.",
-                        reasons),
-                    fivePermission,
-                    false,
-                    false,
-                    true,
                     false);
             }
 
@@ -477,10 +486,21 @@ public sealed class V2SignalEngine
     private bool IsEndOfDay(
         DateTimeOffset timestamp)
     {
-        return timestamp.TimeOfDay >=
-            new TimeSpan(
-                _config.EndOfDayExitHourEt,
-                _config.EndOfDayExitMinuteEt,
-                0);
+        var easternTimeZone =
+            TimeZoneInfo.FindSystemTimeZoneById(
+                OperatingSystem.IsWindows()
+                    ? "Eastern Standard Time"
+                    : "America/New_York");
+
+        var eastern =
+            TimeZoneInfo.ConvertTime(
+                timestamp,
+                easternTimeZone);
+
+        return eastern.TimeOfDay >=
+               new TimeSpan(
+                   _config.EndOfDayExitHourEt,
+                   _config.EndOfDayExitMinuteEt,
+                   0);
     }
 }
