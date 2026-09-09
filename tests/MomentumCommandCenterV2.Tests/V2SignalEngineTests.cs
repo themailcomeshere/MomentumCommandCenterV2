@@ -693,4 +693,34 @@ public sealed class V2SignalEngineTests
         Assert.False(r.RunnerAllowed);
         Assert.False(r.EntryAllowed);
     }
+
+    [Fact]
+    public void HealthyPositionProducesExpectedEvaluationContext()
+    {
+        var f = StrongFive();
+        var o = StrongOne();
+
+        var s = Snapshot(o, f);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.NotNull(r.Evaluation);
+
+        Assert.Equal(6, r.Evaluation!.FiveMinuteScore);
+        Assert.True(r.Evaluation.FiveMinutePermission);
+        Assert.True(r.Evaluation.FiveMinuteStructureBull);
+        Assert.False(r.Evaluation.FiveMinuteStructureBroken);
+
+        Assert.True(r.Evaluation.OneMinuteStructureBull);
+        Assert.False(r.Evaluation.OneMinuteStructureWeak);
+        Assert.True(r.Evaluation.OneMinuteMomentumPositive);
+        Assert.False(r.Evaluation.OneMinuteMomentumWeak);
+
+        Assert.Equal(1m, r.Evaluation.AtrExtension);
+        Assert.False(r.Evaluation.Extended);
+        Assert.False(r.Evaluation.HardExtended);
+
+        Assert.Equal(SignalState.Runner, r.State);
+        Assert.Equal(MomentumAction.HOLD, r.Action);
+    }
 }

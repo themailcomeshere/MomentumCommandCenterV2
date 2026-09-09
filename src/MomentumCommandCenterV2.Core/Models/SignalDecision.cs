@@ -11,7 +11,8 @@ public sealed record SignalDecision(
     bool EntryAllowed,
     bool RunnerAllowed,
     bool ExitWarning,
-    bool HardExit)
+    bool HardExit,
+    SignalEvaluationContext? Evaluation = null)
 {
     public bool IsEntrySignal =>
         State == SignalState.Buy &&

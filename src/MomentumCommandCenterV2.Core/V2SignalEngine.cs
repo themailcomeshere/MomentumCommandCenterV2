@@ -139,6 +139,20 @@ public sealed class V2SignalEngine
             atrExtension >=
             _config.AtrExtensionHardExit;
 
+        var evaluation = new SignalEvaluationContext(
+            FiveMinuteScore: score,
+            FiveMinutePermission: fivePermission,
+            FiveMinuteStructureBull: fiveStructureBull,
+            FiveMinuteStructureBroken: fiveStructureBroken,
+            SoftDeterioration: softDeterioration,
+            OneMinuteStructureBull: oneStructureBull,
+            OneMinuteStructureWeak: oneStructureWeak,
+            OneMinuteMomentumPositive: oneMomentumPositive,
+            OneMinuteMomentumWeak: oneMomentumWeak,
+            AtrExtension: atrExtension,
+            Extended: extended,
+            HardExtended: hardExtended);
+
         // =========================================================
         // FRESH ENTRY
         // =========================================================
@@ -173,7 +187,8 @@ public sealed class V2SignalEngine
                     false,
                     false,
                     true,
-                    true);
+                    true,
+                    evaluation);
             }
 
             if (fiveStructureBroken)
@@ -187,7 +202,8 @@ public sealed class V2SignalEngine
                     false,
                     false,
                     true,
-                    true);
+                    true,
+                    evaluation);
             }
 
             // -----------------------------------------------------
@@ -207,7 +223,8 @@ public sealed class V2SignalEngine
                     false,
                     false,
                     true,
-                    true);
+                    true,
+                    evaluation);
             }
 
             // -----------------------------------------------------
@@ -242,7 +259,8 @@ public sealed class V2SignalEngine
                     false,
                     true,
                     true,
-                    false);
+                    false,
+                    evaluation);
             }
 
             // -----------------------------------------------------
@@ -267,7 +285,8 @@ public sealed class V2SignalEngine
                     false,
                     false,
                     true,
-                    false);
+                    false,
+                    evaluation);
             }
 
             // -----------------------------------------------------
@@ -288,7 +307,8 @@ public sealed class V2SignalEngine
                     false,
                     true,
                     false,
-                    false);
+                    false,
+                    evaluation);
             }
 
             // -----------------------------------------------------
@@ -307,7 +327,8 @@ public sealed class V2SignalEngine
                     false,
                     true,
                     false,
-                    false);
+                    false,
+                    evaluation);
             }
 
             // -----------------------------------------------------
@@ -323,7 +344,7 @@ public sealed class V2SignalEngine
                 false,
                 false,
                 false,
-                false);
+                false, evaluation);
         }
 
         // =========================================================
@@ -362,7 +383,7 @@ public sealed class V2SignalEngine
                 false,
                 false,
                 false,
-                false);
+                false, evaluation);
         }
 
         // Partial alignment.
@@ -379,7 +400,7 @@ public sealed class V2SignalEngine
                 false,
                 false,
                 false,
-                false);
+                false, evaluation);
         }
 
         return Decision(
@@ -393,7 +414,7 @@ public sealed class V2SignalEngine
             false,
             false,
             false,
-            false);
+            false, evaluation);
     }
 
     private bool HasSoftDeterioration(
@@ -464,7 +485,8 @@ public sealed class V2SignalEngine
         bool entryAllowed,
         bool runnerAllowed,
         bool exitWarning,
-        bool hardExit)
+        bool hardExit,
+        SignalEvaluationContext? evaluation = null)
     {
         return new SignalDecision(
             state,
@@ -475,7 +497,8 @@ public sealed class V2SignalEngine
             entryAllowed,
             runnerAllowed,
             exitWarning,
-            hardExit);
+            hardExit,
+            evaluation);
     }
 
     private bool IsEndOfDay(
