@@ -85,7 +85,26 @@ public sealed class V2SignalEngineTests
             60,
             2,
             1,
+            2,
+            timestamp);
+    }
+
+    private static BarSnapshot StrongOneExtended(
+    decimal close,
+    decimal atr,
+    DateTimeOffset? timestamp = null)
+    {
+        return Bar(
+            close,
+            105,
+            108,
+            106,
+            100,
+            3,
+            60,
+            2,
             1,
+            atr,
             timestamp);
     }
 
@@ -169,20 +188,12 @@ public sealed class V2SignalEngineTests
     {
         var f = StrongFive();
 
-        // 2 ATR above the 9 EMA:
-        // warning threshold = 1.5
-        // hard exit threshold = 2.25
-        var o = Bar(
-            112,
-            105,
-            108,
-            106,
-            100,
-            3,
-            60,
-            2,
-            1,
-            2);
+        // 2 ATR above EMA9:
+        // warning >= 1.5
+        // hard exit < 2.25
+        var o = StrongOneExtended(
+            close: 112,
+            atr: 2);
 
         var s = Snapshot(o, f);
 
@@ -305,18 +316,10 @@ public sealed class V2SignalEngineTests
     {
         var f = StrongFive();
 
-        // 2.5 ATR above the 9 EMA.
-        var o = Bar(
-            113,
-            105,
-            108,
-            106,
-            100,
-            3,
-            60,
-            2,
-            1,
-            2);
+        // 2.5 ATR above EMA9.
+        var o = StrongOneExtended(
+            close: 113,
+            atr: 2);
 
         var s = Snapshot(o, f);
 
@@ -327,7 +330,6 @@ public sealed class V2SignalEngineTests
 
         Assert.True(r.ExitWarning);
         Assert.True(r.HardExit);
-
         Assert.False(r.RunnerAllowed);
     }
 
@@ -467,5 +469,228 @@ public sealed class V2SignalEngineTests
         Assert.NotEqual(SignalState.Exit, r.State);
         Assert.NotEqual(MomentumAction.SELL, r.Action);
         Assert.False(r.HardExit);
+    }
+
+    [Fact]
+    public void HealthyRunnerDoesNotSetExitWarning()
+    {
+        var f = StrongFive();
+        var o = StrongOne();
+
+        var s = Snapshot(o, f);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.Equal(SignalState.Runner, r.State);
+        Assert.Equal(MomentumAction.HOLD, r.Action);
+
+        Assert.True(r.RunnerAllowed);
+        Assert.False(r.ExitWarning);
+        Assert.False(r.HardExit);
+
+        Assert.True(r.IsRunner);
+        Assert.False(r.IsExitState);
+        Assert.False(r.IsHardExit);
+    }
+
+    [Fact]
+    public void RunnerWaningIsNotConfirmedWeakness()
+    {
+        var f = StrongFive();
+
+        // 2 ATR extension:
+        // above warning threshold,
+        // below hard-exit threshold.
+        var o = Bar(
+            112,
+            105,
+            108,
+            106,
+            100,
+            3,
+            60,
+            2,
+            1,
+            2);
+
+        var s = Snapshot(o, f);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.Equal(SignalState.RunnerWaning, r.State);
+        Assert.Equal(MomentumAction.HOLD, r.Action);
+
+        Assert.True(r.RunnerAllowed);
+        Assert.True(r.ExitWarning);
+        Assert.False(r.HardExit);
+
+        Assert.True(r.IsRunner);
+        Assert.False(r.IsExitState);
+        Assert.False(r.IsHardExit);
+    }
+
+    [Fact]
+    public void SimultaneousOneMinuteStructureAndMomentumWeaknessProducesConfirmedWeakness()
+    {
+        var previous = Bar(
+            104,
+            105,
+            106,
+            104,
+            100,
+            3,
+            48,
+            0,
+            1);
+
+        var current = Bar(
+            103,
+            105,
+            106,
+            104,
+            100,
+            3,
+            44,
+            -1,
+            0);
+
+        var one = Bar(
+            103,
+            105,
+            104,
+            106,
+            100,
+            3,
+            44,
+            -1,
+            0);
+
+        var s = Snapshot(
+            one,
+            current,
+            previous);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.Equal(SignalState.ConfirmedWeakness, r.State);
+        Assert.Equal(MomentumAction.SELL, r.Action);
+
+        Assert.True(r.ExitWarning);
+        Assert.True(r.HardExit);
+
+        Assert.False(r.RunnerAllowed);
+        Assert.False(r.EntryAllowed);
+
+        Assert.True(r.IsExitState);
+        Assert.True(r.IsHardExit);
+    }
+
+    [Fact]
+    public void FiveMinuteBreakdownOverridesRunnerWaning()
+    {
+        var f = Bar(
+            100,
+            105,
+            103,
+            104,
+            106,
+            2,
+            45,
+            -1,
+            0);
+
+        var o = Bar(
+            112,
+            105,
+            108,
+            106,
+            100,
+            3,
+            60,
+            2,
+            1,
+            2);
+
+        var s = Snapshot(o, f);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.Equal(SignalState.Breakdown, r.State);
+        Assert.Equal(MomentumAction.SELL, r.Action);
+
+        Assert.True(r.ExitWarning);
+        Assert.True(r.HardExit);
+
+        Assert.False(r.RunnerAllowed);
+        Assert.False(r.IsRunner);
+    }
+
+    [Fact]
+    public void HardAtrExtensionOverridesRunnerWaning()
+    {
+        var f = StrongFive();
+
+        var o = Bar(
+            113,
+            105,
+            108,
+            106,
+            100,
+            3,
+            60,
+            2,
+            1,
+            2);
+
+        var s = Snapshot(o, f);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.Equal(SignalState.Breakdown, r.State);
+        Assert.Equal(MomentumAction.SELL, r.Action);
+
+        Assert.True(r.ExitWarning);
+        Assert.True(r.HardExit);
+
+        Assert.False(r.RunnerAllowed);
+    }
+
+    [Fact]
+    public void PrepareSellDoesNotBecomeRunnerWaningWhenBothOneMinuteSignalsAreWeak()
+    {
+        var f = Bar(
+            106,
+            105,
+            105,
+            104,
+            100,
+            1,
+            52,
+            1,
+            0);
+
+        var o = Bar(
+            104,
+            105,
+            105,
+            106,
+            100,
+            1,
+            48,
+            0,
+            1);
+
+        var s = Snapshot(o, f);
+
+        var r = new V2SignalEngine().Evaluate(s, true);
+
+        Assert.Equal(SignalState.PrepareSell, r.State);
+        Assert.Equal(MomentumAction.PREPARE_SELL, r.Action);
+
+        Assert.True(r.ExitWarning);
+        Assert.False(r.HardExit);
+
+        Assert.False(r.RunnerAllowed);
+        Assert.False(r.EntryAllowed);
     }
 }

@@ -89,11 +89,6 @@ public sealed class V2SignalEngine
         var fiveStructureBull =
             five.BullStructure;
 
-        var fiveStructureWeak =
-            five.Close < five.Vwap ||
-            five.Close < five.Ema9 ||
-            five.Ema9 < five.Ema20;
-
         var fiveStructureBroken =
             five.Close < five.Vwap &&
             five.Ema9 < five.Ema20;
