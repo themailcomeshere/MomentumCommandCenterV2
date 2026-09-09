@@ -6,6 +6,27 @@ using MomentumCommandCenterV2.Core.Models.Enums;
 
 namespace MomentumCommandCenterV2.Infrastructure.Schwab;
 
+// =========================================================
+// CLASS: SchwabTradeImporter
+// PURPOSE:
+//   Converts the actual Schwab Order History CSV format into
+//   the application's broker-independent trade models.
+//
+// RESPONSIBILITIES:
+//   - Parse Schwab CSV rows.
+//   - Use Schwab Fill Price for executions.
+//   - Parse Eastern Time timestamps.
+//   - Match buys and sells FIFO.
+//   - Identify open positions.
+//   - Preserve unmatched sells.
+//
+// IMPORTANT:
+//   This is the only layer that should know the Schwab
+//   CSV-specific column names and format.
+//
+// LAYER:
+//   Infrastructure
+// =========================================================
 /// <summary>
 /// Imports Schwab Order History CSV exports and converts filled BUY/SELL
 /// orders into the V2 application trade model.

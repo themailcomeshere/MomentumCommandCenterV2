@@ -1,5 +1,21 @@
 ﻿namespace MomentumCommandCenterV2.Application.Models;
 
+// =========================================================
+// MODEL: TradeStatistics
+// PURPOSE:
+//   Contains aggregate statistics for a collection of
+//   completed trades.
+//
+// RESPONSIBILITIES:
+//   - Track winners, losers, and breakeven trades.
+//   - Calculate P&L and P&L percentages.
+//   - Calculate win rate.
+//   - Calculate holding time.
+//   - Calculate gross profit/loss and profit factor.
+//
+// LAYER:
+//   Application
+// =========================================================
 public sealed record TradeStatistics(
     int TradeCount,
     int WinningTrades,

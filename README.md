@@ -5,7 +5,13 @@ C#/.NET 8 research and decision-engine prototype. **Not an auto-trader.**
 ## Architecture
 5M Direction/Permission -> 1M Execution Confirmation -> Position Lifecycle -> Runner / Weakening / Exit.
 
-States: NoTrade, Watch, Setup, EntryReady, Runner, Hold, Weakening, Exit.
+Core
+  ↑
+Application
+  ↑
+Infrastructure
+  ↑
+CLI
 
 ### Current prototype rules
 5M permission scores six conditions: price > VWAP, price > 9 EMA, 9 EMA > 20 EMA, 20 EMA > 50 SMA, RSI >= 50, RVOL >= 1.5. Five or more = long permission.
@@ -81,3 +87,115 @@ Visual Studio 2022 + .NET 8 SDK. Open the .sln, Build Solution, then run the xUn
 - Automated order placement
 - Autonomous trading
 - Automatic Schwab order submission
+
+
+### What we're doing next
+
+This keeps us on the roadmap rather than wandering into another signal-engine rewrite:
+
+**Phase 1 is now essentially complete except for daily session grouping.**
+
+Then we move to **Phase 2: Trade Quality Analysis**.
+
+And importantly, our next work should be based on the actual problem you've been trying to solve with the TOS system: **did we enter well, did we exit too early, did the position become a runner, and were our limit prices unnecessarily aggressive?**
+
+That's where the Schwab history starts becoming much more valuable than simply calculating win rate.
+
+
+
+### TODO: Determine if this section stays in here or if there should be another file for this
+A position can remain in RUNNER while the underlying trend and momentum
+remain healthy.
+
+A position can move to RUNNER WANING when deterioration begins without
+yet meeting the criteria for a confirmed exit.
+
+Hard structural deterioration, severe ATR extension, or EOD can force an
+exit.
+
+Current V2 Prototype Rules
+
+5M permission scores six conditions:
+
+Price > VWAP
+Price > 9 EMA
+9 EMA > 20 EMA
+20 EMA > 50 SMA
+RSI >= 50
+RVOL >= 1.5
+
+Five or more conditions produce long permission.
+
+Fresh long entry additionally requires:
+
+5M permission
+5M bullish structure
+1M bullish structure
+1M momentum confirmation
+RSI below the fresh-entry ceiling
+No severe ATR extension
+
+While in a position, V2 evaluates the position separately from fresh-entry
+logic.
+
+Historical Trade Foundation
+
+The application can now consume the actual Schwab Order History CSV format.
+
+The importer currently:
+
+Uses Schwab Fill Price, not the submitted order/limit price.
+Parses Schwab timestamps as Eastern Time.
+Matches filled buys and sells using FIFO.
+Reconstructs completed trades.
+Identifies remaining open positions.
+Preserves unmatched sell orders.
+Does not silently discard anomalies.
+
+The current Schwab export does not provide an explicit quantity field, so
+the importer currently treats each filled row as quantity 1.
+
+This limitation will be addressed only when the actual broker data requires
+a more sophisticated quantity model.
+
+Trade Analysis
+
+The application now provides:
+
+Overall trade count.
+Winning / losing / breakeven counts.
+Total P&L.
+Average P&L.
+Average P&L percentage.
+Win rate.
+Average holding time.
+Largest win.
+Largest loss.
+Gross profit.
+Gross loss.
+Profit factor.
+Symbol-level statistics.
+
+The statistical analysis is intentionally deterministic. It does not
+attempt to infer whether an exit was "good" or "bad" yet.
+
+That requires historical market-data replay.
+
+Validation Philosophy
+
+Build first. Validate against actual historical behavior.
+
+V1 remains the control.
+
+During the validation period:
+
+Compare V1 and V2 against actual screenshots.
+Compare V1 and V2 against completed Schwab trade history.
+Preserve actual execution behavior.
+Do not optimize thresholds based on one trade.
+Do not manufacture MFE/MAE from trade-only data.
+Do not infer market behavior that cannot be supported by historical
+market snapshots.
+
+The purpose of V2 is to explain and improve the trading process, not to
+retroactively make historical trades look better.

@@ -1,5 +1,24 @@
 ﻿namespace MomentumCommandCenterV2.Core.Models;
 
+// =========================================================
+// MODEL: BarSnapshot
+// PURPOSE:
+//   Represents the market and indicator state for a single
+//   1-minute or 5-minute bar.
+//
+// RESPONSIBILITIES:
+//   - Store OHLCV data.
+//   - Store calculated indicators.
+//   - Expose basic structure and momentum relationships.
+//
+// DOES NOT:
+//   - Calculate indicators.
+//   - Make trading decisions.
+//   - Access market-data providers.
+//
+// LAYER:
+//   Core
+// =========================================================
 public sealed record BarSnapshot(
     DateTimeOffset Timestamp,
     decimal Open,

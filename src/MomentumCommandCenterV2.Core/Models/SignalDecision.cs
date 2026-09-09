@@ -2,6 +2,26 @@
 
 namespace MomentumCommandCenterV2.Core.Models;
 
+// =========================================================
+// MODEL: SignalDecision
+// PURPOSE:
+//   Represents the V2 engine's trading-state decision for
+//   the current market snapshot.
+//
+// RESPONSIBILITIES:
+//   - Store signal state and action.
+//   - Store scoring and permission information.
+//   - Identify entry, runner, and exit states.
+//   - Preserve the evaluation context used to reach the decision.
+//
+// DOES NOT:
+//   - Submit orders.
+//   - Access Schwab.
+//   - Execute trades.
+//
+// LAYER:
+//   Core
+// =========================================================
 public sealed record SignalDecision(
     SignalState State,
     MomentumAction Action,

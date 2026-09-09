@@ -4,6 +4,26 @@ using MomentumCommandCenterV2.Core.Models;
 
 namespace MomentumCommandCenterV2.Application.Services;
 
+// =========================================================
+// CLASS: TradeAnalysisService
+// PURPOSE:
+//   Performs deterministic statistical analysis against
+//   reconstructed broker trades.
+//
+// RESPONSIBILITIES:
+//   - Calculate overall trade statistics.
+//   - Calculate symbol-level statistics.
+//   - Preserve import anomalies for later investigation.
+//
+// DOES NOT:
+//   - Import files.
+//   - Access Schwab.
+//   - Calculate market indicators.
+//   - Make live trading decisions.
+//
+// LAYER:
+//   Application
+// =========================================================
 public sealed class TradeAnalysisService : ITradeAnalysisService
 {
     public TradeAnalysisResult Analyze(

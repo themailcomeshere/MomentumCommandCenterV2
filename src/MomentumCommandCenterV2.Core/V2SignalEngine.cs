@@ -3,6 +3,30 @@ using MomentumCommandCenterV2.Core.Models.Enums;
 
 namespace MomentumCommandCenterV2.Core;
 
+// =========================================================
+// CLASS: V2SignalEngine
+// PURPOSE:
+//   Converts a CommandCenterSnapshot into a V2 trading
+//   decision.
+//
+// RESPONSIBILITIES:
+//   - Evaluate 5M directional permission.
+//   - Evaluate 1M execution confirmation.
+//   - Manage open-position lifecycle states.
+//   - Detect runner, weakening, breakdown, and EOD conditions.
+//
+// DOES NOT:
+//   - Import broker data.
+//   - Access Schwab.
+//   - Place orders.
+//
+// IMPORTANT:
+//   Fresh-entry logic and open-position management are
+//   intentionally separated.
+//
+// LAYER:
+//   Core
+// =========================================================
 public sealed class V2SignalEngine
 {
     private readonly V2Config _config;
