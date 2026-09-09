@@ -2,44 +2,485 @@ using MomentumCommandCenterV2.Core.Models;
 using MomentumCommandCenterV2.Core.Models.Enums;
 
 namespace MomentumCommandCenterV2.Core;
+
 public sealed class V2SignalEngine
 {
     private readonly V2Config _config;
-    public V2SignalEngine(V2Config? config = null) => _config = config ?? new();
-    public SignalDecision Evaluate(CommandCenterSnapshot snapshot, bool hasPosition)
+
+    public V2SignalEngine(V2Config? config = null)
     {
-        var o = snapshot.OneMinute; var f = snapshot.FiveMinute;
-        if (IsEndOfDay(snapshot.Timestamp)) return new(SignalState.Exit, 0, "EOD GET OUT window reached.", false, false, false, true, true);
-        var score = 0; var reasons = new List<string>();
-        if (f.Close > f.Vwap) { score++; reasons.Add("5M > VWAP"); }
-        if (f.Close > f.Ema9) { score++; reasons.Add("5M > 9 EMA"); }
-        if (f.Ema9 > f.Ema20) { score++; reasons.Add("5M 9 EMA > 20 EMA"); }
-        if (f.Ema20 > f.Sma50) { score++; reasons.Add("5M 20 EMA > 50 SMA"); }
-        if (f.Rsi >= _config.MinRsi) { score++; reasons.Add("5M RSI supportive"); }
-        if (f.Rvol5m >= _config.MinRvol) { score++; reasons.Add("5M RVOL supportive"); }
-        var permission = score >= 5;
-        var oneBull = o.Close > o.Vwap && o.Close > o.Ema9 && o.Ema9 > o.Ema20;
-        var momentum = o.Macd >= o.MacdSignal && o.Rsi >= _config.MinRsi;
-        var extended = o.Atr > 0 && (o.Close - o.Ema9) / o.Atr >= _config.AtrExtensionWarning;
-        var hardExtended = o.Atr > 0 && (o.Close - o.Ema9) / o.Atr >= _config.AtrExtensionHardExit;
-        var entry = permission && oneBull && momentum && f.Rvol5m >= _config.MinRvol && o.Rsi < _config.MaxRsiForFreshEntry && !hardExtended;
-        var structureLoss = o.Close < o.Vwap || o.Close < o.Ema9 || o.Ema9 < o.Ema20;
-        var momentumLoss = o.Macd < o.MacdSignal || o.Rsi < 45m;
-        var fiveFailure = f.Close < f.Vwap || f.Ema9 < f.Ema20;
+        _config = config ?? new V2Config();
+    }
+
+    public SignalDecision Evaluate(
+        CommandCenterSnapshot snapshot,
+        bool hasPosition)
+    {
+        var one = snapshot.OneMinute;
+        var five = snapshot.FiveMinute;
+        var previousFive = snapshot.PreviousFiveMinute;
+
+        // =========================================================
+        // EOD
+        // =========================================================
+
+        if (IsEndOfDay(snapshot.Timestamp))
+        {
+            return Decision(
+                SignalState.Exit,
+                MomentumAction.SELL,
+                0,
+                "EOD GET OUT window reached.",
+                false,
+                false,
+                false,
+                true,
+                true);
+        }
+
+        // =========================================================
+        // 5M DIRECTION / PERMISSION
+        // =========================================================
+
+        var score = 0;
+        var reasons = new List<string>();
+
+        if (five.Close > five.Vwap)
+        {
+            score++;
+            reasons.Add("5M > VWAP");
+        }
+
+        if (five.Close > five.Ema9)
+        {
+            score++;
+            reasons.Add("5M > 9 EMA");
+        }
+
+        if (five.Ema9 > five.Ema20)
+        {
+            score++;
+            reasons.Add("5M 9 EMA > 20 EMA");
+        }
+
+        if (five.Ema20 > five.Sma50)
+        {
+            score++;
+            reasons.Add("5M 20 EMA > 50 SMA");
+        }
+
+        if (five.Rsi >= _config.MinRsi)
+        {
+            score++;
+            reasons.Add("5M RSI supportive");
+        }
+
+        if (five.Rvol5m >= _config.MinRvol)
+        {
+            score++;
+            reasons.Add("5M RVOL supportive");
+        }
+
+        var fivePermission =
+            score >= 5;
+
+        // =========================================================
+        // 5M STRUCTURE
+        // =========================================================
+
+        var fiveStructureBull =
+            five.BullStructure;
+
+        var fiveStructureWeak =
+            five.Close < five.Vwap ||
+            five.Close < five.Ema9 ||
+            five.Ema9 < five.Ema20;
+
+        var fiveStructureBroken =
+            five.Close < five.Vwap &&
+            five.Ema9 < five.Ema20;
+
+        // =========================================================
+        // MULTI-BAR SOFT DETERIORATION
+        // =========================================================
+
+        var softDeterioration =
+            HasSoftDeterioration(
+                five,
+                previousFive);
+
+        // =========================================================
+        // 1M EXECUTION
+        // =========================================================
+
+        var oneStructureBull =
+            one.Close > one.Vwap &&
+            one.Close > one.Ema9 &&
+            one.Ema9 > one.Ema20;
+
+        var oneMomentumPositive =
+            one.Macd >= one.MacdSignal &&
+            one.Rsi >= _config.MinRsi;
+
+        var oneMomentumWeak =
+            one.Macd < one.MacdSignal ||
+            one.Rsi < _config.WeakRsi;
+
+        var oneStructureWeak =
+            one.Close < one.Vwap ||
+            one.Close < one.Ema9 ||
+            one.Ema9 < one.Ema20;
+
+        // =========================================================
+        // ATR EXTENSION
+        // =========================================================
+
+        var atrExtension =
+            GetAtrExtension(one);
+
+        var extended =
+            atrExtension >=
+            _config.AtrExtensionWarning;
+
+        var hardExtended =
+            atrExtension >=
+            _config.AtrExtensionHardExit;
+
+        // =========================================================
+        // FRESH ENTRY
+        // =========================================================
+
+        var freshBuy =
+            fivePermission &&
+            fiveStructureBull &&
+            oneStructureBull &&
+            oneMomentumPositive &&
+            one.Rsi < _config.MaxRsiForFreshEntry &&
+            !hardExtended;
+
+        // =========================================================
+        // POSITION MANAGEMENT
+        // =========================================================
 
         if (hasPosition)
         {
-            if (hardExtended || fiveFailure) return new(SignalState.Exit, score, hardExtended ? "Position materially ATR-extended." : "5M trend structure failed.", permission, false, false, true, true);
-            if (structureLoss && momentumLoss) return new(SignalState.Exit, score, "1M structure and momentum both deteriorated.", permission, false, false, true, true);
-            if (structureLoss || momentumLoss || extended) return new(SignalState.Weakening, score, "Position is weakening; protect gains and do not add.", permission, false, true, true, false);
-            if (permission && oneBull && momentum) return new(SignalState.Runner, score, "Trend intact; runner permitted.", true, false, true, false, false);
-            return new(SignalState.Hold, score, "Position remains open but confirmation is mixed.", permission, false, false, false, false);
+            // -----------------------------------------------------
+            // HIGHEST PRIORITY:
+            // confirmed breakdown / hard failure
+            // -----------------------------------------------------
+
+            if (hardExtended)
+            {
+                return Decision(
+                    SignalState.Breakdown,
+                    MomentumAction.SELL,
+                    score,
+                    "Position materially ATR-extended.",
+                    fivePermission,
+                    false,
+                    false,
+                    true,
+                    true);
+            }
+
+            if (fiveStructureBroken)
+            {
+                return Decision(
+                    SignalState.Breakdown,
+                    MomentumAction.SELL,
+                    score,
+                    "5M trend structure failed.",
+                    false,
+                    false,
+                    false,
+                    true,
+                    true);
+            }
+
+            // -----------------------------------------------------
+            // CONFIRMED WEAKNESS
+            // -----------------------------------------------------
+
+            if (softDeterioration &&
+                oneStructureWeak &&
+                oneMomentumWeak)
+            {
+                return Decision(
+                    SignalState.ConfirmedWeakness,
+                    MomentumAction.SELL,
+                    score,
+                    "5M soft deterioration confirmed by 1M structure and momentum.",
+                    fivePermission,
+                    false,
+                    false,
+                    true,
+                    true);
+            }
+
+            // -----------------------------------------------------
+            // REBOUND / HEALTHY RUNNER
+            // -----------------------------------------------------
+
+            if (fivePermission &&
+                fiveStructureBull &&
+                oneStructureBull &&
+                oneMomentumPositive)
+            {
+                return Decision(
+                    SignalState.Runner,
+                    MomentumAction.HOLD,
+                    score,
+                    "Trend intact; runner permitted.",
+                    true,
+                    false,
+                    true,
+                    false,
+                    false);
+            }
+
+            // -----------------------------------------------------
+            // RUNNER WANING
+            //
+            // IMPORTANT:
+            // This is NOT a SELL.
+            // -----------------------------------------------------
+
+            if (fivePermission &&
+                (extended ||
+                 oneMomentumWeak ||
+                 oneStructureWeak))
+            {
+                return Decision(
+                    SignalState.RunnerWaning,
+                    MomentumAction.HOLD,
+                    score,
+                    BuildReason(
+                        "Runner waning.",
+                        reasons),
+                    fivePermission,
+                    false,
+                    true,
+                    true,
+                    false);
+            }
+
+            // -----------------------------------------------------
+            // PREPARE SELL
+            // -----------------------------------------------------
+
+            if (softDeterioration ||
+                extended ||
+                oneStructureWeak ||
+                oneMomentumWeak)
+            {
+                return Decision(
+                    SignalState.PrepareSell,
+                    MomentumAction.PREPARE_SELL,
+                    score,
+                    BuildReason(
+                        "Conditions weakening; prepare to protect gains.",
+                        reasons),
+                    fivePermission,
+                    false,
+                    false,
+                    true,
+                    false);
+            }
+
+            // -----------------------------------------------------
+            // INTACT TREND
+            // -----------------------------------------------------
+
+            if (fivePermission &&
+                fiveStructureBull)
+            {
+                return Decision(
+                    SignalState.Runner,
+                    MomentumAction.HOLD,
+                    score,
+                    "5M trend remains intact.",
+                    true,
+                    false,
+                    true,
+                    false,
+                    false);
+            }
+
+            // -----------------------------------------------------
+            // MIXED POSITION
+            // -----------------------------------------------------
+
+            return Decision(
+                SignalState.PrepareSell,
+                MomentumAction.HOLD,
+                score,
+                "Position remains open but confirmation is mixed.",
+                fivePermission,
+                false,
+                false,
+                false,
+                false);
         }
 
-        if (entry) return new(SignalState.EntryReady, score, "5M permission + 1M execution confirmation.", true, true, true, false, false);
-        if (permission) return new(SignalState.Setup, score, "5M permission exists; 1M execution confirmation incomplete.", true, false, false, false, false);
-        if (score >= 3) return new(SignalState.Watch, score, "Partial alignment; wait for confirmation.", false, false, false, false, false);
-        return new(SignalState.NoTrade, score, "Insufficient directional alignment.", false, false, false, false, false);
+        // =========================================================
+        // NO POSITION
+        // =========================================================
+
+        // BUY is entry-only.
+        if (freshBuy)
+        {
+            return Decision(
+                SignalState.Buy,
+                MomentumAction.BUY,
+                score,
+                BuildReason(
+                    "5M permission + 1M execution confirmation.",
+                    reasons),
+                true,
+                true,
+                false,
+                false,
+                false);
+        }
+
+        // 5M is good, but 1M has not confirmed execution.
+        if (fivePermission &&
+            fiveStructureBull)
+        {
+            return Decision(
+                SignalState.PrepareBuy,
+                MomentumAction.PREPARE_BUY,
+                score,
+                BuildReason(
+                    "5M permission exists; wait for 1M execution confirmation.",
+                    reasons),
+                true,
+                false,
+                false,
+                false,
+                false);
+        }
+
+        // Partial alignment.
+        if (score >= 3)
+        {
+            return Decision(
+                SignalState.NoTrade,
+                MomentumAction.NONE,
+                score,
+                BuildReason(
+                    "Partial alignment; wait for confirmation.",
+                    reasons),
+                false,
+                false,
+                false,
+                false,
+                false);
+        }
+
+        return Decision(
+            SignalState.NoTrade,
+            MomentumAction.NONE,
+            score,
+            BuildReason(
+                "Insufficient directional alignment.",
+                reasons),
+            false,
+            false,
+            false,
+            false,
+            false);
     }
-    private bool IsEndOfDay(DateTimeOffset t) => t.TimeOfDay >= new TimeSpan(_config.EndOfDayExitHourEt, _config.EndOfDayExitMinuteEt, 0);
+
+    private bool HasSoftDeterioration(
+        BarSnapshot current,
+        BarSnapshot? previous)
+    {
+        if (previous is null)
+        {
+            return false;
+        }
+
+        var currentWeak =
+            current.Close < current.Vwap ||
+            current.Close < current.Ema9 ||
+            current.Ema9 < current.Ema20 ||
+            current.Rsi < _config.MinRsi ||
+            current.Macd < current.MacdSignal;
+
+        var previousWeak =
+            previous.Close < previous.Vwap ||
+            previous.Close < previous.Ema9 ||
+            previous.Ema9 < previous.Ema20 ||
+            previous.Rsi < _config.MinRsi ||
+            previous.Macd < previous.MacdSignal;
+
+        return currentWeak &&
+               previousWeak;
+    }
+
+    private static decimal GetAtrExtension(
+        BarSnapshot bar)
+    {
+        if (bar.AtrExtension > 0)
+        {
+            return bar.AtrExtension;
+        }
+
+        if (bar.Atr <= 0)
+        {
+            return 0;
+        }
+
+        return Math.Max(
+            0,
+            (bar.Close - bar.Ema9) / bar.Atr);
+    }
+
+    private static string BuildReason(
+        string primary,
+        IEnumerable<string> reasons)
+    {
+        var supporting =
+            string.Join(
+                ", ",
+                reasons.Take(3));
+
+        return string.IsNullOrWhiteSpace(supporting)
+            ? primary
+            : $"{primary} {supporting}.";
+    }
+
+    private static SignalDecision Decision(
+        SignalState state,
+        MomentumAction action,
+        int score,
+        string reason,
+        bool longPermission,
+        bool entryAllowed,
+        bool runnerAllowed,
+        bool exitWarning,
+        bool hardExit)
+    {
+        return new SignalDecision(
+            state,
+            action,
+            score,
+            reason,
+            longPermission,
+            entryAllowed,
+            runnerAllowed,
+            exitWarning,
+            hardExit);
+    }
+
+    private bool IsEndOfDay(
+        DateTimeOffset timestamp)
+    {
+        return timestamp.TimeOfDay >=
+            new TimeSpan(
+                _config.EndOfDayExitHourEt,
+                _config.EndOfDayExitMinuteEt,
+                0);
+    }
 }

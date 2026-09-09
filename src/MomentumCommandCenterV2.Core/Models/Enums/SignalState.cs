@@ -1,14 +1,20 @@
-﻿namespace MomentumCommandCenterV2.Core.Models.Enums
+﻿namespace MomentumCommandCenterV2.Core.Models.Enums;
+
+public enum SignalState
 {
-    public enum SignalState
-    {
-        NoTrade,
-        Watch,
-        Setup,
-        EntryReady,
-        Runner,
-        Hold,
-        Weakening,
-        Exit
-    }
+    NoTrade,
+
+    // Pre-entry
+    PrepareBuy,
+    Buy,
+
+    // Position management
+    Runner,
+    RunnerWaning,
+    PrepareSell,
+    ConfirmedWeakness,
+    Breakdown,
+
+    // Terminal
+    Exit
 }
