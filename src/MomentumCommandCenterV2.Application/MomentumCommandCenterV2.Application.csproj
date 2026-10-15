@@ -10,4 +10,8 @@
     <ProjectReference Include="..\MomentumCommandCenterV2.Core\MomentumCommandCenterV2.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Images\Screenshots\10152026\" />
+  </ItemGroup>
+
 </Project>
