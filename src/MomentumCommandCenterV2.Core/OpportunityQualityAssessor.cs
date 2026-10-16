@@ -60,9 +60,9 @@ public sealed class OpportunityQualityAssessor
             return Result(input, OpportunityClassification.WatchDeveloping, reasons);
         }
 
-        if (input.AtrExtension >= _config.ExtensionWarningAtr ||
+        if (input.AtrExtension.Value >= _config.ExtensionWarningAtr ||
             (input.ResistanceDistanceInAtr is not null &&
-             input.ResistanceDistanceInAtr <= _config.ResistanceTooCloseAtr))
+             input.ResistanceDistanceInAtr.Value <= _config.ResistanceTooCloseAtr))
         {
             reasons.Add(OpportunityReason.EntryExtended);
 
