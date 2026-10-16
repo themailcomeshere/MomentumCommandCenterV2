@@ -204,3 +204,7 @@ market snapshots.
 
 The purpose of V2 is to explain and improve the trading process, not to
 retroactively make historical trades look better.
+
+## Opportunity Quality and Ranking (V3 workstream)
+
+A valid `EXECUTION READY` event is not a ranking of expected opportunity quality. The separate design specification in [`docs/Opportunity-Quality-and-Ranking.md`](docs/Opportunity-Quality-and-Ranking.md) defines the proposed eligibility, opportunity-quality, entry-timing, and data-confidence dimensions; decision precedence; reason codes; and historical validation requirements. This workstream is diagnostic/specification-first: it does not change existing entry rules or claim profitability. Implementation must follow inspection of the actual solution structure and be covered by deterministic tests before live use.
