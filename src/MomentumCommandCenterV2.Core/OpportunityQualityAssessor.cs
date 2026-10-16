@@ -38,9 +38,9 @@ public sealed class OpportunityQualityAssessor
             return Result(input, OpportunityClassification.DataUnknown, reasons);
         }
 
-        if (input.RelativeVolume < 0m ||
-            input.AtrExtension < 0m ||
-            input.RecentRangeInAtr < 0m ||
+        if (input.RelativeVolume.Value < 0m ||
+            input.AtrExtension.Value < 0m ||
+            input.RecentRangeInAtr.Value < 0m ||
             (input.ResistanceDistanceInAtr is < 0m))
         {
             reasons.Add(OpportunityReason.DataMissing);
@@ -75,8 +75,8 @@ public sealed class OpportunityQualityAssessor
             return Result(input, OpportunityClassification.ReadyExtended, reasons);
         }
 
-        var lowParticipation = input.RelativeVolume < _config.MinimumRelativeVolume;
-        var limitedRange = input.RecentRangeInAtr < _config.MinimumRecentRangeAtr;
+        var lowParticipation = input.RelativeVolume.Value < _config.MinimumRelativeVolume;
+        var limitedRange = input.RecentRangeInAtr.Value < _config.MinimumRecentRangeAtr;
         var weakMomentum = !input.MomentumConfirmed;
 
         if (lowParticipation)
@@ -107,7 +107,7 @@ public sealed class OpportunityQualityAssessor
             return Result(input, OpportunityClassification.ReadyBoring, reasons);
         }
 
-        if (input.RelativeVolume >= _config.HighRelativeVolume)
+        if (input.RelativeVolume.Value >= _config.HighRelativeVolume)
         {
             reasons.Add(OpportunityReason.StrongParticipation);
             return Result(input, OpportunityClassification.ReadyHighOpportunity, reasons);
