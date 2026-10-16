@@ -208,3 +208,13 @@ retroactively make historical trades look better.
 ## Opportunity Quality and Ranking (V3 workstream)
 
 A valid `EXECUTION READY` event is not a ranking of expected opportunity quality. The separate design specification in [`docs/Opportunity-Quality-and-Ranking.md`](docs/Opportunity-Quality-and-Ranking.md) defines the proposed eligibility, opportunity-quality, entry-timing, and data-confidence dimensions; decision precedence; reason codes; and historical validation requirements. This workstream is diagnostic/specification-first: it does not change existing entry rules or claim profitability. Implementation must follow inspection of the actual solution structure and be covered by deterministic tests before live use.
+
+### Opportunity Quality implementation status
+
+The first diagnostic domain slice now exists under `src/MomentumCommandCenterV2.Core`:
+- `OpportunityQualityInput` — timestamped, explicit input contract.
+- `OpportunityQualityAssessor` — deterministic, diagnostic-only classification and reason codes.
+- `OpportunityQualityAssessment` — classifications and display labels.
+- `tests/MomentumCommandCenterV2.Tests/OpportunityQualityAssessorTests.cs` — precedence and classification tests.
+
+**Next engineering step:** establish the historical market-snapshot/replay and data-adapter contract, including the exact inputs and timestamp/session semantics needed to port the ThinkOrSwim studies faithfully. Do not begin front-end integration or treat provisional classification bands as live rules until the adapter and TOS parity tests provide trustworthy inputs.
