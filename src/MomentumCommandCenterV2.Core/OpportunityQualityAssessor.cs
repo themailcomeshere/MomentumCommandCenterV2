@@ -67,7 +67,7 @@ public sealed class OpportunityQualityAssessor
             reasons.Add(OpportunityReason.EntryExtended);
 
             if (input.ResistanceDistanceInAtr is not null &&
-                input.ResistanceDistanceInAtr <= _config.ResistanceTooCloseAtr)
+                input.ResistanceDistanceInAtr.Value <= _config.ResistanceTooCloseAtr)
             {
                 reasons.Add(OpportunityReason.ResistanceTooClose);
             }
