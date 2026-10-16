@@ -1,6 +1,6 @@
 # Opportunity Quality and Ranking
 
-**Status:** Specification / first implementation slice  
+**Status:** First diagnostic domain slice implemented; market-data integration and calibration pending  
 **Purpose:** Separate technical entry eligibility from opportunity quality and execution timing.
 
 ## Problem statement
@@ -135,3 +135,18 @@ Add integration/comparison tests against known TOS snapshots before using classi
 - No unverified news/catalyst-clear assumption.
 - No claim that a high score guarantees a profitable trade.
 - No production thresholds chosen from the MNSB experience alone.
+
+
+## Current implementation status (2026-10-16)
+
+Implemented on `feature/opportunity-quality-classification`:
+
+- `OpportunityQualityInput`: explicit, timestamped input contract. Recent range and RVOL are supplied measurements; the assessor does not invent them from one bar.
+- `OpportunityQualityAssessor`: deterministic, pure assessment with data freshness checks and precedence for data quality, existing eligibility, active execution-event validity, entry timing, and quality.
+- `OpportunityQualityAssessment`: stable classification, human-facing display label, and reason codes.
+- `OpportunityQualityConfig.DiagnosticDefaults`: provisional prototype bands only; they are not calibrated or approved for live decisions.
+- Unit tests cover strong/moderate/boring classifications, stale/missing data, future timestamps, eligibility precedence, inactive events, extension, and nearby resistance.
+
+This is deliberately not yet wired into `V2SignalEngine`, the CLI, market-data ingestion, or a front end. The current `BarSnapshot` contains a single bar and indicators but does not itself provide a trustworthy recent-range baseline, nearby resistance measurement, time-of-day-relative volume provenance, or an execution event's finite READY lifetime. Those values must come from the forthcoming adapter/replay contract. The caller must explicitly pass the existing eligibility and active execution-event state; the assessor does not infer them.
+
+The classification is diagnostic-only. A successful build and passing unit tests are still required in the local environment; this repository integration did not execute a .NET build.
