@@ -10,5 +10,4 @@
         DateTimeOffset Timestamp,
         int Quantity,
         int SourceRowNumber);
-
 }
