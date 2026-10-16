@@ -1,0 +1,137 @@
+# Opportunity Quality and Ranking
+
+**Status:** Specification / first implementation slice  
+**Purpose:** Separate technical entry eligibility from opportunity quality and execution timing.
+
+## Problem statement
+
+A valid `EXECUTION READY` event establishes that the current entry rules were satisfied at a particular time. It does not establish that the stock has attractive follow-through potential, sufficient remaining range, or favorable reward relative to risk. The decision interface must not imply that all READY events are equally worth trading.
+
+This workstream adds an explainable quality assessment alongside existing signals. It must not silently rewrite or weaken the current 5M authority, 1M execution gates, finite READY window, or position-management rules.
+
+## Decision dimensions
+
+Keep these dimensions separate in the domain model and UI:
+
+1. **Eligibility** — Is the existing strategy's setup valid at this timestamp?
+2. **Opportunity quality** — Does available evidence support prioritizing this candidate for potential movement?
+3. **Entry timing** — Is the entry location acceptable now, or is it extended / poorly positioned?
+4. **Data confidence** — Are the inputs complete, fresh, and comparable?
+
+A high quality score must never override a failed eligibility gate. Good opportunity quality does not make an extended entry safe. Missing or stale required inputs must never silently produce a high-quality or READY result.
+
+## Initial classification contract
+
+Use these as explainable output classifications, not claims of profitability:
+
+- `READY_HIGH_OPPORTUNITY`: eligible, sufficient fresh inputs, and quality evidence meets a calibrated high band.
+- `READY_MODERATE`: eligible, sufficient inputs, and evidence is mixed/moderate.
+- `READY_BORING`: eligible, but measured movement/participation evidence is below the intraday-priority threshold.
+- `READY_EXTENDED`: eligible thesis, but entry location exceeds the validated extension guard.
+- `WATCH_DEVELOPING`: setup may be developing, but the existing execution event is not currently valid.
+- `BLOCKED`: a hard eligibility or risk gate failed.
+- `DATA_UNKNOWN`: required data is missing, stale, or invalid.
+
+The final public labels can be shortened for chart display (e.g. `READY — HIGH`, `READY — BORING`) while preserving stable machine-readable reason codes.
+
+## Proposed input snapshot
+
+Every evaluation must be reproducible from an immutable timestamped snapshot. Candidate fields:
+
+- Symbol, evaluation timestamp, exchange/session context, and timezone.
+- Existing 5M authority/permission state and source timestamp.
+- Existing 1M candidate, confirmation, READY state, READY start/expiry, and block reasons.
+- Last price and timestamp; recent 1M and 5M OHLCV bars with source/freshness metadata.
+- Relative volume, calculated with a documented session/time-of-day baseline.
+- Short-horizon price change / acceleration, with explicit lookback windows.
+- Recent range or ATR and extension relative to a documented reference (e.g. VWAP or moving average).
+- Distance to nearby resistance / recent swing high where the data source supports it.
+- Spread/liquidity proxy only when sourced reliably; do not infer spread from candles.
+- Input-quality flags and per-field timestamps.
+
+Do not add a field to the live contract until its source, session semantics, calculation, and stale-data behavior are defined. If the current source cannot support a field reliably, mark it unavailable rather than fabricating a proxy.
+
+## Scoring design
+
+Start with a transparent, component-based score and retain each component contribution and reason. Do not set production thresholds solely by intuition.
+
+Candidate components for research:
+- Participation: relative volume versus a time-of-day-appropriate baseline.
+- Momentum: short-horizon directional change and acceleration.
+- Movement capacity: recent realized range / ATR, with context for price and liquidity.
+- Entry location: extension from VWAP / structure and proximity to recent highs or resistance.
+- Data quality: a hard confidence gate, not a bonus that can compensate for missing market data.
+
+The quality score is a ranking aid, not a probability of profit. Do not describe it as a win probability unless calibrated and validated as such. Avoid double-counting highly correlated inputs. Initially store component values and expose them in diagnostics; choose weights and bands only after historical comparison.
+
+## Evaluation precedence
+
+Apply precedence in this order:
+
+1. Validate required inputs and freshness; otherwise `DATA_UNKNOWN`.
+2. Evaluate existing hard eligibility and strategy gates; failure => `BLOCKED`.
+3. Evaluate existing finite execution-event validity; no active valid event => `WATCH_DEVELOPING` or the existing non-ready state.
+4. Evaluate entry timing / extension guard; unsafe timing => `READY_EXTENDED` (the underlying thesis remains separately represented).
+5. Evaluate calibrated opportunity-quality band; distinguish high, moderate, and boring.
+6. Persist the result, component values, reason codes, input snapshot reference, and strategy/config version.
+
+Do not collapse `NO NEW SIGNAL`, `HOLD`, and `EXIT`. Opportunity ranking is an entry-prioritization layer and must not independently manage an open position.
+
+## Required reason codes
+
+Initial examples (stable identifiers; exact enum naming may follow repository conventions):
+
+- `DATA_MISSING`, `DATA_STALE`, `DATA_INVALID`
+- `PERMISSION_OFF`, `NO_VALID_EXECUTION_EVENT`, `READY_EXPIRED`
+- `EXTENSION_DANGER`, `LOW_RELATIVE_VOLUME`, `WEAK_MOMENTUM`
+- `LIMITED_RECENT_RANGE`, `RESISTANCE_TOO_CLOSE`
+- `QUALITY_HIGH`, `QUALITY_MODERATE`, `QUALITY_LOW`
+
+Each decision should explain both why it qualified and why it was downgraded or blocked. A decision may contain multiple reason codes.
+
+## Historical validation plan
+
+Capture candidates at the time they are observed, including candidates not traded. For each candidate, preserve signal time, intended entry, actual fill when present, exit, and subsequent bars over a consistent evaluation horizon.
+
+Measure at minimum:
+- Maximum favorable excursion (MFE) and maximum adverse excursion (MAE) from the candidate/entry reference.
+- Realized return and return after a fixed horizon, when historical bars are available.
+- Time to favorable/adverse movement and time in position.
+- Opportunity capture rate and high-quality candidates missed.
+- False-positive rate for high-quality classifications.
+- Slippage/spread sensitivity where actual data exists.
+- Time/capital tied up in low-movement candidates.
+
+Compare classifications to the current READY-only baseline. Evaluate multiple market regimes and symbols; do not tune thresholds on a couple of recent trades. Use time-separated validation to reduce overfitting. Never manufacture MFE/MAE from trade-history rows alone; they require market bars.
+
+## Test requirements
+
+Unit tests should cover:
+- Hard gates always dominate quality score.
+- Missing/stale/invalid inputs produce `DATA_UNKNOWN`, never READY.
+- Extension danger can downgrade timing without declaring the 5M thesis dead.
+- READY expiry remains enforced by the existing execution engine.
+- Stable, deterministic classifications for identical snapshots/configuration.
+- Reason codes explain every blocked/downgraded decision.
+- No opportunity-ranking result creates HOLD/EXIT or changes open-position lifecycle state.
+- Session boundaries, timezone conversions, and time-of-day volume baselines are explicit.
+
+Add integration/comparison tests against known TOS snapshots before using classifications in the live workflow.
+
+## Implementation sequence
+
+1. Inspect the repository's actual solution structure and existing market-snapshot / decision models.
+2. Add pure domain types for the opportunity input snapshot, component assessment, classification, and reason codes in the repository's established layer/naming conventions.
+3. Implement deterministic evaluation with no external I/O.
+4. Add unit tests for precedence, missing data, timing, and deterministic reasons.
+5. Add persistence and historical outcome linkage only after the domain contract is testable.
+6. Surface concise labels and detailed explanations in UI/CLI after the underlying results are reproducible.
+7. Calibrate bands using recorded historical candidates and outcomes; keep the feature diagnostic-only until evidence supports operational use.
+
+## Explicit non-goals
+
+- No automatic order placement or brokerage submission.
+- No replacement of the existing 5M authority or 1M execution logic.
+- No unverified news/catalyst-clear assumption.
+- No claim that a high score guarantees a profitable trade.
+- No production thresholds chosen from the MNSB experience alone.
