@@ -19,6 +19,11 @@
 // LAYER:
 //   Core
 // =========================================================
+/// <summary>
+/// MODEL: SignalEvaluationContext
+/// PURPOSE: Preserves the technical conditions and ATR extension used by one signal evaluation.
+/// WHEN CALLED: Constructed by V2SignalEngine and consumed by diagnostics and historical validation.
+/// </summary>
 public sealed record SignalEvaluationContext(
     int FiveMinuteScore,
     bool FiveMinutePermission,
