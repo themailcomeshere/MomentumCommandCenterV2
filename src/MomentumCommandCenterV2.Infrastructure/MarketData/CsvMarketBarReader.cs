@@ -59,7 +59,7 @@ public sealed class CsvMarketBarReader
                     var value => throw new FormatException($"Unsupported timeframe '{value}'. Use 1m or 5m.")
                 };
                 var timestampText = Field("Timestamp");
-                if (!System.Text.RegularExpressions.Regex.IsMatch(timestampText, @"(?:Z|[+-]\\d{2}:\\d{2})$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ||
+                if (!System.Text.RegularExpressions.Regex.IsMatch(timestampText, @"(?:Z|[+-]\d{2}:\d{2})$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ||
                     !DateTimeOffset.TryParse(timestampText, CultureInfo.InvariantCulture,
                         DateTimeStyles.None, out var timestamp))
                     throw new FormatException("Timestamp must be ISO-8601 with an explicit timezone offset.");
