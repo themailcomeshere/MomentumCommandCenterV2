@@ -22,6 +22,11 @@ namespace MomentumCommandCenterV2.Core.Models;
 // LAYER:
 //   Core
 // =========================================================
+/// <summary>
+/// METHOD: SignalDecision
+/// PURPOSE: Implements SignalDecision behavior for this component.
+/// WHEN CALLED: Called by the owning workflow or by the caller that requests SignalDecision.
+/// </summary>
 public sealed record SignalDecision(
     SignalState State,
     MomentumAction Action,
