@@ -2,9 +2,19 @@ using MomentumCommandCenterV2.Core.Models;
 
 namespace MomentumCommandCenterV2.Core;
 
+/// <summary>
+/// METHOD: TradeReview
+/// PURPOSE: Implements TradeReview behavior for this component.
+/// WHEN CALLED: Called by the owning workflow or by the caller that requests TradeReview.
+/// </summary>
 public sealed record TradeReview(Trade Trade, string Classification, string Finding, decimal? MfePercent, decimal? MaePercent);
 public sealed class TradeAnalyzer
 {
+    /// <summary>
+    /// METHOD: Review
+    /// PURPOSE: Reviews a completed trade against the market snapshots available during its trade window.
+    /// WHEN CALLED: Called by historical trade-quality analysis when matching snapshots are available.
+    /// </summary>
     public TradeReview Review(Trade trade, IReadOnlyList<CommandCenterSnapshot> snapshots, V2SignalEngine engine)
     {
         var during = snapshots.Where(s => s.Symbol.Equals(trade.Symbol, StringComparison.OrdinalIgnoreCase) && s.Timestamp >= trade.EntryTime && s.Timestamp <= trade.ExitTime).OrderBy(s => s.Timestamp).ToList();
