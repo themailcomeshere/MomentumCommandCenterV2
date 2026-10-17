@@ -25,13 +25,13 @@ Required columns:
 
 ```csv
 Symbol,Timeframe,Timestamp,Open,High,Low,Close,Volume
-MNSB,1m,2026-10-16T16:00:00Z,10.00,10.15,9.95,10.10,12500
-MNSB,5m,2026-10-16T15:55:00Z,9.80,10.20,9.75,10.10,56000
+MNSB,1m,2026-10-16T16:01:00Z,10.00,10.15,9.95,10.10,12500
+MNSB,5m,2026-10-16T16:00:00Z,9.80,10.20,9.75,10.10,56000
 ```
 
 - Timeframe accepts `1m` / `5m` (also `1` / `5`).
 - Timestamp must have an explicit timezone offset. Preserve the provider timestamp; never silently assume local machine time.
-- Before integrating a provider, document whether its timestamp marks bar open or close. This prototype compares timestamps directly and does not guess the convention.
+- In this replay contract, `Timestamp` means the time the completed bar becomes available to the decision process (normally its close/availability time), not the bar-open time. If a provider labels bars by open time, its adapter must normalize to availability time before replay. Never pass open-time timestamps directly into replay, because a 5M bar could otherwise appear available before it has completed.
 - Numeric values use invariant culture.
 - Duplicate `symbol + timeframe + timestamp` keys and invalid OHLCV rows are rejected.
 - The adapter currently accepts completed OHLCV bars only. Partial/in-progress bars need a separate explicit contract.
