@@ -21,6 +21,16 @@ namespace MomentumCommandCenterV2.Core.Models;
 // LAYER:
 //   Core
 // =========================================================
+/// <summary>
+/// TYPE: CommandCenterSnapshot
+/// PURPOSE: Defines the record contract or data structure named CommandCenterSnapshot.
+/// WHEN CALLED: Used by the application workflow whenever this contract or type is referenced.
+/// </summary>
+/// <summary>
+/// METHOD: CommandCenterSnapshot
+/// PURPOSE: Implements CommandCenterSnapshot for this component.
+/// WHEN CALLED: Called by the workflow or caller that requests CommandCenterSnapshot.
+/// </summary>
 public sealed record CommandCenterSnapshot(
     DateTimeOffset Timestamp,
     string Symbol,
