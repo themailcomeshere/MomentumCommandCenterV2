@@ -20,6 +20,11 @@ public sealed class CsvMarketBarReader
     /// WHEN CALLED: Called before replay; timestamps must contain an explicit timezone offset.
     /// FORMAT: Header names are case-insensitive and numeric values use invariant culture.
     /// </summary>
+    /// <summary>
+    /// METHOD: Read
+    /// PURPOSE: Parses and validates provider-neutral OHLCV CSV rows.
+    /// WHEN CALLED: Invoked by local replay workflows before frames are built.
+    /// </summary>
     public IReadOnlyList<MarketBar> Read(TextReader reader)
     {
         ArgumentNullException.ThrowIfNull(reader);
@@ -84,6 +89,11 @@ public sealed class CsvMarketBarReader
     /// PURPOSE: Splits a CSV row while respecting quoted commas and escaped double quotes.
     /// WHEN CALLED: Used for the header and each non-empty data row.
     /// LIMITATION: Newlines embedded inside quoted fields are not supported by this fixture format.
+    /// </summary>
+    /// <summary>
+    /// METHOD: ParseCsvLine
+    /// PURPOSE: Parses a single CSV line with quoted-field support.
+    /// WHEN CALLED: Called for the header and each non-empty market-data row.
     /// </summary>
     private static string[] ParseCsvLine(string line)
     {
