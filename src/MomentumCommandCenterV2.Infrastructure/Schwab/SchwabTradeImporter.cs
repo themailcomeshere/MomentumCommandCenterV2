@@ -56,7 +56,9 @@ public sealed class SchwabTradeImporter : ITradeImporter
     };
 
     /// <summary>
-    /// Imports Schwab CSV text.
+    /// METHOD: Import
+    /// PURPOSE: Parses Schwab CSV text and reconstructs completed trades, open positions, and unmatched sells.
+    /// WHEN CALLED: Called by the application import workflow when CSV content is already in memory.
     /// </summary>
     public TradeImportResult Import(string csv)
     {
@@ -199,7 +201,9 @@ public sealed class SchwabTradeImporter : ITradeImporter
     }
 
     /// <summary>
-    /// Imports a Schwab CSV file directly from disk.
+    /// METHOD: ImportFile
+    /// PURPOSE: Validates a file path, reads the Schwab CSV, and delegates parsing to Import.
+    /// WHEN CALLED: Called by the application import workflow when a local broker export file is selected.
     /// </summary>
     public TradeImportResult ImportFile(string filePath)
     {
@@ -477,8 +481,10 @@ public sealed class SchwabTradeImporter : ITradeImporter
     }
 
     /// <summary>
-    /// Small CSV parser supporting quoted fields and escaped quotes.
-    /// This avoids adding a third-party CSV dependency to the V2 core.
+    /// METHOD: ParseCsvLine
+    /// PURPOSE: Splits one CSV row while respecting quoted fields and escaped quotes.
+    /// WHEN CALLED: Called by ParseRows for the header and each non-empty source row.
+    /// LIMITATION: Newlines embedded inside quoted fields are not supported.
     /// </summary>
     private static List<string> ParseCsvLine(
         string line)
