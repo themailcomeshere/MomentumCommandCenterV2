@@ -20,6 +20,11 @@
 // LAYER:
 //   Core
 // =========================================================
+/// <summary>
+/// CONFIGURATION: V2Config
+/// PURPOSE: Defines thresholds used by the V2 signal engine.
+/// WHEN CALLED: Supplied when constructing the engine or defaults are used for prototype evaluation.
+/// </summary>
 public sealed record V2Config(
     decimal MinRvol = 1.50m,
     decimal MinRsi = 50m,
