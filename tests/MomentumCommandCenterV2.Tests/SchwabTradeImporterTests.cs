@@ -3,9 +3,19 @@ using Xunit;
 
 namespace MomentumCommandCenterV2.Tests;
 
+/// <summary>
+/// TYPE: SchwabTradeImporterTests
+/// PURPOSE: Defines the class test or data contract named SchwabTradeImporterTests.
+/// WHEN CALLED: Used by the test runner or owning workflow when this type is needed.
+/// </summary>
 public sealed class SchwabTradeImporterTests
 {
     [Fact]
+    /// <summary>
+    /// METHOD: Import_UsesFillPrice_NotLimitPrice
+    /// PURPOSE: Verifies the expected behavior of Import_UsesFillPrice_NotLimitPrice.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_UsesFillPrice_NotLimitPrice()
     {
         const string csv = """
@@ -29,6 +39,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_MatchesBuyAndSellIntoCompletedTrade
+    /// PURPOSE: Verifies the expected behavior of Import_MatchesBuyAndSellIntoCompletedTrade.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_MatchesBuyAndSellIntoCompletedTrade()
     {
         const string csv = """
@@ -55,6 +70,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_TreatsOpenBuyAsOpenPosition
+    /// PURPOSE: Verifies the expected behavior of Import_TreatsOpenBuyAsOpenPosition.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_TreatsOpenBuyAsOpenPosition()
     {
         const string csv = """
@@ -80,6 +100,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_IgnoresCanceledAndOpenOrders
+    /// PURPOSE: Verifies the expected behavior of Import_IgnoresCanceledAndOpenOrders.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_IgnoresCanceledAndOpenOrders()
     {
         const string csv = """
@@ -100,6 +125,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_ProcessesMultipleTradesForSameSymbol
+    /// PURPOSE: Verifies the expected behavior of Import_ProcessesMultipleTradesForSameSymbol.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_ProcessesMultipleTradesForSameSymbol()
     {
         const string csv = """
@@ -126,6 +156,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_ProcessesMultipleSymbolsIndependently
+    /// PURPOSE: Verifies the expected behavior of Import_ProcessesMultipleSymbolsIndependently.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_ProcessesMultipleSymbolsIndependently()
     {
         const string csv = """
@@ -159,6 +194,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_ReturnsUnmatchedSellWhenNoPriorBuyExists
+    /// PURPOSE: Verifies the expected behavior of Import_ReturnsUnmatchedSellWhenNoPriorBuyExists.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_ReturnsUnmatchedSellWhenNoPriorBuyExists()
     {
         const string csv = """
@@ -184,6 +224,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_OrdersCompletedTradesByEntryTime
+    /// PURPOSE: Verifies the expected behavior of Import_OrdersCompletedTradesByEntryTime.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_OrdersCompletedTradesByEntryTime()
     {
         const string csv = """
@@ -205,6 +250,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_RejectsEmptyCsv
+    /// PURPOSE: Verifies the expected behavior of Import_RejectsEmptyCsv.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_RejectsEmptyCsv()
     {
         var importer = new SchwabTradeImporter();
@@ -214,6 +264,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_RejectsCsvWithNoDataRows
+    /// PURPOSE: Verifies the expected behavior of Import_RejectsCsvWithNoDataRows.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_RejectsCsvWithNoDataRows()
     {
         const string csv =
@@ -226,6 +281,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_RejectsMissingRequiredColumn
+    /// PURPOSE: Verifies the expected behavior of Import_RejectsMissingRequiredColumn.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_RejectsMissingRequiredColumn()
     {
         const string csv = """
@@ -245,6 +305,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_RejectsInvalidFillPrice
+    /// PURPOSE: Verifies the expected behavior of Import_RejectsInvalidFillPrice.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_RejectsInvalidFillPrice()
     {
         const string csv = """
@@ -264,6 +329,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_HandlesQuotedCsvFields
+    /// PURPOSE: Verifies the expected behavior of Import_HandlesQuotedCsvFields.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_HandlesQuotedCsvFields()
     {
         const string csv = """
@@ -286,6 +356,11 @@ public sealed class SchwabTradeImporterTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Import_HandlesDollarSignsAndThousandsSeparators
+    /// PURPOSE: Verifies the expected behavior of Import_HandlesDollarSignsAndThousandsSeparators.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Import_HandlesDollarSignsAndThousandsSeparators()
     {
         const string csv = """
