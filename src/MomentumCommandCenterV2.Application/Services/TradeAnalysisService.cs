@@ -24,6 +24,11 @@ namespace MomentumCommandCenterV2.Application.Services;
 // LAYER:
 //   Application
 // =========================================================
+/// <summary>
+/// CLASS: TradeAnalysisService
+/// PURPOSE: Calculates deterministic aggregate and per-symbol statistics from imported trades.
+/// WHEN CALLED: Called by the application workflow after a broker-history import has completed.
+/// </summary>
 public sealed class TradeAnalysisService : ITradeAnalysisService
 {
     /// <summary>
