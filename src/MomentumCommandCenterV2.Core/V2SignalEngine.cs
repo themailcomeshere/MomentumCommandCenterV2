@@ -36,6 +36,11 @@ public sealed class V2SignalEngine
         _config = config ?? new V2Config();
     }
 
+    /// <summary>
+    /// METHOD: Evaluate
+    /// PURPOSE: Evaluates the supplied snapshot and returns the deterministic signal decision.
+    /// WHEN CALLED: Called by the signal workflow and historical trade/replay analysis.
+    /// </summary>
     public SignalDecision Evaluate(
         CommandCenterSnapshot snapshot,
         bool hasPosition)
@@ -441,6 +446,11 @@ public sealed class V2SignalEngine
             false, evaluation);
     }
 
+    /// <summary>
+    /// METHOD: HasSoftDeterioration
+    /// PURPOSE: Implements HasSoftDeterioration behavior for this component.
+    /// WHEN CALLED: Called by the owning workflow or by the caller that requests HasSoftDeterioration.
+    /// </summary>
     private bool HasSoftDeterioration(
         BarSnapshot current,
         BarSnapshot? previous)
@@ -468,6 +478,11 @@ public sealed class V2SignalEngine
                previousWeak;
     }
 
+    /// <summary>
+    /// METHOD: GetAtrExtension
+    /// PURPOSE: Implements GetAtrExtension behavior for this component.
+    /// WHEN CALLED: Called by the owning workflow or by the caller that requests GetAtrExtension.
+    /// </summary>
     private static decimal GetAtrExtension(
         BarSnapshot bar)
     {
@@ -486,6 +501,11 @@ public sealed class V2SignalEngine
             (bar.Close - bar.Ema9) / bar.Atr);
     }
 
+    /// <summary>
+    /// METHOD: BuildReason
+    /// PURPOSE: Implements BuildReason behavior for this component.
+    /// WHEN CALLED: Called by the owning workflow or by the caller that requests BuildReason.
+    /// </summary>
     private static string BuildReason(
         string primary,
         IEnumerable<string> reasons)
@@ -500,6 +520,11 @@ public sealed class V2SignalEngine
             : $"{primary} {supporting}.";
     }
 
+    /// <summary>
+    /// METHOD: Decision
+    /// PURPOSE: Implements Decision behavior for this component.
+    /// WHEN CALLED: Called by the owning workflow or by the caller that requests Decision.
+    /// </summary>
     private static SignalDecision Decision(
         SignalState state,
         MomentumAction action,
@@ -525,6 +550,11 @@ public sealed class V2SignalEngine
             evaluation);
     }
 
+    /// <summary>
+    /// METHOD: IsEndOfDay
+    /// PURPOSE: Implements IsEndOfDay behavior for this component.
+    /// WHEN CALLED: Called by the owning workflow or by the caller that requests IsEndOfDay.
+    /// </summary>
     private bool IsEndOfDay(
         DateTimeOffset timestamp)
     {
