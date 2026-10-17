@@ -26,6 +26,11 @@ namespace MomentumCommandCenterV2.Application.Services;
 // =========================================================
 public sealed class TradeAnalysisService : ITradeAnalysisService
 {
+    /// <summary>
+    /// METHOD: Analyze
+    /// PURPOSE: Calculates deterministic aggregate and symbol-level trade statistics.
+    /// WHEN CALLED: Called after broker trade history has been imported.
+    /// </summary>
     public TradeAnalysisResult Analyze(
         TradeImportResult importResult)
     {
@@ -57,6 +62,11 @@ public sealed class TradeAnalysisService : ITradeAnalysisService
             bySymbol);
     }
 
+    /// <summary>
+    /// METHOD: BuildOverallStatistics
+    /// PURPOSE: Calculates aggregate P&L, win rate, hold time, and profit/loss statistics.
+    /// WHEN CALLED: Called by Analyze for the complete ordered trade collection.
+    /// </summary>
     private static TradeStatistics BuildOverallStatistics(
         IReadOnlyList<Trade> trades)
     {
@@ -138,6 +148,11 @@ public sealed class TradeAnalysisService : ITradeAnalysisService
             grossLoss);
     }
 
+    /// <summary>
+    /// METHOD: BuildSymbolStatistics
+    /// PURPOSE: Calculates summary statistics for one symbol's trades.
+    /// WHEN CALLED: Called by Analyze for each symbol group.
+    /// </summary>
     private static SymbolTradeStatistics BuildSymbolStatistics(
         IGrouping<string, Trade> group)
     {
