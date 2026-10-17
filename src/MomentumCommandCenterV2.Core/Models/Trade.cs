@@ -22,5 +22,10 @@ namespace MomentumCommandCenterV2.Core.Models
     // LAYER:
     //   Core
     // =========================================================
-    public sealed record Trade(string Symbol, DateTimeOffset EntryTime, decimal EntryPrice, DateTimeOffset ExitTime, decimal ExitPrice, int Quantity, ExitReason ExitReason = ExitReason.Unknown) { public decimal Pnl => (ExitPrice - EntryPrice) * Quantity; public decimal PnlPercent => EntryPrice == 0 ? 0 : (ExitPrice - EntryPrice) / EntryPrice * 100m; public TimeSpan HoldTime => ExitTime - EntryTime; }
+    /// <summary>
+/// MODEL: Trade
+/// PURPOSE: Represents a completed broker-reconstructed trade and exposes deterministic P&L and hold-time properties.
+/// WHEN CALLED: Created by the trade importer and consumed by trade statistics and historical review.
+/// </summary>
+public sealed record Trade(string Symbol, DateTimeOffset EntryTime, decimal EntryPrice, DateTimeOffset ExitTime, decimal ExitPrice, int Quantity, ExitReason ExitReason = ExitReason.Unknown) { public decimal Pnl => (ExitPrice - EntryPrice) * Quantity; public decimal PnlPercent => EntryPrice == 0 ? 0 : (ExitPrice - EntryPrice) / EntryPrice * 100m; public TimeSpan HoldTime => ExitTime - EntryTime; }
 }
