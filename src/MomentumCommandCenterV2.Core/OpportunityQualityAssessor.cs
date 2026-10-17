@@ -6,6 +6,7 @@ namespace MomentumCommandCenterV2.Core;
 /// <summary>
 /// Deterministic, diagnostic-only opportunity ranking layered beside the
 /// existing V2 decision. It never mutates or replaces that decision.
+/// WHEN CALLED: Invoked after an existing entry candidate has been evaluated and timestamped input metrics are available.
 /// </summary>
 public sealed class OpportunityQualityAssessor
 {
