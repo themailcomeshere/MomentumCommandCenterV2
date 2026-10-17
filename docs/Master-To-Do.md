@@ -51,7 +51,7 @@ This file preserves the prior consolidated To-Do text below, after reviewing all
 - Define and test explicit position-management/exit behavior separately from entry readiness.
 
 ## 5. Boring Overnight decision column / chart study — [NOW: specification first]
-Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md` (2026-10-13). Preserve its complete criteria and update it alongside this master.
+Detailed companion: `docs/BoringOvernight.md`. Preserve its complete criteria and update it alongside this master.
 
 ### Required pipeline
 1. Overnight Edge Score (historical overnight profitability/edge).
@@ -118,12 +118,12 @@ From <https://chatgpt.com/g/g-p-6ad0f6bcb72c81918e3cdd194cda6630-momentum-comman
 
 
 
-## 7. C# V3 implementation — [NOW / documentation and import layer]
+## 7. C# V3 implementation — [NEXT / data and replay foundation]
 Repository supplied by user: https://github.com/themailcomeshere/MomentumCommandCenterV2.git
-- [NOW] Verify actual repository branch, latest commit, solution/project tree, framework, namespaces, and build/test commands. The web retrieval attempted 2026-10-15 did not produce verifiable repository content; do not invent repository facts. Existing README is an architecture working spec, not a verified tree.
-- [NEXT] Implement `ITradeImporter` and `SchwabTradeImporter.ImportFile()`; define `TradeImportResult` in `Application.Models`.
-- [NEXT] Add validation and tests for supported file formats, headers, malformed rows, duplicates/idempotency, date/time/number/currency parsing, partial failures, and actionable import diagnostics.
-- Then build persistence layer; normalized trade/fill models and repository abstractions; analysis/market-data layers; state snapshots; decision logging; later web/MVC UI.
+- [DONE] Verify the actual repository branch, latest commit, solution/project tree, framework, namespaces, and build/test commands directly against the repository. The working branch is `feature/opportunity-quality-classification`; it targets .NET 8.
+- [DONE] `ITradeImporter`, `SchwabTradeImporter.ImportFile()`, and `TradeImportResult` exist in the current solution.
+- [PARTIAL] Importer validation and xUnit tests exist. Expand coverage for any uncovered duplicate/idempotency, partial-failure, and diagnostic cases when importer work resumes.
+- [NEXT] Persistence, provider-neutral indicator snapshots, decision logging, market-data parity, and later production UI remain future work. This milestone adds raw-bar replay primitives only.
 - Keep boundaries clean: raw import -> normalized application/domain models -> persistence -> bar/indicator calculations -> deterministic 5M authority -> 1M execution -> separate overnight decision -> logged outcome/backtest.
 - Use pure, testable calculations/state transitions; make data source, time zone, session boundary, missing-data and freshness behavior explicit.
 - C# should own/consume authoritative rolling ON stats, median/mean and 5D/20D metrics, consistency/volatility, scores, catalyst metadata, freshness, reason-coded decisions and outcome logs.
@@ -132,9 +132,9 @@ Repository supplied by user: https://github.com/themailcomeshere/MomentumCommand
 - No claims that live brokerage integration, external event feeds, backtesting, automated orders, or production UI exist until verified in source/tests. No automated orders until separately specified and tested.
 - Ensure any intentional divergence between C# and TOS behavior is documented and covered by comparison tests.
 
-## 8. Repository README / docs — [NEXT]
-- Existing Library docs: `MomentumCommandCenterV3_CSharp_README.md` and commit-stamped copy. Both are conservative working specifications, not source-derived inventories.
-- After direct repo inspection, update README with verified project names, target frameworks, namespaces, entry points, configuration, models/services, scanner/data interfaces, tests, build/test commands, and deployment workflow.
+## 8. Repository README / docs — [PARTIAL]
+- [DONE] README and architecture/data contracts have been refreshed from verified repository contents. The original README is preserved at `docs/archive/README_ORIGINAL.md`.
+- [PARTIAL] README now documents .NET 8 architecture, replay command, demo UI, safety boundaries, and core roadmap. Provider configuration, scanner interfaces, and deployment workflow remain unimplemented and are not claimed.
 - Keep source-of-truth boundaries explicit: current TOS studies are live behavioral reference under validation; C# is intended to make logic/data/decisions reproducible and testable.
 
 ## 9. Historical validation / diagnostics — [NEXT]
@@ -153,15 +153,15 @@ Repository supplied by user: https://github.com/themailcomeshere/MomentumCommand
 - Trading signals are evidence, not guarantees. `EXECUTION READY` does not replace position sizing, risk limits, or exit rules. Distinguish HOLD, EXIT, and NO NEW SIGNAL.
 
 ## 11. Immediate order of operations
-1. Audit XRPN 10/2 12:45 Permission revocation from existing evidence.
-2. Validate Permission semantics without speculative code edits.
-3. Audit 5M -> 1M handoff.
-4. Trace 1M candidate/confirmation/READY/expiry/extension blocks and reconcile installed version.
-5. Validate runner management and explicit exit behavior.
-6. Specify Boring Overnight column contract; implement reliable ThinkScript subset and C# authoritative calculations; validate historically.
-7. Implement `ITradeImporter` / `SchwabTradeImporter.ImportFile()` + `TradeImportResult`, tests, then persistence/analysis.
-8. Verify repository source and refresh README from actual code.
-9. Resume controlled scanner/trade validation and Daily Gainer Review.
+1. [NOW] Build the current branch and run the full xUnit suite; GitHub file edits do not execute .NET.
+2. [NOW] Reconcile the repository's 1M/5M studies with the actually installed ThinkOrSwim versions; do not infer identity from filenames.
+3. [NEXT] Define timestamp open/close semantics, session/extended-hours policy, and DST behavior for historical bars.
+4. [NEXT] Add sanitized real historical fixtures and golden indicator-parity tests against the source studies.
+5. [NEXT] Connect replay frames to V2 signal evaluation without changing existing signal rules; log transitions and opportunity assessments.
+6. [NEXT] Investigate the known XRPN 10/2 Permission revocation from existing chart evidence; keep this separate from speculative edits and replay-foundation work.
+7. [NEXT] Continue targeted 5M/1M handoff, READY expiration/extension, runner, and exit-behavior validation.
+8. [NEXT] Resume scanner-discovery correlation, trade-quality analytics, and V1/V2 historical validation after data parity is trustworthy.
+9. [HOLD] Production UI/provider/news integration and any order automation until their contracts and safety requirements are separately specified.
 
 ---
 
