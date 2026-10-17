@@ -58,9 +58,11 @@ public sealed class CsvMarketBarReader
                     "5" or "5m" or "5M" or "FiveMinute" => BarTimeframe.FiveMinute,
                     var value => throw new FormatException($"Unsupported timeframe '{value}'. Use 1m or 5m.")
                 };
-                if (!DateTimeOffset.TryParse(Field("Timestamp"), CultureInfo.InvariantCulture,
-                        DateTimeStyles.RoundtripKind, out var timestamp))
-                    throw new FormatException("Timestamp must be ISO-8601 with a timezone offset.");
+                var timestampText = Field("Timestamp");
+                if (!System.Text.RegularExpressions.Regex.IsMatch(timestampText, @"(?:Z|[+-]\\d{2}:\\d{2})$", System.Text.RegularExpressions.RegexOptions.IgnoreCase) ||
+                    !DateTimeOffset.TryParse(timestampText, CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var timestamp))
+                    throw new FormatException("Timestamp must be ISO-8601 with an explicit timezone offset.");
 
                 decimal Number(string name) => decimal.Parse(Field(name), NumberStyles.Number, CultureInfo.InvariantCulture);
                 bars.Add(new MarketBar(Field("Symbol").ToUpperInvariant(), timeframe, timestamp,
