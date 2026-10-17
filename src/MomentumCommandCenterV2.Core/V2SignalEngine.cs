@@ -458,8 +458,8 @@ public sealed class V2SignalEngine
 
     /// <summary>
     /// METHOD: HasSoftDeterioration
-    /// PURPOSE: Implements HasSoftDeterioration behavior for this component.
-    /// WHEN CALLED: Called by the owning workflow or by the caller that requests HasSoftDeterioration.
+    /// PURPOSE: Detects soft deterioration that persists across the current and previous 5-minute bars.
+    /// WHEN CALLED: Called by Evaluate while assembling the signal-evaluation context and position-management decision.
     /// </summary>
     private bool HasSoftDeterioration(
         BarSnapshot current,
@@ -490,8 +490,8 @@ public sealed class V2SignalEngine
 
     /// <summary>
     /// METHOD: GetAtrExtension
-    /// PURPOSE: Implements GetAtrExtension behavior for this component.
-    /// WHEN CALLED: Called by the owning workflow or by the caller that requests GetAtrExtension.
+    /// PURPOSE: Uses the supplied ATR extension when present, otherwise derives non-negative close-to-EMA9 distance in ATR units.
+    /// WHEN CALLED: Called by Evaluate before extension warning and hard-exit gates are applied.
     /// </summary>
     private static decimal GetAtrExtension(
         BarSnapshot bar)
@@ -513,8 +513,8 @@ public sealed class V2SignalEngine
 
     /// <summary>
     /// METHOD: BuildReason
-    /// PURPOSE: Implements BuildReason behavior for this component.
-    /// WHEN CALLED: Called by the owning workflow or by the caller that requests BuildReason.
+    /// PURPOSE: Combines the primary decision explanation with up to three supporting condition reasons.
+    /// WHEN CALLED: Called by Evaluate when constructing a decision that benefits from concise supporting evidence.
     /// </summary>
     private static string BuildReason(
         string primary,
@@ -532,8 +532,8 @@ public sealed class V2SignalEngine
 
     /// <summary>
     /// METHOD: Decision
-    /// PURPOSE: Implements Decision behavior for this component.
-    /// WHEN CALLED: Called by the owning workflow or by the caller that requests Decision.
+    /// PURPOSE: Creates a SignalDecision while consistently preserving state, action, permission, lifecycle flags, and evaluation context.
+    /// WHEN CALLED: Called by Evaluate on each terminal signal-state branch.
     /// </summary>
     private static SignalDecision Decision(
         SignalState state,
@@ -562,8 +562,8 @@ public sealed class V2SignalEngine
 
     /// <summary>
     /// METHOD: IsEndOfDay
-    /// PURPOSE: Implements IsEndOfDay behavior for this component.
-    /// WHEN CALLED: Called by the owning workflow or by the caller that requests IsEndOfDay.
+    /// PURPOSE: Converts the input timestamp to Eastern Time and compares it with the configured end-of-day exit threshold.
+    /// WHEN CALLED: Called at the start of Evaluate to enforce the configured EOD exit window.
     /// </summary>
     private bool IsEndOfDay(
         DateTimeOffset timestamp)
