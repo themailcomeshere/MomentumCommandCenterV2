@@ -4,6 +4,7 @@ namespace MomentumCommandCenterV2.Core.Models;
 /// Diagnostic-only inputs for ranking an already evaluated entry candidate.
 /// Values must come from a timestamped market-data snapshot; do not infer
 /// unavailable measurements from a single OHLCV bar.
+/// WHEN CALLED: Created by a snapshot/adapter workflow before an existing entry candidate is diagnostically ranked.
 /// </summary>
 public sealed record OpportunityQualityInput(
     string Symbol,
