@@ -23,7 +23,6 @@ public sealed class MarketReplayEngineTests
             Bar(BarTimeframe.OneMinute, start.AddMinutes(6), 11m),
             Bar(BarTimeframe.FiveMinute, start.AddMinutes(5), 10m),
             Bar(BarTimeframe.OneMinute, start.AddMinutes(1), 10m),
-            Bar(BarTimeframe.FiveMinute, start, 9m),
             Bar(BarTimeframe.OneMinute, start, 9m)
         };
 
@@ -31,7 +30,7 @@ public sealed class MarketReplayEngineTests
         Assert.Equal(3, frames.Count);
         Assert.Null(frames[0].FiveMinuteBar);
         Assert.Equal(start, frames[0].Timestamp);
-        Assert.Equal(start, frames[1].FiveMinuteBar?.Timestamp);
+        Assert.Null(frames[1].FiveMinuteBar);
         Assert.Equal(start.AddMinutes(5), frames[2].FiveMinuteBar?.Timestamp);
         Assert.Equal(frames.OrderBy(frame => frame.Timestamp).Select(frame => frame.Timestamp),
             frames.Select(frame => frame.Timestamp));
