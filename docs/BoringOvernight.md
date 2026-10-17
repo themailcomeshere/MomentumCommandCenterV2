@@ -1,129 +1,122 @@
-Component	Weight	What we want
-ON Win %	25	Higher is better
-Median ON %	20	Positive and reasonably consistent
-20D Avg ON %	15	Positive, but don't reward extreme gaps
-5D Avg ON %	10	Positive / improving
-ON Consistency	10	Higher is better
-ON Volatility	10	Lower is better
-Average Volume	5	Higher liquidity
-Price	5	Prefer established >$5 stocks
+# Boring Overnight Strategy
 
-From <https://chatgpt.com/c/6a7f50f6-f3a0-83e8-9f99-2ced6d82ff49> 
+**Purpose:** Prefer repeatable, controlled overnight returns over the largest possible gap. A zero position is a valid outcome. This is a research framework and checklist, not a guarantee of return or an automatic trade signal.
 
-REJECT if:
-	• ON Win % < 60% 
-	• 20D Avg ON < +0.10% 
-	• 5D Avg ON ≤ 20D Avg ON 
-	• Avg Volume < 500K 
-	• Price < $5 
-	• Below 20 SMA 
-	• One of our Schwab-excluded securities
+## 1. Strategy design — what the system should evaluate
 
+Keep the concepts separate until independently tested.
 
+1. **Overnight Edge Score:** historical ability to produce positive overnight returns.
+2. **Boringness Score:** how controlled, repeatable, liquid, and non-extreme that edge is.
+3. **Event/Catalyst Risk:** earnings, M&A, regulatory/government decisions, corporate actions, material news, or sector/regime shocks that may make the hold non-boring.
+4. **Current-Day Qualification:** unusual intraday move or volume, sharp extension, large current overnight move, or deterioration from normal behavior.
+5. **5M Structure/Permission:** current structure and authority gate.
+6. **1M Confirmation:** entry timing, if the chosen workflow uses a 1M entry.
+7. **Final decision:** READY, WATCH, REJECT/BLOCKED, DATA?, or ZERO POSITION, with reasons and data freshness.
 
+The final decision must not be a single opaque score. Preserve component scores and hard-gate outcomes so a user can see why a candidate passed or failed.
 
+## 2. Initial Boringness score — 100 points
 
-Boring Overnight — Cheat Sheet
-Purpose
-We are going for Boring Overnight candidates/positions, valuing consistency over huge gains.
-	Give me the stock that makes a small amount of money repeatedly, not the stock capable of making the biggest overnight move.
-Zero position is a valid outcome.
-BORINGNESS FILTER / RANK
-Component	Weight	What we want
-ON Win %	25	Higher is better
-Median ON %	20	Positive and reasonably consistent
-20D Avg ON %	15	Positive, but don't reward extreme gaps
-5D Avg ON %	10	Positive / improving
-ON Consistency	10	Higher is better
-ON Volatility	10	Lower is better
-Average Volume	5	Higher liquidity
-Price	5	Prefer established >$5 stocks
-Total	100	
-PEAK “BORINGNESS” CHEAT SHEET
-These are preferred / peak-boringness ranges, not hard rejection rules. They are quick ranking aids after the hard gates pass.
-Current ON %
-	• Preferred boring zone: small positive to <3.0%
-	• Lower/modest is generally better.
-	• A current ON move at or above ~3% increasingly reduces Boringness because it may indicate a catalyst, abnormal volatility, or an already-extended move.
-20D Avg ON %
-	• Preferred boring zone: +0.10% to <2.0%
-	• Positive is required, but we do not want to maximize the average.
-	• Very large averages can be caused by a few outsized overnight gaps.
-5D Avg ON %
-	• Preferred boring zone: positive to <5.0%
-	• Ideally positive and improving, but still controlled.
-	• 5D Avg ON should normally be above 20D Avg ON.
-	• A very large 5D average reduces Boringness because it can indicate a recent volatility/catalyst regime.
-Median ON %
-	• Positive and reasonably close to the average is preferred.
-	• A large average with a tiny median is not truly boring; median helps expose outliers.
-ON Win %
-	• Hard floor: 60%
-	• 70%+ is substantially more attractive.
-	• 80%+ is excellent if the other metrics remain boring.
-ON Consistency
-	• Higher is better.
-	• 70%+ preferred; 80%+ excellent.
-ON Volatility
-	• Lower is better.
-	• Prefer volatility that is low relative to the return being earned.
-Average Volume
-	• Hard floor: 20D average volume >=500K shares/day.
-	• Comfortably above 500K is preferable.
-Price
-	• Hard floor: $5.
-	• Prefer established stocks above $5.
-HARD REJECTION GATES
-REJECT if any are true:
-	• ON Win % <60%
-	• 20D Avg ON < +0.10%
-	• 5D Avg ON <= 20D Avg ON
-	• Average Volume <500K
-	• Price <$5
-	• Below 20 SMA
-	• One of our Schwab-excluded securities
-	• Material Event/Catalyst Risk incompatible with a boring overnight hold
-Schwab exclusions
-SHTDY, FMX, WBKCY, METCZ, ANL, GGAL, KOF, VCRE
-If a candidate appears to violate a hard gate, investigate the scanner/data rather than treating its appearance as permission to trade.
-BORINGNESS RANKING
-Score	Classification
-90–100	PERFECT BORING
-80–89	VERY GOOD
-70–79	POSSIBLE
-60–69	AGGRESSIVE
-<60	REJECT / NOT BORING ENOUGH
-These bands are ranking guidance and do not replace the hard rejection gates.
-CURRENT-DAY “TOO HOT” PENALTY
-A stock can be historically boring and become non-boring today.
-Reduce or reject Boringness for:
-	• unusually large intraday percentage move
-	• current ON % >=3%, especially a much larger move
-	• abnormal volume spike
-	• fresh news-driven move
-	• fresh earnings/catalyst reaction
-	• M&A / regulatory / government decision risk
-	• oil/geopolitical sensitivity causing abnormal sector volatility
-	• sharp extension away from normal structure
-	• a large gap that makes the historical average misleading
-	• materially deteriorating 5M structure
-Examples from testing: a stock such as ECVT or FPS can be technically excellent yet too hot for a Boring Overnight position; FRO/DHT can have strong momentum but excessive oil/tanker or catalyst sensitivity.
-COMPLETE OVERNIGHT PIPELINE
-	1. OVER­NIGHT EDGE — historical overnight behavior.
-	2. BORINGNESS FILTER / RANK — prefer small, repeatable, controlled returns.
-	3. EVENT / CATALYST RISK — reject or penalize incompatible catalysts.
-	4. CURRENT-DAY BEHAVIOR — penalize abnormal extension/volatility.
-	5. 5M CHART — confirm current structure and permission.
-	6. 1M CHART — confirm timing/permission.
-	7. OVERNIGHT DECISION — OVERNIGHT READY / WATCH / REJECT.
-	8. ZERO POSITION — if nothing survives, hold nothing.
-KEY DESIGN PRINCIPLE
-Keep Overnight Edge Score and Boringness Score conceptually separate.
-	• Overnight Edge Score: historical ability to produce positive overnight returns.
-	• Boringness Score: how controlled, repeatable, liquid, and non-extreme that edge is.
-Final qualification should be:
-Overnight Edge + Boringness + Event/Catalyst Risk + Current-Day Behavior + 5M Structure + 1M Confirmation
-Do not collapse these concepts into one number until the individual components have been tested and validated.
+These weights are the current cheat-sheet specification and remain provisional until tested against historical data.
 
-From <https://chatgpt.com/library> 
+| Component | Weight | Preference |
+|---|---:|---|
+| Overnight win % | 25 | Higher is better |
+| Median ON % | 20 | Positive and reasonably close to the mean |
+| 20D average ON % | 15 | Positive; do not reward extreme gaps |
+| 5D average ON % | 10 | Positive and improving, but controlled |
+| Overnight consistency | 10 | Higher is better |
+| Overnight volatility | 10 | Lower is better relative to the return |
+| Average volume | 5 | Higher liquidity |
+| Price | 5 | Prefer established stocks above $5 |
+| **Total** | **100** | |
 
+### Hard rejection gates
+
+Reject or require explicit investigation if any condition is true:
+
+- Overnight win rate below 60%.
+- 20-day average overnight return below +0.10%.
+- 5-day average overnight return less than or equal to the 20-day average (the current cheat-sheet rule).
+- 20-day average volume below 500,000 shares/day.
+- Price below $5.
+- Price below the 20-day SMA.
+- Symbol appears on the maintained Schwab-excluded list.
+- Material event/catalyst risk is incompatible with an overnight hold.
+- Critical data is missing or stale.
+
+Current exclusions documented in the source list: `SHTDY, FMX, WBKCY, METCZ, ANL, GGAL, KOF, VCRE`. Treat this as a known subset pending reconciliation against all maintained lists; do not assume it is exhaustive.
+
+### Ranking bands
+
+| Score | Classification |
+|---:|---|
+| 90–100 | PERFECT BORING |
+| 80–89 | VERY GOOD |
+| 70–79 | POSSIBLE |
+| 60–69 | AGGRESSIVE |
+| Below 60 | REJECT / NOT BORING ENOUGH |
+
+A high score never overrides a failed hard gate or unknown catalyst status.
+
+### Preferred ranges (ranking guidance, not hard gates)
+
+- Current ON %: small positive to below 3%; at or above roughly 3% increasingly warrants penalty/review.
+- 20D average ON %: +0.10% to below 2.0%.
+- 5D average ON %: positive to below 5.0%, ideally above the 20D average without becoming extreme.
+- Median ON %: positive and reasonably close to average. A high average with a tiny median may indicate outlier gaps.
+- ON win rate: 70%+ attractive; 80%+ excellent only if other measures remain controlled.
+- Consistency: 70%+ preferred; 80%+ excellent.
+- Volatility: judge relative to the return earned, not in isolation.
+- Volume: comfortably above the 500K/day floor is preferable.
+
+### Current-day “too hot” penalties
+
+Reduce the rank or move to WATCH/REJECT when current behavior is no longer boring: abnormal intraday move/volume, current ON move >=3%, fresh news or earnings response, M&A/regulatory/government decision risk, corporate action, oil/geopolitical/sector shock, sharp extension, a gap that distorts historical averages, or materially deteriorating 5M structure. Examples previously noted during testing include ECVT/FPS as technically strong but potentially too hot, and FRO/DHT as potentially exposed to oil/tanker or catalyst sensitivity. These are examples to re-check, not permanent symbol classifications.
+
+## 3. Strategy use — the human workflow
+
+### Design vs. Use
+
+**Design (research/build phase):**
+- Define each metric, calculation window, overnight session boundary, split/dividend handling, extended-hours assumptions, and data source.
+- Validate formulas against independently calculated same-symbol/same-date examples.
+- Test winners, losers, outliers, catalyst spikes, overextended candidates, and each hard-gate failure.
+- Keep Overnight Edge and Boringness distinct; measure false positives and missed candidates before tuning weights.
+- Treat ThinkScript limitations honestly. If reliable event status or full rolling history is unavailable, return DATA?/MANUAL REVIEW rather than READY.
+- Version the spec and chart studies; filename or modified date alone does not prove which study is installed in ThinkOrSwim.
+
+**Use (each candidate/night):**
+1. Check data freshness and confirm the overnight calculation uses the intended session boundary.
+2. Apply all hard rejection gates first. A high score does not rescue a failed gate.
+3. Review Overnight Edge and Boringness separately; inspect median vs. mean and 5D vs. 20D behavior.
+4. Check earnings, M&A, regulatory/government events, corporate actions, news, and sector/regime exposure from a trustworthy source. Unknown event status is not clear status.
+5. Apply current-day “too hot” and extension review.
+6. Confirm 5M structure/permission and 1M timing according to the selected setup.
+7. Read the decision and reason codes; manually verify the underlying chart and any suspicious scanner output.
+8. Choose READY, WATCH, REJECT/BLOCKED, DATA?, or ZERO POSITION. Do not force a trade because the list is empty or because a candidate has a high rank.
+9. Record the decision and later compare it with actual overnight outcome, adverse excursion, and source data. Do not change thresholds because of one result.
+
+## 4. What the system should show
+
+- Symbol, last update time, and data freshness.
+- Overnight Edge Score and component inputs.
+- Boringness Score and component contributions.
+- Each hard gate: PASS / FAIL / UNKNOWN.
+- Event/Catalyst Risk: CLEAR only when supported by a reliable source; otherwise UNKNOWN/REVIEW.
+- Current-day heat/extension flags.
+- 5M permission/structure and optional 1M timing.
+- Final status and reason codes.
+- A clear zero-position outcome.
+
+## 5. Implementation notes / limitations
+
+- ThinkScript may support some price/volume calculations but cannot establish catalyst-clear status reliably without a suitable event feed.
+- C# replay can support longer historical windows only when supplied with trustworthy, timestamped data. It must not fabricate MFE/MAE or catalyst state from trade history alone.
+- Initial score weights and thresholds are provisional design choices, not empirically calibrated trading rules.
+- Keep overnight strategy separate from intraday momentum ranking. A stock can be a strong intraday opportunity and still be a poor boring overnight candidate.
+
+## Source notes
+
+This document consolidates the strategy and cheat-sheet criteria present in the prior Boring Overnight notes and master To-Do. Where source material conflicts or is incomplete, the current explicit rule is preserved and remaining reconciliation/calibration is pending.
