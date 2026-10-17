@@ -1,4 +1,5 @@
 name: .NET build and test
+# Re-run on workflow updates so the latest branch state is validated.
 
 on:
   push:
