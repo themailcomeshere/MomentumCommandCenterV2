@@ -5,9 +5,19 @@ using Xunit;
 
 namespace MomentumCommandCenterV2.Tests;
 
+/// <summary>
+/// TYPE: TradeAnalysisServiceTests
+/// PURPOSE: Defines the class test or data contract named TradeAnalysisServiceTests.
+/// WHEN CALLED: Used by the test runner or owning workflow when this type is needed.
+/// </summary>
 public sealed class TradeAnalysisServiceTests
 {
     [Fact]
+    /// <summary>
+    /// METHOD: CalculatesOverallStatistics
+    /// PURPOSE: Verifies the expected behavior of CalculatesOverallStatistics.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void CalculatesOverallStatistics()
     {
         var trades = new List<Trade>
@@ -74,6 +84,11 @@ public sealed class TradeAnalysisServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: GroupsStatisticsBySymbol
+    /// PURPOSE: Verifies the expected behavior of GroupsStatisticsBySymbol.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void GroupsStatisticsBySymbol()
     {
         var start =
@@ -145,6 +160,11 @@ public sealed class TradeAnalysisServiceTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: PreservesOpenPositionsAndUnmatchedOrders
+    /// PURPOSE: Verifies the expected behavior of PreservesOpenPositionsAndUnmatchedOrders.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void PreservesOpenPositionsAndUnmatchedOrders()
     {
         var open =
