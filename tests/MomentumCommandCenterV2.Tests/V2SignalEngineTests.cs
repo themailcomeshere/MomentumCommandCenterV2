@@ -5,8 +5,18 @@ using Xunit;
 
 namespace MomentumCommandCenterV2.Tests;
 
+/// <summary>
+/// TYPE: V2SignalEngineTests
+/// PURPOSE: Defines the class test fixture for V2SignalEngineTests.
+/// WHEN CALLED: Used by the xUnit test runner when this test type is discovered.
+/// </summary>
 public sealed class V2SignalEngineTests
 {
+    /// <summary>
+    /// METHOD: Bar
+    /// PURPOSE: Creates deterministic signal-test fixture data.
+    /// WHEN CALLED: Called by individual test cases to construct controlled inputs.
+    /// </summary>
     private static BarSnapshot Bar(
         decimal c,
         decimal v,
@@ -38,6 +48,11 @@ public sealed class V2SignalEngineTests
             atr);
     }
 
+    /// <summary>
+    /// METHOD: Snapshot
+    /// PURPOSE: Creates deterministic signal-test fixture data.
+    /// WHEN CALLED: Called by individual test cases to construct controlled inputs.
+    /// </summary>
     private static CommandCenterSnapshot Snapshot(
         BarSnapshot one,
         BarSnapshot five,
@@ -55,6 +70,11 @@ public sealed class V2SignalEngineTests
             previousFive);
     }
 
+    /// <summary>
+    /// METHOD: StrongFive
+    /// PURPOSE: Creates deterministic signal-test fixture data.
+    /// WHEN CALLED: Called by individual test cases to construct controlled inputs.
+    /// </summary>
     private static BarSnapshot StrongFive(
         DateTimeOffset? timestamp = null)
     {
@@ -72,6 +92,11 @@ public sealed class V2SignalEngineTests
             timestamp);
     }
 
+    /// <summary>
+    /// METHOD: StrongOne
+    /// PURPOSE: Creates deterministic signal-test fixture data.
+    /// WHEN CALLED: Called by individual test cases to construct controlled inputs.
+    /// </summary>
     private static BarSnapshot StrongOne(
         DateTimeOffset? timestamp = null)
     {
@@ -89,6 +114,11 @@ public sealed class V2SignalEngineTests
             timestamp);
     }
 
+    /// <summary>
+    /// METHOD: StrongOneExtended
+    /// PURPOSE: Creates deterministic signal-test fixture data.
+    /// WHEN CALLED: Called by individual test cases to construct controlled inputs.
+    /// </summary>
     private static BarSnapshot StrongOneExtended(
     decimal close,
     decimal atr,
@@ -109,6 +139,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: StrongAlignmentProducesBuy
+    /// PURPOSE: Creates deterministic signal-test fixture data.
+    /// WHEN CALLED: Called by individual test cases to construct controlled inputs.
+    /// </summary>
     public void StrongAlignmentProducesBuy()
     {
         var f = StrongFive();
@@ -132,6 +167,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: ChoppyOneMinuteProducesPrepareBuy
+    /// PURPOSE: Verifies the expected signal-engine behavior for ChoppyOneMinuteProducesPrepareBuy.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void ChoppyOneMinuteProducesPrepareBuy()
     {
         var f = StrongFive();
@@ -161,6 +201,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: HealthyPositionProducesRunner
+    /// PURPOSE: Verifies the expected signal-engine behavior for HealthyPositionProducesRunner.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void HealthyPositionProducesRunner()
     {
         var f = StrongFive();
@@ -184,6 +229,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: RunnerWaningDoesNotSell
+    /// PURPOSE: Verifies the expected signal-engine behavior for RunnerWaningDoesNotSell.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void RunnerWaningDoesNotSell()
     {
         var f = StrongFive();
@@ -214,6 +264,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: ConfirmedWeaknessProducesSell
+    /// PURPOSE: Verifies the expected signal-engine behavior for ConfirmedWeaknessProducesSell.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void ConfirmedWeaknessProducesSell()
     {
         var previous = Bar(
@@ -270,6 +325,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: FiveMinuteStructureBreakProducesBreakdown
+    /// PURPOSE: Verifies the expected signal-engine behavior for FiveMinuteStructureBreakProducesBreakdown.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void FiveMinuteStructureBreakProducesBreakdown()
     {
         var f = Bar(
@@ -312,6 +372,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: HardAtrExtensionProducesBreakdown
+    /// PURPOSE: Verifies the expected signal-engine behavior for HardAtrExtensionProducesBreakdown.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void HardAtrExtensionProducesBreakdown()
     {
         var f = StrongFive();
@@ -334,6 +399,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: PrepareSellIsNotHardExit
+    /// PURPOSE: Verifies the expected signal-engine behavior for PrepareSellIsNotHardExit.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void PrepareSellIsNotHardExit()
     {
         // Five-minute permission is deliberately lost,
@@ -375,6 +445,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: BuyIsEntryOnlyAndNeverRunnerManagement
+    /// PURPOSE: Verifies the expected signal-engine behavior for BuyIsEntryOnlyAndNeverRunnerManagement.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void BuyIsEntryOnlyAndNeverRunnerManagement()
     {
         var f = StrongFive();
@@ -397,6 +472,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: EodForcesExitAt355Eastern
+    /// PURPOSE: Verifies the expected signal-engine behavior for EodForcesExitAt355Eastern.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void EodForcesExitAt355Eastern()
     {
         var f = StrongFive();
@@ -427,6 +507,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: EodUsesEasternTimeWhenTimestampIsUtc
+    /// PURPOSE: Verifies the expected signal-engine behavior for EodUsesEasternTimeWhenTimestampIsUtc.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void EodUsesEasternTimeWhenTimestampIsUtc()
     {
         var f = StrongFive();
@@ -450,6 +535,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: BeforeEodDoesNotForceExit
+    /// PURPOSE: Verifies the expected signal-engine behavior for BeforeEodDoesNotForceExit.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void BeforeEodDoesNotForceExit()
     {
         var f = StrongFive();
@@ -472,6 +562,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: HealthyRunnerDoesNotSetExitWarning
+    /// PURPOSE: Verifies the expected signal-engine behavior for HealthyRunnerDoesNotSetExitWarning.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void HealthyRunnerDoesNotSetExitWarning()
     {
         var f = StrongFive();
@@ -494,6 +589,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: RunnerWaningIsNotConfirmedWeakness
+    /// PURPOSE: Verifies the expected signal-engine behavior for RunnerWaningIsNotConfirmedWeakness.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void RunnerWaningIsNotConfirmedWeakness()
     {
         var f = StrongFive();
@@ -530,6 +630,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: SimultaneousOneMinuteStructureAndMomentumWeaknessProducesConfirmedWeakness
+    /// PURPOSE: Verifies the expected signal-engine behavior for SimultaneousOneMinuteStructureAndMomentumWeaknessProducesConfirmedWeakness.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void SimultaneousOneMinuteStructureAndMomentumWeaknessProducesConfirmedWeakness()
     {
         var previous = Bar(
@@ -586,6 +691,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: FiveMinuteBreakdownOverridesRunnerWaning
+    /// PURPOSE: Verifies the expected signal-engine behavior for FiveMinuteBreakdownOverridesRunnerWaning.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void FiveMinuteBreakdownOverridesRunnerWaning()
     {
         var f = Bar(
@@ -626,6 +736,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: HardAtrExtensionOverridesRunnerWaning
+    /// PURPOSE: Verifies the expected signal-engine behavior for HardAtrExtensionOverridesRunnerWaning.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void HardAtrExtensionOverridesRunnerWaning()
     {
         var f = StrongFive();
@@ -656,6 +771,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: PrepareSellDoesNotBecomeRunnerWaningWhenBothOneMinuteSignalsAreWeak
+    /// PURPOSE: Verifies the expected signal-engine behavior for PrepareSellDoesNotBecomeRunnerWaningWhenBothOneMinuteSignalsAreWeak.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void PrepareSellDoesNotBecomeRunnerWaningWhenBothOneMinuteSignalsAreWeak()
     {
         var f = Bar(
@@ -695,6 +815,11 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: HealthyPositionProducesExpectedEvaluationContext
+    /// PURPOSE: Verifies the expected signal-engine behavior for HealthyPositionProducesExpectedEvaluationContext.
+    /// WHEN CALLED: Invoked by xUnit as part of the signal-engine regression suite.
+    /// </summary>
     public void HealthyPositionProducesExpectedEvaluationContext()
     {
         var f = StrongFive();
