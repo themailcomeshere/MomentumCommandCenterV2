@@ -19,6 +19,11 @@
 // LAYER:
 //   Core
 // =========================================================
+/// <summary>
+/// TYPE: BarSnapshot
+/// PURPOSE: Defines the record data contract or state named BarSnapshot.
+/// WHEN CALLED: Referenced by the owning workflow whenever this type is needed.
+/// </summary>
 public sealed record BarSnapshot(
     DateTimeOffset Timestamp,
     decimal Open,
