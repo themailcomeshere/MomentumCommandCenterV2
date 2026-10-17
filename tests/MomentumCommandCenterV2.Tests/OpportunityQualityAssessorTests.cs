@@ -5,11 +5,21 @@ using Xunit;
 
 namespace MomentumCommandCenterV2.Tests;
 
+/// <summary>
+/// TYPE: OpportunityQualityAssessorTests
+/// PURPOSE: Defines the class test or data contract named OpportunityQualityAssessorTests.
+/// WHEN CALLED: Used by the test runner or owning workflow when this type is needed.
+/// </summary>
 public sealed class OpportunityQualityAssessorTests
 {
     private static readonly DateTimeOffset Now =
         DateTimeOffset.Parse("2026-10-16T10:00:00-07:00");
 
+    /// <summary>
+    /// METHOD: Input
+    /// PURPOSE: Verifies the expected behavior of Input.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     private static OpportunityQualityInput Input(
         bool eligible = true,
         bool active = true,
@@ -34,6 +44,11 @@ public sealed class OpportunityQualityAssessorTests
             resistanceAtr);
 
     [Fact]
+    /// <summary>
+    /// METHOD: StrongEligibleFreshCandidateIsHighOpportunity
+    /// PURPOSE: Verifies the expected behavior of StrongEligibleFreshCandidateIsHighOpportunity.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void StrongEligibleFreshCandidateIsHighOpportunity()
     {
         var result = new OpportunityQualityAssessor().Evaluate(Input());
@@ -44,6 +59,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: FailedEligibilityDominatesStrongQualityMetrics
+    /// PURPOSE: Verifies the expected behavior of FailedEligibilityDominatesStrongQualityMetrics.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void FailedEligibilityDominatesStrongQualityMetrics()
     {
         var result = new OpportunityQualityAssessor().Evaluate(Input(eligible: false));
@@ -54,6 +74,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: InactiveExecutionEventIsWatchNotReady
+    /// PURPOSE: Verifies the expected behavior of InactiveExecutionEventIsWatchNotReady.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void InactiveExecutionEventIsWatchNotReady()
     {
         var result = new OpportunityQualityAssessor().Evaluate(Input(active: false));
@@ -63,6 +88,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: MissingRequiredMetricProducesDataUnknown
+    /// PURPOSE: Verifies the expected behavior of MissingRequiredMetricProducesDataUnknown.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void MissingRequiredMetricProducesDataUnknown()
     {
         var result = new OpportunityQualityAssessor().Evaluate(Input(rangeAtr: null));
@@ -73,6 +103,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: StaleFiveMinuteSnapshotProducesDataUnknown
+    /// PURPOSE: Verifies the expected behavior of StaleFiveMinuteSnapshotProducesDataUnknown.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void StaleFiveMinuteSnapshotProducesDataUnknown()
     {
         var result = new OpportunityQualityAssessor().Evaluate(
@@ -83,6 +118,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: ExtendedEntryDowngradesOtherwiseStrongCandidate
+    /// PURPOSE: Verifies the expected behavior of ExtendedEntryDowngradesOtherwiseStrongCandidate.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void ExtendedEntryDowngradesOtherwiseStrongCandidate()
     {
         var result = new OpportunityQualityAssessor().Evaluate(Input(extension: 1.5m));
@@ -95,6 +135,11 @@ public sealed class OpportunityQualityAssessorTests
     [InlineData(1.2, true, 1.5)]
     [InlineData(3.0, false, 1.5)]
     [InlineData(3.0, true, 0.5)]
+    /// <summary>
+    /// METHOD: WeakParticipationMomentumOrRangeIsReadyBoring
+    /// PURPOSE: Verifies the expected behavior of WeakParticipationMomentumOrRangeIsReadyBoring.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void WeakParticipationMomentumOrRangeIsReadyBoring(
         decimal rvol,
         bool momentum,
@@ -107,6 +152,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: ModerateParticipationWithHealthyMomentumIsModerate
+    /// PURPOSE: Verifies the expected behavior of ModerateParticipationWithHealthyMomentumIsModerate.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void ModerateParticipationWithHealthyMomentumIsModerate()
     {
         var result = new OpportunityQualityAssessor().Evaluate(Input(rvol: 2m));
@@ -115,6 +165,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: ResistanceTooCloseIsEntryTimingWarning
+    /// PURPOSE: Verifies the expected behavior of ResistanceTooCloseIsEntryTimingWarning.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void ResistanceTooCloseIsEntryTimingWarning()
     {
         var result = new OpportunityQualityAssessor().Evaluate(
@@ -125,6 +180,11 @@ public sealed class OpportunityQualityAssessorTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: FutureDatedMarketSnapshotIsNotFresh
+    /// PURPOSE: Verifies the expected behavior of FutureDatedMarketSnapshotIsNotFresh.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void FutureDatedMarketSnapshotIsNotFresh()
     {
         var result = new OpportunityQualityAssessor().Evaluate(
