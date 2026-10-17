@@ -5,11 +5,21 @@ using Xunit;
 
 namespace MomentumCommandCenterV2.Tests;
 
+/// <summary>
+/// TYPE: TradeAnalyzerTests
+/// PURPOSE: Defines the class test or data contract named TradeAnalyzerTests.
+/// WHEN CALLED: Used by the test runner or owning workflow when this type is needed.
+/// </summary>
 public sealed class TradeAnalyzerTests
 {
     private static readonly DateTimeOffset BaseTime =
         DateTimeOffset.Parse("2026-09-08T13:00:00-04:00");
 
+    /// <summary>
+    /// METHOD: Bar
+    /// PURPOSE: Verifies the expected behavior of Bar.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     private static BarSnapshot Bar(
         DateTimeOffset timestamp,
         decimal close,
@@ -43,6 +53,11 @@ public sealed class TradeAnalyzerTests
             atr);
     }
 
+    /// <summary>
+    /// METHOD: Snapshot
+    /// PURPOSE: Verifies the expected behavior of Snapshot.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     private static CommandCenterSnapshot Snapshot(
         DateTimeOffset timestamp,
         string symbol,
@@ -57,6 +72,11 @@ public sealed class TradeAnalyzerTests
             MarketPhase.RegularSession);
     }
 
+    /// <summary>
+    /// METHOD: StrongSnapshot
+    /// PURPOSE: Verifies the expected behavior of StrongSnapshot.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     private static CommandCenterSnapshot StrongSnapshot(
         DateTimeOffset timestamp,
         string symbol = "TEST",
@@ -102,6 +122,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_ReturnsInsufficientData_WhenNoSnapshotsCoverTrade
+    /// PURPOSE: Verifies the expected behavior of Review_ReturnsInsufficientData_WhenNoSnapshotsCoverTrade.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_ReturnsInsufficientData_WhenNoSnapshotsCoverTrade()
     {
         var trade = new Trade(
@@ -133,6 +158,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_ReturnsInsufficientData_WhenSnapshotsAreOutsideTradeWindow
+    /// PURPOSE: Verifies the expected behavior of Review_ReturnsInsufficientData_WhenSnapshotsAreOutsideTradeWindow.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_ReturnsInsufficientData_WhenSnapshotsAreOutsideTradeWindow()
     {
         var trade = new Trade(
@@ -167,6 +197,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_CalculatesMfeAndMaeFromOneMinuteHighsAndLows
+    /// PURPOSE: Verifies the expected behavior of Review_CalculatesMfeAndMaeFromOneMinuteHighsAndLows.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_CalculatesMfeAndMaeFromOneMinuteHighsAndLows()
     {
         var entryTime = BaseTime;
@@ -217,6 +252,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_IgnoresSnapshotsForOtherSymbols
+    /// PURPOSE: Verifies the expected behavior of Review_IgnoresSnapshotsForOtherSymbols.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_IgnoresSnapshotsForOtherSymbols()
     {
         var trade = new Trade(
@@ -253,6 +293,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_IgnoresSnapshotsOutsideTradeWindow
+    /// PURPOSE: Verifies the expected behavior of Review_IgnoresSnapshotsOutsideTradeWindow.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_IgnoresSnapshotsOutsideTradeWindow()
     {
         var trade = new Trade(
@@ -302,6 +347,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_ReturnsEntryFilterFailure_WhenEntryStateDoesNotPermitLong
+    /// PURPOSE: Verifies the expected behavior of Review_ReturnsEntryFilterFailure_WhenEntryStateDoesNotPermitLong.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_ReturnsEntryFilterFailure_WhenEntryStateDoesNotPermitLong()
     {
         var entryTime = BaseTime;
@@ -405,6 +455,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_ReturnsExitFailure_WhenLosingTradeEndsWithHardExit
+    /// PURPOSE: Verifies the expected behavior of Review_ReturnsExitFailure_WhenLosingTradeEndsWithHardExit.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_ReturnsExitFailure_WhenLosingTradeEndsWithHardExit()
     {
         var entryTime = BaseTime;
@@ -485,6 +540,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_ReturnsEarlyExit_WhenProfitWasMuchSmallerThanMfe
+    /// PURPOSE: Verifies the expected behavior of Review_ReturnsEarlyExit_WhenProfitWasMuchSmallerThanMfe.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_ReturnsEarlyExit_WhenProfitWasMuchSmallerThanMfe()
     {
         var entryTime = BaseTime;
@@ -543,6 +603,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_ReturnsValidate_WhenTradeHasNoObviousV2Defect
+    /// PURPOSE: Verifies the expected behavior of Review_ReturnsValidate_WhenTradeHasNoObviousV2Defect.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_ReturnsValidate_WhenTradeHasNoObviousV2Defect()
     {
         var entryTime = BaseTime;
@@ -601,6 +666,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_UsesChronologicalSnapshots_NotInputOrder
+    /// PURPOSE: Verifies the expected behavior of Review_UsesChronologicalSnapshots_NotInputOrder.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_UsesChronologicalSnapshots_NotInputOrder()
     {
         var entryTime = BaseTime;
@@ -652,6 +722,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_IncludesBoundarySnapshots
+    /// PURPOSE: Verifies the expected behavior of Review_IncludesBoundarySnapshots.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_IncludesBoundarySnapshots()
     {
         var entryTime = BaseTime;
@@ -696,6 +771,11 @@ public sealed class TradeAnalyzerTests
     }
 
     [Fact]
+    /// <summary>
+    /// METHOD: Review_HandlesZeroEntryPriceWithoutInvalidMfeOrMae
+    /// PURPOSE: Verifies the expected behavior of Review_HandlesZeroEntryPriceWithoutInvalidMfeOrMae.
+    /// WHEN CALLED: Invoked by xUnit as part of the test suite or by a test helper.
+    /// </summary>
     public void Review_HandlesZeroEntryPriceWithoutInvalidMfeOrMae()
     {
         var entryTime = BaseTime;
