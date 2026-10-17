@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\\MomentumCommandCenterV2.Core\\MomentumCommandCenterV2.Core.csproj" />
-    <ProjectReference Include="..\\MomentumCommandCenterV2.Infrastructure\\MomentumCommandCenterV2.Infrastructure.csproj" />
+    <ProjectReference Include="../MomentumCommandCenterV2.Core/MomentumCommandCenterV2.Core.csproj" />
+    <ProjectReference Include="../MomentumCommandCenterV2.Infrastructure/MomentumCommandCenterV2.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
