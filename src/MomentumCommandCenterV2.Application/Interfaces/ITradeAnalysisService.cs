@@ -15,6 +15,11 @@ namespace MomentumCommandCenterV2.Application.Interfaces;
 // LAYER:
 //   Application
 // =========================================================
+/// <summary>
+/// TYPE: ITradeAnalysisService
+/// PURPOSE: Defines the interface contract or data structure named ITradeAnalysisService.
+/// WHEN CALLED: Used by the application workflow whenever this contract or type is referenced.
+/// </summary>
 public interface ITradeAnalysisService
 {
     TradeAnalysisResult Analyze(
