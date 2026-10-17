@@ -220,6 +220,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
         return Import(File.ReadAllText(filePath));
     }
 
+    /// <summary>
+    /// METHOD: IsFilledTradeOrder
+    /// PURPOSE: Determines whether a source row represents a filled BUY or SELL order.
+    /// WHEN CALLED: Called while filtering parsed broker CSV rows.
+    /// </summary>
     private static bool IsFilledTradeOrder(
         Dictionary<string, string> row)
     {
@@ -254,6 +259,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
                 StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// METHOD: ParseFilledOrder
+    /// PURPOSE: Validates and converts one filled broker row into a normalized order.
+    /// WHEN CALLED: Called for each row accepted by the filled-order filter.
+    /// </summary>
     private static SchwabOrder ParseFilledOrder(
         Dictionary<string, string> row,
         int sourceRowNumber)
@@ -297,6 +307,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
             sourceRowNumber);
     }
 
+    /// <summary>
+    /// METHOD: ParseEasternTimestamp
+    /// PURPOSE: Converts the source Eastern-time timestamp into an offset-aware timestamp.
+    /// WHEN CALLED: Called while normalizing a filled broker order.
+    /// </summary>
     private static DateTimeOffset ParseEasternTimestamp(
         string value)
     {
@@ -323,6 +338,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
             offset);
     }
 
+    /// <summary>
+    /// METHOD: GetEasternTimeZone
+    /// PURPOSE: Resolves the platform's Eastern time-zone identifier.
+    /// WHEN CALLED: Called by timestamp parsing when converting broker-local time.
+    /// </summary>
     private static TimeZoneInfo GetEasternTimeZone()
     {
         // Windows
@@ -339,6 +359,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
         }
     }
 
+    /// <summary>
+    /// METHOD: CleanMoney
+    /// PURPOSE: Removes broker currency formatting before invariant numeric parsing.
+    /// WHEN CALLED: Called while parsing a fill-price field.
+    /// </summary>
     private static string CleanMoney(string value)
     {
         var cleaned =
@@ -357,6 +382,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
             StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// METHOD: GetRequired
+    /// PURPOSE: Reads a required broker CSV field or raises an actionable format error.
+    /// WHEN CALLED: Called by row filtering and order normalization.
+    /// </summary>
     private static string GetRequired(
         Dictionary<string, string> row,
         string header)
@@ -514,6 +544,11 @@ public sealed class SchwabTradeImporter : ITradeImporter
         return values;
     }
 
+    /// <summary>
+    /// METHOD: OpenLot
+    /// PURPOSE: Implements OpenLot behavior for this component.
+    /// WHEN CALLED: Called by the owning workflow or by the caller that requests OpenLot.
+    /// </summary>
     private sealed record OpenLot(
         DateTimeOffset EntryTime,
         decimal EntryPrice,
