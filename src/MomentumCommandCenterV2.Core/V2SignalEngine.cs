@@ -27,6 +27,11 @@ namespace MomentumCommandCenterV2.Core;
 // LAYER:
 //   Core
 // =========================================================
+/// <summary>
+/// CLASS: V2SignalEngine
+/// PURPOSE: Evaluates timestamped market snapshots for 5M permission, 1M entry confirmation, and open-position management.
+/// WHEN CALLED: Called by a decision or replay workflow when a current market snapshot and position state are available.
+/// </summary>
 public sealed class V2SignalEngine
 {
     private readonly V2Config _config;
