@@ -23,8 +23,8 @@ The user reports that the previous branch build and unit tests passed. This new 
 ## Canonical documents and source files
 
 - `README.md`: project overview and top-level roadmap.
-- `To Do List.md`: legacy/consolidated master checklist still needs complete line-by-line reconciliation and migration into `docs/Master-To-Do.md`.
-- `README_ORIGINAL.md`: historical source; reconcile every requirement before archiving/removing.
+- `docs/Master-To-Do.md`: canonical master checklist. It preserves the prior 180-line To-Do and records which sections are done, deferred, or still unresolved.
+- `docs/archive/README_ORIGINAL.md`: archived historical source after reconciliation against the current README and master checklist.
 - `docs/BoringOvernight.md`: strategy and intended Design vs Use workflow; retain separate Overnight Edge and Boringness concepts.
 - `docs/Opportunity-Quality-and-Ranking.md`: diagnostic classification specification; provisional bands are not calibrated trading rules.
 - `docs/Market-Data-and-Replay-Contract.md`: raw data, CSV, replay guarantees, limitations, and next steps.
@@ -43,7 +43,7 @@ Open `frontend/index.html` directly in a browser. It is static and requires no s
 
 1. Build and run all tests after the market-data/replay changes.
 2. Reconcile every line of `README_ORIGINAL.md` and `To Do List.md` against current docs/code; migrate the master checklist into `docs/Master-To-Do.md` and remove root duplicates only after the comparison is complete.
-3. Audit flowerboxing across every existing class and method; new replay files follow the rule, but older source files still need a full audit.
+3. Maintain the XML flowerboxing standard; a source audit added purpose/when-called comments to the classes and methods found in the current C# files. Recheck new code during review.
 4. Add sanitized historical 1M/5M fixtures and provenance metadata.
 5. Define regular/extended session rules, timestamp open/close semantics, and DST handling.
 6. Port TOS indicators one at a time with golden parity tests.
