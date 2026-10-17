@@ -169,6 +169,7 @@ Repository supplied by user: https://github.com/themailcomeshere/MomentumCommand
 
 ### Done in this branch
 - [DONE] Inspect the current branch and latest commits, including separated Models, development rules, chart-study source files, and documentation additions.
+- [DONE] Add XML flowerboxing with purpose/when-called context to current classes and methods; a follow-up source audit found no unflowerboxed method signatures in the inspected C# files.
 - [DONE] Add raw timestamped OHLCV bar contract and deterministic replay foundation; replay emits frames at 1M timestamps and attaches only 5M bars with timestamp <= the frame timestamp.
 - [DONE] Add CSV ingestion with explicit timezone-offset requirement, invariant numeric parsing, and duplicate/malformed OHLCV validation.
 - [DONE] Add CLI replay command and synthetic CSV fixture.
@@ -181,7 +182,7 @@ Repository supplied by user: https://github.com/themailcomeshere/MomentumCommand
 
 ### Still open / not verified by this branch
 - [NOW] Run the local build and all tests after the new replay/adapter/CLI changes; GitHub file operations do not run .NET.
-- [NOW] Complete flowerboxing audit across all pre-existing classes and methods; new replay files have purpose/when-called comments, but legacy code still needs review.
+- [DONE] Add XML flowerboxing to the current C# class/type and method declarations identified during the repository audit; continue enforcing this on all new and changed code.
 - [NOW] Reconcile the source-controlled chart studies against the actual installed 1M/5M ThinkOrSwim studies; filenames and repository state do not establish runtime version.
 - [NEXT] Add sanitized historical 1M/5M fixtures and provenance.
 - [NEXT] Define bar timestamp open/close convention, session calendar, extended-hours policy, regular-session VWAP reset, and DST handling.
