@@ -13,6 +13,16 @@
 // LAYER:
 //   Application
 // =========================================================
+/// <summary>
+/// TYPE: SymbolTradeStatistics
+/// PURPOSE: Defines the record contract or data structure named SymbolTradeStatistics.
+/// WHEN CALLED: Used by the application workflow whenever this contract or type is referenced.
+/// </summary>
+/// <summary>
+/// METHOD: SymbolTradeStatistics
+/// PURPOSE: Implements SymbolTradeStatistics for this component.
+/// WHEN CALLED: Called by the workflow or caller that requests SymbolTradeStatistics.
+/// </summary>
 public sealed record SymbolTradeStatistics(
     string Symbol,
     int TradeCount,
