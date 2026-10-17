@@ -11,12 +11,22 @@ public sealed class OpportunityQualityAssessor
 {
     private readonly OpportunityQualityConfig _config;
 
+    /// <summary>
+    /// METHOD: OpportunityQualityAssessor
+    /// PURPOSE: Initializes the assessor with supplied or explicitly provisional diagnostic thresholds.
+    /// WHEN CALLED: Called by a diagnostic workflow or test when an assessor instance is created.
+    /// </summary>
     public OpportunityQualityAssessor(OpportunityQualityConfig? config = null)
     {
         _config = config ?? OpportunityQualityConfig.DiagnosticDefaults;
         ValidateConfig(_config);
     }
 
+    /// <summary>
+    /// METHOD: Evaluate
+    /// PURPOSE: Applies data-confidence, eligibility, execution-event, extension, participation, momentum, and movement-capacity gates in precedence order.
+    /// WHEN CALLED: Invoked by a diagnostic workflow after an existing entry candidate has been evaluated.
+    /// </summary>
     public OpportunityQualityAssessment Evaluate(OpportunityQualityInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -117,6 +127,11 @@ public sealed class OpportunityQualityAssessor
         return Result(input, OpportunityClassification.ReadyModerate, reasons);
     }
 
+    /// <summary>
+    /// METHOD: IsFresh
+    /// PURPOSE: Checks whether a source timestamp is non-future and within the configured maximum age.
+    /// WHEN CALLED: Called by Evaluate for both 1M and 5M source timestamps.
+    /// </summary>
     private static bool IsFresh(
         DateTimeOffset evaluatedAt,
         DateTimeOffset sourceTimestamp,
@@ -126,12 +141,22 @@ public sealed class OpportunityQualityAssessor
         return age >= TimeSpan.Zero && age <= maxAge;
     }
 
+    /// <summary>
+    /// METHOD: Result
+    /// PURPOSE: Creates a consistent assessment record from a classification and its reason codes.
+    /// WHEN CALLED: Called by Evaluate for every terminal classification path.
+    /// </summary>
     private static OpportunityQualityAssessment Result(
         OpportunityQualityInput input,
         OpportunityClassification classification,
         IReadOnlyList<OpportunityReason> reasons) =>
         new(input.Symbol, classification, reasons, input.EvaluatedAt);
 
+    /// <summary>
+    /// METHOD: ValidateConfig
+    /// PURPOSE: Rejects invalid or internally inconsistent diagnostic thresholds.
+    /// WHEN CALLED: Called once when the assessor is constructed.
+    /// </summary>
     private static void ValidateConfig(OpportunityQualityConfig config)
     {
         if (config.MaxOneMinuteAge <= TimeSpan.Zero ||
