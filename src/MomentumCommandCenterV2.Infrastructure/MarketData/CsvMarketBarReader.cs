@@ -80,7 +80,15 @@ public sealed class CsvMarketBarReader
         }
 
         // Reuse replay validation so malformed or duplicate records are rejected before the data is returned.
-        _ = new MomentumCommandCenterV2.Core.MarketReplayEngine().Replay(bars);
+        try
+        {
+            _ = new MomentumCommandCenterV2.Core.MarketReplayEngine().Replay(bars);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new FormatException($"Market-data CSV failed OHLCV or duplicate-key validation: {exception.Message}", exception);
+        }
+
         return bars;
     }
 
