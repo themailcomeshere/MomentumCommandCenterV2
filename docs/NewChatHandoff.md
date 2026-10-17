@@ -18,7 +18,7 @@ The branch contains the opportunity-quality diagnostic slice, separated models/e
 - Unit tests for no-look-ahead, duplicate bars, and invalid OHLC.
 - Static front-end scaffold under `frontend/`, explicitly marked demo data.
 
-The user reports that the previous branch build and unit tests passed. This new milestone has not been built or run in the GitHub integration environment; the user must build/test the updated branch locally.
+The user reports that the previous branch build and unit tests passed. A new GitHub Actions workflow was added; the replay foundation's build and tests passed on commit `fdefa8fb85fee0c2e68f17e4848201894be5fc4b`. A second run covering the subsequent signal-engine documentation-only change is in progress as of this handoff. The user should still pull and build locally to verify the exact working environment.
 
 ## Canonical documents and source files
 
