@@ -19,7 +19,7 @@ public sealed record MarketBar(
 /// <summary>
 /// ENUM: BarTimeframe
 /// PURPOSE: Identifies the interval represented by a MarketBar.
-/// WHEN USED: Used by ingestion, replay ordering, and adapter validation to distinguish 1-minute and 5-minute bars.
+/// WHEN CALLED/USED: Referenced by ingestion, replay ordering, and adapter validation to distinguish 1-minute and 5-minute bars.
 /// </summary>
 public enum BarTimeframe
 {
