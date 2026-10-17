@@ -3,7 +3,7 @@ namespace MomentumCommandCenterV2.Core.Models;
 /// <summary>
 /// MODEL: MarketBar
 /// PURPOSE: Represents one completed OHLCV bar from an explicitly identified symbol and timeframe.
-/// WHEN USED: Created by a market-data adapter and consumed by deterministic replay and later indicator calculations.
+/// WHEN CALLED/USED: Created by a market-data adapter and consumed by deterministic replay and later indicator calculations.
 /// BOUNDARY: Contains raw bar data only; it does not calculate indicators or infer trading decisions.
 /// </summary>
 public sealed record MarketBar(
