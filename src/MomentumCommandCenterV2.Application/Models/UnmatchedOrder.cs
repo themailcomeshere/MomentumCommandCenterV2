@@ -17,6 +17,16 @@
 // LAYER:
 //   Application
 // =========================================================
+/// <summary>
+/// TYPE: UnmatchedOrder
+/// PURPOSE: Defines the record contract or data structure named UnmatchedOrder.
+/// WHEN CALLED: Used by the application workflow whenever this contract or type is referenced.
+/// </summary>
+/// <summary>
+/// METHOD: UnmatchedOrder
+/// PURPOSE: Implements UnmatchedOrder for this component.
+/// WHEN CALLED: Called by the workflow or caller that requests UnmatchedOrder.
+/// </summary>
 public sealed record UnmatchedOrder(
     string Symbol,
     string Action,
