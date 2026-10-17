@@ -31,6 +31,11 @@ public sealed class V2SignalEngine
 {
     private readonly V2Config _config;
 
+    /// <summary>
+    /// METHOD: V2SignalEngine
+    /// PURPOSE: Initializes the signal engine with explicit or default rule thresholds.
+    /// WHEN CALLED: Called when the application or a test creates an engine for signal evaluation.
+    /// </summary>
     public V2SignalEngine(V2Config? config = null)
     {
         _config = config ?? new V2Config();
