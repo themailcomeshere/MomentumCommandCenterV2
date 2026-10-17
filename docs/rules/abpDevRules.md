@@ -96,3 +96,36 @@ Adhere to official Microsoft documentation, ASP.NET Core guides, and ABP’s doc
 
 
 ## populated from https://cursorrules.org/article/aspnet-abp-cursorrules-prompt-file
+
+
+## Momentum Command Center project-specific application
+
+These rules originated as an ABP-oriented prompt, but this repository currently uses a conventional .NET 8 layered solution and is **not an ABP application**. Apply the compatible C# style, separation of concerns, validation, testability, security, and documentation principles. Do not add ABP modules, EF Core, OpenIddict, distributed caching, ABP repositories, or ABP-specific abstractions unless the architecture is deliberately changed and the requirement is justified. Existing layer direction must remain Core <- Application <- Infrastructure for references, with CLI as a composition/entry point.
+
+### Required flowerboxing format
+
+Use XML documentation comments (`///`) immediately above every class, record, interface, enum, constructor, and method. Each summary must state both what it does and when it is called/used. Prefer the following shape and adapt the wording to the actual behavior:
+
+```csharp
+/// <summary>
+/// METHOD: Evaluate
+/// PURPOSE: Evaluates a point-in-time snapshot and returns a deterministic decision.
+/// WHEN CALLED: Called by the replay or live-decision workflow after required inputs are available.
+/// </summary>
+public SignalDecision Evaluate(...)
+{
+    ...
+}
+```
+
+Do not use vague boilerplate if the behavior can be described precisely. For test methods, describe the behavior or invariant protected and when the test runs. For data-only records, document their role and who creates/consumes them. Existing class-level comments are useful but do not replace missing method-level documentation.
+
+### Market-data and historical replay constraints
+
+- Raw market bars, calculated indicators, signal decisions, opportunity-quality assessments, and UI models remain separate contracts.
+- Preserve source timestamp, timeframe, symbol, and provenance. Explicitly define whether provider timestamps represent bar open or close before provider integration.
+- Replay must not expose future bars to an earlier decision timestamp.
+- Do not treat missing/stale values as zero, false, or clear. Use explicit unknown/readiness states.
+- Indicator ports must be validated against version-controlled ThinkOrSwim study outputs with matching symbol/date/timeframe/bar golden tests.
+- Keep the source 5M study independent of 1M data. The 1M execution layer may consume 5M context.
+- No automated order placement or autonomous Schwab submission.
