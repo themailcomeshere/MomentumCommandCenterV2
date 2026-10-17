@@ -15,7 +15,7 @@ public sealed record MarketReplayFrame(
     /// <summary>
     /// PROPERTY: FiveMinuteAge
     /// PURPOSE: Reports the elapsed time since the 5-minute bar available at this replay point.
-    /// WHEN USED: Used by downstream consumers to enforce an explicit freshness policy instead of silently trusting stale context.
+    /// WHEN CALLED/USED: Read by downstream consumers to enforce an explicit freshness policy instead of silently trusting stale context.
     /// </summary>
     public TimeSpan? FiveMinuteAge =>
         FiveMinuteBar is null ? null : Timestamp - FiveMinuteBar.Timestamp;
