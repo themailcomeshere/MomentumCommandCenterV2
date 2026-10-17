@@ -51,6 +51,10 @@ Use Visual Studio 2022 and .NET 8 SDK. Open `MomentumCommandCenterV2.sln`, build
 - Missing/stale data is UNKNOWN, not READY.
 - Automated order placement and autonomous Schwab submission remain out of scope.
 
+## Project roadmap and current checklist
+
+The canonical project checklist is [docs/Master-To-Do.md](docs/Master-To-Do.md). The original README is preserved as [an archived source](docs/archive/README_ORIGINAL.md) after reconciliation.
+
 ## Development rules
 
 See [docs/rules/abpDevRules.md](docs/rules/abpDevRules.md). Apply compatible C# conventions, layer separation, tests, and required flowerboxing. ABP-only patterns do not apply unless the project intentionally adopts ABP later.
