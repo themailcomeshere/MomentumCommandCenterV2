@@ -1,0 +1,5 @@
+# Historical READY audit guide
+
+See `docs/Charts/1M/DiagnosticStudy.md` for the full procedure.
+
+This text file is intentionally not a standalone ThinkScript study: the per-bar diagnostics depend on definitions in `MainStudy.txt`. Use the existing `showHistoricalDebugBubbles` input and `executionReadyBlockCode` there; do not duplicate partial logic into an independent study.
