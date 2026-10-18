@@ -1,5 +1,65 @@
-# Historical READY audit guide
+# Momentum Command Center V3 — 1M Historical READY Audit
 
-See `docs/Charts/1M/DiagnosticStudy.md` for the full procedure.
+**Purpose:** A source-audit checklist for investigating historical `EXECUTION READY` bubbles without changing signal logic. This file is documentation, not a standalone ThinkScript study; the diagnostics in `MainStudy.txt` depend on its internal definitions and cannot be copied into an independent study without recreating the full dependency graph.
 
-This text file is intentionally not a standalone ThinkScript study: the per-bar diagnostics depend on definitions in `MainStudy.txt`. Use the existing `showHistoricalDebugBubbles` input and `executionReadyBlockCode` there; do not duplicate partial logic into an independent study.
+## Authority boundary
+
+- The 5M study remains authoritative for structure, permission, runner state, and swing context.
+- The 1M study is the execution/confirmation/timing layer.
+- The 1M chart's reconstructed 5M values are not the same thing as the actual 5M chart's bubbles and do not independently prove 5M execution permission.
+- Never infer a historical bar's state from a current/right-edge `AddLabel()`. Historical bubbles are evaluated on their own bars; labels ordinarily reflect the last real bar.
+
+## Existing per-bar evidence in 1M MainStudy.txt
+
+The main study already contains historical diagnostic support. Enable its `showHistoricalDebugBubbles` input only while zoomed into the period being investigated. On each relevant bar, inspect:
+
+- `P`: `fiveExecutionPermission`
+- `C`: `executionCandidate`
+- `EVT`: event classification (CONT, CONF, FRESH, INTR, NONE)
+- `O`: `executionOpportunity`
+- `R`: `finalExecutionReady`
+- `AGE`: execution-window age
+- `EXT`: extension in ATR units
+- `BLK`: READY blocker code
+- `CB`: candidate blocker code
+- `RSI`, `RVOL`, `VWAP`, `EMA20`: supporting values/gates
+
+### READY blocker codes (as defined in MainStudy.txt)
+
+| Code | Meaning |
+|---:|---|
+| 0 | READY / no listed blocker |
+| 1 | EOD window |
+| 2 | No active execution opportunity |
+| 3 | Execution window expired |
+| 4 | 5M execution permission failed |
+| 5 | Swing zone active |
+| 6 | Bullish extension danger |
+| 7 | Price below EMA20 |
+| 8 | Price below Daily VWAP |
+| 9 | RSI below weak threshold |
+| 10 | MACD bearish |
+
+The code reports the first applicable branch in the source's ordered conditional, not every simultaneous blocker. In particular, code 2 means there is no active execution window; it does not prove that a prior event never occurred.
+
+## Audit procedure
+
+1. Identify the symbol, chart aggregation, date, session (regular/extended hours), and exact bar carrying the historical bubble.
+2. Confirm the 1M study version in the installed Thinkorswim workspace matches the repository source before treating source behavior as runtime behavior.
+3. Zoom tightly around the event and enable historical debug bubbles.
+4. Read the event bar's `EVT`, `O`, `R`, `AGE`, `BLK`, and `P` values. Do not substitute current labels for those values.
+5. Follow subsequent bars to determine whether the execution window aged out, a blocker appeared, or 5M permission changed.
+6. Compare the same timestamp on the actual 5M chart. Treat the 5M study as the authority for 5M structure/permission; a 1M reconstruction is corroborating diagnostic evidence only.
+7. Record the result as one of:
+   - **Expected historical event:** READY was true on the bubble's bar; current state later changed.
+   - **Window expiry:** the opportunity was no longer actionable after its defined finite window.
+   - **Permission/blocker transition:** a documented gate became false after the event.
+   - **Unresolved/source-runtime mismatch:** source cannot explain the chart, or installed study version is unverified.
+   - **Demonstrated source defect:** a reproducible contradiction between the event condition and the same-bar gate values.
+
+## Guardrails
+
+- Diagnostic work must not change `fiveExecutionPermission`, `finalExecutionReady`, event definitions, thresholds, or the 5M→1M authority hierarchy.
+- Do not treat a historical READY bubble as proof that READY remains true now.
+- Do not call the issue fixed until the source-level explanation matches the installed Thinkorswim behavior on a reproducible example.
+- The current main study has `showHistoricalDebugBubbles` and per-bar `executionReadyBlockCode` diagnostics already. First use those existing diagnostics; add code only if a specific evidence gap remains.
