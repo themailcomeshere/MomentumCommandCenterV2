@@ -141,6 +141,7 @@ Repository supplied by user: https://github.com/themailcomeshere/MomentumCommand
 - Resolve known XRPN 10/2 Permission revocation before collecting new-day evidence for that question.
 - Then use controlled sessions to gather transition evidence, not assume production readiness.
 - Historical diagnostics must show per-bar state accurately when scrolled; distinguish current/right-edge state from historical bar state.
+- [DOC ADDED] Use `docs/Charts/1M/DiagnosticStudy.txt` as the audit procedure for historical 1M READY bubbles. It documents the existing per-bar diagnostics in `MainStudy.txt`; it does not alter signal logic or claim the installed Thinkorswim study matches the repository source.
 - Compare scanner candidates, signals, fills, exits, and outcomes; classify false positives, missed trades, invalid entries, exits too early, and missed runner continuation.
 - Validate Arizona/Eastern session conversions and EOD logic across DST/standard-time boundaries.
 
