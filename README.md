@@ -53,7 +53,8 @@ Use Visual Studio 2022 and .NET 8 SDK. Open `MomentumCommandCenterV2.sln`, build
 
 ## Project roadmap and current checklist
 
-The canonical project checklist is [docs/Master-To-Do.md](docs/Master-To-Do.md). The original README is preserved as [an archived source](docs/archive/README_ORIGINAL.md) after reconciliation.
+- The canonical project checklist is [docs/Master-To-Do.md](docs/Master-To-Do.md). Commit Message should state the To-Do item's Category and explanation. End full Commit Message with the currently remaining To-Do item count.
+- The original README is preserved as [an archived source](docs/archive/README_ORIGINAL.md) after reconciliation.
 
 ## Development rules
 
