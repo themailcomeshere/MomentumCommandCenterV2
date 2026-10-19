@@ -55,7 +55,3 @@ Use Visual Studio 2022 and .NET 8 SDK. Open `MomentumCommandCenterV2.sln`, build
 
 - The canonical project checklist is [docs/Master-To-Do.md](docs/Master-To-Do.md). Commit Message should state the To-Do item's Category and explanation. End full Commit Message with the currently remaining To-Do item count.
 - The original README is preserved as [an archived source](docs/archive/README_ORIGINAL.md) after reconciliation.
-
-## Development rules
-
-See [docs/rules/abpDevRules.md](docs/rules/abpDevRules.md). Apply compatible C# conventions, layer separation, tests, and required flowerboxing. ABP-only patterns do not apply unless the project intentionally adopts ABP later.
