@@ -2,6 +2,9 @@
 
 C#/.NET 8 research and decision-support prototype. **Not an auto-trader.**
 
+## Timezone
+Arizona. This means sometimes the timezone will be MDT and sometimes PST.
+
 ## Architecture
 
 5M Direction/Permission → 1M Execution Confirmation → Position Lifecycle → Runner / Weakening / Exit.
