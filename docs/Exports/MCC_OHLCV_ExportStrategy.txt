@@ -11,15 +11,17 @@
 # - Source-controlled text is not proof of Thinkorswim compilation or installed-study identity.
 #
 # Paste into a new Thinkorswim strategy named exactly MCC_OHLCV_V1.
-# Set the chart aggregation to the requested input (1 minute or 5 minutes), and
-# set includeExtendedHours explicitly. Export the Strategy Report after selecting
-# the desired date range.
+# Set the chart aggregation to the requested input (1 minute or 5 minutes), set
+# the date and time inputs explicitly, and ensure the chart has loaded the full
+# requested range before exporting the Strategy Report.
 
 declare upper;
 
 input aggregationLabel = {default OneMinute, FiveMinute};
-input startTime = 0930;
-input endTime = 1600;
+input startDate = 19700101;
+input endDate = 20991231;
+input startTime = 0930; # Eastern Time, as used by SecondsFromTime/SecondsTillTime
+input endTime = 1600; # Eastern Time, as used by SecondsFromTime/SecondsTillTime
 
 # A strategy report row is emitted on the current bar for the immediately
 # preceding completed bar. The payload timestamp is the source bar timestamp,
@@ -35,16 +37,27 @@ input endTime = 1600;
 # this artifact must not be connected to live order submission.
 def secondsFromStart = SecondsFromTime(startTime);
 def secondsTillEnd = SecondsTillTime(endTime);
+def sourceDate = GetYYYYMMDD()[1];
+def sourceInDateRange = sourceDate >= startDate and sourceDate <= endDate;
 def sourceInConfiguredWindow = if startTime <= endTime
     then secondsFromStart[1] >= 0 and secondsTillEnd[1] >= 0
     else secondsFromStart[1] >= 0 or secondsTillEnd[1] >= 0;
-def exportBar = BarNumber() > 1 and sourceInConfiguredWindow;
+def exportBar = BarNumber() > 1 and sourceInDateRange and sourceInConfiguredWindow;
 def sourceTimestamp = GetTime()[1];
 def sourceOpen = open[1];
 def sourceHigh = high[1];
 def sourceLow = low[1];
 def sourceClose = close[1];
 def sourceVolume = volume[1];
+
+# Visible diagnostics: these do not change the strategy-report payload.
+# The label confirms that this exact strategy instance is installed. The point
+# confirms that the date/time filter is producing export events on the chart.
+plot MCCExportMarker = if exportBar then low else Double.NaN;
+MCCExportMarker.SetPaintingStrategy(PaintingStrategy.POINTS);
+MCCExportMarker.SetDefaultColor(Color.CYAN);
+MCCExportMarker.SetLineWeight(3);
+AddLabel(yes, "MCC_OHLCV_V1 loaded", Color.CYAN);
 
 # The name is intentionally machine-readable. Dynamic AddOrder names and the
 # numeric epoch timestamp must be compiled and then checked in Thinkorswim.
