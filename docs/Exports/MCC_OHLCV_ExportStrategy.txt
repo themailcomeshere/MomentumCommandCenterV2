@@ -39,10 +39,15 @@ def secondsFromStart = SecondsFromTime(startTime);
 def secondsTillEnd = SecondsTillTime(endTime);
 def sourceDate = GetYYYYMMDD()[1];
 def sourceInDateRange = sourceDate >= startDate and sourceDate <= endDate;
+def chartIsOneMinute = GetAggregationPeriod() == AggregationPeriod.MIN;
+def chartIsFiveMinute = GetAggregationPeriod() == AggregationPeriod.FIVE_MIN;
+def aggregationMatches = if aggregationLabel == aggregationLabel.OneMinute
+    then chartIsOneMinute
+    else chartIsFiveMinute;
 def sourceInConfiguredWindow = if startTime <= endTime
     then secondsFromStart[1] >= 0 and secondsTillEnd[1] >= 0
     else secondsFromStart[1] >= 0 or secondsTillEnd[1] >= 0;
-def exportBar = BarNumber() > 1 and sourceInDateRange and sourceInConfiguredWindow;
+def exportBar = BarNumber() > 1 and aggregationMatches and sourceInDateRange and sourceInConfiguredWindow;
 def sourceTimestamp = GetTime()[1];
 def sourceOpen = open[1];
 def sourceHigh = high[1];
@@ -57,7 +62,7 @@ plot MCCExportMarker = if exportBar then low else Double.NaN;
 MCCExportMarker.SetPaintingStrategy(PaintingStrategy.POINTS);
 MCCExportMarker.SetDefaultColor(Color.CYAN);
 MCCExportMarker.SetLineWeight(3);
-AddLabel(yes, "MCC_OHLCV_V1 loaded", Color.CYAN);
+AddLabel(yes, "MCC_OHLCV_V1 loaded", if aggregationMatches then Color.CYAN else Color.RED);
 
 # The name is intentionally machine-readable. Dynamic AddOrder names and the
 # numeric epoch timestamp must be compiled and then checked in Thinkorswim.
@@ -70,7 +75,7 @@ AddOrder(OrderType.BUY_TO_OPEN, exportBar,
     Color.CURRENT,
     Color.CURRENT,
     "MCC_OHLCV|v1|" + GetSymbol() + "|" +
-    (if aggregationLabel == aggregationLabel.OneMinute then "1m" else "5m") + "|" +
+    (if chartIsOneMinute then "1m" else "5m") + "|" +
     sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" + sourceLow + "|" + sourceClose + "|" + sourceVolume);
 
 # This transport close has no OHLCV payload and is ignored by the normalizer.
