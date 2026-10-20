@@ -31,17 +31,17 @@ def sourceHigh = high[1];
 def sourceLow = low[1];
 def sourceClose = close[1];
 def sourceVolume = volume[1];
-def sourceTimeframe = if aggregationLabel == aggregationLabel.OneMinute then "1m" else "5m";
-def sourceSymbol = GetSymbol();
 
-# The name is intentionally machine-readable. ISO timestamp formatting and
-# dynamic AddOrder names must be compiled and then checked in Thinkorswim.
+# The name is intentionally machine-readable. Dynamic AddOrder names and the
+# numeric epoch timestamp must be compiled and then checked in Thinkorswim.
 AddOrder(OrderType.BUY_TO_OPEN, exportBar,
     close,
     1,
     Color.CURRENT,
     Color.CURRENT,
-    "MCC_OHLCV|v1|" + sourceSymbol + "|" + sourceTimeframe + "|" + sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" + sourceLow + "|" + sourceClose + "|" + sourceVolume);
+    "MCC_OHLCV|v1|" + GetSymbol() + "|" +
+    (if aggregationLabel == aggregationLabel.OneMinute then "1m" else "5m") + "|" +
+    sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" + sourceLow + "|" + sourceClose + "|" + sourceVolume);
 
 # Validation notes:
 # 1. Confirm the strategy compiles in Thinkorswim; this repository cannot do so.

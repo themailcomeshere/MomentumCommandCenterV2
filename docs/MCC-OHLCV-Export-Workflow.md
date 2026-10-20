@@ -34,7 +34,7 @@ The current C# replay contract consumes completed-bar availability timestamps. I
 
 The strategy emits on the current bar while encoding `[1]` values. This is intentional: current-bar values may be incomplete, while `[1]` is the preceding completed bar and avoids look-ahead. The report's own `Date/Time` is the order/report timestamp and must not be assumed to be the source bar timestamp. The payload separately carries `GetTime()[1]` so the normalizer can use the source timestamp if Thinkorswim preserves it.
 
-This behavior is an engineering hypothesis until verified in Thinkorswim. Specifically, verify all of the following:
+ThinkScript string values must remain in the string expression passed to `AddOrder`; they cannot be assigned to a numeric `def`. This behavior and the dynamic-name expression are still hypotheses until verified in Thinkorswim. Specifically, verify all of the following:
 
 1. `GetTime()[1]` is accepted and represents the intended source-bar time.
 2. Dynamic `AddOrder` names are accepted and are not truncated or rewritten.
