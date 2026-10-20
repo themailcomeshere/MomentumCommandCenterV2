@@ -61,6 +61,19 @@ public sealed class ThinkorswimOhlcvStrategyReportReaderTests
     }
 
     /// <summary>
+    /// TEST: ReadRejectsLatestLegacyOnlyReport
+    /// PURPOSE: Confirms a larger report is not accepted merely because it has many strategy rows.
+    /// WHEN CALLED: Runs against the latest XRPN upload, which contains no MCC payload rows.
+    /// </summary>
+    [Fact]
+    public void ReadRejectsLatestLegacyOnlyReport()
+    {
+        using var report = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_XRPN_101926_2127.csv"));
+
+        Assert.Throws<FormatException>(() => new ThinkorswimOhlcvStrategyReportReader().Read(report));
+    }
+
+    /// <summary>
     /// TEST: ReadRejectsMalformedAndDuplicatePayloads
     /// PURPOSE: Ensures malformed OHLC and duplicate timestamps are rejected without repair.
     /// WHEN CALLED: Runs against parser validation cases.

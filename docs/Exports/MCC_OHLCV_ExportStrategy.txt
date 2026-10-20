@@ -18,13 +18,17 @@
 declare upper;
 
 input aggregationLabel = {default OneMinute, FiveMinute};
-input includeExtendedHours = no;
+input startTime = 0930;
+input endTime = 1600;
 
 # A strategy report row is emitted on the current bar for the immediately
 # preceding completed bar. The payload timestamp is the source bar timestamp,
 # not the report execution timestamp. [1] is intentional: it prevents the
 # current in-progress bar from being exported.
-def exportBar = BarNumber() > 1 and (includeExtendedHours or SecondsFromTime(0400) >= 0);
+def inConfiguredWindow = if startTime <= endTime
+    then SecondsFromTime(startTime) >= 0 and SecondsTillTime(endTime) >= 0
+    else SecondsFromTime(startTime) >= 0 or SecondsTillTime(endTime) >= 0;
+def exportBar = BarNumber() > 1 and inConfiguredWindow;
 def sourceTimestamp = GetTime()[1];
 def sourceOpen = open[1];
 def sourceHigh = high[1];

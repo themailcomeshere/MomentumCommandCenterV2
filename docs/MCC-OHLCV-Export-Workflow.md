@@ -45,7 +45,7 @@ If exact timestamps cannot be embedded reliably, do not guess. Use a verified re
 
 ## Session, aggregation, and timezone policy
 
-Run separate exports for `1m` and `5m`; do not mix them in one export job. Set `includeExtendedHours` explicitly for every run. The default validation matrix is:
+Run separate exports for `1m` and `5m`; do not mix them in one export job. Set the MCC strategy's `startTime` and `endTime` inputs explicitly for every run, and make the chart's extended-hours setting match the run. The default validation matrix is:
 
 - RTH-only: 9:30 AM–4:00 PM New York time;
 - extended-hours: the user's explicitly selected Thinkorswim extended session, recorded in the manifest;
@@ -54,6 +54,8 @@ Run separate exports for `1m` and `5m`; do not mix them in one export job. Set `
 - do not fabricate bars across overnight, weekend, holiday, or session gaps. A missing field is invalid; an absent expected bar is a validation finding, not a zero-volume bar.
 
 The export strategy's session predicate is only a draft guard. The actual chart session settings and symbol's exchange calendar must be recorded and checked against consecutive chart bars.
+
+The strategy defaults are `startTime = 0930` and `endTime = 1600` in the chart's Thinkorswim exchange-time context. For an extended-hours run, change both inputs deliberately (for example, `0400` and `2000`) and enable extended-hours data on the chart. These inputs are not the same as the report's `Work Time` range: `Work Time` describes the bars included in the generated report, while the strategy inputs control which bars emit MCC rows.
 
 ## Transport comparison
 
@@ -65,7 +67,7 @@ Decision: implement and test the strategy-report parser as a controlled fallback
 
 ## Normalization and validation
 
-`ThinkorswimOhlcvStrategyReportReader` skips report headers, summary rows, and the column header. It accepts the observed Thinkorswim wrapper `MCC_OHLCV_V1(MCC_OHLCV|v1|...)`, removes thousands separators from numeric fields, and ignores unrelated strategy rows in a mixed report. A report with no complete MCC payloads is rejected; therefore the current XRPN report remains a required negative fixture. The parser also rejects malformed payloads, missing or non-positive timestamps, invalid OHLC relationships, negative volume, duplicate symbol/timeframe/timestamp keys, and unexpected symbol/timeframe values. It does not repair or fill missing bars. The existing `CsvMarketBarReader` remains the reader for already-normalized canonical CSV.
+`ThinkorswimOhlcvStrategyReportReader` skips report headers, summary rows, and the column header. It accepts the observed Thinkorswim wrapper `MCC_OHLCV_V1(MCC_OHLCV|v1|...)`, removes thousands separators from numeric fields, and ignores unrelated strategy rows in a mixed report. A report with no complete MCC payloads is rejected; therefore both the original XRPN report and `StrategyReports_XRPN_101926_2127.csv` are negative fixtures. The parser also rejects malformed payloads, missing or non-positive timestamps, invalid OHLC relationships, negative volume, duplicate symbol/timeframe/timestamp keys, and unexpected symbol/timeframe values. It does not repair or fill missing bars. The existing `CsvMarketBarReader` remains the reader for already-normalized canonical CSV.
 
 The current XRPN report is a required negative fixture: its six encoded records contain no identifiable volume and must be rejected as incomplete OHLCV.
 
