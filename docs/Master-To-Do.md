@@ -238,6 +238,7 @@ The original master list and `docs/BoringOvernight.md` agree on the initial 100-
 - [DONE] Validate the repository against successful 1M and 5M report shapes. `StrategyReports_XRPN_102026_933.csv` contains 355 1M payload rows; `StrategyReports_XRPN_102026_5m_offset_1027.csv` contains 81 5M payload rows.
 - [DONE] Enforce that `aggregationLabel` matches the actual Thinkorswim chart aggregation; a mismatch must emit no payload rows and show a diagnostic mismatch state.
 - [DONE] Add dependency-free PowerShell validation scripts under `tools/` for single-report structure, 1M/5M export comparison, and report-versus-payload timestamp offsets.
+- [DONE] Add `tools/New-MccChartParityTemplate.ps1` and generate first-20-row 1M/5M comparison templates under `data/validation/`.
 - [DONE] Record automated 1M/5M validation results in `docs/Validation/MCC-OHLCV-20261020.md`: 52 complete 5M windows reconstructed from 1M rows match OHLCV; 29 windows are incomplete; report timestamps are transport metadata.
 - [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 1M payload bars: timestamp, OHLC, volume, first/last boundaries, and the observed report-to-payload offset.
 - [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 5M payload bars and reconcile each 5M bar with its constituent 1M bars.

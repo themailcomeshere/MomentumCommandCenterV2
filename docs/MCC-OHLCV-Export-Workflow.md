@@ -94,6 +94,8 @@ The verified 5m capture `StrategyReports_XRPN_102026_5m_offset_1027.csv` contain
 5. Compare 5m OHLCV with the corresponding 1m bars and classify every observed gap.
 6. Store the raw reports, normalized copies, comparison notes, session settings, date/time inputs, chart aggregation, timezone/DST context, and validation status as provenance.
 
+Use `tools/New-MccChartParityTemplate.ps1` to create the comparison sheets. It has already generated `data/validation/XRPN_1m_parity_template.csv` and `data/validation/XRPN_5m_parity_template.csv` with the first 20 payload rows from the current reports. Fill the `Chart*` columns from Thinkorswim; do not overwrite the payload columns.
+
 ## Required TOS chart-parity procedure
 
 This procedure is external validation, not an automated xUnit test:
