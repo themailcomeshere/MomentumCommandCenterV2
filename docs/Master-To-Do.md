@@ -89,8 +89,9 @@ Detailed companion: `docs/BoringOvernight.md`. Preserve its complete criteria an
 - Track false positives, missed opportunities, ON win rate, average/median return, adverse excursion, spread/slippage. Do not infer profitability from compilation or a few chart examples.
 - No automatic order placement until a separate risk/order-control workflow is specified and tested.
 
-## 6. Scanners / daily workflow — [HOLD until core behavior stabilizes]
-- Reconnect the Command Center to the scanner workflow after 5M/1M behavior is sufficiently validated.
+## 6. Scanners / daily workflow — [PARTIAL: local workbench implemented]
+- [DONE] Add a local scanner/watchlist workbench with four scanner groups, candidate statuses/reasons, local CSV import, and browser-local watchlist persistence. See `docs/Scanner-and-Watchlist-Workbench.md`.
+- [HOLD] Reconnect the Command Center to a live scanner workflow until 5M/1M behavior is sufficiently validated and a provider-neutral scanner contract exists.
 - Scanner groups: A Momentum Hunter; B Breakout Trigger; C Reclaim/Continuation; D Market Movers/Discovery (daytime, not Overnight).
 - Maintain regular-session default and separate overnight workflow explicitly.
 - Daily Gainer Review after 6 PM Arizona time: regular-session biggest intraday gainers only, exclude overnight holds; record scanner appearances/timing, chart states, news/catalysts, Schwab tradability/exclusions, and miss classification.
@@ -239,9 +240,11 @@ The original master list and `docs/BoringOvernight.md` agree on the initial 100-
 - [DONE] Enforce that `aggregationLabel` matches the actual Thinkorswim chart aggregation; a mismatch must emit no payload rows and show a diagnostic mismatch state.
 - [DONE] Add dependency-free PowerShell validation scripts under `tools/` for single-report structure, 1M/5M export comparison, and report-versus-payload timestamp offsets.
 - [DONE] Add `tools/New-MccChartParityTemplate.ps1` and generate first-20-row 1M/5M comparison templates under `data/validation/`.
+- [DONE] Add a local scanner/watchlist front-end workbench without claiming live provider, news, broker, or order connectivity.
 - [DONE] Record automated 1M/5M validation results in `docs/Validation/MCC-OHLCV-20261020.md`: 52 complete 5M windows reconstructed from 1M rows match OHLCV; 29 windows are incomplete; report timestamps are transport metadata.
 - [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 1M payload bars: timestamp, OHLC, volume, first/last boundaries, and the observed report-to-payload offset.
 - [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 5M payload bars and reconcile each 5M bar with its constituent 1M bars.
+- [VALIDATED] Latest uploaded reports provide exactly 20 consecutive structurally valid 1M and 5M payload rows for the manual parity sample; independent chart values are still required.
 - [NOW] Supply independent Thinkorswim chart OHLCV values covering at least 20 1M bars, 20 5M bars, and the observed 1M gaps; screenshots alone are insufficient for exact volume/gap classification unless every value is legible.
 - [NOW] Do not treat `validation/StrategyReports_XRPN_102026_1m_1328to1347.csv` or `validation/StrategyReports_XRPN_102026_5m_1320to1455.csv` as completed parity templates; they are raw Strategy Reports with no independent chart-value columns. Fill the existing `data/validation/XRPN_1m_parity_template.csv` and `data/validation/XRPN_5m_parity_template.csv` from the chart or supply native chart-data CSV.
 - [NEXT] Classify the 1M export's 31 gaps and determine whether they are chart/session gaps or export omissions. Do not fill them until classified.

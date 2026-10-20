@@ -39,7 +39,7 @@ This is a data foundation, not a full backtest. It does not yet calculate indica
 
 ## Front-end workbench
 
-Open [frontend/index.html](frontend/index.html) directly in a browser. It is a static layout prototype with illustrative demo values only. No provider, broker, or order API is connected. The next step is to connect a stable replay JSON contract after data and indicator parity are established.
+Open [frontend/index.html](frontend/index.html) directly in a browser. It is a local research workbench with illustrative scanner groups, local CSV candidate import, and browser-local watchlist persistence. No provider, broker, news, or order API is connected. See [Scanner and Watchlist Workbench](docs/Scanner-and-Watchlist-Workbench.md). The next production step is a provider-neutral replay/scanner contract after data and indicator parity are established.
 
 ## Build and test
 
