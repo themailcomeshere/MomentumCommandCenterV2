@@ -26,6 +26,13 @@ input endTime = 1600;
 # not the report execution timestamp. [1] is intentional: it prevents the
 # current in-progress bar from being exported. The time filter is also indexed
 # [1], so it filters the source bar rather than the later execution bar.
+#
+# The close/reopen pair is intentional. Thinkorswim strategy reports do not
+# reliably emit repeated BUY_TO_OPEN rows while a simulated position remains
+# open. Closing and reopening the one-unit transport position creates one
+# report cycle per source bar, matching the alternating pattern observed in the
+# imported legacy reports. These are simulated strategy-report events only;
+# this artifact must not be connected to live order submission.
 def secondsFromStart = SecondsFromTime(startTime);
 def secondsTillEnd = SecondsTillTime(endTime);
 def sourceInConfiguredWindow = if startTime <= endTime
@@ -41,6 +48,14 @@ def sourceVolume = volume[1];
 
 # The name is intentionally machine-readable. Dynamic AddOrder names and the
 # numeric epoch timestamp must be compiled and then checked in Thinkorswim.
+# This transport close has no OHLCV payload and is ignored by the normalizer.
+AddOrder(OrderType.SELL_TO_CLOSE, exportBar,
+    close,
+    1,
+    Color.CURRENT,
+    Color.CURRENT,
+    "MCC_OHLCV_TRANSPORT_CLOSE");
+
 AddOrder(OrderType.BUY_TO_OPEN, exportBar,
     close,
     1,
