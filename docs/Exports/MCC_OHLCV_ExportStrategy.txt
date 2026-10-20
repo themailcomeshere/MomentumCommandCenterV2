@@ -1,0 +1,53 @@
+# MCC_OHLCV_V1 — owned Thinkorswim strategy export artifact
+#
+# STATUS: Draft until compiled in Thinkorswim and chart parity is completed.
+# PURPOSE: Emit one completed-bar OHLCV payload for normalization by
+# ThinkorswimOhlcvStrategyReportReader. This is a strategy, not a chart study.
+#
+# IMPORTANT:
+# - AddOrder is used only because Thinkorswim strategy reports are the transport.
+# - This artifact does not submit broker orders and must be used in a paper/research
+#   workspace with order submission disabled.
+# - Source-controlled text is not proof of Thinkorswim compilation or installed-study identity.
+#
+# Paste into a new Thinkorswim strategy named exactly MCC_OHLCV_V1.
+# Set the chart aggregation to the requested input (1 minute or 5 minutes), and
+# set includeExtendedHours explicitly. Export the Strategy Report after selecting
+# the desired date range.
+
+declare upper;
+
+input aggregationLabel = {default OneMinute, FiveMinute};
+input includeExtendedHours = no;
+
+# A strategy report row is emitted on the current bar for the immediately
+# preceding completed bar. The payload timestamp is the source bar timestamp,
+# not the report execution timestamp. [1] is intentional: it prevents the
+# current in-progress bar from being exported.
+def exportBar = BarNumber() > 1 and (includeExtendedHours or SecondsFromTime(0400) >= 0);
+def sourceTimestamp = GetTime()[1];
+def sourceOpen = open[1];
+def sourceHigh = high[1];
+def sourceLow = low[1];
+def sourceClose = close[1];
+def sourceVolume = volume[1];
+def sourceTimeframe = if aggregationLabel == aggregationLabel.OneMinute then "1m" else "5m";
+def sourceSymbol = GetSymbol();
+
+# The name is intentionally machine-readable. ISO timestamp formatting and
+# dynamic AddOrder names must be compiled and then checked in Thinkorswim.
+AddOrder(OrderType.BUY_TO_OPEN, exportBar,
+    close,
+    1,
+    Color.CURRENT,
+    Color.CURRENT,
+    "MCC_OHLCV|v1|" + sourceSymbol + "|" + sourceTimeframe + "|" + sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" + sourceLow + "|" + sourceClose + "|" + sourceVolume);
+
+# Validation notes:
+# 1. Confirm the strategy compiles in Thinkorswim; this repository cannot do so.
+# 2. Confirm that the Strategy Report preserves the dynamic name without truncation.
+# 3. Compare at least 20 consecutive 1m and 5m rows with chart OHLCV, including
+#    a session boundary and a DST-observing date.
+# 4. If GetTime()[1] or dynamic order names are unsupported/truncated, do not
+#    normalize the report. Use the documented native chart-data export alternative
+#    or record a verified report-timestamp reconstruction instead.

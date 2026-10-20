@@ -1,6 +1,6 @@
 # Market-Data and Historical-Replay Contract
 
-**Status:** First engineering slice implemented; provider integration and indicator parity remain pending.
+**Status:** Raw replay and canonical CSV ingestion are implemented. The MCC-owned Thinkorswim export transport and parser are draft-only until Thinkorswim compilation, timestamp semantics, and chart parity are verified.
 
 ## Goals
 
@@ -34,7 +34,14 @@ MNSB,5m,2026-10-16T16:00:00Z,9.80,10.20,9.75,10.10,56000
 - In this replay contract, `Timestamp` means the time the completed bar becomes available to the decision process (normally its close/availability time), not the bar-open time. If a provider labels bars by open time, its adapter must normalize to availability time before replay. Never pass open-time timestamps directly into replay, because a 5M bar could otherwise appear available before it has completed.
 - Numeric values use invariant culture.
 - Duplicate `symbol + timeframe + timestamp` keys and invalid OHLCV rows are rejected.
+- Volume must be the source bar's actual nonnegative volume. Previous close, blank volume, and an inferred zero are invalid.
 - The adapter currently accepts completed OHLCV bars only. Partial/in-progress bars need a separate explicit contract.
+
+## MCC Thinkorswim export
+
+The owned strategy is documented in `docs/MCC-OHLCV-Export-Workflow.md`. It emits the preceding completed bar (`[1]`) and carries `MCC_OHLCV|v1|symbol|timeframe|timestamp|open|high|low|close|volume` in the strategy order name. This is an unverified Thinkorswim artifact: the repository does not prove that `AddOrder`, dynamic names, `GetTime()[1]`, or report serialization behave as required. The report's displayed order time must not be assumed to be the source-bar time. Native chart-data export remains a candidate alternative and must be checked in the user's installed UI.
+
+RTH versus extended-hours selection, aggregation, Arizona/New York timezone handling, and DST behavior are explicit workflow inputs. No fixed offset is applied and no missing bars are fabricated. Original reports remain immutable; normalized CSV and a provenance manifest are separate outputs.
 
 ## Explicit non-goals / limitations
 
@@ -44,7 +51,9 @@ The replay engine does not simulate orders, fills, spread, slippage, positions, 
 
 ## Next steps
 
-1. Add representative, sanitized 1M/5M CSV fixtures and provenance metadata.
+1. Compile and run the MCC-owned export in Thinkorswim, then complete the documented consecutive-bar chart-parity procedure for 1M and 5M.
+2. Investigate native Thinkorswim chart-data export and select the transport only after comparing its reliability with the strategy report.
+3. Add representative, sanitized 1M/5M CSV fixtures and provenance metadata.
 2. Define session calendar, extended-hours inclusion, regular-session VWAP reset, and daylight-saving handling.
 3. Port indicator formulas only after extracting exact definitions from versioned ThinkScript studies; add golden-file parity tests for matching symbol/time/bar.
 4. Add explicit indicator snapshots with source timestamp and readiness/freshness metadata.
