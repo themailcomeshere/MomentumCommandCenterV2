@@ -1,0 +1,14 @@
+Strategy report
+Symbol: XRPN
+Work Time: 10/19/26 1:19 AM - 10/19/26 1:19 AM
+
+
+Id;Strategy;Side;Amount;Price;Date/Time;Trade P/L;P/L;Position;
+1;MCC_OHLCV_V1(MCC_OHLCV|v1|XRPN|1m|1,792,396,380,000|15.43|15.43|15.43|15.43|1);Buy to Open;1.0;$15.35;10/19/26 1:19 AM;;$0.08;1.0;
+
+
+Max trade P/L: (Infinity);
+
+Total P/L: $0.00;
+
+Total order(s): 0;

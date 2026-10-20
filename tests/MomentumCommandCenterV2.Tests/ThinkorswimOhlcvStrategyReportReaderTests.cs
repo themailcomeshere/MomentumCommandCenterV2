@@ -74,6 +74,23 @@ public sealed class ThinkorswimOhlcvStrategyReportReaderTests
     }
 
     /// <summary>
+    /// TEST: ReadParsesLatestMccOnlyReport
+    /// PURPOSE: Confirms the latest exported MCC-only report is accepted with identifiable volume.
+    /// WHEN CALLED: Runs against the newly uploaded single-row XRPN export.
+    /// </summary>
+    [Fact]
+    public void ReadParsesLatestMccOnlyReport()
+    {
+        using var report = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_XRPN_101926_2147.csv"));
+
+        var bars = new ThinkorswimOhlcvStrategyReportReader().Read(report, "XRPN", BarTimeframe.OneMinute);
+
+        var bar = Assert.Single(bars);
+        Assert.Equal(15.43m, bar.Open);
+        Assert.Equal(1m, bar.Volume);
+    }
+
+    /// <summary>
     /// TEST: ReadRejectsMalformedAndDuplicatePayloads
     /// PURPOSE: Ensures malformed OHLC and duplicate timestamps are rejected without repair.
     /// WHEN CALLED: Runs against parser validation cases.

@@ -71,6 +71,8 @@ Decision: implement and test the strategy-report parser as a controlled fallback
 
 The current XRPN report is a required negative fixture: its six encoded records contain no identifiable volume and must be rejected as incomplete OHLCV.
 
+Observed export evidence: `StrategyReports_XRPN_101926_2147.csv` contains one MCC-only 1m row with OHLC `15.43/15.43/15.43/15.43` and volume `1`. Its embedded epoch timestamp renders as `2026-10-19T00:53:00-07:00`, while the report row is dated `1:19 AM`; this 26-minute discrepancy means timestamp/bar alignment remains unverified. One row is also insufficient for consecutive-bar or gap validation.
+
 ## Required TOS chart-parity procedure
 
 This procedure is external validation, not an automated xUnit test:
