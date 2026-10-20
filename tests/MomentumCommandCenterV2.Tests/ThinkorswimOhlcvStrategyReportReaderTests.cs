@@ -39,7 +39,25 @@ public sealed class ThinkorswimOhlcvStrategyReportReaderTests
 
         var exception = Assert.Throws<FormatException>(() => new ThinkorswimOhlcvStrategyReportReader().Read(report));
 
-        Assert.Contains("volume is not identifiable", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("no complete", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// TEST: ReadParsesObservedWrappedPayloadAndIgnoresOtherStrategies
+    /// PURPOSE: Confirms the observed Thinkorswim wrapper, thousands separators, and mixed report rows are handled.
+    /// WHEN CALLED: Runs against the newly captured XRPN report.
+    /// </summary>
+    [Fact]
+    public void ReadParsesObservedWrappedPayloadAndIgnoresOtherStrategies()
+    {
+        using var report = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_XRPN_101926_2115.csv"));
+
+        var bars = new ThinkorswimOhlcvStrategyReportReader().Read(report, "XRPN", BarTimeframe.OneMinute);
+
+        Assert.Equal(2, bars.Count);
+        Assert.Equal(2m, bars[0].Volume);
+        Assert.Equal(3170m, bars[1].Volume);
+        Assert.Equal(TimeSpan.Zero, bars[0].Timestamp.Offset);
     }
 
     /// <summary>

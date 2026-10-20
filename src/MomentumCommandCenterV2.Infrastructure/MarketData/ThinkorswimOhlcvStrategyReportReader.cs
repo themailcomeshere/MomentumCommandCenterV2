@@ -55,8 +55,10 @@ public sealed class ThinkorswimOhlcvStrategyReportReader
                 throw InvalidRow(lineNumber, "A strategy-report data row has no strategy payload.");
 
             var strategy = fields[1].Trim();
+            if (strategy.StartsWith("MCC_OHLCV_V1(", StringComparison.Ordinal) && strategy.EndsWith(")", StringComparison.Ordinal))
+                strategy = strategy["MCC_OHLCV_V1(".Length..^1];
             if (!strategy.StartsWith(PayloadPrefix, StringComparison.Ordinal))
-                throw InvalidRow(lineNumber, "The row is not an MCC_OHLCV v1 payload; volume is not identifiable. Legacy kg_EveryTickSOHLCP rows are rejected.");
+                continue;
 
             bars.Add(ParsePayload(strategy, lineNumber));
         }
@@ -111,7 +113,7 @@ public sealed class ThinkorswimOhlcvStrategyReportReader
         };
 
         DateTimeOffset timestamp;
-        if (long.TryParse(fields[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var epochMilliseconds))
+        if (long.TryParse(fields[4], NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var epochMilliseconds))
         {
             if (epochMilliseconds <= 0)
                 throw InvalidRow(lineNumber, "Timestamp must be positive.");

@@ -1,0 +1,26 @@
+Strategy report
+Symbol: XRPN
+Work Time: 10/18/26 10:19 PM - 10/19/26 6:36 AM
+
+
+Id;Strategy;Side;Amount;Price;Date/Time;Trade P/L;P/L;Position;
+1;MCC_OHLCV_V1(MCC_OHLCV|v1|XRPN|1m|1,792,386,180,000|15.48|15.48|15.48|15.48|2);Buy to Open;1.0;$15.47;10/18/26 10:19 PM;;$0.00;1.0;
+2;shared_kg_EveryTickSOHLCP(SellClose);Sell to Close;-1.0;$15.09;10/19/26 6:30 AM;($0.38);($0.38);0.0;
+3;shared_kg_EveryTickSOHLCP(SellClose);Sell to Close;-1.0;$15.07;10/19/26 6:31 AM;$0.81;$0.32;-1.0;
+4;shared_kg_EveryTickSOHLCP(SOHLCP|XRPN|14.51|14.6|14.3|14.37|14.5501);Buy to Open;1.0;$14.26;10/19/26 6:31 AM;;$0.43;0.0;
+5;shared_kg_EveryTickSOHLCP(SellClose);Sell to Close;-1.0;$14.60;10/19/26 6:32 AM;$0.30;$0.48;-1.0;
+6;shared_kg_EveryTickSOHLCP(SOHLCP|XRPN|14.52|14.61|14.35|14.55|14.37);Buy to Open;1.0;$14.30;10/19/26 6:32 AM;;$0.73;0.0;
+7;shared_kg_EveryTickSOHLCP(SellClose);Sell to Close;-1.0;$14.61;10/19/26 6:33 AM;$0.26;$0.88;-1.0;
+8;shared_kg_EveryTickSOHLCP(SOHLCP|XRPN|14.55|14.55|14.4|14.46|14.55);Buy to Open;1.0;$14.35;10/19/26 6:33 AM;;$0.99;0.0;
+9;shared_kg_EveryTickSOHLCP(SellClose);Sell to Close;-1.0;$14.55;10/19/26 6:34 AM;$0.15;$1.04;-1.0;
+10;shared_kg_EveryTickSOHLCP(SOHLCP|XRPN|14.5|14.9999|14.3|14.5|14.46);Buy to Open;1.0;$14.40;10/19/26 6:34 AM;;$1.14;0.0;
+11;shared_kg_EveryTickSOHLCP(SellClose);Sell to Close;-1.0;$15.00;10/19/26 6:35 AM;$0.70;$1.64;-1.0;
+12;shared_kg_EveryTickSOHLCP(SOHLCP|XRPN|14.5|14.5796|14.5|14.5|14.5);Buy to Open;1.0;$14.30;10/19/26 6:35 AM;;$1.84;0.0;
+13;MCC_OHLCV_V1(MCC_OHLCV|v1|XRPN|1m|1,792,416,840,000|14.5|14.9999|14.3|14.5|3,170);Buy to Open;1.0;$14.50;10/19/26 6:36 AM;;$1.80;1.0;
+
+
+Max trade P/L: $0.81;
+
+Total P/L: $1.84;
+
+Total order(s): 6;
