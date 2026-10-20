@@ -91,6 +91,19 @@ public sealed class ThinkorswimOhlcvStrategyReportReaderTests
     }
 
     /// <summary>
+    /// TEST: ReadRejectsTransportOnlyReport
+    /// PURPOSE: Confirms a transport close row without an MCC payload is not market data.
+    /// WHEN CALLED: Runs against the report produced when the close order was declared first.
+    /// </summary>
+    [Fact]
+    public void ReadRejectsTransportOnlyReport()
+    {
+        using var report = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_XRPN_102026_901.csv"));
+
+        Assert.Throws<FormatException>(() => new ThinkorswimOhlcvStrategyReportReader().Read(report));
+    }
+
+    /// <summary>
     /// TEST: ReadRejectsMalformedAndDuplicatePayloads
     /// PURPOSE: Ensures malformed OHLC and duplicate timestamps are rejected without repair.
     /// WHEN CALLED: Runs against parser validation cases.

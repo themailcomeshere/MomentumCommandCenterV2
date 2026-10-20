@@ -91,3 +91,9 @@ This procedure is external validation, not an automated xUnit test:
 8. Store the comparison results and manifest. Only then may the transport be considered validated; it is still not production-ready until operational controls are separately approved.
 
 Automated parser tests prove only framing and validation behavior. They cannot prove Thinkorswim compilation, installed-study identity, chart parity, or live export semantics.
+
+The imported legacy reports show alternating close/open rows at each emitted timestamp. MCC uses the same simulated close/reopen transport pattern because repeated `BUY_TO_OPEN` rows are not emitted reliably while a strategy position remains open. The payload `BUY_TO_OPEN` declaration must precede the transport `SELL_TO_CLOSE` declaration: the observed `StrategyReports_XRPN_102026_901.csv` showed that declaring the close first on an empty position produced `Sell to Open` and suppressed the payload row. The close row is transport-only; the buy row carries the payload. This behavior is an engineering hypothesis until verified in Thinkorswim. Specifically, verify all of the following:
+
+1. The first emitted row's timestamp matches the expected source-bar timestamp or availability time.
+2. Subsequent rows alternate close/open as seen in the legacy reports.
+3. Declaring `BUY_TO_OPEN` before `SELL_TO_CLOSE` rows is necessary and effective.
