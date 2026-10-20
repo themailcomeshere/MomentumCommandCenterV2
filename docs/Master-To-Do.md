@@ -243,6 +243,7 @@ The original master list and `docs/BoringOvernight.md` agree on the initial 100-
 - [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 1M payload bars: timestamp, OHLC, volume, first/last boundaries, and the observed report-to-payload offset.
 - [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 5M payload bars and reconcile each 5M bar with its constituent 1M bars.
 - [NOW] Supply independent Thinkorswim chart OHLCV values covering at least 20 1M bars, 20 5M bars, and the observed 1M gaps; screenshots alone are insufficient for exact volume/gap classification unless every value is legible.
+- [NOW] Do not treat `validation/StrategyReports_XRPN_102026_1m_1328to1347.csv` or `validation/StrategyReports_XRPN_102026_5m_1320to1455.csv` as completed parity templates; they are raw Strategy Reports with no independent chart-value columns. Fill the existing `data/validation/XRPN_1m_parity_template.csv` and `data/validation/XRPN_5m_parity_template.csv` from the chart or supply native chart-data CSV.
 - [NEXT] Classify the 1M export's 31 gaps and determine whether they are chart/session gaps or export omissions. Do not fill them until classified.
 - [NEXT] Repeat parity under RTH and extended-hours settings and across an Arizona/Eastern DST boundary; preserve a provenance manifest for each run.
 - [NEXT] Investigate native Thinkorswim chart-data export as the preferred transport if it exposes the same timestamp/OHLCV fields without strategy-order timing semantics.
