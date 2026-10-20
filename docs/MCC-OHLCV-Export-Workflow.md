@@ -77,6 +77,8 @@ The current XRPN report is a required negative fixture: its six encoded records 
 
 Observed export evidence: `StrategyReports_XRPN_101926_2147.csv` contains one MCC-only 1m row with OHLC `15.43/15.43/15.43/15.43` and volume `1`. Its embedded epoch timestamp renders as `2026-10-19T00:53:00-07:00`, while the report row is dated `1:19 AM`; this 26-minute discrepancy means timestamp/bar alignment remains unverified. One row is also insufficient for consecutive-bar or gap validation.
 
+Observed successful multi-bar export: `StrategyReports_XRPN_102026_933.csv` contains 355 MCC payload rows and 355 transport rows from 6:32 AM through 1:02 PM report time. Embedded payload timestamps run from 6:30 AM through 1:00 PM Arizona time, producing a stable two-minute report-to-payload offset in this capture. Payload timestamps are predominantly one minute apart, but 31 gaps are longer than one minute, including 2- and 3-minute gaps. OHLC invariants pass and volumes are nonnegative (`100` through `62,346` in the captured rows). This is a successful parser/export smoke test, not yet chart parity or proof that missing intervals should be filled.
+
 ## Required TOS chart-parity procedure
 
 This procedure is external validation, not an automated xUnit test:

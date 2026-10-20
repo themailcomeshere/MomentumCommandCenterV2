@@ -74,6 +74,24 @@ public sealed class ThinkorswimOhlcvStrategyReportReaderTests
     }
 
     /// <summary>
+    /// TEST: ReadParsesSuccessfulMultiBarExport
+    /// PURPOSE: Confirms the successful 1m export yields all payload bars while ignoring transport rows.
+    /// WHEN CALLED: Runs against the first substantial MCC export captured from Thinkorswim.
+    /// </summary>
+    [Fact]
+    public void ReadParsesSuccessfulMultiBarExport()
+    {
+        using var report = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_XRPN_102026_933.csv"));
+
+        var bars = new ThinkorswimOhlcvStrategyReportReader().Read(report, "XRPN", BarTimeframe.OneMinute);
+
+        Assert.Equal(355, bars.Count);
+        Assert.Equal(62346m, bars[0].Volume);
+        Assert.Equal(26058m, bars[^1].Volume);
+        Assert.Equal(TimeSpan.Zero, bars[0].Timestamp.Offset);
+    }
+
+    /// <summary>
     /// TEST: ReadParsesLatestMccOnlyReport
     /// PURPOSE: Confirms the latest exported MCC-only report is accepted with identifiable volume.
     /// WHEN CALLED: Runs against the newly uploaded single-row XRPN export.
