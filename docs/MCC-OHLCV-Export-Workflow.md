@@ -83,6 +83,17 @@ Observed successful multi-bar export: `StrategyReports_XRPN_102026_933.csv` cont
 
 The follow-up reports `StrategyReports_XRPN_102026_950.csv` and `StrategyReports_XRPN_102026_951.csv` remain 1m exports: both payloads are labeled `1m` and advance by 60 seconds. The first report begins with an embedded 6:30 AM bar reported at 6:32 AM; the second begins with an embedded 6:28 AM bar reported at 6:30 AM. This is a consistent two-minute transport/report difference, not evidence that changing `aggregationLabel` changed aggregation. The chart aggregation must be changed separately.
 
+The verified 5m capture `StrategyReports_XRPN_102026_5m_offset_1027.csv` contains 81 payload rows labeled `5m`, with embedded timestamps from 6:20 AM through 1:00 PM Arizona time and report times from 6:30 AM through 1:10 PM. The ten-minute difference is consistent with the report transport timing for this aggregation. The `startTime` must describe the desired embedded source-bar window; do not move it earlier merely to make the report's `Date/Time` appear aligned.
+
+## Current action checklist
+
+1. Keep `startTime` and `endTime` set to the desired **source-bar** window in Eastern time; do not compensate for the report timestamp. The report `Date/Time` is transport metadata, not the normalized bar timestamp.
+2. For 1m validation, set the chart to 1 minute and `aggregationLabel = OneMinute`; preserve the raw report and compare at least 20 payload rows to the chart.
+3. For 5m validation, set the chart to 5 minutes and `aggregationLabel = FiveMinute`; preserve a separate raw report and compare at least 20 payload rows to the chart.
+4. Record whether each embedded timestamp is a bar-open or completed-bar availability timestamp. Do not change the parser or add a fixed 1m/5m offset before that comparison.
+5. Compare 5m OHLCV with the corresponding 1m bars and classify every observed gap.
+6. Store the raw reports, normalized copies, comparison notes, session settings, date/time inputs, chart aggregation, timezone/DST context, and validation status as provenance.
+
 ## Required TOS chart-parity procedure
 
 This procedure is external validation, not an automated xUnit test:

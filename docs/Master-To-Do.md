@@ -230,3 +230,19 @@ The original master list and `docs/BoringOvernight.md` agree on the initial 100-
 - [NEXT] Implement golden indicator-parity tests against exact versioned ThinkScript studies, then connect replay to the existing V2 signal engine without changing rules.
 - [NEXT] Build shadow-mode opportunity snapshots and outcome linkage only after timestamp/session/indicator parity. Keep classification diagnostic-only until out-of-sample evaluation demonstrates value over the READY-only baseline.
 - [HOLD] News/catalyst provider selection and AI-assisted headline classification until coverage, licensing, latency, costs, provenance, and unknown/stale behavior are specified. Current repository has no verified live-news or per-symbol ChatGPT/Google query integration.
+
+## 16. MCC-owned OHLCV export checkpoint (2026-10-20)
+
+- [DONE] Add the uniquely named `MCC_OHLCV_V1` strategy artifact with explicit date, Eastern-time session, aggregation, actual-volume payload, visible diagnostics, and simulated close/reopen report transport.
+- [DONE] Add the strategy-report parser and reject legacy `kg_EveryTickSOHLCP` rows, transport-only reports, malformed OHLC, invalid timestamps, negative volume, duplicates, and symbol/timeframe mismatches.
+- [DONE] Validate the repository against successful 1M and 5M report shapes. `StrategyReports_XRPN_102026_933.csv` contains 355 1M payload rows; `StrategyReports_XRPN_102026_5m_offset_1027.csv` contains 81 5M payload rows.
+- [DONE] Enforce that `aggregationLabel` matches the actual Thinkorswim chart aggregation; a mismatch must emit no payload rows and show a diagnostic mismatch state.
+- [DONE] Add dependency-free PowerShell validation scripts under `tools/` for single-report structure, 1M/5M export comparison, and report-versus-payload timestamp offsets.
+- [DONE] Record automated 1M/5M validation results in `docs/Validation/MCC-OHLCV-20261020.md`: 52 complete 5M windows reconstructed from 1M rows match OHLCV; 29 windows are incomplete; report timestamps are transport metadata.
+- [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 1M payload bars: timestamp, OHLC, volume, first/last boundaries, and the observed report-to-payload offset.
+- [NOW] Complete Thinkorswim chart parity for at least 20 consecutive 5M payload bars and reconcile each 5M bar with its constituent 1M bars.
+- [NOW] Supply independent Thinkorswim chart OHLCV values covering at least 20 1M bars, 20 5M bars, and the observed 1M gaps; screenshots alone are insufficient for exact volume/gap classification unless every value is legible.
+- [NEXT] Classify the 1M export's 31 gaps and determine whether they are chart/session gaps or export omissions. Do not fill them until classified.
+- [NEXT] Repeat parity under RTH and extended-hours settings and across an Arizona/Eastern DST boundary; preserve a provenance manifest for each run.
+- [NEXT] Investigate native Thinkorswim chart-data export as the preferred transport if it exposes the same timestamp/OHLCV fields without strategy-order timing semantics.
+- [HOLD] Do not mark the export production-ready, connect it to replay as authoritative market data, or calibrate signal/opportunity logic until the external chart-parity items are complete.
