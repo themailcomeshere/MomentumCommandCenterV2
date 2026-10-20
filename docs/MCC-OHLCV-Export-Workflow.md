@@ -55,7 +55,9 @@ Run separate exports for `1m` and `5m`; do not mix them in one export job. Set t
 
 The export strategy's session predicate is only a draft guard. The actual chart session settings and symbol's exchange calendar must be recorded and checked against consecutive chart bars.
 
-The strategy defaults are `startTime = 0930` and `endTime = 1600` in the chart's Thinkorswim exchange-time context. For an extended-hours run, change both inputs deliberately (for example, `0400` and `2000`) and enable extended-hours data on the chart. These inputs are not the same as the report's `Work Time` range: `Work Time` describes the bars included in the generated report, while the strategy inputs control which bars emit MCC rows.
+The strategy defaults are `startTime = 0930` and `endTime = 1600` in the chart's Thinkorswim exchange-time context. For an extended-hours run, change both inputs deliberately (for example, `0400` and `2000`) and enable extended-hours data on the chart. These inputs are not the same as the report's `Work Time` range: `Work Time` describes the bars included in the generated report, while the strategy inputs control which completed source bars emit MCC rows. The filter is applied to the same `[1]` source bar whose OHLCV values are encoded.
+
+Changing the inputs does not move the report's `Work Time` text or the chart's loaded data range. It should change the number and timestamps of `MCC_OHLCV_V1` rows. If the rows remain identical, the installed strategy is not the saved `MCC_OHLCV_V1` source, the inputs were changed on another strategy, or Thinkorswim has not recalculated the chart; remove/re-add the strategy, save its settings, and confirm the strategy name before exporting.
 
 ## Transport comparison
 

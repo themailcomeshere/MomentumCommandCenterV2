@@ -24,11 +24,14 @@ input endTime = 1600;
 # A strategy report row is emitted on the current bar for the immediately
 # preceding completed bar. The payload timestamp is the source bar timestamp,
 # not the report execution timestamp. [1] is intentional: it prevents the
-# current in-progress bar from being exported.
-def inConfiguredWindow = if startTime <= endTime
-    then SecondsFromTime(startTime) >= 0 and SecondsTillTime(endTime) >= 0
-    else SecondsFromTime(startTime) >= 0 or SecondsTillTime(endTime) >= 0;
-def exportBar = BarNumber() > 1 and inConfiguredWindow;
+# current in-progress bar from being exported. The time filter is also indexed
+# [1], so it filters the source bar rather than the later execution bar.
+def secondsFromStart = SecondsFromTime(startTime);
+def secondsTillEnd = SecondsTillTime(endTime);
+def sourceInConfiguredWindow = if startTime <= endTime
+    then secondsFromStart[1] >= 0 and secondsTillEnd[1] >= 0
+    else secondsFromStart[1] >= 0 or secondsTillEnd[1] >= 0;
+def exportBar = BarNumber() > 1 and sourceInConfiguredWindow;
 def sourceTimestamp = GetTime()[1];
 def sourceOpen = open[1];
 def sourceHigh = high[1];
