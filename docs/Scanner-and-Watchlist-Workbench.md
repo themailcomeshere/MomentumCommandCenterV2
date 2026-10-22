@@ -2,6 +2,16 @@
 
 **Status:** Local front-end workbench implemented; live scanner/provider integration remains unimplemented.
 
+## Scanner integration status update (2026-10-22)
+
+The Application layer now has a provider-neutral discovery DTO at `src/MomentumCommandCenterV2.Application/Models/ScannerDiscoveryEvent.cs` and source boundary at `src/MomentumCommandCenterV2.Application/Interfaces/IScannerDiscoverySource.cs`. These are contracts only: there is no concrete provider adapter, persistence, polling workflow, or live scanner connection yet. A provider must not be presented as integrated until those parts exist and are tested.
+
+The DTO preserves first-seen/observed/source timestamps, source and schema identifiers, raw fields, evaluator version, reason codes, and a presentation disposition. The disposition values (`ActionableQueue`, `WatchPullback`, `FilteredExtended`, `Blocked`, `DataUnknown`) are scanner-list presentation states only; they do not create or replace 5M Permission or 1M EXECUTION READY.
+
+### Extension qualification requirement
+
+Candidates currently outside the exact 1M study's extension envelope should be removed from the default actionable queue or deprioritized, with a visible reason and timestamp, but retained in a recoverable pullback-watch list. Do not permanently exclude a symbol simply because it is extended now. Missing or stale extension inputs must result in `DATA?`. Exact ATR-extension formula/threshold parity and historical data validation are prerequisites to implementing this gate. See `docs/Master-To-Do.md` and `docs/Validation/MCC-OHLCV-20261020.md`.
+
 ## What exists
 
 The static front end now provides:
