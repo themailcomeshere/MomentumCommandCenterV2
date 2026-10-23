@@ -134,3 +134,43 @@ $("exportFeedback")?.addEventListener("click",()=>{
  a.href=url;a.download="mcc-dashboard-feedback.json";a.click();URL.revokeObjectURL(url);
 });
 renderFeedback();
+
+
+/// MODULE: Morning Report Preview
+/// PURPOSE: Presents a transparent, locally derived report preview from demo/import rows.
+/// IMPORTANT: This is NOT a market-data collector, live scanner, or validated opportunity ranker.
+function renderMorningReport(){
+ const grid=$("redZoneGrid");if(!grid)return;
+ const group=$("scannerGroup")?.value||"momentum";
+ const sourceRows=Array.isArray(scannerData[group])?scannerData[group]:[];
+ const ranked=sourceRows.slice().sort((a,b)=>{
+  const sa=Number(a.score),sb=Number(b.score);
+  if(Number.isFinite(sa)!==Number.isFinite(sb))return Number.isFinite(sb)-Number.isFinite(sa);
+  return (Number.isFinite(sb)?sb:-Infinity)-(Number.isFinite(sa)?sa:-Infinity)||String(a.symbol).localeCompare(String(b.symbol));
+ }).slice(0,4);
+ $("morningTopCount").textContent=String(ranked.length);
+ $("reportSubtitle").textContent="Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp";
+ grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
+  const card=document.createElement("article");card.className="redzone-card";
+  const top=document.createElement("div");top.className="redzone-card-top";
+  const rank=document.createElement("span");rank.className="rank-pill";rank.textContent="#"+(index+1);
+  const status=document.createElement("span");status.className="chip";status.textContent=item.status||"DATA?";
+  top.append(rank,status);
+  const symbol=document.createElement("h3");symbol.textContent=item.symbol||"UNKNOWN";
+  const score=document.createElement("div");score.className="redzone-score";score.textContent="Supplied score: "+(item.score??"DATA?");
+  const ext=document.createElement("p");ext.textContent="Extension: "+(item.extension||"DATA?");
+  const fresh=document.createElement("p");fresh.textContent="Freshness: "+(item.freshness||"UNKNOWN");
+  const reason=document.createElement("p");reason.className="redzone-reason";reason.textContent=item.reason||"No reason supplied.";
+  const gate=document.createElement("div");gate.className="gate-warning";gate.textContent="5M Permission: UNKNOWN · 1M execution: UNKNOWN";
+  card.append(top,symbol,score,ext,fresh,reason,gate);return card;
+ }):[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:"No candidate rows available. Import a CSV or select a demo scanner group."})]));
+}
+$("scannerGroup")?.addEventListener("change",renderMorningReport);
+$("exportMorningReport")?.addEventListener("click",()=>{
+ const group=$("scannerGroup")?.value||"momentum";
+ const rows=Array.isArray(scannerData[group])?scannerData[group]:[];
+ const report={reportGeneratedAt:new Date().toISOString(),clockSource:"browser-local-clock; not market-data timestamp",mode:"PREVIEW_ONLY",liveScannerConnected:false,overnightCollectionRunning:false,provider:"NOT_SELECTED",scannerGroup:group,watchlist:readWatchlist(),topCandidates:rows.slice().sort((a,b)=>(Number(b.score)||-Infinity)-(Number(a.score)||-Infinity)).slice(0,4),boringOvernight:{status:"NOT_CALCULATED"},disclaimer:"Local demo/import data only. No live market data, scanner, 5M permission, 1M execution, or validated ranking is connected."};
+ const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="mcc-morning-report-preview.json";a.click();URL.revokeObjectURL(url);
+});
+renderMorningReport();
