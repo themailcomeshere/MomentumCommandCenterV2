@@ -98,7 +98,7 @@ app.MapGet("/api/market-data/compare", async (
     });
 });
 
-app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, CancellationToken cancellationToken) =>
+app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, CancellationToken cancellationToken) =>
 {
     var configured = providers.Where(p => p.IsConfigured).ToArray();
     var benchmarkSymbols = new[] { "SPY", "QQQ", "IWM" };
@@ -113,11 +113,13 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
                 var end = DateTimeOffset.UtcNow;
                 var bars = (await provider.GetBarsAsync(symbol, TimeSpan.FromMinutes(5), end.AddHours(-8), end, cancellationToken))
                     .OrderBy(b => b.Timestamp).ToArray();
+                var persistedObservationCount = await barStore.AppendAsync(bars, cancellationToken);
                 observations.Add(new
                 {
                     provider = provider.ProviderName,
                     status = bars.Length == 0 ? "DATA?" : "OBSERVATION_ONLY",
                     barCount = bars.Length,
+                    persistedObservationCount,
                     latest = bars.LastOrDefault(),
                     changeFromFirstPercent = bars.Length > 1 && bars[0].Close != 0
                         ? Math.Round((bars[^1].Close / bars[0].Close - 1) * 100, 3)
