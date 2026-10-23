@@ -176,34 +176,87 @@ $("exportMorningReport")?.addEventListener("click",()=>{
 renderMorningReport();
 
 
-// Provider comparison is intentionally offline until server-side adapters and credentials are configured.
+// Provider comparison now calls the same-origin API. Keys never enter browser code.
 const providerCompareButton = $("providerCompareRun");
-providerCompareButton?.addEventListener("click", () => {
+const formatBar = bar => bar ? new Date(bar.timestamp).toLocaleString() + " · O " + bar.open + " H " + bar.high + " L " + bar.low + " C " + bar.close + " · V " + bar.volume : "DATA?";
+function renderProviderResult(prefix, result) {
+ const connection = $(prefix + "Connection"), latest = $(prefix + "Latest"), coverage = $(prefix + "Coverage"), recovery = $(prefix + "Recovery");
+ if (!result) { connection.textContent = "NO RESPONSE"; latest.textContent = "DATA?"; coverage.textContent = "UNKNOWN"; recovery.textContent = "NOT TESTED"; return; }
+ connection.textContent = result.configured ? (result.error ? "REQUEST FAILED" : "REQUEST COMPLETED") : "NOT CONFIGURED";
+ latest.textContent = result.latestBar ? formatBar(result.latestBar) : (result.error || "DATA?");
+ coverage.textContent = result.barCount + " bars · " + result.gapCount + " observed timestamp gaps · " + result.duplicateTimestampCount + " duplicate timestamps";
+ recovery.textContent = result.error ? "NOT VERIFIED: " + result.error : "Historical REST request only; reconnect/backfill not tested";
+}
+providerCompareButton?.addEventListener("click", async () => {
  const symbol = ($("providerSymbol")?.value || "").trim().toUpperCase();
  const interval = $("providerInterval")?.value || "1m";
  const date = $("providerDate")?.value || "";
  if (!/^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-  $("providerCompareNotice").textContent = "Invalid test inputs. Enter a valid ticker and date; no provider request was made.";
+  $("providerCompareNotice").textContent = "Invalid test inputs. Enter a valid ticker and date.";
   return;
  }
- const fields = [
-  ["Test request", symbol + " · " + interval + " · " + date, symbol + " · " + interval + " · " + date],
-  ["Connection state", "NOT CONNECTED", "NOT CONNECTED"],
-  ["Bars received", "DATA NOT FOUND IN SOURCES", "DATA NOT FOUND IN SOURCES"],
-  ["Timestamp / timezone", "NOT MEASURED", "NOT MEASURED"],
-  ["OHLCV / quote parity", "NOT TESTED", "NOT TESTED"],
-  ["Missing-bar reconciliation", "NOT TESTED", "NOT TESTED"],
-  ["Reconnect / historical backfill", "NOT TESTED", "NOT TESTED"],
-  ["Source entitlement / license", "NOT VERIFIED", "NOT VERIFIED"]
- ];
- const body = $("providerComparisonRows");
- body.replaceChildren(...fields.map(([field, a, b]) => {
-  const tr = document.createElement("tr");
-  for (const value of [field, a, b]) { const td = document.createElement("td"); td.textContent = value; tr.append(td); }
-  return tr;
- }));
- $("alpacaLatest").textContent = "DATA NOT FOUND IN SOURCES";
- $("massiveLatest").textContent = "DATA NOT FOUND IN SOURCES";
- $("alpacaRecovery").textContent = "Not run"; $("massiveRecovery").textContent = "Not run";
- $("providerCompareNotice").textContent = "Local comparison checklist prepared for " + symbol + ", " + interval + ", " + date + ". This action did not contact either provider. Missing values remain unknown, not zero or no-trade evidence.";
+ const from = new Date(date + "T00:00:00-07:00"), to = new Date(date + "T23:59:59-07:00");
+ const params = new URLSearchParams({symbol, timeframe: interval, from: from.toISOString(), to: to.toISOString()});
+ $("providerCompareNotice").textContent = "Requesting the same UTC window from configured providers…";
+ providerCompareButton.disabled = true;
+ try {
+  const response = await fetch("/api/market-data/compare?" + params.toString(), {headers: {Accept:"application/json"}});
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+  const alpaca = data.results.find(item => item.provider === "Alpaca");
+  const massive = data.results.find(item => item.provider === "Massive");
+  renderProviderResult("alpaca", alpaca); renderProviderResult("massive", massive);
+  const rows = [
+   ["Request", symbol + " · " + interval + " · " + date, symbol + " · " + interval + " · " + date],
+   ["Connection / request", alpaca?.error || (alpaca?.configured ? "REQUEST COMPLETED" : "NOT CONFIGURED"), massive?.error || (massive?.configured ? "REQUEST COMPLETED" : "NOT CONFIGURED")],
+   ["Bars received", String(alpaca?.barCount ?? "DATA?"), String(massive?.barCount ?? "DATA?")],
+   ["First observation", formatBar(alpaca?.firstBar), formatBar(massive?.firstBar)],
+   ["Latest observation", formatBar(alpaca?.latestBar), formatBar(massive?.latestBar)],
+   ["Observed timestamp gaps", String(alpaca?.gapCount ?? "DATA?"), String(massive?.gapCount ?? "DATA?")],
+   ["Duplicate timestamps", String(alpaca?.duplicateTimestampCount ?? "DATA?"), String(massive?.duplicateTimestampCount ?? "DATA?")],
+   ["Reconnect / backfill", "NOT TESTED", "NOT TESTED"],
+   ["Source entitlement / license", "NOT VERIFIED", "NOT VERIFIED"]
+  ];
+  $("providerComparisonRows").replaceChildren(...rows.map(([field,a,b]) => {
+   const tr = document.createElement("tr");
+   for (const value of [field,a,b]) { const td = document.createElement("td"); td.textContent = value; tr.append(td); }
+   return tr;
+  }));
+  $("providerCompareNotice").textContent = data.interpretation + " Window: " + data.from + " to " + data.to + ".";
+ } catch (error) {
+  $("providerCompareNotice").textContent = "API comparison failed: " + error.message + ". Check that the dashboard is served by MomentumCommandCenterV2.API and inspect /api/providers/status.";
+ } finally { providerCompareButton.disabled = false; }
 });
+
+async function loadProviderStatus() {
+ try {
+  const response = await fetch("/api/providers/status", {headers:{Accept:"application/json"}});
+  if (!response.ok) return;
+  const data = await response.json();
+  const alpaca = data.find(item => item.provider === "Alpaca"), massive = data.find(item => item.provider === "Massive");
+  if (alpaca) $("alpacaConnection").textContent = alpaca.status;
+  if (massive) $("massiveConnection").textContent = massive.status;
+ } catch { /* Static-file preview remains usable offline. */ }
+}
+loadProviderStatus();
+
+async function loadMorningBrief() {
+ try {
+  const response = await fetch("/api/morning-brief", {headers:{Accept:"application/json"}});
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  const report = await response.json();
+  $("overnightServiceState").textContent = "Morning Brief API: " + report.status;
+  $("overnightServiceDetail").textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString() + ". Observed market bars only; scanner, catalyst, sector, Red Zone and overnight scoring remain explicitly unavailable until their sources are connected.";
+  $("reportSubtitle").textContent = "API report generated " + new Date(report.generatedAtUtc).toLocaleString() + " · source timestamps retained in response";
+  const market = report.marketLandscape || [];
+  const lines = market.map(item => {
+   const obs = (item.observations || []).map(o => o.provider + ": " + (o.latest ? formatBar(o.latest) : (o.status || "DATA?"))).join(" | ");
+   return item.symbol + " — " + (obs || "DATA? No configured market-data source.");
+  });
+  $("morningApiSnapshot")?.replaceChildren(...lines.map(line => { const p=document.createElement("p"); p.textContent=line; return p; }));
+ } catch {
+  $("overnightServiceState").textContent = "Morning Brief API: NOT CONNECTED";
+  $("overnightServiceDetail").textContent = "Serve this dashboard through MomentumCommandCenterV2.API to load provider status and the partial Morning Brief. Direct file preview remains demo-only.";
+ }
+}
+loadMorningBrief();
