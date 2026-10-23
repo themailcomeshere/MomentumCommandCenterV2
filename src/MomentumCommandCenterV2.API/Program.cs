@@ -4,6 +4,7 @@ using MomentumCommandCenterV2.API.MarketData;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
+builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -52,6 +53,7 @@ app.MapGet("/api/market-data/compare", async (
     DateTimeOffset from,
     DateTimeOffset to,
     IEnumerable<IMarketDataProvider> providers,
+    IMarketBarObservationStore barStore,
     CancellationToken cancellationToken) =>
 {
     if (!IsValidSymbol(symbol))
@@ -67,10 +69,11 @@ app.MapGet("/api/market-data/compare", async (
         {
             var bars = await provider.GetBarsAsync(symbol.ToUpperInvariant(), span, from, to, cancellationToken);
             var ordered = bars.OrderBy(b => b.Timestamp).ToArray();
+            var persisted = await barStore.AppendAsync(ordered, cancellationToken);
             var duplicates = ordered.GroupBy(b => b.Timestamp).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
             var gaps = FindGaps(ordered, span);
             return new ProviderComparisonResult(provider.ProviderName, provider.IsConfigured,
-                ordered.Length, ordered.FirstOrDefault(), ordered.LastOrDefault(), duplicates.Length,
+                ordered.Length, persisted, ordered.FirstOrDefault(), ordered.LastOrDefault(), duplicates.Length,
                 gaps.Count, gaps.Take(25).ToArray(), null, provider.Capabilities);
         }
         catch (ProviderNotConfiguredException ex)
