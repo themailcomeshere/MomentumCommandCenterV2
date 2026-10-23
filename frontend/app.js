@@ -12,6 +12,7 @@ const snapshots=[
 {label:"Snapshot 5",price:"$11.44",rvol:"3.1×",extension:"1.8 ATR",classification:"READY — EXTENDED",kind:"extended",headline:"Strong movement can still mean poor entry timing. Avoid equating momentum with permission to chase.",eligibility:"Eligibility: PASS (demo)",five:"Permission: YES (demo)",one:"Execution event: ACTIVE (demo)",reasons:["ATR extension is above the illustrative warning threshold.","An extended entry can be downgraded even when momentum is strong.","Reassess timing and risk; this is not an order instruction."]}
 ];
 const barHeights=[48,56,53,68,76],$=id=>document.getElementById(id);
+const feedbackKey="mcc.dashboardFeedback.v1";
 function render(){
  const index=Number($("snapshot").value),item=snapshots[index],overnight=$("mode").value==="overnight";
  $("classification").textContent=overnight?"RESEARCH ONLY":item.classification;
@@ -55,7 +56,8 @@ function renderScanner(){
  rows.replaceChildren(...(scannerData[group]||[]).map(candidate=>{
   const tr=document.createElement("tr");
   const statusClass=candidate.status==="BLOCKED"?"status-blocked":candidate.status==="WATCH"?"status-watch":"status-ready";
-  tr.innerHTML=`<td><strong>${candidate.symbol}</strong></td><td class="score">${candidate.score}</td><td class="${statusClass}">${candidate.status}</td><td>${candidate.reason}</td><td></td>`;
+  const cell=value=>{const td=document.createElement("td");td.textContent=value??"DATA?";return td;};
+  tr.append(cell(candidate.symbol),cell(candidate.score),cell(candidate.status),cell(candidate.extension||"DATA?"),cell(candidate.freshness||"UNKNOWN"),cell(candidate.reason),document.createElement("td"));
   const button=document.createElement("button");button.className="row-action";button.textContent="Watch";button.type="button";button.addEventListener("click",()=>addWatch(candidate.symbol));tr.lastElementChild.append(button);return tr;
  }));
 }
@@ -98,8 +100,37 @@ $("scannerFile").addEventListener("change",event=>{
   const lines=String(reader.result).split(/\r?\n/).filter(Boolean),headers=lines.shift().split(",").map(value=>value.trim().toLowerCase());
   const symbolIndex=headers.findIndex(value=>["symbol","ticker"].includes(value));
   if(symbolIndex<0){$("scannerSource").textContent="Import rejected: Symbol/Ticker column required";return;}
-  const imported=lines.map(line=>{const values=parseCsvLine(line);return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:values[headers.indexOf("score")]||"—",status:values[headers.indexOf("status")]||"IMPORTED",reason:values[headers.indexOf("reason")]||"Imported local evidence."};}).filter(item=>item.symbol);
+  const imported=lines.map(line=>{const values=parseCsvLine(line),field=name=>{const i=headers.indexOf(name);return i<0?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score")||"—",status:field("status")||"IMPORTED",extension:field("extension")||field("ext")||"DATA?",freshness:field("freshness")||field("data_as_of")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);
   scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows`;renderScanner();
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
+
+
+// Feedback notes stay in browser local storage; no network calls are made.
+function readFeedback(){
+ try { const value=JSON.parse(localStorage.getItem(feedbackKey)||"[]"); return Array.isArray(value)?value:[]; }
+ catch { return []; }
+}
+function renderFeedback(){
+ const list=$("feedbackRows"); if(!list)return;
+ const items=readFeedback();
+ list.replaceChildren(...(items.length?items.slice().reverse().map(item=>{
+  const li=document.createElement("li"),body=document.createElement("div"),meta=document.createElement("div"),note=document.createElement("p"),remove=document.createElement("button");
+  meta.className="feedback-meta";meta.textContent=item.area+" · "+item.priority+" · "+new Date(item.createdAt).toLocaleString();
+  note.textContent=item.text;body.append(meta,note);remove.type="button";remove.className="row-action";remove.textContent="Delete";
+  remove.addEventListener("click",()=>{localStorage.setItem(feedbackKey,JSON.stringify(readFeedback().filter(x=>x.id!==item.id)));renderFeedback();});
+  li.append(body,remove);return li;
+ }):[Object.assign(document.createElement("li"),{textContent:"No feedback notes saved yet."})]));
+}
+$("feedbackForm")?.addEventListener("submit",event=>{
+ event.preventDefault();const note=$("feedbackText").value.trim();if(!note)return;
+ const items=readFeedback();items.push({id:Date.now().toString(36),area:$("feedbackArea").value,priority:$("feedbackPriority").value,text:note,createdAt:new Date().toISOString(),symbol:$("symbol").value,snapshot:$("snapshot").value});
+ localStorage.setItem(feedbackKey,JSON.stringify(items));$("feedbackText").value="";renderFeedback();
+});
+$("clearFeedback")?.addEventListener("click",()=>{localStorage.removeItem(feedbackKey);renderFeedback();});
+$("exportFeedback")?.addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(readFeedback(),null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="mcc-dashboard-feedback.json";a.click();URL.revokeObjectURL(url);
+});
+renderFeedback();
