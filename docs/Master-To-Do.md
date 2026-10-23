@@ -34,9 +34,9 @@ This file preserves the prior consolidated To-Do text below, after reviewing all
 - [HOLD] No change to Permission logic until a specific defect is demonstrated.
 
 ## 2. 5M -> 1M handoff — [NEXT after Permission audit]
-- [NOW] Audit the 5M→1M handoff in source: list the 5M fields/states reconstructed by the 1M study, compare the gate and runner/waning/swing interactions against the intended contract, and record any concrete mismatches before editing code.
-- Verify fresh candidate, in-trend candidate, continuation, confirmation, event-armed READY, expiration, and re-entry paths obey the intended 5M gate.
-- Verify RUNNER / WANING / SWING do not suppress legitimate 1M opportunities unless intended.
+- [DONE — SOURCE AUDIT ONLY, 2026-10-22] Compare 5M authority predicates with the 1M reconstructed 5M layer and document concrete raw-Permission, structural-damage, and major-failure differences in `docs/Validation/5M-to-1M-Handoff-Audit-20261022.md`. No ThinkScript edits made; installed-study parity and behavioral contract remain open.
+- [NEXT] Validate fresh candidate, in-trend candidate, continuation, confirmation, event-armed READY, expiration, and re-entry paths against same-bar installed-study evidence and the intended 5M gate.
+- [NEXT] Test whether RUNNER / WANING / SWING suppress legitimate 1M opportunities; source audit alone does not establish behavior.
 - Verify extension danger blocks chasing without falsely declaring the 5M thesis dead.
 - Preserve architecture: 5M never references 1M; 1M may reference 5M.
 
@@ -301,7 +301,9 @@ The original master list and `docs/BoringOvernight.md` agree on the initial 100-
 - [IMPORTANT — NOT IMPLEMENTED] Current Dashboard is static HTML/CSS/JS opened via `frontend/index.html` in a browser, not an .exe. It uses demo fixtures/local CSV and browser-local watchlist/feedback. No live feed/scanner, automatic ranking, Morning Report generator, live Red Zone, live Boring Overnight calculator, C# engine wiring, or broker integration is present.
 - [SOURCE AUDIT — REPOSITORY ONLY] `docs/Charts/1M/MainStudy.txt` defines `extensionATR = AbsValue(price - dailyVWAP) / ATR(14)`, warning at 1.50 ATR and danger at 2.00 ATR by default; bullish extension danger is price above Daily VWAP and at/above danger threshold. `inTrendExecutionCandidate = executionCandidate AND NOT freshTrigger`; its event is transition/re-arm gated. Final READY separately requires an active execution window, 5M execution permission, and no bullish extension danger. This establishes repository source semantics, not that the installed Thinkorswim study matches.
 - [NOW] Continue audit of the exact 1M/5M installed-study parity and the bubble's real chart examples before any rule changes. Do not reinterpret IN-TREND CANDIDATE as READY or weaken extension thresholds without validation.
-- [NEXT] Define Morning Report data contract and provider requirements; choose/verify a supported data/scanner provider; implement freshness/provenance checks and append-only scanner event history; implement automatic discovery/deduplication/re-ranking; build top 1–4 Red Zone; implement Boring Overnight pipeline against `docs/BoringOvernight.md`; wire the validated application/API to the Dashboard.
+- [DONE — SPECIFICATION] Define provider-neutral ingestion, persistence, freshness, recovery, report snapshot, and validation requirements in `docs/Overnight-Collection-Contract.md`.
+- [BLOCKED — PROVIDER / ENTITLEMENT] Choose and verify a supported market-data/scanner provider and licensing before implementing its adapter, exact freshness thresholds, and backfill/reconnect behavior.
+- [NEXT] Implement append-only event/observation persistence, idempotent ingestion, health monitoring, recovery tests, deterministic report generation, ranking, Red Zone, and Boring Overnight wiring after provider selection.
 - [NEXT] Decide desktop delivery only after app integration architecture is known. Browser launch is current reality; an .exe is not built or required yet.
 - [USER HISTORY GAP] Repository search and available project handoff do not contain the full prior Morning Routine conversation. The manual documents a proposed workflow from known requirements, but the user should supply or point to the prior routine if exact historical steps/metrics must be restored.
 
@@ -312,6 +314,7 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 
 - [x] Add preview-only Morning Command Brief and responsive ranked 1–4 Red Zone layout to the static UI; include explicit “overnight collection NOT RUNNING” status and JSON report-preview export.
 - [ ] Select a supported/licensed scanner and market-data provider; document actual APIs, entitlements, timestamp/session conventions, rate limits, and terms. Provider is currently unselected.
+- [x] Write the provider-neutral collection contract in `docs/Overnight-Collection-Contract.md`; it deliberately leaves provider-dependent thresholds unspecified.
 - [ ] Implement a long-running collection service that works independently of the browser tab; handle startup, reconnect, rate limits, outages, and graceful shutdown.
 - [ ] Persist raw discovery events and timestamped market observations with source/event IDs, source and receive times, session/timezone, schema/version, raw fields, and ingestion disposition.
 - [ ] Implement collector health states RUNNING / DEGRADED / STOPPED / UNKNOWN, last-success timestamp, freshness checks, gap/duplicate detection, and no synthetic bars.
@@ -321,4 +324,5 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 - [ ] Wire Boring Overnight calculations and hard gates to persisted, validated inputs; unknown catalyst/data remains DATA? / manual review.
 - [ ] Define packaging and startup: browser/local service vs desktop app/installer. Do not claim .exe/background collection exists until built, deployed, and tested.
 - [ ] Keep provider secrets out of frontend, localStorage, repository, and logs.
-- [ ] Verify frontend script behavior and current branch-head CI after the UI changes.
+- [x] Verify the latest branch-head .NET workflow after the UI changes; head `bcb1ef5027859cd4448daa08191df83e0e6eb871`, workflow run 91, conclusion `success` (checked 2026-10-23 UTC).
+- [ ] Run a browser-based end-to-end smoke test of the Morning Command Brief and JSON export; structural checks are not a browser test.
