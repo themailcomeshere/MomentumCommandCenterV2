@@ -39,7 +39,7 @@ This is a data foundation, not a full backtest. It does not yet calculate indica
 
 ## Front-end workbench
 
-Open [frontend/index.html](frontend/index.html) directly in a browser. It is a local research workbench with illustrative scanner groups, local CSV candidate import, and browser-local watchlist persistence. No provider, broker, news, or order API is connected. See [Scanner and Watchlist Workbench](docs/Scanner-and-Watchlist-Workbench.md). The next production step is a provider-neutral replay/scanner contract after data and indicator parity are established.
+Open [frontend/index.html](frontend/index.html) directly in a browser. It is a local research workbench with illustrative scanner groups, local CSV candidate import, browser-local watchlist persistence, a readiness panel, and a browser-local feedback notebook with JSON export. No Thinkorswim feed, other market-data/scanner provider, broker, news, or order API is connected. See [Scanner and Watchlist Workbench](docs/Scanner-and-Watchlist-Workbench.md). The next production step is to select and verify a market-data/scanner provider against documented requirements, then implement its adapter only after data and indicator parity are established. Thinkorswim is currently a chart-study reference, not a connected API/feed.
 
 ## Build and test
 
