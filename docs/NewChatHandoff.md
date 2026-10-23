@@ -185,3 +185,10 @@ No immediate user action is required to continue code/document work. If already-
 - Updated Dashboard layout so Morning Brief sits left and Red Zone sits upper-right on wide viewports; the two-column workspace collapses responsively. User had approved the earlier look; the latest position change still needs browser confirmation.
 - Created `docs/Validation/5M-to-1M-User-Validation-Steps.md` with exact steps and evidence needed from the installed Thinkorswim studies. User need not repeat the already completed OHLCV/DST work.
 - Updated To-Do, User Manual, and Scanner Workbench with this status.
+
+
+### Polling worker scaffold (2026-10-23)
+
+- Added `src/MomentumCommandCenterV2.Application/Services/ScannerDiscoveryPollingWorker.cs`: cancellable generic poll loop, durable ingestion before success state, retry on next interval after errors, and health snapshot (RUNNING / DEGRADED / STOPPED / UNKNOWN). It is not hosted or running because no provider adapter is configured.
+- Added `tests/MomentumCommandCenterV2.Tests/ScannerDiscoveryPollingWorkerTests.cs` for empty-batch handling and graceful cancellation.
+- The event store contract import fix passed CI at commit `38b3f3ad248bd020ac48f377ce86421f7753f76d`; the latest worker/test commit needs its own CI result.
