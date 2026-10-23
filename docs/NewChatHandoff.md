@@ -250,3 +250,14 @@ The Morning Brief endpoint now persists the observed SPY/QQQ/IWM bars it fetches
 
 - GitHub Actions run 151 completed successfully at `ae6ee7acc30e85a6268b5ea8fc40d86429d3461b`: solution restore, Release build, and test suite passed. Run: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40012059701.
 - This is build/test verification only. Live API requests, browser rendering, account entitlements, market-data licensing, and parity with installed Thinkorswim studies remain unverified.
+
+
+## Account dependencies and next work — 2026-10-23
+
+- User confirmed the solution builds and runs locally. Do not ask them to repeat that setup.
+- New canonical checklist: `docs/Next-Steps-and-User-Inputs.md`. It distinguishes free-account/live smoke-test needs, user-supplied TOS evidence, and offline implementation tasks.
+- **Do not ask the user to buy both providers.** Neither account is required for provider-neutral coding, fixture tests, storage, collector lifecycle, or most Morning Brief contracts. One free account is enough to start a live smoke test; both are useful for direct side-by-side comparison. Paid plans remain on hold pending proof of fit and licensing/entitlement checks.
+- Corrected stale To-Do/provider/API README entries: historical REST adapters and append-only JSONL raw-bar storage exist. Latest verified CI run 151 passed at code head `90ca6234a8bafc9230b6e4ef1996e569682c90a1`. Later documentation-only commits update dependency/status notes; check the latest Actions run before asserting current HEAD CI.
+- Remaining work independent of accounts: pagination and resilient HTTP behavior; hosted collector/health lifecycle; streaming abstraction; reconnect/backfill/restart; raw-store corruption/retention/error health; fixture-based Morning Brief, scanner, and Boring Overnight pipelines; session-aware gap semantics; ThinkScript parity.
+- User evidence that still matters: XRPN 5M transition screenshot per `docs/Validation/5M-to-1M-User-Validation-Steps.md`; UPC 09:16–09:36 continuous bars/exact timestamp inspection only if that historical gap question still needs resolution; review dashboard through API-hosted browser. None blocks offline engineering.
+- Morning Brief remains only SPY/QQQ/IWM historical 5M observations plus explicit unknown placeholders. Do not claim broad movers, sector/breadth, news, validated regime, Red Zone or Boring Overnight are implemented.
