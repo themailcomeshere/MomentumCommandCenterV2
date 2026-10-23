@@ -339,3 +339,18 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 - [ ] Browser smoke test the Morning Brief and top-right Red Zone layout; user has manually confirmed the current visual look, but latest layout change still needs browser confirmation.
 - [ ] Validate source differences against installed Thinkorswim studies using the exact user procedure in docs/Validation/5M-to-1M-User-Validation-Steps.md (to be created); do not ask user to repeat prior OHLCV tests already confirmed done.
 - [ ] Resolve provider decision only after entitlement, scanner coverage, session behavior, historical backfill, retention/licensing, and representative-symbol comparison.
+
+
+### Status correction — follow-up work after the prior checkpoint (2026-10-23)
+
+The earlier workflow success recorded above was for its then-current branch head only. It does **not** establish CI status for the newer persistence scaffold and upper-right Red Zone commits.
+
+- [x] Consolidate the supplied Morning.txt excerpts into docs/Morning-Report-and-Routine.md.
+- [x] Add provider evidence and proof-of-fit checklist in docs/Provider-Comparison.md.
+- [x] Add the provider-neutral JSONL discovery-event store and batch-ingestion validation scaffold; tests are added but their latest CI result must be checked.
+- [x] Place Morning Brief left and Red Zone upper-right in the responsive wide-screen command workspace. User browser confirmation is still needed for this specific layout change.
+- [x] Create docs/Validation/5M-to-1M-User-Validation-Steps.md with the exact installed-study evidence needed from the user.
+- [x] Update the User Manual, Scanner Workbench, and New Chat Handoff.
+- [ ] Verify .NET build/test workflow against the latest branch head after all changes.
+- [ ] Browser-test the new top-right layout and export interaction.
+- [ ] After provider selection, extend persistence to market bars and implement cancellable collector, health reporting, reconnection/backfill, and restart/sleep recovery.
