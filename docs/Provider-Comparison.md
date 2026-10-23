@@ -72,7 +72,7 @@ Official sources:
 - **Best free starting points:** Massive Basic for historical/reference API experiments; Alpaca Basic for stream integration experiments. Neither is adequate as the final real-time authority.
 - **Best paid finalists to test:** Alpaca Algo Trader Plus and Massive Stocks Advanced.
 - **Current recommended action:** run a no-cost proof of concept first; do not subscribe until the discovery endpoints, market-data rights and TOS parity tests are demonstrated.
-- **No provider selected. No credentials connected. No live adapter exists.**
+- **No provider selected and no credentials connected.** Initial historical REST adapters exist for both vendors, but neither has been validated with a live account.
 
 ## [Uncertainties]
 
@@ -87,3 +87,8 @@ Public prices and plan matrices can change. Endpoint-specific entitlement, exact
 - **Credentials:** configure environment variables or .NET User Secrets; no real credentials belong in the repository or frontend. Empty credentials currently yield NOT CONFIGURED.
 - **Not validated:** actual provider entitlement/plan, licensing, SIP vs IEX parity, premarket/after-hours behavior, representative small-cap coverage, response pagination, reconnect/backfill, timestamp/session normalization, and browser/API smoke tests.
 - This is an integration starting point, not proof that either provider is suitable as MCC's authoritative live feed. Do not subscribe or remove TOS on the basis of adapter code alone.
+
+
+## Account setup guidance — 2026-10-23
+
+You do not need both accounts, and you should not buy either paid plan yet. Free accounts are optional for live smoke tests; a single provider can validate authentication, response parsing and timestamp handling. Two accounts are useful for comparing the same symbols/window and discovering provider differences. Before any paid subscription, verify the exact feed and endpoint entitlements, personal-use/display rights, retention terms, extended-hours behavior, broad small-cap discovery, quote availability and measured TOS parity. See `docs/Next-Steps-and-User-Inputs.md` for the user/developer dependency checklist.
