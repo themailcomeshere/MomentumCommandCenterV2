@@ -403,3 +403,10 @@ The earlier workflow success recorded above was for its then-current branch head
 
 - [VERIFIED] GitHub Actions run 147 at commit `ae8180866def759612fa7c1a515dc93586143056` completed successfully: solution restore, Release build, and test suite all passed. Run: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40011426478
 - This validates compilation and existing automated tests only. It does not validate live provider credentials, API entitlements, response behavior against real accounts, browser rendering, data parity, or readiness for live trading.
+
+
+### Raw market-bar persistence slice — 2026-10-23
+
+- [IMPLEMENTED — CI PENDING FOR LATEST COMMIT] Added `IMarketBarObservationStore` and `JsonlMarketBarObservationStore` to the API host. Provider-comparison requests append valid raw OHLCV observations to JSONL outside the repository by default (LocalApplicationData/MomentumCommandCenterV2/market-bars.jsonl); override with `MCC_MARKET_BAR_STORE_PATH`.
+- Identical observations are idempotent by provider/symbol/source timestamp/content hash. Changed values append a new observation with a `SupersedesObservationId`; prior records are not overwritten. Records preserve source timestamp, receive timestamp, provider/feed and raw OHLCV.
+- [OPEN] Add automated store-specific tests, corruption recovery policy, disk/retention monitoring, session-aware gap semantics, and ensure write failures surface as a clear API health condition. Validate against latest CI before calling this slice verified.
