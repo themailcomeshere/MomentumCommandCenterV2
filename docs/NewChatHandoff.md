@@ -212,3 +212,18 @@ No immediate user action is required to continue code/document work. If already-
 - Added `src/MomentumCommandCenterV2.Application/Services/ScannerDiscoveryPollingWorker.cs`: cancellable generic poll loop, durable ingestion before success state, retry on next interval after errors, and health snapshot (RUNNING / DEGRADED / STOPPED / UNKNOWN). It is not hosted or running because no provider adapter is configured.
 - Added `tests/MomentumCommandCenterV2.Tests/ScannerDiscoveryPollingWorkerTests.cs` for empty-batch handling and graceful cancellation.
 - The event store contract import fix passed CI at commit `38b3f3ad248bd020ac48f377ce86421f7753f76d`; the latest worker/test commit needs its own CI result.
+
+
+## API host, provider adapters, and Morning Brief — 2026-10-23
+
+- Added project `src/MomentumCommandCenterV2.API` and included it in the solution. The API serves the existing dashboard under `frontend/` from the repository's normal directory layout.
+- Added normalized provider contracts and first REST historical-bar adapters:
+  - `src/MomentumCommandCenterV2.API/MarketData/AlpacaMarketDataAdapter.cs`
+  - `src/MomentumCommandCenterV2.API/MarketData/MassiveMarketDataAdapter.cs`
+  - `src/MomentumCommandCenterV2.API/MarketData/MarketDataContracts.cs`
+- Credentials are read server-side from .NET configuration or `ALPACA_API_KEY`, `ALPACA_API_SECRET`, `ALPACA_DATA_FEED`, and `MASSIVE_API_KEY`. No credentials were supplied; no live requests or plan-entitlement checks have occurred.
+- Endpoints: `/api/health`, `/api/providers/status`, `/api/market-data/compare`, and `/api/morning-brief`.
+- Dashboard provider comparison now requests both adapters for the same UTC window. Morning Brief fetches only SPY/QQQ/IWM 5M observations from configured providers and explicitly labels sectors, movers, catalysts, historical expectations, Red Zone, and Boring Overnight as DATA? / NOT CALCULATED.
+- Start with `dotnet run --project src/MomentumCommandCenterV2.API`. Keep keys out of Git, browser code, localStorage, and logs.
+- **Not yet verified:** latest solution build/test/CI, endpoint smoke test, browser test, provider response parsing against entitled accounts, licensing, timestamp/session parity, pre/post-market coverage, pagination, WebSockets, reconnect/backfill, and durable OHLCV storage. Do not rely on this as a replacement for TOS yet.
+- Continuous UPC OHLCV is not a prerequisite for the provider implementation. It is still the evidence needed to resolve the separate UPC chart-gap question for 09:16–09:36 on 2026-10-22.
