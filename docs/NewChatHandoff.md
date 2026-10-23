@@ -27,6 +27,14 @@
 
 - `docs/Provider-Comparison.md` now compares public free and paid tiers against MCC's target. Recommended paid finalists to proof-test: Alpaca Algo Trader Plus ($99/month) and Massive Stocks Advanced ($199/month); no purchase/provider decision made. Free tiers are for plumbing tests, not live authority.
 
+
+## Provider comparison UI and UPC CSV update (2026-10-23)
+
+- User confirmed UPC screenshot/event date is 2026-10-22 and TOS chart timezone is Arizona.
+- Reviewed `data/StrategyReports_UPC_102226.csv`: strategy/order events are 09:37, 09:40, 09:41, 09:47 Arizona; it is not a continuous OHLCV export and cannot establish whether earlier bars were absent.
+- Added offline comparison cards for Alpaca and Massive to `frontend/index.html`, CSS in `frontend/styles.css`, and a local checklist action in `frontend/app.js`. These are UI-only placeholders; no provider API calls/adapters/credentials are wired. The comparison button only prepares a test checklist and must not be described as a real provider comparison.
+- Evidence review: `docs/Validation/UPC-Extension-Danger-Evidence-Review-20261023.md`; canonical To-Do updated. Still need full UPC OHLCV or exact TOS timestamp evidence, then build backend provider adapters and compare historical/stream data after entitlement/licensing review.
+
 ## 1. Mission and architectural boundaries
 
 MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. Do not implement automatic order placement or Schwab order submission.
