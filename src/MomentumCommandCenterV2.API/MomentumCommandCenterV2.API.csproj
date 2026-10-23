@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UserSecretsId>MomentumCommandCenterV2-API-Local</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MomentumCommandCenterV2.Application\MomentumCommandCenterV2.Application.csproj" />
