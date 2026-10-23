@@ -29,12 +29,12 @@ Replace the two placeholders locally; do not paste real keys into chat, source f
 
 To verify configuration without exposing keys, open `/api/providers/status`. It reports only whether each provider is configured; that is not proof that authentication, feed entitlement, timestamps, or data coverage are valid. The first real-data smoke test is `/api/market-data/compare` with a small symbol/time window. Check returned errors and bar timestamps before considering the provider validated.
 
-Environment-variable alternatives for the API process:
-- `MarketData__Alpaca__ApiKey` or `ALPACA_API_KEY`
-- `MarketData__Alpaca__ApiSecret` or `ALPACA_API_SECRET`
-- `MarketData__Alpaca__Feed` or `ALPACA_DATA_FEED`
+Environment-variable alternatives for the API process use standard ASP.NET Core double-underscore mapping:
+- `MarketData__Alpaca__ApiKey`
+- `MarketData__Alpaca__ApiSecret`
+- `MarketData__Alpaca__Feed`
 
-For Massive later, use `MarketData:Massive:ApiKey` with User Secrets or `MASSIVE_API_KEY`. Never expose credentials to the frontend.
+For Massive later, use `MarketData:Massive:ApiKey` with User Secrets or `MarketData__Massive__ApiKey` as an environment variable. Never expose credentials to the frontend.
 
 ## Endpoints
 
