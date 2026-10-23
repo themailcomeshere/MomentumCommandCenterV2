@@ -244,3 +244,9 @@ No immediate user action is required to continue code/document work. If already-
 
 
 The Morning Brief endpoint now persists the observed SPY/QQQ/IWM bars it fetches and reports each benchmark's observed first-to-last window change when enough bars exist. It still does not calculate sector breadth, catalyst/news, scanner movers, validated regime, Red Zone eligibility, historical probabilities, or Boring Overnight qualification.
+
+
+### Latest verification checkpoint
+
+- GitHub Actions run 151 completed successfully at `ae6ee7acc30e85a6268b5ea8fc40d86429d3461b`: solution restore, Release build, and test suite passed. Run: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40012059701.
+- This is build/test verification only. Live API requests, browser rendering, account entitlements, market-data licensing, and parity with installed Thinkorswim studies remain unverified.
