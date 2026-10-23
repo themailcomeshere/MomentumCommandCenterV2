@@ -129,3 +129,21 @@ MCC does not submit orders. Manual Schwab website order entry is the current pre
 - The detailed prior Morning Routine conversation is not available in the accessible project source/history or repository search. The proposed report layout and workflow above are grounded in documented project requirements, but may not capture every step or metric from that earlier conversation.
 - The repository ThinkScript source may differ from the user's currently installed Thinkorswim studies; confirm installed version before treating the source audit as runtime proof.
 - Live provider/API, packaging choice (.exe versus local web app), and actual live ranking formulas are not selected or implemented.
+
+
+## Overnight collection and Morning Report — implementation requirement (2026-10-22)
+
+The user intends to leave the released/deployed MCC program open overnight so scanner discovery and data collection are already available in the Morning Report around 08:30 Arizona time. This is a product requirement, **not a capability that exists today**.
+
+### Required behavior before this can be relied upon
+- A real, authorized market-data/scanner provider must be selected and integrated. No provider is selected today.
+- A long-running collection service must poll/subscribe to supported discovery and market-data endpoints, handle reconnects/rate limits/outages, and persist events and timestamped observations. The browser page by itself cannot do this in the current implementation.
+- Collection should be independent from the presentation tab where architecture permits. If the UI is closed/reloaded, the collector should continue as a local background service or a hosted service, rather than depending on browser-tab timers.
+- If a desktop app is chosen, startup/shutdown behavior and background-service lifetime must be explicit. If using a local service, the user must launch it and leave the machine awake/connected; OS sleep, network loss, provider outages, authentication expiry, or market closures can interrupt collection. Do not imply the app can gather valid new market bars while the relevant market is closed.
+- Persist raw source events and observations before derived scoring; include provider/source ID, event ID, symbol, source timestamp, receive/observed timestamp, timezone/session metadata, schema/version, and ingestion disposition. Preserve history; do not silently overwrite a symbol's prior event.
+- On startup and at report generation, reconcile last successful poll, latest source timestamp, gaps, duplicate events, provider status, and stale symbols. Show collector status as RUNNING, DEGRADED, STOPPED, or UNKNOWN with last-success time. Missing/stale data must remain DATA?.
+- Generate a report for the current report date only after the data-quality checks run. Clearly separate overnight-acquired observations from premarket/RTH updates. Include source attribution and freshness on every candidate.
+- The Morning Report must be reproducible from persisted observations and versioned scoring logic; export report snapshot/JSON and record scoring version.
+- Test overnight process recovery, machine sleep/wake, network outage, provider outage, duplicate/replayed events, timestamp/session boundaries, and startup after missed collection. No missing bars may be synthesized.
+- Security: never put provider credentials in frontend code, browser storage, committed files, or logs. Use approved local secret storage/configuration.
+- The current UI now includes a **preview-only** Morning Command Brief, Red Zone layout, and JSON export. It intentionally states that overnight collection is not running and uses only local demo/import rows. It is not evidence that the background scanner exists.
