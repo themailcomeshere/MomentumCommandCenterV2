@@ -1,7 +1,7 @@
 # Momentum Command Center V3 — Master To-Do
 
 **Canonical location:** `docs/Master-To-Do.md`  
-**Reviewed:** 2026-10-22 (Arizona time)  
+**Reviewed:** 2026-10-23 (Arizona time)  
 **Branch:** `feature/opportunity-quality-classification`
 
 ## Status and migration note
@@ -326,3 +326,16 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 - [ ] Keep provider secrets out of frontend, localStorage, repository, and logs.
 - [x] Verify the latest branch-head .NET workflow after the UI changes; head `bcb1ef5027859cd4448daa08191df83e0e6eb871`, workflow run 91, conclusion `success` (checked 2026-10-23 UTC).
 - [ ] Run a browser-based end-to-end smoke test of the Morning Command Brief and JSON export; structural checks are not a browser test.
+
+
+## Morning Routine recovery, provider comparison, and collection scaffold (2026-10-23)
+
+- [x] Read the full Project source file Morning.txt (992 lines) and consolidate its non-redundant requirements in docs/Morning-Report-and-Routine.md. This is a curated requirements spec, not a claim the linked original chat was fully recovered.
+- [x] Document provider candidates and public plan tradeoffs in docs/Provider-Comparison.md. Preliminary evaluation pair: Alpaca Algo Trader Plus vs Massive Stocks Advanced; no provider selected and no account entitlements verified.
+- [x] Implement an initial provider-neutral persistence scaffold: IScannerDiscoveryEventStore, JSONL append-only adapter, batch ingestion validation, idempotency key, receipt timestamp, and tests for restart deduplication/corrupt-log failure.
+- [ ] Add an observation/bar store with source/receive timestamps, OHLCV validation, session metadata, and gap/late-correction handling; current scaffold stores scanner discovery events only.
+- [ ] Add collector health state and a cancellable long-running polling/streaming worker after provider choice. No background collector or provider adapter exists yet.
+- [ ] Run .NET build/tests for latest branch head after scaffold and UI layout commits; don't infer success from earlier commits.
+- [ ] Browser smoke test the Morning Brief and top-right Red Zone layout; user has manually confirmed the current visual look, but latest layout change still needs browser confirmation.
+- [ ] Validate source differences against installed Thinkorswim studies using the exact user procedure in docs/Validation/5M-to-1M-User-Validation-Steps.md (to be created); do not ask user to repeat prior OHLCV tests already confirmed done.
+- [ ] Resolve provider decision only after entitlement, scanner coverage, session behavior, historical backfill, retention/licensing, and representative-symbol comparison.
