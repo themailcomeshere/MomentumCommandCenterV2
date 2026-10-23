@@ -149,3 +149,15 @@ No immediate user action is required to continue code/document work. If already-
 - Morning workflow/manual records the target Morning Report sections, up-to-four split-screen “Red Zone”, ranked watchlist, Boring Overnight pipeline, extended continuation watch, manual Schwab boundary, and acceptance criteria. All unimplemented features are labeled as planned.
 - Search of the repository and available project handoff notes did not recover the full earlier Morning Routine conversation. Do not pretend the proposed routine is an exact reproduction. If exact details matter, ask the user to paste or point to the earlier conversation.
 - Next: continue installed-study/source parity audit; preserve current trading rules; define provider-neutral Morning Report and scanner data contracts; choose a verified data/scanner source; implement automated watchlist and ranking, Red Zone, and Boring Overnight only with provenance/freshness and validation. Decide .exe packaging after integration architecture is settled.
+
+
+## Morning Report UI and overnight collector checkpoint (2026-10-22)
+
+- User wants to leave released/deployed MCC open overnight and see collected scanner data in the 08:30 Arizona Morning Report. This is a requirement, not a current capability: the static browser workbench has no live provider, polling/streaming collector, persistent market-data event store, or background service. Keeping the tab open today does not collect data.
+- UI updates:
+  - `frontend/index.html`: Morning Command Brief section, explicit overnight collector NOT RUNNING status, scanner/watchlist/top-candidate/Boring Overnight status cards, responsive Red Zone placeholder.
+  - `frontend/app.js`: locally rank demo/import scanner rows by supplied score for display only, render up to four Red Zone cards with unknown 5M/1M gates, update watchlist count, and export a JSON report preview.
+  - `frontend/styles.css`: responsive Morning Report and 1–4 candidate tiles.
+- The Morning Report is intentionally labeled preview-only. The displayed generated timestamp is the browser's local clock, not a market-data timestamp. The JSON export records liveScannerConnected=false, overnightCollectionRunning=false, provider=NOT_SELECTED, and Boring Overnight NOT_CALCULATED.
+- Documentation updated: `docs/User-Manual.md`, `docs/Master-To-Do.md`, `docs/Scanner-and-Watchlist-Workbench.md`. New To-Do work requires a supported provider, long-running collector independent of browser tab, persisted raw timestamped events/observations, freshness/gap/duplicate checks, restart/outage/sleep recovery, versioned Morning Report, real ranked Red Zone, and Boring Overnight integration.
+- Do not claim live operation or .exe/background service until implemented and tested. Next engineering step is provider selection and data-ingestion/persistence architecture, not adding fake live-looking demo values.
