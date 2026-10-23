@@ -4,6 +4,20 @@
 **Reviewed:** 2026-10-23 (Arizona time)  
 **Branch:** `feature/opportunity-quality-classification`
 
+
+## UPC extension-danger example — 2026-10-23
+
+- [PARTIAL — EVIDENCE REVIEWED] Added `docs/Validation/UPC-Extension-Danger-Evidence-Review-20261023.md` for the user's UPC 5M/1M screenshots and event facts. The reported state is 5M `Perm=1`, `PBLOCK=0`, while 1M says `CANDIDATE BLOCKED: EXTENSION DANGER`, `IN-TREND CANDIDATE`, `EXT=2.35`. This is consistent with a valid higher-timeframe permission and a blocked 1M entry; do not weaken the gate.
+- [OPEN] Resolve screenshot/event date mismatch: screenshots appear to show 2026-10-23 around 11:26 AM, but the reported event date is 2026-10-22. Chart timezone is also missing.
+- [OPEN] Confirm whether reported missing UPC bars are truly absent. Missing chart bars do not prove zero volume or no movement; never synthesize them. Inspect exact timestamps and raw provider/TOS OHLCV if necessary.
+- [OPEN] Confirm installed 1M source and `BLK=6` mapping. Study names alone do not prove installed source parity.
+
+## Provider comparison refresh — 2026-10-23
+
+- [DONE — RESEARCH DOCUMENTATION] Expanded `docs/Provider-Comparison.md` to compare free and paid tiers against ultimate MCC requirements. Free tiers are suitable for plumbing/prototyping only; they are not approved as live authority feeds.
+- [RECOMMENDED SHORTLIST] Alpaca Algo Trader Plus ($99/mo public list price) versus Massive Stocks Advanced ($199/mo public list price), pending proof of fit, account entitlements, licensing, small-cap/premarket coverage and TOS comparison.
+- [OPEN] Run proof-of-fit tests before subscription/provider selection. No provider is selected or connected.
+
 ## Status and migration note
 
 This file preserves the prior consolidated To-Do text below, after reviewing all 180 lines. Completed repository tasks are marked in the current status addendum at the end; unresolved ThinkOrSwim/chart validation tasks remain open because source-controlled files do not prove which study is installed in the user's TOS workspace. The prior reference to a Boring Overnight TODO under `/Trading System/` is not present in this repository; the criteria are now documented in `docs/BoringOvernight.md`. The current repository's `docs/Charts/1M/` and `docs/Charts/5M/` studies are the source-controlled references; do not infer that they match the installed study without comparison.
