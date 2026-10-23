@@ -31,7 +31,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         try
         {
             await EnsureIndexLoadedAsync(cancellationToken);
-            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_path))!);
             var appended = 0;
             await using var stream = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read,
                 16 * 1024, FileOptions.Asynchronous);
