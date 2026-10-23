@@ -58,3 +58,7 @@ Use Visual Studio 2022 and .NET 8 SDK. Open `MomentumCommandCenterV2.sln`, build
 
 - The canonical project checklist is [docs/Master-To-Do.md](docs/Master-To-Do.md). Commit Message should state the To-Do item's Category and explanation. End full Commit Message with the currently remaining To-Do item count.
 - The original README is preserved as [an archived source](docs/archive/README_ORIGINAL.md) after reconciliation.
+
+## Current next steps
+
+The current API host includes initial Alpaca and Massive historical REST adapters and local raw-bar persistence. Accounts are not required for offline development; free credentials are optional for live smoke tests, and paid subscriptions are on hold pending proof-of-fit. See [Next Steps and User Inputs](docs/Next-Steps-and-User-Inputs.md), [Master To-Do](docs/Master-To-Do.md), and [Provider Comparison](docs/Provider-Comparison.md).
