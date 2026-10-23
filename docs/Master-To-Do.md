@@ -354,3 +354,11 @@ The earlier workflow success recorded above was for its then-current branch head
 - [ ] Verify .NET build/test workflow against the latest branch head after all changes.
 - [ ] Browser-test the new top-right layout and export interaction.
 - [ ] After provider selection, extend persistence to market bars and implement cancellable collector, health reporting, reconnection/backfill, and restart/sleep recovery.
+
+
+### Collector lifecycle scaffold extension (2026-10-23)
+
+- [x] Add ScannerDiscoveryPollingWorker with cancellation, retry-on-next-poll behavior, and RUNNING / DEGRADED / STOPPED / UNKNOWN health snapshots.
+- [x] Add an offline test proving a successful empty poll is recorded as zero observations and cancellation stops the worker.
+- [ ] Add explicit degraded-source/recovery test coverage and sleep/wake/backfill reconciliation after provider semantics are known.
+- [ ] Wire the worker into a real host and implement a provider adapter; no configured source exists, so the worker is not currently running.
