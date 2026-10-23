@@ -147,3 +147,12 @@ The user intends to leave the released/deployed MCC program open overnight so sc
 - Test overnight process recovery, machine sleep/wake, network outage, provider outage, duplicate/replayed events, timestamp/session boundaries, and startup after missed collection. No missing bars may be synthesized.
 - Security: never put provider credentials in frontend code, browser storage, committed files, or logs. Use approved local secret storage/configuration.
 - The current UI now includes a **preview-only** Morning Command Brief, Red Zone layout, and JSON export. It intentionally states that overnight collection is not running and uses only local demo/import rows. It is not evidence that the background scanner exists.
+
+
+## Recovered Morning Report requirements and current provider research (2026-10-23)
+
+- Consolidated the provided Project source file Morning.txt into [Morning Report and Routine](Morning-Report-and-Routine.md). It captures Morning Landscape, scenario-based market expectations, continuously refreshed conditions, contextual opportunity hierarchy, Red Zone, Boring Overnight integration, probabilistic catalyst-maturation risk, Journey/outcome tracking, personalized timing, and eventual execution-quality learning.
+- The Red Zone is intended to occupy the **upper-right** of the main workspace. A persistent left Watchlist/News rail is not yet decided; layout remains open for user feedback.
+- [Provider comparison](Provider-Comparison.md) evaluates Alpaca, Massive, Twelve Data, and Schwab evidence. No provider has been selected or account entitlements verified. Do not use delayed/single-venue feeds as though they were complete real-time consolidated data.
+- A first provider-neutral event persistence scaffold now exists: validated batch ingestion, JSONL append-only persistence, idempotency, and receipt timestamps. It is not a live collector and currently persists scanner discovery events, not a complete market-bar store.
+- To validate the actual installed Thinkorswim studies, follow [the exact 5M-to-1M validation steps](Validation/5M-to-1M-User-Validation-Steps.md). Previously completed OHLCV/DST tests should not be repeated; this request is specifically about installed-study source and same-bar signal-state evidence.
