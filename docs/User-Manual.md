@@ -1,0 +1,131 @@
+# Momentum Command Center V3 — User Manual and Morning Workflow
+
+**Status:** Workflow specification for the current prototype; not a claim that the production features are implemented.
+**Branch:** `feature/opportunity-quality-classification`
+**Last reviewed:** 2026-10-22
+
+## 1. What MCC is today
+
+MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. The current Dashboard is a static HTML/CSS/JavaScript workbench. It is opened in a browser; it is not currently a Windows `.exe` application.
+
+Open `frontend/index.html` in a browser. The page can show illustrative demo snapshots, import a local CSV, add/remove symbols from a watchlist stored in that browser, and save/export feedback notes. The watchlist and feedback notebook use browser local storage. They do not sync to GitHub or another computer automatically.
+
+**Current limits:** demo fixtures are not live prices; no market-data provider or live scanner is connected; Thinkorswim is not connected as a feed/API; the C# engine is not wired into this front end; the overnight score is not calculated by the page; news/catalysts are not fetched; no broker integration or order submission exists. The UI's readiness panel is the source of truth for these limits.
+
+## 2. Intended 08:30 Arizona Morning Report
+
+The product goal is that the user can open MCC around 08:30 Arizona time and immediately see a dated, timestamped Morning Report instead of manually assembling the day's candidates. The exact historical Morning Routine previously discussed is not present in the repository or the accessible project handoff notes. This section is therefore a proposed product contract based on documented project requirements, not a claim that every step matches the prior conversation. See the Master To-Do's Morning Routine item and the user's action-needed note.
+
+### Report header
+- Report date and generated-at timestamp.
+- Arizona local time and market-session context; show the corresponding Eastern time and whether US markets are premarket or regular session.
+- Data provider, source timestamps, last update, and freshness/staleness state for each feed.
+- Explicit system status: live, delayed, imported, demo, unavailable, or DATA?.
+- A concise overall readiness summary; never hide a missing feed behind a green status.
+
+### Morning Report sections (target)
+1. **System/data health:** market-data/scanner provider, connection state, last successful update, missing/stale symbols, timestamp/session consistency, and any known data-quality warnings.
+2. **Market context:** only sourced and timestamped market/sector context that MCC can actually retrieve. If no source is connected, show DATA NOT AVAILABLE rather than narrative filler.
+3. **Boring Overnight candidates:** ranked candidates using the documented Overnight Edge, Boringness, catalyst/event risk, current-day qualification, 5M structure where appropriate, and 1M timing where appropriate. Display hard-gate failures, reason codes, freshness, and READY/WATCH/BLOCKED/DATA?; zero position remains valid.
+4. **Intraday scanner/watchlist:** provider-discovered candidates grouped by Momentum Hunter, Breakout Trigger, Reclaim/Continuation, and Market Movers/Discovery. Deduplicate symbols while preserving source events and first-seen timestamps. Rank with transparent factors; distinguish quality ranking from entry eligibility.
+5. **Extended Momentum / Continuation Watch:** retain candidates already up substantially (including the user's observed 10–15% cases) without declaring them buyable. Show EXT ATR, extension warning/danger, source/time-stamped catalyst, volume/liquidity/spread, 5M permission, and the exact reason no fresh entry is available. Requalification must require fresh evidence and existing 5M/1M gates; do not weaken EXT thresholds by default.
+6. **Top Candidates / “Red Zone” panel:** show the top 1–4 candidates at once in a ranked multi-pane layout, inspired by live sports multi-game coverage. Each pane should include symbol/rank, current price and timestamp, % change, volume/RVOL, extension, catalyst/source, 5M Permission, 1M event/READY state, data freshness, key reasons, and next invalidation/blocker. It is a monitoring display, not an order signal. If fewer than four candidates meet the display criteria, show fewer; never pad with weak or fake candidates. Initially use static/demo cards only; live updating and ranking await validated data and engine integration.
+7. **Action queue:** clearly separate (a) actionable under validated gates, (b) watch/pullback, (c) extended/no entry now, (d) blocked, and (e) DATA?. No candidate may be called executable solely due to news, score, or scanner inclusion.
+8. **Manual decision log:** user can record watched/ignored/traded decisions and reasons, with symbol, timestamp, source snapshot, and export. Avoid storing sensitive broker credentials or account data.
+9. **End-of-session feedback:** allow the user to save dashboard observations in the local feedback notebook and export JSON for review.
+
+## 3. How the intended daily workflow should work
+
+### Step 1 — Load MCC
+**Prototype today:** open `frontend/index.html` in a browser. No installer or executable exists in the documented implementation.
+**Target:** provide a reliable desktop shortcut/packaged app or locally hosted web app only after the UI is connected to the application services. An `.exe` is a packaging choice, not a prerequisite for a useful Dashboard. Do not build a fake executable that merely wraps a disconnected demo page.
+
+### Step 2 — Initialize and verify data
+- Determine the report date and Arizona/Eastern session context.
+- Connect only a selected, supported market-data/scanner provider.
+- Load current and required historical OHLCV with explicit timestamps, session definitions, timezone offsets, and provenance.
+- Check freshness, gaps, duplicates, stale quotes, symbol identity, and feed health.
+- If any required input is missing or stale, mark the affected symbol/metric DATA? and block dependent calculations. Never synthesize missing bars.
+- Do not proceed as though the report were live if the source is demo/imported.
+
+### Step 3 — Populate and rank the watchlist
+- Discover candidates from the configured scanner groups.
+- Preserve raw discovery events, provider, first-seen time, source timestamp, group, and raw fields.
+- Deduplicate symbols for display without discarding event history.
+- Compute only validated, versioned features; display score components and reason codes.
+- Re-rank on new valid events/data, with stable tie-breaks and visible “last ranked” time. Avoid visual jitter from inconsequential changes; record ranking changes.
+- Retain extended candidates in the continuation/pullback lane instead of silently losing them.
+- User-added symbols remain distinguishable from provider-discovered candidates.
+- The current page does **not** do this automatically. Its demo rows and imported CSV rows are not calculated by the C# engine.
+
+### Step 4 — Populate the Top 1–4 Candidate “Red Zone”
+- Select up to four candidates from the ranked universe based on explicit criteria.
+- Show them simultaneously in a 1–4 split layout, ordered by rank. A larger candidate count belongs in the watchlist, not forced into this panel.
+- Update only when new timestamped source data arrives; display each pane's quote/data age and the last refresh.
+- Preserve clear distinctions: opportunity quality, 5M authority/Permission, 1M execution event, extension risk, and position management.
+- A strong candidate can remain visible while blocked or extended, but the panel must label why it is not actionable.
+- The current UI has no Red Zone panel, live chart tiles, or automatic re-ranking. These are planned features.
+
+### Step 5 — Determine Boring Overnight
+For each candidate, apply the source-controlled `docs/BoringOvernight.md` specification:
+1. Overnight Edge Score.
+2. Boringness Score.
+3. Event/Catalyst Risk.
+4. Current-Day Qualification, including abnormal extension/volume and deterioration.
+5. 5M structure/permission where appropriate.
+6. 1M entry timing where appropriate.
+7. Decision state with reason codes and freshness.
+
+Initial gates documented there include price at least $5, 20-day average volume at least 500,000 shares/day, overnight win rate at least 60%, 20-day average ON return at least +0.10%, 5-day average ON return greater than the 20-day average, price above 20-day SMA, no maintained Schwab exclusion, and no incompatible material event/catalyst risk. Treat these as specification inputs pending full implementation/validation, not as a currently computed dashboard result. Score bands never override hard gates. Unknown catalyst data is DATA? / manual review, not READY.
+
+The user makes the final decision. A zero position is valid. The Dashboard must not manufacture a buy recommendation when the data or gates are incomplete.
+
+### Step 6 — Review intraday candidates and continuation
+- Check 5M Permission first for the higher-timeframe authority; 1M only times entry and may consume 5M context. 5M must never depend on 1M.
+- A candidate bubble such as IN-TREND CANDIDATE indicates a candidate event, not automatically a READY entry. The checked source defines `inTrendExecutionCandidate = executionCandidate AND NOT freshTrigger`; the event occurs on a transition with re-arm logic. Final READY remains separately gated by an active execution window, 5M permission, and no bullish extension danger.
+- In the repository's 1M MainStudy, ATR extension is `AbsValue(price - dailyVWAP) / ATR(14)`; warning defaults to 1.50 ATR and danger to 2.00 ATR. Bullish extension danger is price above Daily VWAP and extension at/above danger. These are repository-source findings, not proof the installed Thinkorswim study is identical.
+- If EXT is dangerous, keep the candidate visible for monitoring but do not call it entry-ready. A pullback/reclaim or consolidation-breakout alternative must be separately specified, tested, and validated before changing trading rules.
+- Catalyst/news context needs a trustworthy source, publication time, observation time, and freshness. News alone never grants eligibility.
+
+### Step 7 — Manual Schwab entry
+MCC does not submit orders. Manual Schwab website order entry is the current preference. No broker credentials/API, order ticket prefill, or “Buy Maximum Amount” button is implemented or assumed supported. A future sizing helper should be non-submitting, show price timestamp, selected custom/max budget, reserve/cushion, whole-share calculation and assumptions, and leave final review/submission to the user in Schwab.
+
+### Step 8 — Record feedback and close the loop
+- Save dashboard issues with category, priority, symbol, timeframe, timestamp, and expected-versus-observed behavior.
+- Export feedback JSON before switching browsers/devices or clearing browser data.
+- Feed validated observations into the To-Do list and user manual. Do not claim notes are uploaded automatically.
+
+## 4. Current controls in the prototype
+- Workspace selector: Intraday Momentum / Boring Overnight demo views.
+- Symbol selector and replay slider: illustrative fixtures, not live symbols/data.
+- Scanner group selector: demo candidates; local CSV import accepts Symbol/Ticker and optional Score, Status, Reason, Extension/Ext, Freshness/Data_As_Of.
+- Watchlist: manual add/remove/clear; stored in browser local storage.
+- Feedback notebook: category/priority/note; stored locally; JSON export.
+- System readiness panel: states demo-only market data, no Thinkorswim connection, no selected live scanner, no order execution.
+- Reset demo: restores illustrative view.
+
+## 5. Planned acceptance criteria
+- [ ] Launch instructions and desktop packaging decision documented; do not promise an .exe until built and distributed.
+- [ ] Live provider selected, licensed/authorized, and integrated with connection/freshness/error states.
+- [ ] Source-attributed Morning Report is generated for the report date and 08:30 Arizona workflow.
+- [ ] Automated watchlist discovery, deduplication, ranking, stable ordering, and append-only event history work on real timestamped data.
+- [ ] Top 1–4 Red Zone tiles show rank, reasons, price/time, source freshness, 5M/1M states, extension and catalyst context.
+- [ ] Boring Overnight calculations match documented specification and independent test fixtures.
+- [ ] EXT/continuation behavior is validated without bypassing the current entry gate.
+- [ ] Missing/stale data produces DATA? and cannot become READY.
+- [ ] Historical replay and out-of-sample tests are completed before any new rule affects actionable ranking.
+- [ ] UI feedback/export survives routine use; data persistence and backup behavior are documented.
+- [ ] Manual Schwab remains separate; no automatic order submission.
+
+## 6. Canonical references
+- `docs/Master-To-Do.md` — canonical task list.
+- `docs/NewChatHandoff.md` — recovery/context handoff.
+- `docs/Scanner-and-Watchlist-Workbench.md` — scanner and local dashboard status.
+- `docs/BoringOvernight.md` — Boring Overnight criteria.
+- `docs/Charts/1M/MainStudy.txt` and `docs/Charts/5M/MainStudy.txt` — repository study references.
+- `README.md` — project overview and current prototype launch instructions.
+
+## [Uncertainties]
+- The detailed prior Morning Routine conversation is not available in the accessible project source/history or repository search. The proposed report layout and workflow above are grounded in documented project requirements, but may not capture every step or metric from that earlier conversation.
+- The repository ThinkScript source may differ from the user's currently installed Thinkorswim studies; confirm installed version before treating the source audit as runtime proof.
+- Live provider/API, packaging choice (.exe versus local web app), and actual live ranking formulas are not selected or implemented.
