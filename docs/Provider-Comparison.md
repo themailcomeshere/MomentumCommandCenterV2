@@ -1,6 +1,6 @@
 # Market Data / Scanner Provider Comparison
 
-**Reviewed:** 2026-10-23. Research only: no provider selected, account entitlement verified, or adapter implemented. Prices below are current public individual-plan listings checked during this review; verify again before purchase.
+**Reviewed:** 2026-10-23. Two initial REST historical-bar adapters are now implemented in `src/MomentumCommandCenterV2.API`; no provider is selected, account entitlement verified, or live request performed. Prices below are public individual-plan listings checked during the research review; verify again before purchase.
 
 ## What MCC ultimately needs
 
@@ -77,3 +77,13 @@ Official sources:
 ## [Uncertainties]
 
 Public prices and plan matrices can change. Endpoint-specific entitlement, exact history limits, small-cap and premarket coverage, retention/licensing, scanner behavior and vendor terms require confirmation for the user's account and intended use. Data not found in sources: a verified selected provider, actual account entitlement, or contractual approval.
+
+
+## Implementation status update — 2026-10-23
+
+- **Alpaca adapter:** historical REST 1M/5M bars, configured feed, server-side key/secret headers. WebSocket, pagination beyond the first response page, scanner/movers, and quotes are not implemented.
+- **Massive adapter:** REST aggregate 1M/5M bars, date-range query with exact requested timestamp filtering. WebSocket, pagination, scanner/movers, and quotes are not implemented.
+- **API comparison:** `GET /api/market-data/compare` runs both configured providers in parallel for the same symbol/window and reports returned bars, first/latest observations, duplicate timestamps, and coarse timestamp gaps.
+- **Credentials:** configure environment variables or .NET User Secrets; no real credentials belong in the repository or frontend. Empty credentials currently yield NOT CONFIGURED.
+- **Not validated:** actual provider entitlement/plan, licensing, SIP vs IEX parity, premarket/after-hours behavior, representative small-cap coverage, response pagination, reconnect/backfill, timestamp/session normalization, and browser/API smoke tests.
+- This is an integration starting point, not proof that either provider is suitable as MCC's authoritative live feed. Do not subscribe or remove TOS on the basis of adapter code alone.
