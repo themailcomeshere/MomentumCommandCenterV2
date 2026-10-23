@@ -10,9 +10,9 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// </summary>
 public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguration configuration) : IMarketDataProvider
 {
-    private readonly string? _key = string.IsNullOrWhiteSpace(configuration["MarketData:Alpaca:ApiKey"]) ? Environment.GetEnvironmentVariable("ALPACA_API_KEY") : configuration["MarketData:Alpaca:ApiKey"];
-    private readonly string? _secret = string.IsNullOrWhiteSpace(configuration["MarketData:Alpaca:ApiSecret"]) ? Environment.GetEnvironmentVariable("ALPACA_API_SECRET") : configuration["MarketData:Alpaca:ApiSecret"];
-    private readonly string _feed = configuration["MarketData:Alpaca:Feed"] ?? Environment.GetEnvironmentVariable("ALPACA_DATA_FEED") ?? "iex";
+    private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"];
+    private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"];
+    private readonly string _feed = configuration["MarketData:Alpaca:Feed"] ?? "iex";
 
     public string ProviderName => "Alpaca";
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_key) && !string.IsNullOrWhiteSpace(_secret);
