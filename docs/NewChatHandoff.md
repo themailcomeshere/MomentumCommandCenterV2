@@ -240,4 +240,7 @@ No immediate user action is required to continue code/document work. If already-
 - Added `IMarketBarObservationStore` and `JsonlMarketBarObservationStore` under the API project. The comparison endpoint persists each provider's valid raw bars before returning comparison metrics.
 - Default file: LocalApplicationData/MomentumCommandCenterV2/market-bars.jsonl. Override with environment variable `MCC_MARKET_BAR_STORE_PATH`.
 - Append-only records include observation ID, received timestamp, source timestamp, provider, symbol, bar, content hash, and optional superseded observation ID. Identical observations are skipped; changed observations at the same provider/symbol/timestamp are appended as corrections.
-- Persistence is local JSONL only; no database, retention controls, store-specific tests, collector loop, websocket, or automatic restart/backfill process yet.
+- Persistence is local JSONL only; no database, retention controls, collector loop, websocket, or automatic restart/backfill process yet. Store tests cover identical-observation deduplication across store restart and append-only correction history; CI run 148 passed at commit `c702afa21fac9dfa5a31b18463cc4429aa4adc71`.
+
+
+The Morning Brief endpoint now persists the observed SPY/QQQ/IWM bars it fetches and reports each benchmark's observed first-to-last window change when enough bars exist. It still does not calculate sector breadth, catalyst/news, scanner movers, validated regime, Red Zone eligibility, historical probabilities, or Boring Overnight qualification.
