@@ -10,7 +10,7 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// </summary>
 public sealed class MassiveMarketDataAdapter(HttpClient httpClient, IConfiguration configuration) : IMarketDataProvider
 {
-    private readonly string? _apiKey = configuration["MarketData:Massive:ApiKey"] ?? Environment.GetEnvironmentVariable("MASSIVE_API_KEY");
+    private readonly string? _apiKey = string.IsNullOrWhiteSpace(configuration["MarketData:Massive:ApiKey"]) ? Environment.GetEnvironmentVariable("MASSIVE_API_KEY") : configuration["MarketData:Massive:ApiKey"];
 
     public string ProviderName => "Massive";
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_apiKey);
@@ -33,8 +33,10 @@ public sealed class MassiveMarketDataAdapter(HttpClient httpClient, IConfigurati
 
         var fromDate = from.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var toDate = to.UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var url = $"v2/aggs/ticker/{Uri.EscapeDataString(symbol)}/range/{multiplier}/minute/{fromDate}/{toDate}?adjusted=false&sort=asc&limit=50000&apiKey={Uri.EscapeDataString(_apiKey!)}";
-        using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        var url = $"v2/aggs/ticker/{Uri.EscapeDataString(symbol)}/range/{multiplier}/minute/{fromDate}/{toDate}?adjusted=false&sort=asc&limit=50000";
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"Massive returned {(int)response.StatusCode} {response.ReasonPhrase}: {TrimError(body)}");
