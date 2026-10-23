@@ -101,3 +101,8 @@ Until then, status must remain NOT RUNNING / NOT CONNECTED. Never represent a de
 - A JSONL append-only discovery event store and application ingestion validator are now scaffolded. This persists discovery events and receipt time, deduplicates by provider event ID or a deterministic fallback key, and rejects malformed log lines. It does not poll/stream a provider, persist full OHLCV bar history, or generate the live Morning Report.
 - The precise evidence needed for installed-study validation is documented in docs/Validation/5M-to-1M-User-Validation-Steps.md.
 - The Red Zone is being positioned in the upper-right command workspace. Current content remains preview/demo until real source data, validation, and service integration exist.
+
+
+## Polling worker scaffold update (2026-10-23)
+
+A generic cancellable polling worker and health snapshot now exist in the Application layer. It retries on the next configured poll after a source error and records RUNNING / DEGRADED / STOPPED / UNKNOWN. An offline test covers an empty successful batch and graceful cancellation. No concrete source, host startup wiring, or live collection exists until a provider is selected.
