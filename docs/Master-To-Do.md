@@ -347,9 +347,9 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 - [x] Read the full Project source file Morning.txt (992 lines) and consolidate its non-redundant requirements in docs/Morning-Report-and-Routine.md. This is a curated requirements spec, not a claim the linked original chat was fully recovered.
 - [x] Document provider candidates and public plan tradeoffs in docs/Provider-Comparison.md. Preliminary evaluation pair: Alpaca Algo Trader Plus vs Massive Stocks Advanced; no provider selected and no account entitlements verified.
 - [x] Implement an initial provider-neutral persistence scaffold: IScannerDiscoveryEventStore, JSONL append-only adapter, batch ingestion validation, idempotency key, receipt timestamp, and tests for restart deduplication/corrupt-log failure.
-- [ ] Add an observation/bar store with source/receive timestamps, OHLCV validation, session metadata, and gap/late-correction handling; current scaffold stores scanner discovery events only.
-- [ ] Add collector health state and a cancellable long-running polling/streaming worker after provider choice. No background collector or provider adapter exists yet.
-- [ ] Run .NET build/tests for latest branch head after scaffold and UI layout commits; don't infer success from earlier commits.
+- [x] Add a first append-only raw market-bar observation store with source/receive timestamps, OHLCV validation, content-hash idempotency, and append-only correction links. Implemented in API; tests cover restart deduplication and corrections. Session-aware gap classification and corruption/retention policy remain open.
+- [ ] Add API-hosted collector health state and a cancellable long-running streaming/polling worker. A polling-worker scaffold exists but is not wired to a real provider source; Alpaca/Massive historical REST adapters now exist. Live stream binding, recovery/backfill, and operational health remain open.
+- [x] Verify .NET build/tests for the API host, provider adapters, raw-bar store, and store tests. Latest verified run 151: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40012211560. Browser and live-provider tests remain open.
 - [ ] Browser smoke test the Morning Brief and top-right Red Zone layout; user has manually confirmed the current visual look, but latest layout change still needs browser confirmation.
 - [ ] Validate source differences against installed Thinkorswim studies using the exact user procedure in docs/Validation/5M-to-1M-User-Validation-Steps.md (to be created); do not ask user to repeat prior OHLCV tests already confirmed done.
 - [ ] Resolve provider decision only after entitlement, scanner coverage, session behavior, historical backfill, retention/licensing, and representative-symbol comparison.
@@ -420,3 +420,14 @@ The earlier workflow success recorded above was for its then-current branch head
 
 
 - [LATEST HEAD VERIFIED] GitHub Actions run 151 at `ae6ee7acc30e85a6268b5ea8fc40d86429d3461b` completed successfully for restore, Release build, and tests. Run: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40012059701. No live provider, browser, or entitlement validation is implied.
+
+
+## Canonical dependency/status correction — 2026-10-23
+
+Use `docs/Next-Steps-and-User-Inputs.md` as the single checklist for user actions versus work that can proceed without accounts.
+
+- **Accounts:** no paid subscriptions are needed for the next development milestone. Free accounts are optional for live API smoke tests. One provider is enough to begin; both are useful for a same-window comparison. Do not select or pay for a production plan until proof-of-fit, account entitlements, license rights, premarket/small-cap coverage and TOS parity have been checked.
+- **API:** the ASP.NET Core host, Alpaca/Massive historical REST adapters, comparison endpoint, partial Morning Brief and append-only JSONL raw-bar store are implemented. Latest CI run 151 passed restore, Release build and tests. No live provider calls, browser end-to-end test or license verification has been performed.
+- **Offline work that remains actionable now:** adapter pagination/error/retry tests; hosted collector lifecycle and health; stream abstraction; recovery/backfill design and tests; store corruption/retention/error handling; fixture-driven Morning Brief/scanner/Boring Overnight calculations; session-aware gap semantics; ThinkScript source parity tests.
+- **User evidence still required:** XRPN 5M screenshot listed in `docs/Validation/5M-to-1M-User-Validation-Steps.md`; UPC continuous bars or exact timestamp inspection only if the historical 09:16–09:36 gap question still needs resolution; review the API-hosted browser layout. These are not prerequisites for offline infrastructure work.
+- **Morning Brief scope:** currently benchmark observation/freshness only. Broad movers, sector/breadth, sourced news/catalysts, validated regime, Red Zone qualification and live Boring Overnight remain unimplemented and must not be displayed as known.
