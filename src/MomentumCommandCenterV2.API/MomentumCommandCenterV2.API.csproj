@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MomentumCommandCenterV2.Application\MomentumCommandCenterV2.Application.csproj" />
+    <ProjectReference Include="..\MomentumCommandCenterV2.Infrastructure\MomentumCommandCenterV2.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
