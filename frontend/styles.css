@@ -854,3 +854,17 @@ th {
 .provider-status { color:var(--yellow); font-size:12px; line-height:1.5; }
 .provider-results-wrap { margin-top:16px; }
 @media (max-width:700px) { .provider-cards { grid-template-columns:1fr; } .provider-card-heading { align-items:flex-start; } }
+
+.morning-api-snapshot {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0c1527;
+}
+.morning-api-snapshot p {
+    margin: 5px 0;
+    color: #c6d3e6;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
