@@ -75,3 +75,20 @@ The existing red "In-trend candidate" bubble has not been semantically verified 
 ## Schwab / order-entry boundary
 
 MCC remains non-executing. Manual Schwab website entry is the preferred baseline. Do not integrate broker credentials or implement one-click "Buy Maximum Amount." A future non-submitting sizing calculator may support a custom budget or an explicitly selected maximum budget, but it must show its assumptions, current price timestamp, calculated whole-share quantity, reserve/cushion, and final manual review warning. Any "Open Schwab" navigation should wait until a legitimate supported link/prefill workflow is verified.
+
+
+## Persistent overnight collection and Morning Report (2026-10-22)
+
+The user's desired operating model is to leave the released/deployed MCC program open overnight so the Morning Report is populated with recent scanner discoveries by 08:30 Arizona time. This is **not supported by the current static browser workbench**. Leaving `frontend/index.html` open does not create scanner traffic, ingest market data, or persist provider observations.
+
+The UI now has a preview-only Morning Command Brief, a responsive Red Zone showing up to four locally ranked demo/import candidates, and a JSON export for that preview. The report clearly identifies itself as PREVIEW_ONLY and says the overnight collector is not running. Supplied scores are sorted for UI demonstration only; they are not the validated MCC opportunity ranking. 5M Permission and 1M execution remain UNKNOWN in these tiles.
+
+Required architecture before overnight collection can be relied on:
+1. Select and verify a supported provider and its licensing/entitlements.
+2. Implement a long-running provider adapter/collector independent of the browser tab.
+3. Persist raw discovery events and timestamped market observations with provenance and schema/version identifiers.
+4. Implement health/freshness, gap/duplicate detection, reconnect and restart recovery, and machine sleep/wake handling.
+5. Build deterministic Morning Report generation from persisted data and versioned scoring.
+6. Connect ranked discovery, continuation watch, Boring Overnight, and Red Zone to that validated data path.
+
+Until then, status must remain NOT RUNNING / NOT CONNECTED. Never represent a demo/import CSV as live data; do not synthesize missing bars; no provider secrets in browser code or localStorage.
