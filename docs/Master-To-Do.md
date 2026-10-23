@@ -8,8 +8,8 @@
 ## UPC extension-danger example — 2026-10-23
 
 - [PARTIAL — EVIDENCE REVIEWED] Added `docs/Validation/UPC-Extension-Danger-Evidence-Review-20261023.md` for the user's UPC 5M/1M screenshots and event facts. The reported state is 5M `Perm=1`, `PBLOCK=0`, while 1M says `CANDIDATE BLOCKED: EXTENSION DANGER`, `IN-TREND CANDIDATE`, `EXT=2.35`. This is consistent with a valid higher-timeframe permission and a blocked 1M entry; do not weaken the gate.
-- [OPEN] Resolve screenshot/event date mismatch: screenshots appear to show 2026-10-23 around 11:26 AM, but the reported event date is 2026-10-22. Chart timezone is also missing.
-- [OPEN] Confirm whether reported missing UPC bars are truly absent. Missing chart bars do not prove zero volume or no movement; never synthesize them. Inspect exact timestamps and raw provider/TOS OHLCV if necessary.
+- [OPEN] [RESOLVED] User confirmed screenshots/event are from 2026-10-22 and Thinkorswim chart timezone is Arizona.
+- [OPEN] [PARTIAL] Reviewed `data/StrategyReports_UPC_102226.csv`: this is a strategy report covering 09:37–09:47, not a continuous OHLCV export; it cannot establish the reported 09:16–09:36 missing-bar intervals. Obtain a full bar export or exact timestamp inspection. Missing chart bars do not prove zero volume or no movement; never synthesize them.
 - [OPEN] Confirm installed 1M source and `BLK=6` mapping. Study names alone do not prove installed source parity.
 
 ## Provider comparison refresh — 2026-10-23
@@ -376,3 +376,12 @@ The earlier workflow success recorded above was for its then-current branch head
 - [x] Add an offline test proving a successful empty poll is recorded as zero observations and cancellation stops the worker.
 - [ ] Add explicit degraded-source/recovery test coverage and sleep/wake/backfill reconciliation after provider semantics are known.
 - [ ] Wire the worker into a real host and implement a provider adapter; no configured source exists, so the worker is not currently running.
+
+
+## Provider comparison UI / UPC CSV follow-up — 2026-10-23
+
+- [DONE — STATIC UI ONLY] Added parallel Alpaca and Massive Stocks comparison cards to `frontend/index.html`, styled in `frontend/styles.css`, with a local comparison checklist action in `frontend/app.js`. User can set symbol, aggregation, and date; it marks both feeds NOT CONNECTED and shows required comparison fields. The button does not contact vendors and is not a live integration.
+- [DONE — CSV REVIEW] Reviewed `data/StrategyReports_UPC_102226.csv`. It records four strategy/order events between 09:37 and 09:47 Arizona time and embedded isolated 1M OHLCV payloads. It is not a full OHLCV time series, so it cannot determine whether the reported earlier candles were absent.
+- [RESOLVED] User confirms UPC screenshots/event date 2026-10-22 and Thinkorswim chart timezone Arizona.
+- [OPEN] Obtain continuous 1M/5M UPC OHLCV or verify exact bar timestamps in TOS for 09:16–09:36. Do not fill missing bars.
+- [OPEN] Implement real backend adapters for both vendors only after credentials and entitlement/licensing decisions; keep secrets out of frontend JS. Compare source timestamps, bars, quotes, missing intervals, reconnect and backfill.
