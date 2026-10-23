@@ -210,6 +210,7 @@ providerCompareButton?.addEventListener("click", async () => {
    ["Request", symbol + " · " + interval + " · " + date, symbol + " · " + interval + " · " + date],
    ["Connection / request", alpaca?.error || (alpaca?.configured ? "REQUEST COMPLETED" : "NOT CONFIGURED"), massive?.error || (massive?.configured ? "REQUEST COMPLETED" : "NOT CONFIGURED")],
    ["Bars received", String(alpaca?.barCount ?? "DATA?"), String(massive?.barCount ?? "DATA?")],
+   ["New raw observations persisted", String(alpaca?.persistedObservationCount ?? "DATA?"), String(massive?.persistedObservationCount ?? "DATA?")],
    ["First observation", formatBar(alpaca?.firstBar), formatBar(massive?.firstBar)],
    ["Latest observation", formatBar(alpaca?.latestBar), formatBar(massive?.latestBar)],
    ["Observed timestamp gaps", String(alpaca?.gapCount ?? "DATA?"), String(massive?.gapCount ?? "DATA?")],
