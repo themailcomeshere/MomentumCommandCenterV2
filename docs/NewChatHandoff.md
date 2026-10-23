@@ -139,3 +139,13 @@ No immediate user action is required to continue code/document work. If already-
 - Exact scanner provider and its API/entitlement/licensing details are not specified; Thinkorswim is not integrated as a live feed.
 - Live scanner extension gating remains blocked until exact indicator parity is implemented and tested.
 - Dashboard feedback is local to the browser until manually exported; there is no server-side feedback storage.
+
+## Morning Report / Dashboard workflow checkpoint (2026-10-22)
+
+- User's target is to open MCC around 08:30 Arizona time and see a Morning Report, automatically populated and re-ranked watchlist, top 1–4 ranked candidate “Red Zone” tiles, and Boring Overnight decision support.
+- New user manual: `docs/User-Manual.md`. Canonical To-Do remains `docs/Master-To-Do.md`.
+- Current UI reality: `frontend/index.html` is opened in a browser; it is not an .exe. The page is a static demo/import workbench with localStorage watchlist/feedback. No live data/scanner provider, automatic ranking, generated Morning Report, Red Zone tiles, live Boring Overnight scoring, application-engine wiring, or broker API is connected.
+- Repository source audit: `docs/Charts/1M/MainStudy.txt` sets extension warning/danger defaults at 1.50/2.00 ATR using absolute price-to-Daily-VWAP distance divided by ATR(14); bullish danger is specifically price above VWAP and extension at/above danger. `inTrendExecutionCandidate` means `executionCandidate AND NOT freshTrigger`; event is transition/re-arm gated. Final READY separately requires an active execution window, 5M execution permission, and no bullish extension danger. It is a candidate classification, not itself READY. This audit does not prove the installed Thinkorswim study matches repository source.
+- Morning workflow/manual records the target Morning Report sections, up-to-four split-screen “Red Zone”, ranked watchlist, Boring Overnight pipeline, extended continuation watch, manual Schwab boundary, and acceptance criteria. All unimplemented features are labeled as planned.
+- Search of the repository and available project handoff notes did not recover the full earlier Morning Routine conversation. Do not pretend the proposed routine is an exact reproduction. If exact details matter, ask the user to paste or point to the earlier conversation.
+- Next: continue installed-study/source parity audit; preserve current trading rules; define provider-neutral Morning Report and scanner data contracts; choose a verified data/scanner source; implement automated watchlist and ranking, Red Zone, and Boring Overnight only with provenance/freshness and validation. Decide .exe packaging after integration architecture is settled.
