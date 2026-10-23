@@ -1,59 +1,130 @@
 # Momentum Command Center — New Chat Handoff
 
-**Updated:** 2026-10-16  
-**Repository:** [MomentumCommandCenterV2](https://github.com/themailcomeshere/MomentumCommandCenterV2)  
+**Updated:** 2026-10-22
+**Repository:** [MomentumCommandCenterV2](https://github.com/themailcomeshere/MomentumCommandCenterV2)
 **Working branch:** `feature/opportunity-quality-classification`
+**Canonical task list:** `docs/Master-To-Do.md`
+**Purpose:** Recovery guide for a new ChatGPT conversation or interrupted project session. Treat the repository and this document as the working record; never invent missing facts.
 
-## Project intent and boundaries
+## 1. Mission and architectural boundaries
 
-This is a C#/.NET 8 research and decision-support prototype, not an auto-trader. Preserve the architecture: 5M is the authority/permission timeframe; 1M may consume 5M context for execution timing, but 5M must never depend on 1M. Entry eligibility, opportunity quality, entry timing, position management, and data confidence are separate dimensions. No automatic order placement or Schwab order submission.
+MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. Do not implement automatic order placement or Schwab order submission.
 
-## Current branch status
+- **5M is the authority/permission timeframe.** It establishes whether the broader setup has permission.
+- **1M is the execution-timing timeframe.** It may consume 5M context; 5M must never depend on 1M.
+- Keep data confidence, setup/entry eligibility, opportunity quality, entry timing, and position management as distinct dimensions.
+- Scanner discovery is a candidate-universe input, not a trade signal. A scanner must not create or override 5M Permission or 1M `EXECUTION READY`.
+- Opportunity-quality classifications remain diagnostic-only until exact input parity and out-of-sample validation support further use.
+- Preserve raw data, source provenance, timezone offsets, and versioned study/config identities. Never synthesize missing bars or silently fill gaps.
 
-The branch contains the opportunity-quality diagnostic slice, separated models/enums, version-controlled 1M/5M ThinkScript references, development rules under `docs/rules/abpDevRules.md`, and the market-data/replay foundation:
-- Raw `MarketBar` OHLCV contract with symbol, timeframe, and timestamp.
-- CSV reader using invariant numeric parsing and timezone-aware timestamps.
-- Deterministic replay frames: each 1M bar sees only a 5M bar whose timestamp is <= the 1M frame timestamp.
-- Replay CLI command and synthetic sample CSV.
-- Unit tests for no-look-ahead, duplicate bars, and invalid OHLC.
-- Static front-end scaffold under `frontend/`, explicitly marked demo data.
+## 2. User workflow and collaboration rules
 
-The user reports that the previous branch build and unit tests passed. A new GitHub Actions workflow was added; the replay foundation's build and tests passed on commit `fdefa8fb85fee0c2e68f17e4848201894be5fc4b`. A second run covering the subsequent signal-engine documentation-only change also passed on commit `74d5848a955e2595747db716ca5b3453cf7c074d`. Later changes in the branch were documentation-only. The user should still pull and build locally to verify the exact working environment.
+- No fabrication. If data is missing, state: **Data not found in sources.**
+- Flag assumptions and unknowns in a final `[Uncertainties]` section for complex responses.
+- Be direct and thorough; execute the next task without unnecessary approval requests.
+- For any multi-step work, report what changed, what is verified, what remains open, and exactly what the user needs to do (if anything).
+- Do not claim build/tests/CI passed without evidence tied to the current branch head.
+- Follow `docs/rules/abpDevRules.md`: flowerbox classes and methods with purpose/when-called comments; preserve clean layer dependencies.
+- Update this handoff and `docs/Master-To-Do.md` when the project checkpoint materially changes.
 
-## Canonical documents and source files
+## 3. Current project state
 
-- `README.md`: project overview and top-level roadmap.
-- `docs/Master-To-Do.md`: canonical master checklist. It preserves the prior 180-line To-Do and records which sections are done, deferred, or still unresolved.
-- `docs/archive/README_ORIGINAL.md`: archived historical source after reconciliation against the current README and master checklist.
-- `docs/BoringOvernight.md`: strategy and intended Design vs Use workflow; retain separate Overnight Edge and Boringness concepts.
-- `docs/Opportunity-Quality-and-Ranking.md`: diagnostic classification specification; provisional bands are not calibrated trading rules.
-- `docs/Market-Data-and-Replay-Contract.md`: raw data, CSV, replay guarantees, limitations, and next steps.
-- `docs/Charts/1M/` and `docs/Charts/5M/`: version-controlled current MainStudy and DiagnosticStudy ThinkScript sources. Do not rename/replace a baseline without verifying the installed version and intended role.
-- `docs/rules/abpDevRules.md`: development rules. Flowerbox every class and method with purpose and when called; keep layer dependencies clean.
+### Architecture/code already present
 
-## Data/replay contract
+- Core market bar and replay models, CSV parsing, replay frame sequencing, V2 signal engine, and opportunity-quality diagnostic models/assessor.
+- Strategy Report parser for the MCC-owned `MCC_OHLCV` payload, with validation/rejection paths for malformed/legacy rows.
+- ThinkScript references in `docs/Charts/1M/` and `docs/Charts/5M/`, including Authority Diagnostic V2 for the 5M Permission audit.
+- Static front-end under `frontend/` is a local/demo workbench; its sample rows are not live scanner output and are not calculated from the C# engine.
+- Application-layer scanner contract scaffold was committed on 2026-10-22: `ScannerDiscoveryEvent.cs` and `IScannerDiscoverySource.cs`. These are contracts only—not a concrete provider, polling job, storage layer, UI wiring, or live integration.
+- Scanner candidate dispositions are presentation states (`ActionableQueue`, `WatchPullback`, `FilteredExtended`, `Blocked`, `DataUnknown`), not trade signals.
 
-CSV header: `Symbol,Timeframe,Timestamp,Open,High,Low,Close,Volume`. Timeframe `1m` or `5m`. Timestamps must carry timezone offsets. The bar timestamp convention (open vs close) is not yet settled for an actual provider; document it before integration. The reader does not calculate VWAP, EMA/SMA, RSI, MACD, ATR, RVOL, scanner/catalyst events, or fills. Do not infer missing values. Golden parity tests against exact ThinkScript versions are required before signal integration.
+### Market-data validation status — important reconciliation
 
-## Current UI
+On 2026-10-22, the user clarified that they completed the following **locally** and saw only `MATCH` or `ROUNDING ONLY`: (1) all 31 irregular 1M intervals, (2) full-session 1M-to-5M reconciliation, (3) RTH/extended-hours session-setting checks, and (4) Arizona/Eastern DST checks. The user intentionally did not commit all detailed comparison work because they considered it wasteful.
 
-Open `frontend/index.html` directly in a browser. It is static and requires no server/build. Values are illustrative UI fixtures, not live feed, not calculated by C#, and not trading advice. The next UI step should consume a documented JSON replay output after the data contract stabilizes.
+Treat these checks as **USER-CONFIRMED DONE** for task planning. Do not ask the user to repeat them. However, detailed local comparison rows, run dates/settings, classifications, hashes, and provenance are not all present in the current repository; independent auditability is therefore incomplete. The efficient follow-up is to sync already-completed local artifacts or a concise manifest/summary if available—not rerun the analysis.
 
-## Next engineering sequence
+`docs/Validation/MCC-OHLCV-20261020.md` and `docs/Master-To-Do.md` were updated to reflect this distinction. The 20-row `_UPDATED_3.csv` 1M and 5M samples are already committed and documented as `MATCH`, with precision-only differences identified as `ROUNDING ONLY`. The `_UPDATED_4.csv` files contain later appended source payload rows whose chart comparison fields were observed blank in the repository; do not treat those appended rows as completed chart parity without reconciling the local copy.
 
-1. Build and run all tests after the market-data/replay changes.
-2. Reconcile every line of `README_ORIGINAL.md` and `To Do List.md` against current docs/code; migrate the master checklist into `docs/Master-To-Do.md` and remove root duplicates only after the comparison is complete.
-3. Maintain the XML flowerboxing standard; a source audit added purpose/when-called comments to the classes and methods found in the current C# files. Recheck new code during review.
-4. Add sanitized historical 1M/5M fixtures and provenance metadata.
-5. Define regular/extended session rules, timestamp open/close semantics, and DST handling.
-6. Port TOS indicators one at a time with golden parity tests.
-7. Connect replay frames to V2 signal evaluation without changing current trading rules; then record decision transitions and opportunity assessments.
-8. Keep Boring Overnight scoring separate from intraday momentum; treat catalyst status unknown unless a reliable event source exists.
+### What remains a validation blocker
 
-## Important validation context
+- Reconcile the user's completed local interval/full-session/session/DST results into repo evidence where practical (exact files, chart/study version, run dates, settings, row/window counts and hashes where available). Do not invent missing metadata.
+- Verify build and tests at the current branch head. Older CI runs or user-reported local passes do not prove the current head passes.
+- Complete golden indicator parity for the exact versioned ThinkScript definitions used by the C# application, especially ATR/extension and any other metrics that will gate scanner candidates.
+- Keep replay authority and live scanner gating blocked until the required evidence and indicator parity are reconciled.
 
-A prior low-momentum entry (MNSB) raised concern that `EXECUTION READY` does not communicate opportunity quality. The quality label is intended to distinguish `READY — HIGH`, `READY — MODERATE`, `READY — BORING`, and `READY — EXTENDED`, without changing the underlying eligibility gate. Two individual trades do not prove a code defect; validate against timestamped historical market snapshots.
+## 4. XRPN 2026-10-02 5M Permission audit — result
 
-## Development note
+The user uploaded a screenshot showing the normal 5M study and Authority Diagnostic V2 around the Permission transition near 12:45 Arizona chart time. Red diagnostic bubbles show `Perm=0`, `PRAW=0`, `PBLOCK=2`, and `EOD=0`; visible conditions include price below VWAP and EMA9 and EMA9 below EMA20.
 
-The current project is not an ABP Framework app. Apply compatible C# conventions, separation of concerns, testing, and flowerboxing from `abpDevRules.md`; do not add ABP modules, Entity Framework, authentication, or distributed caching without an actual requirement.
+Source review in `docs/Charts/5M/MainStudy.txt` confirms the `PBLOCK=2` mapping to persistent major failure. The major-failure raw condition is price below Daily VWAP, price below EMA9, EMA9 below EMA20, and EMA20 below SMA50; persistence requires two bars by default. The Permission latch checks EOD, then persistent major failure, then persistent structural damage, and recovers when the bullish raw condition is true.
+
+Conclusion: the screenshot and source agree that persistent major failure explains the observed Permission revocation. No Permission code change was justified by this evidence. The Master To-Do records the audit and the next handoff task.
+
+## 5. Scanner integration decision and EXT problem
+
+**Decision: start the provider-neutral scanner foundation; do not connect a live provider yet.**
+
+The user reports that red-state `EXT`/extension-danger often coincides with no `EXECUTION READY`, causing wasted chart reviews. Treat the workflow issue as credible, but do not invent a measured frequency or alter the existing gate without data.
+
+Required design:
+
+- Filter/deprioritize currently overextended candidates from the default actionable queue using the exact versioned 1M study's ATR-extension formula and thresholds.
+- Keep them in a recoverable `WATCH_PULLBACK` list; do not permanently discard a symbol solely because it is extended now.
+- Requalification requires fresh data, a valid new event, and the existing 5M authority and 1M execution gates.
+- Distinguish extension warning from danger. Never substitute guessed percentage thresholds or provisional opportunity-assessor thresholds for the exact study rules.
+- Missing/stale extension metrics must produce `DATA?`, not an assumption that the candidate is not extended.
+- Run shadow mode and measure chart reviews avoided, valid opportunities hidden, and later pullback/READY events before hard-exclusion becomes default.
+
+Provider choice, verified API access, licensing, rate limits, and live credentials are not established in sources. Do not claim a provider is integrated. No automatic orders.
+
+## 6. Scanner commits and documents
+
+Recent commits on `feature/opportunity-quality-classification`:
+
+- `5c3f45d0a82202aa554550e7a991f0dc251629c6` — add `src/MomentumCommandCenterV2.Application/Models/ScannerDiscoveryEvent.cs`.
+- `719db8631a1d3629cfccf98933817f8fb7afa9fd` — add `src/MomentumCommandCenterV2.Application/Interfaces/IScannerDiscoverySource.cs`.
+- `59a516436994c9ac869c46ac48ee629d712731c1` — document scanner contract and EXT qualification in `docs/Scanner-and-Watchlist-Workbench.md`.
+- `ec4029b2807a64727ad0de88a7d4dd5fa32dbb40` — add scanner integration and EXT prequalification items to Master To-Do.
+- `7616548fb9779ee74538a6397fb833125cd93d02` — mark contract scaffold as partial; remaining acceptance work stays open.
+- `eccc9c0cb1a6d0147778b6b1e15f547bfe400e03` — reconcile validation doc with user's locally completed MATCH/ROUNDING results.
+- `1e057315783119059f599ef4026a09f654353b8b` — update Master To-Do to mark interval/session/DST checks user-confirmed done and evidence sync pending.
+
+These commit hashes are the observed GitHub responses from the tool actions; they are not a claim that CI passed.
+
+## 7. Recommended execution order from this checkpoint
+
+1. [NOW] Inspect current branch head and workflow status; run or trigger build/tests for the exact head if supported. Record pass/fail and SHA accurately.
+2. [NEXT] Audit exact 1M extension/ATR implementation and define the scanner qualification input contract from the versioned study. Confirm the C# app can calculate these inputs with golden parity tests; otherwise keep scanner extension gating blocked.
+3. [NEXT] Implement deterministic provider-neutral scanner qualification and append-only discovery history. Add tests for first-seen preservation, deduplication, source timestamps, stale/missing values, reason codes, and transitions between actionable, pullback-watch, filtered, blocked, and data-unknown.
+4. [NEXT] Add extension warning/danger tests, pullback requalification tests, and prove filtering never changes 5M Permission or 1M READY.
+5. [NEXT] Reconcile completed local interval/session/DST artifacts into a compact manifest if available; do not repeat the tests solely to recreate already completed work.
+6. [BLOCKED UNTIL CHOSEN] Implement one live provider adapter only after the user/provider choice and verified access requirements are known.
+7. [NEXT] Run shadow mode on timestamped data and measure both efficiency gains and false-negative risk.
+8. Keep the local UI clearly marked demo until it consumes the validated application contract; no order execution.
+
+## 8. Canonical source map
+
+- `README.md` — project overview and roadmap.
+- `docs/Master-To-Do.md` — canonical task checklist and next-task authority.
+- `docs/NewChatHandoff.md` — recovery guide (this file).
+- `docs/Scanner-and-Watchlist-Workbench.md` — local workbench and scanner integration status.
+- `docs/Validation/MCC-OHLCV-20261020.md` — market-data export/parity status and user-confirmed local validation note.
+- `data/validation/XRPN/10192026/parity/` — 1M/5M parity templates, including `_UPDATED_3` and `_UPDATED_4` versions.
+- `data/validation/XRPN/findings.md` and `data/validation/XRPN/manifest.md` — intended detailed evidence/provenance record; currently still contain incomplete template fields.
+- `docs/Charts/1M/MainStudy.txt`, `docs/Charts/5M/MainStudy.txt` — versioned study logic.
+- `docs/Charts/5M/DiagnosticStudy.txt` — Authority Diagnostic V2.
+- `docs/Market-Data-and-Replay-Contract.md` — raw bar, timestamp, replay, and parity requirements.
+- `docs/Opportunity-Classification-Verification.md` and `docs/Opportunity-Quality-and-Ranking.md` — diagnostic-only quality assessment and validation protocol.
+- `docs/rules/abpDevRules.md` — code/comment/layering conventions.
+
+## 9. Current user action
+
+No immediate user action is required to continue code/document work. If already-completed local validation artifacts can be synced without repeating analysis, that would improve auditability; otherwise keep them recorded as user-confirmed completion with evidence-sync caveat. Provider selection will eventually require user input unless a provider is already specified in a source.
+
+## [Uncertainties]
+
+- Detailed local records supporting the 31-interval, full-session, RTH/ETH, and DST checks are not present in the current repository state. The user's completion report is authoritative for planning but not independently reproducible from the committed files.
+- Build/test status at the current branch head is not verified here.
+- Exact scanner provider and its API/entitlement/licensing details are not specified.
+- Live scanner extension gating remains blocked until exact indicator parity is implemented and tested.
