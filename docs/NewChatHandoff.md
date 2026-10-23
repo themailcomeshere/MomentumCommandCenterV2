@@ -6,6 +6,15 @@
 **Canonical task list:** `docs/Master-To-Do.md`
 **Purpose:** Recovery guide for a new ChatGPT conversation or interrupted project session. Treat the repository and this document as the working record; never invent missing facts.
 
+## New user requirements — extended momentum and Schwab (2026-10-22)
+
+- User prefers manual Schwab website order entry; no broker API, credentials, or automated order placement. A future "Open Schwab" link is only a possibility after a supported workflow is verified. Do not build one-click Buy Maximum Amount. If requested later, a non-submitting position-size calculator is the safer starting point.
+- User wants MCC to account for stocks already up around 10–15% when they sit down to trade, especially when continuation/news context is strong. Do not automatically discard these candidates solely because they are extended; add an **Extended Momentum / Continuation Watch** research lane.
+- This is not permission to override EXT, 5M Permission, or the 1M EXECUTION READY gate. Separate "extended/no entry now", "continuation candidate worth monitoring", and "fresh valid entry event". News must be timestamped and sourced, and cannot alone create eligibility.
+- Audit the exact installed ThinkScript to determine what the red "In-trend candidate" bubble means. Do not describe it as technically safe to buy until its exact formula is verified.
+- Evaluate a separate validated pullback/reclaim or consolidation-breakout re-entry condition, with spread/liquidity/gap/halts safeguards and out-of-sample tests, rather than weakening the original entry gate.
+- Timezone: the user references 08:30 Arizona time. Arizona generally stays on MST while Eastern market hours shift with DST, so the US regular-session open is generally 07:30 Arizona time during Eastern daylight time and 08:30 during Eastern standard time. Dashboard labels should include timezone/session context.
+
 ## 1. Mission and architectural boundaries
 
 MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. Do not implement automatic order placement or Schwab order submission.
