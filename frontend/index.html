@@ -15,6 +15,7 @@
  </div>
  <p class="muted readiness-note">This dashboard is for workflow feedback. Values and scanner rows are illustrative or locally imported; no field here is a live trading signal.</p>
 </section>
+<div class="command-layout" aria-label="Morning command workspace">
 <section class="panel morning-report" aria-labelledby="morningReportTitle">
  <div class="section-heading"><div><div class="eyebrow">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Morning Command Brief</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions"><span class="chip warning-chip">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
  <div class="report-banner"><span class="readiness-dot blocked"></span><div><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
@@ -31,6 +32,7 @@
  <div id="redZoneGrid" class="redzone-grid"><article class="redzone-empty">No candidate rows available.</article></div>
  <p class="notice">Tiles below are built only from local demo/import rows and are not live coverage. Rank is the supplied scanner score, not a validated MCC opportunity score. Missing source, freshness, 5M Permission, or 1M event must never be treated as passing.</p>
 </section>
+</div>
 <section class="status-grid">
 <article class="panel hero-card"><div class="eyebrow">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
 <article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">$11.29</strong><small>Illustrative only</small></article><article class="panel metric"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">1.2×</strong><small>Demo value — not calculated</small></article><article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">0.7 ATR</strong><small>Illustrative only</small></article>
