@@ -35,8 +35,8 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
 
         using var request = new HttpRequestMessage(HttpMethod.Get,
             $"v2/stocks/{Uri.EscapeDataString(symbol)}/bars?timeframe={minutes}Min&start={Uri.EscapeDataString(from.UtcDateTime.ToString("O"))}&end={Uri.EscapeDataString(to.UtcDateTime.ToString("O"))}&limit=10000&feed={Uri.EscapeDataString(_feed)}&sort=asc");
-        request.Headers.Add("APCA-API-KEY-ID", _key);
-        request.Headers.Add("APCA-API-SECRET-KEY", _secret);
+        request.Headers.Add("APCA-API-KEY-ID", _key!);
+        request.Headers.Add("APCA-API-SECRET-KEY", _secret!);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
