@@ -48,7 +48,7 @@ public sealed class AlpacaMarketDataAdapterTests
         Assert.Equal(10.4, bars[0].Close);
         Assert.Equal(1234, bars[0].Volume);
         Assert.Equal("Alpaca", bars[0].Provider);
-        Assert.Equal("iex", bars[0].Source);
+        Assert.Equal("iex", bars[0].Feed);
         Assert.Equal("test-key", handler.Request!.Headers.GetValues("APCA-API-KEY-ID").Single());
         Assert.Equal("test-secret", handler.Request.Headers.GetValues("APCA-API-SECRET-KEY").Single());
         Assert.Contains("feed=iex", handler.Request.RequestUri!.Query, StringComparison.Ordinal);
