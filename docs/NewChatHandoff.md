@@ -1,6 +1,6 @@
 # Momentum Command Center — New Chat Handoff
 
-**Updated:** 2026-10-22
+**Updated:** 2026-10-23
 **Repository:** [MomentumCommandCenterV2](https://github.com/themailcomeshere/MomentumCommandCenterV2)
 **Working branch:** `feature/opportunity-quality-classification`
 **Canonical task list:** `docs/Master-To-Do.md`
@@ -37,6 +37,14 @@ MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-
 - Update this handoff and `docs/Master-To-Do.md` when the project checkpoint materially changes.
 
 ## 3. Current project state
+
+**New documentation:** [5M→1M handoff audit](Validation/5M-to-1M-Handoff-Audit-20261022.md) · [Overnight collection contract](Overnight-Collection-Contract.md) · [Canonical Master To-Do](Master-To-Do.md)
+
+### Latest completed work (2026-10-23)
+
+- Added `docs/Validation/5M-to-1M-Handoff-Audit-20261022.md`: source comparison confirms the 1M layer reconstructs rather than consumes the actual 5M Permission state, and records concrete raw-Permission, structural-damage, and major-failure predicate differences. No ThinkScript logic was changed; installed-study parity remains open.
+- Added `docs/Overnight-Collection-Contract.md`: provider-neutral contract for event envelopes, append-only persistence, idempotency, freshness/health, sleep/restart/outage recovery, deterministic Morning Report snapshots, and required tests. Provider-specific thresholds remain undefined until provider selection.
+- Latest branch-head .NET workflow was checked: head `bcb1ef5027859cd4448daa08191df83e0e6eb871`, run 91, conclusion `success`. This does not replace a browser-based end-to-end smoke test.
 
 ### Architecture/code already present
 
@@ -159,5 +167,5 @@ No immediate user action is required to continue code/document work. If already-
   - `frontend/app.js`: locally rank demo/import scanner rows by supplied score for display only, render up to four Red Zone cards with unknown 5M/1M gates, update watchlist count, and export a JSON report preview.
   - `frontend/styles.css`: responsive Morning Report and 1–4 candidate tiles.
 - The Morning Report is intentionally labeled preview-only. The displayed generated timestamp is the browser's local clock, not a market-data timestamp. The JSON export records liveScannerConnected=false, overnightCollectionRunning=false, provider=NOT_SELECTED, and Boring Overnight NOT_CALCULATED.
-- Documentation updated: `docs/User-Manual.md`, `docs/Master-To-Do.md`, `docs/Scanner-and-Watchlist-Workbench.md`. New To-Do work requires a supported provider, long-running collector independent of browser tab, persisted raw timestamped events/observations, freshness/gap/duplicate checks, restart/outage/sleep recovery, versioned Morning Report, real ranked Red Zone, and Boring Overnight integration.
+- Documentation updated: `docs/User-Manual.md`, `docs/Master-To-Do.md`, `docs/Scanner-and-Watchlist-Workbench.md`. New To-Do work requires a supported provider, long-running collector independent of browser tab, persisted raw timestamped events/observations, freshness/gap/duplicate checks, restart/outage/sleep recovery, versioned Morning Report, real ranked Red Zone, and Boring Overnight integration. The provider-neutral contract is now written in `docs/Overnight-Collection-Contract.md`; provider-specific adapter and operational thresholds remain blocked on provider selection.
 - Do not claim live operation or .exe/background service until implemented and tested. Next engineering step is provider selection and data-ingestion/persistence architecture, not adding fake live-looking demo values.
