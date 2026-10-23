@@ -1,6 +1,6 @@
 # Scanner and Watchlist Workbench
 
-**Status:** Local front-end workbench implemented; live scanner/provider integration remains unimplemented.
+**Status:** Local front-end workbench implemented; live scanner/provider integration remains unimplemented. The dashboard includes a local-only feedback notebook and explicit connection/readiness status.
 
 ## Scanner integration status update (2026-10-22)
 
@@ -17,7 +17,9 @@ Candidates currently outside the exact 1M study's extension envelope should be r
 The static front end now provides:
 
 - Four documented scanner groups: Momentum Hunter, Breakout Trigger, Reclaim/Continuation, and Market Movers/Discovery.
-- Candidate rows with symbol, score, status, and reason.
+- Candidate rows with symbol, score, status, extension input, freshness, and reason; absent extension/freshness fields display as unknown rather than implying a safe state.
+- A system-readiness panel that explicitly shows market data as demo-only, Thinkorswim as not connected, live scanner as not selected, and order execution as not implemented.
+- A dashboard feedback notebook with category/priority, browser-local persistence, individual deletion, clear, and JSON export. Feedback is not uploaded automatically.
 - CSV import from a local file with a required `Symbol` or `Ticker` column and optional `Score`, `Status`, and `Reason` columns.
 - One-click add-to-watchlist controls.
 - Manual ticker entry and removal.
@@ -48,3 +50,10 @@ The import is evidence display only. It does not calculate scanner scores, verif
 ## Use
 
 Open `frontend/index.html` directly in a browser. Use the scanner group selector for the illustrative local candidates, use **Import CSV** for a local candidate file, and add candidates to the browser-local watchlist. This workbench is not a live scanner and does not place orders.
+
+
+## Provider decision — current state
+
+**No live scanner provider is selected or connected. Thinkorswim is not currently an API/feed integration.** Thinkorswim remains the source of the versioned chart-study behavior and manually inspected chart evidence; the repository contains no verified Thinkorswim live API/session adapter. The current front end only reads local fixtures and user-imported CSV files.
+
+Before choosing a feed, compare the actual capabilities needed: real-time 1M/5M OHLCV, scanner/query support, symbol universe and filters, timestamps/session conventions, extended-hours coverage, entitlement/licensing, rate limits, reconnect behavior, and historical access. The exact provider/API choice is **Data not found in sources.** Do not wire the UI to an unverified endpoint or represent a provider as selected.
