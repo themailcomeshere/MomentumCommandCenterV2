@@ -57,3 +57,21 @@ Open `frontend/index.html` directly in a browser. Use the scanner group selector
 **No live scanner provider is selected or connected. Thinkorswim is not currently an API/feed integration.** Thinkorswim remains the source of the versioned chart-study behavior and manually inspected chart evidence; the repository contains no verified Thinkorswim live API/session adapter. The current front end only reads local fixtures and user-imported CSV files.
 
 Before choosing a feed, compare the actual capabilities needed: real-time 1M/5M OHLCV, scanner/query support, symbol universe and filters, timestamps/session conventions, extended-hours coverage, entitlement/licensing, rate limits, reconnect behavior, and historical access. The exact provider/API choice is **Data not found in sources.** Do not wire the UI to an unverified endpoint or represent a provider as selected.
+
+
+## Extended Momentum / Continuation Watch
+
+The desired behavior is to preserve visibility for strong stocks that have already gained roughly 10–15% before the user begins reviewing them. EXT remains a real risk warning, but extension alone should not permanently discard the candidate. A separate watch disposition can retain the symbol for monitoring without labeling it executable.
+
+Required state distinctions:
+- **EXTENDED — NO ENTRY NOW:** outside the validated extension envelope; not actionable.
+- **CONTINUATION WATCH:** current trend/catalyst and price-volume evidence justify monitoring, but no fresh execution event is confirmed.
+- **FRESH ENTRY EVENT:** only after the unchanged 5M Permission and 1M execution conditions pass, plus the validated entry policy and risk checks.
+
+Any catalyst/news inputs must include source, publication time, observation time, and freshness. Missing/stale news or price data is unknown, not positive. News strength alone cannot produce eligibility. Candidate retention must not suppress EXT warnings or override the exact source-study formula. Test a distinct pullback/reclaim or consolidation-breakout path against historical/out-of-sample data before it affects actionable ranking.
+
+The existing red "In-trend candidate" bubble has not been semantically verified from the exact installed ThinkScript in the repository. Its meaning is **Data not found in sources** until its formula and relevant chart states are checked.
+
+## Schwab / order-entry boundary
+
+MCC remains non-executing. Manual Schwab website entry is the preferred baseline. Do not integrate broker credentials or implement one-click "Buy Maximum Amount." A future non-submitting sizing calculator may support a custom budget or an explicitly selected maximum budget, but it must show its assumptions, current price timestamp, calculated whole-share quantity, reserve/cushion, and final manual review warning. Any "Open Schwab" navigation should wait until a legitimate supported link/prefill workflow is verified.
