@@ -174,3 +174,36 @@ $("exportMorningReport")?.addEventListener("click",()=>{
  a.href=url;a.download="mcc-morning-report-preview.json";a.click();URL.revokeObjectURL(url);
 });
 renderMorningReport();
+
+
+// Provider comparison is intentionally offline until server-side adapters and credentials are configured.
+const providerCompareButton = $("providerCompareRun");
+providerCompareButton?.addEventListener("click", () => {
+ const symbol = ($("providerSymbol")?.value || "").trim().toUpperCase();
+ const interval = $("providerInterval")?.value || "1m";
+ const date = $("providerDate")?.value || "";
+ if (!/^[A-Z][A-Z0-9.-]{0,7}$/.test(symbol) || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  $("providerCompareNotice").textContent = "Invalid test inputs. Enter a valid ticker and date; no provider request was made.";
+  return;
+ }
+ const fields = [
+  ["Test request", symbol + " · " + interval + " · " + date, symbol + " · " + interval + " · " + date],
+  ["Connection state", "NOT CONNECTED", "NOT CONNECTED"],
+  ["Bars received", "DATA NOT FOUND IN SOURCES", "DATA NOT FOUND IN SOURCES"],
+  ["Timestamp / timezone", "NOT MEASURED", "NOT MEASURED"],
+  ["OHLCV / quote parity", "NOT TESTED", "NOT TESTED"],
+  ["Missing-bar reconciliation", "NOT TESTED", "NOT TESTED"],
+  ["Reconnect / historical backfill", "NOT TESTED", "NOT TESTED"],
+  ["Source entitlement / license", "NOT VERIFIED", "NOT VERIFIED"]
+ ];
+ const body = $("providerComparisonRows");
+ body.replaceChildren(...fields.map(([field, a, b]) => {
+  const tr = document.createElement("tr");
+  for (const value of [field, a, b]) { const td = document.createElement("td"); td.textContent = value; tr.append(td); }
+  return tr;
+ }));
+ $("alpacaLatest").textContent = "DATA NOT FOUND IN SOURCES";
+ $("massiveLatest").textContent = "DATA NOT FOUND IN SOURCES";
+ $("alpacaRecovery").textContent = "Not run"; $("massiveRecovery").textContent = "Not run";
+ $("providerCompareNotice").textContent = "Local comparison checklist prepared for " + symbol + ", " + interval + ", " + date + ". This action did not contact either provider. Missing values remain unknown, not zero or no-trade evidence.";
+});
