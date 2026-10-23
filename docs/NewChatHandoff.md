@@ -1,3 +1,11 @@
+## Checkpoint update — local Alpaca configuration and XRPN evidence (2026-10-23)
+
+- Added the API project's `.NET User Secrets` identity and documented local Alpaca setup commands in `src/MomentumCommandCenterV2.API/README.md`. Tracked `appsettings.json` now contains only the non-secret default feed (`iex`); do not place API keys there.
+- Alpaca adapter credentials now resolve through standard ASP.NET Core configuration, so User Secrets and environment variables follow the same configuration pipeline. Added deterministic xUnit coverage for configured credentials, request headers, bar parsing, and the unconfigured-provider path. GitHub source edits do not execute tests; latest-head CI must be checked before claiming these tests pass.
+- User supplied the requested XRPN 2026-10-02 screenshot. It shows the normal 5M study, Authority Diagnostic V2, readable time axis and target 12:30–13:00 Arizona window; user confirmed the 5M and 1M chart dates are correct and the top-left chart date should be ignored. Canonical To-Do and external-dependency checklist now mark this evidence received.
+- Remaining user action: create the free Alpaca account, configure credentials locally with the README commands, run the API, and report sanitized status/errors/timestamps. Do not ask for credentials in chat. Keep Massive deferred and paid subscriptions on hold.
+- Still open without provider credentials: pagination/retries, collector lifecycle/recovery, storage hardening, fixture-driven Morning Brief/scanner/Boring Overnight, session-aware gap semantics, ThinkScript parity and installed-study validation.
+
 # Momentum Command Center — New Chat Handoff
 
 **Updated:** 2026-10-23
