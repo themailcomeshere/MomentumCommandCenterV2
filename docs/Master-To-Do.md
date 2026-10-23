@@ -304,3 +304,21 @@ The original master list and `docs/BoringOvernight.md` agree on the initial 100-
 - [NEXT] Define Morning Report data contract and provider requirements; choose/verify a supported data/scanner provider; implement freshness/provenance checks and append-only scanner event history; implement automatic discovery/deduplication/re-ranking; build top 1–4 Red Zone; implement Boring Overnight pipeline against `docs/BoringOvernight.md`; wire the validated application/API to the Dashboard.
 - [NEXT] Decide desktop delivery only after app integration architecture is known. Browser launch is current reality; an .exe is not built or required yet.
 - [USER HISTORY GAP] Repository search and available project handoff do not contain the full prior Morning Routine conversation. The manual documents a proposed workflow from known requirements, but the user should supply or point to the prior routine if exact historical steps/metrics must be restored.
+
+
+## Overnight scanner / persistent Morning Report requirement (2026-10-22)
+
+User wants to leave the released/deployed MCC program open overnight so scanner discoveries/data are collected before the 08:30 Arizona Morning Report. Do not mark this satisfied by an open browser tab or a static preview.
+
+- [x] Add preview-only Morning Command Brief and responsive ranked 1–4 Red Zone layout to the static UI; include explicit “overnight collection NOT RUNNING” status and JSON report-preview export.
+- [ ] Select a supported/licensed scanner and market-data provider; document actual APIs, entitlements, timestamp/session conventions, rate limits, and terms. Provider is currently unselected.
+- [ ] Implement a long-running collection service that works independently of the browser tab; handle startup, reconnect, rate limits, outages, and graceful shutdown.
+- [ ] Persist raw discovery events and timestamped market observations with source/event IDs, source and receive times, session/timezone, schema/version, raw fields, and ingestion disposition.
+- [ ] Implement collector health states RUNNING / DEGRADED / STOPPED / UNKNOWN, last-success timestamp, freshness checks, gap/duplicate detection, and no synthetic bars.
+- [ ] Implement recovery tests for machine sleep/wake, network/provider outage, authentication expiry, replayed/duplicate events, session boundaries, and process restart.
+- [ ] Implement deterministic, versioned Morning Report generation from persisted data; include provenance/freshness per candidate and exportable report snapshots.
+- [ ] Connect the live service to scanner discovery, deduplication, automatic re-ranking, continuation watch, and the Red Zone; show only up to four ranked candidates and never treat rank as permission.
+- [ ] Wire Boring Overnight calculations and hard gates to persisted, validated inputs; unknown catalyst/data remains DATA? / manual review.
+- [ ] Define packaging and startup: browser/local service vs desktop app/installer. Do not claim .exe/background collection exists until built, deployed, and tested.
+- [ ] Keep provider secrets out of frontend, localStorage, repository, and logs.
+- [ ] Verify frontend script behavior and current branch-head CI after the UI changes.
