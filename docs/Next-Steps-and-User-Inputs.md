@@ -11,7 +11,7 @@
 The current code has historical REST adapters for Alpaca and Massive. It does not yet have a live streaming collector, scanner integration, broad movers, quote/spread feed, news/catalyst source, or production recovery/backfill pipeline.
 
 Suggested sequence:
-1. If you are comfortable creating free developer accounts, create both free accounts and use them only for initial API plumbing and schema/provenance tests. Never treat their results as production-grade market authority.
+1. Create one free Alpaca account first. Use it for initial API plumbing and schema/provenance tests; never treat its free-tier results as production-grade market authority. Defer Massive until a second provider materially improves comparison.
 2. Configure one provider at a time with server-side environment variables and test the adapter against real responses. Do not put keys in source control, browser JavaScript, screenshots, or chat.
 3. Keep paid subscriptions on hold until we complete the documented proof-of-fit comparison and verify personal-use/display rights, historical retention rights, extended-hours behavior, rate limits, scanner/mover coverage, and exact plan entitlements.
 4. If you prefer to minimize setup, start with one free provider. We can implement the provider-neutral contracts and test harness first, then add the second account when it materially improves the comparison.
@@ -21,14 +21,14 @@ The current research shortlist is Alpaca Algo Trader Plus and Massive Stocks Adv
 ## User actions that genuinely require your input
 
 ### A. Provider access (only for live-data verification)
-- [ ] Decide whether to create free Alpaca and/or Massive accounts for the first proof of concept. No paid plan is needed for the next coding milestone.
-- [ ] If using Alpaca, create API credentials and confirm which feed your account actually allows. Basic normally means IEX; do not configure SIP unless entitled.
-- [ ] If using Massive, create an API key and confirm the endpoints/data plan enabled for the account.
-- [ ] Set credentials as local environment variables on the machine running the API. Do not send secrets in chat or commit them.
-- [ ] Run the API locally and report sanitized status/error messages only. We will not call a provider "verified" until the actual response, timestamps, entitlement and coverage are checked.
+- [ ] Create a free Alpaca account and generate an API key/secret. No paid plan is needed for this first smoke test.
+- [ ] Configure credentials locally using .NET User Secrets; exact commands are in `src/MomentumCommandCenterV2.API/README.md`. `appsettings.json` is for non-secret defaults only. Do not send secrets in chat or commit them.
+- [ ] Confirm which feed the account actually allows. Keep `iex` unless the account explicitly entitles you to another feed; do not configure SIP unless entitled.
+- [ ] Run the API locally, inspect `/api/providers/status`, then run a small `/api/market-data/compare` request. Report sanitized status/error messages and observed timestamps only.
+- [ ] We will not call the provider "verified" until real authentication, feed entitlement, timestamps and coverage are checked. Defer Massive account setup until a second provider is needed.
 
 ### B. Thinkorswim parity evidence (required before trusting trading gates)
-- [ ] Provide the exact 5M chart screenshot requested in `docs/Validation/5M-to-1M-User-Validation-Steps.md` for XRPN 2026-10-02 around 12:30–13:00 Arizona time, with the normal 5M study, Authority Diagnostic V2, and readable time axis visible.
+- [x] Received the XRPN 2026-10-02 screenshot with normal 5M study, Authority Diagnostic V2 and readable time axis covering the target window (user clarified the top-left chart date can be ignored). Do not request this screenshot again.
 - [ ] For the UPC chart-gap question, either provide continuous 1M/5M OHLCV covering 2026-10-22 09:16–09:36 Arizona time, or inspect exact timestamps in TOS. This is only needed to settle that historical incident; it does not block adapter development.
 - [ ] When asked for installed-study evidence, capture the study name/version and the relevant bars. A repository file does not prove that the same code is installed in TOS.
 
