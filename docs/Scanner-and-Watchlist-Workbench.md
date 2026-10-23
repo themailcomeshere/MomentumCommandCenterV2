@@ -92,3 +92,12 @@ Required architecture before overnight collection can be relied on:
 6. Connect ranked discovery, continuation watch, Boring Overnight, and Red Zone to that validated data path.
 
 Until then, status must remain NOT RUNNING / NOT CONNECTED. Never represent a demo/import CSV as live data; do not synthesize missing bars; no provider secrets in browser code or localStorage.
+
+
+## Morning routine recovery and provider-neutral persistence scaffold (2026-10-23)
+
+- Requirements from the Project source file Morning.txt are consolidated in docs/Morning-Report-and-Routine.md. The intended Red Zone location is upper-right; a left Watchlist/News rail remains a user-feedback decision.
+- Provider candidates and fit-testing requirements are documented in docs/Provider-Comparison.md. No provider is selected or authenticated.
+- A JSONL append-only discovery event store and application ingestion validator are now scaffolded. This persists discovery events and receipt time, deduplicates by provider event ID or a deterministic fallback key, and rejects malformed log lines. It does not poll/stream a provider, persist full OHLCV bar history, or generate the live Morning Report.
+- The precise evidence needed for installed-study validation is documented in docs/Validation/5M-to-1M-User-Validation-Steps.md.
+- The Red Zone is being positioned in the upper-right command workspace. Current content remains preview/demo until real source data, validation, and service integration exist.
