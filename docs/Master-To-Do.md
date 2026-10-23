@@ -1,7 +1,7 @@
 # Momentum Command Center V3 — Master To-Do
 
 **Canonical location:** `docs/Master-To-Do.md`  
-**Reviewed:** 2026-10-16 (Arizona time)  
+**Reviewed:** 2026-10-22 (Arizona time)  
 **Branch:** `feature/opportunity-quality-classification`
 
 ## Status and migration note
@@ -91,6 +91,14 @@ Detailed companion: `docs/BoringOvernight.md`. Preserve its complete criteria an
 - Add chart study only if it explains information not usefully shown by the column.
 - Track false positives, missed opportunities, ON win rate, average/median return, adverse excursion, spread/slippage. Do not infer profitability from compilation or a few chart examples.
 - No automatic order placement until a separate risk/order-control workflow is specified and tested.
+
+## Dashboard feedback and scanner feed decision (2026-10-22)
+
+- [PARTIAL — UI FEEDBACK SLICE] The static dashboard now has an explicit system-readiness panel and a local feedback notebook so the user can review layout and behavior before provider integration. Notes persist only in browser local storage and can be exported as JSON; they are not uploaded automatically.
+- [NOW] Use dashboard feedback to prioritize UI changes. Keep demo/unknown labels visible; never make mock data look live.
+- [BLOCKED — PROVIDER NOT SELECTED] Thinkorswim is not connected as a live scanner/API feed. It is the source of chart-study behavior and validation evidence. No live scanner provider/feed is selected or verified in repository sources.
+- [NEXT] Compare eligible feed/provider options against real-time 1M/5M OHLCV, scanner API coverage, timestamps/session/ETH behavior, historical data, entitlements, licensing, rate limits, and outage/reconnect behavior before implementing an adapter.
+- [HOLD] Do not bind the dashboard to an assumed Thinkorswim endpoint or a guessed third-party API.
 
 ## Scanner integration readiness and EXT prequalification (2026-10-22)
 
