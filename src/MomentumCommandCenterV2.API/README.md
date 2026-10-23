@@ -12,19 +12,29 @@ dotnet run --project src/MomentumCommandCenterV2.API
 
 Open the URL printed by ASP.NET Core. The API serves the existing dashboard from the frontend directory when that directory exists. Health endpoint: /api/health.
 
-## Configure credentials securely
+## Configure credentials locally
 
-Do not place real API keys in source control, appsettings.json, browser JavaScript, screenshots, or issue reports. Use environment variables or .NET User Secrets.
+The API project is configured for .NET User Secrets. Use that for local development; the tracked `appsettings.json` contains only the default Alpaca feed (`iex`) and no credential values. ASP.NET Core also reads environment variables using the standard configuration mapping.
 
-Alpaca:
-- ALPACA_API_KEY
-- ALPACA_API_SECRET
-- Optional ALPACA_DATA_FEED (defaults to iex; configure sip only if entitled)
+From the repository root, after creating your Alpaca account and generating an API key/secret, run these commands in a terminal on the same machine that runs MCC:
 
-Massive:
-- MASSIVE_API_KEY
+```powershell
+dotnet user-secrets set "MarketData:Alpaca:ApiKey" "YOUR_ALPACA_KEY_ID" --project src/MomentumCommandCenterV2.API
+dotnet user-secrets set "MarketData:Alpaca:ApiSecret" "YOUR_ALPACA_SECRET_KEY" --project src/MomentumCommandCenterV2.API
+dotnet user-secrets set "MarketData:Alpaca:Feed" "iex" --project src/MomentumCommandCenterV2.API
+dotnet run --project src/MomentumCommandCenterV2.API
+```
 
-Equivalent configuration keys are MarketData:Alpaca:ApiKey, MarketData:Alpaca:ApiSecret, MarketData:Alpaca:Feed, and MarketData:Massive:ApiKey.
+Replace the two placeholders locally; do not paste real keys into chat, source files, screenshots, or issue reports. Keep `iex` unless your Alpaca account explicitly entitles you to another feed. The credentials are stored in the local .NET User Secrets store outside the repository. Do not use real credentials in `appsettings.json`.
+
+To verify configuration without exposing keys, open `/api/providers/status`. It reports only whether each provider is configured; that is not proof that authentication, feed entitlement, timestamps, or data coverage are valid. The first real-data smoke test is `/api/market-data/compare` with a small symbol/time window. Check returned errors and bar timestamps before considering the provider validated.
+
+Environment-variable alternatives for the API process:
+- `MarketData__Alpaca__ApiKey` or `ALPACA_API_KEY`
+- `MarketData__Alpaca__ApiSecret` or `ALPACA_API_SECRET`
+- `MarketData__Alpaca__Feed` or `ALPACA_DATA_FEED`
+
+For Massive later, use `MarketData:Massive:ApiKey` with User Secrets or `MASSIVE_API_KEY`. Never expose credentials to the frontend.
 
 ## Endpoints
 
