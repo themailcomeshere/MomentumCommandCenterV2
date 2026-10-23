@@ -93,7 +93,6 @@ Visual Studio 2022 + .NET 8 SDK. Open the .sln, Build Solution, then run the xUn
 - [ ] /docs/Trade-Analysis.md
 - [ ] /docs/Validation-Plan.md
 
-
 ### What we're doing next
 
 This keeps us on the roadmap rather than wandering into another signal-engine rewrite:
@@ -106,17 +105,12 @@ And importantly, our next work should be based on the actual problem you've been
 
 That's where the Schwab history starts becoming much more valuable than simply calculating win rate.
 
-
-
 ### TODO: Determine if this section stays in here or if there should be another file for this
-A position can remain in RUNNER while the underlying trend and momentum
-remain healthy.
+A position can remain in RUNNER while the underlying trend and momentum remain healthy.
 
-A position can move to RUNNER WANING when deterioration begins without
-yet meeting the criteria for a confirmed exit.
+A position can move to RUNNER WANING when deterioration begins without yet meeting the criteria for a confirmed exit.
 
-Hard structural deterioration, severe ATR extension, or EOD can force an
-exit.
+Hard structural deterioration, severe ATR extension, or EOD can force an exit.
 
 Current V2 Prototype Rules
 
@@ -140,8 +134,7 @@ Fresh long entry additionally requires:
 RSI below the fresh-entry ceiling
 No severe ATR extension
 
-While in a position, V2 evaluates the position separately from fresh-entry
-logic.
+While in a position, V2 evaluates the position separately from fresh-entry logic.
 
 Historical Trade Foundation
 
@@ -157,11 +150,9 @@ Identifies remaining open positions.
 Preserves unmatched sell orders.
 Does not silently discard anomalies.
 
-The current Schwab export does not provide an explicit quantity field, so
-the importer currently treats each filled row as quantity 1.
+The current Schwab export does not provide an explicit quantity field, so the importer currently treats each filled row as quantity 1.
 
-This limitation will be addressed only when the actual broker data requires
-a more sophisticated quantity model.
+This limitation will be addressed only when the actual broker data requires a more sophisticated quantity model.
 
 Trade Analysis
 
@@ -181,8 +172,7 @@ Gross loss.
 Profit factor.
 Symbol-level statistics.
 
-The statistical analysis is intentionally deterministic. It does not
-attempt to infer whether an exit was "good" or "bad" yet.
+The statistical analysis is intentionally deterministic. It does not attempt to infer whether an exit was "good" or "bad" yet.
 
 That requires historical market-data replay.
 
@@ -199,8 +189,52 @@ Compare V1 and V2 against completed Schwab trade history.
 Preserve actual execution behavior.
 Do not optimize thresholds based on one trade.
 Do not manufacture MFE/MAE from trade-only data.
-Do not infer market behavior that cannot be supported by historical
-market snapshots.
+Do not infer market behavior that cannot be supported by historical market snapshots.
 
-The purpose of V2 is to explain and improve the trading process, not to
-retroactively make historical trades look better.
+The purpose of V2 is to explain and improve the trading process, not to retroactively make historical trades look better.
+
+
+## Alpaca provider smoke test (read-only)
+
+The initial Alpaca adapter is intentionally limited to account authentication and latest-stock-bar retrieval. It has **no order-placement API**. The CLI smoke test verifies credentials against `GET /v2/account`, then retrieves a latest bar from Alpaca Market Data.
+
+### Local credential configuration
+
+Do not put API keys or secrets in `appsettings.json`, tracked files, screenshots, or commits. The client reads credentials from environment variables:
+
+- `MCC_ALPACA_API_KEY`
+- `MCC_ALPACA_API_SECRET`
+
+PowerShell, current terminal only:
+
+```powershell
+$env:MCC_ALPACA_API_KEY = "YOUR_ALPACA_KEY"
+$env:MCC_ALPACA_API_SECRET = "YOUR_ALPACA_SECRET"
+dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-check AAPL
+```
+
+Bash, current terminal only:
+
+```bash
+export MCC_ALPACA_API_KEY="YOUR_ALPACA_KEY"
+export MCC_ALPACA_API_SECRET="YOUR_ALPACA_SECRET"
+dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-check AAPL
+```
+
+The defaults are the Alpaca paper-trading account API and the Alpaca market-data API with the `iex` feed. The account endpoint is read-only for this check. Market-data access/feed availability depends on the Alpaca account's entitlements.
+
+Optional environment overrides:
+
+- `MCC_ALPACA_TRADING_BASE_URL`
+- `MCC_ALPACA_MARKET_DATA_BASE_URL`
+- `MCC_ALPACA_DATA_FEED`
+
+The command prints the account status and latest bar values/timestamp. It deliberately does not print the account ID, key, or secret. HTTP failures are reported with status codes, not raw response bodies. The local unit tests use mocked HTTP responses; they do not require Alpaca credentials or internet access.
+
+### Test
+
+```powershell
+dotnet test MomentumCommandCenterV2.sln
+```
+
+The real-provider smoke test should be run manually after the user creates the Alpaca account and configures credentials. No live API call has been made from the repository automation, and provider connectivity is not yet verified.
