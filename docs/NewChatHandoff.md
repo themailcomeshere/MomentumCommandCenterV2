@@ -15,6 +15,18 @@
 - Evaluate a separate validated pullback/reclaim or consolidation-breakout re-entry condition, with spread/liquidity/gap/halts safeguards and out-of-sample tests, rather than weakening the original entry gate.
 - Timezone: the user references 08:30 Arizona time. Arizona generally stays on MST while Eastern market hours shift with DST, so the US regular-session open is generally 07:30 Arizona time during Eastern daylight time and 08:30 during Eastern standard time. Dashboard labels should include timezone/session context.
 
+
+## UPC extension-danger evidence review (2026-10-23)
+
+- User supplied UPC screenshots and facts for a reported 2026-10-22 09:25 event. Reported 5M `Perm=1` and `PBLOCK=0`; 1M `EXT=2.35`, `CANDIDATE BLOCKED: EXTENSION DANGER`, and `IN-TREND CANDIDATE`. This supports keeping the 5M permission and 1M entry gate separate; no logic change is justified.
+- Evidence review: `docs/Validation/UPC-Extension-Danger-Evidence-Review-20261023.md`.
+- Screenshot headers appear to show 2026-10-23 around 11:26 AM, conflicting with the reported event date. Timezone is missing. Reported missing bars cannot be interpreted as zero movement/volume. Resolve exact bar timestamps and data before diagnosing gaps.
+- The exact installed 1M source and `BLK=6` mapping remain unverified. Do not infer source parity from study names.
+
+## Provider comparison refresh (2026-10-23)
+
+- `docs/Provider-Comparison.md` now compares public free and paid tiers against MCC's target. Recommended paid finalists to proof-test: Alpaca Algo Trader Plus ($99/month) and Massive Stocks Advanced ($199/month); no purchase/provider decision made. Free tiers are for plumbing tests, not live authority.
+
 ## 1. Mission and architectural boundaries
 
 MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. Do not implement automatic order placement or Schwab order submission.
