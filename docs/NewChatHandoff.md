@@ -34,7 +34,7 @@ MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-
 - Core market bar and replay models, CSV parsing, replay frame sequencing, V2 signal engine, and opportunity-quality diagnostic models/assessor.
 - Strategy Report parser for the MCC-owned `MCC_OHLCV` payload, with validation/rejection paths for malformed/legacy rows.
 - ThinkScript references in `docs/Charts/1M/` and `docs/Charts/5M/`, including Authority Diagnostic V2 for the 5M Permission audit.
-- Static front-end under `frontend/` is a local/demo workbench; its sample rows are not live scanner output and are not calculated from the C# engine.
+- Static front-end under `frontend/` is a local/demo workbench; its sample rows are not live scanner output and are not calculated from the C# engine. The dashboard now includes a readiness panel and browser-local feedback notebook with JSON export.
 - Application-layer scanner contract scaffold was committed on 2026-10-22: `ScannerDiscoveryEvent.cs` and `IScannerDiscoverySource.cs`. These are contracts only—not a concrete provider, polling job, storage layer, UI wiring, or live integration.
 - Scanner candidate dispositions are presentation states (`ActionableQueue`, `WatchPullback`, `FilteredExtended`, `Blocked`, `DataUnknown`), not trade signals.
 
@@ -63,7 +63,7 @@ Conclusion: the screenshot and source agree that persistent major failure explai
 
 ## 5. Scanner integration decision and EXT problem
 
-**Decision: start the provider-neutral scanner foundation; do not connect a live provider yet.**
+**Decision: start the provider-neutral scanner foundation; do not connect a live provider yet. Thinkorswim is not currently connected as a live scanner/API feed.**
 
 The user reports that red-state `EXT`/extension-danger often coincides with no `EXECUTION READY`, causing wasted chart reviews. Treat the workflow issue as credible, but do not invent a measured frequency or alter the existing gate without data.
 
@@ -76,7 +76,7 @@ Required design:
 - Missing/stale extension metrics must produce `DATA?`, not an assumption that the candidate is not extended.
 - Run shadow mode and measure chart reviews avoided, valid opportunities hidden, and later pullback/READY events before hard-exclusion becomes default.
 
-Provider choice, verified API access, licensing, rate limits, and live credentials are not established in sources. Do not claim a provider is integrated. No automatic orders.
+Provider choice, verified API access, licensing, rate limits, and live credentials are not established in sources. Thinkorswim is currently the chart-study reference/validation environment, not an integrated feed. Do not claim a provider is integrated. No automatic orders.
 
 ## 6. Scanner commits and documents
 
@@ -101,7 +101,8 @@ These commit hashes are the observed GitHub responses from the tool actions; the
 5. [NEXT] Reconcile completed local interval/session/DST artifacts into a compact manifest if available; do not repeat the tests solely to recreate already completed work.
 6. [BLOCKED UNTIL CHOSEN] Implement one live provider adapter only after the user/provider choice and verified access requirements are known.
 7. [NEXT] Run shadow mode on timestamped data and measure both efficiency gains and false-negative risk.
-8. Keep the local UI clearly marked demo until it consumes the validated application contract; no order execution.
+8. [NOW] Use the updated local dashboard for UI feedback; export feedback JSON before changing browsers/devices because notes are browser-local.
+9. Keep the local UI clearly marked demo until it consumes the validated application contract; no order execution.
 
 ## 8. Canonical source map
 
@@ -126,5 +127,6 @@ No immediate user action is required to continue code/document work. If already-
 
 - Detailed local records supporting the 31-interval, full-session, RTH/ETH, and DST checks are not present in the current repository state. The user's completion report is authoritative for planning but not independently reproducible from the committed files.
 - Build/test status at the current branch head is not verified here.
-- Exact scanner provider and its API/entitlement/licensing details are not specified.
+- Exact scanner provider and its API/entitlement/licensing details are not specified; Thinkorswim is not integrated as a live feed.
 - Live scanner extension gating remains blocked until exact indicator parity is implemented and tested.
+- Dashboard feedback is local to the browser until manually exported; there is no server-side feedback storage.
