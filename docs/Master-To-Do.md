@@ -385,3 +385,15 @@ The earlier workflow success recorded above was for its then-current branch head
 - [RESOLVED] User confirms UPC screenshots/event date 2026-10-22 and Thinkorswim chart timezone Arizona.
 - [OPEN] Obtain continuous 1M/5M UPC OHLCV or verify exact bar timestamps in TOS for 09:16–09:36. Do not fill missing bars.
 - [OPEN] Implement real backend adapters for both vendors only after credentials and entitlement/licensing decisions; keep secrets out of frontend JS. Compare source timestamps, bars, quotes, missing intervals, reconnect and backfill.
+
+
+## API host, REST adapters, and Morning Brief integration (2026-10-23)
+
+- [DONE — IMPLEMENTED, NOT YET BUILD-VERIFIED] Added `src/MomentumCommandCenterV2.API` as an ASP.NET Core .NET 8 project and included it in `MomentumCommandCenterV2.sln`. It serves the existing `frontend/` workbench when run from the repository layout and exposes health/provider-status endpoints.
+- [DONE — REST HISTORY ADAPTERS, NOT LIVE-VALIDATED] Added server-side Alpaca historical 1M/5M bars adapter and Massive historical aggregate adapter. Credentials are read from configuration/environment variables, never from frontend JavaScript. No API credentials were provided; no live provider request was performed.
+- [DONE — FIRST COMPARISON ENDPOINT] Added `GET /api/market-data/compare` to request the same symbol/timeframe/window from both providers and report bar counts, first/latest bars, duplicate timestamps, and observed timestamp gaps. Gap count does not imply zero trading or a provider defect. Websocket, scanner/movers, quotes, pagination, durable bar storage, reconnect/backfill, and market-session-aware gap classification remain open.
+- [PARTIAL — MORNING BRIEF] Added `GET /api/morning-brief` for SPY/QQQ/IWM 5M observation snapshots from configured providers, and connected the dashboard to provider status, the comparison endpoint, and Morning Brief. Sectors, breadth, movers, catalysts/news, validated market regime, Red Zone scoring, historical expectations, and Boring Overnight remain explicitly DATA? / NOT CALCULATED.
+- [OPEN — REQUIRED BEFORE TRADING RELIANCE] Build/test the latest branch head, run live API requests with user's licensed credentials, verify provider entitlements and extended-hours coverage, compare both feeds against TOS, and test session/gap semantics. These commits are not a claim of build success, CI success, live-data parity, or production readiness.
+- [OPEN] Add durable raw OHLCV persistence with source/receive timestamps, late/corrected bar handling, and restart recovery.
+- [OPEN] Add websocket streaming, health state, reconnection and historical backfill before considering real-time operation.
+- [OPEN] Continuous UPC OHLCV remains needed only to resolve whether the specific 09:16–09:36 chart intervals were truly missing. It is not a blocker to implementing provider adapters.
