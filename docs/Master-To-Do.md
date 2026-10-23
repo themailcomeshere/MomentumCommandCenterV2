@@ -405,7 +405,7 @@ The earlier workflow success recorded above was for its then-current branch head
 - This validates compilation and existing automated tests only. It does not validate live provider credentials, API entitlements, response behavior against real accounts, browser rendering, data parity, or readiness for live trading.
 
 
-### Raw market-bar persistence slice — 2026-10-23
+### Raw market-bar persistence slice — 2026-10-23 [BUILD/TEST VERIFIED]
 
 - [IMPLEMENTED — CI PENDING FOR LATEST COMMIT] Added `IMarketBarObservationStore` and `JsonlMarketBarObservationStore` to the API host. Provider-comparison requests append valid raw OHLCV observations to JSONL outside the repository by default (LocalApplicationData/MomentumCommandCenterV2/market-bars.jsonl); override with `MCC_MARKET_BAR_STORE_PATH`.
 - Identical observations are idempotent by provider/symbol/source timestamp/content hash. Changed values append a new observation with a `SupersedesObservationId`; prior records are not overwritten. Records preserve source timestamp, receive timestamp, provider/feed and raw OHLCV.
@@ -417,3 +417,6 @@ The earlier workflow success recorded above was for its then-current branch head
 
 - Morning Brief now records observed SPY/QQQ/IWM 5M bars into the same append-only store and displays the observed first-to-last window change when data is available. These are observations, not a validated market-regime classification.
 - The provider comparison UI shows newly persisted observation counts. REST history only; no WebSocket/live collector.
+
+
+- [LATEST HEAD VERIFIED] GitHub Actions run 151 at `ae6ee7acc30e85a6268b5ea8fc40d86429d3461b` completed successfully for restore, Release build, and tests. Run: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40012059701. No live provider, browser, or entitlement validation is implied.
