@@ -92,6 +92,22 @@ Detailed companion: `docs/BoringOvernight.md`. Preserve its complete criteria an
 - Track false positives, missed opportunities, ON win rate, average/median return, adverse excursion, spread/slippage. Do not infer profitability from compilation or a few chart examples.
 - No automatic order placement until a separate risk/order-control workflow is specified and tested.
 
+## Extended momentum / continuation lane (user requirement, 2026-10-22)
+
+- [RESEARCH REQUIREMENT] Do not treat a large current-day gain or an EXT warning as an automatic permanent rejection. Preserve the existing risk warning, but evaluate a separate **Extended Momentum / Continuation Watch** path for stocks already up roughly 10–15% when the user begins reviewing them.
+- [DESIGN ONLY — NOT A BUY SIGNAL] This path should combine fresh price/volume continuation evidence, catalyst/news context with source and timestamp, tradability/liquidity/spread checks, current 5M Permission, and current 1M execution state. News sentiment or a strong narrative alone must never grant eligibility.
+- [SEPARATE STATES] Distinguish (1) extended and not currently executable, (2) continuation remains credible and should be watched, and (3) a fresh, valid entry event exists under the unchanged 5M/1M gates. A continuation candidate can stay on a pullback/reclaim watchlist without being marked EXECUTION READY.
+- [SAFETY] Never bypass the exact 1M extension formula or turn red EXT into a green/permission state. Any alternative entry policy needs explicit risk limits, gap/halts/spread safeguards, an auditable reason code, and historical/out-of-sample validation before it can affect actionable ranking.
+- [OPEN] Determine whether the existing red In-trend candidate bubble is a diagnostic, setup classification, or actual eligibility state by checking the exact installed ThinkScript and chart examples. Do not claim it means technically safe to buy until its formula and semantics are verified.
+- [OPEN] Test whether continuation logic should allow a separate re-entry trigger (for example a defined pullback/reclaim or consolidation breakout) rather than weakening the original EXECUTION READY gate.
+- [TIME CONTEXT] User's 08:30 reference is Arizona local time. Arizona generally does not observe US daylight saving time, while US Eastern market hours do; therefore the US market open shifts between 07:30 and 08:30 Arizona time depending on the season. Label dashboard/session times with timezone and market-session context.
+
+## Broker integration boundary (user preference, 2026-10-22)
+
+- [DECISION] Schwab website/manual order entry is the preferred baseline. Do not implement Schwab API access, credential handling, or automated order submission merely for convenience.
+- [POSSIBLE FUTURE UX] Consider a clearly labeled Open Schwab / open trade-ticket handoff only if a legitimate, supported URL workflow is verified. Do not imply that it can prefill symbol, quantity, account, or order type until confirmed.
+- [NOT APPROVED] Do not implement a one-click Buy Maximum Amount control. It is too easy to submit a mistaken oversized order, and broker-side buying power/margin/order constraints cannot be safely inferred from MCC's local data. If a sizing helper is later requested, make it a non-submitting calculator with explicit custom/max budget choice, visible price and share calculation, reserve/cushion, and a final manual review in Schwab.
+
 ## Dashboard feedback and scanner feed decision (2026-10-22)
 
 - [PARTIAL — UI FEEDBACK SLICE] The static dashboard now has an explicit system-readiness panel and a local feedback notebook so the user can review layout and behavior before provider integration. Notes persist only in browser local storage and can be exported as JSON; they are not uploaded automatically.
