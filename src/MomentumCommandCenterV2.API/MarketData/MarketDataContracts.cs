@@ -46,6 +46,7 @@ public sealed record ProviderComparisonResult(
     string Provider,
     bool Configured,
     int BarCount,
+    int PersistedObservationCount,
     MarketBar? FirstBar,
     MarketBar? LatestBar,
     int DuplicateTimestampCount,
@@ -63,5 +64,5 @@ public sealed record ProviderComparisonResult(
         bool configured,
         string error,
         IReadOnlyList<string> capabilities) =>
-        new(provider, configured, 0, null, null, 0, 0, Array.Empty<DateTimeOffset>(), error, capabilities);
+        new(provider, configured, 0, 0, null, null, 0, 0, Array.Empty<DateTimeOffset>(), error, capabilities);
 }
