@@ -121,7 +121,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
                         : (double?)null
                 });
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException or ProviderNotConfiguredException)
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
             {
                 observations.Add(new { provider = provider.ProviderName, status = "UNKNOWN", error = ex.Message });
             }
