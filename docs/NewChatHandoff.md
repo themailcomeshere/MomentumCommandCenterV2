@@ -169,3 +169,19 @@ No immediate user action is required to continue code/document work. If already-
 - The Morning Report is intentionally labeled preview-only. The displayed generated timestamp is the browser's local clock, not a market-data timestamp. The JSON export records liveScannerConnected=false, overnightCollectionRunning=false, provider=NOT_SELECTED, and Boring Overnight NOT_CALCULATED.
 - Documentation updated: `docs/User-Manual.md`, `docs/Master-To-Do.md`, `docs/Scanner-and-Watchlist-Workbench.md`. New To-Do work requires a supported provider, long-running collector independent of browser tab, persisted raw timestamped events/observations, freshness/gap/duplicate checks, restart/outage/sleep recovery, versioned Morning Report, real ranked Red Zone, and Boring Overnight integration. The provider-neutral contract is now written in `docs/Overnight-Collection-Contract.md`; provider-specific adapter and operational thresholds remain blocked on provider selection.
 - Do not claim live operation or .exe/background service until implemented and tested. Next engineering step is provider selection and data-ingestion/persistence architecture, not adding fake live-looking demo values.
+
+
+## Latest checkpoint — Morning routine, provider research, collection scaffold (2026-10-23)
+
+- Latest previously checked branch head `46c28fd4f56bc7db3b192a4b9a05b617bb42350a` had a successful .NET build-and-test workflow (run 39905346096). Subsequent commits in this checkpoint require a fresh CI check; do not assume they passed until verified.
+- Read the complete Project source file Morning.txt (992 lines). Consolidated its selected excerpts into `docs/Morning-Report-and-Routine.md`. It covers the 08:30 Arizona briefing, market/industry context, scenario expectations, continuous conditions, contextual ranking, catalyst maturation risk, Boring Overnight, journey/outcome learning, personalized timing, and execution intelligence. Illustrative numbers in that file are not real outputs.
+- Added `docs/Provider-Comparison.md` comparing Alpaca, Massive, Twelve Data, and Schwab evidence. Preliminary proof-of-fit candidates are Alpaca Algo Trader Plus and Massive Stocks Advanced. No provider is selected; account entitlements and contract rights are unverified.
+- Added an initial provider-neutral persistence scaffold:
+  - `src/MomentumCommandCenterV2.Application/Interfaces/IScannerDiscoveryEventStore.cs`
+  - `src/MomentumCommandCenterV2.Application/Services/ScannerDiscoveryIngestionService.cs`
+  - `src/MomentumCommandCenterV2.Infrastructure/Persistence/JsonlScannerDiscoveryEventStore.cs`
+  - `tests/MomentumCommandCenterV2.Tests/JsonlScannerDiscoveryEventStoreTests.cs`
+- Scaffold validates event fields/timestamps, stores discovery envelopes in append-only JSONL, retains receipt time, and deduplicates using source event ID or a deterministic fallback key. It is not a background worker/provider adapter and does not yet persist OHLCV bars.
+- Updated Dashboard layout so Morning Brief sits left and Red Zone sits upper-right on wide viewports; the two-column workspace collapses responsively. User had approved the earlier look; the latest position change still needs browser confirmation.
+- Created `docs/Validation/5M-to-1M-User-Validation-Steps.md` with exact steps and evidence needed from the installed Thinkorswim studies. User need not repeat the already completed OHLCV/DST work.
+- Updated To-Do, User Manual, and Scanner Workbench with this status.
