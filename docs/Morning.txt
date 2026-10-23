@@ -1,0 +1,992 @@
+### Morning Report/Routine
+***Check this chat:*** https://chatgpt.com/c/6a9ba0cf-0298-83e8-a78c-992eeb875dae
+***personalized intelligence***
+
+I am going to copy+paste some relevant/valuable snippets from the chat.
+
+
+8. What I'd actually want V2 to accomplish
+Here's my preferred progression:
+Phase 1 — Prove V1
+Maintain your 2.5% benchmark.
+
+Don't raise it.
+
+We collect actual results.
+Phase 2 — V2 learns
+After enough trades, we calculate:
+- win rate
+- average winner
+- average loser
+- expectancy
+- maximum drawdown
+- average favorable excursion
+- average adverse excursion
+- setup-specific performance
+- time-of-day performance
+- catalyst vs non-catalyst performance
+- BB/MACD combinations
+- 5M/1M combinations
+- runner performance
+- re-entry performance
+Now we're no longer guessing.
+Phase 3 — Optimize
+Suppose V2 discovers:
+2.5%+ days occur frequently when market conditions are strong, but trying to reach 2.5% on weak days dramatically increases losses.
+
+Then the system should say:
+
+TODAY'S MARKET REGIME: STRONG
+Target opportunity: 2.5–5%
+
+versus:
+
+TODAY'S MARKET REGIME: WEAK
+Target opportunity: 0–1%
+
+DO NOT FORCE TRADES
+
+That's much better than saying:
+"I need 2.5% today."
+
+
+
+#8 Phase 3 - I LOVE that prediction model of "Today's Market Regime: <strength>". We could even take it a step further and breakdown/sort per Industry. Even a little summary of "Yesterday's strongest Industry was Aerospace and it is continuing today.." "Today's biggest gainers are Industrial...". Additionally, show the inverse: "Today is not a day for Microchips.."
+
+
+
+
+
+
+
+###
+8. And yes — we absolutely should build the Industry/Market Regime layer
+I think your Phase 3 idea is excellent.
+
+At the top of the dashboard:
+TODAY'S MARKET
+Market Regime: 🟢 STRONG — 87/100
+Broad participation
+Momentum breadth expanding
+High-volume breakouts elevated
+Risk appetite strong
+
+Then:
+INDUSTRY REGIMES
+Industry	Score	Direction
+Aerospace	94	🟢 STRONG
+Defense	91	🟢 STRONG
+Industrial	86	🟢 STRONG
+Energy	74	🟢 Positive
+Biotech	68	🟡 Mixed
+Semiconductors	38	🔴 Weak
+Software	42	🔴 Weak
+
+
+And then natural-language intelligence:
+Yesterday's strongest industry: Aerospace
+
+Aerospace remains strong today, with continued above-average participation.
+
+And:
+Today's strongest industry: Industrial
+
+Industrial stocks currently have the strongest combination of breadth, volume expansion and momentum.
+
+And the inverse:
+⚠️ SEMICONDUCTORS
+
+Weak participation today.
+
+Breakouts have a historically lower follow-through rate under the current market conditions.
+
+Recommendation: DOWNWEIGHT.
+
+That's extremely useful.
+
+
+
+
+
+9. Then combine Market + Industry + Stock
+This is where the scoring system becomes much more powerful.
+
+Imagine:
+
+Market = Strong
+
+↓
+
+Industry = Strong
+
+↓
+
+Ticker = Strong
+
+↓
+
+Catalyst = Strong
+
+↓
+
+5M = Strong
+
+↓
+
+1M = Strong
+
+↓
+
+Historical pattern = Strong
+
+Instead of treating every stock independently, V2 understands the hierarchy:
+
+Market → Industry → Stock → Setup → Execution
+
+For example:
+Market: 87/100
+
+Aerospace: 94/100
+
+GRI: 91/100
+
+Setup: 88/100
+
+Execution: 93/100
+
+Overall: 92/100 — BUY
+
+Whereas:
+Market: 42/100
+
+Semiconductors: 31/100
+
+Stock: 81/100
+
+Setup: 84/100
+
+Overall: 58/100 — PASS
+
+Even though the individual stock looks technically good.
+
+That's the kind of contextual filtering that TOS isn't really designed to do.
+10. And this creates the "why did you show me this?" feature
+This is one of my favorite parts of what you're describing.
+
+Every alert should be explainable.
+
+Not:
+BUY XYZ
+
+but:
+PREPARE TO BUY — XYZ
+
+Why I'm showing you this:
+1. Strong catalyst detected
+2. Industry currently ranked #2
+3. RVOL increased from 2.1 → 5.8
+4. 5M trend turned bullish
+5. 1M approaching VWAP reclaim
+6. Similar historical setups had strong follow-through
+7. Stock is inside your trading window
+8. Most of today's move has NOT already occurred
+What I'm waiting for:
+
+1M confirmation.
+
+That's the beginning of a genuinely useful decision-support system.
+11. And here's the important distinction about "prediction"
+I want us to be disciplined about this.
+
+V2 should not eventually say:
+"This stock will go up."
+
+It should say something like:
+Based on 1,247 historical observations with similar conditions:
+
+Probability of reaching +2% before -1%: 71%
+
+Probability of reaching +5%: 38%
+
+Probability of failing before +2%: 29%
+
+Median favorable excursion: +3.1%
+
+Median adverse excursion: -0.8%
+
+That is much more quant-like.
+
+And eventually we'd test whether those probabilities are actually calibrated.
+
+If the system says "70% probability" 100 times, roughly 70 of those situations should actually produce the modeled outcome.
+
+If they don't, the model isn't trustworthy.
+
+
+
+###
+TRADING INTELLIGENCE ENGINE
+Layer 1 — Market
+What kind of day is this?
+Layer 2 — Industry
+Where is the strength/weakness?
+Layer 3 — Discovery
+What stocks are becoming interesting?
+Layer 4 — Catalyst
+Why is this moving?
+Layer 5 — Qualification
+Is this actually tradable for YOU?
+Layer 6 — Prediction
+What do comparable situations historically do?
+Layer 7 — Execution
+Is it time to buy?
+Layer 8 — Management
+Should I RIDE or PREPARE TO SELL?
+Layer 9 — Exit
+Has the structure actually broken?
+Layer 10 — Learning
+Was the decision correct? What happened afterward?
+
+And then it feeds the outcome back into the system.
+
+
+
+###
+14. The ultimate dashboard I'm envisioning
+At the very top:
+TODAY'S MARKET REGIME
+
+🟢 STRONG — 87/100
+
+Best industries: Aerospace, Industrial, Energy
+Weakest: Semiconductors, Software  
+
+Your trading window: FAVORABLE
+Current opportunity density: HIGH
+
+Then:
+🚨 ACTIVE OPPORTUNITIES
+GRI — 94 — 🟢 BUY
+
+CHPT — 88 — 🟡 PREPARE TO BUY
+
+XYZ — 83 — 🟡 PREPARE TO BUY
+
+ABC — 79 — 🔵 RIDE
+
+DEF — 41 — 🟠 PREPARE TO SELL
+
+And the system automatically moves stocks between these categories.
+
+No manually maintaining a giant watchlist.
+
+No staring at 100 tickers.
+
+No trying to remember which indicator means what.
+
+The system is effectively saying:
+"Here are the 3 things I believe deserve your attention RIGHT NOW, and here's why."
+
+And that is the big evolution
+Our V1 asks:
+"Can I find a stock that looks good?"
+
+V2 eventually asks:
+"Given the entire market, industry, catalyst, stock, historical behavior, current technical structure, time of day, and YOUR available trading window — what is the highest-quality opportunity available to you right now?"
+
+That is absolutely the direction I would take this.
+
+And I would still keep the V1 → V2 lineage intact. We're not throwing away the system we've built. We're turning its rules into measurable features, then letting actual outcomes tell us which combinations deserve more or less weight.
+
+That's how we go from a very good rule-based trading dashboard toward a genuine quantitative trading intelligence platform.
+
+
+
+
+
+
+
+
+### The gamer-style probability visualization is especially worth preserving.
+***The following "slider" idea may be outdated, so don't take this as gospel. Think of it as brainstorming.***
+V3 TODO — Quantitative "Journey" Visualization
+The concept I want captured is:
+
+Stock enters the system → probability/expected-move journey → current position in that journey → outcome.
+
+For example:
+GRI — BUY 94/100
+
+Potential journey:
+
+ENTRY ────────●────────────── +5%
+               ↑
+             NOW
+
++2% target: 74% probability
++5% target: 38% probability
++10% target: 12% probability  
+
+Median favorable excursion: +3.1%
+Median adverse excursion: -0.8%
+
+But I think we can make this much more game-like than a plain slider.
+Possible V3 display
+MOMENTUM QUEST
+
+START → +1% → +2% → +3% → +5% → +10%
+
+GRI
+███████████░░░░░░░░░
+
+Current: +2.7%
+Median historical journey: +3.1%
+Next milestone: +5%
+Probability of reaching next milestone: 38%
+
+And underneath:
+🟢 RIDE
+
+5M structure intact
+1M pullback healthy
+VWAP holding
+MACD positive
+Selling volume not confirming failure
+
+Then if the evidence deteriorates:
+
+███████████░░░░░░░░░
+↓
+PREPARE TO SELL
+
+And eventually:
+🔴 SELL
+
+Historical journey invalidated — confirmed structural failure.
+
+And there's an even better idea for V3
+The slider shouldn't merely represent price percentage.
+
+It could represent the stock's statistical journey.
+
+For example:
+
+Phase 1 — Discovery
+↓
+Phase 2 — Setup
+↓
+Phase 3 — Entry
+↓
+Phase 4 — Early Momentum
+↓
+Phase 5 — Established Runner
+↓
+Phase 6 — Extended
+↓
+Phase 7 — Exhaustion / Exit
+
+The system could show both:
+
+WHERE THE STOCK IS
+
+and
+
+WHERE SIMILAR HISTORICAL STOCKS TENDED TO GO NEXT.
+
+That's much more interesting than simply displaying "+3.2%."
+
+
+
+And yes: Layer 10 is the monster
+I agree with your assessment.
+
+Layer 10 — LEARNING is probably the hardest and ultimately the most valuable part.
+
+Because eventually we want:
+System predicted 72%
+
+What actually happened?
+
+Then:
+Prediction was correct.
+
+or:
+Prediction failed.
+
+And V2 records why.
+
+Over time, we can discover that perhaps:
+- certain MACD configurations are much stronger than others
+- some BB configurations produce excellent continuation
+- certain industries behave differently
+- some catalysts persist while others fade immediately
+- certain times of day are dramatically better
+- certain setups work beautifully on strong-regime days but poorly on weak days
+- some "BUY 90+" situations actually aren't 90+ and need recalibration
+- some apparent pullbacks are actually excellent re-entry opportunities
+That creates the feedback loop:
+
+OBSERVE → PREDICT → TRADE → MEASURE → LEARN → IMPROVE
+
+And eventually:
+
+V2 isn't just following the strategy.
+
+V2 is learning what makes the strategy work.
+
+
+
+
+
+
+
+
+
+###
+
+V3 — Decision Engine
+“Given everything we know, what is the stock most likely to do next, and where are we in that journey?”
+
+And that alone gives us some very powerful capabilities:
+- Market Regime — Is today favorable for momentum trading?
+- Industry Regime — Where is money actually flowing?
+- Opportunity Discovery — Find stocks that matter during your trading window, not merely stocks that already exploded.
+- Setup Quality — Quantify how closely the current situation resembles desirable setups.
+- Probability Engine — Estimate outcomes such as reaching +2%, +5%, +10% before a defined adverse move.
+- Journey Visualization — Show START → +1% → +2% → +3% → +5% → +10% and where the stock currently sits.
+- Trade State Machine — PASS → PREPARE → BUY → RIDE → PREPARE TO SELL → SELL.
+- Runner Intelligence — Recognize that a position is still healthy rather than interpreting every 1M pullback as a sell.
+- Extension/Exhaustion Detection — Distinguish “still running” from “the easy money is probably behind us.”
+- Personalized Timing — Learn what constitutes a good opportunity specifically during your available trading hours.
+- Opportunity Ranking — Instead of staring at 20 stocks, V3 can tell you which 1–3 deserve attention right now.
+- Why — Not just BUY, but why: catalyst + liquidity + RVOL + structure + momentum + historical behavior + market/industry context.
+And here's the really important distinction
+V3 doesn't need to predict the future perfectly.
+
+It needs to answer:
+“Given everything we know right now, which available opportunity has the best risk/reward probability?”
+
+That's a dramatically more achievable problem.
+
+Then Layer 10 eventually turns V3 from:
+
+Intelligent decision engine
+
+into:
+
+self-improving trading intelligence engine.
+
+It watches what it predicted, what actually happened, whether you took the trade, how you managed it, and where its assumptions were wrong.
+
+So I would actually structure the development philosophy as:
+
+V1 → Rules
+↓
+V2 → Intelligence
+↓
+V3 → Quantified Decision Engine
+↓
+V3 + Layer 10 → Learning System
+
+And yes—V3 is already worth building even if Layer 10 takes a long time.
+
+In fact, Layer 10 will be much easier to build because V3 exists. We first need V3 generating clean, structured observations and predictions. Then we have something for the learning system to learn from.
+
+
+
+###
+These five are now core V3 goals:
+1. Journey Visualization
+2. Runner Intelligence
+3. Extension/Exhaustion Detection
+4. Personalized Timing
+5. Opportunity Ranking
+
+
+
+
+Catalyst / News
+For every meaningful candidate:
+- News/catalyst present?
+- Catalyst timestamp
+- Catalyst type
+- Company-specific vs sector-wide
+- Earnings
+- FDA/regulatory
+- Contract
+- Acquisition
+- Financing
+- Analyst action
+- Partnership
+- Product/news announcement
+- SEC filing
+- Rumor/social-driven
+- Unknown
+And ideally:
+
+Catalyst strength:
+NONE → WEAK → MODERATE → STRONG → MAJOR
+
+Eventually V2 can discover things like:
+“A +15% move on a legitimate contract catalyst behaves very differently from a +15% move caused by low-float speculation.”
+
+That's enormously valuable.
+
+
+
+
+4. Market + Industry Context
+This is one of the things I am particularly excited about for V3.
+
+At the moment of the observation:
+Market
+- SPY direction
+- QQQ direction
+- IWM direction
+- Market breadth
+- VIX
+- Overall market regime
+Something like:
+
+STRONG / NORMAL / WEAK
+Industry
+- Industry/sector
+- Sector % change
+- Sector momentum
+- Sector relative strength
+- Whether the industry is accelerating or fading
+Eventually:
+MARKET: STRONG
+INDUSTRY: Aerospace — VERY STRONG
+STOCK: +4.2%
+SETUP: Fresh breakout
+
+becomes a materially different situation from:
+MARKET: WEAK
+INDUSTRY: Semiconductors — WEAK
+STOCK: +4.2%
+SETUP: Extended
+
+That is the beginning of actual contextual intelligence.
+5. The Most Important Part: The Journey
+This is where we start building the V3 Journey Visualization.
+
+At each observation, record:
+
+Current price
+
+and then what happened afterward:
+Maximum favorable excursion
+How far did it eventually go?
+
+For example:
+
+Entry observation: $10.00
+
+Then:
+- +1% reached? YES
+- +2% reached? YES
+- +3% reached? YES
+- +5% reached? YES
+- +10% reached? NO
+Maximum:
+
++7.4%
+Maximum adverse excursion
+How far did it go against the setup?
+
+MAE = -1.2%
+
+And critically:
+
+How long did it take?
+- +1% in 4 minutes
+- +2% in 11 minutes
+- +3% in 19 minutes
+- +5% in 37 minutes
+- eventual high +7.4%
+Now we're building the data needed for:
+
+START → +1 → +2 → +3 → +5 → +10
+
+with actual probabilities.
+6. Time
+This is critical for your Personalized Timing goal.
+
+Every observation needs:
+- Date
+- Exact timestamp
+- ET timestamp
+- Your AZ timestamp
+- Minutes since regular-session open
+- Minutes since your trading window opened
+- Minutes until close
+- Premarket vs regular session
+- Regular session vs after-hours
+Then V2 can eventually discover:
+“This setup has a 61% probability of reaching +2% when it appears between 8:30–10:00 AZ.”
+
+versus:
+“The same setup only reaches +2% 29% of the time after noon.”
+
+That is personalized timing.
+
+We're no longer asking when stocks generally move.
+
+We're asking:
+When does this type of opportunity work best for YOU?
+
+
+
+
+
+###
+
+TO-DO: Create a Morning Report for my ~0830 (AZ time) trading session. Its purpose is to communicate to me (at a glance, maybe into an infographic) what has happened (Morning Landscape), what the current Daily Predictions are (we haven't discussed this yet - is that worthwhile? What would you suggest putting in such a thing?), and least Current Conditions. Because this is already running (right?), my Watchlist will ALSO already be sorted.
+
+
+1. Catalyst classification: add a “pump → dump” state
+I really like this, with one refinement: we shouldn't call it a fact. We should make it a probabilistic condition.
+
+For example:
+CATALYST: Strong
+MOMENTUM: Fading
+EXTENSION: Extreme
+BUYERS: Weakening
+SELLING: Increasing
+DUMP RISK: HIGH
+
+Then something like:
+
+“PUMP MATURING → ELEVATED DUMP RISK”
+
+GRI today is a perfect example of the type of event we should eventually train this on.
+
+That becomes part of Extension/Exhaustion Detection.
+
+
+
+
+
+
+4. Morning Report — YES. This should absolutely be a V2 feature.
+And I think your instinct about 08:30 AZ is exactly right.
+
+The Morning Report shouldn't be another giant dashboard.
+
+It should be a 30-second briefing.
+
+I'd structure it as three panels:
+🌅 MORNING LANDSCAPE
+MARKET
+Market Regime: 🟢 STRONG
+
+QQQ: +0.8%
+IWM: +1.2%
+SPY: +0.5%
+MONEY FLOW
+Strongest Industries
+1. Aerospace
+2. Energy
+3. Biotech
+Weakest
+1. Semiconductors
+2. Banks
+3. Retail
+OVERNIGHT / PREMARKET
+Major Movers
+
+GRI +18%
+FEMY +11%
+XYZ +9%
+
+Then importantly:
+GRI: +18% mostly occurred before trading window → elevated extension risk
+
+That is exactly the distinction we've been discussing.
+5. DAILY PREDICTIONS — YES, but I would NOT make them “stock predictions”
+This is where I think we can make something much more sophisticated.
+
+Instead of:
+“GRI will go up today.”
+
+V2 should produce scenario predictions.
+
+For example:
+🔮 TODAY'S MARKET EXPECTATION
+Momentum Environment: 🟢 FAVORABLE
+Expected volatility: HIGH
+Breakout probability: HIGH
+Continuation probability: MODERATE-HIGH
+Mean-reversion risk: MODERATE
+What V2 expects to work today
+BEST ENVIRONMENT
+Fresh catalyst + high RVOL + strong industry + bullish 5M structure
+
+LIKELY TO STRUGGLE
+Extended overnight runners + declining RVOL + weakening momentum
+
+And then:
+🎯 TODAY'S OPPORTUNITY MAP
+Highest-quality opportunity type:
+
+FRESH CATALYST → EARLY MOMENTUM → RECLAIM/BREAKOUT
+
+Avoid chasing:
+
++15%+ PREMARKET → EXTENDED → MOMENTUM FADING
+
+That's much more useful than pretending we can predict individual stock prices.
+6. And then: CURRENT CONDITIONS
+This is the part that updates continuously.
+
+At 08:30:
+CURRENT CONDITIONS
+
+Market: 🟢
+Momentum: 🟢
+Volatility: 🟢
+Sector concentration: 🟢
+Fresh catalysts: 🟢
+Chase risk: 🟡
+
+At 10:15:
+CURRENT CONDITIONS
+
+Market: 🟢
+Momentum: 🟢
+Volatility: 🟢
+Fresh catalysts: 🟢
+Chase risk: 🔴 increasing
+
+That means the Morning Report isn't something you read once and forget.
+
+It becomes:
+
+Morning expectation → actual conditions → divergence
+
+And that divergence itself becomes data.
+
+
+
+
+
+8. And YES — Boring Overnighting gets this intelligence too
+This is a really important V3/V2 connection.
+
+Right now, Boring Overnight is essentially asking:
+“Which stocks have characteristics that make them attractive to hold overnight?”
+
+Eventually:
+V3 Boring Overnight
+takes into account:
+
+Stock
+- Catalyst
+- Overnight behavior
+- Liquidity
+- Industry
+- Market regime
+- Historical overnight behavior
+- Extension
+- Probability of continuation
+- Probability of overnight deterioration
+- Expected overnight range
+Then:
+🌙 OVERNIGHT RANKING
+CMBT — 91
+High-quality overnight continuation profile
+
+INSW — 84
+Stronger reliability, lower expected upside
+
+NAT — 78
+Stable but lower expected movement
+
+etc.
+
+And the system can distinguish:
+“Good overnight hold”
+
+from
+“Stock that is currently moving a lot.”
+
+Those are absolutely not the same thing.
+
+
+
+*** execution intelligence ***
+Because right now we're mostly evaluating:
+“Was the setup good?”
+
+Execution Intelligence asks a completely different question:
+“Once the setup was good, did we actually execute it well?”
+
+And with your Limit Buy / Limit Sell approach, there is a lot to learn.
+V2 could eventually measure:
+SIGNAL
+→ V2 says EXECUTION READY at $10.00
+
+YOUR ORDER
+→ Limit Buy $9.97
+
+RESULT
+→ Stock runs to $10.15 without filling
+
+V2 learns:
+“This trader's limit was too aggressive for this type of setup.”
+
+But another situation:
+
+SIGNAL
+→ $10.00
+
+LIMIT
+→ $9.98
+
+FILL
+→ $9.98
+
+AFTER FILL
+→ $10.30
+
+V2 learns:
+“Waiting for a modest price improvement works extremely well for this setup.”
+
+And there's an even more interesting one:
+The missed-fill dataset
+Suppose:
+EXECUTION READY @ 10.00
+Limit Buy = 9.95
+NO FILL
+Stock → 10.80
+
+That's not simply a missed trade.
+
+It's a valuable execution observation.
+
+We can eventually calculate:
+Probability of filling at various discounts from signal price
+
+versus
+Probability the stock runs away without filling.
+
+Then V3 could eventually tell you:
+EXECUTION
+Signal: $10.00
+Suggested Limit: $9.97
+Fill probability: 78%
+Expected improvement: +0.03
+Risk of missing move: 14%
+
+That's fucking useful.
+And SELLING gets even better
+Imagine you're holding at $10.50.
+
+V3 says:
+PREPARE TO SELL
+
+You submit:
+
+Limit Sell $10.65
+
+It fills.
+
+Great.
+
+But imagine:
+V3 says PREPARE TO SELL at $10.50
+You submit $10.65
+Never fills
+Stock collapses to $10.10
+
+Now we have learned something completely different:
+“When this particular exhaustion pattern appears, prioritizing additional price improvement materially increases exit risk.”
+
+That's execution intelligence + exit intelligence.
+And eventually V3 could separate TWO scores
+🧠 TRADE QUALITY
+94/100
+
+“This is a historically excellent opportunity.”
+
+and
+🎯 EXECUTION QUALITY
+87/100
+
+“Your proposed Limit Buy has a high probability of filling without sacrificing much expected edge.”
+
+That's a huge distinction.
+
+Because a phenomenal setup can produce a terrible trade if you execute it badly.
+
+And conversely, a mediocre setup doesn't become good just because you got a great fill.
+
+
+
+
+
+
+###
+
+
+Naming the system
+And yes — Jeeves is absolutely a classy, intelligent helper reference.
+
+The classic Jeeves archetype is basically:
+highly competent personal attendant who anticipates what you need and quietly handles things.
+
+That's actually pretty damn close to what we're building. 😄
+
+But I agree that V3 is perfectly fine for now. Naming it too early might make us force a personality onto something that is still evolving.
+
+I'd keep a shortlist in the background.
+Some directions I'd explore
+Classical / sophisticated
+- Jeeves
+- Alfred
+- Sterling
+- Winston
+- Reginald
+- Percival
+- Hamilton
+Intelligence-oriented
+- Atlas
+- Oracle
+- Vector
+- Nexus
+- Sentinel
+- Compass
+Personal operating-system feel
+- OPS
+- Trading OS
+- Command
+- Navigator
+- The Operator
+- Trading Intelligence Engine
+Slightly sci-fi without being "JARVIS"
+- Aegis
+- Argo
+- Meridian
+- Prometheus
+- Athena
+- Halcyon
+But I particularly like the eventual distinction:
+
+V3 = the engineering version.
+[Name] = the thing you actually interact with.
+
+So internally we're building V3, while eventually you might say:
+“What does Jeeves think about this setup?”
+
+or
+“Why did the system put this stock at #1?”
+
+or
+“What limit does it recommend?”
+
+And the system responds with the underlying evidence.
+
+That's much more interesting than simply having another scanner.
+
+V3 is becoming a personal trading operating system that observes, predicts, recommends, learns from your execution, and eventually learns you.

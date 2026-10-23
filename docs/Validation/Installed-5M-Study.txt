@@ -1,0 +1,1728 @@
+# ============================================================
+# Momentum Command Center V3.2
+# 5M Command Center — Extended Hours
+# V4.1.7 — Targeted runner-waning protection + Arizona-time diagnostics + parallel aggressive entry lane
+#
+# PURPOSE OF THIS REVISION
+#   Preserve all existing 5M permission, setup, runner, swing, and sell calculations.
+#   Require BUY establishment before runner states can be displayed.
+#   Keep the permission diagnostics from V4.1.1.
+#   Correct the session clock so the study's EOD time is defined
+#   in Arizona time while thinkScript's SecondsFromTime() and
+#   SecondsTillTime() continue to use the Eastern clock.
+#   Add optional per-bar time diagnostics so historical bars can
+#   be inspected without relying on right-edge AddLabel() values.
+#
+#   Permission, setup, runner, swing, and sell calculations are unchanged.
+#   The displayed state machine now has an explicit BUY-established latch.
+#
+# PURPOSE
+#   5M = structure / permission / setup / runner / swing
+#   1M = execution / confirmation / timing
+#
+# IMPORTANT
+#   EXECUTION READY belongs to the 1M.
+#   This study provides the 5M environment that the 1M
+#   execution layer consumes.
+#
+# ARCHITECTURE
+#
+#   5M AUTHORITY:
+#       permission
+#       bullish regime
+#       setup
+#       runner
+#       runner waning
+#       swing zone
+#       sell / failure states
+#
+#   1M CONSUMER:
+#       execution
+#       confirmation
+#       timing
+#
+# IMPORTANT RUNNER CHANGE
+#
+#   The 5M bullish regime does NOT require the full:
+#
+#       price > EMA9 > EMA20 > SMA50
+#
+#   stack.
+#
+#   The full stack remains the STRONG STRUCTURE definition.
+#
+#   A valid runner can exist while price is:
+#
+#       above VWAP
+#       above EMA9
+#       EMA9 > EMA20
+#
+#   with bullish momentum / RSI support.
+#
+#   This prevents the 50 SMA from incorrectly blocking an
+#   otherwise valid RUNNER / RUNNER RISING environment.
+#
+# IMPORTANT
+#
+#   This study must never reference 1M data.
+# ============================================================
+declare upper;
+# ============================================================
+# INPUTS
+# ============================================================
+input showLabels = yes;
+input showStateBubbles = yes;
+input showDebugLabels = no;
+input showTimeDiagnostics = no;
+input showTimeDiagnosticBubbles = no;
+input showHistoricalDebugBubbles = no;
+input rvolLength = 50;
+input rsiLength = 14;
+input rsiBull = 50;
+input rsiStrong = 55;
+input rsiWeak = 45;
+input fastEMA = 9;
+input slowEMA = 20;
+input trendSMA = 50;
+input macdFast = 12;
+input macdSlow = 26;
+input macdLength = 9;
+input atrLength = 14;
+input extensionWarningATR = 1.50;
+input extensionDangerATR = 2.00;
+input breakoutLength = 10;
+input permissionFailureBars = 2;
+input majorFailureBars = 2;
+input confirmedWeaknessBars = 2;
+input swingWaningBars = 2;
+input runnerWaningBars = 2;
+input minimumPermissionRSI = 50;
+input minimumSetupRVOL = 1.00;
+# ============================================================
+# AGGRESSIVE ENTRY LANE
+# ============================================================
+# The normal green lane is unchanged. The orange lane is a parallel
+# experimental entry path intended to identify strong developing moves
+# that are still slightly below Daily VWAP. The allowance is tiered by
+# share price rather than using one blunt percentage for every symbol.
+#
+# Price tiers:
+#   < $10    = 1.00% below VWAP allowed
+#   $10-$25  = 1.50% below VWAP allowed
+#   $25-$50  = 2.00% below VWAP allowed
+#   $50-$100 = 2.50% below VWAP allowed
+#   > $100   = 3.00% below VWAP allowed
+#
+# These values do NOT change the normal green lane.
+# ============================================================
+input aggressiveMarginUnder10 = 1.00;
+input aggressiveMargin10To25 = 1.50;
+input aggressiveMargin25To50 = 2.00;
+input aggressiveMargin50To100 = 2.50;
+input aggressiveMarginOver100 = 3.00;
+# Fixed Arizona session cutoff for this version.
+# The Eastern equivalents below are separate compile-time inputs because
+# SecondsFromTime()/SecondsTillTime() require constant HHMM arguments.
+def eodHourArizona = 15;
+def eodMinuteArizona = 55;
+input eodTimeEasternDaylight = 1855;
+input eodTimeEasternStandard = 1955;
+# ============================================================
+# SESSION / TIMEZONE
+#
+# TOS chart display can remain set to Arizona time.
+# thinkScript's SecondsFromTime() and SecondsTillTime() use the
+# Eastern clock regardless of the chart's displayed timezone.
+#
+# Arizona remains UTC-7 year-round. Eastern is UTC-4 during US
+# daylight time and UTC-5 during standard time. Therefore an
+# Arizona 3:55 PM EOD corresponds to 6:55 PM Eastern during
+# daylight time and 7:55 PM Eastern during standard time.
+#
+# The DST dates are calculated from the US rules:
+#   - starts on the second Sunday in March
+#   - ends on the first Sunday in November
+#
+# GetDayOfWeek() returns Monday=1 through Sunday=7.
+# ============================================================
+def currentDate =
+    GetYYYYMMDD();
+def currentYear =
+    Floor(currentDate / 10000);
+def currentMonth =
+    Floor(currentDate / 100) % 100;
+def currentDay =
+    currentDate % 100;
+def marchFirst =
+    currentYear * 10000 + 301;
+def novemberFirst =
+    currentYear * 10000 + 1101;
+def marchFirstDayOfWeek =
+    GetDayOfWeek(marchFirst);
+def novemberFirstDayOfWeek =
+    GetDayOfWeek(novemberFirst);
+def secondSundayMarch =
+    8 + (7 - marchFirstDayOfWeek) % 7;
+def firstSundayNovember =
+    1 + (7 - novemberFirstDayOfWeek) % 7;
+def easternDaylightTime =
+    currentMonth > 3 and
+    currentMonth < 11
+    or
+    currentMonth == 3 and
+    currentDay >= secondSundayMarch
+    or
+    currentMonth == 11 and
+    currentDay < firstSundayNovember;
+def eodTimeEastern =
+    if easternDaylightTime
+    then eodTimeEasternDaylight
+    else eodTimeEasternStandard;
+# thinkScript requires SecondsTillTime()/SecondsFromTime() to receive
+# compile-time constant HHMM arguments. The two Eastern times are therefore
+# inputs (compile-time constants) and the DST branch selects between them.
+def beforeEOD =
+    if easternDaylightTime
+    then SecondsTillTime(eodTimeEasternDaylight) > 0
+    else SecondsTillTime(eodTimeEasternStandard) > 0;
+def afterEOD =
+    if easternDaylightTime
+    then SecondsFromTime(eodTimeEasternDaylight) >= 0
+    else SecondsFromTime(eodTimeEasternStandard) >= 0;
+def regularSession =
+    GetTime() >= RegularTradingStart(GetYYYYMMDD()) and
+    GetTime() < RegularTradingEnd(GetYYYYMMDD());
+def extendedSession =
+    !regularSession;
+def eodExitWindow =
+    afterEOD;
+# ============================================================
+# TIME DIAGNOSTICS
+#
+# AddLabel() uses values from the last real bar, so these labels
+# are intentionally supplemented by optional per-bar bubbles.
+# The bubbles are attached to each historical bar and therefore
+# follow the bars you zoom into.
+# ============================================================
+def secondsFromEOD =
+    if easternDaylightTime
+    then SecondsFromTime(eodTimeEasternDaylight)
+    else SecondsFromTime(eodTimeEasternStandard);
+def secondsTillEOD =
+    if easternDaylightTime
+    then SecondsTillTime(eodTimeEasternDaylight)
+    else SecondsTillTime(eodTimeEasternStandard);
+AddLabel(
+    showDebugLabels and showTimeDiagnostics,
+    "TIME AZ EOD=" + eodHourArizona + ":" + eodMinuteArizona +
+    " ET=" + eodTimeEastern +
+    " DST=" + easternDaylightTime
+);
+AddLabel(
+    showDebugLabels and showTimeDiagnostics,
+    "TIME CurrentDate=" + currentDate +
+    " EODWindow=" + eodExitWindow
+);
+AddChartBubble(
+    showTimeDiagnosticBubbles,
+    high,
+    "AZ=" + eodHourArizona + ":" + eodMinuteArizona +
+    " ET=" + eodTimeEastern +
+    " From=" + secondsFromEOD +
+    " Till=" + secondsTillEOD +
+    " EOD=" + eodExitWindow,
+    if eodExitWindow then Color.RED else Color.WHITE,
+    yes
+);
+# ============================================================
+# PRICE / MOVING AVERAGES
+# ============================================================
+def price = close;
+def ema9 =
+    ExpAverage(price, fastEMA);
+def ema20 =
+    ExpAverage(price, slowEMA);
+def sma50 =
+    Average(price, trendSMA);
+def ema9Rising =
+    ema9 > ema9[1];
+def ema9Falling =
+    ema9 < ema9[1];
+def ema20Rising =
+    ema20 > ema20[1];
+def ema20Falling =
+    ema20 < ema20[1];
+def sma50Rising =
+    sma50 > sma50[1];
+def sma50Falling =
+    sma50 < sma50[1];
+# ============================================================
+# VWAP
+# ============================================================
+def dailyVWAP =
+    vwap(period = AggregationPeriod.DAY);
+def priceAboveVWAP =
+    price > dailyVWAP;
+def priceBelowVWAP =
+    price < dailyVWAP;
+def vwapRising =
+    dailyVWAP > dailyVWAP[1];
+def vwapFalling =
+    dailyVWAP < dailyVWAP[1];
+# ============================================================
+# CORE STRUCTURE
+# ============================================================
+# ------------------------------------------------------------
+# BULLISH CORE
+#
+# Basic bullish structure.
+# ------------------------------------------------------------
+def bullishCore =
+    price > dailyVWAP and
+    price > ema9;
+# ------------------------------------------------------------
+# BULLISH STACK
+#
+# Strong / fully aligned bullish structure.
+#
+# This remains deliberately stricter than runner structure.
+# ------------------------------------------------------------
+def bullishStack =
+    price > dailyVWAP and
+    price > ema9 and
+    ema9 > ema20 and
+    ema20 > sma50;
+# ------------------------------------------------------------
+# BEARISH CORE / STACK
+# ------------------------------------------------------------
+def bearishCore =
+    price < dailyVWAP and
+    price < ema9;
+def bearishStack =
+    price < dailyVWAP and
+    price < ema9 and
+    ema9 < ema20 and
+    ema20 < sma50;
+# ============================================================
+# RSI
+# ============================================================
+def rsi =
+    RSI(
+        price = price,
+        length = rsiLength
+    );
+def rsiBullish =
+    rsi >= rsiBull;
+def rsiStrongBullish =
+    rsi >= rsiStrong;
+def rsiWeakCondition =
+    rsi < rsiWeak;
+def rsiRising =
+    rsi > rsi[1];
+def rsiFalling =
+    rsi < rsi[1];
+def rsiWeakening =
+    rsi < rsi[1] and
+    rsi[1] <= rsi[2];
+def rsiRecovering =
+    rsi > rsi[1] and
+    rsi[1] <= rsi[2];
+# ============================================================
+# MACD
+# ============================================================
+def macdValue =
+    MACD(
+        fastLength = macdFast,
+        slowLength = macdSlow,
+        MACDLength = macdLength
+    ).Value;
+def macdSignal =
+    MACD(
+        fastLength = macdFast,
+        slowLength = macdSlow,
+        MACDLength = macdLength
+    ).Avg;
+def macdHistogram =
+    MACD(
+        fastLength = macdFast,
+        slowLength = macdSlow,
+        MACDLength = macdLength
+    ).Diff;
+def macdBullish =
+    macdValue > macdSignal;
+def macdBearish =
+    macdValue < macdSignal;
+def macdRising =
+    macdHistogram > macdHistogram[1];
+def macdFalling =
+    macdHistogram < macdHistogram[1];
+def macdWeakening =
+    macdHistogram < macdHistogram[1] and
+    macdHistogram[1] <= macdHistogram[2];
+def macdRecovering =
+    macdHistogram > macdHistogram[1] and
+    macdHistogram[1] <= macdHistogram[2];
+# ============================================================
+# RVOL
+# ============================================================
+def averageVolume =
+    Average(volume, rvolLength);
+def rvol =
+    if averageVolume > 0
+    then volume / averageVolume
+    else 0;
+def rvolHealthy =
+    rvol >= 1.00;
+def rvolStrong =
+    rvol >= 1.50;
+# ============================================================
+# ATR / EXTENSION
+# ============================================================
+def atr =
+    Average(
+        TrueRange(
+            high,
+            close,
+            low
+        ),
+        atrLength
+    );
+def extensionATR =
+    if atr > 0
+    then AbsValue(price - dailyVWAP) / atr
+    else 0;
+def bullishExtensionWarning =
+    price > dailyVWAP and
+    extensionATR >= extensionWarningATR;
+def bullishExtensionDanger =
+    price > dailyVWAP and
+    extensionATR >= extensionDangerATR;
+# ============================================================
+# BREAKOUT / RECLAIM / RETEST
+# ============================================================
+def priorHigh =
+    Highest(
+        high[1],
+        breakoutLength
+    );
+def priorLow =
+    Lowest(
+        low[1],
+        breakoutLength
+    );
+def breakout =
+    price > priorHigh;
+def reclaimVWAP =
+    price > dailyVWAP and
+    price[1] <= dailyVWAP[1];
+def reclaimEMA9 =
+    price > ema9 and
+    price[1] <= ema9[1];
+def retestEMA9 =
+    low <= ema9 and
+    price > ema9;
+def retestVWAP =
+    low <= dailyVWAP and
+    price > dailyVWAP;
+# ============================================================
+# BULLISH SETUP
+# ============================================================
+def bullishTrigger =
+    breakout or
+    reclaimVWAP or
+    reclaimEMA9 or
+    retestEMA9 or
+    retestVWAP;
+def bullishSetup =
+    bullishTrigger and
+    price > dailyVWAP and
+    price > ema9 and
+    ema9 >= ema20 and
+    rsi >= minimumPermissionRSI and
+    rvol >= minimumSetupRVOL and
+    !bullishExtensionDanger;
+# ============================================================
+# 5M PERMISSION
+# ============================================================
+# Permission is the minimum bullish environment.
+#
+# It intentionally does not require:
+#   - EMA20 > SMA50
+#   - full bullish stack
+#   - breakout
+#   - RVOL
+#
+# Permission answers:
+#
+#   "Is the 5M still allowed to support bullish activity?"
+# ============================================================
+def bullishPermissionRaw =
+    price > dailyVWAP and
+    price > ema9 and
+    ema9 >= ema20 and
+    rsi >= minimumPermissionRSI;
+# ============================================================
+# PERMISSION DIAGNOSTICS
+#
+# These definitions are diagnostic only.
+# They do NOT alter the Permission state below.
+#
+# PermissionRaw is the complete recovery condition.
+# The component diagnostics let us identify which part of
+# PermissionRaw is false on a specific 5M bar.
+# ============================================================
+def permissionPriceAboveVWAP =
+    price > dailyVWAP;
+def permissionPriceAboveEMA9 =
+    price > ema9;
+def permissionEMA9AboveEMA20 =
+    ema9 >= ema20;
+def permissionRSIOK =
+    rsi >= minimumPermissionRSI;
+# ============================================================
+# STRUCTURAL DAMAGE
+# ============================================================
+def structuralDamage =
+    price < dailyVWAP and
+    ema9 < ema20;
+def structuralDamagePersistent =
+    Sum(
+        if structuralDamage
+        then 1
+        else 0,
+        permissionFailureBars
+    ) >= permissionFailureBars;
+# ============================================================
+# MAJOR FAILURE
+# ============================================================
+def majorFailureRaw =
+    price < dailyVWAP and
+    price < ema9 and
+    ema9 < ema20 and
+    ema20 < sma50;
+def majorFailurePersistent =
+    Sum(
+        if majorFailureRaw
+        then 1
+        else 0,
+        majorFailureBars
+    ) >= majorFailureBars;
+# ============================================================
+# PERMISSION RECOVERY DIAGNOSTIC
+#
+# This reports whether the complete permission environment is
+# currently available, without changing the Permission latch.
+# ============================================================
+def permissionRecoveryReady =
+    bullishPermissionRaw and
+    !majorFailurePersistent and
+    !structuralDamagePersistent and
+    !eodExitWindow;
+# ============================================================
+# PERMISSION STATE
+# ============================================================
+def permission =
+    CompoundValue(
+        1,
+        if eodExitWindow then
+            0
+        else if majorFailurePersistent then
+            0
+        else if structuralDamagePersistent then
+            0
+        else if bullishPermissionRaw then
+            1
+        else
+            permission[1],
+        0
+    );
+# ============================================================
+# PERMISSION BLOCK DIAGNOSTIC
+#
+# 0 = Permission currently YES
+# 1 = EOD exit window
+# 2 = persistent major failure
+# 3 = persistent structural damage
+# 4 = price not above Daily VWAP
+# 5 = price not above EMA9
+# 6 = EMA9 below EMA20
+# 7 = RSI below minimum permission RSI
+# 8 = no listed blocker / initialization edge
+#
+# This is diagnostic only. It does NOT alter Permission.
+# ============================================================
+def permissionBlockCode =
+    if permission then
+        0
+    else if eodExitWindow then
+        1
+    else if majorFailurePersistent then
+        2
+    else if structuralDamagePersistent then
+        3
+    else if !permissionPriceAboveVWAP then
+        4
+    else if !permissionPriceAboveEMA9 then
+        5
+    else if !permissionEMA9AboveEMA20 then
+        6
+    else if !permissionRSIOK then
+        7
+    else
+        8;
+# ============================================================
+# BULLISH REGIME
+#
+# IMPORTANT REVISION
+#
+# The bullish regime no longer requires the full 50-SMA stack.
+#
+# The regime can be established from:
+#
+#   permission
+#   bullish core
+#   RSI bullish OR MACD bullish
+#
+# This matches the actual runner architecture.
+#
+# The 50 SMA remains part of the stronger bullishStack and
+# Swing Zone structure.
+# ============================================================
+def bullishRegimeTrigger =
+    permission and
+    price > dailyVWAP and
+    price > ema9 and
+    (
+        rsiBullish or
+        macdBullish
+    );
+def bullishRegimeEstablished =
+    CompoundValue(
+        1,
+        if eodExitWindow then
+            0
+        else if majorFailurePersistent then
+            0
+        else if bullishRegimeTrigger then
+            1
+        else
+            bullishRegimeEstablished[1],
+        0
+    );
+# ============================================================
+# DEVELOPING RUNNER
+#
+# A developing runner is allowed before EMA9 > EMA20.
+#
+# This is intentionally a transitional state.
+#
+# It still requires:
+#   - permission
+#   - established bullish regime
+#   - price above VWAP
+#   - price above EMA9
+#   - bullish RSI OR MACD
+#
+# It does NOT require:
+#   - EMA9 > EMA20
+#   - EMA20 > SMA50
+# ============================================================
+def developingRunner =
+    permission and
+    bullishRegimeEstablished and
+    price > dailyVWAP and
+    price > ema9 and
+    (
+        rsiBullish or
+        macdBullish
+    ) and
+    !structuralDamagePersistent and
+    !majorFailurePersistent;
+# ============================================================
+# RUNNER STRUCTURE
+#
+# This is the authoritative 5M runner structure.
+#
+# IMPORTANT:
+#
+# Do NOT require EMA20 > SMA50 here.
+#
+# The 50 SMA is stronger trend context, not a prerequisite
+# for a valid active runner.
+# ============================================================
+def runnerStructure =
+    permission and
+    price > dailyVWAP and
+    price > ema9 and
+    ema9 > ema20;
+# ============================================================
+# RUNNER STRENGTH
+# ============================================================
+def runnerStrength =
+    runnerStructure and
+    (
+        rsiStrongBullish or
+        macdBullish
+    );
+# ============================================================
+# RUNNER RISING
+# ============================================================
+def runnerRising =
+    runnerStrength and
+    (
+        rsiRising or
+        macdRising or
+        rvolStrong
+    );
+# ============================================================
+# RUNNER WANING
+# ============================================================
+# TARGETED V4.1.7 CHANGE
+#
+# The previous waning test required runnerStructure to remain true
+# AND required the specialized two-step RSI/MACD weakening pattern.
+# That can miss the first meaningful reversal because the moment price
+# loses EMA9, runnerStructure becomes false and the waning test stops
+# looking at the runner.
+#
+# The revised test keeps the bullish regime / VWAP / EMA9>EMA20 context
+# intact, but allows price to fall below EMA9 while still above VWAP.
+# It then looks for either the original momentum weakening pattern or
+# an early price/momentum deterioration combination. This is intentionally
+# NOT a SELL condition. It is an earlier RUNNER WANING warning.
+# ============================================================
+def runnerWaningContext =
+    bullishRegimeEstablished and
+    price > dailyVWAP and
+    ema9 > ema20 and
+    !majorFailurePersistent;
+
+def runnerWaningRaw =
+    runnerWaningContext and
+    (
+        rsiWeakening or
+        macdWeakening or
+        (
+            price < ema9 and
+            (
+                rsi < rsiStrong or
+                macdFalling
+            )
+        ) or
+        (
+            price < price[1] and
+            ema9Falling and
+            rsiFalling
+        )
+    );
+
+def runnerWaningPersistent =
+    Sum(
+        if runnerWaningRaw
+        then 1
+        else 0,
+        runnerWaningBars
+    ) >= runnerWaningBars;
+# ============================================================
+# SWING ZONE
+# ============================================================
+def swingStructureIntact =
+    permission and
+    price > ema20 and
+    ema20 >= sma50 and
+    priceAboveVWAP;
+def swingMomentumWeakening =
+    (
+        rsiWeakening and
+        macdWeakening
+    )
+    or
+    (
+        rsi < rsiStrong and
+        macdFalling
+    );
+def swingZoneRaw =
+    swingStructureIntact and
+    runnerWaningPersistent and
+    swingMomentumWeakening and
+    !majorFailurePersistent;
+def swingBuyEnvironment =
+    swingZoneRaw and
+    (
+        rsiRecovering or
+        macdRecovering
+    );
+# ============================================================
+# SELL PREPARATION
+# ============================================================
+def sellPreparationDamage =
+    bullishRegimeEstablished and
+    structuralDamagePersistent;
+def prepareToSell =
+    sellPreparationDamage
+    or
+    (
+        bullishRegimeEstablished and
+        majorFailurePersistent
+    );
+# ============================================================
+# SELL — REBOUND POSSIBLE
+# ============================================================
+def reboundMomentum =
+    rsiRecovering or
+    macdRecovering;
+def sellReboundPossible =
+    bullishRegimeEstablished and
+    structuralDamagePersistent and
+    reboundMomentum and
+    !majorFailurePersistent;
+# ============================================================
+# CONFIRMED WEAKNESS
+# ============================================================
+def confirmedWeaknessRaw =
+    bullishRegimeEstablished and
+    price < dailyVWAP and
+    price < ema9 and
+    ema9 < ema20 and
+    (
+        rsiWeakCondition or
+        macdBearish
+    );
+def confirmedWeaknessPersistent =
+    Sum(
+        if confirmedWeaknessRaw
+        then 1
+        else 0,
+        confirmedWeaknessBars
+    ) >= confirmedWeaknessBars;
+# ============================================================
+# BREAKDOWN
+# ============================================================
+def breakdown =
+    bullishRegimeEstablished and
+    majorFailurePersistent and
+    confirmedWeaknessPersistent and
+    price < sma50;
+# ============================================================
+# STATE CONSTANTS
+# ============================================================
+def FIVE_WAIT = 0;
+def FIVE_PREPARE_BUY = 1;
+def FIVE_BUY = 2;
+def FIVE_RUNNER_RISING = 3;
+def FIVE_RUNNER = 4;
+def FIVE_RUNNER_WANING = 5;
+def FIVE_SWING_ZONE = 6;
+def FIVE_PREPARE_SELL = 7;
+def FIVE_SELL_REBOUND = 8;
+def FIVE_SELL_CONFIRMED = 9;
+def FIVE_SELL_BREAKDOWN = 10;
+def FIVE_EOD_GET_OUT = 11;
+# ============================================================
+# BUY-ESTABLISHED LATCH
+#
+# RUNNER states are downstream of BUY. A runner condition can
+# become true before the first actionable setup, but it must not
+# skip PREPARE TO BUY / BUY in the displayed state machine.
+#
+# This latch becomes active when bullishSetup is actually true.
+# It resets on EOD, persistent major failure, or confirmed
+# weakness so a new bullish cycle must establish a new BUY.
+# ============================================================
+def buyEstablished =
+    CompoundValue(
+        1,
+        if eodExitWindow then
+            0
+        else if majorFailurePersistent then
+            0
+        else if confirmedWeaknessPersistent then
+            0
+        else if bullishSetup then
+            1
+        else
+            buyEstablished[1],
+        0
+    );
+# ============================================================
+# DISPLAY STATE
+#
+# The prior-bar BUY-established value is used for runner gating.
+# This is critical: on the exact bar where bullishSetup first
+# becomes true, buyEstablished also becomes true, but that bar
+# must still display BUY rather than skipping directly to RUNNER.
+# ============================================================
+def buyEstablishedPrior =
+    buyEstablished[1];
+
+# ============================================================
+# PARALLEL AGGRESSIVE ENTRY LANE
+# ============================================================
+# This lane does not modify Permission, bullishSetup, BUY, RUNNER,
+# or any existing green state. It is a separate orange signal.
+#
+# The lane is intentionally allowed to operate before normal VWAP
+# permission is established, but only while price remains within the
+# price-tiered VWAP allowance and the underlying structure is bullish.
+# Major failure, persistent structural damage, confirmed weakness,
+# EOD, and excessive ATR extension remain hard blockers.
+#
+# AGGRESSIVE PREPARE TO BUY = developing bullish environment that has
+# not yet produced the aggressive trigger.
+# AGGRESSIVE BUY = the aggressive environment plus a fresh bullish
+# trigger.
+# ============================================================
+def aggressiveVWAPMarginPct =
+    if price < 10 then aggressiveMarginUnder10
+    else if price < 25 then aggressiveMargin10To25
+    else if price < 50 then aggressiveMargin25To50
+    else if price < 100 then aggressiveMargin50To100
+    else aggressiveMarginOver100;
+def aggressiveVWAPFloor =
+    dailyVWAP * (1 - aggressiveVWAPMarginPct / 100);
+def aggressivePriceWithinVWAPMargin =
+    price >= aggressiveVWAPFloor;
+def aggressiveStructure =
+    price > ema20 and
+    price > ema9 and
+    ema9 >= ema20;
+def aggressiveMomentum =
+    rsi >= minimumPermissionRSI and
+    (
+        macdBullish or
+        rsiRising or
+        rvolHealthy
+    );
+def aggressiveEnvironment =
+    aggressivePriceWithinVWAPMargin and
+    aggressiveStructure and
+    aggressiveMomentum and
+    !structuralDamagePersistent and
+    !majorFailurePersistent and
+    !confirmedWeaknessPersistent and
+    !eodExitWindow and
+    !bullishExtensionDanger;
+def aggressiveTrigger =
+    bullishTrigger or
+    (
+        price > price[1] and
+        rsiRising and
+        (macdBullish or macdRising)
+    );
+def aggressiveLaneActive =
+    aggressiveEnvironment and
+    !priceAboveVWAP and
+    !bullishSetup and
+    !buyEstablished;
+def aggressivePrepareToBuy =
+    aggressiveLaneActive and
+    !aggressiveTrigger;
+def aggressiveBuy =
+    aggressiveLaneActive and
+    aggressiveTrigger;
+def aggressivePrepareEvent =
+    aggressivePrepareToBuy and
+    !aggressivePrepareToBuy[1];
+def aggressiveBuyEvent =
+    aggressiveBuy and
+    !aggressiveBuy[1];
+# ============================================================
+# DISPLAY STATE
+#
+# REQUIRED ORDER:
+#
+#   EOD
+#   BREAKDOWN
+#   CONFIRMED WEAKNESS
+#   REBOUND
+#   PREPARE SELL
+#   SWING ZONE
+#   RUNNER WANING
+#   RUNNER RISING
+#   RUNNER
+#   BUY
+#   PREPARE
+#   WAIT
+#
+# IMPORTANT STATE-MACHINE RULE:
+#
+#   A runner state is allowed to display only after BUY has
+#   actually been established on a prior bar. Runner calculations
+#   themselves are unchanged; the prior-bar latch controls whether
+#   they may advance the displayed state machine.
+#
+#   The first bullishSetup bar therefore displays BUY even when
+#   runnerRising is already true on that same bar.
+# ============================================================
+def rawState =
+    if eodExitWindow then
+        FIVE_EOD_GET_OUT
+    else if breakdown then
+        FIVE_SELL_BREAKDOWN
+    else if confirmedWeaknessPersistent then
+        FIVE_SELL_CONFIRMED
+    else if sellReboundPossible then
+        FIVE_SELL_REBOUND
+    else if prepareToSell then
+        FIVE_PREPARE_SELL
+    else if swingZoneRaw then
+        FIVE_SWING_ZONE
+    else if !buyEstablishedPrior and bullishSetup then
+        FIVE_BUY
+    else if buyEstablishedPrior and runnerWaningPersistent then
+        FIVE_RUNNER_WANING
+    else if buyEstablishedPrior and runnerRising then
+        FIVE_RUNNER_RISING
+    else if buyEstablishedPrior and runnerStructure then
+        FIVE_RUNNER
+    else if permission then
+        FIVE_PREPARE_BUY
+    else
+        FIVE_WAIT;
+# ============================================================
+# 1M EXECUTION ENVIRONMENT
+#
+# THIS IS SEPARATE FROM DISPLAY STATE.
+#
+# A 5M RUNNER MUST NOT tell the 1M:
+#
+#   "execution is no longer allowed."
+#
+# The 1M consumes this environment and creates its own
+# execution timing.
+# ============================================================
+def executionEnvironment =
+    permission and
+    bullishRegimeEstablished and
+    price > dailyVWAP and
+    price > ema20 and
+    !majorFailurePersistent and
+    !confirmedWeaknessPersistent and
+    !eodExitWindow;
+# ============================================================
+# HISTORICAL 5M DIAGNOSTICS
+# AddLabel() always reflects the last real bar. This optional bubble
+# attaches key 5M state/permission values to each historical bar.
+# Enable only on a tightly zoomed window when inspecting a past bar.
+# ============================================================
+AddChartBubble(
+    showHistoricalDebugBubbles,
+    high + atr * 4.0,
+    "5M DBG\nSTATE=" + rawState +
+    " P=" + permission +
+    " CORE=" + bullishCore +
+    " STACK=" + bullishStack +
+    " REG=" + bullishRegimeEstablished +
+    "\nSETUP=" + bullishSetup +
+    " BUYEST=" + buyEstablished +
+    " RUN=" + runnerRising +
+    " WAN=" + runnerWaningPersistent +
+    " SWING=" + swingZoneRaw +
+    "\nEXEC=" + executionEnvironment +
+    " EXT=" + Round(extensionATR, 2) +
+    " RSI=" + Round(rsi, 1) +
+    " EOD=" + eodExitWindow,
+    if permission and executionEnvironment then Color.GREEN
+    else if majorFailurePersistent then Color.RED
+    else Color.WHITE,
+    yes
+);
+# ============================================================
+# LABELS
+# ============================================================
+AddLabel(
+    showLabels,
+    "5M STATE: " +
+    (
+        if rawState == FIVE_WAIT then
+            "WAIT"
+        else if rawState == FIVE_PREPARE_BUY then
+            "PREPARE TO BUY"
+        else if rawState == FIVE_BUY then
+            "BUY"
+        else if rawState == FIVE_RUNNER_RISING then
+            "RUNNER RISING"
+        else if rawState == FIVE_RUNNER then
+            "RUNNER"
+        else if rawState == FIVE_RUNNER_WANING then
+            "RUNNER WANING"
+        else if rawState == FIVE_SWING_ZONE then
+            "SWING ZONE"
+        else if rawState == FIVE_PREPARE_SELL then
+            "PREPARE TO SELL"
+        else if rawState == FIVE_SELL_REBOUND then
+            "SELL - REBOUND POSSIBLE"
+        else if rawState == FIVE_SELL_CONFIRMED then
+            "SELL - CONFIRMED WEAKNESS"
+        else if rawState == FIVE_SELL_BREAKDOWN then
+            "SELL - BREAKDOWN"
+        else
+            "GET OUT"
+    ),
+    if rawState == FIVE_WAIT then
+        Color.GRAY
+    else if rawState == FIVE_PREPARE_BUY then
+        Color.CYAN
+    else if rawState == FIVE_BUY then
+        Color.GREEN
+    else if rawState == FIVE_RUNNER_RISING then
+        Color.GREEN
+    else if rawState == FIVE_RUNNER then
+        Color.GREEN
+    else if rawState == FIVE_RUNNER_WANING then
+        Color.YELLOW
+    else if rawState == FIVE_SWING_ZONE then
+        Color.ORANGE
+    else if rawState == FIVE_PREPARE_SELL then
+        Color.YELLOW
+    else if rawState == FIVE_SELL_REBOUND then
+        Color.ORANGE
+    else
+        Color.RED
+);
+AddLabel(
+    showLabels,
+    "5M PERMISSION: " +
+    if permission then
+        "YES"
+    else
+        "NO",
+    if permission then Color.GREEN else Color.RED
+);
+AddLabel(
+    showLabels,
+    "5M STRUCTURE: " +
+    if bullishStack then
+        "BULLISH"
+    else if runnerStructure then
+        "RUNNER"
+    else if bullishCore then
+        "TRANSITIONING"
+    else if bearishStack then
+        "BEARISH"
+    else
+        "NEUTRAL",
+    if bullishStack or runnerStructure or bullishCore then Color.GREEN
+    else if bearishStack then Color.RED
+    else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "BULLISH REGIME: " +
+    if bullishRegimeEstablished then
+        "ESTABLISHED"
+    else
+        "NOT ESTABLISHED",
+    if bullishRegimeEstablished then Color.GREEN else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "RVOL: " +
+    Round(rvol, 2),
+    if rvol >= 1.50 then Color.GREEN
+    else if rvol >= 1.00 then Color.CYAN
+    else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "RSI: " +
+    Round(rsi, 1),
+    if rsi >= rsiStrong then Color.GREEN
+    else if rsi >= rsiBull then Color.CYAN
+    else if rsi < rsiWeak then Color.RED
+    else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "EXTENSION: " +
+    Round(extensionATR, 2) +
+    " ATR",
+    if extensionATR >= extensionDangerATR then Color.RED
+    else if extensionATR >= extensionWarningATR then Color.YELLOW
+    else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "RUNNER MOMENTUM: " +
+    if runnerRising then
+        "RISING"
+    else if runnerWaningPersistent then
+        "WANING"
+    else if runnerStrength then
+        "STRONG"
+    else if developingRunner then
+        "DEVELOPING"
+    else
+        "NEUTRAL",
+    if runnerRising then
+        Color.GREEN
+    else if runnerWaningPersistent then
+        Color.YELLOW
+    else if runnerStrength then
+        Color.GREEN
+    else if developingRunner then
+        Color.CYAN
+    else
+        Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "1M EXECUTION ENVIRONMENT: " +
+    if executionEnvironment then
+        "YES"
+    else
+        "NO",
+    if executionEnvironment then Color.GREEN else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "SWING ZONE: " +
+    if swingZoneRaw then
+        "YES"
+    else
+        "NO",
+    if swingZoneRaw then Color.ORANGE else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "SWING BUY ENVIRONMENT: " +
+    if swingBuyEnvironment then
+        "YES"
+    else
+        "NO",
+    if swingBuyEnvironment then Color.GREEN else Color.GRAY
+);
+AddLabel(
+    showLabels,
+    "EOD: " +
+    if eodExitWindow then
+        "GET OUT"
+    else
+        "ACTIVE",
+    if eodExitWindow then Color.ORANGE else Color.GREEN
+);
+# ============================================================
+# AGGRESSIVE LANE STATUS
+# ============================================================
+AddLabel(
+    showLabels and aggressiveLaneActive,
+    "AGG. ENTRY LANE: " +
+    (if aggressiveBuy then "BUY" else "PREPARE TO BUY"),
+    Color.ORANGE
+);
+AddLabel(
+    showDebugLabels,
+    "AGG VWAP Margin=" + Round(aggressiveVWAPMarginPct, 2) +
+    "% Floor=" + Round(aggressiveVWAPFloor, 2) +
+    " InMargin=" + aggressivePriceWithinVWAPMargin +
+    " Structure=" + aggressiveStructure +
+    " Momentum=" + aggressiveMomentum +
+    " Lane=" + aggressiveLaneActive +
+    " Trigger=" + aggressiveTrigger,
+    Color.ORANGE
+);
+
+# ============================================================
+# STATE BUBBLES
+# ============================================================
+def stateChanged =
+    rawState != rawState[1];
+# ------------------------------------------------------------
+# AGGRESSIVE PREPARE TO BUY
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and aggressivePrepareEvent,
+    low,
+    "AGG. PREPARE\nTO BUY",
+    Color.ORANGE,
+    no
+);
+# ------------------------------------------------------------
+# AGGRESSIVE BUY
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and aggressiveBuyEvent,
+    low,
+    "AGG. BUY",
+    Color.ORANGE,
+    no
+);
+
+# ------------------------------------------------------------
+# PREPARE TO BUY
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_PREPARE_BUY,
+    low,
+    "PREPARE TO BUY",
+    Color.CYAN,
+    no
+);
+# ------------------------------------------------------------
+# BUY
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_BUY,
+    low,
+    "BUY",
+    Color.GREEN,
+    no
+);
+# ------------------------------------------------------------
+# RUNNER RISING
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_RUNNER_RISING,
+    low,
+    "RUNNER RISING",
+    Color.GREEN,
+    no
+);
+# ------------------------------------------------------------
+# RUNNER
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_RUNNER,
+    low,
+    "RUNNER",
+    Color.GREEN,
+    no
+);
+# ------------------------------------------------------------
+# RUNNER WANING
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_RUNNER_WANING,
+    high,
+    "RUNNER WANING",
+    Color.YELLOW,
+    yes
+);
+# ------------------------------------------------------------
+# SWING ZONE
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_SWING_ZONE,
+    low,
+    "SWING ZONE",
+    Color.ORANGE,
+    no
+);
+# ------------------------------------------------------------
+# PREPARE TO SELL
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_PREPARE_SELL,
+    high,
+    "PREPARE TO SELL",
+    Color.YELLOW,
+    yes
+);
+# ------------------------------------------------------------
+# SELL — REBOUND
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_SELL_REBOUND,
+    high,
+    "SELL - REBOUND",
+    Color.ORANGE,
+    yes
+);
+# ------------------------------------------------------------
+# SELL — CONFIRMED
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_SELL_CONFIRMED,
+    high,
+    "SELL - CONFIRMED",
+    Color.RED,
+    yes
+);
+# ------------------------------------------------------------
+# SELL — BREAKDOWN
+# ------------------------------------------------------------
+AddChartBubble(
+    showStateBubbles and
+    stateChanged and
+    rawState == FIVE_SELL_BREAKDOWN,
+    high,
+    "SELL - BREAKDOWN",
+    Color.RED,
+    yes
+);
+# ============================================================
+# DEBUG
+# ============================================================
+AddLabel(
+    showDebugLabels,
+    "BullishSetup=" + bullishSetup
+);
+AddLabel(
+    showDebugLabels,
+    "BuyEstablished=" + buyEstablished
+);
+AddLabel(
+    showDebugLabels,
+    "BullishCore=" + bullishCore
+);
+AddLabel(
+    showDebugLabels,
+    "BullishStack=" + bullishStack
+);
+AddLabel(
+    showDebugLabels,
+    "Permission=" + permission
+);
+AddLabel(
+    showDebugLabels,
+    "PermissionRaw=" + bullishPermissionRaw
+);
+AddLabel(
+    showDebugLabels,
+    "PermissionRecovery=" + permissionRecoveryReady
+);
+AddLabel(
+    showDebugLabels,
+    "PermissionBlock=" + permissionBlockCode
+);
+AddLabel(
+    showDebugLabels,
+    "P VWAP=" + permissionPriceAboveVWAP +
+    " EMA9=" + permissionPriceAboveEMA9 +
+    " EMA9>20=" + permissionEMA9AboveEMA20 +
+    " RSI=" + permissionRSIOK
+);
+AddLabel(
+    showDebugLabels,
+    "P RSI=" + Round(rsi, 1) +
+    " Min=" + minimumPermissionRSI
+);
+AddLabel(
+    showDebugLabels,
+    "BullishRegime=" + bullishRegimeEstablished
+);
+AddLabel(
+    showDebugLabels,
+    "DevelopingRunner=" + developingRunner
+);
+AddLabel(
+    showDebugLabels,
+    "RunnerStructure=" + runnerStructure
+);
+AddLabel(
+    showDebugLabels,
+    "RunnerStrength=" + runnerStrength
+);
+AddLabel(
+    showDebugLabels,
+    "RunnerRising=" + runnerRising
+);
+AddLabel(
+    showDebugLabels,
+    "RunnerWaning=" + runnerWaningPersistent +
+    " Context=" + runnerWaningContext +
+    " Raw=" + runnerWaningRaw
+);
+AddLabel(
+    showDebugLabels,
+    "SwingZone=" + swingZoneRaw
+);
+AddLabel(
+    showDebugLabels,
+    "SwingBuy=" + swingBuyEnvironment
+);
+AddLabel(
+    showDebugLabels,
+    "ExecutionEnvironment=" + executionEnvironment
+);
+AddLabel(
+    showDebugLabels,
+    "SellRebound=" + sellReboundPossible
+);
+AddLabel(
+    showDebugLabels,
+    "ConfirmedWeakness=" + confirmedWeaknessPersistent
+);
+AddLabel(
+    showDebugLabels,
+    "MajorFailure=" + majorFailurePersistent
+);
+# ============================================================
+# CURRENT-BAR TIME DEBUG
+#
+# These labels are intentionally current/right-edge diagnostics.
+# Use the per-bar bubbles above when inspecting historical bars.
+# ============================================================
+AddLabel(
+    showDebugLabels and showTimeDiagnostics,
+    "TIME ET=" + eodTimeEastern +
+    " FromEOD=" + secondsFromEOD +
+    " TillEOD=" + secondsTillEOD +
+    " EOD=" + eodExitWindow
+);
+# ============================================================
+# PLOTS
+# ============================================================
+plot VWAPLine =
+    dailyVWAP;
+VWAPLine.SetDefaultColor(Color.WHITE);
+VWAPLine.SetLineWeight(2);
+plot EMA9Line =
+    ema9;
+EMA9Line.SetDefaultColor(Color.YELLOW);
+EMA9Line.SetLineWeight(1);
+plot EMA20Line =
+    ema20;
+EMA20Line.SetDefaultColor(Color.CYAN);
+EMA20Line.SetLineWeight(1);
+plot SMA50Line =
+    sma50;
+SMA50Line.SetDefaultColor(Color.LIGHT_GRAY);
+SMA50Line.SetLineWeight(1);
+# ============================================================
+# STATE MARKERS
+# ============================================================
+plot PrepareToBuySignal =
+    if rawState == FIVE_PREPARE_BUY
+    then low
+    else Double.NaN;
+PrepareToBuySignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_UP
+);
+PrepareToBuySignal.SetDefaultColor(Color.CYAN);
+PrepareToBuySignal.HideTitle();
+plot BuySignal =
+    if rawState == FIVE_BUY
+    then low
+    else Double.NaN;
+BuySignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_UP
+);
+BuySignal.SetDefaultColor(Color.GREEN);
+BuySignal.HideTitle();
+plot RunnerRisingSignal =
+    if rawState == FIVE_RUNNER_RISING
+    then low
+    else Double.NaN;
+RunnerRisingSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_UP
+);
+RunnerRisingSignal.SetDefaultColor(Color.GREEN);
+RunnerRisingSignal.HideTitle();
+plot RunnerSignal =
+    if rawState == FIVE_RUNNER
+    then low
+    else Double.NaN;
+RunnerSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_UP
+);
+RunnerSignal.SetDefaultColor(Color.GREEN);
+RunnerSignal.HideTitle();
+plot RunnerWaningSignal =
+    if rawState == FIVE_RUNNER_WANING
+    then high
+    else Double.NaN;
+RunnerWaningSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_DOWN
+);
+RunnerWaningSignal.SetDefaultColor(Color.YELLOW);
+RunnerWaningSignal.HideTitle();
+plot SwingZoneSignal =
+    if rawState == FIVE_SWING_ZONE
+    then low
+    else Double.NaN;
+SwingZoneSignal.SetPaintingStrategy(
+    PaintingStrategy.POINTS
+);
+SwingZoneSignal.SetDefaultColor(Color.ORANGE);
+SwingZoneSignal.SetLineWeight(3);
+SwingZoneSignal.HideTitle();
+plot PrepareSellSignal =
+    if rawState == FIVE_PREPARE_SELL
+    then high
+    else Double.NaN;
+PrepareSellSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_DOWN
+);
+PrepareSellSignal.SetDefaultColor(Color.YELLOW);
+PrepareSellSignal.HideTitle();
+plot SellReboundSignal =
+    if rawState == FIVE_SELL_REBOUND
+    then high
+    else Double.NaN;
+SellReboundSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_DOWN
+);
+SellReboundSignal.SetDefaultColor(Color.ORANGE);
+SellReboundSignal.HideTitle();
+plot SellConfirmedSignal =
+    if rawState == FIVE_SELL_CONFIRMED
+    then high
+    else Double.NaN;
+SellConfirmedSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_DOWN
+);
+SellConfirmedSignal.SetDefaultColor(Color.RED);
+SellConfirmedSignal.HideTitle();
+plot BreakdownSignal =
+    if rawState == FIVE_SELL_BREAKDOWN
+    then high
+    else Double.NaN;
+BreakdownSignal.SetPaintingStrategy(
+    PaintingStrategy.ARROW_DOWN
+);
+BreakdownSignal.SetDefaultColor(Color.RED);
+BreakdownSignal.HideTitle();
+# ============================================================
+# AGGRESSIVE LANE DATA OUTPUTS
+# These are hidden and do not alter the normal green lane.
+# ============================================================
+plot AggressiveLaneCode =
+    if aggressiveBuy then 2
+    else if aggressivePrepareToBuy then 1
+    else 0;
+AggressiveLaneCode.Hide();
+plot AggressiveVWAPMarginCode = aggressiveVWAPMarginPct;
+AggressiveVWAPMarginCode.Hide();
+plot AggressiveVWAPFloorCode = aggressiveVWAPFloor;
+AggressiveVWAPFloorCode.Hide();
+plot AggressivePriceWithinVWAPCode = aggressivePriceWithinVWAPMargin;
+AggressivePriceWithinVWAPCode.Hide();
+
+# ============================================================
+# DOWNSTREAM OUTPUTS
+#
+# Keep these explicit and stable for the 1M execution layer.
+# ============================================================
+plot FiveMinuteState =
+    rawState;
+FiveMinuteState.Hide();
+plot StateCode =
+    rawState;
+StateCode.Hide();
+plot FiveMinutePermissionRawCode =
+    bullishPermissionRaw;
+FiveMinutePermissionRawCode.Hide();
+plot PermissionRecoveryCode =
+    permissionRecoveryReady;
+PermissionRecoveryCode.Hide();
+plot PermissionBlockCodeValue =
+    permissionBlockCode;
+PermissionBlockCodeValue.Hide();
+plot PermissionPriceAboveVWAPCode =
+    permissionPriceAboveVWAP;
+PermissionPriceAboveVWAPCode.Hide();
+plot PermissionPriceAboveEMA9Code =
+    permissionPriceAboveEMA9;
+PermissionPriceAboveEMA9Code.Hide();
+plot PermissionEMA9AboveEMA20Code =
+    permissionEMA9AboveEMA20;
+PermissionEMA9AboveEMA20Code.Hide();
+plot PermissionRSIOKCode =
+    permissionRSIOK;
+PermissionRSIOKCode.Hide();
+plot FiveMinutePermission =
+    permission;
+FiveMinutePermission.Hide();
+plot PermissionCode =
+    permission;
+PermissionCode.Hide();
+plot FiveMinuteBullishRegime =
+    bullishRegimeEstablished;
+FiveMinuteBullishRegime.Hide();
+plot BullishRegimeCode =
+    bullishRegimeEstablished;
+BullishRegimeCode.Hide();
+plot FiveMinuteRunnerStructure =
+    runnerStructure;
+FiveMinuteRunnerStructure.Hide();
+plot RunnerStructureCode =
+    runnerStructure;
+RunnerStructureCode.Hide();
+plot FiveMinuteRunnerRising =
+    runnerRising;
+FiveMinuteRunnerRising.Hide();
+plot RunnerRisingCode =
+    runnerRising;
+RunnerRisingCode.Hide();
+plot FiveMinuteDevelopingRunnerCode =
+    developingRunner;
+FiveMinuteDevelopingRunnerCode.Hide();
+plot FiveMinuteRunnerWaning =
+    runnerWaningPersistent;
+FiveMinuteRunnerWaning.Hide();
+plot RunnerWaningCode =
+    runnerWaningPersistent;
+RunnerWaningCode.Hide();
+plot RunnerWaningRawCode =
+    runnerWaningRaw;
+RunnerWaningRawCode.Hide();
+plot RunnerWaningContextCode =
+    runnerWaningContext;
+RunnerWaningContextCode.Hide();
+plot FiveMinuteSwingZone =
+    swingZoneRaw;
+FiveMinuteSwingZone.Hide();
+plot SwingZoneCode =
+    swingZoneRaw;
+SwingZoneCode.Hide();
+plot FiveMinuteExecutionEnvironment =
+    executionEnvironment;
+FiveMinuteExecutionEnvironment.Hide();
+plot ExecutionEnvironmentCode =
+    executionEnvironment;
+ExecutionEnvironmentCode.Hide();
+plot FiveMinuteSellRebound =
+    sellReboundPossible;
+FiveMinuteSellRebound.Hide();
+plot FiveMinuteConfirmedWeakness =
+    confirmedWeaknessPersistent;
+FiveMinuteConfirmedWeakness.Hide();
+plot FiveMinuteExtensionATR =
+    extensionATR;
+FiveMinuteExtensionATR.Hide();
+plot FiveMinuteRVOL =
+    rvol;
+FiveMinuteRVOL.Hide();
+plot FiveMinuteRSI =
+    rsi;
+FiveMinuteRSI.Hide();
+plot FiveMinuteVWAP =
+    dailyVWAP;
+FiveMinuteVWAP.Hide();
+plot FiveMinuteEMA9 =
+    ema9;
+FiveMinuteEMA9.Hide();
+plot FiveMinuteEMA20 =
+    ema20;
+FiveMinuteEMA20.Hide();
+plot FiveMinuteSMA50 =
+    sma50;
+FiveMinuteSMA50.Hide();
+plot FiveMinuteEODWindow =
+    eodExitWindow;
+FiveMinuteEODWindow.Hide();
+plot FiveMinuteEODTimeEastern =
+    eodTimeEastern;
+FiveMinuteEODTimeEastern.Hide();
+plot FiveMinuteEasternDST =
+    easternDaylightTime;
+FiveMinuteEasternDST.Hide();
