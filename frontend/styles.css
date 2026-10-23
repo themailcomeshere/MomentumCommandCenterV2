@@ -835,3 +835,22 @@ th {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Provider comparison: parallel, explicitly offline proof-of-fit slots. */
+.provider-compare { margin-bottom: 14px; }
+.provider-compare-toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:12px 0 16px; }
+.provider-compare-toolbar label { display:flex; flex-direction:column; gap:5px; color:var(--muted); font-size:12px; }
+.provider-compare-toolbar input, .provider-compare-toolbar select { min-height:36px; min-width:110px; }
+.provider-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.provider-card { border:1px solid var(--line); border-radius:12px; padding:16px; min-width:0; background:var(--panel,transparent); }
+.provider-card-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.provider-card h3 { margin:4px 0; }
+.provider-plan { color:var(--muted); font-size:13px; }
+.provider-card dl { margin:14px 0; }
+.provider-card dl div { display:grid; grid-template-columns:minmax(100px,.7fr) minmax(0,1.3fr); gap:10px; padding:9px 0; border-top:1px solid var(--line); }
+.provider-card dt { color:var(--muted); font-size:12px; }
+.provider-card dd { margin:0; font-size:12px; overflow-wrap:anywhere; }
+.provider-status { color:var(--yellow); font-size:12px; line-height:1.5; }
+.provider-results-wrap { margin-top:16px; }
+@media (max-width:700px) { .provider-cards { grid-template-columns:1fr; } .provider-card-heading { align-items:flex-start; } }
