@@ -1,3 +1,11 @@
+## Local Alpaca setup and XRPN evidence — 2026-10-23
+
+- [DONE — SOURCE CHANGE, CI PENDING] Added API `UserSecretsId`, removed empty credential placeholders from tracked `appsettings.json`, documented local User Secrets commands, and standardized Alpaca credential resolution on ASP.NET Core configuration.
+- [DONE — TESTS ADDED, CI PENDING] Added `AlpacaMarketDataAdapterTests` for configured credentials/request headers/bar parsing and missing-credentials behavior. These are fixture-based tests and do not contact Alpaca.
+- [DONE — EVIDENCE RECEIVED] User supplied the XRPN 2026-10-02 screenshot showing the normal 5M study, Authority Diagnostic V2 and readable target time axis; top-left chart date is explicitly excluded per user clarification. Do not request it again.
+- [USER ACTION — NEXT] Create a free Alpaca account, configure credentials locally using `src/MomentumCommandCenterV2.API/README.md`, run a small real API smoke test, and share only sanitized status/errors/timestamps. Do not share credentials. Massive and paid plans remain deferred.
+- [OPEN] Check CI/build/test results at the latest branch head after these commits. A source edit or successful prior build does not establish current-head verification.
+
 # Momentum Command Center V3 — Master To-Do
 
 **Canonical location:** `docs/Master-To-Do.md`  
