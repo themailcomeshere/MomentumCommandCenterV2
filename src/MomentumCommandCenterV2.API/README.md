@@ -37,7 +37,7 @@ The comparison endpoint requests the same window from both adapters, returns fir
 
 ## Explicit current limits
 
-These are first REST/history adapters, not a production market-data stack. Websocket streaming, reconnect/backfill orchestration, scanner/movers, quote/spread coverage, news/catalysts, durable raw-bar storage, rate-limit coordination, provider licensing review, full pagination, and market-session-aware gap classification are not implemented. A successful HTTP request does not prove that the selected plan/feed is appropriate for live decisions.
+These are first REST/history adapters, not a production market-data stack. An append-only local JSONL raw-bar store is implemented and wired to comparison/Morning Brief requests. WebSocket streaming, reconnect/backfill orchestration, scanner/movers, quote/spread coverage, news/catalysts, rate-limit coordination, provider licensing review, full pagination, and market-session-aware gap classification are not implemented. A successful HTTP request does not prove that the selected plan/feed is appropriate for live decisions.
 
 The Morning Brief intentionally returns DATA NOT FOUND IN SOURCES / NOT CALCULATED for sectors, broad movers, catalysts, validated market regime, Red Zone qualification, and Boring Overnight until those sources and pipelines exist. No auto-trading or order submission exists.
 
@@ -45,3 +45,8 @@ The Morning Brief intentionally returns DATA NOT FOUND IN SOURCES / NOT CALCULAT
 ## Raw bar observation store
 
 Provider-comparison requests append valid returned bars to an append-only JSONL file outside the repository by default: LocalApplicationData/MomentumCommandCenterV2/market-bars.jsonl. Set MCC_MARKET_BAR_STORE_PATH to choose another path. Identical observations are skipped by source/symbol/timestamp/content hash; changed values are appended as corrections linked to the prior observation ID. Each record includes source time and receive time. This is a local persistence foundation, not a managed database or full late-event/reconciliation pipeline.
+
+
+## What requires accounts versus what does not
+
+Accounts are not required to continue implementing provider-neutral infrastructure or fixture-based tests. Free credentials are useful for validating real authentication, response shapes and timestamps. Do not buy a paid plan until proof-of-fit and licensing checks are complete. One configured provider can be smoke-tested; both are needed only for direct side-by-side provider comparison. See [Next Steps and User Inputs](../../../docs/Next-Steps-and-User-Inputs.md).
