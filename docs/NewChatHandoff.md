@@ -233,3 +233,11 @@ No immediate user action is required to continue code/document work. If already-
 
 - GitHub Actions run 147 completed successfully at commit `ae8180866def759612fa7c1a515dc93586143056`. Restore, Release build, and tests passed: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40011426478
 - This is not live provider validation or browser testing. The subsequent To-Do/handoff documentation-only updates should still be followed by a check of the newest workflow run before claiming latest-head validation.
+
+
+### Raw OHLCV persistence extension — 2026-10-23
+
+- Added `IMarketBarObservationStore` and `JsonlMarketBarObservationStore` under the API project. The comparison endpoint persists each provider's valid raw bars before returning comparison metrics.
+- Default file: LocalApplicationData/MomentumCommandCenterV2/market-bars.jsonl. Override with environment variable `MCC_MARKET_BAR_STORE_PATH`.
+- Append-only records include observation ID, received timestamp, source timestamp, provider, symbol, bar, content hash, and optional superseded observation ID. Identical observations are skipped; changed observations at the same provider/symbol/timestamp are appended as corrections.
+- Persistence is local JSONL only; no database, retention controls, store-specific tests, collector loop, websocket, or automatic restart/backfill process yet.
