@@ -1,5 +1,5 @@
 # MCC V3 — Morning Report and Current Conditions Data Contract
-**Status:** Draft specification based on `Morning.txt`; source selection and live implementation remain open.  
+**Status:** Draft specification based on `Morning.txt`; recommended first-release defaults documented below, live implementation remains open.  
 **Last updated:** 2026-10-23
 
 ## 1. Purpose
@@ -107,8 +107,10 @@ No sample values in `Morning.txt` (for example, sample sector ranks, percentage 
 
 ## 7. Refresh and history behavior
 
-- Initial target: one briefing around 08:30 Arizona time, subject to user confirmation and data-provider timing.
-- Current Conditions refresh cadence is unresolved and must be configurable; do not claim real-time behavior until a working refresh mechanism and provider limits are verified.
+- Initial target: one briefing at approximately 08:30 Arizona time. Generate it from an explicit data cut-off timestamp and show unavailable inputs.
+- Recommended first-release delivery surface: a CLI-generated Markdown report/artifact. This fits the verified CLI-first repository and is easy to diff/test; defer a desktop/web UI until the core data pipeline is proven.
+- Recommended Current Conditions cadence: recalculate market/industry/technical summaries every 5 minutes during the configured trading window. Consume news/catalyst updates as events when streaming is available; otherwise poll at 1–2 minute intervals only after provider limits are confirmed. Every output remains timestamped and freshness-aware.
+- Proposed configurable trading window: 08:30–12:00 Arizona time, explicitly provisional rather than an assumed user preference. Use this only to measure move-before-window versus move-during-window and to filter timing context; do not suppress candidates until the user approves the window. Do not assume the window is an order/trading authorization.
 - Store the initial morning snapshot plus subsequent periodic/event-driven snapshots.
 - Capture expectation-versus-observation divergence for later evaluation. Keep original predictions immutable; append later revisions and outcomes.
 - Respect market holidays, early closes, premarket/regular/after-hours session boundaries, and Arizona versus Eastern time differences.
@@ -127,15 +129,18 @@ No sample values in `Morning.txt` (for example, sample sector ranks, percentage 
 10. Boring Overnight consumes only available, timestamped inputs and does not equate “big mover” with “good overnight hold.”
 11. No invented example values from the source brainstorm are displayed as live data.
 
-## 9. Open decisions / user input
+## 9. Recommended first-release choices and remaining approvals
 
-1. Confirm whether the briefing should be a local CLI artifact, a local UI panel, or part of the eventual web UI. The current repository/runtime target needs to be verified before choosing implementation details.
-2. Approve providers for market breadth, VIX, sector/industry classification and returns, news/catalysts, and any analyst/target data. Data not found in sources for approved live providers/entitlements.
-3. Confirm the precise Arizona trading window used to separate premarket movement from movement during the user's trading time.
-4. Set Current Conditions refresh cadence and whether alerts are desired, including channel and quiet hours.
-5. Confirm whether the first release should use only qualitative scenario labels or wait for validated historical probabilities; recommendation is qualitative labels first.
+1. **Delivery:** CLI-generated Markdown report/artifact first; defer GUI selection until the report/data pipeline works. This is a recommendation, not a claim the CLI report is implemented.
+2. **Market/industry data:** use Alpaca bars for the initial price/volume adapter, while clearly marking the IEX feed's limited single-exchange coverage. For a market-regime prototype, SPY/QQQ/IWM bars are straightforward, but breadth and VIX require separate data fields/providers or a defined universe-derived proxy. Do not label a three-ETF sample as full market breadth.
+3. **Industry ranking:** a stock's industry label can be looked up, but ranking strongest/weakest industries requires a maintained ticker-to-industry classification, a defined constituent universe, time-aligned prices/returns, and a calculation window. A classification label alone does not establish industry momentum.
+4. **News/catalysts:** yes, an API/feed is needed for automated source-backed news monitoring. Alpaca documents a News API and real-time news stream; historical news is described by Alpaca as provided by Benzinga. Before enabling it, verify the user's account access, coverage, licensing/usage rights, rate limits, and article timestamps. The current successful smoke test only verified account authentication and one IEX latest-bar request; it did not test News API access. Until verified, show `UNKNOWN`/`DATA?`, not catalyst-clear. [Alpaca historical news documentation](https://docs.alpaca.markets/us/docs/historical-news-data) and [real-time news documentation](https://docs.alpaca.markets/us/docs/streaming-real-time-news).
+5. **Refresh:** recommended market/industry calculations every 5 minutes during the configured window; news stream when available, otherwise a 1–2 minute polling target only if provider limits permit. This is a proposed cadence, not live functionality.
+6. **Trading window:** use 08:30–12:00 Arizona as a configurable provisional default for development only. Ask the user to approve before this window affects candidate suppression or personalized timing conclusions.
+7. **Prediction format:** qualitative scenarios first; no numerical probabilities until outcomes, sample sizes, point-in-time features, validation, and calibration are implemented.
+8. **Alerts:** defer push/email alerts; first persist the state change and show it in the report. Decide channels and quiet hours only when the user interface is selected.
 
 ## [Uncertainties]
 - The source brainstorming specifies the 08:30 Arizona target and panel concepts, but not approved providers, refresh cadence, exact trading-window boundaries, or delivery surface.
-- No live market/news data source or entitlement was verified while drafting this contract.
+- Alpaca News API endpoints are documented publicly, but this account’s News API entitlement and usable coverage have not been tested. The successful smoke test only established account auth and one IEX bar request.
 - Scenario probabilities are not supportable until outcome definitions, sufficient historical samples, and calibration are implemented and tested.
