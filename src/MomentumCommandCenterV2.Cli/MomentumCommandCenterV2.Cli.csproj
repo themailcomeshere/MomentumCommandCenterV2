@@ -5,9 +5,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UserSecretsId>MomentumCommandCenterV2-Cli-Local</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MomentumCommandCenterV2.Core\MomentumCommandCenterV2.Core.csproj" />
     <ProjectReference Include="..\MomentumCommandCenterV2.Infrastructure\MomentumCommandCenterV2.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
   </ItemGroup>
 </Project>
