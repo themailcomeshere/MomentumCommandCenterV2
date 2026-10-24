@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using MomentumCommandCenterV2.Core.Models.Enums;
 using MomentumCommandCenterV2.Infrastructure.Alpaca;
 
@@ -5,7 +6,24 @@ if (args.Length > 0 &&
     args[0].Equals("alpaca-check", StringComparison.OrdinalIgnoreCase))
 {
     var symbol = args.Length > 1 ? args[1] : "AAPL";
-    var options = AlpacaOptions.FromEnvironment();
+    var configuration = new ConfigurationBuilder()
+        .AddUserSecrets("MomentumCommandCenterV2-Cli-Local", optional: true)
+        .Build();
+
+    // Environment variables override local User Secrets. Never log either value.
+    var options = new AlpacaOptions
+    {
+        ApiKey = Environment.GetEnvironmentVariable(AlpacaOptions.ApiKeyEnvironmentVariable)
+            ?? configuration["Alpaca:ApiKey"],
+        ApiSecret = Environment.GetEnvironmentVariable(AlpacaOptions.ApiSecretEnvironmentVariable)
+            ?? configuration["Alpaca:ApiSecret"],
+        TradingBaseUrl = Environment.GetEnvironmentVariable("MCC_ALPACA_TRADING_BASE_URL")
+            ?? "https://paper-api.alpaca.markets",
+        MarketDataBaseUrl = Environment.GetEnvironmentVariable("MCC_ALPACA_MARKET_DATA_BASE_URL")
+            ?? "https://data.alpaca.markets",
+        MarketDataFeed = Environment.GetEnvironmentVariable("MCC_ALPACA_DATA_FEED")
+            ?? "iex"
+    };
 
     try
     {
@@ -51,5 +69,5 @@ foreach (var state in Enum.GetValues<SignalState>())
 Console.WriteLine();
 Console.WriteLine("Read-only Alpaca provider test:");
 Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-check [SYMBOL]");
-Console.WriteLine("Configure MCC_ALPACA_API_KEY and MCC_ALPACA_API_SECRET locally before running.");
+Console.WriteLine("Configure Alpaca:ApiKey and Alpaca:ApiSecret with .NET User Secrets, or use the MCC_ALPACA_API_KEY and MCC_ALPACA_API_SECRET environment variables.");
 return 0;
