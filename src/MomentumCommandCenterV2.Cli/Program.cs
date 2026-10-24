@@ -7,7 +7,7 @@ if (args.Length > 0 &&
 {
     var symbol = args.Length > 1 ? args[1] : "AAPL";
     var configuration = new ConfigurationBuilder()
-        .AddUserSecrets("MomentumCommandCenterV2-Cli-Local", optional: true)
+        .AddUserSecrets(typeof(Program).Assembly, optional: true)
         .Build();
 
     // Environment variables override local User Secrets. Never log either value.
