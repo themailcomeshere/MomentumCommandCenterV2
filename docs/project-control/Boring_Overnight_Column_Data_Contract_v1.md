@@ -149,6 +149,45 @@ No historical values, event facts, scores, or targets may be backfilled from gue
 
 The two implementations must be compared on identical symbol/date/session inputs. Differences must be explained, not patched with hidden per-symbol exceptions.
 
+
+## 10. Provisional score maps for first implementation (version `BORING-0.1-PROVISIONAL`)
+
+These maps are engineering proposals, not source-derived historical truths. They make implementation/test fixtures deterministic while keeping each threshold configurable. Do not interpret a passing test as evidence of profitability. Any hard gate or missing/stale required input overrides the numeric score.
+
+### Component scoring
+
+| Component | Provisional mapping | Guard |
+|---|---|---|
+| ON win rate (25) | 60% = 0; 70% = 10; 80% = 18; 90%+ = 25; linear interpolation between anchors | Below 60% is a hard block. Display numerator/denominator and valid sample count. |
+| Median ON return (20) | Median <= 0% = 0; +0.10% = 8; +0.25% = 14; +0.50% or higher = 20 | Positive median is preferred; large mean/median divergence triggers a dispersion warning rather than hiding behind the score. |
+| 20-session mean ON return (15) | Below +0.10% = hard block; +0.10% = 5; +0.25% = 10; +0.50% = 15; +1.00% = 10; +1.50% = 5; >= +2.00% = 0, interpolated between anchors | Reward modest edge; penalize unusually high mean returns that may be outlier-driven. The <2% preferred ceiling is a scoring preference, not a new hard gate. |
+| 5-session mean ON return (10) | Must be greater than 20-session mean; positive difference 0 to +0.10 percentage points = 5–7; +0.10 to +0.50 points = 7–10; +0.50 to +1.00 points = 10–7; +1.00 to +3.00 points = 7–3; >= +3.00 points = 0–3 and WATCH/review | Compare percentage-point difference, not relative percentage change. Existing absolute 5D preferred ceiling (<5%) still applies to current-day qualification. |
+| ON consistency (10) | Share of the last 20 valid overnight returns in the interval [0%, +2.00%]: 60% = 0; 70% = 5; 80% = 8; 90%+ = 10, linear interpolation | This is “boring positive outcome rate,” distinct from win rate: losses and outsized positive gaps both lower it. Display the exact definition. |
+| Overnight volatility (10) | Standard deviation of the last 20 valid ON returns: <=0.25% = 10; 0.50% = 8; 1.00% = 5; 1.50% = 2; >=2.00% = 0, linear interpolation | Percent units; require 20 valid observations. Thresholds are provisional and should be calibrated against historical cases. |
+| Average daily volume (5) | 500,000 = 1; 750,000 = 2; 1,000,000 = 3; 2,000,000+ = 5, linear interpolation | Below 500,000 is a hard block. Share volume is not a substitute for spread/liquidity checks. |
+| Price (5) | $5 = 0; $10 = 1; $25 = 3; $50+ = 5, linear interpolation | Below $5 is a hard block. Price points are a weak preference only and must never imply safety or quality by themselves. |
+
+### Provisional status precedence
+
+1. `BLOCKED` if a hard gate fails, including exclusion-list match or a known incompatible material catalyst.
+2. `DATA?` if any required source/field is missing or stale, including unresolved catalyst status or insufficient ON history.
+3. `WATCH` if current ON move is >=3%, recent behavior is unusually hot/volatile, catalyst evidence conflicts, or 5M structure is deteriorating.
+4. `READY` only if all required gates pass, required data are fresh, catalyst status is verified clear for the defined holding interval, and no current-day caution rule is active.
+5. The score band describes quality only after status precedence; it cannot override `BLOCKED` or `DATA?`.
+
+`READY` means eligible for the overnight watchlist/review queue, **not** an instruction to buy or submit an order.
+
+### Session and data defaults
+
+- Initial ON interval: prior regular-session close to the next regular-session open, using the exchange calendar and the security's primary listing exchange where available.
+- Do not merge premarket/after-hours into the ON return. Track those periods separately for current-day qualification.
+- Use split-adjusted prices consistently for historical returns; record corporate actions and do not silently bridge missing bars.
+- Require 20 valid ON intervals for a full 20D score and 5 for the 5D metric. If the history is insufficient, return `DATA?`.
+- Current ON move is measured from the most recent regular-session close to the latest reliable overnight/premarket price, with timestamp and feed shown. At >=3%, classify at least `WATCH`; do not automatically block solely because of the move.
+- If news/catalyst feed access or freshness is unverified, use `DATA?`, not “catalyst clear.”
+
+These defaults are ready for implementation as a versioned configuration, but must be evaluated on labeled historical cases before production thresholds are frozen.
+
 ## 11. Validation matrix and acceptance criteria
 
 Test at minimum:
@@ -174,7 +213,7 @@ Measure false-positive READY rate, missed qualified candidates, ON win rate, mea
 3. Define overnight-volatility and “median reasonably close to mean” thresholds.
 4. Confirm how catalyst clearance is supplied (provider, cost/licensing, coverage, or manual review) and how stale news is treated.
 5. Confirm whether `READY` means “eligible for overnight watchlist” or “eligible for a separate entry review”; recommended interpretation is eligible for watchlist/review only.
-6. [DONE 2026-10-25] User supplied the current 58-symbol Schwab exclusion list; canonical source is `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. Implementation must use a shared versioned exclusion provider.
+6. [DONE 2026-10-25] User supplied the current 55-symbol Schwab exclusion list; canonical source is `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. Implementation must use a shared versioned exclusion provider.
 7. Provide a representative set of symbols/dates labelled as known good, bad, catalyst-spike, overextended, and excluded for validation.
 
 ## [Uncertainties]
