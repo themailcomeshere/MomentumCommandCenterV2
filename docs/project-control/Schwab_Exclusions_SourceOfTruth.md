@@ -63,7 +63,7 @@ YDES
 YJ
 ```
 
-- Count: 58 symbols (preserve exact casing and punctuation, including lowercase `p` in symbols such as `AMHpG` and `KEYpI`).
+- Count: 55 symbols (preserve exact casing and punctuation, including lowercase `p` in symbols such as `AMHpG` and `KEYpI`).
 - Treat this as the current list supplied by the user, not proof of the live tradability status of each security.
 - The list is append-oriented: add newly identified exclusions; do not remove existing entries without explicit review/authorization.
 - Normalize symbols only for comparison where a separate canonicalization rule is defined. Never silently rewrite the displayed/source symbol.
