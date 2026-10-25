@@ -34,7 +34,7 @@ Status precedence: `BLOCKED` for a known disqualifying condition; otherwise `DAT
 | 20D mean ON return | >= +0.10% | Use completed overnight intervals only. |
 | 5D vs 20D mean | 5D mean ON return > 20D mean ON return | This is the existing cheat-sheet rule; validate it rather than silently changing it. |
 | Trend | Price above 20D SMA | Specify which price/session close and same-day treatment. |
-| Exclusions | Not on the maintained Schwab exclusion list | Load a canonical maintained list; existing examples are not exhaustive. |
+| Exclusions | Not on the maintained Schwab exclusion list | Load `docs/project-control/Schwab_Exclusions_SourceOfTruth.md` through one shared provider; list supplied 2026-10-25 contains 58 symbols and is append-oriented. |
 | Catalyst | No known material event incompatible with the overnight strategy | Requires a separate evidence-backed event source or explicit manual clearance. Unknown is not clear. |
 
 Any gate with unavailable inputs must not default to pass. Corporate actions and symbol changes require careful handling to avoid false returns.
@@ -174,10 +174,10 @@ Measure false-positive READY rate, missed qualified candidates, ON win rate, mea
 3. Define overnight-volatility and “median reasonably close to mean” thresholds.
 4. Confirm how catalyst clearance is supplied (provider, cost/licensing, coverage, or manual review) and how stale news is treated.
 5. Confirm whether `READY` means “eligible for overnight watchlist” or “eligible for a separate entry review”; recommended interpretation is eligible for watchlist/review only.
-6. Supply/reconcile the complete current Schwab exclusion lists; examples in prior notes are not exhaustive.
+6. [DONE 2026-10-25] User supplied the current 58-symbol Schwab exclusion list; canonical source is `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. Implementation must use a shared versioned exclusion provider.
 7. Provide a representative set of symbols/dates labelled as known good, bad, catalyst-spike, overextended, and excluded for validation.
 
 ## [Uncertainties]
 - The proposed close-to-open ON interval and positive-return consistency definition are candidates to confirm, not established final rules.
 - Component point maps and several thresholds are not present in the source material; no mapping is invented here.
-- Data provider entitlements, news-source availability/licensing, and the complete exclusion lists have not been verified.
+- Data provider entitlements and news-source availability/licensing have not been verified. The current user-provided exclusion list is captured; whether every symbol remains currently Schwab-unavailable has not been independently checked.
