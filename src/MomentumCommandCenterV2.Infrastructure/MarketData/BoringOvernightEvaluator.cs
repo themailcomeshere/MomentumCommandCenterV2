@@ -55,11 +55,11 @@ public sealed class BoringOvernightEvaluator
         if (input.FiveMinutePermission == false)
             reasons.Add("BLOCK_5M_PERMISSION");
         if (input.StructureDeteriorating == true)
-            reasons.Add("BLOCK_STRUCTURE_DETERIORATION");
+            reasons.Add("WATCH_STRUCTURE_DETERIORATION");
         if (input.ExtensionDanger == true)
-            reasons.Add("BLOCK_CURRENT_EXTENSION");
+            reasons.Add("WATCH_CURRENT_EXTENSION");
         if (input.AbnormalVolumeDanger == true)
-            reasons.Add("BLOCK_ABNORMAL_VOLUME");
+            reasons.Add("WATCH_ABNORMAL_VOLUME");
 
         var missing = new List<string>();
         if (string.IsNullOrWhiteSpace(input.Symbol)) missing.Add("DATA_SYMBOL_MISSING");
