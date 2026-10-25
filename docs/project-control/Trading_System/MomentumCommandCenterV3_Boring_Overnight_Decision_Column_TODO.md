@@ -14,7 +14,7 @@ V3 should not require the user to ask ChatGPT for final approval for every overn
 
 **Current implementation checkpoint (2026-10-25):** `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` implements deterministic `BORING-0.1-PROVISIONAL` metrics, score components, reason codes, and conservative status precedence using the shared Schwab exclusion provider. Tests were added in `tests/MomentumCommandCenterV2.Tests/BoringOvernightEvaluatorTests.cs`; they now pass in CI (84 total, 0 failed). The feature-branch GitHub Actions run passed: build succeeded and 84/84 tests passed, including the Alpaca News API client tests. The baseline fixture was corrected to honor the 5D > 20D gate.
 
-Remaining pipeline gaps: data/session ingestion, overnight high-excursion acquisition, catalyst source, snapshot persistence, current 5M state adapter, and consumer integration. The limit-sell calculation core and CLI are now implemented but require a current CI run and real verified excursion data. Do not call the feature production-ready until the updated suite passes and historical fixtures are evaluated.
+Remaining pipeline gaps: data/session ingestion, order-eligible-window high-excursion acquisition, catalyst source, snapshot persistence, current 5M state adapter, and consumer integration. The limit-sell calculation core and CLI are now implemented but require a current CI run and real verified excursion data. Do not call the feature production-ready until the updated suite passes and historical fixtures are evaluated.
 
 
 
@@ -98,7 +98,7 @@ Ranking bands: 90–100 `PERFECT BORING`; 80–89 `VERY GOOD`; 70–79 `POSSIBLE
 
 **Fail-closed behavior:** No recommendation when entry price is invalid or fewer than the required history samples exist. This component never places an order. All thresholds are provisional and must be tested on historical cases with actual entry windows and outcomes before being presented as a production recommendation.
 
-**CLI command:** `dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell AAPL 100 ./overnight-high-excursions.csv 70 0.10 0.00`. The CSV must have one verified percentage per row and may have an `excursion_percent` header. This example shows command shape only; `$100` and the CSV are not a real recommendation or provided dataset.
+**CLI command:** `dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell AAPL 100 ./eligible-window-high-excursions.csv 70 0.10 0.00`. The CSV must have one verified percentage per row and may have an `excursion_percent` header. This example shows command shape only; `$100` and the CSV are not a real recommendation or provided dataset.
 
 **Next work:** add source acquisition for session-specific overnight highs, persist the sample/provenance and calculator version, surface limit price + estimated historical touch rate + estimated net return + reasons in the CLI/Morning Report/MarketWatch, and compare predictions with actual limit-touch/fill outcomes including spread/costs. Do not wire into order submission.
 
