@@ -13,7 +13,7 @@ public sealed class BoringOvernightEvaluatorTests
     private static BoringOvernightInput GoodInput(string symbol = "AAPL") => new()
     {
         Symbol = symbol,
-        CompletedOvernightReturnsPercent = Enumerable.Repeat(0.25, 20).ToArray(),
+        CompletedOvernightReturnsPercent = Enumerable.Range(0, 20).Select(i => i < 5 ? 0.40 : 0.20).ToArray(),
         Price = 100,
         PriceTimestampUtc = Now,
         PriceIsFresh = true,
