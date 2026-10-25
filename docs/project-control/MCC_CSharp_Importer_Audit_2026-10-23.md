@@ -33,9 +33,8 @@
 7. **Tests:** the GitHub status and workflow lookup returned no checks for the User Secrets fix. The user has confirmed the app builds/runs through the real Alpaca read-only smoke test, but a full `dotnet test MomentumCommandCenterV2.sln` result remains unreported.
 
 ## Exact next steps
-1. User runs `dotnet test MomentumCommandCenterV2.sln` on the feature branch and returns the test summary/failures.
-2. Fix only demonstrated test failures.
-3. Add focused ImportFile/DST/malformed-row tests and agree on fail-fast versus partial-import behavior.
-4. Define an import batch identity and deduplication policy before persistence; do not invent broker order IDs absent from the export.
-5. Implement persistence and restart/idempotency tests after the storage model is selected.
-6. Keep all brokerage functionality read-only; no order-placement functionality is authorized.
+1. [DONE 2026-10-25] User ran `dotnet test MomentumCommandCenterV2.sln`: 53 passed, 0 failed, 0 skipped; build succeeded.
+2. Add focused ImportFile/DST/malformed-row tests and agree on fail-fast versus partial-import behavior.
+3. Define an import batch identity and deduplication policy before persistence; do not invent broker order IDs absent from the export.
+4. Implement persistence and restart/idempotency tests after the storage model is selected.
+5. Keep all brokerage functionality read-only; no order-placement functionality is authorized.
