@@ -21,7 +21,8 @@ Remaining pipeline gaps: data/session ingestion, catalyst source, snapshot persi
 1. **Specify and implement a Boring Overnight Decision watchlist column first.** This is the primary sortable triage surface across scanner candidates.
 2. Validate its calculations and decision states against known examples and historical observations.
 3. Add a companion chart study only if it adds useful explanatory context that the column cannot provide.
-4. Integrate market-calendar-aware historical statistics and a persistent decision log into MomentumCommandCenterV3 C# where ThinkScript cannot reliably calculate or retain the complete data set. (The pure scoring/status evaluator now exists; acquisition, persistence, and consumers remain open.)
+4. Integrate market-calendar-aware historical statistics and a persistent decision log into MomentumCommandCenterV3 C# where ThinkScript cannot reliably calculate or retain the complete data set.
+5. Implement and validate the limit-sell recommendation described above; keep it separate from the Boringness score and never automate order submission. (The pure scoring/status evaluator now exists; acquisition, persistence, and consumers remain open.)
 
 Do not create duplicate or conflicting definitions of the same score in the column, chart study, and C# application. Document which layer is authoritative for each metric.
 
@@ -86,6 +87,18 @@ Ranking bands: 90–100 `PERFECT BORING`; 80–89 `VERY GOOD`; 70–79 `POSSIBLE
 - Do not automatically submit or recommend an order from this calculation alone. It ignores the distribution/tail risk, current spread and liquidity, catalysts, overnight eligibility, fees, and the possibility that price never reaches the limit.
 - Schwab's `GTC + Extended` order is not necessarily the 24-hour overnight session. Schwab documents the 13-hour extended session as 7:00 a.m.–8:00 p.m. ET; eligible thinkorswim overnight orders use `EXTO` / `GTC_EXTO`. Verify the exact time-in-force and security eligibility in the order ticket before relying on overnight execution. Extended-hours fills require a matching contra order and may be partial or not occur.
 - MCC must keep order placement out of the Boring Overnight scoring engine. The output is watchlist/review eligibility, not an order.
+
+### Limit-sell recommendation — new implementation task
+
+**Purpose:** Give the user a defensible, explainable limit-sell reference for an intended overnight holding, rather than telling them to add historical median close-to-open return to the closing price.
+
+**Implementation:** `OvernightLimitSellCalculator` in `src/MomentumCommandCenterV2.Infrastructure/MarketData/OvernightLimitSellCalculator.cs` is the first calculation core. It accepts the actual average entry fill price, at least 20 completed historical overnight **high-excursion** percentages from the same reference/session, a requested historical touch-rate target (provisional default 70%), minimum desired net return (provisional default 0.10%), estimated round-trip costs, and tick size. It chooses the corresponding lower-tail empirical excursion percentile (for a 70% desired historical touch rate, the 30th percentile), compares it with the minimum-return/cost floor, rounds down to the tick, and reports the observed historical threshold-exceedance rate plus reason codes.
+
+**Critical data requirement:** Do not feed the existing median close-to-open return series into this calculator. A closing return does not show whether the price reached a limit intranight. Build a separate series of overnight highs relative to the session reference, using the exact trading window in which the order would be eligible. A historical high crossing a price is still only a proxy for fill probability; quotes, spread, liquidity, queue priority, trading halts, and order eligibility affect actual fills.
+
+**Fail-closed behavior:** No recommendation when entry price is invalid or fewer than the required history samples exist. This component never places an order. All thresholds are provisional and must be tested on historical cases with actual entry windows and outcomes before being presented as a production recommendation.
+
+**Next work:** add source acquisition for session-specific overnight highs, persist the sample/provenance and calculator version, surface limit price + estimated historical touch rate + estimated net return + reasons in the CLI/Morning Report/MarketWatch, and compare predictions with actual limit-touch/fill outcomes including spread/costs. Do not wire into order submission.
 
 ### Preferred ranges / penalties
 
