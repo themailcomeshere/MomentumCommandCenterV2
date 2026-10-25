@@ -150,7 +150,7 @@ No historical values, event facts, scores, or targets may be backfilled from gue
 The two implementations must be compared on identical symbol/date/session inputs. Differences must be explained, not patched with hidden per-symbol exceptions.
 
 
-## 10. Provisional score maps for first implementation (version `BORING-0.1-PROVISIONAL`)
+## 10A. Provisional score maps for first implementation (version `BORING-0.1-PROVISIONAL`)
 
 These maps are engineering proposals, not source-derived historical truths. They make implementation/test fixtures deterministic while keeping each threshold configurable. Do not interpret a passing test as evidence of profitability. Any hard gate or missing/stale required input overrides the numeric score.
 
@@ -209,10 +209,10 @@ Measure false-positive READY rate, missed qualified candidates, ON win rate, mea
 ## 12. Decisions still required before production
 
 1. Confirm exact ON session boundaries and treatment of premarket/after-hours, holidays, early closes, and corporate actions.
-2. Define the numeric point maps for all eight Boringness components.
-3. Define overnight-volatility and “median reasonably close to mean” thresholds.
+2. Evaluate and approve/freeze the provisional numeric point maps in section 10A after historical-case testing.
+3. Evaluate the provisional overnight-volatility thresholds and define an explicit median/mean dispersion warning threshold after testing.
 4. Confirm how catalyst clearance is supplied (provider, cost/licensing, coverage, or manual review) and how stale news is treated.
-5. Confirm whether `READY` means “eligible for overnight watchlist” or “eligible for a separate entry review”; recommended interpretation is eligible for watchlist/review only.
+5. Review the proposed `READY` meaning: eligible for overnight watchlist/review only, not an instruction to buy or submit an order.
 6. [DONE 2026-10-25] User supplied the current 55-symbol Schwab exclusion list; canonical source is `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. Implementation must use a shared versioned exclusion provider.
 7. Provide a representative set of symbols/dates labelled as known good, bad, catalyst-spike, overextended, and excluded for validation.
 
