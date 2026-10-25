@@ -71,7 +71,7 @@ Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_De
 - [USER PROVIDED 2026-10-25] Canonical current Schwab exclusion list is maintained in `Schwab_Exclusions_SourceOfTruth.md` (55 symbols). Treat it as append-oriented; do not remove entries without explicit review. Load it once through a shared exclusion service and apply it consistently to Boring Overnight, scanners, Morning Report, and MarketWatch.
 
 ### Implementation sequence
-- [NOW] Write column specification/data contract: field definitions, windows, session boundaries, source, freshness, missing-data handling, reason codes, extended-hours assumptions.
+- [DONE / DRAFT CONTRACT] Data contract now includes provisional configurable score maps (`BORING-0.1-PROVISIONAL`), close-to-open ON interval, volatility thresholds, and status precedence. These are engineering defaults to validate, not approved/proven thresholds.
 - Implement only calculations ThinkScript can reliably support; label proxies honestly. Split into coherent columns if one column truncates critical information.
 - ThinkScript cannot establish catalyst-clear status reliably or retain full authoritative rolling history. Missing event data => DATA? / manual review, never READY.
 - Validate known winners, losers, catalyst spikes, overextended candidates, and all hard-gate failures. Compare same-symbol/same-date ThinkScript results against independently calculated C# results.
