@@ -30,7 +30,16 @@ if (args.Length > 0 &&
 
     try
     {
-        var rows = await File.ReadAllLinesAsync(args[3]);
+        var inputPath = Path.GetFullPath(args[3]);
+        if (!File.Exists(inputPath))
+        {
+            Console.Error.WriteLine($"Overnight excursion CSV not found: {inputPath}");
+            Console.Error.WriteLine("Create the file with one verified high-excursion percentage per line and an optional 'excursion_percent' header.");
+            Console.Error.WriteLine("At least 20 completed observations are required. Do not use synthetic values or close-to-open returns.");
+            return 1;
+        }
+
+        var rows = await File.ReadAllLinesAsync(inputPath);
         var excursions = new List<double>();
         foreach (var row in rows)
         {
@@ -79,7 +88,7 @@ if (args.Length > 0 &&
     }
     catch (IOException exception)
     {
-        Console.Error.WriteLine($"Could not read the overnight excursion file: {exception.Message}");
+        Console.Error.WriteLine($"Could not read the overnight excursion file '{args[3]}': {exception.Message}");
         return 1;
     }
 }
