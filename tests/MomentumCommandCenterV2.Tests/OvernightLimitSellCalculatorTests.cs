@@ -9,8 +9,8 @@ public sealed class OvernightLimitSellCalculatorTests
     {
         Symbol = "AAPL",
         EntryPrice = 100m,
-        // Synthetic fixtures only: 20 completed overnight high excursions.
-        CompletedOvernightHighExcursionsPercent = new double[]
+        // Synthetic fixtures only: 20 completed order-eligible-window high excursions.
+        CompletedEligibleWindowHighExcursionsPercent = new double[]
         {
             -1.0, -0.5, -0.2, 0.0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35,
             0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 1.0, 1.2
@@ -40,7 +40,7 @@ public sealed class OvernightLimitSellCalculatorTests
     public void MissingOrInsufficientHistoryProducesNoPrice()
     {
         var result = new OvernightLimitSellCalculator().Calculate(
-            GoodInput() with { CompletedOvernightHighExcursionsPercent = new[] { 0.2, 0.3 } });
+            GoodInput() with { CompletedEligibleWindowHighExcursionsPercent = new[] { 0.2, 0.3 } });
 
         Assert.False(result.IsCalculable);
         Assert.Null(result.LimitPrice);
