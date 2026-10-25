@@ -11,4 +11,8 @@
     <ProjectReference Include="..\MomentumCommandCenterV2.Core\MomentumCommandCenterV2.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Resources/schwab-exclusions.txt" LogicalName="MomentumCommandCenterV2.Infrastructure.Resources.schwab-exclusions.txt" />
+  </ItemGroup>
+
 </Project>
