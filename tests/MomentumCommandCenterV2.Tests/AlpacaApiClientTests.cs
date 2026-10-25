@@ -111,7 +111,7 @@ public sealed class AlpacaApiClientTests
             Assert.StartsWith(
                 "https://data.alpaca.markets/v1beta1/news?symbols=AAPL&limit=5&sort=desc&start=",
                 request.RequestUri!.ToString());
-            Assert.Contains("&end=", request.RequestUri.ToString());
+            Assert.Contains("&end=", request.RequestUri!.ToString());
             return JsonResponse(
                 "{\"news\":[{\"id\":123,\"headline\":\"AAPL test headline\",\"summary\":\"summary\",\"created_at\":\"2026-10-25T14:00:00Z\",\"updated_at\":\"2026-10-25T14:05:00Z\",\"url\":\"https://example.test/story\",\"symbols\":[\"AAPL\"]}]}");
         });
