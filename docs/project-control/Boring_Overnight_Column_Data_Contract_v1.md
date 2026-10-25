@@ -57,7 +57,7 @@ Before production calculations, freeze the session contract and use it consisten
 
 ## 5. Boringness score — initial weights
 
-Total 100 points. The point maps below in §10A are implemented in `BoringOvernightEvaluator` as `BORING-0.1-PROVISIONAL`. They are deterministic engineering defaults, not source-derived historical truths or profitability-validated thresholds.
+Total 100 points; each component must have a documented mapping from raw metric to points. The existing weighting is retained, but the point maps are **not yet specified** and must not be guessed in code.
 
 | Component | Max points |
 |---|---:|
@@ -145,7 +145,7 @@ No historical values, event facts, scores, or targets may be backfilled from gue
 
 **ThinkScript:** lightweight display and calculations only where chart/session behavior can be verified; show clearly labelled proxies; cannot be the authoritative catalyst-clearance system or full rolling-history store.
 
-**C# V3:** `BoringOvernightEvaluator` now calculates metrics from supplied completed overnight returns, applies `BORING-0.1-PROVISIONAL` score maps, consumes the shared `SchwabExclusionList`, and returns status, score components, sample count, version, and reason codes. Rolling-history acquisition, exchange-calendar/session pairing, market-data freshness enforcement, catalyst retrieval, persistence/snapshot history, and scanner/Morning Report/MarketWatch integration are not yet implemented. Keep one evaluator as the sole score/status implementation.
+**C# V3:** authoritative rolling ON history, mean/median, win rate, consistency, volatility, sample counts, score point maps, exclusion management, catalyst evidence, freshness, reason-coded decision, snapshot history, and comparison tests. Use one pure calculation service so the same input fixture always yields the same output.
 
 The two implementations must be compared on identical symbol/date/session inputs. Differences must be explained, not patched with hidden per-symbol exceptions.
 
@@ -186,7 +186,7 @@ These maps are engineering proposals, not source-derived historical truths. They
 - Current ON move is measured from the most recent regular-session close to the latest reliable overnight/premarket price, with timestamp and feed shown. At >=3%, classify at least `WATCH`; do not automatically block solely because of the move.
 - If news/catalyst feed access or freshness is unverified, use `DATA?`, not “catalyst clear.”
 
-The scoring/status calculation is implemented in `BoringOvernightEvaluator` on the feature branch. Data ingestion, calendar-aware return construction, persistence, and consumer wiring remain unimplemented. These defaults must be evaluated on labeled historical cases before production thresholds are frozen.
+These defaults are ready for implementation as a versioned configuration, but must be evaluated on labeled historical cases before production thresholds are frozen.
 
 ## 11. Validation matrix and acceptance criteria
 
@@ -218,5 +218,5 @@ Measure false-positive READY rate, missed qualified candidates, ON win rate, mea
 
 ## [Uncertainties]
 - The proposed close-to-open ON interval and positive-return consistency definition are candidates to confirm, not established final rules.
-- `BORING-0.1-PROVISIONAL` component point maps are engineering proposals now implemented in code; they are not source-derived truths and have not been evaluated on labeled historical cases.
-- Data provider entitlements and news-source availability/licensing have not been verified. The current user-provided exclusion list is captured and covered by unit tests; whether every symbol remains currently Schwab-unavailable has not been independently checked.
+- Component point maps and several thresholds are not present in the source material; no mapping is invented here.
+- Data provider entitlements and news-source availability/licensing have not been verified. The current user-provided exclusion list is captured; whether every symbol remains currently Schwab-unavailable has not been independently checked.

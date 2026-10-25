@@ -1,6 +1,6 @@
 # Momentum Command Center V3 — Boring Overnight Decision Column / Chart Study TODO
 
-**Status:** Provisional C# evaluator implemented on feature branch; live data pipeline, consumer integration, and historical validation remain incomplete  
+**Status:** Planned — not implemented or validated yet  
 **Related existing Library item:** `/Trading System/Boring_Overnight_Cheat_Sheet.md`  
 **Purpose:** Move Boring Overnight decisions from ad hoc manual approval into a repeatable, explainable, testable workflow.
 
@@ -12,17 +12,10 @@ V3 should not require the user to ask ChatGPT for final approval for every overn
 
 ## Deliverable order
 
-**Current implementation checkpoint (2026-10-25):** `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` implements deterministic `BORING-0.1-PROVISIONAL` metrics, score components, reason codes, and conservative status precedence using the shared Schwab exclusion provider. Tests were added in `tests/MomentumCommandCenterV2.Tests/BoringOvernightEvaluatorTests.cs`; they now pass in CI (84 total, 0 failed). The feature-branch GitHub Actions run passed: build succeeded and 84/84 tests passed, including the Alpaca News API client tests. The baseline fixture was corrected to honor the 5D > 20D gate.
-
-Remaining pipeline gaps: data/session ingestion, order-eligible-window high-excursion acquisition, catalyst source, snapshot persistence, current 5M state adapter, and consumer integration. The limit-sell calculation core and CLI are now implemented but require a current CI run and real verified excursion data. Do not call the feature production-ready until the updated suite passes and historical fixtures are evaluated.
-
-
-
 1. **Specify and implement a Boring Overnight Decision watchlist column first.** This is the primary sortable triage surface across scanner candidates.
 2. Validate its calculations and decision states against known examples and historical observations.
 3. Add a companion chart study only if it adds useful explanatory context that the column cannot provide.
-4. Integrate market-calendar-aware historical statistics and a persistent decision log into MomentumCommandCenterV3 C# where ThinkScript cannot reliably calculate or retain the complete data set.
-5. Implement and validate the limit-sell recommendation described above; keep it separate from the Boringness score and never automate order submission. (The pure scoring/status evaluator now exists; acquisition, persistence, and consumers remain open.)
+4. Integrate the authoritative historical statistics and decision log into MomentumCommandCenterV3 C# where ThinkScript cannot reliably calculate or retain the complete data set.
 
 Do not create duplicate or conflicting definitions of the same score in the column, chart study, and C# application. Document which layer is authoritative for each metric.
 
@@ -79,28 +72,6 @@ Current complete user-provided list (55 symbols) is in `../Schwab_Exclusions_Sou
 | Price | 5 | Prefer established stocks above $5 |
 
 Ranking bands: 90–100 `PERFECT BORING`; 80–89 `VERY GOOD`; 70–79 `POSSIBLE`; 60–69 `AGGRESSIVE`; below 60 `REJECT / NOT BORING ENOUGH`. Ranking bands do not override hard gates.
-
-### Median ON % is a statistic, not an automatic sell instruction
-
-- The historical median overnight return is a reference statistic, not a forecast, guaranteed fill price, or prescribed limit-sell price.
-- A simple reference calculation is `prior regular-session close × (1 + median ON % / 100)`. Label it **median-based reference price**, never “target” or “expected fill” unless a separately validated strategy explicitly defines that use.
-- Do not automatically submit or recommend an order from this calculation alone. It ignores the distribution/tail risk, current spread and liquidity, catalysts, overnight eligibility, fees, and the possibility that price never reaches the limit.
-- Schwab's `GTC + Extended` order is not necessarily the 24-hour overnight session. Schwab documents the 13-hour extended session as 7:00 a.m.–8:00 p.m. ET; eligible thinkorswim overnight orders use `EXTO` / `GTC_EXTO`. Verify the exact time-in-force and security eligibility in the order ticket before relying on overnight execution. Extended-hours fills require a matching contra order and may be partial or not occur.
-- MCC must keep order placement out of the Boring Overnight scoring engine. The output is watchlist/review eligibility, not an order.
-
-### Limit-sell recommendation — new implementation task
-
-**Purpose:** Give the user a defensible, explainable limit-sell reference for an intended overnight holding, rather than telling them to add historical median close-to-open return to the closing price.
-
-**Implementation:** `OvernightLimitSellCalculator` in `src/MomentumCommandCenterV2.Infrastructure/MarketData/OvernightLimitSellCalculator.cs` is the first calculation core. It accepts the actual average entry fill price, at least 20 completed historical high-excursion percentages measured over the **same order-eligible window** and reference convention, a requested historical threshold-exceedance target (provisional default 70%), minimum desired net return (provisional default 0.10%), estimated round-trip costs, and tick size. It chooses the corresponding lower-tail empirical excursion percentile (for a 70% desired historical touch rate, the 30th percentile), compares it with the minimum-return/cost floor, rounds down to the tick, and reports the observed historical threshold-exceedance rate plus reason codes.
-
-**Critical data requirement:** Do not feed the existing median close-to-open return series into this calculator. A closing return does not show whether the price reached a limit intranight. Build a separate series of highs relative to the session reference, using the exact trading window in which the intended broker/order type is eligible. For the user's Schwab `GTC + Extended` workflow, do not assume Alpaca's BOATS overnight feed alone is equivalent: Alpaca documents BOATS overnight data as 8:00 p.m.–4:00 a.m. ET, while Schwab extended-hours eligibility is a different window. Verify feed entitlement and coverage before using a feed for recommendations. A historical high crossing a price is still only a proxy for fill probability; quotes, spread, liquidity, queue priority, trading halts, and order eligibility affect actual fills.
-
-**Fail-closed behavior:** No recommendation when entry price is invalid or fewer than the required history samples exist. This component never places an order. All thresholds are provisional and must be tested on historical cases with actual entry windows and outcomes before being presented as a production recommendation.
-
-**CLI command:** `dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell AAPL 100 ./eligible-window-high-excursions.csv 70 0.10 0.00`. The CSV must have one verified percentage per row and may have an `excursion_percent` header. This example shows command shape only; `$100` and the CSV are not a real recommendation or provided dataset.
-
-**Next work:** determine which available data source covers the actual Schwab order-eligible window and captures extended-hours highs without material gaps; verify Alpaca feed entitlement/coverage (the user's IEX bar test did not establish BOATS or consolidated extended-hours coverage). Then add session-aware acquisition, persist sample/provenance and calculator version, surface limit price + estimated historical threshold-exceedance rate + estimated net return + reasons in the CLI/Morning Report/MarketWatch, and compare predictions with actual limit-touch/fill outcomes including spread/costs. Do not wire into order submission.
 
 ### Preferred ranges / penalties
 
