@@ -1,5 +1,5 @@
 # Momentum Command Center V3 — Consolidated Master To-Do
-**Updated:** 2026-10-25 (Arizona time; user verified Alpaca News API access with 2 AAPL articles; feature-branch CI last verified 84/84 before limit-sell calculator tests/CLI were added; rerun CI for latest commits)  
+**Updated:** 2026-10-25 (Arizona time; user verified Alpaca News API access with 2 AAPL articles; limit-sell calculator + CLI code passed .NET 8 CI with 89/89 tests on commit `eb32a4c7`; broker-window data acquisition and historical validation remain open)  
 **Purpose:** Canonical master list. Consolidates the 2026-10-06 master TODO, the 2026-10-13 Boring Overnight Decision Column TODO, and subsequent documented project status. The dedicated Boring Overnight TODO remains a detailed companion; this master list must be updated whenever that companion changes.
 
 ## Status key
@@ -75,7 +75,8 @@ Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_De
 - [IMPLEMENTED / NOT YET TESTED] `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` calculates win rate, median/mean 5D/20D returns, consistency, volatility, eight score components, hard-gate reasons, status, and score band from supplied inputs. It consumes the shared 55-symbol exclusion provider.
 - [DONE / CI 2026-10-25] Feature-branch .NET 8 CI build succeeded and all 84 tests passed, including the Boring Overnight evaluator and Alpaca News API response/error tests. This validates code/test consistency, not profitability.
 - [VERIFIED 2026-10-25] User ran `alpaca-news-check AAPL`; API access succeeded and 2 articles were returned for the previous 24 hours. This verifies endpoint access, not complete news coverage or catalyst clearance.
-- [IMPLEMENTED / DATA FILE REQUIRED] `dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <eligible-window-high-excursions.csv> [desired-touch%] [minimum-net%] [estimated-costs%]` exposes the first limit-sell calculator. It requires verified historical high-excursion samples; data ingestion is not yet built.
+- [DONE / CI 2026-10-25] Limit-sell calculator and CLI compiled and passed 89/89 tests in CI on commit `eb32a4c7`. Latest documentation-only update is running through CI separately.
+- [IMPLEMENTED / DATA FILE REQUIRED] `dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <eligible-window-high-excursions.csv> [desired-touch%] [minimum-net%] [estimated-costs%]` exposes the first limit-sell calculator. It requires verified historical high-excursion samples; automated data ingestion is not yet built.
 - [IMPLEMENTED / NEEDS DATA + VALIDATION] `OvernightLimitSellCalculator` now produces a provisional historical-reach-based limit-sell reference from order-eligible-window high-excursion samples, desired historical touch rate, minimum net return, estimated costs, and tick size. It deliberately does not use median close-to-open return as a target and never places orders.
 - [NEXT] Acquire session-specific overnight highs (not just overnight close/open returns), persist their provenance, and validate the calculator against actual historical limit-touch/fill outcomes and trading costs.
 - [NEXT] Add labeled historical fixtures and independently hand-check Boring Overnight metrics.
