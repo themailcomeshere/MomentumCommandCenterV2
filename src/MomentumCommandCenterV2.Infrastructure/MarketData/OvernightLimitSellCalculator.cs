@@ -4,7 +4,7 @@ namespace MomentumCommandCenterV2.Infrastructure.MarketData;
 /// CLASS: OvernightLimitSellCalculator
 /// PURPOSE:
 ///   Produce a historical-reach-based limit-sell reference from completed
-///   overnight high excursions, rather than treating median close-to-open
+///   order-eligible-window high excursions, rather than treating median close-to-open
 ///   return as a price target.
 /// SAFETY:
 ///   Decision support only. Does not place orders or guarantee fills.
@@ -24,7 +24,7 @@ public sealed class OvernightLimitSellCalculator
     {
         ArgumentNullException.ThrowIfNull(input);
 
-        var history = input.CompletedOvernightHighExcursionsPercent?
+        var history = input.CompletedEligibleWindowHighExcursionsPercent?
             .Where(double.IsFinite)
             .OrderBy(x => x)
             .ToArray() ?? Array.Empty<double>();
@@ -118,11 +118,11 @@ public sealed record OvernightLimitSellInput
     /// <summary>Actual average entry fill price, not automatically the prior close.</summary>
     public decimal EntryPrice { get; init; }
     /// <summary>
-    /// Completed historical maximum overnight high excursions, in percent from
+    /// Completed historical maximum order-eligible-window high excursions, in percent from
     /// each session's reference entry/close through the relevant sell window.
     /// Do not pass close-to-open returns here.
     /// </summary>
-    public IReadOnlyList<double>? CompletedOvernightHighExcursionsPercent { get; init; }
+    public IReadOnlyList<double>? CompletedEligibleWindowHighExcursionsPercent { get; init; }
     public double DesiredHistoricalTouchProbabilityPercent { get; init; } =
         OvernightLimitSellCalculator.DefaultDesiredHistoricalTouchProbabilityPercent;
     public double MinimumNetProfitPercent { get; init; } =
