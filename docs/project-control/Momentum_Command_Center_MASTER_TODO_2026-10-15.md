@@ -1,5 +1,5 @@
 # Momentum Command Center V3 — Consolidated Master To-Do
-**Updated:** 2026-10-25 (Arizona time; complete 55-symbol Schwab exclusions supplied; baseline .NET suite passed before new exclusion-provider tests; XRPN source audit completed)  
+**Updated:** 2026-10-25 (Arizona time; user reports 65/65 tests pass with Schwab exclusion provider; provisional Boring Overnight evaluator/tests added afterward and still require fresh run)  
 **Purpose:** Canonical master list. Consolidates the 2026-10-06 master TODO, the 2026-10-13 Boring Overnight Decision Column TODO, and subsequent documented project status. The dedicated Boring Overnight TODO remains a detailed companion; this master list must be updated whenever that companion changes.
 
 ## Status key
@@ -39,7 +39,7 @@
 - Runner waning is caution, not automatic SELL. Preserve goal of holding valid runners rather than repeatedly taking tiny profits.
 - Define and test explicit position-management/exit behavior separately from entry readiness.
 
-## 5. Boring Overnight decision column / chart study — [NOW: specification first]
+## 5. Boring Overnight decision column / chart study — [NOW: evaluator implemented; verify tests and wire data pipeline]
 Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md` (2026-10-13). Preserve its complete criteria and update it alongside this master.
 
 - [NEW 2026-10-23] Draft data contract created: `Boring_Overnight_Column_Data_Contract_v1.md`. It formalizes status precedence, hard gates, overnight-return/session definitions, required provenance/freshness, reason codes, ThinkScript/C# responsibilities, and a validation matrix. This is a draft: do not code undefined score point maps or unresolved session definitions as if approved.
@@ -71,7 +71,10 @@ Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_De
 - [USER PROVIDED 2026-10-25] Canonical current Schwab exclusion list is maintained in `Schwab_Exclusions_SourceOfTruth.md` (55 symbols). Treat it as append-oriented; do not remove entries without explicit review. Load it once through a shared exclusion service and apply it consistently to Boring Overnight, scanners, Morning Report, and MarketWatch.
 
 ### Implementation sequence
-- [DONE / DRAFT CONTRACT] Data contract now includes provisional configurable score maps (`BORING-0.1-PROVISIONAL`), close-to-open ON interval, volatility thresholds, and status precedence. These are engineering defaults to validate, not approved/proven thresholds.
+- [DONE / DRAFT CONTRACT] Data contract includes provisional score maps (`BORING-0.1-PROVISIONAL`), close-to-open ON interval, volatility thresholds, and status precedence. These are engineering defaults to validate, not approved/proven thresholds.
+- [IMPLEMENTED / NOT YET TESTED] `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` calculates win rate, median/mean 5D/20D returns, consistency, volatility, eight score components, hard-gate reasons, status, and score band from supplied inputs. It consumes the shared 55-symbol exclusion provider.
+- [NEXT] Run the full suite after pulling the evaluator/tests; add labeled historical fixtures and independently hand-check calculations.
+- [NEXT] Build session-aware data acquisition, catalyst evidence/freshness, persisted snapshots, and adapters for scanner, Morning Report, and MarketWatch. Those consumers are not yet implemented/wired; do not claim exclusion enforcement there until each exists and tests it.
 - Implement only calculations ThinkScript can reliably support; label proxies honestly. Split into coherent columns if one column truncates critical information.
 - ThinkScript cannot establish catalyst-clear status reliably or retain full authoritative rolling history. Missing event data => DATA? / manual review, never READY.
 - Validate known winners, losers, catalyst spikes, overextended candidates, and all hard-gate failures. Compare same-symbol/same-date ThinkScript results against independently calculated C# results.
