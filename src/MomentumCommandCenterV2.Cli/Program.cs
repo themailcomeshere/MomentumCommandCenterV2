@@ -1,6 +1,88 @@
+using System.Globalization;
 using Microsoft.Extensions.Configuration;
 using MomentumCommandCenterV2.Core.Models.Enums;
 using MomentumCommandCenterV2.Infrastructure.Alpaca;
+using MomentumCommandCenterV2.Infrastructure.MarketData;
+
+if (args.Length > 0 &&
+    args[0].Equals("overnight-limit-sell", StringComparison.OrdinalIgnoreCase))
+{
+    if (args.Length < 4 ||
+        !decimal.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out var entryPrice))
+    {
+        Console.Error.WriteLine("Usage: overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <overnight-high-excursions.csv> [desired-touch-percent] [minimum-net-percent] [estimated-costs-percent]");
+        Console.Error.WriteLine("CSV must contain verified historical overnight high-excursion percentages, one per row, with an optional 'excursion_percent' header.");
+        return 2;
+    }
+
+    var desiredTouch = args.Length > 4 &&
+        double.TryParse(args[4], NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedTouch)
+            ? parsedTouch
+            : OvernightLimitSellCalculator.DefaultDesiredHistoricalTouchProbabilityPercent;
+    var minimumNet = args.Length > 5 &&
+        double.TryParse(args[5], NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedMinimumNet)
+            ? parsedMinimumNet
+            : OvernightLimitSellCalculator.DefaultMinimumNetProfitPercent;
+    var estimatedCosts = args.Length > 6 &&
+        double.TryParse(args[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedCosts)
+            ? parsedCosts
+            : OvernightLimitSellCalculator.DefaultEstimatedRoundTripCostsPercent;
+
+    try
+    {
+        var rows = await File.ReadAllLinesAsync(args[3]);
+        var excursions = new List<double>();
+        foreach (var row in rows)
+        {
+            var value = row.Trim();
+            if (value.Length == 0 || value.Equals("excursion_percent", StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var excursion) ||
+                !double.IsFinite(excursion))
+            {
+                Console.Error.WriteLine($"Invalid overnight excursion row: '{value}'. No recommendation calculated.");
+                return 2;
+            }
+            excursions.Add(excursion);
+        }
+
+        var recommendation = new OvernightLimitSellCalculator().Calculate(new OvernightLimitSellInput
+        {
+            Symbol = args[1],
+            EntryPrice = entryPrice,
+            CompletedOvernightHighExcursionsPercent = excursions,
+            DesiredHistoricalTouchProbabilityPercent = desiredTouch,
+            MinimumNetProfitPercent = minimumNet,
+            EstimatedRoundTripCostsPercent = estimatedCosts
+        });
+
+        Console.WriteLine($"Overnight limit-sell reference ({recommendation.RulesVersion})");
+        Console.WriteLine($"Symbol: {recommendation.Symbol}");
+        Console.WriteLine($"Historical samples: {recommendation.SampleCount}");
+        Console.WriteLine($"Requested historical touch rate: {recommendation.DesiredHistoricalTouchProbabilityPercent:F1}%");
+        if (!recommendation.IsCalculable || recommendation.LimitPrice is null)
+        {
+            Console.WriteLine("Limit price: NOT CALCULABLE");
+            Console.WriteLine($"Reasons: {string.Join(", ", recommendation.ReasonCodes)}");
+            return 1;
+        }
+
+        Console.WriteLine($"Limit-sell reference: {recommendation.LimitPrice.Value.ToString("0.00", CultureInfo.InvariantCulture)}");
+        Console.WriteLine($"Return from entry before estimated costs: {recommendation.TargetReturnPercent:F3}%");
+        Console.WriteLine($"Estimated return after configured costs: {recommendation.EstimatedNetReturnPercent:F3}%");
+        Console.WriteLine($"Observed historical high-touch rate at this threshold: {recommendation.ObservedHistoricalTouchRatePercent:F1}%");
+        Console.WriteLine($"Excursion percentile used: {recommendation.PercentileUsed:F1}th");
+        Console.WriteLine($"Reasons: {string.Join(", ", recommendation.ReasonCodes)}");
+        Console.WriteLine("This is a historical decision-support reference, not a fill-probability guarantee or personalized financial advice.");
+        Console.WriteLine("Confirm actual entry price, overnight order eligibility, spread/liquidity, and cost assumptions. No order was submitted.");
+        return 0;
+    }
+    catch (IOException exception)
+    {
+        Console.Error.WriteLine($"Could not read the overnight excursion file: {exception.Message}");
+        return 1;
+    }
+}
 
 if (args.Length > 0 &&
     args[0].Equals("alpaca-news-check", StringComparison.OrdinalIgnoreCase))
@@ -121,5 +203,6 @@ Console.WriteLine();
 Console.WriteLine("Read-only Alpaca provider test:");
 Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-check [SYMBOL]");
 Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-news-check [SYMBOL]");
+Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <overnight-high-excursions.csv> [desired-touch%] [minimum-net%] [estimated-costs%]");
 Console.WriteLine("Configure Alpaca:ApiKey and Alpaca:ApiSecret with .NET User Secrets, or use the MCC_ALPACA_API_KEY and MCC_ALPACA_API_SECRET environment variables.");
 return 0;
