@@ -79,6 +79,14 @@ Current complete user-provided list (55 symbols) is in `../Schwab_Exclusions_Sou
 
 Ranking bands: 90–100 `PERFECT BORING`; 80–89 `VERY GOOD`; 70–79 `POSSIBLE`; 60–69 `AGGRESSIVE`; below 60 `REJECT / NOT BORING ENOUGH`. Ranking bands do not override hard gates.
 
+### Median ON % is a statistic, not an automatic sell instruction
+
+- The historical median overnight return is a reference statistic, not a forecast, guaranteed fill price, or prescribed limit-sell price.
+- A simple reference calculation is `prior regular-session close × (1 + median ON % / 100)`. Label it **median-based reference price**, never “target” or “expected fill” unless a separately validated strategy explicitly defines that use.
+- Do not automatically submit or recommend an order from this calculation alone. It ignores the distribution/tail risk, current spread and liquidity, catalysts, overnight eligibility, fees, and the possibility that price never reaches the limit.
+- Schwab's `GTC + Extended` order is not necessarily the 24-hour overnight session. Schwab documents the 13-hour extended session as 7:00 a.m.–8:00 p.m. ET; eligible thinkorswim overnight orders use `EXTO` / `GTC_EXTO`. Verify the exact time-in-force and security eligibility in the order ticket before relying on overnight execution. Extended-hours fills require a matching contra order and may be partial or not occur.
+- MCC must keep order placement out of the Boring Overnight scoring engine. The output is watchlist/review eligibility, not an order.
+
 ### Preferred ranges / penalties
 
 - Current overnight move: small positive to <3%; a move >=3% should increasingly reduce Boringness and may trigger review/blocking depending on context.
