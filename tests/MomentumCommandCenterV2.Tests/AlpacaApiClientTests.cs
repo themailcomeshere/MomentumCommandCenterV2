@@ -103,6 +103,58 @@ public sealed class AlpacaApiClientTests
         Assert.Contains("no latest bar", exception.Message);
     }
 
+    [Fact]
+    public async Task GetLatestNewsAsync_ParsesArticleMetadataAndRequestsSymbol()
+    {
+        var handler = new RecordingHandler(request =>
+        {
+            Assert.StartsWith(
+                "https://data.alpaca.markets/v1beta1/news?symbols=AAPL&limit=5&sort=desc&start=",
+                request.RequestUri!.ToString());
+            Assert.Contains("&end=", request.RequestUri.ToString());
+            return JsonResponse(
+                "{\"news\":[{\"id\":123,\"headline\":\"AAPL test headline\",\"summary\":\"summary\",\"created_at\":\"2026-10-25T14:00:00Z\",\"updated_at\":\"2026-10-25T14:05:00Z\",\"url\":\"https://example.test/story\",\"symbols\":[\"AAPL\"]}]}");
+        });
+
+        using var httpClient = new HttpClient(handler);
+        var articles = await new AlpacaApiClient(httpClient, ValidOptions())
+            .GetLatestNewsAsync(" aapl ");
+
+        var article = Assert.Single(articles);
+        Assert.Equal("123", article.Id);
+        Assert.Equal("AAPL test headline", article.Headline);
+        Assert.Equal("summary", article.Summary);
+        Assert.Equal("https://example.test/story", article.Url);
+        Assert.Contains("AAPL", article.Symbols);
+    }
+
+    [Fact]
+    public async Task GetLatestNewsAsync_ThrowsSanitizedHttpErrorWhenNewsAccessIsDenied()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.Forbidden));
+        using var httpClient = new HttpClient(handler);
+        var client = new AlpacaApiClient(httpClient, ValidOptions());
+
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(
+            () => client.GetLatestNewsAsync("AAPL"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, exception.StatusCode);
+        Assert.DoesNotContain("test-secret", exception.Message);
+    }
+
+    [Fact]
+    public async Task GetLatestNewsAsync_RejectsInvalidLimitBeforeHttpRequest()
+    {
+        var handler = new RecordingHandler(_ => throw new Xunit.Sdk.XunitException(
+            "No HTTP request should be sent for an invalid limit."));
+        using var httpClient = new HttpClient(handler);
+        var client = new AlpacaApiClient(httpClient, ValidOptions());
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => client.GetLatestNewsAsync("AAPL", 51));
+        Assert.Equal(0, handler.RequestCount);
+    }
+
     private static HttpResponseMessage JsonResponse(string json) => new(HttpStatusCode.OK)
     {
         Content = new StringContent(json, Encoding.UTF8, "application/json")
