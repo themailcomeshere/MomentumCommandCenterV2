@@ -1,7 +1,7 @@
 # Schwab Exclusions — Current User-Provided Source of Truth
 
 **Last supplied by user:** 2026-10-25  
-**Purpose:** Maintain the growing set of symbols excluded from MCC candidate/watchlist/scanner qualification because they are Schwab-excluded/unavailable according to the user's workflow.
+**Purpose:** Maintain the growing set of symbols excluded from MCC candidate/watchlist/scanner qualification because they are Schwab-excluded/unavailable according to the user's workflow. The machine-readable canonical list is `src/MomentumCommandCenterV2.Infrastructure/Resources/schwab-exclusions.txt`; this Markdown file is its human-readable mirror and must be updated in the same commit.
 
 ## Current list
 
