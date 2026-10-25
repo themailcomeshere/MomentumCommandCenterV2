@@ -156,3 +156,31 @@ No column/study implementation should claim profitability from compilation or a 
 - The current Library contains `MomentumCommandCenterV3_2_1M_V14_5.txt`, labeled V14.5 (event-armed opportunity, fresh-trigger memory, candidate re-arm, finite execution window). Audit this source before requesting any new chart inputs; the screenshot does not prove the locally installed study matches the Library byte-for-byte.
 - Recommended implementation defaults: regular-session close to next regular-session open in `America/New_York`; premarket/after-hours tracked separately; 20-session standard deviation of overnight returns as the provisional volatility metric; all score mappings configurable until historical validation.
 - Do not ask the user to repeat screenshot/bubble evidence already provided. Complete exclusion list is now supplied. If representative labelled validation fixtures cannot be recovered from existing sources, ask for a small set only after source review.
+
+## 2026-10-25 — Limit-sell CLI failure and launch-readiness gate
+
+### Why the user's first command failed
+
+The command's CSV path is an input, not a generated output. The relative path `./eligible-window-high-excursions.csv` resolves from the current working directory (in the reported run, the repository root). That file was not present. The calculator therefore had no historical sample and correctly did not calculate a price. Do not populate it with invented values or use median close-to-open returns as a substitute.
+
+Expected input:
+- Optional header: `excursion_percent`
+- One finite numeric percentage per subsequent row.
+- At least 20 completed observations.
+- Each observation must be the maximum price excursion above the relevant reference entry/close during the exact session in which the intended sell limit would be eligible.
+- Source, feed, session definition, time zone, missing-bar treatment, and observation dates must be documented outside the raw numeric column until the provenance-aware importer is implemented.
+
+### Follow-up code change
+
+A follow-up branch fixes the nullable symbol warning and makes the missing-file error state the resolved path, required input shape, and 20-sample minimum. It also adds a regression test for a null symbol. Treat these changes as pending until the follow-up PR's CI is green and merged.
+
+### Before using this calculator
+
+1. Confirm the exact Schwab order type and hours/overnight eligibility for the intended symbol and account.
+2. Verify a historical data feed actually covers those hours. Do not assume Alpaca BOATS overnight data is equivalent to Schwab GTC + Extended eligibility.
+3. Generate at least 20 valid, completed historical eligible-window high excursions with dates and provenance.
+4. Confirm the entry price is the actual average fill price; set realistic round-trip costs and desired net return.
+5. Review the reported empirical high-touch rate and remember that touching a price is not proof of a live limit fill.
+6. Keep manual order placement and risk review separate. The calculator never submits orders.
+
+**Current status:** the calculation core is merged and CI passed on the merge commit. Automated session-aware data acquisition and historical sample generation are not implemented. **Data not found in sources** for verified high excursions matching the actual Schwab order window. Until that dependency is resolved, this command is a calculator engine test, not a ready-to-use live limit recommendation.
