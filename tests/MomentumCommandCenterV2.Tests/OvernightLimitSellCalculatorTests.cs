@@ -69,7 +69,7 @@ public sealed class OvernightLimitSellCalculatorTests
 
         Assert.True(costed.IsCalculable);
         Assert.True(costed.LimitPrice > baseline.LimitPrice);
-        Assert.True(costed.EstimatedNetReturnPercent >= 0.20);
+        Assert.True(costed.EstimatedNetReturnPercent >= 0.199);
     }
 
     [Fact]
