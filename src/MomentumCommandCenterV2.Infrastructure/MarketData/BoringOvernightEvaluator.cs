@@ -63,6 +63,7 @@ public sealed class BoringOvernightEvaluator
 
         var missing = new List<string>();
         if (string.IsNullOrWhiteSpace(input.Symbol)) missing.Add("DATA_SYMBOL_MISSING");
+        if (input.EvaluatedAtUtc is null) missing.Add("DATA_EVALUATION_TIMESTAMP_MISSING");
         if (input.Price is null || input.Price <= 0 || input.PriceTimestampUtc is null || !input.PriceIsFresh)
             missing.Add("DATA_PRICE_MISSING_OR_STALE");
         if (input.AverageDailyVolume is null || input.AverageDailyVolume < 0 || !input.VolumeIsFresh)
@@ -120,7 +121,7 @@ public sealed class BoringOvernightEvaluator
             input.Symbol?.Trim() ?? string.Empty, status, totalScore, Band(totalScore),
             winRate, median, mean20, mean5, consistency, volatility, returns.Length,
             new Dictionary<string, double>(scoreParts), reasons.Distinct(StringComparer.Ordinal).ToArray(),
-            RulesVersion, input.EvaluatedAtUtc ?? DateTimeOffset.UtcNow);
+            RulesVersion, input.EvaluatedAtUtc ?? DateTimeOffset.MinValue);
     }
 
     private static bool IsBlockingReason(string reason) =>
