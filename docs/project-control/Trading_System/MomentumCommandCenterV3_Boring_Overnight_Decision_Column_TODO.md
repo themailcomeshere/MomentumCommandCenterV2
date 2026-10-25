@@ -56,7 +56,7 @@ These are current project design thresholds, not proof of profitability. Preserv
 - Symbol is not on the Schwab-excluded securities list.
 - No material event/catalyst risk incompatible with a boring overnight hold.
 
-Current complete user-provided list (58 symbols) is in `../Schwab_Exclusions_SourceOfTruth.md` (canonical repository path: `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`). It is append-oriented; do not remove entries without explicit review.
+Current complete user-provided list (55 symbols) is in `../Schwab_Exclusions_SourceOfTruth.md` (canonical repository path: `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`). It is append-oriented; do not remove entries without explicit review.
 
 ### Boringness score weights (100 points)
 
