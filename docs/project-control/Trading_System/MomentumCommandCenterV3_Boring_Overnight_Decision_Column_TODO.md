@@ -1,6 +1,6 @@
 # Momentum Command Center V3 — Boring Overnight Decision Column / Chart Study TODO
 
-**Status:** Planned — not implemented or validated yet  
+**Status:** Provisional C# evaluator implemented on feature branch; live data pipeline, consumer integration, and historical validation remain incomplete  
 **Related existing Library item:** `/Trading System/Boring_Overnight_Cheat_Sheet.md`  
 **Purpose:** Move Boring Overnight decisions from ad hoc manual approval into a repeatable, explainable, testable workflow.
 
@@ -12,10 +12,16 @@ V3 should not require the user to ask ChatGPT for final approval for every overn
 
 ## Deliverable order
 
+**Current implementation checkpoint (2026-10-25):** `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` implements deterministic `BORING-0.1-PROVISIONAL` metrics, score components, reason codes, and conservative status precedence using the shared Schwab exclusion provider. Tests were added in `tests/MomentumCommandCenterV2.Tests/BoringOvernightEvaluatorTests.cs`; they have **not yet been run**. The user's reported 65/65 passing suite predates these evaluator tests.
+
+Remaining pipeline gaps: data/session ingestion, catalyst source, snapshot persistence, current 5M state adapter, and consumer integration. Do not call the feature production-ready until the updated test suite passes and historical fixtures are evaluated.
+
+
+
 1. **Specify and implement a Boring Overnight Decision watchlist column first.** This is the primary sortable triage surface across scanner candidates.
 2. Validate its calculations and decision states against known examples and historical observations.
 3. Add a companion chart study only if it adds useful explanatory context that the column cannot provide.
-4. Integrate the authoritative historical statistics and decision log into MomentumCommandCenterV3 C# where ThinkScript cannot reliably calculate or retain the complete data set.
+4. Integrate market-calendar-aware historical statistics and a persistent decision log into MomentumCommandCenterV3 C# where ThinkScript cannot reliably calculate or retain the complete data set. (The pure scoring/status evaluator now exists; acquisition, persistence, and consumers remain open.)
 
 Do not create duplicate or conflicting definitions of the same score in the column, chart study, and C# application. Document which layer is authoritative for each metric.
 
