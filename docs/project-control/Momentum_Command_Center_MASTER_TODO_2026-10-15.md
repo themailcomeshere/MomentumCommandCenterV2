@@ -1,5 +1,5 @@
 # Momentum Command Center V3 — Consolidated Master To-Do
-**Updated:** 2026-10-25 (Arizona time; feature-branch CI build and 81/81 tests pass including Schwab exclusions and provisional Boring Overnight evaluator tests; historical validation and data pipeline remain open)  
+**Updated:** 2026-10-25 (Arizona time; feature-branch CI build and 84/84 tests pass including Schwab exclusions, provisional Boring Overnight evaluator, and Alpaca News API client tests; news entitlement still requires a local smoke test; historical validation and data pipeline remain open)  
 **Purpose:** Canonical master list. Consolidates the 2026-10-06 master TODO, the 2026-10-13 Boring Overnight Decision Column TODO, and subsequent documented project status. The dedicated Boring Overnight TODO remains a detailed companion; this master list must be updated whenever that companion changes.
 
 ## Status key
@@ -73,9 +73,11 @@ Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_De
 ### Implementation sequence
 - [DONE / DRAFT CONTRACT] Data contract includes provisional score maps (`BORING-0.1-PROVISIONAL`), close-to-open ON interval, volatility thresholds, and status precedence. These are engineering defaults to validate, not approved/proven thresholds.
 - [IMPLEMENTED / NOT YET TESTED] `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` calculates win rate, median/mean 5D/20D returns, consistency, volatility, eight score components, hard-gate reasons, status, and score band from supplied inputs. It consumes the shared 55-symbol exclusion provider.
-- [DONE / CI 2026-10-25] Feature-branch .NET 8 CI build succeeded and all 81 tests passed, including new Boring Overnight evaluator tests. This validates code/test consistency, not profitability.
+- [DONE / CI 2026-10-25] Feature-branch .NET 8 CI build succeeded and all 84 tests passed, including the Boring Overnight evaluator and Alpaca News API response/error tests. This validates code/test consistency, not profitability.
+- [IMPLEMENTED / USER RUN REQUIRED] Read-only News API smoke test: `dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-news-check AAPL`. This tests the user's configured credentials/endpoint entitlement locally; it does not prove complete news coverage or catalyst clearance.
 - [NEXT] Add labeled historical fixtures and independently hand-check calculations.
-- [NEXT] Build session-aware data acquisition, catalyst evidence/freshness, persisted snapshots, and adapters for scanner, Morning Report, and MarketWatch. Those consumers are not yet implemented/wired; do not claim exclusion enforcement there until each exists and tests it.
+- [NEXT] Build session-aware historical bar acquisition/close-open pairing, catalyst evidence/freshness, persisted snapshots, and adapters for scanner, Morning Report, and MarketWatch. Those consumers are not yet implemented/wired; do not claim exclusion enforcement there until each exists and tests it.
+- [NEXT / USER RUN] Run `alpaca-news-check AAPL` locally and share only the result summary (HTTP status/access OK, article count, timestamps; do not send credentials).
 - Implement only calculations ThinkScript can reliably support; label proxies honestly. Split into coherent columns if one column truncates critical information.
 - ThinkScript cannot establish catalyst-clear status reliably or retain full authoritative rolling history. Missing event data => DATA? / manual review, never READY.
 - Validate known winners, losers, catalyst spikes, overextended candidates, and all hard-gate failures. Compare same-symbol/same-date ThinkScript results against independently calculated C# results.
