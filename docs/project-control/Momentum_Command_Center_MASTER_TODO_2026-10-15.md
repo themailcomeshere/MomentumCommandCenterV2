@@ -1,5 +1,5 @@
 # Momentum Command Center V3 — Consolidated Master To-Do
-**Updated:** 2026-10-25 (Arizona time; complete Schwab exclusions supplied and captured; full .NET test suite passed; project-control docs synchronized to both Git branches)  
+**Updated:** 2026-10-25 (Arizona time; complete 55-symbol Schwab exclusions supplied; baseline .NET suite passed before new exclusion-provider tests; XRPN source audit completed)  
 **Purpose:** Canonical master list. Consolidates the 2026-10-06 master TODO, the 2026-10-13 Boring Overnight Decision Column TODO, and subsequent documented project status. The dedicated Boring Overnight TODO remains a detailed companion; this master list must be updated whenever that companion changes.
 
 ## Status key
@@ -17,7 +17,7 @@
 - [VALIDATED] `buyEstablished` / `buyEstablishedPrior` protects the first BUY bar from being swallowed by runner states.
 - [VALIDATED] Authority Diagnostic V2 exists and mirrors the normal V4.1.7 5M logic without 1M references. Use beside normal 5M study for targeted testing; keep normal historical debug off unless needed.
 - [HOLD] No change to Permission logic until a specific defect is demonstrated.
-- [NOW / ASSISTANT ACTION] Finish the code-level comparison of normal 5M V4.1.7 and Authority Diagnostic V2 around the 12:45 bar; determine whether the Permission latch behavior is intended under persistent major failure. User input is not currently required. Keep logic unchanged unless a concrete discrepancy is demonstrated.
+- [DONE / SOURCE AUDIT 2026-10-25] Normal V4.1.7 and Authority Diagnostic V2 Permission definitions match exactly (132-line normalized comparison). `PBLOCK=2` means persistent major failure and the normal latch explicitly clears Permission to 0. No normal-5M-versus-diagnostic source discrepancy found. The next audit is the V14.5 1M reconstructed-permission proxy, whose raw permission, structural-damage, and major-failure definitions differ from authoritative 5M logic; do not change it until the XRPN same-bar effect is validated.
 
 ## 2. 5M -> 1M handoff — [NEXT after Permission audit]
 - Verify exactly which 5M fields/states the 1M consumes.
@@ -92,7 +92,7 @@ Repository supplied by user: https://github.com/themailcomeshere/MomentumCommand
 - [NOW] Verify actual repository branch, latest commit, solution/project tree, framework, namespaces, and build/test commands. The web retrieval attempted 2026-10-15 did not produce verifiable repository content; do not invent repository facts. Existing README is an architecture working spec, not a verified tree.
 - [SOURCE REVIEW 2026-10-23] `ITradeImporter`, `TradeImportResult`, `SchwabTradeImporter.ImportFile()`, CSV parsing, fill-price parsing, Eastern timestamp conversion, FIFO matching, open-position detection, and unmatched-sell preservation already exist in the feature branch. Do not implement these a second time.
 - [NEXT] Expand importer validation/tests for ImportFile behavior, duplicate/idempotency policy, malformed row handling, timestamp/DST edge cases, header/currency/number parsing, and actionable partial-failure diagnostics. Current importer throws on malformed input and returns an empty `Errors` collection on successful imports; row-level partial recovery/idempotency are not implemented or verified.
-- [USER CONFIRMED 2026-10-25] `dotnet test MomentumCommandCenterV2.sln` succeeded on the feature branch: 53 total, 53 passed, 0 failed, 0 skipped; build succeeded. This was the user's local test report before the new Schwab exclusion provider/tests were added. The new provider/tests still require a fresh local run; this is not an independently executed CI run.
+- [BASELINE USER TEST 2026-10-25] Before the new exclusion provider/tests, `dotnet test MomentumCommandCenterV2.sln` passed 53/53 (0 failed, 0 skipped; build succeeded). New Schwab exclusion provider/tests have since been added on the feature branch and require a fresh local test run. This is not an independently executed CI run.
 - Then build persistence layer; normalized trade/fill models and repository abstractions; analysis/market-data layers; state snapshots; decision logging; later web/MVC UI.
 - Keep boundaries clean: raw import -> normalized application/domain models -> persistence -> bar/indicator calculations -> deterministic 5M authority -> 1M execution -> separate overnight decision -> logged outcome/backtest.
 - Use pure, testable calculations/state transitions; make data source, time zone, session boundary, missing-data and freshness behavior explicit.
