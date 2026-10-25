@@ -186,7 +186,7 @@ These maps are engineering proposals, not source-derived historical truths. They
 - Current ON move is measured from the most recent regular-session close to the latest reliable overnight/premarket price, with timestamp and feed shown. At >=3%, classify at least `WATCH`; do not automatically block solely because of the move.
 - If news/catalyst feed access or freshness is unverified, use `DATA?`, not “catalyst clear.”
 
-These defaults are ready for implementation as a versioned configuration, but must be evaluated on labeled historical cases before production thresholds are frozen.
+The scoring/status calculation is implemented in `BoringOvernightEvaluator` on the feature branch. Data ingestion, calendar-aware return construction, persistence, and consumer wiring remain unimplemented. These defaults must be evaluated on labeled historical cases before production thresholds are frozen.
 
 ## 11. Validation matrix and acceptance criteria
 
@@ -218,5 +218,5 @@ Measure false-positive READY rate, missed qualified candidates, ON win rate, mea
 
 ## [Uncertainties]
 - The proposed close-to-open ON interval and positive-return consistency definition are candidates to confirm, not established final rules.
-- Component point maps and several thresholds are not present in the source material; no mapping is invented here.
-- Data provider entitlements and news-source availability/licensing have not been verified. The current user-provided exclusion list is captured; whether every symbol remains currently Schwab-unavailable has not been independently checked.
+- `BORING-0.1-PROVISIONAL` component point maps are engineering proposals now implemented in code; they are not source-derived truths and have not been evaluated on labeled historical cases.
+- Data provider entitlements and news-source availability/licensing have not been verified. The current user-provided exclusion list is captured and covered by unit tests; whether every symbol remains currently Schwab-unavailable has not been independently checked.
