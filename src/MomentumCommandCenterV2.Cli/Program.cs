@@ -10,8 +10,8 @@ if (args.Length > 0 &&
     if (args.Length < 4 ||
         !decimal.TryParse(args[2], NumberStyles.Number, CultureInfo.InvariantCulture, out var entryPrice))
     {
-        Console.Error.WriteLine("Usage: overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <overnight-high-excursions.csv> [desired-touch-percent] [minimum-net-percent] [estimated-costs-percent]");
-        Console.Error.WriteLine("CSV must contain verified historical overnight high-excursion percentages, one per row, with an optional 'excursion_percent' header.");
+        Console.Error.WriteLine("Usage: overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <eligible-window-high-excursions.csv> [desired-touch-percent] [minimum-net-percent] [estimated-costs-percent]");
+        Console.Error.WriteLine("CSV must contain verified historical order-eligible-window high-excursion percentages, one per row, with an optional 'excursion_percent' header.");
         return 2;
     }
 
@@ -50,7 +50,7 @@ if (args.Length > 0 &&
         {
             Symbol = args[1],
             EntryPrice = entryPrice,
-            CompletedOvernightHighExcursionsPercent = excursions,
+            CompletedEligibleWindowHighExcursionsPercent = excursions,
             DesiredHistoricalTouchProbabilityPercent = desiredTouch,
             MinimumNetProfitPercent = minimumNet,
             EstimatedRoundTripCostsPercent = estimatedCosts
@@ -203,6 +203,6 @@ Console.WriteLine();
 Console.WriteLine("Read-only Alpaca provider test:");
 Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-check [SYMBOL]");
 Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- alpaca-news-check [SYMBOL]");
-Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <overnight-high-excursions.csv> [desired-touch%] [minimum-net%] [estimated-costs%]");
+Console.WriteLine("  dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell <SYMBOL> <ENTRY_PRICE> <eligible-window-high-excursions.csv> [desired-touch%] [minimum-net%] [estimated-costs%]");
 Console.WriteLine("Configure Alpaca:ApiKey and Alpaca:ApiSecret with .NET User Secrets, or use the MCC_ALPACA_API_KEY and MCC_ALPACA_API_SECRET environment variables.");
 return 0;
