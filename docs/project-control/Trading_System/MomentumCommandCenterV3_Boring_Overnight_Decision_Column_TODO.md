@@ -145,7 +145,7 @@ Open decisions. For the first prototype, use the recommendations below as provis
 - Define component score-to-points mappings for all eight Boringness score components; the weights alone are not sufficient to calculate a score.
 - Provisional volatility metric: standard deviation of daily overnight returns over the same 20-session window. Define the median-to-mean comparison as a scored feature with a configurable tolerance; do not hard-reject on an unvalidated tolerance.
 - Choose/verify a catalyst/news source or use timestamped manual review; unknown catalyst status must not silently pass.
-- [DONE 2026-10-25] User supplied the current 58-symbol Schwab exclusion list. Canonical source: `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. Next: implement a shared exclusion service and tests; treat future additions as append-only unless user explicitly authorizes removal.
+- [DONE 2026-10-25] User supplied the current 58-symbol Schwab exclusion list. Canonical source: `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. A shared `SchwabExclusionList` provider and tests have now been added on `feature/alpaca-readonly-provider-smoke-test`; the new code has not yet been rerun locally. Next: run the full test suite, then wire this provider into candidate qualification/scanners/watchlist and add end-to-end exclusion tests. Treat future additions as append-only unless user explicitly authorizes removal.
 - Supply known-good, known-bad, catalyst-spike, overextended, and excluded symbol/date fixtures for validation.
 
 No column/study implementation should claim profitability from compilation or a few chart examples. Keep no-auto-order behavior.
