@@ -12,7 +12,7 @@ V3 should not require the user to ask ChatGPT for final approval for every overn
 
 ## Deliverable order
 
-**Current implementation checkpoint (2026-10-25):** `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` implements deterministic `BORING-0.1-PROVISIONAL` metrics, score components, reason codes, and conservative status precedence using the shared Schwab exclusion provider. Tests were added in `tests/MomentumCommandCenterV2.Tests/BoringOvernightEvaluatorTests.cs`; they have **not yet been run**. The user's reported 65/65 passing suite predates these evaluator tests.
+**Current implementation checkpoint (2026-10-25):** `src/MomentumCommandCenterV2.Infrastructure/MarketData/BoringOvernightEvaluator.cs` implements deterministic `BORING-0.1-PROVISIONAL` metrics, score components, reason codes, and conservative status precedence using the shared Schwab exclusion provider. Tests were added in `tests/MomentumCommandCenterV2.Tests/BoringOvernightEvaluatorTests.cs`; they now pass in CI (81 total, 0 failed). The feature-branch GitHub Actions run on commit `75b0dccc4f5eaa6765e139adfa60f653c28846f2` passed: build succeeded and 81/81 tests passed after fixing the baseline fixture to honor the 5D > 20D gate.
 
 Remaining pipeline gaps: data/session ingestion, catalyst source, snapshot persistence, current 5M state adapter, and consumer integration. Do not call the feature production-ready until the updated test suite passes and historical fixtures are evaluated.
 
