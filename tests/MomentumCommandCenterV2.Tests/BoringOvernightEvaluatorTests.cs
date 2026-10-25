@@ -131,6 +131,23 @@ public sealed class BoringOvernightEvaluatorTests
     }
 
     [Fact]
+    public void ExtensionCautionProducesWatchRatherThanReady()
+    {
+        var result = CreateEvaluator().Evaluate(GoodInput() with { ExtensionDanger = true });
+        Assert.Equal(BoringOvernightStatus.Watch, result.Status);
+        Assert.Contains("WATCH_CURRENT_EXTENSION", result.ReasonCodes);
+    }
+
+    [Fact]
+    public void HighScoreNeverOverridesHardGate()
+    {
+        var result = CreateEvaluator().Evaluate(GoodInput() with { Price = 4.99 });
+        Assert.NotNull(result.Score);
+        Assert.Equal(BoringOvernightStatus.Blocked, result.Status);
+        Assert.Contains("GATE_PRICE_BELOW_MIN", result.ReasonCodes);
+    }
+
+    [Fact]
     public void DeterministicInputProducesSameOutput()
     {
         var input = GoodInput();
