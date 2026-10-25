@@ -25,6 +25,18 @@ public sealed record AlpacaLatestBar(
     long Volume);
 
 /// <summary>
+/// Minimal article metadata returned by Alpaca's News API.
+/// </summary>
+public sealed record AlpacaNewsArticle(
+    string Id,
+    string Headline,
+    string? Summary,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    string? Url,
+    IReadOnlyList<string> Symbols);
+
+/// <summary>
 /// Safe summary of a successful account-authentication check.
 /// Account identifiers and credential values are intentionally not returned.
 /// </summary>
@@ -158,6 +170,99 @@ public sealed class AlpacaApiClient
             RequiredDecimal(bar, "c"),
             RequiredInt64(bar, "v"));
     }
+
+    /// <summary>
+    /// Retrieves recent news for one symbol. A successful response verifies endpoint access,
+    /// not complete news coverage or catalyst clearance.
+    /// </summary>
+    public async Task<IReadOnlyList<AlpacaNewsArticle>> GetLatestNewsAsync(
+        string symbol,
+        int limit = 5,
+        CancellationToken cancellationToken = default)
+    {
+        _options.Validate();
+
+        if (string.IsNullOrWhiteSpace(symbol))
+            throw new ArgumentException("A stock symbol is required.", nameof(symbol));
+        if (limit is < 1 or > 50)
+            throw new ArgumentOutOfRangeException(nameof(limit), "News limit must be between 1 and 50.");
+
+        var normalizedSymbol = symbol.Trim().ToUpperInvariant();
+        var start = Uri.EscapeDataString(DateTimeOffset.UtcNow.AddHours(-24).ToString("O", CultureInfo.InvariantCulture));
+        var end = Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
+        var escapedSymbol = Uri.EscapeDataString(normalizedSymbol);
+        var url = CombineUrl(_options.MarketDataBaseUrl,
+            $"/v1beta1/news?symbols={escapedSymbol}&limit={limit}&sort=desc&start={start}&end={end}");
+
+        using var request = CreateRequest(HttpMethod.Get, url);
+        using var response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Alpaca news request for {normalizedSymbol} failed with HTTP {(int)response.StatusCode} ({response.StatusCode}).",
+                null,
+                response.StatusCode);
+        }
+
+        await using var stream = await response.Content
+            .ReadAsStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+        using var document = await JsonDocument.ParseAsync(
+            stream,
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        if (!document.RootElement.TryGetProperty("news", out var articles) ||
+            articles.ValueKind != JsonValueKind.Array)
+            throw new FormatException("Alpaca news response did not contain a news array.");
+
+        var result = new List<AlpacaNewsArticle>();
+        foreach (var article in articles.EnumerateArray())
+        {
+            var createdAt = RequiredTimestamp(article, "created_at");
+            var updatedAt = article.TryGetProperty("updated_at", out var updated) &&
+                updated.ValueKind == JsonValueKind.String &&
+                DateTimeOffset.TryParse(updated.GetString(), CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsedUpdated)
+                    ? parsedUpdated
+                    : createdAt;
+            var symbols = article.TryGetProperty("symbols", out var symbolsElement) &&
+                symbolsElement.ValueKind == JsonValueKind.Array
+                ? symbolsElement.EnumerateArray()
+                    .Where(x => x.ValueKind == JsonValueKind.String)
+                    .Select(x => x.GetString()!)
+                    .ToArray()
+                : Array.Empty<string>();
+
+            result.Add(new AlpacaNewsArticle(
+                article.TryGetProperty("id", out var id) ? id.ToString() : string.Empty,
+                RequiredString(article, "headline"),
+                OptionalString(article, "summary"),
+                createdAt,
+                updatedAt,
+                OptionalString(article, "url"),
+                Array.AsReadOnly(symbols)));
+        }
+
+        return result.AsReadOnly();
+    }
+
+    private static DateTimeOffset RequiredTimestamp(JsonElement element, string propertyName)
+    {
+        var timestampText = RequiredString(element, propertyName);
+        if (!DateTimeOffset.TryParse(timestampText, CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var timestamp))
+            throw new FormatException($"Alpaca response contains invalid timestamp field '{propertyName}'.");
+        return timestamp;
+    }
+
+    private static string? OptionalString(JsonElement element, string propertyName) =>
+        element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 
     private HttpRequestMessage CreateRequest(HttpMethod method, string url)
     {
