@@ -68,7 +68,7 @@ Detailed companion: `/Trading System/MomentumCommandCenterV3_Boring_Overnight_De
 - Bands: 90–100 PERFECT BORING; 80–89 VERY GOOD; 70–79 POSSIBLE; 60–69 AGGRESSIVE; below 60 REJECT / NOT BORING ENOUGH. Score never overrides hard gates.
 - Preferred ranges: current ON move <3% (>=3% increases penalty/review); 20D average +0.10% to <2.0%; 5D average positive to <5.0%; consistency >=70% preferred and >=80% excellent; median should be positive and reasonably close to mean.
 - Penalize abnormal intraday moves/volume, sharp extension, fresh news/earnings/catalyst, M&A/regulatory/government decisions, corporate actions, sector/regime shocks, deteriorating 5M structure.
-- [USER PROVIDED 2026-10-25] Canonical current Schwab exclusion list is maintained in `Schwab_Exclusions_SourceOfTruth.md` (58 symbols). Treat it as append-oriented; do not remove entries without explicit review. Load it once through a shared exclusion service and apply it consistently to Boring Overnight, scanners, Morning Report, and MarketWatch.
+- [USER PROVIDED 2026-10-25] Canonical current Schwab exclusion list is maintained in `Schwab_Exclusions_SourceOfTruth.md` (55 symbols). Treat it as append-oriented; do not remove entries without explicit review. Load it once through a shared exclusion service and apply it consistently to Boring Overnight, scanners, Morning Report, and MarketWatch.
 
 ### Implementation sequence
 - [NOW] Write column specification/data contract: field definitions, windows, session boundaries, source, freshness, missing-data handling, reason codes, extended-hours assumptions.
