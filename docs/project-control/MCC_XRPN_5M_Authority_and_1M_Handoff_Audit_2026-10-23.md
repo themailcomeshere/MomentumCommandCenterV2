@@ -1,6 +1,6 @@
 # MCC V3 — XRPN 5M Authority and 1M Handoff Audit
 **As of:** 2026-10-25 (Arizona time)  
-**Status:** Screenshot evidence reviewed; normal 5M and diagnostic Permission sections compared; V14.5 1M proxy divergence confirmed in source. No study logic changed.
+**Status:** XRPN 5M Permission behavior explained and source audit complete; V14.5 1M proxy differences documented for a separate robustness audit. No study logic changed.
 
 ## 1. Evidence already provided
 - User supplied `Screenshot 2026-10-23 154303.png`; chart dates are set to 10/02/2026 and the top-left chart date is not authoritative.
@@ -35,7 +35,7 @@ These are verified source differences, not yet a confirmed production defect. Th
 5. Then validate candidate/confirmation/event-armed READY/expiry/extension block/re-entry and runner/swing transitions, keeping `NO NEW SIGNAL`, `HOLD`, and `EXIT` distinct.
 
 ## 5. Status / user asks
-- Screenshot/bubble timestamp evidence: **received and reviewed**. No re-upload needed.
+- Screenshot/bubble timestamp evidence: **received and reviewed**. No re-upload needed. At the 12:45 region, the 5M diagnostic reports `Perm=0`, `PRAW=0`, `PBLOCK=2`, `State=0`; the aligned 1M debug bubbles also show no active permission/execution state. This is consistent with the current 5M major-failure gate, not evidence of a 5M diagnostic defect.
 - Exact study identity: V14.5 source is present in Library and consistent with the screenshot label; no request to identify it again.
-- Remaining user-owned input: none for the source audit. A chart-level same-bar comparison is still needed to prove whether the V14.5 proxy divergence changes the actual decision on XRPN; existing source and screenshot evidence should be used first.
+- Remaining user-owned input: none for the XRPN Permission finding. The screenshot supports the expected 12:45 blocked state. The 1M proxy differences remain a separate robustness risk to test against other bars/scenarios; no new screenshot is requested.
 - No code changes or profitability claims are authorized by this audit alone.
