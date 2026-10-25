@@ -56,7 +56,7 @@ These are current project design thresholds, not proof of profitability. Preserv
 - Symbol is not on the Schwab-excluded securities list.
 - No material event/catalyst risk incompatible with a boring overnight hold.
 
-Current recorded Schwab exclusions: `SHTDY, FMX, WBKCY, METCZ, ANL, GGAL, KOF, VCRE`. Preserve any additional exclusions recorded in the current project source of truth; do not treat this short list as exhaustive if another maintained list is newer.
+Current complete user-provided list (58 symbols) is in `../Schwab_Exclusions_SourceOfTruth.md` (canonical repository path: `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`). It is append-oriented; do not remove entries without explicit review.
 
 ### Boringness score weights (100 points)
 
@@ -145,7 +145,7 @@ Open decisions. For the first prototype, use the recommendations below as provis
 - Define component score-to-points mappings for all eight Boringness score components; the weights alone are not sufficient to calculate a score.
 - Provisional volatility metric: standard deviation of daily overnight returns over the same 20-session window. Define the median-to-mean comparison as a scored feature with a configurable tolerance; do not hard-reject on an unvalidated tolerance.
 - Choose/verify a catalyst/news source or use timestamped manual review; unknown catalyst status must not silently pass.
-- Reconcile the full maintained Schwab exclusion list(s). The cheat sheet names `SHTDY, FMX, WBKCY, METCZ, ANL, GGAL, KOF, VCRE`, but explicitly notes that other maintained lists contain additional symbols. Data not found in sources for the full union; search all project/Library lists before asking the user.
+- [DONE 2026-10-25] User supplied the current 58-symbol Schwab exclusion list. Canonical source: `docs/project-control/Schwab_Exclusions_SourceOfTruth.md`. Next: implement a shared exclusion service and tests; treat future additions as append-only unless user explicitly authorizes removal.
 - Supply known-good, known-bad, catalyst-spike, overextended, and excluded symbol/date fixtures for validation.
 
 No column/study implementation should claim profitability from compilation or a few chart examples. Keep no-auto-order behavior.
@@ -155,4 +155,4 @@ No column/study implementation should claim profitability from compilation or a 
 
 - The current Library contains `MomentumCommandCenterV3_2_1M_V14_5.txt`, labeled V14.5 (event-armed opportunity, fresh-trigger memory, candidate re-arm, finite execution window). Audit this source before requesting any new chart inputs; the screenshot does not prove the locally installed study matches the Library byte-for-byte.
 - Recommended implementation defaults: regular-session close to next regular-session open in `America/New_York`; premarket/after-hours tracked separately; 20-session standard deviation of overnight returns as the provisional volatility metric; all score mappings configurable until historical validation.
-- Do not ask the user to repeat screenshot/bubble evidence already provided. User input is only needed for the complete Schwab exclusion union and representative known-good/known-bad ticker/date cases if those cannot be recovered from existing project sources.
+- Do not ask the user to repeat screenshot/bubble evidence already provided. Complete exclusion list is now supplied. If representative labelled validation fixtures cannot be recovered from existing sources, ask for a small set only after source review.
