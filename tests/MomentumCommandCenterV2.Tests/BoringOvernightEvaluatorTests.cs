@@ -137,7 +137,10 @@ public sealed class BoringOvernightEvaluatorTests
         var evaluator = CreateEvaluator();
         var first = evaluator.Evaluate(input);
         var second = evaluator.Evaluate(input);
-        Assert.Equal(first, second);
+        Assert.Equal(first.Symbol, second.Symbol);
+        Assert.Equal(first.Status, second.Status);
+        Assert.Equal(first.Score, second.Score);
+        Assert.Equal(first.ReasonCodes, second.ReasonCodes);
         Assert.Equal(first.ScoreComponents.OrderBy(x => x.Key), second.ScoreComponents.OrderBy(x => x.Key));
     }
 }
