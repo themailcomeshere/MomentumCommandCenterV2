@@ -34,7 +34,7 @@ Status precedence: `BLOCKED` for a known disqualifying condition; otherwise `DAT
 | 20D mean ON return | >= +0.10% | Use completed overnight intervals only. |
 | 5D vs 20D mean | 5D mean ON return > 20D mean ON return | This is the existing cheat-sheet rule; validate it rather than silently changing it. |
 | Trend | Price above 20D SMA | Specify which price/session close and same-day treatment. |
-| Exclusions | Not on the maintained Schwab exclusion list | Load `docs/project-control/Schwab_Exclusions_SourceOfTruth.md` through one shared provider; list supplied 2026-10-25 contains 58 symbols and is append-oriented. |
+| Exclusions | Not on the maintained Schwab exclusion list | Load `docs/project-control/Schwab_Exclusions_SourceOfTruth.md` through one shared provider; list supplied 2026-10-25 contains 55 symbols and is append-oriented. |
 | Catalyst | No known material event incompatible with the overnight strategy | Requires a separate evidence-backed event source or explicit manual clearance. Unknown is not clear. |
 
 Any gate with unavailable inputs must not default to pass. Corporate actions and symbol changes require careful handling to avoid false returns.
