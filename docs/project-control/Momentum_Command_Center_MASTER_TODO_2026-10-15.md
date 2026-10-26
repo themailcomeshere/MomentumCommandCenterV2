@@ -321,3 +321,11 @@ Goal: get the safest useful MCC workflow into manual use this week; do not call 
 
 ### OTC fee policy
 - [USER CLARIFICATION] Do not spend current launch time reconciling the secondary OTC list. Keep the canonical repository list append-oriented and enforce it where already supported; revisit the $6.95 fee versus opportunity-cost decision later using actual trade economics. Do not silently add/remove exclusions.
+
+
+## 19. News-assisted exit review — 2026-10-26
+
+- [SPEC CREATED] `docs/project-control/Trading_System/Boring_Overnight_Unfilled_Sell_News_Review_v0_1.md` defines evidence fields, publication/retrieval timestamps, thesis-impact analysis, manual choices, unknown/conflicting states, profitability math, and strict no-auto-order boundaries.
+- [SOURCE VERIFIED] Master already has `AlpacaApiClient.GetLatestNewsAsync()` and `alpaca-news-check`; it fetches up to five articles from the previous 24 hours. This is not complete market-news coverage and a zero-result response is not proof of no news.
+- [PR #6 OPEN / CI CHECKING] `alpaca-news-check` output enhancement adds provider summary, article update time, tagged symbols, URL, retrieval time, and explicit coverage warning. Do not call this a complete diagnosis workflow.
+- [NEXT] Build a read-only open-position review that combines retrieved news with known actual entry fill, current order status/limit, current quote/volume/spread, and any verified halt reason. Unknown inputs remain unknown. Any proposed target change is a manual option only.
