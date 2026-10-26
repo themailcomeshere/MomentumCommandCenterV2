@@ -231,3 +231,12 @@ The +0.5% target is the operator's chosen heuristic (motivated by observed media
 
 - [2026-10-26 STATUS] Source-linked news-assisted review is now specified in `Boring_Overnight_Unfilled_Sell_News_Review_v0_1.md`. Master already has the read-only Alpaca News API and `alpaca-news-check`; PR #6 improved the output and passed CI. The full position-aware diagnosis remains unimplemented.
 - [2026-10-26 STATUS] Existing `BoringOvernightEvaluator` already injects and checks the canonical `SchwabExclusionList`. End-to-end scanner/Morning Report/MarketWatch qualification paths remain future integration work. Secondary OTC list reconciliation is deferred by the operator.
+
+## October export review — 2026-10-26 (feature-branch evidence)
+
+Detailed audit: [OHLCV-Opportunity-Readiness-Audit-20261026.md](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md).
+
+- The new October 2 file is HPK 1M, not XRPN 1M; it duplicates the existing HPK rows and has 176 missing minute timestamps across its 390-minute span. It does not complete the XRPN October 2 pair.
+- October 19 XRPN has limited manually entered chart parity (20 bars/timeframe) but known missing intervals and no internal READY gate states.
+- The +0.5% sell target remains a user heuristic benchmark, not a fixed rule. Alternative limits require a full-window historical reach study and out-of-sample evaluation.
+- The available bars do not cover the full GTC_EXT eligible window. The placeholder high-excursion CSV is not research data. Keep affected rows `DATA_GAP`; do not infer fill probability from target touches.
