@@ -13,9 +13,28 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"];
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"];
     private readonly string _feed = configuration["MarketData:Alpaca:Feed"] ?? "iex";
+    private long _lastSuccessfulValidationUnixMilliseconds;
+    private int _lastSuccessfulValidationBarCount;
 
     public string ProviderName => "Alpaca";
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_key) && !string.IsNullOrWhiteSpace(_secret);
+    public DateTimeOffset? LastSuccessfulDataValidationUtc
+    {
+        get
+        {
+            var timestamp = Interlocked.Read(ref _lastSuccessfulValidationUnixMilliseconds);
+            return timestamp == 0 ? null : DateTimeOffset.FromUnixTimeMilliseconds(timestamp);
+        }
+    }
+    public bool HasSuccessfulDataValidation => LastSuccessfulDataValidationUtc.HasValue;
+    public int LastSuccessfulDataValidationBarCount => Volatile.Read(ref _lastSuccessfulValidationBarCount);
+
+    private void RecordSuccessfulValidation(int barCount)
+    {
+        if (barCount <= 0) return;
+        Volatile.Write(ref _lastSuccessfulValidationBarCount, barCount);
+        Interlocked.Exchange(ref _lastSuccessfulValidationUnixMilliseconds, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+    }
     public IReadOnlyList<string> Capabilities { get; } = new[]
     {
         "Historical 1m/5m OHLCV bars", "REST only; no websocket yet", "Feed selection configured server-side",
@@ -51,6 +70,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
                 item.GetProperty("o").GetDouble(), item.GetProperty("h").GetDouble(),
                 item.GetProperty("l").GetDouble(), item.GetProperty("c").GetDouble(),
                 item.GetProperty("v").GetInt64(), ProviderName, _feed));
+        RecordSuccessfulValidation(result.Count);
         return result;
     }
 
