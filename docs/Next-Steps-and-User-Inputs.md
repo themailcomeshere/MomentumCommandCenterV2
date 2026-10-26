@@ -146,3 +146,25 @@ Tests are green, but live market-data verification failed at configuration. API 
 2. dotnet user-secrets set "MarketData:Alpaca:ApiSecret" "<YOUR_EXISTING_ALPACA_SECRET>" --project src/MomentumCommandCenterV2.API
 
 Do not paste actual secrets into chat or commit them. Restart API, verify /api/providers/status says Alpaca configured, then repeat compare endpoint. If still unconfigured, confirm same machine/user and exact project path. Massive can remain unconfigured.
+
+
+## 2026-10-26 — Final Overnight review: exact remaining actions
+
+### What the assistant did
+- Inspected all three available chart images identified as AHR, FMS, and NNN.
+- The visible chart headers show 2026-10-19 through 2026-10-21, not the intended 2026-10-21 through 2026-10-23. The images are retained as provisional Oct 19–21 visual evidence only; no date substitution or inferred data.
+- Wrote the visual-only observations and explicit evidence gaps to docs/NewChatHandoff.md.
+
+### Your exact next actions
+
+1. In Visual Studio, stop the running API and start it again after saving User Secrets. Use the API project as the startup project / confirm the launch profile runs MomentumCommandCenterV2.API.
+2. Open the same localhost origin/port used by that Visual Studio process: /api/providers/status and /api/market-data/compare?symbol=SPY&timeframe=5m&from=2026-10-23T13:30:00Z&to=2026-10-23T13:50:00Z.
+3. Send back sanitized results only: provider configured/status/error, returned bar count, first/latest source timestamps, feed name, and any persistence count. Never send the key, secret, authorization header, or token.
+4. If provider remains unconfigured, check the API project's UserSecretsId is MomentumCommandCenterV2-API-Local and the Visual Studio launch environment is Development. Confirm the secrets were saved under the same Windows user account running Visual Studio.
+5. For the overnight screenshots, first check whether the correct AHR/FMS/NNN files for Oct 21–23 are already present in Project Sources. If so, identify those exact files; if not, provide them when convenient. Do not repeat the invalid Oct 26–28 capture window.
+
+### What remains blocked
+- Date-correct visual conclusion for Oct 21–23.
+- Full GTC_EXT target-touch study: source-backed regular close + complete subsequent 07:00–20:00 Eastern bars, missing intervals marked DATA_GAP.
+- Any claim that +0.5% is optimal, or any live Overnight READY status, until full-window outcomes, catalyst review and required data gates are validated.
+- Provider smoke test until actual Alpaca bars are returned by the Visual Studio-hosted API.
