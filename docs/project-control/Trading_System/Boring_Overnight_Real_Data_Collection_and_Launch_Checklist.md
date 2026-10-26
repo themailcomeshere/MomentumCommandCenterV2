@@ -23,7 +23,7 @@ The calculator expects an optional header named excursion_percent followed by on
 
 ## 3. Define one observation consistently
 
-Preferred for evaluating the actual strategy: actual filled buy price and maximum price observable during the exact session(s) in which the intended sell order is eligible. If actual fills are unavailable, label the baseline REFERENCE_CLOSE, not ACTUAL_FILL. Never blend these baselines without retaining their type.
+Maintain two separate analyses. **Strategy-rule benchmark:** baseline is the relevant regular-session close; target = close × 1.005; measure touch/no-touch and first-touch time during the following GTC_EXT-eligible window. **Historical-reach research:** baseline is also explicitly defined (reference close or actual fill), and historical eligible-window highs are used to estimate which alternative target levels were historically reachable at a chosen empirical rate. **Actual-trade journal:** use real buy/sell fills to calculate realized outcomes. Never pool these three questions or label a historical high-touch rate as a fill probability. The fixed +0.5% rule is the benchmark; a history-derived target is a candidate alternative to compare against it, not an automatic replacement.
 
 For each symbol/date, record:
 1. Symbol and security type; confirm not OTC and not on either exclusion list.
@@ -75,9 +75,10 @@ Create eligible-window-high-excursions.csv with a header named excursion_percent
 Replace every example number with calculated values from the verified ledger. One row equals one valid completed observation. Do not paste untraceable values. Keep the ledger and the generated file together.
 
 ### Step E — Sanity-check output
-1. Confirm at least 20 valid numeric observations.
-2. Independently sort observations and calculate the empirical percentile. Current 70% desired touch rate maps to the 30th-percentile high-excursion threshold; confirm against code/tests before interpreting.
-3. Independently verify the proposed limit, return percentage and tick rounding.
+1. For the five-row fixed-target pilot, verify each target = regular-session close × 1.005, with valid tick rounding, and record whether the eligible-window high reached it. Do not require 20 rows for this pilot.
+2. For the separate percentile calculator, confirm at least 20 valid numeric observations.
+3. Independently sort the percentile-calculator observations and calculate the empirical percentile. Current 70% desired touch rate maps to the 30th-percentile high-excursion threshold; confirm against code/tests before interpreting.
+4. Independently verify the proposed limit, return percentage and tick rounding.
 4. Hand-check at least one row from baseline and observed high.
 5. If output suggests a very large return while the strategy target is +0.5%, stop and verify units, baseline, session, sample mix and percentile.
 6. Treat high-touch rate as a proxy, not a fill probability. Better fill evidence requires quote/trade sequence, spread, liquidity and order timing.
