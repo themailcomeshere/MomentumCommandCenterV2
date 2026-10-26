@@ -120,3 +120,13 @@ Reduce the rank or move to WATCH/REJECT when current behavior is no longer borin
 ## Source notes
 
 This document consolidates the strategy and cheat-sheet criteria present in the prior Boring Overnight notes and master To-Do. Where source material conflicts or is incomplete, the current explicit rule is preserved and remaining reconciliation/calibration is pending.
+
+## October 26, 2026 — research status and evidence boundary
+
+- The user's current GTC_EXT window is 07:00–20:00 Eastern. During Eastern daylight time this maps to 04:00–17:00 Arizona; research must cover the complete eligible interval, not just regular-session hours.
+- The +0.5% sell target is the user's current heuristic benchmark, not a fixed strategy rule. Keep it as one candidate and compare alternative target limits only after a source-backed historical reach study with out-of-sample evaluation.
+- The current October 19 XRPN OHLCV pair is daytime-only and has known one-minute timestamp gaps. It cannot establish full-window overnight reach or actual fill probability.
+- The newly uploaded October 2 file was actually HPK 1M and duplicates the October 2 portion of the existing HPK multi-day file. It does not create an XRPN October 2 pair.
+- `eligible-window-high-excursions.csv` contains placeholder values, not market observations. Do not use it to estimate target reach.
+- Until full eligible-window OHLCV and source-backed regular-session closes are available, mark affected rows `DATA_GAP`; do not recommend a new limit from incomplete data. Keep actual fills/fees separate from reference-close touch research.
+- Detailed uncertainty dispositions and next evidence: `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
