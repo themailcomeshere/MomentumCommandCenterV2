@@ -87,3 +87,9 @@ It is **not wired** into the replay workflow, `V2SignalEngine`, CLI, API, or fro
 - Missing timestamps in the export are not classified as no-trade intervals versus export omissions.
 - No full GTC_EXT eligible-window dataset or actual-fill dataset was found in the audited files.
 - No internal READY/Permission diagnostic states are embedded in the paired October 19 OHLCV payloads.
+
+## Repository integration note
+
+The GitHub compare result reports this feature branch as diverged from `master` (268 commits ahead, 152 behind). Treat the branch as a working baseline for this audit, not as a safe fast-forward/merge candidate. Reconcile history and file-level changes deliberately before merging.
+
+The opportunity-quality display-label safety change and negative-metric test additions were committed on this branch after the audit. GitHub's combined status endpoint had no status records for the latest branch commit at the time of review; build/test verification is pending.
