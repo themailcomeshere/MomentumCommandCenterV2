@@ -16,7 +16,7 @@
 ## UPC extension-danger example — 2026-10-23
 
 - [PARTIAL — EVIDENCE REVIEWED] Added `docs/Validation/UPC-Extension-Danger-Evidence-Review-20261023.md` for the user's UPC 5M/1M screenshots and event facts. The reported state is 5M `Perm=1`, `PBLOCK=0`, while 1M says `CANDIDATE BLOCKED: EXTENSION DANGER`, `IN-TREND CANDIDATE`, `EXT=2.35`. This is consistent with a valid higher-timeframe permission and a blocked 1M entry; do not weaken the gate.
-- [OPEN] [RESOLVED] User confirmed screenshots/event are from 2026-10-22 and Thinkorswim chart timezone is Arizona.
+- [DONE — USER CONFIRMED] Screenshots/event are from 2026-10-22 and Thinkorswim chart timezone is Arizona. This resolves the date/timezone question only; it does not classify the missing intervals or prove study-state parity.
 - [OPEN] [PARTIAL] Reviewed `data/StrategyReports_UPC_102226.csv`: this is a strategy report covering 09:37–09:47, not a continuous OHLCV export; it cannot establish the reported 09:16–09:36 missing-bar intervals. Obtain a full bar export or exact timestamp inspection. Missing chart bars do not prove zero volume or no movement; never synthesize them.
 - [OPEN] Confirm installed 1M source and `BLK=6` mapping. Study names alone do not prove installed source parity.
 
