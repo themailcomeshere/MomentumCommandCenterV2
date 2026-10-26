@@ -181,3 +181,10 @@ Engineering work: source-backed historical price/session ingestion; compare the 
 ## 9. News-assisted unfilled-sell review (manual decision support)
 
 When a sell remains unfilled, collect current source-linked news and price/liquidity context before suggesting an action. Each review must show: (1) verified news facts with publication/observation times and links; (2) interpretation and confidence; (3) effect on the original thesis; (4) current price, spread/volume and halt status when available; (5) actual entry fill/cost and current sell limit if known; (6) manual choices and risks. A verified adverse deal/catalyst can raise `URGENT_MANUAL_REVIEW`. A halt/pause alone does not mean the thesis is intact. Missing or conflicting coverage must be `NEWS_UNKNOWN`/`CONFLICTING`, never “no news.” Any lower sell limit must be assessed against actual entry economics; the goal can be the smallest profitable exit, but profit cannot be assumed from the close-based target. Never automatically cancel, replace, sell, or change an order.
+
+## October 26 data-readiness update
+
+- The latest uploaded October 2 1M file was mislabeled in its filename: its actual symbol is HPK, and its 214 rows duplicate the October 2 HPK subset in the existing multi-day report. It does not provide the missing XRPN 1M partner for the October 2 XRPN 5M report.
+- The October 19 XRPN parity worksheets contain 20 chart-entered rows per timeframe; the rest are unfilled. Missing minute timestamps remain unresolved, not presumed no-trade.
+- No target-reach calculation is justified until the source-backed regular-session close and complete next GTC_EXT-eligible window are available. Keep historical touch, actual fill, and realized P/L as separate datasets.
+- See the detailed feature-branch audit: https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md
