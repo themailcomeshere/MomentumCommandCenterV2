@@ -172,12 +172,12 @@ Expected input:
 
 ### Follow-up code change
 
-A follow-up branch fixes the nullable symbol warning and makes the missing-file error state the resolved path, required input shape, and 20-sample minimum. It also adds a regression test for a null symbol. Treat these changes as pending until the follow-up PR's CI is green and merged.
+A follow-up fix is merged in PR #2: nullable-symbol handling, actionable missing-file diagnostics, and a null-symbol regression test. Its post-merge CI passed.
 
 ### Before using this calculator
 
-1. Confirm the exact Schwab order type and hours/overnight eligibility for the intended symbol and account.
-2. Verify a historical data feed actually covers those hours. Do not assume Alpaca BOATS overnight data is equivalent to Schwab GTC + Extended eligibility.
+1. Use the operator-confirmed GTC_EXT sell qualifier and reported active window of 7:00 AM–8:00 PM ET for this strategy; EXTO 24h is not required. Verify individual symbol eligibility only when that symbol's ticket is uncertain.
+2. Verify a historical data feed actually covers the GTC_EXT-eligible window. Do not assume Alpaca IEX or BOATS is equivalent to Schwab's full eligible price stream.
 3. Generate at least 20 valid, completed historical eligible-window high excursions with dates and provenance.
 4. Confirm the entry price is the actual average fill price; set realistic round-trip costs and desired net return.
 5. Review the reported empirical high-touch rate and remember that touching a price is not proof of a live limit fill.
@@ -193,8 +193,8 @@ A follow-up branch fixes the nullable symbol warning and makes the missing-file 
 - Candidate limit-buy window 3:00–5:00 PM Arizona time, Monday–Thursday; after actual fill, user sets a limit sell at regular-session close +0.5%, currently described as GTC + Extended.
 - Priority is manually reviewed Boring Overnight decision support; no automated orders.
 
-### Mandatory Schwab order-mode check
-Do not infer that GTC + Extended means 24-hour overnight eligibility. Schwab documentation describes GTC + Extended / thinkorswim EXT 13h as 7:00 AM–8:00 PM Eastern, while overnight execution requires thinkorswim EXTO 24h and an eligible security. Confirm the actual platform, order qualifier, and symbol eligibility in the order ticket. Official sources:
+### Confirmed sell-session definition
+The operator has confirmed GTC_EXT as the intended sell qualifier, with the ticket's reported active window 7:00 AM–8:00 PM Eastern. EXTO 24h is not a requirement for this workflow. Do not re-open the EXTO decision unless the strategy changes. Official background references:
 - https://www.schwab.com/stocks/extended-hours-trading
 - https://international.schwab.com/investment-products/extended-hours-trading
 - https://www.schwab.com/learn/story/how-does-extended-hours-trading-work
@@ -206,17 +206,16 @@ Arizona remains on Mountain Standard Time year-round. During Eastern Daylight Ti
 ADR pass-through fees are depositary fees for certain ADR holdings, not specifically overnight trading fees; amounts/timing vary. The calculator's cost input is a user-supplied round-trip execution estimate for Schwab in this workflow, not Alpaca API/data subscription costs and not automatically retrieved from a broker. Include actual transaction charges and spread/slippage without double-counting; verify against Schwab confirmations/pricing guide: https://www.schwab.com/legal/schwab-pricing-guide-for-individual-investors.
 
 ### Data needed before valid excursion CSV generation
-1. Confirm platform/order qualifier for both buy and sell; establish whether the sell must execute during overnight 8 PM–4 AM Eastern.
-2. Confirm symbol-specific eligibility using the actual Schwab order ticket and thinkorswim Public → 24 Hour Trading watchlist.
-3. Identify the actual historical feeds/entitlements available. Alpaca IEX is single-exchange, SIP is consolidated coverage subject to plan, and BOATS is an overnight ATS feed. BOATS alone does not cover the entire after-hours + overnight + premarket + regular-session lifecycle, and no feed is assumed to reproduce Schwab executable quotes/fills.
+1. Use the already confirmed LMT EXT buy and LMT GTC_EXT sell qualifiers. Check an individual symbol's eligibility only if that ticket is uncertain.
+2. Identify the actual historical feeds/entitlements available. Alpaca IEX is single-exchange, SIP is consolidated coverage subject to plan, and BOATS is an overnight ATS feed. BOATS alone does not cover the entire after-hours + overnight + premarket + regular-session lifecycle, and no feed is assumed to reproduce Schwab executable quotes/fills.
 4. Implement session-aware minute bars and, where available, quotes/trades with named time zones, exchange calendar, holiday/early-close/DST handling, timestamps, feed provenance, missing-interval checks, and corporate-action treatment.
 5. For each observation, preserve symbol/date, reference entry price, window start/end, provider/feed, full coverage/missing-data flags, max favorable/adverse excursion, spread/quote availability, target-touch time, and whether there is actual fill evidence or only a touch proxy.
 6. Generate the CSV only after coverage checks pass. Fail closed for missing intervals, mismatched session, stale feed, invalid data, or fewer than 20 completed observations.
 7. Use at least a multi-month, broad-universe out-of-sample validation to evaluate touch rate, executable quote touch, no-fill rate, net return after costs, adverse excursion, catalyst nights, and market regimes. Twenty samples validate only basic code-path behavior, not strategy reliability.
 8. Review the actual CSV behind the user's AAPL output. Until its provenance and window are verified, that result is only a calculation output. Data not found in sources for a verified Schwab-window-matched sample.
 
-### Weekend/unfilled-position decision still open
-No Friday entries does not prevent a Thursday position from remaining open over the weekend. Define latest entry time, whether Thursday entries are allowed, sell review/cancel/reprice rules, exit deadline, and whether positions may be carried over weekends. Do not auto-cancel or reprice without explicit user authorization. Until the policy is decided, any open position/unfilled exit must remain a visible alert, not a completed cycle.
+### Weekend/unfilled-position handling — operator preference recorded
+Thursday entries and weekend carry are allowed. The operator does not want a predetermined automatic response. For an unfilled sell, review source-linked Market News plus price/volume/liquidity and the original thesis, then present manual options (leave working, consider a lower limit, prioritize an exit, or gather more evidence). No automatic cancel, reprice, or sell. See `Boring_Overnight_Unfilled_Sell_News_Review_v0_1.md`.
 
 ### Release gate
 The +0.5% target is the operator's chosen heuristic (motivated by observed median ON % often around 0.56–1.00%), not a fixed strategy rule or a near-guarantee. It must be compared with history-derived targets. The first usable release should be read-only/manual review with order-eligibility, catalyst, data freshness, liquidity, cost, and weekend-risk gates. It must not submit orders.
@@ -228,3 +227,7 @@ The +0.5% target is the operator's chosen heuristic (motivated by observed media
 - Do not request the user's secondary OTC list for current launch work. Keep the canonical 55-symbol repository list append-oriented and focus on wiring the shared provider where relevant; revisit the $6.95 fee/opportunity-cost trade-off later using actual economics.
 - When an overnight sell remains unfilled, use source-linked Market News plus price/liquidity context to diagnose the thesis and present manual options. A confirmed adverse deal change can trigger urgent manual review; a halt/pause alone is not proof the thesis is intact. Missing/conflicting news must be explicit. Never auto-cancel, replace, sell, or change the limit.
 - Historical-data request: for the first Boring Overnight pilot, an OHLCSV export is useful only if timestamps and coverage include the relevant regular close and following GTC_EXT-eligible sell window. If the export does not contain extended-hours bars for the full interval, mark DATA_GAP. High-touch is not fill probability.
+
+
+- [2026-10-26 STATUS] Source-linked news-assisted review is now specified in `Boring_Overnight_Unfilled_Sell_News_Review_v0_1.md`. Master already has the read-only Alpaca News API and `alpaca-news-check`; PR #6 improved the output and passed CI. The full position-aware diagnosis remains unimplemented.
+- [2026-10-26 STATUS] Existing `BoringOvernightEvaluator` already injects and checks the canonical `SchwabExclusionList`. End-to-end scanner/Morning Report/MarketWatch qualification paths remain future integration work. Secondary OTC list reconciliation is deferred by the operator.
