@@ -6,7 +6,7 @@
 ## Executive result
 
 - **A usable aligned XRPN 1M/5M pair exists for October 19, 2026**, in `data/StrategyReports_XRPN_102026_933.csv` and `data/StrategyReports_XRPN_102026_5m_offset_1027.csv`. Both payloads cover approximately 06:30–13:00 Arizona time; the 5M file starts at 06:20.
-- **The apparent October 2 full-day 1M/5M pair is not aligned.** The October 22 1M file is now correctly named `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv`. It was previously named `StrategyReports_XRPN_10022026_1M_EntireDay.csv`, which incorrectly suggested October 2. The companion `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` is October 2. Do not combine them.
+- **The October 2 XRPN pair is still not aligned.** The new file uploaded as `data/StrategyReports_XRPN_10022026_1M_EntireDay_2.csv` actually has `Symbol: HPK` in its report header and all 214 payload rows are HPK 1M bars for October 2. I renamed it to `data/StrategyReports_HPK_10022026_1M_EntireDay.csv`; it exactly duplicates the October 2 HPK rows in the existing HPK multi-day export. The companion `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` is XRPN 5M, so the symbol mismatch remains. Separately, the October 22 XRPN 1M file is correctly named `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv`.
 - The October 19 pair is sufficient to continue checking export structure and 1M/5M OHLCV consistency, but **not sufficient to diagnose READY gates**: the paired rows contain OHLCV, not the actual per-bar ThinkScript Permission, candidate, extension, READY, re-arm, or expiration states.
 - **The current files do not support a valid Boring Overnight target-reach estimate.** They do not cover the full GTC_EXT-eligible window around the regular close, and `eligible-window-high-excursions.csv` contains placeholder values 1–20 rather than sourced historical observations.
 
@@ -17,8 +17,8 @@
 | `data/StrategyReports_XRPN_102026_933.csv` | 2026-10-19, 06:30–13:00; 355 1M payload rows | Paired 1M input; 31 non-one-minute intervals detected in this file. |
 | `data/StrategyReports_XRPN_102026_5m_offset_1027.csv` | 2026-10-19, 06:20–13:00; 81 5M payload rows | Same symbol/date as the 1M file; regular five-minute timestamp spacing in this export. |
 | `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv` | 2026-10-22, 06:30–13:00; 267 1M payload rows | Filename now matches the report header and embedded epoch date; the previous misleading filename was corrected. |
-| `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` | 2026-10-02, 06:30–13:00; 79 5M payload rows | October 2 5M data, but no matching October 2 1M full-day file is established by the files audited here. |
-| `data/StrategyReports_HPK_10022026_to_10032026_1M_EntireDay.csv` | 2026-10-01 06:30 through 2026-10-02 12:59; 422 1M payload rows | Two-day HPK file with many gaps; not an XRPN signal-parity pair. |
+| `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` | 2026-10-02, 06:30–13:00; 79 5M payload rows | XRPN 5M bars; no same-symbol XRPN 1M partner is established by the audited files. |
+| `data/StrategyReports_HPK_10022026_to_10032026_1M_EntireDay.csv` | 2026-10-01 06:30 through 2026-10-02 12:59; 422 1M payload rows | Two-day HPK file with many gaps; its October 2 subset exactly matches the 214 rows in the newly uploaded HPK file. Not an XRPN signal-parity pair. |
 | `data/StrategyReports_UPC_102226.csv` | 2026-10-22, 09:37–09:47; 4 1M payload rows | Short strategy report; cannot settle the separate 09:16–09:36 UPC interval question. |
 | `eligible-window-high-excursions.csv` | No symbol/date/source columns; values 1–20 | Placeholder/sample data, not eligible-window market observations. Exclude from research. |
 
@@ -40,14 +40,14 @@ These checks validate only internal consistency for complete windows. They do no
 
 Use October 19 as the first aligned pair for a **bar-coverage and timeline pilot**, not as a complete explanation of rare READY events.
 
-The export files do not include internal ThinkScript states. Therefore they cannot by themselves count:
+The OHLCV export payloads do not include internal ThinkScript states. The chart-parity worksheets do contain manually entered chart values for a limited sample, but not READY/Permission state. Therefore these sources cannot by themselves count:
 - candidate trigger and re-arm events;
 - 5M raw Permission and latched Permission transitions;
 - extension-danger blocks;
 - READY activation and expiration;
 - the specific reason a candidate failed after 09:00 Arizona.
 
-The already documented October 2 diagnostic screenshot remains the evidence for the October 2 Permission revocation; it should not be conflated with the October 19 OHLCV pair. To attribute READY frequency to a specific gate, the next evidence must pair the same symbol/date/bar with the relevant 1M/5M diagnostic labels or a diagnostic export that records those states. The October 2 1M file/date mismatch should be corrected if the intent is to reconstruct that exact event.
+The already documented October 2 diagnostic screenshot remains the evidence for the October 2 Permission revocation; it should not be conflated with the October 19 OHLCV pair. To attribute READY frequency to a specific gate, the next evidence must pair the same symbol/date/bar with the relevant 1M/5M diagnostic labels or a diagnostic export that records those states. The October 2 1M symbol mismatch is now documented; to reconstruct the XRPN event, obtain XRPN 1M data rather than using the HPK upload.
 
 ## Boring Overnight target research: current disposition
 
@@ -71,7 +71,7 @@ The branch contains `OpportunityQualityAssessor`, its input/config/result models
 
 It is **not wired** into the replay workflow, `V2SignalEngine`, CLI, API, or front end. Raw OHLCV replay does not calculate its required indicators, relative volume, recent range, resistance distance, or actual ThinkScript READY state. Its default thresholds are explicitly provisional and uncalibrated.
 
-**UI wording risk:** result labels such as `READY — HIGH` and `READY — BORING` can be mistaken for the actual ThinkScript `EXECUTION READY` event even though the assessor is diagnostic-only. When this is surfaced, show the existing execution state and quality classification in separate fields; prefer a visibly distinct label such as `QUALITY: HIGH` and never allow the quality result to grant eligibility.
+**UI wording safety change:** the assessor's current display labels are `QUALITY — HIGH`, `QUALITY — MODERATE`, `QUALITY — LOW`, and `TIMING — EXTENDED`, distinct from Thinkorswim `EXECUTION READY`. Source and tests have been updated; a later GitHub Actions run is required to verify the latest commits.
 
 ## Next steps, in order
 
@@ -88,7 +88,7 @@ It is **not wired** into the replay workflow, `V2SignalEngine`, CLI, API, or fro
 - No full GTC_EXT eligible-window dataset or actual-fill dataset was found in the audited files.
 - No internal READY/Permission diagnostic states are embedded in the paired October 19 OHLCV payloads.
 
-## Repository integration note
+## October 19 chart-parity worksheet results\n\nThe current parity worksheets have 20 manually chart-entered rows per timeframe. 1M: 10 `MATCH`, 10 `ROUNDING ONLY`, 48 unfilled rows. 5M: 9 `MATCH`, 11 `ROUNDING ONLY`, 13 unfilled rows. All 40 entered chart timestamps match the local clock digits represented by payload timestamps, but the worksheet's `ChartTimestampMeaning` cells say `MATCH`, not `BAR_OPEN`/`BAR_CLOSE`; semantics are therefore not fully documented. See `data/validation/XRPN/manifest.md` and `data/validation/XRPN/findings.md`.\n\n## Repository integration note
 
 The GitHub compare result reports this feature branch as diverged from `master` (268 commits ahead, 152 behind). Treat the branch as a working baseline for this audit, not as a safe fast-forward/merge candidate. Reconcile history and file-level changes deliberately before merging.
 
