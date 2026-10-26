@@ -37,8 +37,8 @@ public sealed class OvernightFixedTargetTouchEvaluator
         if (input.ObservedHighTimestamp is null) missing.Add("HIGH_TIMESTAMP_MISSING");
 
         if (missing.Count == 0 &&
-            (input.ObservedHighTimestamp < input.WindowStart ||
-             input.ObservedHighTimestamp > input.WindowEnd))
+            (input.ObservedHighTimestamp!.Value < input.WindowStart!.Value ||
+             input.ObservedHighTimestamp.Value > input.WindowEnd!.Value))
             missing.Add("HIGH_TIMESTAMP_OUTSIDE_ELIGIBLE_WINDOW");
 
         if (missing.Count > 0)
