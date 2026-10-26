@@ -184,3 +184,39 @@ A follow-up branch fixes the nullable symbol warning and makes the missing-file 
 6. Keep manual order placement and risk review separate. The calculator never submits orders.
 
 **Current status:** the calculation core is merged and CI passed on the merge commit. Automated session-aware data acquisition and historical sample generation are not implemented. **Data not found in sources** for verified high excursions matching the actual Schwab order window. Until that dependency is resolved, this command is a calculator engine test, not a ready-to-use live limit recommendation.
+
+
+## 2026-10-25 — User workflow confirmed; broker/session alignment required
+
+### User's intended routine
+- Research 1:00–3:00 PM Arizona time.
+- Candidate limit-buy window 3:00–5:00 PM Arizona time, Monday–Thursday; after actual fill, user sets a limit sell at regular-session close +0.5%, currently described as GTC + Extended.
+- Priority is manually reviewed Boring Overnight decision support; no automated orders.
+
+### Mandatory Schwab order-mode check
+Do not infer that GTC + Extended means 24-hour overnight eligibility. Schwab documentation describes GTC + Extended / thinkorswim EXT 13h as 7:00 AM–8:00 PM Eastern, while overnight execution requires thinkorswim EXTO 24h and an eligible security. Confirm the actual platform, order qualifier, and symbol eligibility in the order ticket. Official sources:
+- https://www.schwab.com/stocks/extended-hours-trading
+- https://international.schwab.com/investment-products/extended-hours-trading
+- https://www.schwab.com/learn/story/how-does-extended-hours-trading-work
+
+### Time conversion
+Arizona remains on Mountain Standard Time year-round. During Eastern Daylight Time, 3:00–5:00 PM Arizona = 6:00–8:00 PM Eastern. During Eastern Standard Time, it = 5:00–7:00 PM Eastern. Convert with named time zones and the actual date; never hardcode an offset.
+
+### ADR fees and calculator costs
+ADR pass-through fees are depositary fees for certain ADR holdings, not specifically overnight trading fees; amounts/timing vary. The calculator's cost input is a user-supplied round-trip execution estimate for Schwab in this workflow, not Alpaca API/data subscription costs and not automatically retrieved from a broker. Include actual transaction charges and spread/slippage without double-counting; verify against Schwab confirmations/pricing guide: https://www.schwab.com/legal/schwab-pricing-guide-for-individual-investors.
+
+### Data needed before valid excursion CSV generation
+1. Confirm platform/order qualifier for both buy and sell; establish whether the sell must execute during overnight 8 PM–4 AM Eastern.
+2. Confirm symbol-specific eligibility using the actual Schwab order ticket and thinkorswim Public → 24 Hour Trading watchlist.
+3. Identify the actual historical feeds/entitlements available. Alpaca IEX is single-exchange, SIP is consolidated coverage subject to plan, and BOATS is an overnight ATS feed. BOATS alone does not cover the entire after-hours + overnight + premarket + regular-session lifecycle, and no feed is assumed to reproduce Schwab executable quotes/fills.
+4. Implement session-aware minute bars and, where available, quotes/trades with named time zones, exchange calendar, holiday/early-close/DST handling, timestamps, feed provenance, missing-interval checks, and corporate-action treatment.
+5. For each observation, preserve symbol/date, reference entry price, window start/end, provider/feed, full coverage/missing-data flags, max favorable/adverse excursion, spread/quote availability, target-touch time, and whether there is actual fill evidence or only a touch proxy.
+6. Generate the CSV only after coverage checks pass. Fail closed for missing intervals, mismatched session, stale feed, invalid data, or fewer than 20 completed observations.
+7. Use at least a multi-month, broad-universe out-of-sample validation to evaluate touch rate, executable quote touch, no-fill rate, net return after costs, adverse excursion, catalyst nights, and market regimes. Twenty samples validate only basic code-path behavior, not strategy reliability.
+8. Review the actual CSV behind the user's AAPL output. Until its provenance and window are verified, that result is only a calculation output. Data not found in sources for a verified Schwab-window-matched sample.
+
+### Weekend/unfilled-position decision still open
+No Friday entries does not prevent a Thursday position from remaining open over the weekend. Define latest entry time, whether Thursday entries are allowed, sell review/cancel/reprice rules, exit deadline, and whether positions may be carried over weekends. Do not auto-cancel or reprice without explicit user authorization. Until the policy is decided, any open position/unfilled exit must remain a visible alert, not a completed cycle.
+
+### Release gate
+The +0.5% target is an objective to test, not a near-guarantee. The first usable release should be read-only/manual review with order-eligibility, catalyst, data freshness, liquidity, cost, and weekend-risk gates. It must not submit orders.
