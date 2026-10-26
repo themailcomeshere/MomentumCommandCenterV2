@@ -546,3 +546,6 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 - [OPEN — CCI/NICE HARD GATES] Verify exact unrounded 5D > 20D average, 20D average daily volume >=500K, freshness, exclusion list and source-backed catalyst review. Until then keep both WATCH.
 - [OPEN — QUANTITATIVE OVERNIGHT RESEARCH] Need source-backed prior regular close plus complete next 07:00–20:00 Eastern GTC_EXT bars; preserve missing intervals as DATA_GAP. Historical touch is not fill. No target optimization or READY claim from screenshots alone.
 - [NOW — RELEASE READINESS] Prioritize current-head CI; install/verify 1M EOD bubble; finish market-data pagination/retry/error handling and session-aware gaps; collector lifecycle/restart/backfill/durable checkpoints; storage failure/rotation tests; fixture-driven Morning Brief/scanner/Boring Overnight; current-head parity/diagnostic review. Do not merge the diverged feature branch wholesale into master.
+
+
+- [DONE — INITIAL PUBLIC CATALYST CHECK] CCI Q3 earnings/outlook release confirmed for Oct 21 after close; include recent post-earnings risk in manual review. NICE official IR event page lists no upcoming events, but full current-news/catalyst clearance remains OPEN. Sources and details: docs/Validation/Overnight-Candidate-Review-20261026.md.
