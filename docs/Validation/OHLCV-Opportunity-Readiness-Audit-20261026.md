@@ -6,7 +6,7 @@
 ## Executive result
 
 - **A usable aligned XRPN 1M/5M pair exists for October 19, 2026**, in `data/StrategyReports_XRPN_102026_933.csv` and `data/StrategyReports_XRPN_102026_5m_offset_1027.csv`. Both payloads cover approximately 06:30–13:00 Arizona time; the 5M file starts at 06:20.
-- **The apparent October 2 full-day 1M/5M pair is not aligned.** `data/StrategyReports_XRPN_10022026_1M_EntireDay.csv` has a filename suggesting October 2, but both its report header and embedded timestamps are October 22. The companion `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` is October 2. Do not combine them.
+- **The apparent October 2 full-day 1M/5M pair is not aligned.** The October 22 1M file is now correctly named `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv`. It was previously named `StrategyReports_XRPN_10022026_1M_EntireDay.csv`, which incorrectly suggested October 2. The companion `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` is October 2. Do not combine them.
 - The October 19 pair is sufficient to continue checking export structure and 1M/5M OHLCV consistency, but **not sufficient to diagnose READY gates**: the paired rows contain OHLCV, not the actual per-bar ThinkScript Permission, candidate, extension, READY, re-arm, or expiration states.
 - **The current files do not support a valid Boring Overnight target-reach estimate.** They do not cover the full GTC_EXT-eligible window around the regular close, and `eligible-window-high-excursions.csv` contains placeholder values 1–20 rather than sourced historical observations.
 
@@ -16,7 +16,7 @@
 |---|---|---|
 | `data/StrategyReports_XRPN_102026_933.csv` | 2026-10-19, 06:30–13:00; 355 1M payload rows | Paired 1M input; 31 non-one-minute intervals detected in this file. |
 | `data/StrategyReports_XRPN_102026_5m_offset_1027.csv` | 2026-10-19, 06:20–13:00; 81 5M payload rows | Same symbol/date as the 1M file; regular five-minute timestamp spacing in this export. |
-| `data/StrategyReports_XRPN_10022026_1M_EntireDay.csv` | 2026-10-22, 06:30–13:00; 267 1M payload rows | Filename/date mismatch. Its header says 10/22/26, and embedded epoch timestamps resolve to 10/22/26. |
+| `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv` | 2026-10-22, 06:30–13:00; 267 1M payload rows | Filename now matches the report header and embedded epoch date; the previous misleading filename was corrected. |
 | `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` | 2026-10-02, 06:30–13:00; 79 5M payload rows | October 2 5M data, but no matching October 2 1M full-day file is established by the files audited here. |
 | `data/StrategyReports_HPK_10022026_to_10032026_1M_EntireDay.csv` | 2026-10-01 06:30 through 2026-10-02 12:59; 422 1M payload rows | Two-day HPK file with many gaps; not an XRPN signal-parity pair. |
 | `data/StrategyReports_UPC_102226.csv` | 2026-10-22, 09:37–09:47; 4 1M payload rows | Short strategy report; cannot settle the separate 09:16–09:36 UPC interval question. |
@@ -76,7 +76,7 @@ It is **not wired** into the replay workflow, `V2SignalEngine`, CLI, API, or fro
 ## Next steps, in order
 
 1. Keep the October 19 1M/5M pair as the first aligned OHLCV coverage fixture; preserve its gaps and timestamp provenance.
-2. Correct or rename the October 22 1M file so its filename does not claim October 2.
+2. [DONE] Rename the October 22 1M file to `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv` so its filename matches its embedded date.
 3. Obtain or export diagnostic states for the same symbol/date/time as the OHLCV bars before attributing READY failures to a gate. The existing October 2 screenshot does not need to be re-uploaded.
 4. Complete a full-window overnight export including the source-backed regular close and all available bars across the following 07:00–20:00 Eastern eligible window; otherwise retain `DATA_GAP`.
 5. Add opportunity-quality replay/presentation only after the required metrics and existing execution-state snapshots are reproducible. Keep it diagnostic-only until out-of-sample comparison supports its value.
