@@ -453,3 +453,10 @@ Use `docs/Next-Steps-and-User-Inputs.md` as the single checklist for user action
 - [NEXT — NO USER INPUT REQUIRED] Keep the October 19 pair as a coverage fixture; add regression checks for filename/header/payload date consistency where the ingestion workflow has file-level provenance; keep incomplete intervals explicit.
 - [NEXT — USER/THINKORSWIM EVIDENCE] To diagnose a particular READY gate, obtain diagnostic states for the same symbol/date/bars as the OHLCV. For Boring Overnight, use a full eligible-window export with source-backed regular close; otherwise mark DATA_GAP.
 - [NO PROMOTION] These exports are not proof of production timestamp semantics, indicator parity, fill probability, or strategy profitability.
+
+## Opportunity-quality label safety and branch validation — 2026-10-26
+
+- [DONE — SOURCE CHANGE, CI NOT YET CONFIRMED] Changed display labels from `READY — HIGH/MODERATE/BORING/EXTENDED` to `QUALITY — HIGH/MODERATE/LOW` and `TIMING — EXTENDED`. The labels now avoid conflating this diagnostic classification with the existing Thinkorswim `EXECUTION READY` event. Machine-readable enum values and eligibility precedence are unchanged.
+- [DONE — TEST SOURCE UPDATED, CI NOT YET CONFIRMED] Updated the high-quality label assertion and added four negative-metric cases covering negative RVOL, ATR extension, recent range, and resistance distance; invalid metrics should fail closed to `DATA_UNKNOWN`.
+- [OPEN — CI VERIFICATION] GitHub combined commit status returned no status records for the latest branch commit at audit time. Do not call the current branch build/test green until a workflow run tied to the latest commit is confirmed.
+- [INTEGRATION CAUTION] Repository compare reports `feature/opportunity-quality-classification` as diverged from `master` (268 commits ahead and 152 behind in the compare result). Do not merge this branch wholesale into master without a deliberate file/history reconciliation. The changes in this work session remain on the feature branch.
