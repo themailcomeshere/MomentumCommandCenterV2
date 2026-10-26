@@ -55,13 +55,13 @@ Use only historical data that demonstrably covers the chosen window. Regular-ses
 
 If thinkorswim chart/export shows the full historical interval, enable extended-hours display where available, set aggregation appropriate to the window, inspect date/time axes and export underlying data only if the platform supports it. If the required historical interval is not available, stop and select a verified data source. Do not estimate or invent missing values.
 
-### Step C — Collect a pilot
-1. Collect at least 20 completed symbol/date observations using the same baseline and eligible-session definition.
-2. Use a multi-week or multi-month span, not handpicked winners. Include ordinary, down, gap and event days; tag material events.
-3. Mark incomplete rows INVALID_INCOMPLETE and do not include them in calculator input.
-4. Check duplicates, splits/corporate actions, stale bars, missing intervals and out-of-session highs.
-5. Hand-calculate at least three excursion values and reconcile to the generated values to two decimal places.
-6. Retain all valid rows, including zero and negative excursions; do not clip losses or keep only successful target touches.
+### Step C — Collect a small hand-verified pilot
+1. Start with five completed symbol/date rows to prove source coverage, session mapping, close/target math, and timestamp handling. Include ordinary, down/flat, gap, and event cases where available; do not select only winners.
+2. The first pilot evaluates the strategy's fixed target: target = relevant regular-session close × 1.005, rounded using the actual valid-price rules. Record whether the target was touched in the following GTC_EXT-eligible window, and the first touch timestamp if the source supports it.
+3. Mark incomplete rows `DATA_GAP` / `INVALID_INCOMPLETE`; do not count them as misses or successes.
+4. Check duplicates, splits/corporate actions, stale bars, missing intervals, and out-of-session highs.
+5. Hand-calculate at least three values (or all rows if fewer than three are complete) and reconcile to the generated results.
+6. Retain misses and down/flat cases. Once source/session semantics are proven, expand to a larger multi-week or multi-month sample. The existing percentile calculator's 20-observation minimum is not a requirement for the fixed-target pilot and does not mean 20 personal trades are required.
 
 ### Step D — Generate calculator input
 
@@ -91,31 +91,29 @@ Set the entry argument to the actual fill/reference price under evaluation. A 0.
 
 User-reported commission is $0.00 for intended eligible stocks; OTCs are excluded due to a reported $6.95 fee. The initial cost model may set direct commission to zero for eligible non-OTC stocks as a user-specified assumption. Track spread and slippage separately. Do not apply the OTC fee to eligible non-OTC observations, and add no other fee without support from account activity or current pricing evidence.
 
-## 6. User decisions still required
+## 6. Remaining operator decisions / confirmations
 
-1. Sell session: is 7:00 AM–8:00 PM ET under GTC + Extended acceptable, or does the strategy require EXTO 24h? Verify symbol/account eligibility if EXTO is required.
-2. Weekend risk: are Thursday entries allowed if the sell remains unfilled? Can positions be carried over a weekend? Define latest entry and manual review/cancel/replace deadline. No automated order management is assumed.
-3. Baseline: actual-fill observations only, or a separately labeled reference-close study?
-4. Scope: start with a one-ticker pilot, then a broader symbol/date sample. One ticker cannot validate the whole universe.
+1. **Weekend/open-position handling:** Thursday entries and weekend carry are allowed by the operator, but the precise manual response to an unfilled sell is not yet specified. Choose a review time and what the operator will do if the position remains open; do not automate cancel/replace.
+2. **Historical sample scope:** use the five-row pilot to validate data/session/calculation first, then broaden the sample. The operator does not need to reconstruct unrecorded personal trades.
+3. **Per-symbol tradability/exclusions:** the maintained OTC lists must be synchronized and checked before a candidate is treated as eligible. The canonical Schwab exclusion list in the repository is not proof that both operator-maintained OTC lists are synchronized.
 
-Until answered, do not assume sell coverage from 8:00 PM to 7:00 AM ET; no new Friday entries; manually review every candidate and order; no automated order submission.
+Confirmed strategy: LMT EXT buy between 3:00–5:00 PM Arizona, Monday–Thursday; LMT GTC_EXT sell at relevant regular-session close +0.5%; GTC_EXT is the intended sell session; no new Friday entries; Thursday/weekend carry is allowed with a manual risk plan. Do not require EXTO 24h for this workflow. Manually review each candidate and order; no automated order submission.
 
 ## 7. MCC launch checklist
 
 ### User actions
-- [ ] Confirm BMY eligibility in Public → 24 Hour Trading; save redacted evidence.
-- [ ] Record exact buy and sell qualifiers and whether sell is GTC + Extended or EXTO 24h.
-- [ ] Decide whether only 7:00 AM–8:00 PM ET is acceptable or 24-hour execution is required.
-- [ ] Decide Thursday/weekend carry policy and unfilled-exit handling.
-- [ ] Replace fabricated CSV with source-backed ledger and generated calculator input.
-- [ ] Run the pilot CLI and provide output plus ledger, with personal/account information redacted.
-- [ ] Confirm the two OTC exclusion lists are synchronized and specify which is canonical if they disagree.
+- [ ] Define the manual review/action plan for an unfilled sell, especially after a Thursday entry and across weekends.
+- [ ] If using a broker/data screenshot or export, redact account and personal information.
+- [ ] Confirm the two OTC exclusion lists are synchronized; resolve any disagreement without deleting exclusions silently.
+- [ ] If available, provide historical chart/export data only after the required session coverage is visible; otherwise report that export is unavailable rather than estimating values.
 
 ### Engineering tasks
 - [ ] Build repeatable historical-data import/generation with feed/session metadata and fail-closed coverage checks.
 - [ ] Test holidays, early closes, DST changes, missing intervals, duplicate bars, invalid values and session mismatch.
 - [ ] Preserve source ledger/provenance with generated input.
-- [ ] Verify percentile and tick rounding against tests and hand calculations.
+- [ ] Implement a separate fixed-target reference-close evaluator: target = regular-session close × 1.005; report touch/no-touch, first-touch time when supported, and coverage gaps. Do not repurpose the excursion-percentile calculator for this question.
+- [ ] Verify target rounding against the actual order price rules and hand calculations.
+- [ ] Keep the percentile-based historical-reach calculator as a separate research tool only if its baseline/session definition matches the intended question.
 - [ ] Wire the shared Schwab exclusion provider through all qualification paths.
 - [ ] Define stale position, unfilled sell, Thursday and weekend behavior before showing READY.
 - [ ] Validate broad labeled sample including losers, catalysts, low liquidity, gaps and no-fill cases.
@@ -127,9 +125,9 @@ Until answered, do not assume sell coverage from 8:00 PM to 7:00 AM ET; no new F
 Not ready for unattended or fully trusted Boring Overnight use. A successful build/run or high historical-touch percentage does not establish live eligibility, actual fills, profitability or safe weekend handling. Near-term use is read-only/manual decision support.
 
 ## [Uncertainties]
-- EXTO 24h eligibility for BMY or other candidates is not yet established.
-- Historical source/feed coverage for the actual Schwab-eligible session is not established.
-- Weekend policy and actual-fill versus reference-close baseline remain user decisions.
+- Historical source/feed coverage for the actual GTC_EXT-eligible session is not established.
+- The exact manual action for an unfilled position across Thursday/weekend is not yet specified.
+- A historical high-touch result is not evidence of an actual limit fill.
 ## 9. Clarification from the operator — actual Boring Overnight workflow (2026-10-26)
 
 The earlier guidance over-focused on EXTO/24-hour execution and made data collection sound as if the operator needed a large personal trade history. That is not the intended strategy. Use this clarified workflow unless the operator changes it:
