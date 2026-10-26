@@ -40,6 +40,9 @@ public sealed class AlpacaMarketDataAdapterTests
             CancellationToken.None);
 
         Assert.True(adapter.IsConfigured);
+        Assert.True(adapter.HasSuccessfulDataValidation);
+        Assert.NotNull(adapter.LastSuccessfulDataValidationUtc);
+        Assert.Equal(1, adapter.LastSuccessfulDataValidationBarCount);
         Assert.Single(bars);
         Assert.Equal("SPY", bars[0].Symbol);
         Assert.Equal(DateTimeOffset.Parse("2026-10-22T16:30:00Z"), bars[0].Timestamp);
@@ -53,6 +56,32 @@ public sealed class AlpacaMarketDataAdapterTests
         Assert.Equal("test-key", handler.Request!.Headers.GetValues("APCA-API-KEY-ID").Single());
         Assert.Equal("test-secret", handler.Request.Headers.GetValues("APCA-API-SECRET-KEY").Single());
         Assert.Contains("feed=iex", handler.Request.RequestUri!.Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GetBarsAsync_EmptySuccessfulResponse_DoesNotMarkDataValidated()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"bars":[]}""", Encoding.UTF8, "application/json")
+        });
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(client, configuration);
+
+        var bars = await adapter.GetBarsAsync("SPY", TimeSpan.FromMinutes(5),
+            DateTimeOffset.Parse("2026-10-22T16:30:00Z"), DateTimeOffset.Parse("2026-10-22T17:00:00Z"),
+            CancellationToken.None);
+
+        Assert.Empty(bars);
+        Assert.False(adapter.HasSuccessfulDataValidation);
+        Assert.Null(adapter.LastSuccessfulDataValidationUtc);
+        Assert.Equal(0, adapter.LastSuccessfulDataValidationBarCount);
     }
 
     /// <summary>
