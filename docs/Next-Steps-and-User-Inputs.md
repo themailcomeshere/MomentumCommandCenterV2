@@ -218,3 +218,9 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 ### Evidence needed later for quantitative target research
 - For each sample: source-backed regular-session close and all eligible GTC_EXT bars for the following 07:00–20:00 Eastern window, with timestamps/source and any gaps preserved as DATA_GAP.
 - Keep historical target touches distinct from actual fills. Do not claim the +0.5% heuristic is optimal without out-of-sample evaluation.
+
+
+### Candidate-specific catalyst note
+- CCI reported Q3 results and updated outlook after close on Oct 21, 2026. Treat as recent post-earnings context and inspect price/volume stability before considering a boring overnight hold: https://crowncastle.gcs-web.com/news-releases/news-release-details/crown-castle-reports-third-quarter-2026-results-and-updates.
+- NICE's official IR events page currently lists no upcoming events, but that is not a full catalyst clearance: https://www.nice.com/investors.
+- These checks do not change the result: CCI and NICE remain WATCH / NOT READY until all hard gates and current chart conditions pass.
