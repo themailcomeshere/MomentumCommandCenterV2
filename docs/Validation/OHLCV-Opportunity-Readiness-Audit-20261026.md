@@ -8,7 +8,7 @@
 - **A usable aligned XRPN 1M/5M pair exists for October 19, 2026**, in `data/StrategyReports_XRPN_102026_933.csv` and `data/StrategyReports_XRPN_102026_5m_offset_1027.csv`. Both payloads cover approximately 06:30–13:00 Arizona time; the 5M file starts at 06:20.
 - **The October 2 XRPN pair is still not aligned.** The new file uploaded as `data/StrategyReports_XRPN_10022026_1M_EntireDay_2.csv` actually has `Symbol: HPK` in its report header and all 214 payload rows are HPK 1M bars for October 2. I renamed it to `data/StrategyReports_HPK_10022026_1M_EntireDay.csv`; it exactly duplicates the October 2 HPK rows in the existing HPK multi-day export. The companion `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` is XRPN 5M, so the symbol mismatch remains. Separately, the October 22 XRPN 1M file is correctly named `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv`.
 - The October 19 pair is sufficient to continue checking export structure and 1M/5M OHLCV consistency, but **not sufficient to diagnose READY gates**: the paired rows contain OHLCV, not the actual per-bar ThinkScript Permission, candidate, extension, READY, re-arm, or expiration states.
-- **The current files do not support a valid Boring Overnight target-reach estimate.** They do not cover the full GTC_EXT-eligible window around the regular close, and `eligible-window-high-excursions.csv` contains placeholder values 1–20 rather than sourced historical observations.
+- **The current files do not support a valid Boring Overnight target-reach estimate.** They do not cover the full GTC_EXT-eligible window around the regular close, and `eligible-window-high-excursions.csv` had placeholder values 1–20 rather than sourced historical observations; those fabricated rows have now been removed, leaving only the required header.
 
 ## File-by-file findings
 
@@ -20,7 +20,7 @@
 | `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` | 2026-10-02, 06:30–13:00; 79 5M payload rows | XRPN 5M bars; no same-symbol XRPN 1M partner is established by the audited files. |
 | `data/StrategyReports_HPK_10022026_to_10032026_1M_EntireDay.csv` | 2026-10-01 06:30 through 2026-10-02 12:59; 422 1M payload rows | Two-day HPK file with many gaps; its October 2 subset exactly matches the 214 rows in the newly uploaded HPK file. Not an XRPN signal-parity pair. |
 | `data/StrategyReports_UPC_102226.csv` | 2026-10-22, 09:37–09:47; 4 1M payload rows | Short strategy report; cannot settle the separate 09:16–09:36 UPC interval question. |
-| `eligible-window-high-excursions.csv` | No symbol/date/source columns; values 1–20 | Placeholder/sample data, not eligible-window market observations. Exclude from research. |
+| `eligible-window-high-excursions.csv` | Header only: `excursion_percent`; zero observations | Former fabricated values 1–20 have been removed. This is now an empty input/template, not research data; the calculator must not produce a limit until at least 20 verified observations exist. |
 
 Timestamps above are converted from the embedded epoch payloads to `America/Phoenix`. The Strategy Report `Date/Time` column is transport metadata; do not substitute it for the embedded payload timestamp. Timestamp open/close/availability semantics remain a separate validation gate.
 
@@ -56,7 +56,7 @@ The files audited here cover daytime chart windows, not the full GTC_EXT-eligibl
 Accordingly:
 - Do not compute a target-touch rate, median excursion, or recommended alternative limit from these files.
 - Do not treat a historical high touch as a fill.
-- Do not treat the placeholder `eligible-window-high-excursions.csv` as observations.
+- Do not treat the now-empty `eligible-window-high-excursions.csv` as observations; its fabricated rows were removed.
 - Mark any future row whose full eligible window is not present as `DATA_GAP`.
 - Keep reference-close target-touch research separate from actual fills and realized outcomes.
 
@@ -85,7 +85,7 @@ It is **not wired** into the replay workflow, `V2SignalEngine`, CLI, API, or fro
 
 - The intended meaning of the export payload timestamp (bar-open, bar-close, or decision availability) is not settled by these files alone.
 - Missing timestamps in the export are not classified as no-trade intervals versus export omissions.
-- No full GTC_EXT eligible-window dataset or actual-fill dataset was found in the audited files.
+- The fabricated excursion rows were removed from `eligible-window-high-excursions.csv`; it now contains only the header and zero observations. No full GTC_EXT eligible-window dataset or actual-fill dataset was found in the audited files.
 - No internal READY/Permission diagnostic states are embedded in the paired October 19 OHLCV payloads.
 
 ## October 19 chart-parity worksheet results\n\nThe current parity worksheets have 20 manually chart-entered rows per timeframe. 1M: 10 `MATCH`, 10 `ROUNDING ONLY`, 48 unfilled rows. 5M: 9 `MATCH`, 11 `ROUNDING ONLY`, 13 unfilled rows. All 40 entered chart timestamps match the local clock digits represented by payload timestamps, but the worksheet's `ChartTimestampMeaning` cells say `MATCH`, not `BAR_OPEN`/`BAR_CLOSE`; semantics are therefore not fully documented. See `data/validation/XRPN/manifest.md` and `data/validation/XRPN/findings.md`.\n\n## Repository integration note
