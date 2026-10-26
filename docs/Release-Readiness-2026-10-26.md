@@ -101,3 +101,14 @@
 
 - The current feature-branch head's CI and Release test status have not yet been observed after the provider-status code changes.
 - Provider validation is process-local and resets on API restart; durable validation history is not implemented.
+
+
+## Follow-up — CCI/NICE and TTE bubble fix (2026-10-26)
+
+- [DONE — VISUAL TRIAGE] AHR/FMS/NNN screenshots reviewed using the user's confirmation that they represent the 2026-10-21–2026-10-23 sample. See docs/Validation/Overnight-Candidate-Review-20261026.md. Quantitative full-window research remains blocked.
+- [WATCH — CCI] Score 68.11 (AGGRESSIVE), ON win 60%, mean 1.24% vs median 0.08%, 5D 2.73%, current ON 0.03%. Chart: 5M Permission NO, neutral structure, bullish regime not established. Not READY.
+- [WATCH — NICE] Score 60.47 (AGGRESSIVE), ON win 75%, mean/median 0.70%/0.60%, 5D 0.70%, current ON 0.55%. Chart: 5M Permission YES but neutral structure, RVOL 9.48, execution environment NO and price below displayed VWAP/EMAs/SMA50. Unrounded 5D > 20D gate, daily average volume and catalyst state need verification. Not READY.
+- [SOURCE CHANGE — EOD BUBBLE] docs/Charts/1M/MainStudy.txt now includes a one-time red EOD GET OUT bubble on entry to EOD_GET_OUT; no signal/permission calculations changed. User must install and validate this ThinkScript in TOS. .NET CI does not validate ThinkScript compilation.
+- [PASS — PRIOR-HEAD CI] GitHub Actions passed on commit 4f5ed265e54e9a924935a58b8b3233b31b264279 (run 40414827751); user reports 88 tests passed. Newer source/docs commits need a current-head CI check.
+- [OPEN — FULL OVERNIGHT RESEARCH] Source-backed prior regular close plus complete next 07:00–20:00 Eastern GTC_EXT bars are still required. Preserve gaps as DATA_GAP; screenshots cannot establish target-touch rates or fills.
+- [OPEN — REMAINING ENGINEERING] Pagination/retries, collector lifecycle/recovery, durable checkpoints, session-aware gap states, storage hardening, Morning Brief/scanner integrations, and fixture-based Boring Overnight calculations remain important before live reliance.
