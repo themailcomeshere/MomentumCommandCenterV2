@@ -330,3 +330,17 @@ Goal: get the safest useful MCC workflow into manual use this week; do not call 
 - [SOURCE VERIFIED] Master already has `AlpacaApiClient.GetLatestNewsAsync()` and `alpaca-news-check`; it fetches up to five articles from the previous 24 hours. This is not complete market-news coverage and a zero-result response is not proof of no news.
 - [MERGED PR #6; CI PASSED] `alpaca-news-check` now shows provider summary, article update time, tagged symbols, URL, retrieval time, and explicit coverage warning. This is still not a complete diagnosis workflow.
 - [NEXT] Build a read-only open-position review that combines retrieved news with known actual entry fill, current order status/limit, current quote/volume/spread, and any verified halt reason. Unknown inputs remain unknown. Any proposed target change is a manual option only.
+
+## October export uncertainty assessment — 2026-10-26
+
+**Evidence source:** `feature/opportunity-quality-classification`, especially [the detailed OHLCV/READY audit](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md). This records evidence on the feature branch; it does not imply those feature-branch code/data changes are merged into master.
+
+- [DATA PROVENANCE RESOLVED] The latest October 2 upload was named as XRPN but the report header and all embedded payloads identify HPK 1M. It contains 214 rows from 06:30–12:59 Arizona and exactly duplicates the October 2 HPK subset in the existing HPK multi-day file. It was renamed accurately on the feature branch to `data/StrategyReports_HPK_10022026_1M_EntireDay.csv`.
+- [XRPN OCT 2 PAIR STILL BLOCKED] The October 2 XRPN 5M file still has no verified same-symbol XRPN 1M partner. Do not use the HPK upload to explain XRPN READY/Permission behavior.
+- [PARTIAL — OCT 19 CHART PARITY] Existing worksheets have 20 chart-entered rows per timeframe: 1M = 10 MATCH / 10 ROUNDING ONLY; 5M = 9 MATCH / 11 ROUNDING ONLY. Remaining rows are unfilled. This is sampled OHLCV parity, not full study parity.
+- [UNRESOLVED — TIMESTAMP SEMANTICS] All entered chart labels match payload local clock digits, but the worksheets do not explicitly state BAR_OPEN, BAR_CLOSE, or decision availability. Raw `GetTime()[1]` semantics must remain unverified until the convention is documented against the installed study and chart.
+- [UNRESOLVED — MISSING INTERVALS] October 2 HPK has 176 missing timestamps out of 390 expected; October 19 XRPN has 30 absent timestamps from 09:00–12:59. Neither should be classified as no-trade or chart gaps without additional chart evidence.
+- [BLOCKED — READY ROOT CAUSE] Raw OHLCV contains no per-bar Permission/block code, candidate/trigger, extension danger, READY activation/expiration, or re-arm state.
+- [BLOCKED — BORING OVERNIGHT] The available files do not cover the full 07:00–20:00 Eastern GTC_EXT window; `eligible-window-high-excursions.csv` is placeholder data. Actual fills/fees are also not found in the audited sources.
+- [CI] Feature-branch run `40380221253` passed for commit `cbbb601b`; later documentation commits triggered new runs. Verify exact branch-head CI before promoting either code or docs.
+- [INTEGRATION] Feature branch is divergent from master. Reconcile deliberately; do not merge wholesale.
