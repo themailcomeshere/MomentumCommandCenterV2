@@ -237,17 +237,17 @@ Build an MCC-native equivalent of Thinkorswim MarketWatch: a semi-permanent, use
 - [RELEASE GATE] MCC may be used this week for read-only smoke tests and manually reviewed decision support only. Boring Overnight automation is not launch-ready until source coverage, catalyst status, history, exclusion wiring, and session rules are verified. No automated order submission is in scope.
 
 
-## 13. Boring Overnight trade-readiness plan — 2026-10-25
+## 13. Boring Overnight trade-readiness plan — 2026-10-25 (operator workflow clarified in §15)
 
-- [USER WORKFLOW] Research candidates 1:00–3:00 PM Arizona time. Intended entry window is 3:00–5:00 PM Arizona time, Monday–Thursday only; user places a limit buy during extended hours. After actual fill, user sets a limit sell at regular-session end-of-day close +0.5%, described as GTC + Extended.
-- [IMPORTANT SCHWAB SESSION DISTINCTION] Schwab docs distinguish GTC + extended / EXT 13h (7:00 AM–8:00 PM ET) from thinkorswim EXTO 24h (overnight session; eligible securities only). Confirm platform, order qualifier, and symbol eligibility before claiming a sell order is active overnight. Official refs: https://www.schwab.com/stocks/extended-hours-trading and https://international.schwab.com/investment-products/extended-hours-trading.
-- Arizona does not observe daylight saving time. While Eastern Daylight Time is active, 3:00–5:00 PM Arizona = 6:00–8:00 PM ET; while Eastern Standard Time is active, it = 5:00–7:00 PM ET. Use named time zones, not fixed offsets.
-- [RISK / DESIGN] No Friday new entries does not eliminate weekend exposure if an earlier GTC sell remains unfilled. Define a stale-position/unfilled-exit policy, including Thursday fills, Friday handling, and whether positions may be carried into a weekend. GTC does not guarantee an exit.
-- [ADR CLARIFICATION] ADR pass-through fees are depositary/custody fees associated with certain ADR holdings, not fees imposed simply because a trade occurs overnight. Amount/timing varies by ADR. User may exclude ADRs by policy, but label the reason correctly. Ref: https://www.schwab.com/legal/schwab-pricing-guide-for-individual-investors.
-- [COST CLARIFICATION] Calculator estimated-cost percentage is a user-supplied round-trip execution-cost estimate for the actual broker used (Schwab here), not Alpaca's API/data subscription fee. It is not fetched automatically. Include actual transaction charges and spread/slippage without double-counting; verify against trade confirmations and current Schwab pricing.
-- [CRITICAL DATA GAP] Historical bars must cover actual fill-to-exit eligible sessions and comparable venues. Schwab extended/overnight executions are not necessarily represented by Alpaca IEX or BOATS. The reported 20-point AAPL sample is not accepted as validation until source file, provenance, date range, feed, session coverage, and calculation method are reviewed. Data not found in sources for a verified Schwab-window-matched sample.
-- [VALIDATION GATE] Test a multi-month universe sample including winners, losers, gaps, earnings/news, low-liquidity cases, excluded tickers, no-fill cases, and positions not exited by the intended deadline. Track limit touched vs executable quote/trade, actual fill evidence where available, net P&L after costs, adverse excursion, and weekend exposure.
-- [RELEASE SCOPE] Near-term target is read-only, manually reviewed decision support and a verified order-entry checklist. Do not call +0.5% four nights per week nearly guaranteed. No automated order submission.
+- [USER WORKFLOW] Research candidates during the afternoon; buy with LMT EXT between 3:00–5:00 PM Arizona, Monday–Thursday; no Friday entries. After the relevant regular-session close is known, set LMT GTC_EXT sell at close × 1.005. The target may differ from the buy fill.
+- [SESSION RULE] The operator confirmed GTC_EXT as the intended sell qualifier, with the displayed 7:00 AM–8:00 PM ET active window. EXTO 24h is not required for this strategy. Do not count prices from 8:00 PM–7:00 AM ET as sell-window observations. Morning premarket and early regular-open observations can fall inside the stated active window.
+- Arizona does not observe daylight saving time. During Eastern Daylight Time, 3:00–5:00 PM Arizona = 6:00–8:00 PM ET; during Eastern Standard Time, it = 5:00–7:00 PM ET. Use named time zones and an exchange calendar.
+- [WEEKEND RISK] Thursday entries and weekend carry are allowed, but GTC does not guarantee an exit. A manual stale-position/unfilled-exit action and review time remain to be specified.
+- [COST POLICY] User reports $0.00 commissions for intended eligible non-OTC stocks and a $6.95 OTC fee; OTCs are excluded on two maintained lists. Do not add the OTC fee to eligible non-OTC trades or invent additional fees. Track spread/slippage separately.
+- [CRITICAL DATA GAP] Data not found in sources for a verified historical dataset covering the actual GTC_EXT window with source/feed provenance. Do not treat the prior fabricated CSV or the synthetic unit-test fixtures as market evidence.
+- [TWO DISTINCT RESEARCH QUESTIONS] First benchmark the current fixed rule (close × 1.005) against source-backed historical touch/no-touch observations. Separately evaluate history-derived target levels using eligible-window high excursions and a stated desired historical touch rate. Compare out-of-sample; neither historical touch metric proves actual fills.
+- [VALIDATION GATE] Include ordinary, down/flat, gap, catalyst, low-liquidity, excluded-symbol and no-touch cases. Track high-touch versus executable quote/trade evidence, actual fills when available, net returns, adverse excursion, spread/slippage, and weekend exposure.
+- [RELEASE SCOPE] Read-only, manually reviewed decision support only. No automated order submission.
 
 ## 14. Launch checklist and real-data collection — 2026-10-26 (partially superseded by §15)
 
@@ -270,3 +270,11 @@ Build an MCC-native equivalent of Thinkorswim MarketWatch: a semi-permanent, use
 - [CALCULATOR CAUTION] Existing overnight-limit-sell CLI percentile behavior may not evaluate the fixed EOD-close +0.5% rule. Inspect implementation and tests before using it; if semantics differ, implement a separate fixed-target evaluator rather than misusing the existing calculator.
 - [USER ACTION] No need to reconstruct unrecorded historical trades from memory. For future trades, preserve order ticket, actual fills, reference close, target, timestamps, MCC output, and final outcome. Historical rows require source evidence; otherwise label unknown.
 - [ENGINEERING] Build session-aware historical ingestion with feed coverage/provenance; fixed-target +0.5% touch study; source/session validation and exchange calendar handling; ensure both OTC exclusion lists are enforced across candidate paths; manual open-position/weekend plan; no automated orders.
+
+
+## 16. Branch and delivery discipline — 2026-10-26
+
+- Keep `master` as the canonical, releasable source of truth. Do not create branches merely to edit one or two low-risk documentation paragraphs when an existing documentation PR/branch can carry the related changes.
+- Use one short-lived branch per coherent code change when isolation, tests, review, or rollback matters (for example, a new evaluator plus its tests). Avoid multiple branches that duplicate the same task or leave competing versions of a document.
+- Before creating a branch, inspect existing branches and open PRs; update the existing task branch/PR when it is the same deliverable. After merge, verify the change is on `master`; do not assume closed branches were deleted.
+- Treat old feature branches as archival until their diff and merge status are checked. Do not delete branches without checking whether they contain unmerged work.
