@@ -34,7 +34,7 @@
 2. The October 2 XRPN 5M file still has no verified same-symbol XRPN 1M partner.
 3. The October 19 XRPN 1M/5M pair supports selected OHLCV consistency checks, but its one-minute export has known gaps and its payload does not contain ThinkScript state.
 4. The current chart-parity worksheets have 48 unfilled 1M rows and 13 unfilled 5M rows. Missing intervals are not classified as no-trade intervals or chart gaps.
-5. `eligible-window-high-excursions.csv` contains placeholders, not sourced market observations. No Boring Overnight target reach rate or alternative limit is justified from it.
+5. The prior placeholder rows in `eligible-window-high-excursions.csv` have been removed; it is now header-only with zero observations. No Boring Overnight target reach rate or alternative limit is justified from it.
 6. Historical target touch is not a fill; actual trade outcomes were not found in the audited sources.
 
 ## Work that can proceed without user action
