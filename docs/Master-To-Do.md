@@ -486,3 +486,18 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 - [BLOCKED — USER/THINKORSWIM] Obtain same-bar 1M/5M gate-state diagnostics for READY-frequency attribution.
 - [BLOCKED — DATA SOURCE] Obtain full GTC_EXT eligible-window bars plus source-backed regular close for target reach research; actual fills are a separate data source.
 - [CI STATUS] Latest confirmed feature-branch head `c1895641` passed workflow `40380631692`; the release-readiness note was then updated, so recheck the workflow for the resulting newest head before promotion.
+
+
+## Follow-up update — 2026-10-26 (XRPN pair, Overnight Scanner, Alpaca)
+
+- [DONE — OHLCV PAIR] data/StrategyReports_XRPN_100226_1M_EntireDay_New.csv contains XRPN 1M data for 2026-10-02: 391 consecutive timestamps from 06:30–13:00 Arizona. Against data/StrategyReports_XRPN_10022026_5M_EntireDay.csv, 78 complete 5M windows aggregate exactly from the 1M rows. The same-symbol OHLCV pair is now available.
+- [BLOCKED — READY ROOT CAUSE] The pair's strategy report payloads contain only OHLCV transport rows, not per-bar Permission, block code, candidate/trigger, extension danger, READY activation/expiration, re-arm, or expiration diagnostics. Data not found in sources. Need the diagnostic exports or exact repository path if they were uploaded separately. Do not attribute READY rarity from OHLCV alone.
+- [NEXT — USER LOCAL ACTION] Run the documented Alpaca smoke test in src/MomentumCommandCenterV2.API/README.md and docs/Next-Steps-and-User-Inputs.md. Saved Alpaca credentials are intended for this test. Report sanitized API response/errors and timestamps only. User reports 87/87 tests pass; this is not live-provider verification.
+- [NEXT — BORING OVERNIGHT] Initial chart-review shortlist from the 2026-10-26 scanner screenshot: TTE, RTO, NNN, OKE, AHR, FMS; CCI secondary. Request same 5M chart window across symbols with ETH enabled: 2026-10-26 regular session through 2026-10-27 20:00 Eastern. Full quantitative research still requires source-backed close and full next GTC_EXT window OHLCV with DATA_GAP intervals preserved.
+- [RELEASE POSTURE] Local prototype / diagnostic only; no live-decision reliance until provider authentication/entitlements, timestamp semantics, persistence/recovery, installed-study parity and overnight research gates are closed. Do not merge the diverged feature branch wholesale.
+
+## [Uncertainties]
+
+- Study diagnostic exports are not present in the reviewed October 2 OHLCV files.
+- Alpaca credentials are user-reported as saved; live auth is not yet verified.
+- Screenshot-based overnight shortlist is provisional; catalyst/news clearance and full data coverage are unavailable.
