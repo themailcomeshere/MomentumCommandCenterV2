@@ -11,7 +11,7 @@
 - The branch includes REST market-data adapters and read-only Alpaca news lookup; live credentials, plan entitlements, live response parity, and production freshness have not been verified.
 - Source-controlled XRPN 1M/5M OHLCV can be used for selected offline coverage and aggregation tests.
 - Twenty chart-entered bars per timeframe in the October 19 parity worksheets have been compared: 1M = 10 MATCH / 10 ROUNDING ONLY; 5M = 9 MATCH / 11 ROUNDING ONLY.
-- Opportunity-quality labels were changed to `QUALITY — HIGH/MODERATE/LOW` and `TIMING — EXTENDED`, separating the diagnostic classification from Thinkorswim `EXECUTION READY`. The source/test changes passed a .NET workflow run on commit `e7e59d4`; documentation commits made later are still running CI at the time this file was written.
+- Opportunity-quality labels were changed to `QUALITY — HIGH/MODERATE/LOW` and `TIMING — EXTENDED`, separating the diagnostic classification from Thinkorswim `EXECUTION READY`. The source/test changes passed a .NET workflow run on commit `e7e59d4`. The latest branch-head documentation/test workflow also passed on commit `c1895641` (run 40380631692). Any subsequent commit requires a fresh current-head check.
 
 ## Release gates before relying on MCC for live decisions
 
