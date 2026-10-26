@@ -269,3 +269,38 @@ The Morning Brief endpoint now persists the observed SPY/QQQ/IWM bars it fetches
 - Remaining work independent of accounts: pagination and resilient HTTP behavior; hosted collector/health lifecycle; streaming abstraction; reconnect/backfill/restart; raw-store corruption/retention/error health; fixture-based Morning Brief, scanner, and Boring Overnight pipelines; session-aware gap semantics; ThinkScript parity.
 - User evidence that still matters: XRPN 5M transition screenshot per `docs/Validation/5M-to-1M-User-Validation-Steps.md`; UPC 09:16–09:36 continuous bars/exact timestamp inspection only if that historical gap question still needs resolution; review dashboard through API-hosted browser. None blocks offline engineering.
 - Morning Brief remains only SPY/QQQ/IWM historical 5M observations plus explicit unknown placeholders. Do not claim broad movers, sector/breadth, news, validated regime, Red Zone or Boring Overnight are implemented.
+
+
+## Checkpoint update — October 2 XRPN pair received; Alpaca smoke-test runbook — 2026-10-26
+
+### XRPN October 2 OHLCV
+
+- [DONE — OHLCV EXPORT RECEIVED] data/StrategyReports_XRPN_100226_1M_EntireDay_New.csv is a genuine XRPN 1M export, not the previously misnamed HPK file. Report header: XRPN, 2026-10-02, 06:32–13:02 Arizona display range. Embedded payload has 391 consecutive minute timestamps from 06:30 through 13:00 Arizona (13:30–20:00 UTC); no missing one-minute payload timestamps were found.
+- [DONE — TIMEFRAME CROSS-CHECK] Matched against data/StrategyReports_XRPN_10022026_5M_EntireDay.csv: 79 5M payload rows, same first/last payload timestamps. Of the 79 5M bars, 78 have a complete five-row 1M group; all 78 aggregated OHLCV groups match the corresponding 5M payload within numeric precision. The final 5M timestamp has no subsequent five-minute 1M group because both exports end at 13:00 Arizona. This validates exported OHLCV alignment for shared windows, not installed-study state parity.
+- [BLOCKED — INTERNAL STUDY DIAGNOSTICS] The two repository CSVs expose the MCC_OHLCV transport payload only. No per-bar Permission, block-code, candidate/trigger, extension-danger, READY activation/expiration, re-arm, or expiration-state fields were found. Data not found in sources. If those diagnostics were uploaded separately, confirm their exact repository path; otherwise export the diagnostic study output for both timeframes.
+- Keep the prior October 2 screenshot; do not ask the user to re-upload it. Pair its observed Permission revocation with the newly validated OHLCV only after same-bar diagnostic fields are available. Do not infer gate-state root cause from OHLCV alone.
+
+### Overnight Scanner screenshot — 2026-10-26
+
+- Screenshot reviewed: Screenshot 2026-10-26 143847.png. It is a ranked scanner view, not proof of Boring Overnight eligibility. Initial chart-review shortlist prioritizes lower displayed ON movement / steadier values over the highest raw Overnight Score: TTE, RTO, NNN, OKE, AHR, FMS, with CCI as a secondary comparison. Exclude BOLT and VISN from the first boringness batch because their displayed current ON moves are 6.22% and 33.8%, respectively; the screenshot alone cannot establish catalyst clearance, liquidity gate, source-backed close, or actual fill probability.
+- Request same-window 5M chart screenshots with extended-hours bars enabled, covering Monday 2026-10-26 regular session and Tuesday 2026-10-27 from 07:00–20:00 Eastern. Capture the regular-session close and visible time axis for each symbol. Screenshots are visual triage only; quantitative target-touch research still requires timestamped OHLCV export and explicit DATA_GAP rows.
+
+### Alpaca live API smoke test
+
+- The user's saved Alpaca key/secret are the intended credentials for the first provider smoke test. Do not ask them to paste credentials. If /api/providers/status says Alpaca is not configured, re-enter them locally with the commands in src/MomentumCommandCenterV2.API/README.md.
+- From the repository root, run: dotnet run --project src/MomentumCommandCenterV2.API. Open /api/health, then /api/providers/status. A configured status is only a configuration check.
+- With the API still running, request /api/market-data/compare?symbol=SPY&timeframe=5m&from=2026-10-23T13:30:00Z&to=2026-10-23T13:50:00Z from the same local host/port printed by ASP.NET Core. This is 09:30–09:50 Eastern on Friday 2026-10-23. Check Alpaca request status, returned bar count, first/latest source timestamps, feed, duplicate timestamps and observed gaps. If Massive is unconfigured, its error is expected and does not invalidate an otherwise successful Alpaca response; record it separately.
+- Run tests separately with dotnet test MomentumCommandCenterV2.sln --configuration Release. The user's reported 87/87 passing tests is good offline evidence, but it does not prove live authentication, feed entitlement, correct timestamps, or extended-hours coverage. Never include keys/secrets in the report.
+- Share only sanitized results: health/status JSON, HTTP/error messages with tokens removed, provider/feed name, bar count, and source timestamps. Do not call Alpaca production-verified until authentication, entitlement, coverage and timestamp semantics are checked.
+
+### Current branch / release posture
+
+- Feature branch remains substantially diverged from master; do not merge it wholesale. Use scoped file/history reconciliation.
+- MCC remains LOCAL PROTOTYPE / DIAGNOSTIC ONLY; live trading reliance is not approved. No orders were submitted by this work.
+
+## [Uncertainties]
+
+- OHLCV alignment is validated for 78 complete five-minute windows; the final endpoint bar has no complete subsequent 1M group by design of the export endpoint.
+- Per-bar ThinkScript diagnostic fields were not present in the two XRPN OHLCV report files. Data not found in sources.
+- The scanner screenshot has no source-backed news/catalyst or complete liquidity evidence; shortlist is for chart review, not a buy/hold recommendation.
+- The local Alpaca credentials are user-reported as saved; actual API authentication has not yet been observed in this conversation.
