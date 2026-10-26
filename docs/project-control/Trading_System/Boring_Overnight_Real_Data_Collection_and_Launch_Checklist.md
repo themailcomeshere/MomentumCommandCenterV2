@@ -7,7 +7,7 @@ Last updated: 2026-10-26 (Arizona time)
 
 The user checked BMY and reports the Schwab ticket says GTC + Extended: active from 7:00 AM to 8:00 PM Eastern Time, up to 180 calendar days, limit orders only; orders placed after 8:00 PM ET, on weekends, or holidays activate the next trading day.
 
-This is not proof of 24-hour overnight execution. The order is inactive during the 8:00 PM–7:00 AM ET gap. If the strategy requires sell execution in that gap, inspect thinkorswim Public → 24 Hour Trading and the sell ticket for EXTO 24h eligibility for that symbol and account. Do not assume BMY eligibility applies to another ticker. If EXTO is unavailable, constrain the strategy and historical windows to the sessions the actual order covers.
+The operator has confirmed GTC_EXT is the intended sell qualifier and does not require EXTO 24h for this strategy. Use the reported GTC_EXT active window of 7:00 AM–8:00 PM ET for historical-window analysis; do not count highs from the 8:00 PM–7:00 AM ET gap as eligible-window observations.
 
 Arizona stays on Mountain Standard Time year-round. Convert using named time zones:
 - During Eastern Daylight Time: 3:00–5:00 PM Arizona = 6:00–8:00 PM ET.
@@ -23,7 +23,7 @@ The calculator expects an optional header named excursion_percent followed by on
 
 ## 3. Define one observation consistently
 
-Maintain two separate analyses. **Strategy-rule benchmark:** baseline is the relevant regular-session close; target = close × 1.005; measure touch/no-touch and first-touch time during the following GTC_EXT-eligible window. **Historical-reach research:** baseline is also explicitly defined (reference close or actual fill), and historical eligible-window highs are used to estimate which alternative target levels were historically reachable at a chosen empirical rate. **Actual-trade journal:** use real buy/sell fills to calculate realized outcomes. Never pool these three questions or label a historical high-touch rate as a fill probability. The fixed +0.5% rule is the benchmark; a history-derived target is a candidate alternative to compare against it, not an automatic replacement.
+Maintain separate analyses. **Current heuristic benchmark:** baseline is the relevant regular-session close; the operator's chosen target is close × 1.005, motivated by observed median ON % often around 0.56–1.00%. This is not a fixed strategy rule. Measure touch/no-touch during the following GTC_EXT-eligible window. **Historical-reach research:** use eligible-window high excursions to estimate alternative target levels at a chosen empirical touch rate; select levels on one sample and evaluate on separate dates/symbols. **Actual-trade journal:** use real buy/sell fills to calculate realized outcomes. Never pool these questions or label a historical high-touch rate as a fill probability.
 
 For each symbol/date, record:
 1. Symbol and security type; confirm not OTC and not on either exclusion list.
@@ -43,12 +43,10 @@ A session high touching the limit does not prove the sell order would fill. The 
 ## 4. Step-by-step collection
 
 ### Step A — Verify order session
-1. In thinkorswim, open Public → 24 Hour Trading.
-2. Search BMY and one other intended non-OTC candidate; record overnight eligibility for each.
-3. Open the buy ticket and record exact order type, time-in-force and session qualifier.
-4. Open the sell ticket and separately record its exact order type, time-in-force and session qualifier. Do not infer sell eligibility from buy eligibility.
-5. Distinguish GTC + Extended / EXT 13h from EXTO 24h. Save redacted screenshots; do not submit a test order to discover eligibility.
-6. If the sell is GTC + Extended only, use 7:00 AM–8:00 PM ET as its active window. Do not count 8:00 PM–7:00 AM ET highs as executable-window evidence.
+1. Use the operator-confirmed GTC_EXT sell qualifier and reported 7:00 AM–8:00 PM ET active window for the study.
+2. If a particular symbol's actual order eligibility is uncertain, verify that symbol's ticket; do not infer eligibility from BMY or another ticker.
+3. Keep the buy order's EXT qualifier separate from the sell order's GTC_EXT qualifier.
+4. Do not require EXTO 24h for this workflow. Do not count 8:00 PM–7:00 AM ET highs as GTC_EXT-window evidence.
 
 ### Step B — Verify the data source
 Use only historical data that demonstrably covers the chosen window. Regular-session-only data is insufficient. Do not assume IEX or an overnight ATS feed represents all Schwab-eligible trading. Verify extended-hours coverage, timestamp semantics, entitlement and missing intervals.
@@ -57,7 +55,7 @@ If thinkorswim chart/export shows the full historical interval, enable extended-
 
 ### Step C — Collect a small hand-verified pilot
 1. Start with five completed symbol/date rows to prove source coverage, session mapping, close/target math, and timestamp handling. Include ordinary, down/flat, gap, and event cases where available; do not select only winners.
-2. The first pilot evaluates the strategy's fixed target: target = relevant regular-session close × 1.005, rounded using the actual valid-price rules. Record whether the target was touched in the following GTC_EXT-eligible window, and the first touch timestamp if the source supports it.
+2. The pilot evaluates the current +0.5% heuristic as a benchmark, not a rule: target = relevant regular-session close × 1.005, rounded using the applicable price increment. Also retain the raw high-excursion values needed to test alternative history-derived targets.
 3. Mark incomplete rows `DATA_GAP` / `INVALID_INCOMPLETE`; do not count them as misses or successes.
 4. Check duplicates, splits/corporate actions, stale bars, missing intervals, and out-of-session highs.
 5. Hand-calculate at least three values (or all rows if fewer than three are complete) and reconcile to the generated results.
@@ -75,14 +73,14 @@ Create eligible-window-high-excursions.csv with a header named excursion_percent
 Replace every example number with calculated values from the verified ledger. One row equals one valid completed observation. Do not paste untraceable values. Keep the ledger and the generated file together.
 
 ### Step E — Sanity-check output
-1. For the five-row fixed-target pilot, verify each target = regular-session close × 1.005, with valid tick rounding, and record whether the eligible-window high reached it. Do not require 20 rows for this pilot.
+1. For the five-row pilot, verify the current +0.5% heuristic target calculation and record whether the eligible-window high reached it. Do not require 20 rows for this pilot.
 2. For the separate percentile calculator, confirm at least 20 valid numeric observations.
 3. Independently sort the percentile-calculator observations and calculate the empirical percentile. Current 70% desired touch rate maps to the 30th-percentile high-excursion threshold; confirm against code/tests before interpreting.
 4. Independently verify the proposed limit, return percentage and tick rounding.
-4. Hand-check at least one row from baseline and observed high.
-5. If output suggests a very large return while the strategy target is +0.5%, stop and verify units, baseline, session, sample mix and percentile.
-6. Treat high-touch rate as a proxy, not a fill probability. Better fill evidence requires quote/trade sequence, spread, liquidity and order timing.
-7. Run the CLI only against the verified file. The sample syntax below uses an illustrative entry price, not a current price or recommendation:
+5. Hand-check at least one row from baseline and observed high.
+6. If output suggests a very large return relative to the observed ON distribution, stop and verify units, baseline, session, sample mix and percentile.
+7. Treat high-touch rate as a proxy, not a fill probability. Better fill evidence requires quote/trade sequence, spread, liquidity and order timing.
+8. Run the CLI only against the verified file. The sample syntax below uses an illustrative entry price, not a current price or recommendation:
 
     dotnet run --project src/MomentumCommandCenterV2.Cli -- overnight-limit-sell AAPL 100 ./eligible-window-high-excursions.csv 70 0.10 0.00
 
@@ -94,25 +92,24 @@ User-reported commission is $0.00 for intended eligible stocks; OTCs are exclude
 
 ## 6. Remaining operator decisions / confirmations
 
-1. **Weekend/open-position handling:** Thursday entries and weekend carry are allowed by the operator, but the precise manual response to an unfilled sell is not yet specified. Choose a review time and what the operator will do if the position remains open; do not automate cancel/replace.
-2. **Historical sample scope:** use the five-row pilot to validate data/session/calculation first, then broaden the sample. The operator does not need to reconstruct unrecorded personal trades.
-3. **Per-symbol tradability/exclusions:** the maintained OTC lists must be synchronized and checked before a candidate is treated as eligible. The canonical Schwab exclusion list in the repository is not proof that both operator-maintained OTC lists are synchronized.
+1. **Manual decision remains operator-controlled:** no fixed automatic response when a sell remains unfilled. Review Market News, price/volume, liquidity, and thesis status; present a diagnosis and manual choices. No auto-cancel, reprice, or sell.
+2. **Historical sample scope:** use a five-row OHLCSV pilot to validate source/session/calculation first, then broaden. No need to reconstruct unrecorded personal trades.
+3. **OTC secondary list:** deferred per operator. Do not spend launch time reconciling it. Keep the canonical repository list append-oriented; later evaluate the $6.95 fee against actual opportunity economics.
 
-Confirmed strategy: LMT EXT buy between 3:00–5:00 PM Arizona, Monday–Thursday; LMT GTC_EXT sell at relevant regular-session close +0.5%; GTC_EXT is the intended sell session; no new Friday entries; Thursday/weekend carry is allowed with a manual risk plan. Do not require EXTO 24h for this workflow. Manually review each candidate and order; no automated order submission.
+Confirmed workflow: LMT EXT buy between 3:00–5:00 PM Arizona, Monday–Thursday; LMT GTC_EXT sell currently targeted at relevant regular-session close +0.5% as a heuristic; no new Friday entries; Thursday/weekend carry is allowed. Manual news-assisted review only; no automated order submission.
 
 ## 7. MCC launch checklist
 
 ### User actions
-- [ ] Define the manual review/action plan for an unfilled sell, especially after a Thursday entry and across weekends.
-- [ ] If using a broker/data screenshot or export, redact account and personal information.
-- [ ] Confirm the two OTC exclusion lists are synchronized; resolve any disagreement without deleting exclusions silently.
-- [ ] If available, provide historical chart/export data only after the required session coverage is visible; otherwise report that export is unavailable rather than estimating values.
+- [ ] Provide aligned 1M and 5M OHLCSV for a representative date/symbol where READY is rare after 09:00 Arizona, for the separate signal-frequency investigation.
+- [ ] Provide a Boring Overnight OHLCSV sample with regular close and the following GTC_EXT-eligible window, if the platform export covers it. If not, say what it does cover; do not estimate missing intervals.
+- [ ] Redact account and personal information from any ticket/screenshot.
 
 ### Engineering tasks
 - [ ] Build repeatable historical-data import/generation with feed/session metadata and fail-closed coverage checks.
 - [ ] Test holidays, early closes, DST changes, missing intervals, duplicate bars, invalid values and session mismatch.
 - [ ] Preserve source ledger/provenance with generated input.
-- [ ] Implement a separate fixed-target reference-close evaluator: target = regular-session close × 1.005; report touch/no-touch, first-touch time when supported, and coverage gaps. Do not repurpose the excursion-percentile calculator for this question.
+- [x] Implement a configurable reference-close target-touch evaluator (PR #5 merged and tests passed); it reports touch/no-touch and DATA_GAP for incomplete coverage. First-touch time still requires interval-level observations. Do not repurpose the percentile calculator for this question.
 - [ ] Verify target rounding against the actual order price rules and hand calculations.
 - [ ] Keep the percentile-based historical-reach calculator as a separate research tool only if its baseline/session definition matches the intended question.
 - [ ] Wire the shared Schwab exclusion provider through all qualification paths.
@@ -179,3 +176,8 @@ For every future trade, preserve symbol/date, MCC score and decision output at e
 - Do not use the small recent personal-trade sample as the sole validation dataset.
 
 Engineering work: source-backed historical price/session ingestion; fixed-target +0.5% touch study if current calculator is not semantically suitable; preserve provenance and gaps; exchange calendar/time-zone validation; synchronize and enforce both OTC exclusion lists across candidate paths; record actual fills prospectively; define manual weekend/open-position plan; keep decision support read-only with no automated orders.
+
+
+## 9. News-assisted unfilled-sell review (manual decision support)
+
+When a sell remains unfilled, collect current source-linked news and price/liquidity context before suggesting an action. Each review must show: (1) verified news facts with publication/observation times and links; (2) interpretation and confidence; (3) effect on the original thesis; (4) current price, spread/volume and halt status when available; (5) actual entry fill/cost and current sell limit if known; (6) manual choices and risks. A verified adverse deal/catalyst can raise `URGENT_MANUAL_REVIEW`. A halt/pause alone does not mean the thesis is intact. Missing or conflicting coverage must be `NEWS_UNKNOWN`/`CONFLICTING`, never “no news.” Any lower sell limit must be assessed against actual entry economics; the goal can be the smallest profitable exit, but profit cannot be assumed from the close-based target. Never automatically cancel, replace, sell, or change an order.
