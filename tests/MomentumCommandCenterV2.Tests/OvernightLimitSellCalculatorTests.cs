@@ -72,6 +72,17 @@ public sealed class OvernightLimitSellCalculatorTests
         Assert.True(costed.EstimatedNetReturnPercent >= 0.199);
     }
 
+
+    [Fact]
+    public void MissingSymbolProducesNoRecommendationInsteadOfNullDereference()
+    {
+        var result = new OvernightLimitSellCalculator().Calculate(GoodInput() with { Symbol = null });
+
+        Assert.False(result.IsCalculable);
+        Assert.Null(result.LimitPrice);
+        Assert.Contains("SYMBOL_MISSING", result.ReasonCodes);
+    }
+
     [Fact]
     public void ResultNeverRepresentsAnOrderSubmission()
     {

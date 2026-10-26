@@ -24,13 +24,14 @@ public sealed class OvernightLimitSellCalculator
     {
         ArgumentNullException.ThrowIfNull(input);
 
+        var normalizedSymbol = input.Symbol?.Trim().ToUpperInvariant() ?? string.Empty;
         var history = input.CompletedEligibleWindowHighExcursionsPercent?
             .Where(double.IsFinite)
             .OrderBy(x => x)
             .ToArray() ?? Array.Empty<double>();
 
         string? invalid = null;
-        if (string.IsNullOrWhiteSpace(input.Symbol)) invalid = "SYMBOL_MISSING";
+        if (normalizedSymbol.Length == 0) invalid = "SYMBOL_MISSING";
         else if (input.EntryPrice <= 0) invalid = "ENTRY_PRICE_INVALID";
         else if (input.DesiredHistoricalTouchProbabilityPercent is <= 0 or >= 100)
             invalid = "TOUCH_PROBABILITY_MUST_BE_BETWEEN_0_AND_100";
@@ -76,7 +77,7 @@ public sealed class OvernightLimitSellCalculator
             reasons.Add("HISTORICAL_EXCURSION_BELOW_MINIMUM_NET_EDGE");
 
         return new OvernightLimitSellRecommendation(
-            input.Symbol.Trim().ToUpperInvariant(),
+            normalizedSymbol,
             limitPrice,
             targetReturnPercent,
             excursionPercent,
