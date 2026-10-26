@@ -304,3 +304,9 @@ The Morning Brief endpoint now persists the observed SPY/QQQ/IWM bars it fetches
 - Per-bar ThinkScript diagnostic fields were not present in the two XRPN OHLCV report files. Data not found in sources.
 - The scanner screenshot has no source-backed news/catalyst or complete liquidity evidence; shortlist is for chart review, not a buy/hold recommendation.
 - The local Alpaca credentials are user-reported as saved; actual API authentication has not yet been observed in this conversation.
+
+
+### Handoff status after documentation edits — 2026-10-26
+
+- Updated this handoff, docs/Next-Steps-and-User-Inputs.md, docs/Master-To-Do.md, docs/Release-Readiness-2026-10-26.md, and src/MomentumCommandCenterV2.API/README.md with the XRPN 1M/5M alignment result, the missing diagnostic-state evidence, the Overnight Scanner shortlist, and the exact Alpaca smoke-test procedure.
+- The latest documentation edits have not been independently tested by a current-head GitHub Actions run in this session. Do not describe the latest branch head as CI-green until a run tied to the exact head completes.
