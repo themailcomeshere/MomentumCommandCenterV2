@@ -99,3 +99,7 @@ The existing October 19 chart-parity worksheets contain chart entries for 20 bar
 Do not re-upload the HPK file. The remaining evidence needed is specifically:
 1. For READY root cause: same-symbol/date XRPN 1M OHLCV plus matching 1M/5M ThinkScript gate diagnostics, if October 2 is the target event.
 2. For Boring Overnight: full source-backed regular close and bars over the complete next GTC_EXT-eligible window, with gaps explicit; actual fills are a separate dataset.
+
+## Release-readiness summary
+
+See [Release-Readiness-2026-10-26.md](Release-Readiness-2026-10-26.md). Current posture is local prototype / diagnostic only, not approved for reliance on live decisions. The most useful next work is automated report-provenance validation, importer regression coverage, and completing offline replay/UI integration without weakening ThinkScript eligibility gates. User/Thinkorswim evidence is still required for XRPN October 2 READY diagnosis and full GTC_EXT-window overnight research.
