@@ -485,4 +485,4 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 - [BLOCKED — USER/THINKORSWIM] Obtain actual XRPN 1M for October 2 if that exact event remains the target; the new file was HPK and duplicates existing HPK rows.
 - [BLOCKED — USER/THINKORSWIM] Obtain same-bar 1M/5M gate-state diagnostics for READY-frequency attribution.
 - [BLOCKED — DATA SOURCE] Obtain full GTC_EXT eligible-window bars plus source-backed regular close for target reach research; actual fills are a separate data source.
-- [CI STATUS] Workflow `40380221253` passed for commit `cbbb601b`. Later documentation commits trigger new runs; current-head status must be rechecked before promotion.
+- [CI STATUS] Latest confirmed feature-branch head `c1895641` passed workflow `40380631692`; the release-readiness note was then updated, so recheck the workflow for the resulting newest head before promotion.
