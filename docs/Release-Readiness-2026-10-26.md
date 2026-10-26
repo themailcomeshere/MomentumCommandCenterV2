@@ -88,3 +88,16 @@
 
 - Why existing saved credentials are not present under this API project's UserSecretsId is unknown.
 - Screenshot review cannot establish source-backed target reach rates or actual order fills.
+
+
+## Update — 2026-10-26 (SPY smoke test and provider-status semantics)
+
+- [PASS — ALPACA HISTORICAL REQUEST] Visual Studio API returned 5 SPY 5M IEX bars for 2026-10-23T13:30Z–13:50Z, persisted 5 observations, zero duplicate timestamps, zero reported gaps, no provider error. This is a successful historical data smoke test for that window.
+- [STATUS ENDPOINT DEFECT FOUND] `/api/providers/status` was hardcoded to report `CONFIGURED_NOT_YET_VALIDATED` whenever credentials existed, irrespective of successful data retrieval. This made the status misleading after the successful compare.
+- [CODE UPDATED — NEEDS TEST/CI] Provider adapters now track the last successful non-empty response in process memory. Status reports `VALIDATED_DATA_RETURNED` with validation timestamp and bar count after data is returned; empty results do not mark validation. Added an empty-response unit test. Exact updated-head test/CI result remains unverified.
+- [LIMITS] This does not validate all symbols/time windows, SIP entitlement, streaming, overnight GTC_EXT coverage, or production readiness. Massive remains unconfigured and is not required for the initial Alpaca path.
+
+## [Uncertainties]
+
+- The current feature-branch head's CI and Release test status have not yet been observed after the provider-status code changes.
+- Provider validation is process-local and resets on API restart; durable validation history is not implemented.
