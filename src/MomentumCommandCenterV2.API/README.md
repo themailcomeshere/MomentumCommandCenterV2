@@ -60,3 +60,17 @@ Provider-comparison requests append valid returned bars to an append-only JSONL 
 ## What requires accounts versus what does not
 
 Accounts are not required to continue implementing provider-neutral infrastructure or fixture-based tests. Free credentials are useful for validating real authentication, response shapes and timestamps. Do not buy a paid plan until proof-of-fit and licensing checks are complete. One configured provider can be smoke-tested; both are needed only for direct side-by-side provider comparison. See [Next Steps and User Inputs](../../../docs/Next-Steps-and-User-Inputs.md).
+
+
+## Alpaca smoke test — step by step
+
+Use the Alpaca key and secret already saved in this machine's .NET User Secrets store. Do not paste them into chat or commit them. If they were saved for a different project/UserSecretsId, the API may not see them; verify with the provider-status endpoint before resetting anything.
+
+1. From the repository root, run: dotnet run --project src/MomentumCommandCenterV2.API
+2. Use the local URL/port printed by ASP.NET Core. Open /api/health and confirm the API responds.
+3. Open /api/providers/status. Confirm Alpaca reports configured. This checks configuration only; it does not authenticate to Alpaca.
+4. Request /api/market-data/compare?symbol=SPY&timeframe=5m&from=2026-10-23T13:30:00Z&to=2026-10-23T13:50:00Z. This asks for the 09:30–09:50 Eastern window on 2026-10-23. Use the same local host/port as step 2. Inspect Alpaca status/error, bar count, first/latest source timestamps, feed, duplicates and observed gaps. If Massive is not configured, its provider error is expected; report it separately.
+5. Separately run dotnet test MomentumCommandCenterV2.sln --configuration Release from the repository root. Passing tests validate local code/fixtures; they do not prove live authentication or data entitlement.
+6. Report only sanitized output: HTTP status, provider status/error, feed name, returned bar count, source timestamps, duplicate count and gap count. Remove keys, secrets, authorization headers and tokens.
+
+Keep the feed set to iex unless the Alpaca account explicitly entitles a different feed. No paid subscription and no Massive account are required for this first Alpaca-only smoke test. A successful request still does not establish that the account/feed is suitable for live trading or that extended-hours coverage matches Thinkorswim.
