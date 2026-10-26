@@ -460,3 +460,16 @@ Use `docs/Next-Steps-and-User-Inputs.md` as the single checklist for user action
 - [DONE — TEST SOURCE UPDATED, CI NOT YET CONFIRMED] Updated the high-quality label assertion and added four negative-metric cases covering negative RVOL, ATR extension, recent range, and resistance distance; invalid metrics should fail closed to `DATA_UNKNOWN`.
 - [OPEN — CI VERIFICATION] GitHub combined commit status returned no status records for the latest branch commit at audit time. Do not call the current branch build/test green until a workflow run tied to the latest commit is confirmed.
 - [INTEGRATION CAUTION] Repository compare reports `feature/opportunity-quality-classification` as diverged from `master` (268 commits ahead and 152 behind in the compare result). Do not merge this branch wholesale into master without a deliberate file/history reconciliation. The changes in this work session remain on the feature branch.
+
+## October upload uncertainty assessment — 2026-10-26 (supersedes prior preliminary note)
+
+- [DONE — DATA PROVENANCE] Inspected the newly uploaded `StrategyReports_XRPN_10022026_1M_EntireDay_2.csv` by report header and embedded payload. It is actually **HPK 1M**, October 2, with 214 rows from 06:30–12:59 Arizona. Renamed it to `data/StrategyReports_HPK_10022026_1M_EntireDay.csv` and removed the misleading XRPN-named path.
+- [DATA QUALITY] Those 214 rows match all corresponding October 2 rows in the existing HPK multi-day file exactly. The upload is a duplicate/subset, not new XRPN data. The October 2 XRPN 5M file still has no verified same-symbol XRPN 1M partner.
+- [PARTIAL — CHART PARITY] Existing October 19 parity worksheets have chart-entered values for 20 bars per timeframe: 1M has 10 MATCH and 10 ROUNDING ONLY; 5M has 9 MATCH and 11 ROUNDING ONLY. 48 1M and 13 5M rows remain unfilled. This supports sampled OHLCV transport mapping but not full chart/session parity.
+- [PARTIAL — TIMESTAMP SEMANTICS] All 40 manually entered chart labels match the local clock digits represented by the payload timestamps. The worksheet records `ChartTimestampMeaning=MATCH`, not BAR_OPEN/BAR_CLOSE/decision availability; the timestamp convention is not fully documented.
+- [BLOCKED — GAP CLASSIFICATION] October 2 HPK 1M has 214 of 390 expected minute timestamps, leaving 176 absent. October 19 XRPN has 30 absent timestamps in the 09:00–12:59 interval. Do not infer that missing rows are no-trade periods or chart gaps.
+- [BLOCKED — READY ROOT CAUSE] The parity worksheets contain OHLCV chart values, not per-bar ThinkScript READY/Permission/candidate/extension/re-arm states. The October 2 XRPN diagnostic question still needs XRPN 1M and same-bar diagnostic state.
+- [BLOCKED — BORING OVERNIGHT] No complete 07:00–20:00 Eastern GTC_EXT window or actual-fill dataset has been found. `eligible-window-high-excursions.csv` remains placeholder data.
+- [CI] GitHub Actions run `40379797275` for commit `e7e59d4` completed successfully (restore, build, test). Documentation commits made after that run trigger newer runs; do not treat the current branch head as green until its own run completes.
+- [INTEGRATION CAUTION] Keep branch-divergence caution in force; do not merge this feature branch wholesale into master.
+- Detailed uncertainty table: `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
