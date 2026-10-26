@@ -501,3 +501,18 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 - Study diagnostic exports are not present in the reviewed October 2 OHLCV files.
 - Alpaca credentials are user-reported as saved; live auth is not yet verified.
 - Screenshot-based overnight shortlist is provisional; catalyst/news clearance and full data coverage are unavailable.
+
+
+## Correction and verification update — 2026-10-26
+
+- [CORRECTED] Prior chart screenshot request for 2026-10-26–10-28 was invalid. User is providing AHR, FMS, NNN charts for completed historical dates 2026-10-21–10-23. Accept those for visual triage; do not ask them to retake based on the invalid request.
+- [PASS — API HEALTH] /api/health reports OK, decision-support-only; order submission is not implemented.
+- [PASS — TESTS, USER-REPORTED] Release test command succeeded: 87 passed, 0 failed, 0 skipped.
+- [BLOCKED — LIVE PROVIDER] Both Alpaca and Massive report NOT_CONFIGURED. Compare endpoint returned zero bars and zero persisted observations. Alpaca error identifies missing MarketData:Alpaca:ApiKey and ApiSecret or ALPACA_API_KEY / ALPACA_API_SECRET. User's saved credentials are not available to this API process under its current configuration.
+- [NEXT — LOCAL ACTION] API UserSecretsId is MomentumCommandCenterV2-API-Local. Run the two dotnet user-secrets set commands documented in NewChatHandoff.md and Next-Steps-and-User-Inputs.md, restart API, verify provider status, and rerun compare. Never send credentials in chat. Massive can remain unconfigured.
+- [OPEN — XRPN] 1M/5M OHLCV alignment verified for 78 complete windows; per-bar Permission/block/candidate/extension-danger/READY/re-arm/expiration diagnostics remain missing from reviewed reports.
+
+## [Uncertainties]
+
+- Existing credential storage location is not known; project-scoped User Secrets should resolve this if credentials are already owned and valid.
+- Screenshots are visual evidence only; full-window OHLCV and actual fill outcomes remain unverified.
