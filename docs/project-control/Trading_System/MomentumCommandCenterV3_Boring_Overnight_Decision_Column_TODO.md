@@ -219,4 +219,12 @@ ADR pass-through fees are depositary fees for certain ADR holdings, not specific
 No Friday entries does not prevent a Thursday position from remaining open over the weekend. Define latest entry time, whether Thursday entries are allowed, sell review/cancel/reprice rules, exit deadline, and whether positions may be carried over weekends. Do not auto-cancel or reprice without explicit user authorization. Until the policy is decided, any open position/unfilled exit must remain a visible alert, not a completed cycle.
 
 ### Release gate
-The +0.5% target is an objective to test, not a near-guarantee. The first usable release should be read-only/manual review with order-eligibility, catalyst, data freshness, liquidity, cost, and weekend-risk gates. It must not submit orders.
+The +0.5% target is the operator's chosen heuristic (motivated by observed median ON % often around 0.56–1.00%), not a fixed strategy rule or a near-guarantee. It must be compared with history-derived targets. The first usable release should be read-only/manual review with order-eligibility, catalyst, data freshness, liquidity, cost, and weekend-risk gates. It must not submit orders.
+
+
+## 2026-10-26 — Operator corrections and launch additions
+
+- The +0.5% limit is a current heuristic, not a rule. The research goal is to derive candidate targets from historical eligible-window highs, compare those against +0.5%, and evaluate out-of-sample. Keep reference-close study and actual-fill trade records separate.
+- Do not request the user's secondary OTC list for current launch work. Keep the canonical 55-symbol repository list append-oriented and focus on wiring the shared provider where relevant; revisit the $6.95 fee/opportunity-cost trade-off later using actual economics.
+- When an overnight sell remains unfilled, use source-linked Market News plus price/liquidity context to diagnose the thesis and present manual options. A confirmed adverse deal change can trigger urgent manual review; a halt/pause alone is not proof the thesis is intact. Missing/conflicting news must be explicit. Never auto-cancel, replace, sell, or change the limit.
+- Historical-data request: for the first Boring Overnight pilot, an OHLCSV export is useful only if timestamps and coverage include the relevant regular close and following GTC_EXT-eligible sell window. If the export does not contain extended-hours bars for the full interval, mark DATA_GAP. High-touch is not fill probability.
