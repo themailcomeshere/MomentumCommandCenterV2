@@ -112,8 +112,8 @@ Confirmed workflow: LMT EXT buy between 3:00–5:00 PM Arizona, Monday–Thursda
 - [x] Implement a configurable reference-close target-touch evaluator (PR #5 merged and tests passed); it reports touch/no-touch and DATA_GAP for incomplete coverage. First-touch time still requires interval-level observations. Do not repurpose the percentile calculator for this question.
 - [ ] Verify target rounding against the actual order price rules and hand calculations.
 - [ ] Keep the percentile-based historical-reach calculator as a separate research tool only if its baseline/session definition matches the intended question.
-- [ ] Wire the shared Schwab exclusion provider through all qualification paths.
-- [ ] Define stale position, unfilled sell, Thursday and weekend behavior before showing READY.
+- [ ] Wire the shared Schwab exclusion provider through all relevant qualification paths; secondary OTC-list reconciliation is deferred.
+- [x] Operator specified desired approach: news-assisted diagnosis and manual decision for unfilled sells; no fixed automatic action and no automated order changes. Implementation remains outstanding.
 - [ ] Validate broad labeled sample including losers, catalysts, low liquidity, gaps and no-fill cases.
 - [ ] Missing/unverified catalyst coverage must produce DATA? or manual review, never confident READY.
 - [ ] Keep this read-only/manual. No automated order submission.
@@ -124,7 +124,7 @@ Not ready for unattended or fully trusted Boring Overnight use. A successful bui
 
 ## [Uncertainties]
 - Historical source/feed coverage for the actual GTC_EXT-eligible session is not established.
-- The exact manual action for an unfilled position across Thursday/weekend is not yet specified.
+- The manual action remains case-specific and will be informed by current news/market context; the user does not want a fixed automatic response.
 - A historical high-touch result is not evidence of an actual limit fill.
 ## 9. Clarification from the operator — actual Boring Overnight workflow (2026-10-26)
 
@@ -141,13 +141,13 @@ The relevant UI reference is the user's existing “Use the Overnight” watchli
 
 ## 10. What the baseline choices mean for this strategy
 
-The strategy deliberately sets the sell limit from the end-of-day close, not necessarily from the buy fill. There are two distinct return questions:
+The current workflow sets the sell limit from the end-of-day close, not necessarily from the buy fill. The +0.5% level is the operator's chosen heuristic, motivated by observed median ON % often around 0.56–1.00%; it is not a fixed strategy rule. There are three distinct research questions:
 
-- **Reference-close / strategy-rule study (best first research sample):** For each symbol/date, set target sell limit = relevant regular-session close × 1.005. Check whether the observed high reaches that target during the next sell-eligible window covered by GTC_EXT. Record whether the target was touched and when, if timestamps are available. This can be researched without the operator having personally traded that symbol/date, provided historical prices and session coverage are real and verified. It is a target-touch study, not proof that an order would fill.
+- **Reference-close benchmark study:** For each symbol/date, evaluate the current +0.5% heuristic as one candidate: relevant regular-session close × 1.005. Check whether the observed high reaches it during the next sell-eligible window covered by GTC_EXT. This can be researched without a personal trade if the historical data and coverage are verified. It is a target-touch study, not proof that an order would fill.
 - **Actual-fill study:** For trades actually made, record actual buy fill price/time, sell limit price/time, sell fill price/time if sold, and any still-open/unfilled status. Calculate realized return from actual buy fill to actual sell fill. The operator's recent sample is too small to validate performance on its own.
-- **Both, kept separate:** Maintain two tabs/files, such as ReferenceCloseStudy and ActualTrades. Never pool observations into one percentile distribution. The first evaluates historical strategy-rule target touches across more symbol/dates; the second measures actual execution and realized outcomes. Compare them later, but do not treat one as the other.
+- **Historical-reach alternative:** Use completed eligible-window high excursions to estimate alternative target levels at a selected historical touch rate. Select levels on a development sample and test them on separate dates/symbols. Maintain separate ReferenceCloseStudy, HistoricalReachResearch, and ActualTrades datasets. Never pool them or treat a high-touch rate as a fill probability.
 
-For the reference-close study, minimum fields are symbol, date, source-backed regular-session close, target limit (close × 1.005, rounded according to the actual order's valid price rules), following sell-window start/end, observed high and timestamp, whether target was touched, source/feed, data coverage/missing intervals, catalyst/market notes, and provenance.
+For the reference-close benchmark, minimum fields are symbol, date, source-backed regular-session close, candidate target (close × 1.005, rounded according to the applicable valid-price rules), following sell-window start/end, observed high and timestamp, whether target was touched, source/feed, data coverage/missing intervals, catalyst/market notes, and provenance. Preserve the full high-excursion distribution for alternative-target research.
 
 ## 11. Simplified data collection path — no invented spreadsheet and no requirement for many personal trades
 
@@ -156,26 +156,26 @@ Do not ask the operator to produce 20 historical personal trades. Use two tracks
 **Track A — historical reference-close pilot (primary blocker):**
 1. Select a small pilot set of candidate symbols and completed dates. Include all qualifying cases in the selected sample, not only winners.
 2. Obtain actual historical daily close plus historical extended-hours/premarket data from a source whose coverage is verified for the required window.
-3. For each symbol/date, calculate target = close × 1.005; inspect the next eligible sell window; record whether the high touched target and when.
+3. For each symbol/date, evaluate the current +0.5% heuristic and retain the observed eligible-window high excursion; later use separate development/test samples to evaluate history-derived target alternatives.
 4. Record source/feed and exact session coverage. If the source cannot cover the GTC_EXT-eligible window, mark the row DATA_GAP and do not count it.
 5. Start with a small hand-verified pilot (for example, five symbol/date rows) to prove the workflow and calculations. Expand only after the source and session mapping are proven. The existing calculator's 20-observation minimum applies when using that calculator; it does not mean 20 personal trades are required.
 
 **Track B — actual trade journal (secondary validation):**
 For every future trade, preserve symbol/date, MCC score and decision output at entry, buy order and actual fill, reference EOD close used for target, target limit, sell order qualifier, sell fill/time or open status, and any manual intervention. This is prospective data collection. Do not reconstruct unknown values from memory as if verified. Add historical trades only where records/screenshots provide evidence.
 
-**Important:** if the current CLI accepts only excursion_percent and computes a percentile threshold from excursion samples, it may not answer the fixed-target question “did high reach EOD close × 1.005?” Do not feed target-touch binary results or arbitrary excursion values into it. Inspect implementation/tests and add a separate fixed +0.5% historical target-touch evaluator if the current calculator's semantics do not match the strategy.
+**Important:** the current repository has two separate tools: the percentile calculator proposes a target from historical high excursions, while the configurable target-touch evaluator measures whether a chosen reference-close target was reached. Neither establishes actual fill probability. Do not feed target-touch binary results or arbitrary values into the percentile calculator.
 
 ## 12. User-confirmed policy and remaining engineering gates
 
 - Buy order: LMT EXT, 3:00–5:00 PM Arizona time, Monday–Thursday; no new Friday entries.
-- Sell order: LMT GTC_EXT at the relevant regular-session EOD close +0.5%, not necessarily actual buy fill +0.5%.
+- Sell order: LMT GTC_EXT; the current chosen heuristic is relevant regular-session EOD close +0.5%, not necessarily actual buy fill +0.5%. The target is open to historical optimization, not a fixed rule.
 - Sell may fill same evening, next morning premarket, or shortly after regular open.
 - GTC + Extended is acceptable; user-reported active window is 7:00 AM–8:00 PM ET. EXTO 24h is not a current requirement.
 - Weekend carry is allowed, including after Thursday entries, with an explicit manual risk plan.
 - Current checks include the “Use the Overnight” watchlist columns; BMY Overnight Score reported as 33.49. This score does not prove order eligibility or profitability.
 - Do not use the small recent personal-trade sample as the sole validation dataset.
 
-Engineering work: source-backed historical price/session ingestion; fixed-target +0.5% touch study if current calculator is not semantically suitable; preserve provenance and gaps; exchange calendar/time-zone validation; synchronize and enforce both OTC exclusion lists across candidate paths; record actual fills prospectively; define manual weekend/open-position plan; keep decision support read-only with no automated orders.
+Engineering work: source-backed historical price/session ingestion; compare the +0.5% heuristic with historical-reach candidate targets; preserve provenance and gaps; exchange calendar/time-zone validation; enforce the canonical OTC exclusion list across candidate paths (secondary list reconciliation deferred); record actual fills prospectively; implement source-linked news-assisted manual review for unfilled positions; keep decision support read-only with no automated orders.
 
 
 ## 9. News-assisted unfilled-sell review (manual decision support)
