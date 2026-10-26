@@ -350,3 +350,44 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - The reason saved Alpaca credentials are not visible is unknown until project-specific User Secrets are checked locally.
 - The 10/21–10/23 chart screenshots may reveal visual behavior, but exact OHLCV coverage, GTC_EXT reach/touch rates, and actual fills cannot be established from screenshots alone.
 - XRPN diagnostic fields may have been uploaded separately, but their exact path is not identified in reviewed branch files.
+
+
+## Final Overnight review and Visual Studio credential update — 2026-10-26
+
+### Screenshot date mismatch — do not mislabel evidence
+
+- Three Project Sources screenshots were visually inspected: AHR, FMS, NNN.
+- All three visible chart headers show 2026-10-19 through 2026-10-21, not the intended 2026-10-21 through 2026-10-23. Treat these screenshots only as a provisional visual read of Oct 19–21. Do not report them as the Final Analysis of the intended Oct 21–23 sample and do not infer the missing two dates.
+- User had already been asked to capture Oct 21–23 after the assistant's earlier invalid future-date request. Do not ask the user to repeat work because of the assistant's mistake; ask only for the correct-date screenshots if they are not already present elsewhere in Project Sources.
+- A chart screenshot can support qualitative visual observations, but not full GTC_EXT eligible-window coverage, exact target touch rates, actual fills, or a statistically validated target recommendation.
+
+### Provisional chart observations (visual only; dates shown are Oct 19–21)
+
+- **AHR:** The chart shows an early-session rise/spike toward the displayed high near 54.76, followed by a broad fade and lower prices into the right edge. The 5M status ribbon at the right edge reads 5M STATE: GET OUT, 5M PERMISSION: NO, bearish structure, extension about 1.71 ATR, and EOD GET OUT. This is consistent with deterioration by the displayed endpoint, not proof of overnight behavior or a sell-fill outcome.
+- **FMS:** The chart shows a sharp downward gap/flush around the Tue boundary from roughly 22.0 to a low near 20.91, followed by a partial recovery and then relatively flat/lower consolidation near 21.5–21.7. The right-edge ribbon shows 5M STATE: GET OUT, 5M PERMISSION: NO, transitioning structure, RSI around 75.8 and extension around 6.46 ATR. The large gap and extreme displayed extension make this a poor example of a “boring” overnight without event/price-context investigation.
+- **NNN:** The chart shows a rise from roughly 40.5 into a spike/high around 41.67, then a sustained fade toward about 40.6 by the right edge. The right-edge ribbon still shows permission YES / runner structure and rising runner momentum while extension is around 2.53 ATR and EOD is active. This demonstrates that a persistent 5M permission/runner state can coexist with intraday price deterioration and elevated extension; it does not prove overnight suitability.
+- These observations are intentionally descriptive. The screenshots' exact dates/session boundaries and visual scale are not a substitute for exported bars and reference closes. No target-touch percentage is derived from them.
+
+### Alpaca credentials and Visual Studio launch context
+
+- User reports both MarketData:Alpaca:ApiKey and MarketData:Alpaca:ApiSecret were successfully saved to a .NET User Secrets store.
+- User runs the application through Visual Studio and navigates to localhost endpoints; they are not launching the app with the previously provided dotnet run command.
+- The next live-provider check must be made against the same Visual Studio-launched API process. User Secrets are loaded for the API project's UserSecretsId only when the app runs in Development configuration (the usual Visual Studio profile, but verify the launch profile/environment rather than assume).
+- Stop/restart and re-run the API from Visual Studio after saving the secrets so the process reloads configuration. Then open /api/providers/status and /api/market-data/compare?symbol=SPY&timeframe=5m&from=2026-10-23T13:30:00Z&to=2026-10-23T13:50:00Z on the same localhost port.
+- Success requires actual returned bars and source timestamps, not just configured: true. If still unconfigured, check the API project's exact UserSecretsId, Visual Studio launch profile's environment, and whether the secrets were set under the same Windows user. Do not share credentials or secret-store output containing values.
+- Massive can remain unconfigured for the initial test.
+
+### Immediate status / next steps
+
+1. Assistant: keep the three chart screenshots marked as Oct 19–21; do not overstate them as Oct 21–23.
+2. User: if Oct 21–23 screenshots exist in Project Sources, identify/attach the exact correct three files; otherwise provide the intended-date screenshots when convenient. No need to re-capture anything just to satisfy the earlier invalid date request.
+3. User: restart the API in Visual Studio, verify /api/providers/status, then inspect /api/market-data/compare for real bars and source timestamps; send sanitized output only.
+4. Assistant: after correct-date evidence and provider response are available, complete the date-correct visual review and then pursue full-window OHLCV / GTC_EXT target-touch research. Keep the launch recommendation blocked until evidence supports it.
+5. Do not change the +0.5% reference target or claim it is optimized based on these screenshots. It remains a heuristic until a verified sample of full eligible windows is analyzed.
+
+## [Uncertainties]
+
+- Data not found in sources for the intended Oct 21–23 chart screenshots in the files inspected in this turn; the three inspected images visibly show Oct 19–21.
+- It is not yet known whether the correct screenshots exist elsewhere in Project Sources but were not returned by the available file search.
+- The visual chart endpoint status is not an independent provider/data export and does not establish order fills, catalyst clearance, or overnight returns.
+- Whether Visual Studio is using Development and the same user-secrets profile remains to be confirmed from the actual running process.
