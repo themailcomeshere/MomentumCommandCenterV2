@@ -103,3 +103,28 @@ Do not re-upload the HPK file. The remaining evidence needed is specifically:
 ## Release-readiness summary
 
 See [Release-Readiness-2026-10-26.md](Release-Readiness-2026-10-26.md). Current posture is local prototype / diagnostic only, not approved for reliance on live decisions. The most useful next work is automated report-provenance validation, importer regression coverage, and completing offline replay/UI integration without weakening ThinkScript eligibility gates. User/Thinkorswim evidence is still required for XRPN October 2 READY diagnosis and full GTC_EXT-window overnight research.
+
+
+## 2026-10-26 follow-up — XRPN pair and Alpaca smoke test
+
+### XRPN October 2 evidence status
+
+- [DONE — OHLCV PAIR] data/StrategyReports_XRPN_100226_1M_EntireDay_New.csv is the intended XRPN 1M export. It contains 391 consecutive minute timestamps from 06:30–13:00 Arizona. Paired with the October 2 XRPN 5M export, 78 complete 5M windows aggregate from 1M and match OHLCV.
+- [OPEN — STUDY STATE] The files contain OHLCV transport payloads only. Per-bar Permission/block code/candidate/extension-danger/READY/re-arm/expiration diagnostic fields: Data not found in sources. If uploaded separately, provide the exact path; otherwise export diagnostic output for the same bars/timeframes.
+
+### Alpaca smoke test — exact user steps
+
+The saved Alpaca key/secret are the intended credentials. Do not paste them into chat. From the repository root:
+
+1. Start the API: dotnet run --project src/MomentumCommandCenterV2.API.
+2. Open /api/health and confirm the API responds.
+3. Open /api/providers/status; confirm Alpaca is configured. This does not prove live authentication.
+4. Call /api/market-data/compare?symbol=SPY&timeframe=5m&from=2026-10-23T13:30:00Z&to=2026-10-23T13:50:00Z using the host/port printed by ASP.NET Core. Inspect Alpaca status/error, bar count, first/latest source timestamps, feed, duplicates and gaps. Massive may report not configured; record separately.
+5. Run dotnet test MomentumCommandCenterV2.sln --configuration Release independently. User-reported 87/87 tests passed is fixture/offline test evidence, not proof of real API connectivity.
+6. Report only sanitized response fields and errors; remove credentials, authorization headers and tokens.
+
+If Alpaca shows unconfigured, reset only the local User Secrets values using the commands in src/MomentumCommandCenterV2.API/README.md. Keep the iex feed unless the account explicitly entitles another feed. No paid plan or Massive account is needed for this first smoke test.
+
+### Boring Overnight screenshot next step
+
+Initial chart-review candidates from the 2026-10-26 Overnight Scanner screenshot: TTE, RTO, NNN, OKE, AHR, FMS; CCI is a secondary comparison. This is a research shortlist, not a qualification decision. Capture each on a 5-minute chart with extended hours enabled, same visible window: 2026-10-26 regular session through 2026-10-27 20:00 Eastern, ensuring the next-day 07:00–20:00 Eastern window and prior regular close are visible. For quantitative reach/touch research, follow with source-backed OHLCV export and explicit DATA_GAP intervals.
