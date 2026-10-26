@@ -127,6 +127,6 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 - The +0.5% sell target is the user's current heuristic benchmark, not a fixed strategy rule. Keep it as one candidate and compare alternative target limits only after a source-backed historical reach study with out-of-sample evaluation.
 - The current October 19 XRPN OHLCV pair is daytime-only and has known one-minute timestamp gaps. It cannot establish full-window overnight reach or actual fill probability.
 - The newly uploaded October 2 file was actually HPK 1M and duplicates the October 2 portion of the existing HPK multi-day file. It does not create an XRPN October 2 pair.
-- `eligible-window-high-excursions.csv` contains placeholder values, not market observations. Do not use it to estimate target reach.
+- The prior placeholder rows in `eligible-window-high-excursions.csv` have been removed; it is now header-only with zero observations. Do not use it to estimate target reach.
 - Until full eligible-window OHLCV and source-backed regular-session closes are available, mark affected rows `DATA_GAP`; do not recommend a new limit from incomplete data. Keep actual fills/fees separate from reference-close touch research.
 - Detailed uncertainty dispositions and next evidence: `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
