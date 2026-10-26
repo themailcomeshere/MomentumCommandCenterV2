@@ -429,3 +429,38 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - Exact TTE 1M study version and `showStateBubbles` input are not visible in the screenshot; these are the main unresolved causes of the blank bubble display.
 - The provider validation state is intentionally in-memory and process-local; no durable provider-health history has been implemented.
 - The successful SPY test proves the requested historical IEX bars were returned, not SIP entitlement, real-time stream, all symbols, or full GTC_EXT coverage.
+
+
+## 2026-10-26 — CCI/NICE review, date-correct screenshot review, and 1M EOD bubble fix
+
+### Historical screenshot set — COMPLETE for visual triage
+- User confirms the three AHR/FMS/NNN screenshots represent the 2026-10-21–2026-10-23 sample. Accept the correction; do not ask for re-upload. Full visual notes are in docs/Validation/Overnight-Candidate-Review-20261026.md.
+- AHR: visible spike then fade; right edge showed GET OUT / 5M Permission NO. Not boring at that snapshot.
+- FMS: 5M Permission NO and EOD GET OUT; 1M extension about 6.45 ATR. Abnormally extended for a consistency-first overnight hold.
+- NNN: best 5M permission of the three at the visible right edge (Permission YES / runner regime / execution environment YES), but 1M PREPARE and extension about 2.53 ATR. Scanner Boringness score 55.23 is below 60, so this is not a Boring Overnight READY.
+- Screenshot-only triage is complete. Quantitative overnight target-touch research is still blocked on source-backed prior regular close and complete subsequent 07:00–20:00 Eastern GTC_EXT bars; missing intervals remain DATA_GAP and a touch is not a fill.
+
+### New candidates CCI and NICE — WATCH, neither READY
+- Scanner columns: CCI score 68.11 (AGGRESSIVE), ON Win 60%, AVG ON 1.24%, median 0.08%, 5D 2.73%, current ON 0.03%. Mean/median divergence warns that a few large gaps may dominate the average. CCI chart: 5M Permission NO, neutral structure, bullish regime not established, RVOL 0.04, extension 1.23 ATR.
+- NICE score 60.47 (AGGRESSIVE), ON Win 75%, AVG ON 0.70%, median 0.60%, 5D 0.70%, current ON 0.55%. Rounded 5D and average values are equal; verify unrounded values against the strict 5D > 20D hard gate. NICE chart: 5M Permission YES but neutral structure, RVOL 9.48, extension 0.45 ATR, execution environment NO; price is below displayed VWAP/EMA9/EMA20/SMA50. Neither candidate qualifies from supplied evidence.
+- Catalyst state and 20-day average daily share volume are not shown. Keep catalyst UNKNOWN; do not label READY. Full analysis and values are in docs/Validation/Overnight-Candidate-Review-20261026.md.
+
+### TTE 1M bubble root cause and source fix
+- User confirmed TTE and FMS use the same study/settings. Source inspection shows V14.5 only creates bubbles on transitions/events; the final EOD_GET_OUT state was label-only and was not included in stateBubbleEvent. Therefore an EOD/GET OUT label could appear without a bubble. This is a source-level omission, not evidence of a different 5M permission state.
+- Updated docs/Charts/1M/MainStudy.txt to emit one red “EOD GET OUT” bubble on the transition into EOD_GET_OUT. This does not change entry gates, 5M authority, or state calculations; it only makes the EOD state transition visible. Source file is not automatically installed in Thinkorswim.
+- User action: paste/update the 1M study from the repository source in Thinkorswim, save/apply it to TTE, then confirm one EOD GET OUT bubble appears when the chart enters the EOD state. Do not edit the 5M study. If other event bubbles remain absent outside EOD, use showHistoricalDebugBubbles=yes only for a tightly zoomed diagnostic window; turn it back off after debugging.
+
+### Alpaca status and CI
+- User's actual SPY 5M IEX compare returned 5 bars and 5 persisted observations for 2026-10-23 13:30Z–13:50Z, with zero duplicate timestamps, zero reported gaps and no error. The status endpoint then correctly returned VALIDATED_DATA_RETURNED after the provider-status code update; validation is process-local and resets on API restart.
+- GitHub Actions .NET build/test workflow passed on commit 4f5ed265e54e9a924935a58b8b3233b31b264279 (run 40414827751). User also reports 88 tests passed. The subsequent ThinkScript text edit and documentation commits still require a current-head CI check; .NET CI cannot compile/validate ThinkScript semantics.
+- Massive remains unconfigured and is not needed for the initial Alpaca path.
+
+### Tonight / this week
+- No supplied candidate is fully Boring Overnight READY. For tonight, only continue with manual source-backed catalyst checks and exact scanner hard gates; if any required field is unknown, choose WATCH / zero position.
+- Near-term MCC work: current-head CI after the EOD bubble edit; install/verify the 1M EOD bubble; finish provider pagination/retries, collector lifecycle/recovery, durable data-quality states, Morning Brief and scanner contracts, and fixture-based Overnight calculations. Live stream, catalyst/news coverage, full GTC_EXT history, target-touch study, study parity, and realized outcomes remain release blockers.
+
+## [Uncertainties]
+- Exact unrounded scanner calculations, CCI/NICE daily average volume and catalyst status are not supplied.
+- The user's date range for AHR/FMS/NNN is accepted, but visible chart labels/axes do not align perfectly; verify per-bar timestamps before quantitative research.
+- No full GTC_EXT bars or actual fills for CCI/NICE/AHR/FMS/NNN were found.
+- Thinkorswim installation of the updated 1M study must be done by the user and confirmed visually.
