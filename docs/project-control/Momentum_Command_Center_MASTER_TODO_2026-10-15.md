@@ -278,3 +278,26 @@ Build an MCC-native equivalent of Thinkorswim MarketWatch: a semi-permanent, use
 - Use one short-lived branch per coherent code change when isolation, tests, review, or rollback matters (for example, a new evaluator plus its tests). Avoid multiple branches that duplicate the same task or leave competing versions of a document.
 - Before creating a branch, inspect existing branches and open PRs; update the existing task branch/PR when it is the same deliverable. After merge, verify the change is on `master`; do not assume closed branches were deleted.
 - Treat old feature branches as archival until their diff and merge status are checked. Do not delete branches without checking whether they contain unmerged work.
+
+
+## 17. Near-term launch critical path — 2026-10-26
+
+Goal: get the safest useful MCC workflow into manual use this week; do not call the full system production-ready simply because the CLI or build succeeds.
+
+### P0 — before relying on any Boring Overnight candidate
+1. [ENGINEERING] Build a fixed-rule reference-close evaluator for target = regular-session close × 1.005. Inputs must include symbol/date, close, eligible-window high and timestamp, source/feed, timezone/session bounds, coverage status, and provenance. Outputs: target, observed high, touch/no-touch, first-touch time if available, and DATA_GAP where coverage is incomplete. Add deterministic tests and hand-calculation examples.
+2. [ENGINEERING] Keep the percentile-based OvernightLimitSellCalculator separate. It answers a different question: what price threshold is suggested by a selected percentile of historical high excursions? Compare that candidate with the fixed +0.5% benchmark; do not label either a fill probability.
+3. [BLOCKER] Verify an actual historical source/feed covers the next GTC_EXT sell window (reported active 7:00 AM–8:00 PM ET) for the chosen symbols/dates. Until verified, status is DATA_GAP; Data not found in sources. Do not manufacture a pilot dataset.
+4. [ENGINEERING] Trace both maintained OTC exclusion lists and wire the shared Schwab exclusion provider into every Boring Overnight/scanner/Morning Report/MarketWatch qualification path. Verify the OTC-fee policy is applied only to excluded OTCs.
+5. [OPERATOR + ENGINEERING] Define visible/manual handling for an open position whose sell has not filled, including Thursday/weekend carry. No automatic cancel, replace, or sell.
+6. [OPERATOR WORKFLOW] Until P0 is complete, use MCC only as read-only candidate triage; verify the ticket, data freshness, catalyst status, spread/liquidity, and position risk manually. Do not infer an order instruction from READY or score alone.
+
+### P1 — urgent MCC usability issue
+- [INVESTIGATE] User reports MCC often fails to grant EXECUTION READY after 9:00 AM and requires repeated scanning/refreshing. Inspect the actual time-window gates, permission/state transitions, stale-state handling, and installed version. Reproduce from source/screenshots before editing; determine whether this is expected (morning-only entry window) or a defect that prevents daytime discovery. Do not broaden permission or change trading logic without evidence.
+- [AUDIT] Finish targeted 5M authority → 1M handoff comparison on aligned symbol/date/timestamps. The 5M authority and diagnostic sources matched; 1M proxy differences remain unvalidated.
+- [INTEGRATION] Wire the shared Schwab exclusion provider consistently and add tests proving excluded symbols cannot be marked eligible in each qualification path.
+- [DATA] Choose/verify the historical market-data provider, feed entitlement, extended-hours coverage, timestamps, and licensing/access. Do not assume Alpaca IEX or BOATS reproduces Schwab's full eligible window.
+
+### Launch boundary
+- [POSSIBLE THIS WEEK] Read-only/manual decision support with explicit unknown/stale/catalyst flags and a manual order checklist, if current quote/source evidence and exclusion checks are independently verified.
+- [NOT READY] Trusted historical-reach recommendations, automatic candidate READY, unattended position management, or automated orders until the source-backed validation and safety gates above pass.
