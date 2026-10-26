@@ -327,5 +327,5 @@ Goal: get the safest useful MCC workflow into manual use this week; do not call 
 
 - [SPEC CREATED] `docs/project-control/Trading_System/Boring_Overnight_Unfilled_Sell_News_Review_v0_1.md` defines evidence fields, publication/retrieval timestamps, thesis-impact analysis, manual choices, unknown/conflicting states, profitability math, and strict no-auto-order boundaries.
 - [SOURCE VERIFIED] Master already has `AlpacaApiClient.GetLatestNewsAsync()` and `alpaca-news-check`; it fetches up to five articles from the previous 24 hours. This is not complete market-news coverage and a zero-result response is not proof of no news.
-- [PR #6 OPEN / CI CHECKING] `alpaca-news-check` output enhancement adds provider summary, article update time, tagged symbols, URL, retrieval time, and explicit coverage warning. Do not call this a complete diagnosis workflow.
+- [MERGED PR #6; CI PASSED] `alpaca-news-check` now shows provider summary, article update time, tagged symbols, URL, retrieval time, and explicit coverage warning. This is still not a complete diagnosis workflow.
 - [NEXT] Build a read-only open-position review that combines retrieved news with known actual entry fill, current order status/limit, current quote/volume/spread, and any verified halt reason. Unknown inputs remain unknown. Any proposed target change is a manual option only.
