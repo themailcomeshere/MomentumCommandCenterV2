@@ -464,3 +464,9 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - The user's date range for AHR/FMS/NNN is accepted, but visible chart labels/axes do not align perfectly; verify per-bar timestamps before quantitative research.
 - No full GTC_EXT bars or actual fills for CCI/NICE/AHR/FMS/NNN were found.
 - Thinkorswim installation of the updated 1M study must be done by the user and confirmed visually.
+
+
+### CCI/NICE catalyst lookup — 2026-10-26
+- CCI: company source confirms Q3 2026 results and full-year outlook update were released Oct 21 after close. Treat as a recent earnings/outlook event; review post-earnings volatility before any boring overnight classification. Source: https://crowncastle.gcs-web.com/news-releases/news-release-details/crown-castle-reports-third-quarter-2026-results-and-updates.
+- NICE: official investor-relations event page currently lists no upcoming events, but that does not prove absence of company news or catalyst risk. Source: https://www.nice.com/investors.
+- Current outcome remains WATCH / NOT READY for both. See docs/Validation/Overnight-Candidate-Review-20261026.md for values and caveats.
