@@ -26,7 +26,7 @@ The normalized CSV schema is:
 Symbol,Timeframe,Timestamp,Open,High,Low,Close,Volume
 ```
 
-`Timestamp` is an ISO-8601 timestamp with an explicit offset and represents the completed source bar's availability timestamp. `Open`, `High`, `Low`, and `Close` are the source bar's OHLC values. `Volume` is `volume[1]`, the actual source bar volume; it is never previous close, inferred, or silently converted to zero. `Timeframe` is independently set to `1m` or `5m`. The parser rejects any other payload and rejects the legacy `kg_EveryTickSOHLCP` encoding because its volume field is not identifiable.
+`Timestamp` in the **normalized CSV contract** is an ISO-8601 timestamp with an explicit offset and represents the completed source bar's availability timestamp. `Open`, `High`, `Low`, and `Close` are the source bar's OHLC values. `Volume` is `volume[1]`, the actual source bar volume; it is never previous close, inferred, or silently converted to zero. `Timeframe` is independently set to `1m` or `5m`. The parser rejects any other payload and rejects the legacy `kg_EveryTickSOHLCP` encoding because its volume field is not identifiable. **The raw embedded `GetTime()[1]` payload timestamp is not yet proven to have this meaning.** The normalized contract is the target convention; the adapter must not claim conformance until the raw-to-normalized timestamp mapping is verified against chart labels and completed-bar availability.
 
 The current C# replay contract consumes completed-bar availability timestamps. If Thinkorswim's `GetTime()[1]` is confirmed to be a bar-open timestamp, the export adapter must convert it to the documented completed-bar timestamp using the verified aggregation interval and session rules before normalization. Do not apply that conversion until chart comparison proves the source convention.
 
@@ -47,7 +47,7 @@ If exact timestamps cannot be embedded reliably, do not guess. Use a verified re
 
 Run separate exports for `1m` and `5m`; do not mix them in one export job. Set the MCC strategy's `startTime` and `endTime` inputs explicitly for every run, and make the chart's extended-hours setting match the run. The default validation matrix is:
 
-- RTH-only: 9:30 AM–4:00 PM New York time;
+- RTH-only: 9:30 AMâ€“4:00 PM New York time;
 - extended-hours: the user's explicitly selected Thinkorswim extended session, recorded in the manifest;
 - no fixed Arizona offset: convert using a named IANA timezone such as `America/Phoenix` for Arizona and `America/New_York` for exchange time, allowing New York DST changes;
 - preserve the original offset in normalized timestamps and record the conversion convention;
@@ -55,7 +55,7 @@ Run separate exports for `1m` and `5m`; do not mix them in one export job. Set t
 
 The export strategy's session predicate is only a draft guard. The actual chart session settings and symbol's exchange calendar must be recorded and checked against consecutive chart bars.
 
-The strategy defaults are `startDate = 19700101`, `endDate = 20991231`, `startTime = 0930`, and `endTime = 1600`. Date inputs use Thinkorswim's `YYYYMMDD` exchange-session date. `SecondsFromTime` and `SecondsTillTime` use Eastern Time, matching the original `kg_EveryTickSOHLCP` comments; they are not Arizona wall-clock inputs. For example, during Eastern daylight time, 5:00 AM Arizona is approximately 8:00 AM Eastern. For an extended-hours run, change the Eastern-time inputs deliberately (for example, `0800` and `1100` for approximately 5:00–8:00 AM Arizona during DST) and enable extended-hours data on the chart. The date inputs filter calendar dates; the time inputs filter time of day. These inputs are not the same as the report's `Work Time` range: `Work Time` describes the first and last emitted report events, while the strategy inputs control which completed source bars emit MCC rows. The filter is applied to the same `[1]` source bar whose OHLCV values are encoded.
+The strategy defaults are `startDate = 19700101`, `endDate = 20991231`, `startTime = 0930`, and `endTime = 1600`. Date inputs use Thinkorswim's `YYYYMMDD` exchange-session date. `SecondsFromTime` and `SecondsTillTime` use Eastern Time, matching the original `kg_EveryTickSOHLCP` comments; they are not Arizona wall-clock inputs. For example, during Eastern daylight time, 5:00 AM Arizona is approximately 8:00 AM Eastern. For an extended-hours run, change the Eastern-time inputs deliberately (for example, `0800` and `1100` for approximately 5:00â€“8:00 AM Arizona during DST) and enable extended-hours data on the chart. The date inputs filter calendar dates; the time inputs filter time of day. These inputs are not the same as the report's `Work Time` range: `Work Time` describes the first and last emitted report events, while the strategy inputs control which completed source bars emit MCC rows. The filter is applied to the same `[1]` source bar whose OHLCV values are encoded.
 
 `aggregationLabel` does not change the chart aggregation. MCC now compares it with `GetAggregationPeriod()`, emits no rows on a mismatch, and derives the payload timeframe from the actual chart aggregation. Selecting `FiveMinute` requires changing the chart itself to 5 minutes; otherwise the label is red and no export rows should be produced.
 
@@ -116,3 +116,9 @@ The imported legacy reports show alternating close/open rows at each emitted tim
 1. The first emitted row's timestamp matches the expected source-bar timestamp or availability time.
 2. Subsequent rows alternate close/open as seen in the legacy reports.
 3. Declaring `BUY_TO_OPEN` before `SELL_TO_CLOSE` rows is necessary and effective.
+
+## October 19 chart-parity evidence update â€” 2026-10-26
+
+The committed parity worksheets currently have 20 chart-entered rows per timeframe. The 1M sheet records 10 `MATCH` and 10 `ROUNDING ONLY`; the 5M sheet records 9 `MATCH` and 11 `ROUNDING ONLY`. All 40 entered chart labels match the payload timestamp's Arizona-local clock digits. However, `ChartTimestampMeaning` is populated with `MATCH`, not a semantic value such as `BAR_OPEN`, `BAR_CLOSE`, or `AVAILABLE_AT`; 48 1M and 13 5M rows are unfilled. This is partial sampled parity, not complete timestamp-contract validation.
+
+The October 2 file uploaded with an XRPN-looking filename was actually HPK 1M and was renamed by symbol. The October 2 XRPN 5M report remains without a same-symbol 1M partner. See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
