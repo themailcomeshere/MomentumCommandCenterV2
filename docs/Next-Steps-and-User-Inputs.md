@@ -128,3 +128,21 @@ If Alpaca shows unconfigured, reset only the local User Secrets values using the
 ### Boring Overnight screenshot next step
 
 Initial chart-review candidates from the 2026-10-26 Overnight Scanner screenshot: TTE, RTO, NNN, OKE, AHR, FMS; CCI is a secondary comparison. This is a research shortlist, not a qualification decision. Capture each on a 5-minute chart with extended hours enabled, same visible window: 2026-10-26 regular session through 2026-10-27 20:00 Eastern, ensuring the next-day 07:00–20:00 Eastern window and prior regular close are visible. For quantitative reach/touch research, follow with source-backed OHLCV export and explicit DATA_GAP intervals.
+
+
+## Correction and local action — 2026-10-26
+
+### Boring Overnight chart window correction
+
+The prior request to chart 2026-10-26 through 2026-10-28 was incorrect. Do not use that future-facing window. User is capturing AHR, FMS, and NNN for 2026-10-21 through 2026-10-23; accept those screenshots for initial visual review. They do not by themselves establish full GTC_EXT target-touch research. Any next request must specify completed historical sessions and include the previous regular-session close plus the entire subsequent 07:00–20:00 Eastern window. Preserve missing bars as DATA_GAP.
+
+### Alpaca smoke-test result and fix
+
+The user supplied: /api/health OK; decision-support-only; order submission not implemented. /api/providers/status says Alpaca and Massive are NOT_CONFIGURED. /api/market-data/compare returned zero bars and zero persisted observations. Alpaca explicitly reports missing MarketData:Alpaca:ApiKey and ApiSecret or environment variables. Release tests: build succeeded; 87 passed, 0 failed, 0 skipped.
+
+Tests are green, but live market-data verification failed at configuration. API project UserSecretsId is MomentumCommandCenterV2-API-Local. Existing secrets may have been saved for another project ID or Windows user. From the repository root, set the existing credentials locally (replace placeholders only in local terminal):
+
+1. dotnet user-secrets set "MarketData:Alpaca:ApiKey" "<YOUR_EXISTING_ALPACA_KEY>" --project src/MomentumCommandCenterV2.API
+2. dotnet user-secrets set "MarketData:Alpaca:ApiSecret" "<YOUR_EXISTING_ALPACA_SECRET>" --project src/MomentumCommandCenterV2.API
+
+Do not paste actual secrets into chat or commit them. Restart API, verify /api/providers/status says Alpaca configured, then repeat compare endpoint. If still unconfigured, confirm same machine/user and exact project path. Massive can remain unconfigured.
