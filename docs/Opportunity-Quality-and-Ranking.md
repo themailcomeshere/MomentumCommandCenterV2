@@ -32,7 +32,7 @@ Use these as explainable output classifications, not claims of profitability:
 - `BLOCKED`: a hard eligibility or risk gate failed.
 - `DATA_UNKNOWN`: required data is missing, stale, or invalid.
 
-The final public labels can be shortened for chart display (e.g. `READY — HIGH`, `READY — BORING`) while preserving stable machine-readable reason codes.
+The public labels must remain distinct from the Thinkorswim `EXECUTION READY` event. Current display labels are `QUALITY — HIGH`, `QUALITY — MODERATE`, `QUALITY — LOW`, and `TIMING — EXTENDED`; stable machine-readable classifications and reason codes remain unchanged.
 
 ## Proposed input snapshot
 
@@ -157,4 +157,4 @@ The domain assessor and unit tests exist, but the classification remains a stand
 
 The October 19 XRPN 1M/5M export pair has been checked for internal OHLCV consistency on complete windows, but the files do not contain the internal ThinkScript gate states. It therefore does not calibrate the assessor or explain READY frequency. See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
 
-**Presentation rule:** Keep actual strategy eligibility/execution state distinct from quality. The assessor's current labels contain the word `READY`; when surfaced, present separate fields such as `Execution: EXECUTION READY / NOT READY / UNKNOWN` and `Opportunity quality: HIGH / MODERATE / LOW / EXTENDED / UNKNOWN`. The quality field must never create or imply the actual execution event. The default bands remain provisional and must not be promoted based on unit tests or this small OHLCV sample.
+**Presentation rule (implemented 2026-10-26):** Display labels now use `QUALITY — HIGH`, `QUALITY — MODERATE`, `QUALITY — LOW`, and `TIMING — EXTENDED` instead of labels beginning with `READY`. When surfaced, show separate fields for `Execution: EXECUTION READY / NOT READY / UNKNOWN` and `Opportunity quality: HIGH / MODERATE / LOW / EXTENDED / UNKNOWN`. The quality field must never create or imply the actual execution event. Unit tests were updated for the label and invalid negative metrics; the current branch CI result must still be checked before calling these changes verified. The default bands remain provisional and must not be promoted based on unit tests or this small OHLCV sample.
