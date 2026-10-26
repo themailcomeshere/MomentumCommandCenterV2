@@ -54,7 +54,7 @@ public sealed class OpportunityQualityAssessorTests
         var result = new OpportunityQualityAssessor().Evaluate(Input());
 
         Assert.Equal(OpportunityClassification.ReadyHighOpportunity, result.Classification);
-        Assert.Equal("READY — HIGH", result.DisplayLabel);
+        Assert.Equal("QUALITY — HIGH", result.DisplayLabel);
         Assert.Contains(OpportunityReason.StrongParticipation, result.Reasons);
     }
 
@@ -177,6 +177,32 @@ public sealed class OpportunityQualityAssessorTests
 
         Assert.Equal(OpportunityClassification.ReadyExtended, result.Classification);
         Assert.Contains(OpportunityReason.ResistanceTooClose, result.Reasons);
+    }
+
+    [Theory]
+    [InlineData(-0.1, 1.5, 1.0, 2.0)]
+    [InlineData(1.5, -0.1, 1.0, 2.0)]
+    [InlineData(1.5, 1.0, -0.1, 2.0)]
+    [InlineData(1.5, 1.0, 1.0, -0.1)]
+    /// <summary>
+    /// METHOD: NegativeMetricProducesDataUnknown
+    /// PURPOSE: Rejects negative relative volume, extension, recent range, and resistance distance rather than ranking invalid input.
+    /// WHEN CALLED: Invoked by xUnit to verify invalid numeric input fails closed.
+    /// </summary>
+    public void NegativeMetricProducesDataUnknown(
+        decimal rvol,
+        decimal extension,
+        decimal rangeAtr,
+        decimal resistanceAtr)
+    {
+        var result = new OpportunityQualityAssessor().Evaluate(Input(
+            rvol: rvol,
+            extension: extension,
+            rangeAtr: rangeAtr,
+            resistanceAtr: resistanceAtr));
+
+        Assert.Equal(OpportunityClassification.DataUnknown, result.Classification);
+        Assert.Contains(OpportunityReason.DataMissing, result.Reasons);
     }
 
     [Fact]
