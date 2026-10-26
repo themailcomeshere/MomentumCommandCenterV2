@@ -168,3 +168,29 @@ Do not paste actual secrets into chat or commit them. Restart API, verify /api/p
 - Full GTC_EXT target-touch study: source-backed regular close + complete subsequent 07:00–20:00 Eastern bars, missing intervals marked DATA_GAP.
 - Any claim that +0.5% is optimal, or any live Overnight READY status, until full-window outcomes, catalyst review and required data gates are validated.
 - Provider smoke test until actual Alpaca bars are returned by the Visual Studio-hosted API.
+
+
+## 2026-10-26 — Updated exact actions: TTE bubbles and Alpaca validation
+
+### TTE 1M bubbles — please do this first
+
+1. On the TTE chart, use the lower 1M pane's Studies/Edit Studies control. Select the **1M Command Center study** (do not edit the upper 5M study).
+2. Open its settings/gear and verify the input `showStateBubbles` is `yes`. Apply the setting.
+3. Compare the exact 1M study name/version and inputs against the FMS lower 1M pane, which displays bubbles. Do not assume the two charts use the same installed script simply because their labels look similar.
+4. If `showStateBubbles` was already yes and the script/version/inputs match FMS, report that result before changing code. The Library V14.5 source plots bubbles only on specific events/transitions; missing bubbles alone do not imply HOLD or SELL.
+
+### Alpaca provider status
+
+The user's SPY comparison already proved the Visual Studio-hosted API can retrieve and persist 5 historical 5M IEX bars for the requested 2026-10-23 UTC window. The remaining issue was the status endpoint: source code hardcoded `CONFIGURED_NOT_YET_VALIDATED` even after a successful fetch. I updated the feature branch to track successful non-empty responses and report `VALIDATED_DATA_RETURNED` plus the last successful validation timestamp/bar count. A new empty-response unit test was added; CI/local tests for these code changes are not yet confirmed.
+
+After the updated branch is built/run:
+
+1. Stop and restart the API in Visual Studio.
+2. Repeat `/api/market-data/compare?symbol=SPY&timeframe=5m&from=2026-10-23T13:30:00Z&to=2026-10-23T13:50:00Z`.
+3. Reopen `/api/providers/status`. Alpaca should show `validated: true`, `status: VALIDATED_DATA_RETURNED`, a UTC validation timestamp, and the last successful non-empty bar count.
+4. If it still says `CONFIGURED_NOT_YET_VALIDATED`, the running app is likely not using the updated code or it was restarted after the compare (the validation state is process-local). Confirm the startup project/branch and request order.
+5. Do not configure Massive for this test; it is not needed to validate Alpaca's IEX historical path.
+
+### Historical Overnight chart set
+
+User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-23. Do not request re-upload. Finish the date-correct visual analysis from those sources; target-touch rates/fills still require full-window source OHLCV.
