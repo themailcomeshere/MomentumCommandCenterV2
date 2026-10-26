@@ -73,3 +73,18 @@
 - Exact installed ThinkScript diagnostic fields remain absent from the OHLCV files.
 - The user's 87/87 test result is reported but not independently observed in this session; no live Alpaca response has been returned yet.
 - Overnight candidate ranking is preliminary and limited to visible scanner fields; source-backed catalyst/news and fill evidence remain unavailable.
+
+
+## User-provided verification and correction — 2026-10-26
+
+- [PASS — API PROCESS] /api/health returns OK in decision-support-only mode. Order submission is not implemented.
+- [PASS — TEST SUITE, USER-REPORTED] dotnet test MomentumCommandCenterV2.sln --configuration Release: build succeeded, 87 passed, 0 failed, 0 skipped.
+- [BLOCKED — LIVE PROVIDER] /api/providers/status reports Alpaca and Massive NOT_CONFIGURED. /api/market-data/compare returned zero bars/observations and explicit missing Alpaca key/secret configuration. Do not claim live verification passed. API process and tests pass, but provider authentication/data retrieval has not succeeded.
+- [NEXT — ALPACA CONFIG] API project's UserSecretsId is MomentumCommandCenterV2-API-Local. Set the existing Alpaca key and secret with dotnet user-secrets set "MarketData:Alpaca:ApiKey" "<YOUR_EXISTING_ALPACA_KEY>" --project src/MomentumCommandCenterV2.API and corresponding MarketData:Alpaca:ApiSecret command. Replace placeholders only locally; never send credentials to chat. Restart API and repeat provider status and comparison request.
+- [CORRECTED — OVERNIGHT CHART WINDOW] Prior instruction to capture 10/26–10/28 was invalid. User will provide AHR, FMS, and NNN charts for 10/21–10/23. Accept for visual triage; quantitative target research still requires historical bars spanning regular-session close and complete next 07:00–20:00 Eastern window, with DATA_GAP intervals preserved.
+- [OPEN — XRPN READY] OHLCV alignment is complete for 78 windows; internal study diagnostic state remains unavailable in reviewed files.
+
+## [Uncertainties]
+
+- Why existing saved credentials are not present under this API project's UserSecretsId is unknown.
+- Screenshot review cannot establish source-backed target reach rates or actual order fills.
