@@ -150,3 +150,11 @@ Implemented on `feature/opportunity-quality-classification`:
 This is deliberately not yet wired into `V2SignalEngine`, the CLI, market-data ingestion, or a front end. The current `BarSnapshot` contains a single bar and indicators but does not itself provide a trustworthy recent-range baseline, nearby resistance measurement, time-of-day-relative volume provenance, or an execution event's finite READY lifetime. Those values must come from the forthcoming adapter/replay contract. The caller must explicitly pass the existing eligibility and active execution-event state; the assessor does not infer them.
 
 The classification is diagnostic-only. A successful build and passing unit tests are still required in the local environment; this repository integration did not execute a .NET build.
+
+## Implementation and data audit — 2026-10-26
+
+The domain assessor and unit tests exist, but the classification remains a standalone diagnostic slice. It is not wired to the market-data replay, existing V2 signal engine, CLI, API, or dashboard. The OHLCV reader does not calculate relative volume, momentum indicators, ATR extension, recent range, resistance distance, or the actual Thinkorswim READY event. Those must be supplied by a validated snapshot adapter before a classification can represent a reproducible market observation.
+
+The October 19 XRPN 1M/5M export pair has been checked for internal OHLCV consistency on complete windows, but the files do not contain the internal ThinkScript gate states. It therefore does not calibrate the assessor or explain READY frequency. See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
+
+**Presentation rule:** Keep actual strategy eligibility/execution state distinct from quality. The assessor's current labels contain the word `READY`; when surfaced, present separate fields such as `Execution: EXECUTION READY / NOT READY / UNKNOWN` and `Opportunity quality: HIGH / MODERATE / LOW / EXTENDED / UNKNOWN`. The quality field must never create or imply the actual execution event. The default bands remain provisional and must not be promoted based on unit tests or this small OHLCV sample.
