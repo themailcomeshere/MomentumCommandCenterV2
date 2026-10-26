@@ -473,3 +473,16 @@ Use `docs/Next-Steps-and-User-Inputs.md` as the single checklist for user action
 - [CI] GitHub Actions run `40379797275` for commit `e7e59d4` completed successfully (restore, build, test). Documentation commits made after that run trigger newer runs; do not treat the current branch head as green until its own run completes.
 - [INTEGRATION CAUTION] Keep branch-divergence caution in force; do not merge this feature branch wholesale into master.
 - Detailed uncertainty table: `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
+
+## Launch-week release gates — 2026-10-26
+
+Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. This is a prioritization aid, not a declaration of release approval.
+
+- [DONE — DOCS] Added explicit release-readiness assessment separating local prototype use from live-trading reliance.
+- [DONE — CONTRACT CLARITY] Clarified in `docs/MCC-OHLCV-Export-Workflow.md` that the normalized CSV contract expects completed-bar availability timestamps, but raw `GetTime()[1]` semantics remain unverified until chart parity proves the mapping.
+- [NEXT — NO USER INPUT] Add automated report provenance checks for filename/header/payload symbol and date consistency; add importer regression coverage for duplicate, missing, malformed, and partial-window rows.
+- [NEXT — NO USER INPUT] Reconcile duplicated and legacy To-Do material; preserve one canonical Master To-Do and link domain-specific specifications rather than creating competing checklists.
+- [BLOCKED — USER/THINKORSWIM] Obtain actual XRPN 1M for October 2 if that exact event remains the target; the new file was HPK and duplicates existing HPK rows.
+- [BLOCKED — USER/THINKORSWIM] Obtain same-bar 1M/5M gate-state diagnostics for READY-frequency attribution.
+- [BLOCKED — DATA SOURCE] Obtain full GTC_EXT eligible-window bars plus source-backed regular close for target reach research; actual fills are a separate data source.
+- [CI STATUS] Workflow `40380221253` passed for commit `cbbb601b`. Later documentation commits trigger new runs; current-head status must be rechecked before promotion.
