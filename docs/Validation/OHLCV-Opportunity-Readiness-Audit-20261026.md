@@ -93,3 +93,33 @@ It is **not wired** into the replay workflow, `V2SignalEngine`, CLI, API, or fro
 The GitHub compare result reports this feature branch as diverged from `master` (268 commits ahead, 152 behind). Treat the branch as a working baseline for this audit, not as a safe fast-forward/merge candidate. Reconcile history and file-level changes deliberately before merging.
 
 The opportunity-quality display-label safety change and negative-metric test additions were committed on this branch after the audit. GitHub's combined status endpoint had no status records for the latest branch commit at the time of review; build/test verification is pending.
+
+## New October 2 upload — verified symbol and coverage (2026-10-26)
+
+The newly uploaded file was inspected by its report header and embedded OHLCV payload, not by filename alone.
+
+- Original path: `data/StrategyReports_XRPN_10022026_1M_EntireDay_2.csv`.
+- The report header says **Symbol: HPK**, work time 2026-10-02 06:32–13:01 Arizona; all 214 embedded payload rows are `HPK|1m` and resolve to 2026-10-02 06:30–12:59 Arizona.
+- The paired file `data/StrategyReports_XRPN_10022026_5M_EntireDay.csv` says **Symbol: XRPN** and contains 79 `XRPN|5m` payload rows from 06:30 through 13:00 Arizona. This is still not a same-symbol pair.
+- I corrected the 1M file's name to `data/StrategyReports_HPK_10022026_1M_EntireDay.csv` and removed the misleading XRPN-named duplicate path.
+- All 214 HPK 1M payload rows match the HPK rows at the same timestamps in `data/StrategyReports_HPK_10022026_to_10032026_1M_EntireDay.csv` exactly. Thus this upload confirms a clean duplicate/subset of the existing HPK data; it adds no new XRPN 1M evidence.
+- The HPK 1M payload spans 390 expected minute timestamps from 06:30 through 12:59, but only 214 rows are present: **176 timestamps are absent**. This is not full one-minute coverage. Do not treat missing timestamps as no-trade bars.
+
+## Explicit uncertainty assessment
+
+| Uncertainty | Current assessment | Impact | What resolves it |
+|---|---|---|---|
+| October 2 symbol pairing | **Resolved: not aligned.** The new 1M upload is HPK; the October 2 5M report is XRPN. | The new file cannot diagnose XRPN's October 2 READY/Permission sequence. | Obtain the intended XRPN 1M export, or explicitly switch the diagnostic question to HPK with its matching 5M data. |
+| Embedded timestamp meaning | **Unresolved.** Payload epochs convert consistently to Arizona local time, but the export alone does not state whether each timestamp is bar-open, bar-close, or decision-availability time. | Can shift bar alignment and causal replay; must not assert exact signal ordering until settled. | Compare a known timestamped chart bar / ThinkScript diagnostic bubble and document Thinkorswim's export convention. |
+| Missing 1M rows | **Partially quantified; cause unresolved.** October 2 HPK: 214/390 minute timestamps present (176 absent). October 19 XRPN: 30 absent timestamps in the 09:00–12:59 interval. | Cannot infer zero trades, zero volume, or absent chart bars. Gaps invalidate strict parity windows that cross them. | Export bar-level coverage or confirm chart aggregation and export/report strategy behavior for a sample of missing timestamps. |
+| READY/Permission cause | **Unresolved.** OHLCV has no internal gate values. The known screenshot shows Permission off at its observed point, but does not provide per-bar history or establish a general post-09:00 cause. | Cannot responsibly change READY logic or claim root cause. | Same-symbol/date 1M and 5M diagnostic exports including raw Permission, block code, candidate/trigger, extension danger, READY, re-arm, and expiration states. |
+| Boring Overnight target reach | **Unresolved; current data is inadequate.** All audited bars end around 13:00 Arizona, before the 17:00 Arizona end of the GTC_EXT window during EDT; the high-excursion file is placeholder data. | No defensible target-touch rate or alternative limit can be recommended. | Source-backed regular-session close plus complete eligible-window OHLCV, timestamp provenance, and gap flags. |
+| Actual order outcomes | **Data not found in sources.** Historical OHLCV does not provide actual fills, fees, order status, or slippage. | Target touch cannot be treated as execution or realized profit. | Actual order/fill exports and known fees; keep these rows separate from reference-close studies. |
+| Current branch CI | **Pending, not failed and not green.** The latest GitHub Actions run was in progress at last check. | Recent label-safety/test changes remain unverified until the run concludes. | Recheck workflow run and inspect build/test results after completion. |
+| Feature branch integration | **Known integration risk.** Earlier GitHub compare showed the branch diverged substantially from master. | Do not merge the branch wholesale or assume its commits are ready to promote. | Review changed files and reconcile branch history deliberately; prefer a PR with scoped changes and passing CI. |
+
+## Recommended decision
+
+The new October upload **does not close the XRPN October 2 data gap**. It is an HPK 1M export with substantial timestamp gaps and is an exact subset of existing HPK data. The best available same-symbol paired OHLCV fixture remains XRPN on October 19, and it is useful only for OHLCV coverage/aggregation checks—not READY gate attribution.
+
+No signal rules or order behavior were changed as a result of this file review.
