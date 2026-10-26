@@ -86,7 +86,7 @@ The files already committed to `feature/opportunity-quality-classification` have
 - The October 19 XRPN 1M/5M pair is available and useful for OHLCV coverage checks. Its 1M export has 30 absent minute timestamps from 09:00–12:59 Arizona; 27 complete post-09:00 5M windows exactly match aggregated 1M OHLCV.
 - The October 22 1M report filename has been corrected to `data/StrategyReports_XRPN_10222026_1M_EntireDay.csv`; it is not the October 2 1M pair. The October 2 5M file remains unmatched by a verified October 2 1M full-day export.
 - These reports contain raw OHLCV payloads, not internal ThinkScript READY/Permission diagnostics. To diagnose why READY is rare, the missing evidence is the gate state on the same bars (or an equivalent diagnostic export), not another screenshot of the already supplied October 2 chart.
-- The current files do not cover the full GTC_EXT-eligible window for Boring Overnight target research. `eligible-window-high-excursions.csv` is placeholder data and must not be used as market evidence.
+- The current files do not cover the full GTC_EXT-eligible window for Boring Overnight target research. The prior placeholder rows in `eligible-window-high-excursions.csv` have been removed; it is now header-only and must not be used as market evidence.
 
 See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md` for row counts, date/range checks, complete-window comparison, limitations, and next steps.
 
