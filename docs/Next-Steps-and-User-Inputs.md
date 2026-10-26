@@ -77,7 +77,7 @@ These tasks should not wait for provider credentials:
 
 - Provider plan prices and entitlements can change and have not been confirmed in the user's accounts.
 - No account credentials, license terms, or live API response payloads were supplied; live compatibility is unverified.
-- The user's final layout preference and exact trading window are not yet confirmed.
+- The user's final dashboard layout preference remains open. The Boring Overnight order window has been user-defined as 07:00–20:00 Eastern for GTC_EXT; Arizona entry timing is separately documented. Do not treat layout preference as a blocker for backend work.
 
 ## 2026-10-26 export audit reconciliation
 
