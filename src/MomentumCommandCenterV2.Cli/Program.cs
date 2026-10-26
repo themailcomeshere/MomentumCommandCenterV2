@@ -120,16 +120,36 @@ if (args.Length > 0 &&
     {
         using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         var articles = await new AlpacaApiClient(httpClient, options).GetLatestNewsAsync(symbol, 5);
-        Console.WriteLine($"Alpaca News API access: OK ({symbol.Trim().ToUpperInvariant()})");
-        Console.WriteLine($"Articles returned for the last 24 hours: {articles.Count}");
+        var retrievedAt = DateTimeOffset.UtcNow;
+        var normalizedSymbol = symbol.Trim().ToUpperInvariant();
+
+        Console.WriteLine($"Alpaca News API access: OK ({normalizedSymbol})");
+        Console.WriteLine($"Retrieved at (UTC): {retrievedAt:O}");
+        Console.WriteLine("Query window: last 24 hours; newest first; maximum 5 articles.");
+        Console.WriteLine($"Articles returned: {articles.Count}");
+
+        if (articles.Count == 0)
+        {
+            Console.WriteLine("No articles were returned by this provider for this symbol and query window.");
+        }
+
         foreach (var article in articles)
         {
-            Console.WriteLine($"{article.CreatedAt:O} | {article.Headline}");
-            if (!string.IsNullOrWhiteSpace(article.Url))
-                Console.WriteLine($"  {article.Url}");
+            Console.WriteLine();
+            Console.WriteLine($"Published/created (UTC): {article.CreatedAt:O}");
+            Console.WriteLine($"Last updated (UTC): {article.UpdatedAt:O}");
+            Console.WriteLine($"Headline: {article.Headline}");
+            Console.WriteLine($"Tagged symbols: {(article.Symbols.Count > 0 ? string.Join(", ", article.Symbols) : "not supplied")}");
+            if (!string.IsNullOrWhiteSpace(article.Summary))
+                Console.WriteLine($"Provider summary: {article.Summary}");
+            else
+                Console.WriteLine("Provider summary: not supplied");
+            Console.WriteLine($"Source URL: {(string.IsNullOrWhiteSpace(article.Url) ? "not supplied" : article.Url)}");
         }
+
+        Console.WriteLine();
         Console.WriteLine("Read-only news check complete. No order was submitted.");
-        Console.WriteLine("Important: endpoint access and returned articles do not prove complete coverage or catalyst clearance.");
+        Console.WriteLine("Coverage warning: this is only the latest 24-hour query from one provider (max 5 articles). Zero results do not prove no material news exists. Headlines/summaries are evidence to review, not a diagnosis or order instruction.");
         return 0;
     }
     catch (Exception exception) when (
