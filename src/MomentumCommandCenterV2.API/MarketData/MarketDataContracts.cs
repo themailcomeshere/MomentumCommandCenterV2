@@ -23,6 +23,10 @@ public interface IMarketDataProvider
 {
     string ProviderName { get; }
     bool IsConfigured { get; }
+    /// <summary>True only after this process has successfully retrieved at least one market bar.</summary>
+    bool HasSuccessfulDataValidation { get; }
+    DateTimeOffset? LastSuccessfulDataValidationUtc { get; }
+    int LastSuccessfulDataValidationBarCount { get; }
     IReadOnlyList<string> Capabilities { get; }
     Task<IReadOnlyList<MarketBar>> GetBarsAsync(
         string symbol,
