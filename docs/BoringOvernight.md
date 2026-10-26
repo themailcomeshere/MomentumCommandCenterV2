@@ -130,3 +130,11 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 - The prior placeholder rows in `eligible-window-high-excursions.csv` have been removed; it is now header-only with zero observations. Do not use it to estimate target reach.
 - Until full eligible-window OHLCV and source-backed regular-session closes are available, mark affected rows `DATA_GAP`; do not recommend a new limit from incomplete data. Keep actual fills/fees separate from reference-close touch research.
 - Detailed uncertainty dispositions and next evidence: `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
+
+
+## Current candidate review — 2026-10-26
+
+- The current CCI and NICE scanner/chart review is recorded in docs/Validation/Overnight-Candidate-Review-20261026.md. Both remain WATCH / NOT READY on the supplied evidence.
+- CCI's Oct 21, 2026 Q3 results/outlook update is a recent earnings catalyst; NICE's official IR event page lists no upcoming events but this is not a complete catalyst clearance.
+- Do not infer READY from the scanner score. Verify exact unrounded 5D > 20D mean, 20-day average daily volume >=500K, source freshness, exclusions, current catalyst/news and 5M/1M chart state.
+- Full eligible-window reach research remains blocked on source-backed regular close and complete next 07:00–20:00 Eastern GTC_EXT OHLCV with missing intervals preserved as DATA_GAP. A historical touch is not an actual fill.
