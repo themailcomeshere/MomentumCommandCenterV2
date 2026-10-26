@@ -1444,6 +1444,10 @@ def fiveBuyEvent =
     fiveState == FIVE_BUY and fiveState[1] != FIVE_BUY;
 def sellBubbleEvent =
     finalState == SELL and finalState[1] != SELL;
+# GET OUT is a real final state, but historically it only appeared as a label.
+# Emit one red bubble when the chart first enters the EOD exit state.
+def eodGetOutEvent =
+    finalState == EOD_GET_OUT and finalState[1] != EOD_GET_OUT;
 def executionExpiredEvent =
     executionExpired and !executionExpired[1];
 def swingReclaimBubbleEvent =
@@ -1458,7 +1462,7 @@ def candidateBlockedBubbleEvent =
     executionCandidateBlockCode <= 10;
 
 def stateBubbleEvent =
-    readyEvent or executionExpiredEvent or prepareToBuyEvent or
+    readyEvent or executionExpiredEvent or eodGetOutEvent or prepareToBuyEvent or
     prepareSellEvent or aggressivePrepareEvent or aggressiveBuyEvent or
     fivePrepareBuyEvent or fiveRunnerWaningEvent or sellBubbleEvent or
     fiveBuyEvent or candidateBlockedBubbleEvent or anyCandidateBubbleEvent or
@@ -1487,6 +1491,7 @@ AddChartBubble(
     showCompositeBubble,
     if compositeBubbleBelow then low - atr else high + atr,
     (
+    (if eodGetOutEvent then "EOD GET OUT\n" else "") +
     (if readyEvent then "EXECUTION READY\n" else "") +
     (if executionExpiredEvent then "EXECUTION EXPIRED\n" else "") +
     (if prepareToBuyEvent then "PREPARE TO BUY\n" else "") +
@@ -1540,7 +1545,8 @@ AddChartBubble(
         " BUY=" + aggressiveBuy + "\n"
      else "")
     ),
-    if readyEvent then Color.GREEN
+    if eodGetOutEvent then Color.RED
+    else if readyEvent then Color.GREEN
     else if sellBubbleEvent or (candidateBlockedBubbleEvent and
         (executionCandidateBlockCode == 1 or executionCandidateBlockCode == 2 or
          executionCandidateBlockCode == 4 or executionCandidateBlockCode == 5 or
