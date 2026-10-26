@@ -78,3 +78,14 @@ These tasks should not wait for provider credentials:
 - Provider plan prices and entitlements can change and have not been confirmed in the user's accounts.
 - No account credentials, license terms, or live API response payloads were supplied; live compatibility is unverified.
 - The user's final layout preference and exact trading window are not yet confirmed.
+
+## 2026-10-26 export audit reconciliation
+
+The files already committed to `feature/opportunity-quality-classification` have been reviewed. Do not ask the user to re-upload the same files.
+
+- The October 19 XRPN 1M/5M pair is available and useful for OHLCV coverage checks. Its 1M export has 30 absent minute timestamps from 09:00–12:59 Arizona; 27 complete post-09:00 5M windows exactly match aggregated 1M OHLCV.
+- The file named `data/StrategyReports_XRPN_10022026_1M_EntireDay.csv` actually contains October 22 data, while its 5M companion is October 2. This is a filename/content date mismatch, not an aligned pair.
+- These reports contain raw OHLCV payloads, not internal ThinkScript READY/Permission diagnostics. To diagnose why READY is rare, the missing evidence is the gate state on the same bars (or an equivalent diagnostic export), not another screenshot of the already supplied October 2 chart.
+- The current files do not cover the full GTC_EXT-eligible window for Boring Overnight target research. `eligible-window-high-excursions.csv` is placeholder data and must not be used as market evidence.
+
+See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md` for row counts, date/range checks, complete-window comparison, limitations, and next steps.
