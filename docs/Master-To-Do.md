@@ -516,3 +516,12 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 - Existing credential storage location is not known; project-scoped User Secrets should resolve this if credentials are already owned and valid.
 - Screenshots are visual evidence only; full-window OHLCV and actual fill outcomes remain unverified.
+
+
+## Final Overnight review and Visual Studio launch update — 2026-10-26
+
+- [PARTIAL — VISUAL REVIEW ONLY] Inspected Project Sources screenshots for AHR, FMS, NNN. Their visible chart headers show 2026-10-19–2026-10-21, not the intended 2026-10-21–2026-10-23 sample. Do not label these as the requested date range. Visual-only observations and limits are recorded in docs/NewChatHandoff.md.
+- [BLOCKED — DATE-CORRECT OVERNIGHT ANALYSIS] The intended Oct 21–23 screenshots were not identified in the inspected files. Data not found in sources for that exact window in this review. If they exist under different Project Sources names, identify the exact files; otherwise the correct-date visual review remains open. Do not ask the user to repeat already completed work without checking for the correct files first.
+- [BLOCKED — TARGET RESEARCH] Screenshots do not establish full subsequent 07:00–20:00 Eastern GTC_EXT bars, target touch/reach percentages, or actual fills. Need source-backed prior regular close and full eligible window for each completed session, with missing bars preserved as DATA_GAP.
+- [NEXT — USER / VISUAL STUDIO] User reports Alpaca secrets were saved successfully and the API is launched from Visual Studio. Stop/restart the API in Visual Studio so it reloads configuration; verify launch environment is Development and the API project's UserSecretsId is MomentumCommandCenterV2-API-Local. Recheck /api/providers/status and /api/market-data/compare on the same localhost process. A configured flag alone is insufficient; actual bars and source timestamps are required.
+- [KEEP BLOCKED] Do not call today's Overnight qualified or optimize the +0.5% target from the inspected screenshots. The current target is a heuristic; validated touch-rate research and actual fills remain unavailable.
