@@ -310,3 +310,43 @@ The Morning Brief endpoint now persists the observed SPY/QQQ/IWM bars it fetches
 
 - Updated this handoff, docs/Next-Steps-and-User-Inputs.md, docs/Master-To-Do.md, docs/Release-Readiness-2026-10-26.md, and src/MomentumCommandCenterV2.API/README.md with the XRPN 1M/5M alignment result, the missing diagnostic-state evidence, the Overnight Scanner shortlist, and the exact Alpaca smoke-test procedure.
 - The latest documentation edits have not been independently tested by a current-head GitHub Actions run in this session. Do not describe the latest branch head as CI-green until a run tied to the exact head completes.
+
+
+## Correction and evidence update — 2026-10-26 (user response)
+
+### Corrected chart-window request
+
+- Retract the prior request to capture 2026-10-26 through 2026-10-28. It was an invalid historical-research instruction because those future sessions had not occurred when the screenshot request was made.
+- User is capturing AHR, FMS, and NNN on 2026-10-21 through 2026-10-23. Accept this historical window for initial visual review; do not ask them to retake these screenshots merely to satisfy the previous erroneous range.
+- This window provides recent historical shape only. It does not itself include the complete 07:00–20:00 Eastern GTC_EXT window for a subsequent session following each regular close. If initial chart review justifies further research, request a completed historical pair: prior regular-session close plus the entire next 07:00–20:00 Eastern window, with actual session dates explicitly named and all missing intervals preserved as DATA_GAP. Avoid future dates.
+
+### Alpaca smoke test — actual result received
+
+- /api/health returned OK, mode decision-support-only, orderSubmission NOT IMPLEMENTED, timestamp 2026-10-26T22:10:39Z.
+- /api/providers/status reports Alpaca NOT_CONFIGURED and Massive NOT_CONFIGURED.
+- /api/market-data/compare returned zero bars and zero persisted observations for both providers. Alpaca error: Set MarketData:Alpaca:ApiKey and ApiSecret (or ALPACA_API_KEY / ALPACA_API_SECRET). Massive error: Set MarketData:Massive:ApiKey or MASSIVE_API_KEY.
+- Therefore, live-provider smoke test has NOT passed. Endpoint responds, but no provider returned market data.
+- User reports dotnet test MomentumCommandCenterV2.sln --configuration Release completed successfully: build succeeded; 87 tests succeeded, 0 failed, 0 skipped. This is test evidence, not live provider evidence.
+
+### Specific local credential fix
+
+The API project UserSecretsId is MomentumCommandCenterV2-API-Local. Credentials saved under a different project/UserSecretsId or Windows account are not automatically visible to this API. In a terminal at repository root, set values locally without printing or sharing them:
+
+1. dotnet user-secrets set "MarketData:Alpaca:ApiKey" "<YOUR_EXISTING_ALPACA_KEY>" --project src/MomentumCommandCenterV2.API
+2. dotnet user-secrets set "MarketData:Alpaca:ApiSecret" "<YOUR_EXISTING_ALPACA_SECRET>" --project src/MomentumCommandCenterV2.API
+
+Replace placeholders locally; never paste actual values into chat, source control, or screenshots. Restart API, recheck /api/providers/status, then rerun the same /api/market-data/compare request. If configured remains false, check same machine/user and target project. Do not create or buy Massive credentials for this test.
+
+### Current user-reported status
+
+- XRPN Oct 2 1M/5M OHLCV pair: aligned for 78 complete 5M windows; per-bar internal study diagnostics still missing from reviewed files.
+- Overnight chart screenshots: user will provide AHR, FMS, NNN for Oct 21–23.
+- Alpaca: credentials are not visible to this API process yet; actual authentication/data retrieval remains blocked.
+- Tests: 87/87 passed according to user's terminal output.
+- No live trading or order submission occurred.
+
+## [Uncertainties]
+
+- The reason saved Alpaca credentials are not visible is unknown until project-specific User Secrets are checked locally.
+- The 10/21–10/23 chart screenshots may reveal visual behavior, but exact OHLCV coverage, GTC_EXT reach/touch rates, and actual fills cannot be established from screenshots alone.
+- XRPN diagnostic fields may have been uploaded separately, but their exact path is not identified in reviewed branch files.
