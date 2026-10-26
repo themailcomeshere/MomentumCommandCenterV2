@@ -59,3 +59,17 @@
 - READY gate frequency and production study parity are not established by raw OHLCV.
 - Full eligible-window overnight reach, actual fill rates, and realized outcomes are not established.
 - Current-head CI and branch reconciliation must be verified before promoting the branch.
+
+
+## Follow-up evidence update — 2026-10-26
+
+- [DONE — XRPN OHLCV PAIR] The intended data/StrategyReports_XRPN_100226_1M_EntireDay_New.csv is present on the feature branch. It has 391 consecutive 1M payload rows from 06:30–13:00 Arizona. Against the October 2 XRPN 5M export, 78 complete 5M windows have full 1M coverage and exact OHLCV aggregation match; the last 5M timestamp has no complete forward 1M group. This closes the same-symbol OHLCV-pair gap, not the ThinkScript diagnostic-state gap.
+- [BLOCKED — THINKSCRIPT DIAGNOSTICS] The two reports contain OHLCV transport payloads only. Per-bar Permission/block-code/candidate/extension-danger/READY/re-arm/expiration states: Data not found in sources. Keep study parity gate blocked until diagnostics are exported or their exact uploaded path is identified.
+- [PARTIAL — ALPACA] User reports credentials were previously saved and 87/87 tests passed. This is not yet live-provider verification. Follow the exact API smoke-test steps in docs/Next-Steps-and-User-Inputs.md and return sanitized HTTP status, bar count, source timestamps and feed. No secrets in chat.
+- [PARTIAL — OVERNIGHT RESEARCH] Reviewed the 2026-10-26 scanner screenshot and identified TTE, RTO, NNN, OKE, AHR, FMS as initial chart-review candidates, with CCI secondary. Chart screenshots alone do not establish target-touch rates, catalyst clearance, or actual fills. Source-backed close and full 07:00–20:00 Eastern window bars with gaps preserved as DATA_GAP are still required.
+
+## [Uncertainties]
+
+- Exact installed ThinkScript diagnostic fields remain absent from the OHLCV files.
+- The user's 87/87 test result is reported but not independently observed in this session; no live Alpaca response has been returned yet.
+- Overnight candidate ranking is preliminary and limited to visible scanner fields; source-backed catalyst/news and fill evidence remain unavailable.
