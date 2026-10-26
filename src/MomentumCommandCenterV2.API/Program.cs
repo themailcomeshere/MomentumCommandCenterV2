@@ -42,7 +42,14 @@ app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers)
     {
         provider = p.ProviderName,
         configured = p.IsConfigured,
-        status = p.IsConfigured ? "CONFIGURED_NOT_YET_VALIDATED" : "NOT_CONFIGURED",
+        validated = p.HasSuccessfulDataValidation,
+        status = !p.IsConfigured
+            ? "NOT_CONFIGURED"
+            : p.HasSuccessfulDataValidation
+                ? "VALIDATED_DATA_RETURNED"
+                : "CONFIGURED_NOT_YET_VALIDATED",
+        lastSuccessfulDataValidationUtc = p.LastSuccessfulDataValidationUtc,
+        lastSuccessfulDataValidationBarCount = p.LastSuccessfulDataValidationBarCount,
         capabilities = p.Capabilities,
         credentialLocation = "server environment / user secrets; never frontend"
     })));
