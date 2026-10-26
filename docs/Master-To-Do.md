@@ -439,3 +439,17 @@ Use `docs/Next-Steps-and-User-Inputs.md` as the single checklist for user action
 - **Offline work that remains actionable now:** adapter pagination/error/retry tests; hosted collector lifecycle and health; stream abstraction; recovery/backfill design and tests; store corruption/retention/error handling; fixture-driven Morning Brief/scanner/Boring Overnight calculations; session-aware gap semantics; ThinkScript source parity tests.
 - **User evidence still required:** XRPN 5M screenshot listed in `docs/Validation/5M-to-1M-User-Validation-Steps.md`; UPC continuous bars or exact timestamp inspection only if the historical 09:16–09:36 gap question still needs resolution; review the API-hosted browser layout. These are not prerequisites for offline infrastructure work.
 - **Morning Brief scope:** currently benchmark observation/freshness only. Broad movers, sector/breadth, sourced news/catalysts, validated regime, Red Zone qualification and live Boring Overnight remain unimplemented and must not be displayed as known.
+
+## Export and opportunity-quality review — 2026-10-26
+
+**Audit:** `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`
+
+- [DONE — REPOSITORY DATA AUDIT] Found an aligned XRPN 1M/5M OHLCV pair for 2026-10-19: `data/StrategyReports_XRPN_102026_933.csv` (355 1M payload rows) and `data/StrategyReports_XRPN_102026_5m_offset_1027.csv` (81 5M payload rows).
+- [DATA QUALITY FINDING] `data/StrategyReports_XRPN_10022026_1M_EntireDay.csv` is named as though it is 2026-10-02, but its report header and embedded payload timestamps are 2026-10-22. Do not pair it with the actual 2026-10-02 5M file.
+- [PARTIAL — INTERNAL OHLCV CHECK] In the October 19 post-09:00 Arizona overlap, 27 complete 5M windows have all five 1M payload rows and their aggregated OHLCV matches the corresponding 5M payload. Thirty minute timestamps from 09:00–12:59 are absent from the 1M file; missing rows remain gaps, not synthesized bars.
+- [BLOCKED — DIAGNOSTIC STATES] OHLCV payloads do not contain internal ThinkScript Permission, candidate, extension, READY, re-arm, or expiration states. READY-frequency root cause cannot be attributed from OHLCV alone. Existing October 2 screenshot remains available; do not ask user to re-upload it.
+- [BLOCKED — OVERNIGHT WINDOW] Audited bars do not cover the full 07:00–20:00 Eastern GTC_EXT eligible window. `eligible-window-high-excursions.csv` is placeholder values 1–20, not historical observations. No target-touch rate or alternative limit recommendation may be derived from it.
+- [AUDIT — OPPORTUNITY QUALITY] `OpportunityQualityAssessor` and unit tests exist, but the assessor is not wired to replay, V2SignalEngine, CLI, API, or UI. Required metrics are not derived from raw OHLCV. Keep provisional thresholds diagnostic-only; presentation must distinguish opportunity quality from the actual ThinkScript EXECUTION READY event.
+- [NEXT — NO USER INPUT REQUIRED] Keep the October 19 pair as a coverage fixture; fix the misleading October 22 1M filename; add regression checks for the date/header/payload mismatch; keep incomplete intervals explicit.
+- [NEXT — USER/THINKORSWIM EVIDENCE] To diagnose a particular READY gate, obtain diagnostic states for the same symbol/date/bars as the OHLCV. For Boring Overnight, use a full eligible-window export with source-backed regular close; otherwise mark DATA_GAP.
+- [NO PROMOTION] These exports are not proof of production timestamp semantics, indicator parity, fill probability, or strategy profitability.
