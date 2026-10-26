@@ -130,3 +130,53 @@ Not ready for unattended or fully trusted Boring Overnight use. A successful bui
 - EXTO 24h eligibility for BMY or other candidates is not yet established.
 - Historical source/feed coverage for the actual Schwab-eligible session is not established.
 - Weekend policy and actual-fill versus reference-close baseline remain user decisions.
+## 9. Clarification from the operator — actual Boring Overnight workflow (2026-10-26)
+
+The earlier guidance over-focused on EXTO/24-hour execution and made data collection sound as if the operator needed a large personal trade history. That is not the intended strategy. Use this clarified workflow unless the operator changes it:
+
+1. Candidate passes current MCC checks / the “Use the Overnight” watchlist criteria.
+2. Operator submits a limit buy with EXT between 3:00 PM and 5:00 PM Arizona time, Monday through Thursday. Thursday entries are allowed; no new Friday entries.
+3. After the buy, operator sets a limit sell with GTC_EXT at the relevant regular-session end-of-day close + 0.5%. The sell limit is based on the end-of-day close and can differ from the actual buy fill.
+4. Sell may fill before 5:00 PM Arizona time, during the next morning's premarket session, or in the first minutes of regular trading. Operator reports premarket / early-open exits are common.
+5. The intended sell order is GTC_EXT, with the user-reported Schwab session definition of 7:00 AM–8:00 PM ET. EXTO 24h is not a requirement for this clarified workflow. The inactive 8:00 PM–7:00 AM ET gap is not by itself a contradiction if the strategy does not require the sell to execute during that gap.
+6. Weekend carry is allowed, including after Thursday entries, but requires an explicit manual risk plan.
+
+The relevant UI reference is the user's existing “Use the Overnight” watchlist columns, where BMY's Overnight Score was reported as 33.49. Do not confuse that analytical watchlist/score with definitive Schwab order eligibility. The reported ticket qualifiers are LMT EXT buy and LMT GTC_EXT sell. Do not keep asking the user to prove EXTO eligibility unless the strategy changes to require 24-hour execution.
+
+## 10. What the baseline choices mean for this strategy
+
+The strategy deliberately sets the sell limit from the end-of-day close, not necessarily from the buy fill. There are two distinct return questions:
+
+- **Reference-close / strategy-rule study (best first research sample):** For each symbol/date, set target sell limit = relevant regular-session close × 1.005. Check whether the observed high reaches that target during the next sell-eligible window covered by GTC_EXT. Record whether the target was touched and when, if timestamps are available. This can be researched without the operator having personally traded that symbol/date, provided historical prices and session coverage are real and verified. It is a target-touch study, not proof that an order would fill.
+- **Actual-fill study:** For trades actually made, record actual buy fill price/time, sell limit price/time, sell fill price/time if sold, and any still-open/unfilled status. Calculate realized return from actual buy fill to actual sell fill. The operator's recent sample is too small to validate performance on its own.
+- **Both, kept separate:** Maintain two tabs/files, such as ReferenceCloseStudy and ActualTrades. Never pool observations into one percentile distribution. The first evaluates historical strategy-rule target touches across more symbol/dates; the second measures actual execution and realized outcomes. Compare them later, but do not treat one as the other.
+
+For the reference-close study, minimum fields are symbol, date, source-backed regular-session close, target limit (close × 1.005, rounded according to the actual order's valid price rules), following sell-window start/end, observed high and timestamp, whether target was touched, source/feed, data coverage/missing intervals, catalyst/market notes, and provenance.
+
+## 11. Simplified data collection path — no invented spreadsheet and no requirement for many personal trades
+
+Do not ask the operator to produce 20 historical personal trades. Use two tracks:
+
+**Track A — historical reference-close pilot (primary blocker):**
+1. Select a small pilot set of candidate symbols and completed dates. Include all qualifying cases in the selected sample, not only winners.
+2. Obtain actual historical daily close plus historical extended-hours/premarket data from a source whose coverage is verified for the required window.
+3. For each symbol/date, calculate target = close × 1.005; inspect the next eligible sell window; record whether the high touched target and when.
+4. Record source/feed and exact session coverage. If the source cannot cover the GTC_EXT-eligible window, mark the row DATA_GAP and do not count it.
+5. Start with a small hand-verified pilot (for example, five symbol/date rows) to prove the workflow and calculations. Expand only after the source and session mapping are proven. The existing calculator's 20-observation minimum applies when using that calculator; it does not mean 20 personal trades are required.
+
+**Track B — actual trade journal (secondary validation):**
+For every future trade, preserve symbol/date, MCC score and decision output at entry, buy order and actual fill, reference EOD close used for target, target limit, sell order qualifier, sell fill/time or open status, and any manual intervention. This is prospective data collection. Do not reconstruct unknown values from memory as if verified. Add historical trades only where records/screenshots provide evidence.
+
+**Important:** if the current CLI accepts only excursion_percent and computes a percentile threshold from excursion samples, it may not answer the fixed-target question “did high reach EOD close × 1.005?” Do not feed target-touch binary results or arbitrary excursion values into it. Inspect implementation/tests and add a separate fixed +0.5% historical target-touch evaluator if the current calculator's semantics do not match the strategy.
+
+## 12. User-confirmed policy and remaining engineering gates
+
+- Buy order: LMT EXT, 3:00–5:00 PM Arizona time, Monday–Thursday; no new Friday entries.
+- Sell order: LMT GTC_EXT at the relevant regular-session EOD close +0.5%, not necessarily actual buy fill +0.5%.
+- Sell may fill same evening, next morning premarket, or shortly after regular open.
+- GTC + Extended is acceptable; user-reported active window is 7:00 AM–8:00 PM ET. EXTO 24h is not a current requirement.
+- Weekend carry is allowed, including after Thursday entries, with an explicit manual risk plan.
+- Current checks include the “Use the Overnight” watchlist columns; BMY Overnight Score reported as 33.49. This score does not prove order eligibility or profitability.
+- Do not use the small recent personal-trade sample as the sole validation dataset.
+
+Engineering work: source-backed historical price/session ingestion; fixed-target +0.5% touch study if current calculator is not semantically suitable; preserve provenance and gaps; exchange calendar/time-zone validation; synchronize and enforce both OTC exclusion lists across candidate paths; record actual fills prospectively; define manual weekend/open-position plan; keep decision support read-only with no automated orders.
