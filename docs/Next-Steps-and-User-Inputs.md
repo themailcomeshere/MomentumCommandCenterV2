@@ -194,3 +194,27 @@ After the updated branch is built/run:
 ### Historical Overnight chart set
 
 User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-23. Do not request re-upload. Finish the date-correct visual analysis from those sources; target-touch rates/fills still require full-window source OHLCV.
+
+
+## 2026-10-26 — concrete user actions and current findings
+
+### Tonight's Overnight decision
+1. Treat CCI and NICE as WATCH, not READY, based on the supplied scanner columns and charts. Do not force a trade because today's shortlist is thin.
+2. Before reconsidering either, verify the exact unrounded AVG ON and 5D ON values; the current hard gate is 5D > 20D average. Verify 20-day average daily share volume >=500K, price >=$5, above 20 SMA, Schwab exclusions, fresh data and a source-backed earnings/news/corporate-action check.
+3. Recheck current 5M permission/structure and 1M context. CCI currently shows 5M Permission NO / neutral structure. NICE shows Permission YES but neutral structure, 9.48 RVOL, execution environment NO and price below VWAP/EMAs/SMA50. Neither is ready from current evidence.
+4. If catalyst state, volume, or required source freshness cannot be verified, record WATCH / DATA? and use zero position. Do not interpret scanner score as a trade authorization.
+
+### Install the TTE EOD bubble display fix
+1. Open the repository source docs/Charts/1M/MainStudy.txt at branch feature/opportunity-quality-classification.
+2. In Thinkorswim, edit the lower 1M Command Center study (not the upper 5M study), replace its source with the updated 1M source, save/apply, and verify the study compiles.
+3. Check TTE around the EOD window. The updated source should emit one red “EOD GET OUT” bubble when the 1M state first enters EOD_GET_OUT. This is a display-only event; entry/permission logic is unchanged.
+4. If no bubble appears, capture the exact compiler message or confirm the installed study name/version and whether the chart has a real EOD state transition. Do not send account credentials or unrelated personal data.
+5. Do not leave showHistoricalDebugBubbles enabled during ordinary use; it draws a diagnostic bubble on every bar and is intended only for tightly zoomed debugging.
+
+### Provider validation
+- The SPY historical smoke test has succeeded: 5 IEX 5M bars returned and 5 observations persisted for 2026-10-23 13:30Z–13:50Z; no duplicates/gaps/errors. The status endpoint reports VALIDATED_DATA_RETURNED after a non-empty response in the current process.
+- Massive can stay unconfigured. The successful request does not prove stream availability, SIP entitlement, all-symbol coverage or full overnight history.
+
+### Evidence needed later for quantitative target research
+- For each sample: source-backed regular-session close and all eligible GTC_EXT bars for the following 07:00–20:00 Eastern window, with timestamps/source and any gaps preserved as DATA_GAP.
+- Keep historical target touches distinct from actual fills. Do not claim the +0.5% heuristic is optimal without out-of-sample evaluation.
