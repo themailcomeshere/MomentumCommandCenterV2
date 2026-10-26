@@ -11,9 +11,28 @@ namespace MomentumCommandCenterV2.API.MarketData;
 public sealed class MassiveMarketDataAdapter(HttpClient httpClient, IConfiguration configuration) : IMarketDataProvider
 {
     private readonly string? _apiKey = string.IsNullOrWhiteSpace(configuration["MarketData:Massive:ApiKey"]) ? Environment.GetEnvironmentVariable("MASSIVE_API_KEY") : configuration["MarketData:Massive:ApiKey"];
+    private long _lastSuccessfulValidationUnixMilliseconds;
+    private int _lastSuccessfulValidationBarCount;
 
     public string ProviderName => "Massive";
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_apiKey);
+    public DateTimeOffset? LastSuccessfulDataValidationUtc
+    {
+        get
+        {
+            var timestamp = Interlocked.Read(ref _lastSuccessfulValidationUnixMilliseconds);
+            return timestamp == 0 ? null : DateTimeOffset.FromUnixTimeMilliseconds(timestamp);
+        }
+    }
+    public bool HasSuccessfulDataValidation => LastSuccessfulDataValidationUtc.HasValue;
+    public int LastSuccessfulDataValidationBarCount => Volatile.Read(ref _lastSuccessfulValidationBarCount);
+
+    private void RecordSuccessfulValidation(int barCount)
+    {
+        if (barCount <= 0) return;
+        Volatile.Write(ref _lastSuccessfulValidationBarCount, barCount);
+        Interlocked.Exchange(ref _lastSuccessfulValidationUnixMilliseconds, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+    }
     public IReadOnlyList<string> Capabilities { get; } = new[]
     {
         "Historical 1m/5m OHLCV aggregates", "REST only; no websocket yet", "Scanner/movers endpoint not implemented",
@@ -56,6 +75,7 @@ public sealed class MassiveMarketDataAdapter(HttpClient httpClient, IConfigurati
                 item.GetProperty("h").GetDouble(), item.GetProperty("l").GetDouble(),
                 item.GetProperty("c").GetDouble(), item.GetProperty("v").GetInt64(), ProviderName, "Massive aggregate"));
         }
+        RecordSuccessfulValidation(result.Count);
         return result;
     }
 
