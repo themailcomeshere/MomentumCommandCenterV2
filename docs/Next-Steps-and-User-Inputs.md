@@ -89,3 +89,13 @@ The files already committed to `feature/opportunity-quality-classification` have
 - The current files do not cover the full GTC_EXT-eligible window for Boring Overnight target research. `eligible-window-high-excursions.csv` is placeholder data and must not be used as market evidence.
 
 See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md` for row counts, date/range checks, complete-window comparison, limitations, and next steps.
+
+## October 2 upload reviewed — 2026-10-26
+
+The new file was found on the feature branch and inspected. Despite the old filename containing XRPN, its report header and all embedded bars identify **HPK 1M**, dated October 2. It has 214 bars from 06:30–12:59 Arizona and duplicates the corresponding rows in the existing HPK multi-day export. I renamed it to `data/StrategyReports_HPK_10022026_1M_EntireDay.csv`. It does not complete the XRPN 1M/5M pair; the XRPN 5M October 2 file still lacks a verified same-symbol 1M partner.
+
+The existing October 19 chart-parity worksheets contain chart entries for 20 bars per timeframe (1M: 10 MATCH / 10 ROUNDING ONLY; 5M: 9 MATCH / 11 ROUNDING ONLY). The remaining worksheet rows are unfilled. These results support sampled OHLCV transport mapping but do not resolve all timestamp semantics, missing-bar classification, or READY-state behavior.
+
+Do not re-upload the HPK file. The remaining evidence needed is specifically:
+1. For READY root cause: same-symbol/date XRPN 1M OHLCV plus matching 1M/5M ThinkScript gate diagnostics, if October 2 is the target event.
+2. For Boring Overnight: full source-backed regular close and bars over the complete next GTC_EXT-eligible window, with gaps explicit; actual fills are a separate dataset.
