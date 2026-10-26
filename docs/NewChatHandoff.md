@@ -391,3 +391,41 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - It is not yet known whether the correct screenshots exist elsewhere in Project Sources but were not returned by the available file search.
 - The visual chart endpoint status is not an independent provider/data export and does not establish order fills, catalyst clearance, or overnight returns.
 - Whether Visual Studio is using Development and the same user-secrets profile remains to be confirmed from the actual running process.
+
+
+## User correction, TTE/FMS chart review, and Alpaca validation — 2026-10-26
+
+### Historical Overnight screenshots — accept user's date clarification
+
+- User explicitly confirms the three AHR/FMS/NNN screenshots are for 2026-10-21 through 2026-10-23. Accept that user-provided date range as the intended study window; the previous response misread/misinterpreted the screenshots and incorrectly challenged the dates. Do not ask the user to re-provide those three images.
+- Final analysis should use those screenshots as the 10/21–10/23 review set, with the limitation that screenshots are visual evidence and cannot establish exact target-touch rates or fills.
+
+### Today's 1M chart screenshots — TTE and FMS
+
+- TTE screenshot (2026-10-26): 5M ribbon shows `SELL - CONFIRMED WEAKNESS`, Permission NO, bearish structure, RSI about 53.1, extension about 3.58 ATR, EOD GET OUT. The lower 1M chart has no visible event bubbles in the displayed window, although state/metric labels are present.
+- FMS screenshot (2026-10-26): 5M ribbon shows SELL/BREAKDOWN, Permission NO, bearish structure, RSI about 46.6, extension about 8.54 ATR, with very elevated displayed RVOL (about 15.47). The 1M chart has many historical event bubbles, including PREPARE TO SELL, SELL, EXECUTION EXPIRED, and extension-danger/candidate diagnostics. The right-edge 1M state is PREPARE TO SELL.
+- No-bubble interpretation: absence of bubbles is not a HOLD or SELL signal by itself. In the Library's V14.5 1M source, `showStateBubbles` defaults to yes, but bubbles are plotted only for specific state/event transitions (e.g. PREPARE TO BUY, candidate events, READY, EXECUTION EXPIRED, PREPARE TO SELL, SELL); there is no generic per-bar bubble for every state and no dedicated GET OUT/EOD bubble in the inspected bubble section. Thus no qualifying bubble-producing transition in the displayed interval can produce a blank chart even while right-edge labels show a bearish/GET OUT state. However, because FMS displays many bubbles while TTE displays none, the screenshot alone cannot distinguish (a) TTE had no bubble-producing events, (b) `showStateBubbles` is off on TTE, or (c) the installed TTE study/version differs from FMS. Do not assert a single cause without checking the TTE study inputs/version.
+- User walkthrough: on TTE's lower 1M pane, open Studies/Edit Studies, select the 1M Command Center study (not the 5M study), open its gear/settings, confirm `showStateBubbles = yes`, apply. Compare the exact 1M study name/version and inputs on TTE and FMS. If already yes and versions/settings match, do not change trading logic; report this and then use a temporary targeted diagnostic view to inspect state transitions. Do not change the 5M authority logic as a response to missing 1M bubbles.
+- Caution: displayed extension is elevated on both; TTE ~3.58 ATR and FMS ~8.54 ATR. Their 5M permission is NO and structures are bearish. These are not fresh long-entry approvals. This is chart-state interpretation, not a personal position-management instruction.
+
+### Alpaca smoke test — PASS for historical IEX bar retrieval
+
+- User's Visual Studio-hosted API returned Alpaca configured true and status `CONFIGURED_NOT_YET_VALIDATED` from `/api/providers/status`.
+- User's `/api/market-data/compare` request for SPY 5M from 2026-10-23 13:30Z to 13:50Z returned 5 Alpaca bars, 5 persisted observations, feed `iex`, first timestamp 13:30Z, latest timestamp 13:50Z, zero duplicate timestamps, zero reported gaps, and no error. This is actual successful historical market-data retrieval for that requested window and validates the configured credentials/feed path. It does not validate every symbol, every historical window, live streaming, SIP entitlements, or overnight-session coverage.
+- Massive remains NOT_CONFIGURED; no need to configure it for this first successful Alpaca smoke test.
+- Code review found `/api/providers/status` hardcoded `CONFIGURED_NOT_YET_VALIDATED` whenever credentials existed, independent of successful `/api/market-data/compare` requests. This made the status stale/misleading after successful data retrieval.
+- Implemented a feature-branch fix: provider adapters now remember the timestamp and bar count of the last successful non-empty data response; `/api/providers/status` now reports `VALIDATED_DATA_RETURNED` when such a response has occurred in the current API process, and exposes `validated`, `lastSuccessfulDataValidationUtc`, and `lastSuccessfulDataValidationBarCount`. Empty successful responses do not mark validation. This is process-local state and resets when the API restarts; it is not a persistent health history.
+- Added an Alpaca unit test for empty successful response not counting as data validation. The exact latest commit's CI status has not yet been verified; do not claim tests passed for these new code changes until GitHub Actions/local Release tests finish.
+
+### Current next steps
+
+1. User: check TTE lower 1M study's `showStateBubbles` setting and compare its exact study/version with FMS; return the setting/version result if bubbles remain absent.
+2. User: after the status endpoint code update is available in the running build, restart the API in Visual Studio and repeat a small SPY compare request. `/api/providers/status` should then report `VALIDATED_DATA_RETURNED` after a successful non-empty response; if not, confirm the updated branch/build is actually running.
+3. Assistant: check CI on the updated branch and address failures before promoting code.
+4. Continue the date-correct 10/21–10/23 Overnight analysis from the three existing screenshots; do not request a duplicate upload.
+
+## [Uncertainties]
+
+- Exact TTE 1M study version and `showStateBubbles` input are not visible in the screenshot; these are the main unresolved causes of the blank bubble display.
+- The provider validation state is intentionally in-memory and process-local; no durable provider-health history has been implemented.
+- The successful SPY test proves the requested historical IEX bars were returned, not SIP entitlement, real-time stream, all symbols, or full GTC_EXT coverage.
