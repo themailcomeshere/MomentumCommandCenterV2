@@ -15,10 +15,10 @@ public sealed record OpportunityQualityAssessment(
 {
     public string DisplayLabel => Classification switch
     {
-        OpportunityClassification.ReadyHighOpportunity => "READY — HIGH",
-        OpportunityClassification.ReadyModerate => "READY — MODERATE",
-        OpportunityClassification.ReadyBoring => "READY — BORING",
-        OpportunityClassification.ReadyExtended => "READY — EXTENDED",
+        OpportunityClassification.ReadyHighOpportunity => "QUALITY — HIGH",
+        OpportunityClassification.ReadyModerate => "QUALITY — MODERATE",
+        OpportunityClassification.ReadyBoring => "QUALITY — LOW",
+        OpportunityClassification.ReadyExtended => "TIMING — EXTENDED",
         OpportunityClassification.WatchDeveloping => "WATCH — DEVELOPING",
         OpportunityClassification.Blocked => "BLOCKED",
         _ => "DATA?"
