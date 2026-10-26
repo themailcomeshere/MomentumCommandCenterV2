@@ -4,7 +4,7 @@
 
 ## Decision summary
 
-- **CCI — WATCH / NOT READY.** Scanner score 68.11 is in the documented AGGRESSIVE band (60–69), ON Win 60% is exactly the hard floor, and the visible mean/median split is concerning: AVG ON 1.24% versus Median ON 0.08%. 5D ON 2.73% exceeds AVG ON 1.24%; current ON 0.03% and Above 20 SMA=1 look acceptable from the shown columns. The chart screenshot shows 5M Permission NO, Structure NEUTRAL, Bullish Regime NOT ESTABLISHED, RVOL 0.04, Extension 1.23 ATR, and EOD ACTIVE. The chart does not support an Overnight READY decision. Catalyst state, 20-day average daily share volume, source freshness and unrounded inputs are not shown.
+- **CCI — WATCH / NOT READY.** Scanner score 68.11 is in the documented AGGRESSIVE band (60–69), ON Win 60% is exactly the hard floor, and the visible mean/median split is concerning: AVG ON 1.24% versus Median ON 0.08%. 5D ON 2.73% exceeds AVG ON 1.24%; current ON 0.03% and Above 20 SMA=1 look acceptable from the shown columns. The chart screenshot shows 5M Permission NO, Structure NEUTRAL, Bullish Regime NOT ESTABLISHED, RVOL 0.04, Extension 1.23 ATR, and EOD ACTIVE. The chart does not support an Overnight READY decision. A public company release confirms CCI reported Q3 2026 results and updated its 2026 outlook on Oct 21 after the close, making this a recent earnings/outlook reaction to review rather than assume clear. See https://crowncastle.gcs-web.com/news-releases/news-release-details/crown-castle-reports-third-quarter-2026-results-and-updates. 20-day average daily share volume, source freshness and unrounded inputs are not shown.
 - **NICE — WATCH / NOT READY.** Scanner score 60.47 is also AGGRESSIVE; ON Win 75%, AVG ON 0.70%, Median ON 0.60%, 5D ON 0.70%, Current ON 0.55%, ON Momentum 0.00%, Above 20 SMA=1. The displayed 5D and average ON figures are equal after rounding; the hard rule requires 5D > 20D average, so the unrounded values must be checked before claiming a pass. NICE's chart shows 5M Permission YES but Structure NEUTRAL, RVOL 9.48, Extension 0.45 ATR, Execution Environment NO and Swing Buy Environment NO. Price 122.41 is below the displayed VWAP 122.66, EMA9 122.66, EMA20 122.76 and SMA50 122.55. High current-bar relative volume and the lack of an execution environment mean the chart does not establish a ready entry/overnight qualification. Catalyst status and 20-day average daily volume are not shown.
 - **Neither is qualified as a Boring Overnight tonight from these sources.** If forced to keep one for manual follow-up, NICE has the less skewed historical ON mean/median pair, but it has a near-bottom AGGRESSIVE score and an unresolved 5D-vs-average hard gate. That is a research watchlist distinction, not a trade recommendation. Zero position remains valid.
 
@@ -33,7 +33,7 @@ The user explicitly confirms these three screenshots represent the requested Oct
 ## Shared pipeline blockers
 
 1. Scores do not override hard gates. Need exact 20D average, 5D > 20D check, daily average volume >=500K, price >=$5, above 20SMA, Schwab exclusion list, fresh data and catalyst review.
-2. No event/news source or timestamped catalyst clearance is shown in the scanner screenshot. Catalyst status stays UNKNOWN, not CLEAR.
+2. CCI has a recent Oct 21 earnings/outlook release; treat current price/volume behavior as potentially catalyst-affected and do not assume the move is boring. NICE's IR page lists no upcoming event, but a complete timestamped news/catalyst review is still required; event-calendar absence is not clearance.
 3. No complete source-backed prior regular close plus next eligible GTC_EXT 07:00–20:00 Eastern OHLCV set is attached for these names. Therefore no target-touch percentage, target optimality, actual fill, or realized-return claim can be made. Data not found in sources.
 4. Chart screenshots are snapshots and do not prove full-window bars, absence of gaps, fills, or expectancy.
 
@@ -46,6 +46,11 @@ The user explicitly confirms these three screenshots represent the requested Oct
 ## [Uncertainties]
 
 - Exact unrounded scanner values and the exact meaning/window of AVG ON % are not shown.
-- CCI/NICE catalyst status, daily average share volume, and source freshness are not shown.
+- CCI's recent Oct 21 earnings/outlook release is verified from company sources; the effect on current overnight volatility still needs review. NICE's official IR page shows no upcoming events, but complete news/catalyst clearance, daily average share volume, and source freshness are not established.
 - The user-confirmed Oct 21–23 screenshot sample range conflicts with some visible chart header/axis labels; user correction is accepted, but exact per-bar dates should be verified before quantitative use.
 - No full GTC_EXT OHLCV, target touches, or actual fills for these candidates were found in the reviewed sources.
+
+## Public catalyst source check — 2026-10-26
+
+- CCI: Crown Castle reported Q3 2026 results and updated its full-year outlook on October 21, 2026 after the close. This is a recent company event, so the boringness review must explicitly consider post-earnings repricing/volatility; no claim is made about the current reaction's direction or magnitude. Source: https://crowncastle.gcs-web.com/news-releases/news-release-details/crown-castle-reports-third-quarter-2026-results-and-updates.
+- NICE: the official investor-relations events page currently lists no upcoming events. This does not establish that the stock is catalyst-free; continue a current-news/company-event review. Source: https://www.nice.com/investors.
