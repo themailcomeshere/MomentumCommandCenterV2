@@ -122,3 +122,6 @@
 - [BLOCKED — THINKSCRIPT] The user's installed chart still has no bubbles after the previous attempted fix. Source identity mismatch exists between the repository V14.4.10 MainStudy and uploaded V14.5 reference. Installed-study bubble fix must be corrected and verified in Thinkorswim.
 - [OPEN — TARGET RESEARCH] See `docs/Validation/Boring-Overnight-Target-Policy-20261027.md`. No optimized target can be selected from the current data; full eligible-window bars, prior-only rolling metrics and walk-forward evaluation are required.
 - [OPEN — CURRENT-HEAD CI] Verify the exact current branch head before any release recommendation.
+
+
+- [PATCH ARTIFACT CREATED — NOT VERIFIED] Generated a V14.5-specific source copy with a one-time EOD GET OUT bubble on transition into `EOD_GET_OUT`. It is not the same as the repository's V14.4.10 MainStudy and must be installed and visually verified in Thinkorswim before the bubble issue can close.
