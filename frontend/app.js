@@ -316,10 +316,10 @@ $("exclusionForm")?.addEventListener("submit", async event => {
 $("strategyReportForm")?.addEventListener("submit", async event => {
  event.preventDefault();
  const file = $("strategyReportFile").files?.[0];
- const status = $("strategyReportStatus"), summary = $("strategyReportSummary"), download = $("downloadStrategyReportJson");
+ const status = $("strategyReportStatus"), summary = $("strategyReportSummary"), download = $("downloadStrategyReportJson"), parityDownload = $("downloadParityCsv");
  if (!file) { status.textContent = "Choose a CSV file first."; return; }
  status.textContent = "Uploading and parsing " + file.name + "…";
- summary.classList.add("hidden"); download.classList.add("hidden"); latestStrategyReportJson = null;
+ summary.classList.add("hidden"); download.classList.add("hidden"); parityDownload?.classList.add("hidden"); latestStrategyReportJson = null;
  try {
   const form = new FormData(); form.append("file", file, file.name);
   const response = await fetch("/api/strategy-report/upload", {method:"POST",body:form,headers:{Accept:"application/json"}});
@@ -343,7 +343,7 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
   preview.textContent = JSON.stringify(parsed.previewRows || [], null, 2);
   summary.append(preview);
   summary.classList.remove("hidden"); download.classList.remove("hidden");
-  status.textContent = "Parse complete. Full rows are included in the downloadable JSON.";
+  if ((parsed.parityRows || []).length > 0) parityDownload?.classList.remove("hidden");\n  status.textContent = "Parse complete. " + (parsed.parityRows || []).length + " MCC OHLCV row(s) converted to the Chart Parity Template.";
  } catch (e) {
   status.textContent = "StrategyReport upload failed: " + e.message;
  }
@@ -356,3 +356,16 @@ $("downloadStrategyReportJson")?.addEventListener("click", () => {
  document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 });
 refreshExclusions();
+
+$("downloadParityCsv")?.addEventListener("click", () => {
+ const rows = latestStrategyReportJson?.parsed?.parityRows || [];
+ if (!rows.length) return;
+ const headers = ["SourceRow","Symbol","Timeframe","PayloadTimestampUtc","PayloadOpen","PayloadHigh","PayloadLow","PayloadClose","PayloadVolume","ChartTimestamp","ChartOpen","ChartHigh","ChartLow","ChartClose","ChartVolume","ChartTimestampMeaning","Finding"];
+ const quote = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+ const csv = [headers, ...rows.map(row => headers.map(header => row[header] ?? ""))]
+   .map(row => row.map(quote).join(",")).join("\r\n");
+ const blob = new Blob(["\\uFEFF", csv], {type:"text/csv;charset=utf-8"});
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement("a"); link.href = url; link.download = "mcc-chart-parity-template.csv";
+ document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+});
