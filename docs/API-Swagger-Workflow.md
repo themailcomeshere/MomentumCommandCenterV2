@@ -49,3 +49,20 @@ Percent values are percentage points: `0.5` means 0.5%. Use `catalystStatus` = `
 ## Security and evidence
 
 Never paste credentials into Swagger fields, browser storage, issue comments, or chat. Provider secrets remain server-side User Secrets/environment configuration. Report sanitized errors and timestamps only. Successful historical bars validate that specific request path, not streaming, complete session coverage, entitlement breadth, or live trading readiness.
+
+
+## StrategyReport CSV upload
+
+Open `POST /api/strategy-report/upload`, choose the multipart `file` field, and upload a Thinkorswim StrategyReport `.csv`. Example limits: 10 MB and 10,000 valid data rows. Response includes source headers, full parsed rows, first 100 preview rows, row warnings, and likely timestamp/symbol/event column names. The parser preserves report content; a StrategyReport is not assumed to be a continuous OHLCV export.
+
+## Exclusion watchlist
+
+- `GET /api/watchlists/exclusions` lists the local MCC exclusions.
+- `POST /api/watchlists/exclusions` example body: `{ "symbol": "TTE", "reason": "Manual exclusion" }`.
+- `DELETE /api/watchlists/exclusions/TTE` removes TTE from MCC's local list.
+
+The evaluator automatically checks this local list. It is not synchronized to the personal Thinkorswim watchlist. Do not assume a TOS Add to Watchlist action updates MCC until a supported import/sync path is implemented.
+
+## Current verification
+
+User previously reported 91 passing Release tests before this change set. Current-head GitHub Actions run must finish successfully before the new endpoints are treated as verified. Never expose unauthenticated Swagger/API beyond a trusted local environment.
