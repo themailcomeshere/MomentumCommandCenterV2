@@ -572,3 +572,32 @@ No open PRs were returned by the current open-PR search. PR #7 is closed and mus
 - Extended-hours test instructions: request a completed date for 07:00–20:00 Eastern and compare returned timestamps/bars with independent TOS/export data. For 2026-10-26, query UTC 2026-10-26T11:00:00Z to 2026-10-27T00:00:00Z. Example: /api/market-data/bars?symbol=SPY&timeframe=1m&from=2026-10-26T11%3A00%3A00Z&to=2026-10-27T00%3A00%3A00Z&providerName=Alpaca. Repeat 5m and an individual equity such as TTE. Verify feed/entitlement, bar count, first/latest source timestamps, gap timestamps and values. This test is not complete until compared with a source export.
 - Latest workflow/combined status could not be verified with available GitHub wrapper results (the returned empty status/run arrays are inconclusive). Run dotnet test MomentumCommandCenterV2.sln --configuration Release after pulling latest feature branch and check GitHub Actions for exact HEAD SHA.
 - Follow-up correctness checks: the parser fixture epoch `1792430880000` resolves to `2026-10-19T17:28:00Z`, so corrected the test expectation (commit `ba5c92f`). Grouped volume values like `8,210` are normalized to `8210` (commit `dab2bc8`). Latest parser/test fixes have not been executed by CI or locally after these commits; the next validation is a Release test run on the exact current feature-branch HEAD.
+
+
+## October 27, 2026 — handoff update
+
+Working branch remains `feature/opportunity-quality-classification`. Latest observed branch head before these changes was `1012b8c15a615021cc83880dc86556fceafc744a`; new changes add an Alpaca/IEX OHLCV CSV-to-parity parser and tests, plus provider dashboard cache/status corrections. Do not assume the new commits passed CI until the current branch-head workflow completes.
+
+### Current evidence
+- Alpaca provider status returned `VALIDATED_DATA_RETURNED` at 17:53–18:26 UTC on 2026-10-27, with configured feed `iex`. It proves some bars were returned; not complete coverage, SIP access, or streaming.
+- Collector status: 2 cycles, 36 newly persisted observations, 0 errors in the last reported cycle, durable watermarks for SPY/QQQ/TTE/FMS on 1m/5m. Restart/recovery is not yet tested.
+- User's saved coverage responses: SPY 1m = 394 bars/8 observed gaps; TTE 1m = 168 bars/91 observed gaps; TTE 5m = 75 bars/3 observed gaps. Compare exact timestamps and OHLCV against Thinkorswim before declaring errors.
+- Added `POST /api/market-data/import-csv` for standard Alpaca/IEX CSV with timestamp/time, open, high, low, close, volume columns. Optional form fields `symbol` and `timeframe` fill absent columns. Output has all 17 parity columns; imported values fill Payload* only. Chart* remains blank and no parity is claimed until a separate chart export is uploaded.
+- Dashboard JS now requests provider/collector status without cache and uses a versioned script URL. If still stale after pull, confirm dashboard URL is served by the same API origin, not a file preview or different app instance.
+
+### Scanner blocker
+The collector's configured universe is only SPY, QQQ, TTE, FMS; it is not market-wide discovery. No verified movers/scanner feed, catalyst/news data, quote/spread feed, or fully validated overnight scoring is wired in. Next implement a provider-backed discovery adapter and score only fresh candidates with liquidity, spread, event, extension, and session guards. Never relabel the four configured symbols as a full-market scan.
+
+### User's next actions
+1. Pull latest branch and run `dotnet test MomentumCommandCenterV2.sln --configuration Release`; confirm CI on the new head.
+2. Run the API and open its printed URL (not a local `index.html` file). Hard reload once; check that provider cards say `CONNECTED · DATA RETURNED` and show latest returned bars.
+3. In Swagger, test `POST /api/market-data/import-csv` with a small Alpaca/IEX CSV. Include form fields `symbol=TTE` and `timeframe=1m` if missing from CSV; confirm 17 parity columns and blank Chart* fields.
+4. In Swagger, retest `POST /api/strategy-report/upload` with the real TOS StrategyReport; confirm explicit payload parity rows and grouped volume.
+5. Upload the exact matching TTE Thinkorswim OHLCV/StrategyExport and all six candidate chart screenshots directly in this conversation. Repository PNG bytes were not accessible to the current analysis tools, so no limit-sell levels or candidate ranking have been made up.
+6. Run one controlled API restart and verify the collector resumes from watermarks with overlap, without silently losing historical bars.
+
+[Uncertainties]
+- New parser/endpoint/test CI status is not yet known.
+- The exact cause of the stale dashboard display is not proven; stale browser assets or a different origin/instance are the leading checks.
+- Exact TTE parity cannot be assessed until the matching Thinkorswim export is available.
+- No overnight shortlist or limit-sell prices are supported without the six chart images and entry/risk assumptions.
