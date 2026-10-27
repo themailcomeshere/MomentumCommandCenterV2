@@ -11,7 +11,6 @@ public sealed class MarketDataCollectionWorker(
     IConfiguration configuration,
     IEnumerable<IMarketDataProvider> providers,
     IMarketBarObservationStore store,
-    MarketDataCollectionStatus status,
     ILogger<MarketDataCollectionWorker> logger) : BackgroundService
 {
     private readonly string[] _symbols = (configuration["MarketData:Collector:Symbols"] ?? "")
@@ -96,9 +95,3 @@ public sealed class MarketDataCollectionWorker(
     private static string Trim(string value) => value.Length <= 240 ? value : value[..240];
 }
 
-public sealed class MarketDataCollectionStatus
-{
-    private MarketDataCollectionWorker? _worker;
-    public void Attach(MarketDataCollectionWorker worker) => _worker = worker;
-    public object Snapshot() => _worker?.Snapshot() ?? new { enabled = false, mode = "not started" };
-}
