@@ -1,3 +1,4 @@
+using Xunit;
 using MomentumCommandCenterV2.API.BoringOvernight;
 
 namespace MomentumCommandCenterV2.Tests;
