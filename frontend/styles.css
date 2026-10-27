@@ -882,3 +882,12 @@ th {
 .upload-warning { color:var(--yellow); }
 .hidden { display:none !important; }
 @media (max-width:760px) { .integration-grid { grid-template-columns:1fr; } }
+
+
+/* API historical scanner controls: responsive, compact, and explicitly bounded to user-entered symbols. */
+.scanner-api-controls { margin: 0.75rem 0 1rem; padding: 0.75rem; border: 1px solid var(--border, #343a46); border-radius: 8px; }
+.scanner-api-controls form { display: flex; flex-wrap: wrap; align-items: end; gap: 0.65rem; }
+.scanner-api-controls label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: var(--muted, #aab1bd); }
+.scanner-api-controls input, .scanner-api-controls select { min-width: 130px; max-width: 100%; }
+.scanner-api-controls #apiScanSymbols { min-width: 220px; }
+.scanner-api-controls .notice { margin-bottom: 0; }
