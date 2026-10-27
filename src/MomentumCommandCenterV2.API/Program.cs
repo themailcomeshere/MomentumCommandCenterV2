@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi.Models;
 using MomentumCommandCenterV2.API.MarketData;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -225,7 +226,27 @@ app.MapPost("/api/strategy-report/upload", async (HttpRequest request, Cancellat
 .WithSummary("Upload and parse a Thinkorswim StrategyReport CSV")
 .WithDescription("Swagger example: choose multipart file field 'file' and upload a CSV exported from Thinkorswim. Example response includes headers, row count, up to 100 preview rows, detected likely timestamp/symbol/event columns, and warnings. This preserves report rows; it does not invent missing OHLCV bars or infer unreported fills.")
 .Produces<MomentumCommandCenterV2.API.StrategyReports.StrategyReportParseResult>()
-.ProducesProblem(400);
+.ProducesProblem(400)
+.WithOpenApi(operation =>
+{
+    operation.RequestBody = new OpenApiRequestBody
+    {
+        Required = true,
+        Content =
+        {
+            ["multipart/form-data"] = new OpenApiMediaType
+            {
+                Schema = new OpenApiSchema
+                {
+                    Type = "object",
+                    Required = new HashSet<string> { "file" },
+                    Properties = { ["file"] = new OpenApiSchema { Type = "string", Format = "binary", Description = "Thinkorswim StrategyReport CSV, max 10 MB." } }
+                }
+            }
+        }
+    };
+    return operation;
+});
 
 app.MapGet("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
     Results.Ok(new { count = (await store.GetAsync(ct)).Count, symbols = await store.GetAsync(ct) }))
