@@ -419,7 +419,8 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
   preview.textContent = JSON.stringify(parsed.previewRows || [], null, 2);
   summary.append(preview);
   summary.classList.remove("hidden"); download.classList.remove("hidden");
-  if ((parsed.parityRows || []).length > 0) parityDownload?.classList.remove("hidden");\n  status.textContent = "Parse complete. " + (parsed.parityRows || []).length + " MCC OHLCV row(s) converted to the Chart Parity Template.";
+  if ((parsed.parityRows || []).length > 0) parityDownload?.classList.remove("hidden");
+  status.textContent = "Parse complete. " + (parsed.parityRows || []).length + " MCC OHLCV row(s) converted to the Chart Parity Template.";
  } catch (e) {
   status.textContent = "StrategyReport upload failed: " + e.message;
  }
