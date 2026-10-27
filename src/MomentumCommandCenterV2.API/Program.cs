@@ -251,6 +251,43 @@ app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API
     return operation;
 });
 
+app.MapPost("/api/market-data/import-csv", async (HttpRequest request, CancellationToken cancellationToken) =>
+{
+    if (!request.HasFormContentType)
+        return Results.BadRequest(new { error = "Use multipart/form-data with a file field named 'file', plus optional symbol and timeframe fields." });
+    var form = await request.ReadFormAsync(cancellationToken);
+    var file = form.Files.GetFile("file");
+    if (file is null || file.Length == 0)
+        return Results.BadRequest(new { error = "Upload a non-empty Alpaca/IEX OHLCV CSV in the 'file' field." });
+    if (file.Length > 10 * 1024 * 1024)
+        return Results.BadRequest(new { error = "Maximum upload size is 10 MB." });
+    if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "Only .csv files are accepted." });
+    try
+    {
+        using var reader = new StreamReader(file.OpenReadStream());
+        var csv = await reader.ReadToEndAsync(cancellationToken);
+        var parityRows = MomentumCommandCenterV2.API.MarketData.AlpacaCsvParityParser.Parse(
+            csv, form["symbol"].ToString(), form["timeframe"].ToString());
+        return Results.Ok(new
+        {
+            fileName = Path.GetFileName(file.FileName),
+            uploadedBytes = file.Length,
+            parsedAtUtc = DateTimeOffset.UtcNow,
+            headers = MomentumCommandCenterV2.API.MarketData.AlpacaCsvParityParser.ParityHeaders,
+            rowCount = parityRows.Count,
+            parityRows,
+            interpretation = "Alpaca/IEX export values populate Payload* only. Chart* fields remain blank until an independent Thinkorswim/chart export is supplied; this import does not assert parity."
+        });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (FormatException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("ImportAlpacaCsvForParity")
+.WithSummary("Import Alpaca/IEX OHLCV CSV into MCC parity rows")
+.WithDescription("Upload multipart/form-data with file field 'file'. Optional form fields: symbol and timeframe (1m or 5m) if absent from the CSV. The response has all 17 canonical parity columns. It does not synthesize chart values.")
+.ProducesProblem(400);
+
 app.MapPost("/api/strategy-report/upload", async (HttpRequest request, CancellationToken cancellationToken) =>
 {
     if (!request.HasFormContentType)
