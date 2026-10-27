@@ -146,3 +146,7 @@
 - [IMPLEMENTED — CI PENDING] Alpaca pagination, transient retry, range filtering, duplicate timestamp handling; added request-driven `/api/market-data/bars` persistence endpoint.
 - [CI WARNING] The first parity UI build failed because `StrategyReportParseResult` lacked the new `ParityRows` property. Corrected, and a regression test was added. Workflow run 40545469124 queued at last check.
 - [NOT COMPLETE] No continuous background collector/recovery, no scanner candidate provider, no full live Boring Overnight computation, no verified TOS watchlist sync, no current V14.5 exact-source bubble consolidation. The API remains decision-support-only and order submission is not implemented.
+
+
+- [IMPLEMENTED — CI PENDING] Opt-in hosted historical collector with overlap/backfill after restarts and `/api/market-data/collector/status`. Requires explicit `MarketData:Collector:Symbols`; default disabled. Current-head CI was in progress at last check.
+- [USER VALIDATION REQUIRED] Configure a short explicit symbol list in User Secrets/environment, restart, verify collector status cycles increase and observation counts advance, then restart again and verify overlap recovery.
