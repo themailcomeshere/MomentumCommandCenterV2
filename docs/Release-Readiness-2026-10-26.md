@@ -125,3 +125,12 @@
 
 
 - [PATCH ARTIFACT CREATED — NOT VERIFIED] Generated a V14.5-specific source copy with a one-time EOD GET OUT bubble on transition into `EOD_GET_OUT`. It is not the same as the repository's V14.4.10 MainStudy and must be installed and visually verified in Thinkorswim before the bubble issue can close.
+
+
+## Follow-up — 2026-10-27: API usability
+
+- [IMPLEMENTED — CI PENDING] StrategyReport CSV upload endpoint with 10 MB / 10,000-row bounds, quoted-field parser, complete parsed row return and preview/warnings. Validate with actual TOS exports.
+- [IMPLEMENTED — CI PENDING] MCC local persisted exclusion watchlist CRUD. Evaluator checks it automatically. Not a direct Thinkorswim watchlist sync.
+- [IMPLEMENTED — CI PENDING] Swagger examples added across current API routes; upload has multipart file schema. Swagger enabled for Release local runs. Do not expose unauthenticated API/Swagger publicly.
+- [BLOCKED — USER VERIFICATION] Cleaned V14.5 source artifact and EOD bubble change not compiled/verified in Thinkorswim.
+- [OPEN — CURRENT-HEAD CI] Workflow run 40538766766 was queued at last check. User-reported 91 passes applies to earlier code only.
