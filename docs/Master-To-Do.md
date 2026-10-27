@@ -651,3 +651,5 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 - [DATA NOT FOUND IN SOURCES] `data/HowToTestExtendedHoursCoverage_5m.txt` exists but is empty. The SPY 5-minute response is not available in the repository and must be recaptured; do not infer SPY 5m coverage from SPY 1m.
 
 - [DATA REVIEWED — INTERNAL CONSISTENCY PASS] Compared the 75 TTE 5m bars to aggregation of the saved TTE 1m bars in the same UTC five-minute buckets. All 75 available 5m bars matched the aggregate OHLCV values from the corresponding 1m rows; 0 mismatches observed. This is a consistency check between the saved IEX responses, not independent parity against Thinkorswim.
+
+- [SOURCE CHANGE — CURRENT-HEAD CI PENDING] Connected the Scanner Workbench to `GET /api/scanner/universe` with symbols, timeframe, and local-time window controls. Results are descriptive historical data only. Latest verified .NET CI run passed at commit `7eb26118f360ba0d9cc0b2dbc274ca346bc99240`; later frontend/docs commits are running their own workflows and current-head status must be checked before release.
