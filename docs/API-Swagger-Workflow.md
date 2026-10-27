@@ -89,3 +89,10 @@ Upload the exported CSV to `POST /api/strategy-report/upload`. If rows contain t
 ## Limits of current Alpaca work
 
 Historical requests paginate with a safety cap and retry transient failures. The new endpoint is request-driven, not a background collector. Alpaca data does not supply the authoritative Thinkorswim study states or current news/catalyst data; the live overnight scanner must return DATA? when these required sources are absent.
+
+
+## Opt-in background collection
+
+Configure the API host's User Secrets or environment with `MarketData:Collector:Symbols=SPY,QQQ,TTE,FMS` (use the exact symbols you want polled). The hosted worker is disabled when the setting is empty. Defaults: 60-second polling and 20-minute overlap; it retrieves 1m and 5m historical bars and persists idempotently. Use `GET /api/market-data/collector/status` to inspect enablement, cycle count, newly persisted observations, last run times, and recent errors.
+
+The collector only fetches explicitly configured symbols. It is not a market-wide scanner, does not stream websocket ticks, and does not infer TOS 5M permission or 1M execution state. Keep the symbol list narrow while testing.
