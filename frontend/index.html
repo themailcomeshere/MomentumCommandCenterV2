@@ -77,7 +77,7 @@
   <form id="strategyReportForm" class="upload-form"><label for="strategyReportFile">StrategyReport CSV (max 10 MB)</label><input id="strategyReportFile" type="file" accept=".csv,text/csv" required><button type="submit">Upload and parse</button></form>
   <p id="strategyReportStatus" class="muted">Choose a TOS StrategyReport export to parse through the API.</p>
   <div id="strategyReportSummary" class="upload-summary hidden"></div>
-  <button id="downloadStrategyReportJson" type="button" class="quiet-button hidden">Download parsed JSON</button>
+  <div class="button-row"><button id="downloadStrategyReportJson" type="button" class="quiet-button hidden">Download parsed JSON</button><button id="downloadParityCsv" type="button" class="quiet-button hidden">Download Parity Template CSV</button></div>
   <p class="notice">The API preserves report rows and warnings. A StrategyReport is not assumed to be continuous OHLCV data and does not prove fills unless the export records them.</p>
  </article>
 </section>
