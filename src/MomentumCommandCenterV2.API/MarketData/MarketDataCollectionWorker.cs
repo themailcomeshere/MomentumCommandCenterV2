@@ -109,7 +109,8 @@ public sealed class MarketDataCollectionWorker(
 
                             var bars = await provider.GetBarsAsync(symbol, timeframe, from, to, stoppingToken);
                             var ordered = bars.OrderBy(b => b.Timestamp).ToArray();
-                            await store.AppendAsync(ordered, stoppingToken);
+                            var newlyPersisted = await store.AppendAsync(ordered, stoppingToken);
+                            Interlocked.Add(ref _newObservations, newlyPersisted);
                             if (ordered.Length > 0)
                             {
                                 var latest = ordered[^1].Timestamp;
