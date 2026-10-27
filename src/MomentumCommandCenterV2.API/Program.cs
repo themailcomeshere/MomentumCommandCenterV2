@@ -167,8 +167,8 @@ app.MapGet("/api/scanner/universe", async (
                 barCount = bars.Length, persistedObservationCount = persisted, firstTimestampUtc = (DateTimeOffset?)first.Timestamp,
                 latestTimestampUtc = (DateTimeOffset?)latest.Timestamp,
                 latestBarAgeMinutes = (double?)Math.Round(Math.Max(0, (DateTimeOffset.UtcNow - latest.Timestamp).TotalMinutes), 2),
-                changePercent = change is null ? null : Math.Round(change.Value, 4),
-                observedRangePercent = range is null ? null : Math.Round(range.Value, 4),
+                changePercent = change is null ? (double?)null : Math.Round(change.Value, 4),
+                observedRangePercent = range is null ? (double?)null : Math.Round(range.Value, 4),
                 summedVolume = (long?)bars.Sum(b => b.Volume),
                 interpretation = "Observed historical bars only. No relative-volume baseline, quote/spread, catalyst, halt, sector, or Thinkorswim eligibility data is included."
             };
