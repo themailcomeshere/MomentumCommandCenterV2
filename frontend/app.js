@@ -262,3 +262,97 @@ async function loadMorningBrief() {
  }
 }
 loadMorningBrief();
+
+
+/* API-backed exclusion watchlist and StrategyReport upload. */
+let latestStrategyReportJson = null;
+async function refreshExclusions() {
+ const status = $("exclusionStatus"), list = $("exclusionRows");
+ if (!status || !list) return;
+ status.textContent = "Loading exclusions from MCC API…";
+ try {
+  const response = await fetch("/api/watchlists/exclusions", {headers:{Accept:"application/json"}});
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  const data = await response.json();
+  list.replaceChildren(...(data.symbols || []).map(entry => {
+   const li = document.createElement("li");
+   const detail = document.createElement("span");
+   detail.textContent = entry.symbol + " — " + entry.reason;
+   const remove = document.createElement("button");
+   remove.type = "button"; remove.className = "quiet-button"; remove.textContent = "Remove";
+   remove.addEventListener("click", async () => {
+    remove.disabled = true;
+    try {
+     const res = await fetch("/api/watchlists/exclusions/" + encodeURIComponent(entry.symbol), {method:"DELETE"});
+     if (!res.ok) throw new Error("HTTP " + res.status);
+     await refreshExclusions();
+    } catch (e) { status.textContent = "Could not remove symbol: " + e.message; remove.disabled = false; }
+   });
+   li.append(detail, remove);
+   return li;
+  }));
+  status.textContent = data.count + " excluded symbol(s) · API-backed MCC list";
+ } catch (e) {
+  status.textContent = "Exclusion API unavailable: " + e.message + ". Serve this page through the MCC API.";
+ }
+}
+$("refreshExclusions")?.addEventListener("click", refreshExclusions);
+$("exclusionForm")?.addEventListener("submit", async event => {
+ event.preventDefault();
+ const symbol = $("exclusionSymbol").value.trim().toUpperCase();
+ const reason = $("exclusionReason").value.trim();
+ const status = $("exclusionStatus");
+ try {
+  const response = await fetch("/api/watchlists/exclusions", {
+   method:"POST", headers:{"Content-Type":"application/json","Accept":"application/json"},
+   body:JSON.stringify({symbol,reason:reason || null})
+  });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || ("HTTP " + response.status));
+  $("exclusionSymbol").value = ""; $("exclusionReason").value = "";
+  await refreshExclusions();
+ } catch (e) { status.textContent = "Could not add exclusion: " + e.message; }
+});
+$("strategyReportForm")?.addEventListener("submit", async event => {
+ event.preventDefault();
+ const file = $("strategyReportFile").files?.[0];
+ const status = $("strategyReportStatus"), summary = $("strategyReportSummary"), download = $("downloadStrategyReportJson");
+ if (!file) { status.textContent = "Choose a CSV file first."; return; }
+ status.textContent = "Uploading and parsing " + file.name + "…";
+ summary.classList.add("hidden"); download.classList.add("hidden"); latestStrategyReportJson = null;
+ try {
+  const form = new FormData(); form.append("file", file, file.name);
+  const response = await fetch("/api/strategy-report/upload", {method:"POST",body:form,headers:{Accept:"application/json"}});
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || ("HTTP " + response.status));
+  latestStrategyReportJson = body;
+  const parsed = body.parsed;
+  summary.replaceChildren();
+  const intro = document.createElement("p");
+  intro.textContent = body.fileName + " · " + parsed.parsedRowCount + " parsed rows · " + parsed.headers.length + " columns";
+  summary.append(intro);
+  const headers = document.createElement("p");
+  headers.textContent = "Columns: " + parsed.headers.join(", ");
+  summary.append(headers);
+  if (parsed.warnings?.length) {
+   const warning = document.createElement("p"); warning.className = "upload-warning";
+   warning.textContent = "Warnings: " + parsed.warnings.slice(0,8).join(" | ");
+   summary.append(warning);
+  }
+  const preview = document.createElement("pre");
+  preview.textContent = JSON.stringify(parsed.previewRows || [], null, 2);
+  summary.append(preview);
+  summary.classList.remove("hidden"); download.classList.remove("hidden");
+  status.textContent = "Parse complete. Full rows are included in the downloadable JSON.";
+ } catch (e) {
+  status.textContent = "StrategyReport upload failed: " + e.message;
+ }
+});
+$("downloadStrategyReportJson")?.addEventListener("click", () => {
+ if (!latestStrategyReportJson) return;
+ const blob = new Blob([JSON.stringify(latestStrategyReportJson, null, 2)], {type:"application/json"});
+ const url = URL.createObjectURL(blob);
+ const link = document.createElement("a"); link.href = url; link.download = "strategy-report-parsed.json";
+ document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+});
+refreshExclusions();
