@@ -175,7 +175,7 @@ public sealed class AlpacaHistoricalBarsClient
                     stream,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
             }
-            catch (HttpRequestException) when (attempt < _maxAttempts)
+            catch (HttpRequestException exception) when (attempt < _maxAttempts && exception.StatusCode is null)
             {
                 await Task.Delay(Backoff(attempt), cancellationToken).ConfigureAwait(false);
             }
