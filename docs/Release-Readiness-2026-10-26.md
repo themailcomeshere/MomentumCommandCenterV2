@@ -150,3 +150,7 @@
 
 - [IMPLEMENTED — CI PENDING] Opt-in hosted historical collector with overlap/backfill after restarts and `/api/market-data/collector/status`. Requires explicit `MarketData:Collector:Symbols`; default disabled. Current-head CI was in progress at last check.
 - [USER VALIDATION REQUIRED] Configure a short explicit symbol list in User Secrets/environment, restart, verify collector status cycles increase and observation counts advance, then restart again and verify overlap recovery.
+
+
+- [CI FIX APPLIED — RECHECK REQUIRED] Background collector build initially failed on unused constructor parameter; removed in commit `72d4034468d0837c38a4baf726e43ca68ad9f7bf`. Workflow run 40546245830 was in progress at last check.
+- [TOS USER VALIDATION REQUIRED] Composite single-bubble replacement file created; exact current V14.5 file in Thinkorswim still needs the replacement applied and visually checked.
