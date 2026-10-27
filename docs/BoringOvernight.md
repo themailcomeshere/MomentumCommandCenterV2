@@ -138,3 +138,10 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 - CCI's Oct 21, 2026 Q3 results/outlook update is a recent earnings catalyst; NICE's official IR event page lists no upcoming events but this is not a complete catalyst clearance.
 - Do not infer READY from the scanner score. Verify exact unrounded 5D > 20D mean, 20-day average daily volume >=500K, source freshness, exclusions, current catalyst/news and 5M/1M chart state.
 - Full eligible-window reach research remains blocked on source-backed regular close and complete next 07:00–20:00 Eastern GTC_EXT OHLCV with missing intervals preserved as DATA_GAP. A historical touch is not an actual fill.
+
+
+## Implementation update — 2026-10-27
+
+- A new API evaluator exists at `POST /api/boring-overnight/evaluate`. It applies the documented hard gates for price, SMA20, average daily volume, overnight win rate, 20D average, strict 5D > 20D, excluded-list status, catalyst status, 5M permission/structure, 1M state, freshness and extension/current-day heat warnings.
+- This is the first deterministic evaluator slice, not the full scanner-to-decision pipeline. Inputs are caller-supplied and must be sourced/timestamped by the caller. Automatic candidate discovery, catalyst feed integration, persisted candidate metrics, and validated sell-target selection are still open.
+- `docs/Validation/Boring-Overnight-Target-Policy-20261027.md` defines why the +0.5% heuristic and median ON % must be evaluated against complete eligible-window bars and walk-forward outcomes before selecting a target.
