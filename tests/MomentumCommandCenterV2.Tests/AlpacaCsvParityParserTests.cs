@@ -38,7 +38,7 @@ public sealed class AlpacaCsvParityParserTests
     [Fact]
     public void ParsesCheckedInAlpacaHistoricalBarsJsonEvenWhenNamedCsv()
     {
-        const string json = """ 
+        const string json = """
             {
               "symbol":"TTE",
               "timeframe":"5m",
