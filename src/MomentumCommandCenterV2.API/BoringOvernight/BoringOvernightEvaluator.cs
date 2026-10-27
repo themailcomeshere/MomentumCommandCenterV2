@@ -8,62 +8,79 @@ public static class BoringOvernightEvaluator
 {
     public static BoringOvernightEvaluation Evaluate(BoringOvernightEvaluationRequest r)
     {
-        var reasons = new List<string>();
         var missing = new List<string>();
         var blockers = new List<string>();
         var warnings = new List<string>();
 
-        void Require(bool? condition, string field, string failure)
-        {
-            if (condition is null) missing.Add(field);
-            else if (!condition.Value) blockers.Add(failure);
-        }
+        if (r.DataFresh is null) missing.Add("dataFresh");
+        else if (!r.DataFresh.Value) blockers.Add("Market/metric data is stale.");
 
-        Require(r.DataFresh, "dataFresh", "Market/metric data is stale.");
-        Require(r.Excluded is not null, "excluded", "Excluded-list status is unknown.");
-        if (r.Excluded == true) blockers.Add("Symbol is on the excluded list.");
+        if (r.Excluded is null) missing.Add("excluded");
+        else if (r.Excluded.Value) blockers.Add("Symbol is on the excluded list.");
 
-        Require(r.Price is > 0, "price", "Price is missing or invalid.");
-        Require(r.Sma20 is > 0, "sma20", "20-day SMA is missing or invalid.");
-        Require(r.AverageDailyVolume20 is >= 0, "averageDailyVolume20", "20-day average daily volume is missing.");
-        Require(r.OvernightWinRatePct is >= 0 and <= 100, "overnightWinRatePct", "Overnight win rate is missing or invalid.");
-        Require(r.AverageOvernightPct20 is not null, "averageOvernightPct20", "20-day average overnight return is missing.");
-        Require(r.AverageOvernightPct5 is not null, "averageOvernightPct5", "5-day average overnight return is missing.");
-        Require(r.MedianOvernightPct20 is not null, "medianOvernightPct20", "20-day median overnight return is missing.");
-        Require(r.CurrentOvernightPct is not null, "currentOvernightPct", "Current overnight move is missing.");
-        Require(r.CatalystStatus is not null, "catalystStatus", "Catalyst review is incomplete.");
-        Require(r.FiveMinutePermission is not null, "fiveMinutePermission", "5M permission is unknown.");
-        Require(!string.IsNullOrWhiteSpace(r.FiveMinuteStructure), "fiveMinuteStructure", "5M structure is unknown.");
-        Require(!string.IsNullOrWhiteSpace(r.OneMinuteState), "oneMinuteState", "1M state is unknown.");
-        Require(r.ExtensionAtr is not null and >= 0, "extensionAtr", "1M extension is missing.");
-        Require(r.CurrentVolumeVsAverage is not null and >= 0, "currentVolumeVsAverage", "Current volume ratio is missing.");
+        if (r.Price is null) missing.Add("price");
+        else if (r.Price.Value <= 0) blockers.Add("Price is invalid.");
+        else if (r.Price.Value <= 5) blockers.Add("Price must be above $5.");
 
-        if (r.Price is > 0 && r.Price <= 5) blockers.Add("Price must be above $5.");
-        if (r.Price is > 0 && r.Sma20 is > 0 && r.Price <= r.Sma20) blockers.Add("Price is not above the 20-day SMA.");
-        if (r.AverageDailyVolume20 is >= 0 and < 500_000) blockers.Add("20-day average daily volume is below 500,000 shares.");
-        if (r.OvernightWinRatePct is >= 0 and < 60) blockers.Add("Overnight win rate is below 60%.");
-        if (r.AverageOvernightPct20 is not null and < 0.10) blockers.Add("20-day average overnight return is below +0.10%.");
-        if (r.AverageOvernightPct5 is not null && r.AverageOvernightPct20 is not null &&
-            r.AverageOvernightPct5 <= r.AverageOvernightPct20)
+        if (r.Sma20 is null or <= 0) missing.Add("sma20");
+        if (r.Price is > 0 && r.Sma20 is > 0 && r.Price.Value <= r.Sma20.Value)
+            blockers.Add("Price is not above the 20-day SMA.");
+
+        if (r.AverageDailyVolume20 is null) missing.Add("averageDailyVolume20");
+        else if (r.AverageDailyVolume20.Value < 500_000)
+            blockers.Add("20-day average daily volume is below 500,000 shares.");
+
+        if (r.OvernightWinRatePct is null) missing.Add("overnightWinRatePct");
+        else if (r.OvernightWinRatePct.Value < 60 || r.OvernightWinRatePct.Value > 100)
+            blockers.Add("Overnight win rate must be between 60% and 100%.");
+
+        if (r.AverageOvernightPct20 is null) missing.Add("averageOvernightPct20");
+        else if (r.AverageOvernightPct20.Value < 0.10)
+            blockers.Add("20-day average overnight return is below +0.10%.");
+
+        if (r.AverageOvernightPct5 is null) missing.Add("averageOvernightPct5");
+        else if (r.AverageOvernightPct20 is not null &&
+                 r.AverageOvernightPct5.Value <= r.AverageOvernightPct20.Value)
             blockers.Add("5-day average overnight return is not strictly greater than the 20-day average.");
-        if (string.Equals(r.CatalystStatus, "RISK", StringComparison.OrdinalIgnoreCase))
-            blockers.Add("Material catalyst/event risk requires rejection or explicit manual review.");
-        if (r.FiveMinutePermission == false) blockers.Add("5M permission is NO.");
-        if (!string.IsNullOrWhiteSpace(r.FiveMinuteStructure) &&
-            !r.FiveMinuteStructure.Equals("BULLISH", StringComparison.OrdinalIgnoreCase))
-            blockers.Add("5M structure is not BULLISH.");
-        if (!string.IsNullOrWhiteSpace(r.OneMinuteState) &&
-            (r.OneMinuteState.Contains("GET OUT", StringComparison.OrdinalIgnoreCase) ||
-             r.OneMinuteState.Contains("SELL", StringComparison.OrdinalIgnoreCase) ||
-             r.OneMinuteState.Contains("BLOCK", StringComparison.OrdinalIgnoreCase)))
-            blockers.Add("1M state indicates SELL/GET OUT/BLOCK; do not qualify an entry.");
-        if (r.ExtensionAtr is >= 2.0) warnings.Add("1M extension is at or above the 2.0 ATR danger threshold.");
-        if (r.CurrentOvernightPct is >= 3.0) warnings.Add("Current overnight move is at or above 3%; treat as too hot.");
-        if (r.CurrentVolumeVsAverage is >= 3.0) warnings.Add("Current volume is at least 3x its reference average; investigate an abnormal session.");
-        if (r.DailyRangePct is >= 0 && r.AtrPct is >= 0 && r.DailyRangePct > r.AtrPct * 1.5)
-            warnings.Add("Current daily range exceeds 1.5x ATR%; investigate unusually large range.");
-        if (string.Equals(r.CatalystStatus, "UNKNOWN", StringComparison.OrdinalIgnoreCase))
+
+        if (r.MedianOvernightPct20 is null) missing.Add("medianOvernightPct20");
+        if (r.CurrentOvernightPct is null) missing.Add("currentOvernightPct");
+
+        if (string.IsNullOrWhiteSpace(r.CatalystStatus)) missing.Add("catalystStatus");
+        else if (r.CatalystStatus.Equals("UNKNOWN", StringComparison.OrdinalIgnoreCase))
             missing.Add("catalyst clearance");
+        else if (r.CatalystStatus.Equals("RISK", StringComparison.OrdinalIgnoreCase))
+            blockers.Add("Material catalyst/event risk requires rejection or explicit manual review.");
+
+        if (r.FiveMinutePermission is null) missing.Add("fiveMinutePermission");
+        else if (!r.FiveMinutePermission.Value) blockers.Add("5M permission is NO.");
+
+        if (string.IsNullOrWhiteSpace(r.FiveMinuteStructure)) missing.Add("fiveMinuteStructure");
+        else if (!r.FiveMinuteStructure.Equals("BULLISH", StringComparison.OrdinalIgnoreCase))
+            blockers.Add("5M structure is not BULLISH.");
+
+        if (string.IsNullOrWhiteSpace(r.OneMinuteState)) missing.Add("oneMinuteState");
+        else if (r.OneMinuteState.Contains("GET OUT", StringComparison.OrdinalIgnoreCase) ||
+                 r.OneMinuteState.Contains("SELL", StringComparison.OrdinalIgnoreCase) ||
+                 r.OneMinuteState.Contains("BLOCK", StringComparison.OrdinalIgnoreCase))
+            blockers.Add("1M state indicates SELL/GET OUT/BLOCK; do not qualify an entry.");
+
+        if (r.ExtensionAtr is null) missing.Add("extensionAtr");
+        else if (r.ExtensionAtr.Value >= 2.0)
+            warnings.Add("1M extension is at or above the 2.0 ATR danger threshold.");
+
+        if (r.CurrentVolumeVsAverage is null) missing.Add("currentVolumeVsAverage");
+        else if (r.CurrentVolumeVsAverage.Value >= 3.0)
+            warnings.Add("Current volume is at least 3x its reference average; investigate an abnormal session.");
+
+        if (r.DailyRangePct is null) missing.Add("dailyRangePct");
+        if (r.AtrPct is null) missing.Add("atrPct");
+        if (r.DailyRangePct is >= 0 && r.AtrPct is > 0 &&
+            r.DailyRangePct.Value > r.AtrPct.Value * 1.5)
+            warnings.Add("Current daily range exceeds 1.5x ATR%; investigate unusually large range.");
+
+        if (r.CurrentOvernightPct is >= 3.0)
+            warnings.Add("Current overnight move is at or above 3%; treat as too hot.");
 
         var uniqueMissing = missing.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var uniqueBlockers = blockers.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -73,7 +90,9 @@ public static class BoringOvernightEvaluator
             uniqueBlockers.Length > 0 ? "BLOCKED" :
             uniqueWarnings.Length > 0 ? "WATCH" : "READY";
 
-        if (status == "READY") reasons.Add("All configured hard gates passed; this is eligibility only, not an order or profitability claim.");
+        var reasons = new List<string>();
+        if (status == "READY")
+            reasons.Add("All configured hard gates passed; this is eligibility only, not an order or profitability claim.");
         reasons.AddRange(uniqueBlockers);
         reasons.AddRange(uniqueWarnings);
         reasons.AddRange(uniqueMissing.Select(x => $"Missing/unknown: {x}."));
