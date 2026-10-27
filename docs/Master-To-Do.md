@@ -593,3 +593,7 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 - [IMPLEMENTED — CI PENDING] Added opt-in `MarketDataCollectionWorker`. Set `MarketData:Collector:Symbols` to a comma/semicolon-separated list (for example `SPY,QQQ,TTE,FMS`) to poll overlapping 1m/5m historical windows. Default interval 60 seconds, default lookback 20 minutes; bounded config ranges. Append-only storage deduplicates repeats and the overlapping lookback recovers recent bars after restarts. `GET /api/market-data/collector/status` reports enabled state, configured symbols, cycles, new observations, errors, and timestamps. Disabled when no symbols are configured. This is not a market-wide scanner or websocket feed.
 - [OPEN] Validate worker under a real configured Alpaca key, restart API and confirm recent bars are backfilled without duplicate persistence; test 429/5xx retry and API cancellation.
+
+
+- [IMPLEMENTED ARTIFACT — TOS VERIFICATION PENDING] Created `V14_5_Bubble_Stack_Replacement.txt`: one composite bubble per 1M bar with all simultaneous event names, including EOD transition, to eliminate overlapping separate bubbles. Apply to the current cleaned V14.5 study only; the Library source is stale. Thinkorswim compile and visual validation remain open.
+- [CI FIX APPLIED — RECHECK REQUIRED] Removed the unused collector status constructor parameter that failed current-head build. Verify latest workflow before pulling.
