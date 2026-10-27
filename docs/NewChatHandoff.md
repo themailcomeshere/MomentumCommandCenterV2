@@ -608,3 +608,7 @@ The collector's configured universe is only SPY, QQQ, TTE, FMS; it is not market
 - New `GET /api/scanner/universe` scans a caller-supplied list of 1–50 symbols for a maximum 7-day window, on 1m or 5m, via selected configured provider. It returns observed bar count, first/latest timestamps, latest-bar age, window change %, observed range %, and summed volume; it persists retrieved bars.
 - Endpoint is deliberately descriptive. It does not produce candidate-quality probabilities or entry signals and is not market-wide discovery. Relative volume baseline, quote/spread, catalyst/news, halt, sector, and Thinkorswim permission/entry state remain absent.
 - SPY 5m capture file `data/HowToTestExtendedHoursCoverage_5m.txt` is empty; the response is Data not found in sources. Recapture it before claiming SPY 5m coverage.
+
+
+### TTE 1m-to-5m consistency check
+The saved TTE IEX response files were compared by UTC five-minute bucket. All 75 saved TTE 5m bars matched the OHLCV aggregation of the corresponding saved TTE 1m rows; 0 mismatches. This only proves internal consistency between these two saved IEX responses, not parity with Thinkorswim. SPY 5m response file was empty and remains missing.
