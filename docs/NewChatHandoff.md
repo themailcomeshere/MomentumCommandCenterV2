@@ -560,3 +560,5 @@ No open PRs were returned by the current open-PR search. PR #7 is closed and mus
 3. Configure collector symbols locally, inspect /api/market-data/collector/status, restart the API, and verify watermarks resume and new persisted counts remain idempotent.
 4. Test a known symbol/date across premarket, RTH and postmarket using the configured feed; compare source timestamps to TOS export.
 5. Keep scanner DATA? for missing catalyst/TOS-state/daily metrics until those sources are wired and validated.
+
+- [PARITY SEMANTICS CORRECTION] StrategyReport `Date/Time` represents an order event, not guaranteed chart-bar time. The parser deliberately leaves `ChartTimestamp` blank unless an explicit chart timestamp field is present and documents the reason in `ChartTimestampMeaning` / `Finding`; a regression test enforces this. Latest parser/test commits: `a8a2568`, `13f1c83`.
