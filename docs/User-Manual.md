@@ -156,3 +156,10 @@ The user intends to leave the released/deployed MCC program open overnight so sc
 - [Provider comparison](Provider-Comparison.md) evaluates Alpaca, Massive, Twelve Data, and Schwab evidence. No provider has been selected or account entitlements verified. Do not use delayed/single-venue feeds as though they were complete real-time consolidated data.
 - A first provider-neutral event persistence scaffold now exists: validated batch ingestion, JSONL append-only persistence, idempotency, and receipt timestamps. It is not a live collector and currently persists scanner discovery events, not a complete market-bar store.
 - To validate the actual installed Thinkorswim studies, follow [the exact 5M-to-1M validation steps](Validation/5M-to-1M-User-Validation-Steps.md). Previously completed OHLCV/DST tests should not be repeated; this request is specifically about installed-study source and same-bar signal-state evidence.
+
+
+## API testing with Swagger — added 2026-10-27
+
+Run the API locally with `dotnet run --project src/MomentumCommandCenterV2.API --configuration Release` and open `/swagger` on the host/port printed by ASP.NET Core. Use Swagger to run the health, provider-status, market-data comparison and Boring Overnight evaluator endpoints without manually building URLs. Swagger does not guarantee authentication, data entitlement, completeness, or trading readiness. Never enter API keys into Swagger requests.
+
+`POST /api/boring-overnight/evaluate` is a deterministic policy-test endpoint. It expects caller-supplied snapshot fields; it is not yet connected to automatic scanner/catalyst collection. Missing or unknown critical values should remain DATA? rather than being guessed. It does not calculate a validated overnight limit target and never submits orders.
