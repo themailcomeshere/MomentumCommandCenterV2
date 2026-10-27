@@ -497,3 +497,13 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - Swagger is now enabled outside Development too, at `/swagger`, with example descriptions and a multipart file picker schema for StrategyReport. Only expose on a trusted local network; no authentication is implemented.
 - The cleaned V14.5 ThinkScript file is available in the conversation attachment `MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt`. It reflows statements, comments wrapped prose that was being parsed as code, and adds a red EOD transition bubble. Not TOS-compiled/visually verified; user reported earlier file errors and no bubbles. Test this exact file, don't assume success.
 - User-reported prior local Release test: 91 passed before this new change set. GitHub Actions run 40538766766 for the current head was queued at the last check; no current-head pass claim.
+
+
+## Final UI/CI checkpoint — 2026-10-27
+
+- Added visible API-backed panels to the dashboard: MCC exclusion watchlist (add/remove/refresh) and StrategyReport CSV upload (parse, show count/columns/warnings/preview, download complete parsed JSON). Existing browser-local "Working candidates" list is separate and not the exclusion list.
+- Swagger endpoint descriptions contain examples; Boring Overnight evaluator and exclusion add request bodies have OpenAPI examples, and StrategyReport upload exposes a multipart file picker schema. Swagger remains unauthenticated; keep API bound to localhost/trusted network only.
+- First workflow run for the API changes failed at build because `WithOpenApi` extension was not referenced. Added `Microsoft.AspNetCore.OpenApi` package 8.0.0. Latest workflow run 40539484300 for commit `2c811c5da83cb5e807e9f95ef81eae05cb152de8` was in progress at last check. Verify this exact head after the next commit; do not reuse the user's earlier 91-test result as current-head proof.
+- StrategyReport API returns all parsed rows up to 10,000 plus a 100-row preview. Parser unit tests were added. The front-end downloads the full response as JSON to avoid forcing a large report into the page.
+- Exclusion watchlist writes `App_Data/exclusions-watchlist.json`; ensure local directory is writable and back it up if exclusions are important. This does not sync to TOS. User still needs to maintain TOS and MCC lists consistently or provide an export format for import.
+- Cleaned ThinkScript file download: `MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt`. It removes blank-line bloat and fixes wrapped header prose that caused ThinkScript to parse fragments as code, plus adds the EOD transition bubble. Not TOS-compiled or visually verified.
