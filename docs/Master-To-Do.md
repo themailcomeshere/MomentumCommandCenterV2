@@ -649,3 +649,5 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 - [SOURCE CHANGE — CI PENDING] Added `GET /api/scanner/universe`: bounded 1–50-symbol historical scan returning bar count, first/latest timestamps, latest-bar age, observed window change, observed range, and summed volume. It is explicitly user-universe-only, not market-wide discovery, and does not generate READY/BUY labels. This provides a transparent scan primitive while a licensed market-wide movers source remains unresolved.
 - [DATA NOT FOUND IN SOURCES] `data/HowToTestExtendedHoursCoverage_5m.txt` exists but is empty. The SPY 5-minute response is not available in the repository and must be recaptured; do not infer SPY 5m coverage from SPY 1m.
+
+- [DATA REVIEWED — INTERNAL CONSISTENCY PASS] Compared the 75 TTE 5m bars to aggregation of the saved TTE 1m bars in the same UTC five-minute buckets. All 75 available 5m bars matched the aggregate OHLCV values from the corresponding 1m rows; 0 mismatches observed. This is a consistency check between the saved IEX responses, not independent parity against Thinkorswim.
