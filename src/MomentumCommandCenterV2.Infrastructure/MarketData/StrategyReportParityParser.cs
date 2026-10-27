@@ -67,9 +67,9 @@ public static class StrategyReportParityParser
 
             var payload = strategy[payloadStart..payloadEnd];
             var parts = payload.Split('|');
-            if (parts.Length != 8)
+            if (parts.Length != 9)
                 throw new FormatException(
-                    $"MCC_OHLCV payload must contain 8 fields after its marker; found {parts.Length}.");
+                    $"MCC_OHLCV payload must contain 9 fields after its marker; found {parts.Length}.");
 
             var version = parts[0];
             if (!string.Equals(version, "v1", StringComparison.OrdinalIgnoreCase))
