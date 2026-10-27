@@ -76,9 +76,12 @@ public static class StrategyReportCsvParser
     private static int FindHeaderStart(string csv, List<string> preamble)
     {
         var offset = 0;
-        foreach (var line in csv.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n'))
+        while (offset <= csv.Length)
         {
-            var trimmed = line.TrimStart('\uFEFF').Trim();
+            var newline = csv.IndexOf('\\n', offset);
+            var length = newline < 0 ? csv.Length - offset : newline - offset;
+            var line = csv.Substring(offset, length).TrimEnd('\\r');
+            var trimmed = line.TrimStart('\\uFEFF').Trim();
             if (trimmed.Length > 0 && (trimmed.StartsWith("Id;Strategy;Side;", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("Id,Strategy,Side,", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("SourceRow,", StringComparison.OrdinalIgnoreCase) ||
@@ -86,7 +89,8 @@ public static class StrategyReportCsvParser
                 trimmed.StartsWith("Symbol;", StringComparison.OrdinalIgnoreCase)))
                 return offset;
             if (trimmed.Length > 0) preamble.Add(trimmed);
-            offset += line.Length + 1;
+            if (newline < 0) break;
+            offset = newline + 1;
         }
         return -1;
     }
