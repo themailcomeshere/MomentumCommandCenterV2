@@ -1,4 +1,5 @@
 using System.Text;
+using System.Globalization;
 
 namespace MomentumCommandCenterV2.API.StrategyReports;
 
@@ -43,9 +44,56 @@ public static class StrategyReportCsvParser
         var likelyTime = headers.FirstOrDefault(h => h.Contains("time", StringComparison.OrdinalIgnoreCase) || h.Contains("date", StringComparison.OrdinalIgnoreCase));
         var likelySymbol = headers.FirstOrDefault(h => h.Contains("symbol", StringComparison.OrdinalIgnoreCase));
         var likelyEvent = headers.FirstOrDefault(h => h.Contains("signal", StringComparison.OrdinalIgnoreCase) || h.Contains("strategy", StringComparison.OrdinalIgnoreCase) || h.Contains("order", StringComparison.OrdinalIgnoreCase) || h.Contains("event", StringComparison.OrdinalIgnoreCase));
-        return new StrategyReportParseResult(headers, rows.Count, rows.Take(100).ToArray(), rows, warnings,
+        var parityRows = BuildParityRows(rows, warnings);
+        return new StrategyReportParseResult(headers, rows.Count, rows.Take(100).ToArray(), rows, parityRows, warnings,
             likelyTime, likelySymbol, likelyEvent,
             "Parsed CSV fields as exported; this upload does not reconstruct missing OHLCV bars or infer trades not represented in the report.");
+    }
+
+    private static readonly string[] ParityHeaders =
+    {
+        "SourceRow", "Symbol", "Timeframe", "PayloadTimestampUtc", "PayloadOpen", "PayloadHigh",
+        "PayloadLow", "PayloadClose", "PayloadVolume", "ChartTimestamp", "ChartOpen", "ChartHigh",
+        "ChartLow", "ChartClose", "ChartVolume", "ChartTimestampMeaning", "Finding"
+    };
+
+    private static IReadOnlyList<IReadOnlyDictionary<string, string>> BuildParityRows(
+        IReadOnlyList<IReadOnlyDictionary<string, string>> rows, List<string> warnings)
+    {
+        var output = new List<IReadOnlyDictionary<string, string>>();
+        foreach (var row in rows)
+        {
+            var payloadField = row.FirstOrDefault(pair => pair.Value.Contains("MCC_OHLCV|v1|", StringComparison.Ordinal));
+            if (string.IsNullOrEmpty(payloadField.Value)) continue;
+            var text = payloadField.Value;
+            var start = text.IndexOf("MCC_OHLCV|v1|", StringComparison.Ordinal);
+            var end = text.IndexOf(')', start);
+            if (end >= 0) text = text[start..end];
+            else text = text[start..];
+            var parts = text.Split('|');
+            if (parts.Length != 10 || parts[0] != "MCC_OHLCV" || parts[1] != "v1")
+            {
+                warnings.Add("A row contained an MCC OHLCV marker but did not match the v1 parity payload format.");
+                continue;
+            }
+            if (!long.TryParse(parts[4], NumberStyles.Integer, CultureInfo.InvariantCulture, out var epoch))
+            {
+                warnings.Add("A parity payload had an invalid Unix-millisecond timestamp.");
+                continue;
+            }
+            var result = ParityHeaders.ToDictionary(h => h, _ => "", StringComparer.OrdinalIgnoreCase);
+            result["SourceRow"] = (output.Count + 1).ToString(CultureInfo.InvariantCulture);
+            result["Symbol"] = parts[2].Trim().ToUpperInvariant();
+            result["Timeframe"] = parts[3].Trim();
+            result["PayloadTimestampUtc"] = DateTimeOffset.FromUnixTimeMilliseconds(epoch).UtcDateTime.ToString("O", CultureInfo.InvariantCulture);
+            result["PayloadOpen"] = parts[5].Trim();
+            result["PayloadHigh"] = parts[6].Trim();
+            result["PayloadLow"] = parts[7].Trim();
+            result["PayloadClose"] = parts[8].Trim();
+            result["PayloadVolume"] = parts[9].Trim();
+            output.Add(result);
+        }
+        return output;
     }
 
     private static List<List<string>> ParseRecords(string input)
