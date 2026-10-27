@@ -597,3 +597,29 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 - [IMPLEMENTED ARTIFACT — TOS VERIFICATION PENDING] Created `V14_5_Bubble_Stack_Replacement.txt`: one composite bubble per 1M bar with all simultaneous event names, including EOD transition, to eliminate overlapping separate bubbles. Apply to the current cleaned V14.5 study only; the Library source is stale. Thinkorswim compile and visual validation remain open.
 - [CI FIX APPLIED — RECHECK REQUIRED] Removed the unused collector status constructor parameter that failed current-head build. Verify latest workflow before pulling.
+
+## 2026-10-27 — current-head implementation audit and recovery/parity fixes
+
+### Implemented in this checkpoint (CI still must be verified)
+- StrategyReport parser corrected for actual Thinkorswim export structure: report preamble (title, Symbol, Work Time), semicolon-delimited order table, embedded MCC_OHLCV v1 payload, comma-grouped Unix-millisecond timestamps, and Windows CRLF line endings. Explicit payload rows are projected to the exact 17 canonical parity-template columns. Chart-side fields remain blank unless present in source; order price is never substituted for OHLCV.
+- Added regression coverage for real-format semicolon StrategyReport conversion and for reports with no explicit payload, where parity rows must not be fabricated.
+- Collector now persists per-provider/symbol/timeframe source-timestamp watermarks to collector-watermarks.json (override with MCC_MARKET_COLLECTOR_CHECKPOINT_PATH). It resumes from the watermark minus an overlap, writes checkpoints atomically after successful non-empty retrieval/persistence, and catches up long outages in bounded 30-day chunks.
+- Collector's newlyPersistedObservations counter increments only by the store's returned append count. An identical already-seen bar returning zero is an idempotent no-op, not a persistence failure.
+- Inspected user-fixed commit 0caf00004a837e269c175f7d4c34827120ac8fe6: it adds Swashbuckle.AspNetCore.SwaggerGen and Xunit imports. Prior handoff records workflow 40541586544 green for that SHA; this does not validate newer edits.
+
+### Still open — do not overstate live readiness
+- Current-head build/test status must be checked after commits 1c0b54e, bf62d3b, c7acc54, d1af047, and a69771c. Green CI on an earlier SHA does not validate this head.
+- Collector recovery is bounded by provider REST limits (30-day chunks); very long outages catch up over repeated cycles. Test restart, checkpoint corruption, filesystem permissions, transient failures, duplicate bars, corrections and cancellation against a configured provider.
+- Alpaca pagination/retries are already present. No websocket/streaming ingestion is implemented. Extended-hours coverage depends on feed entitlement and actual returned bars; validate with known premarket, RTH, postmarket and next-session samples.
+- /api/market-data/bars reports timestamp gaps, not session-aware missing-bar truth. Closed sessions, halts and no-trade intervals must not be classified as data failures without session-aware rules.
+- Provider-backed scanner and Boring Overnight remain incomplete. The evaluator still needs sourced daily/overnight metrics, timestamped catalyst clearance, authoritative 5M Permission/structure, 1M execution state, and freshness/exclusion inputs. Historical OHLCV alone cannot reconstruct TOS states or a news verdict. Missing inputs must remain DATA?.
+
+### PR state
+- Current open-PR search returned no open pull requests. PR #7 is closed and must remain unmerged. User reports cleaning up other branches/PRs; no merge action is required unless a fresh query finds an open PR.
+
+### User actions after this update
+1. Verify latest workflow for the exact feature branch head, then run dotnet test MomentumCommandCenterV2.sln --configuration Release. Record exact tested SHA and pass/fail/skip counts.
+2. Upload a committed real-format StrategyReport through Swagger POST /api/strategy-report/upload. Verify parityRows is non-empty, exactly 17 columns match the canonical template, and timestamp/OHLCV values are correct. Do not substitute order execution price for OHLCV.
+3. Configure MarketData:Collector:Symbols locally (e.g. SPY,QQQ,TTE,FMS). Inspect GET /api/market-data/collector/status before and after stopping/restarting the API; verify watermarks persist, advance, and identical bars do not inflate new-write counts.
+4. Validate one completed symbol/date across premarket, regular session and postmarket using the configured Alpaca feed; compare returned timestamps to a source export. Do not mark coverage complete from one SPY window.
+5. Keep missing catalyst/TOS-state/daily metrics as DATA? until a real source is wired and validated.
