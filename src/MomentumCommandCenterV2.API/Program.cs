@@ -176,7 +176,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
 .WithSummary("Get the partial market Morning Brief")
 .WithDescription("No parameters. Example status: PARTIAL — MARKET SNAPSHOT ONLY; missing sector flow, movers, catalysts, and scoring remain DATA? until providers are wired.");
 
-app.MapPost("/api/boring-overnight/evaluate", (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request) =>
+app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore, CancellationToken ct) =>
 {
     if (!IsValidSymbol(request.Symbol))
         return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
@@ -184,7 +184,9 @@ app.MapPost("/api/boring-overnight/evaluate", (MomentumCommandCenterV2.API.Borin
         !new[] { "CLEAR", "RISK", "UNKNOWN" }.Contains(request.CatalystStatus, StringComparer.OrdinalIgnoreCase))
         return Results.BadRequest(new { error = "catalystStatus must be CLEAR, RISK, or UNKNOWN." });
 
-    var result = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(request);
+    var exclusions = await exclusionStore.GetAsync(ct);
+    var isExcluded = exclusions.Any(x => x.Symbol.Equals(request.Symbol, StringComparison.OrdinalIgnoreCase));
+    var result = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(request with { Excluded = isExcluded });
     return Results.Ok(result);
 })
 .WithName("EvaluateBoringOvernight")
