@@ -138,3 +138,11 @@
 
 - [IMPLEMENTED — CURRENT-HEAD CI PENDING] Dashboard now exposes API-backed exclusion management and StrategyReport upload/parse/JSON export. Verify browser workflows against the running Release API.
 - [CI FIX APPLIED — RECHECK REQUIRED] Build failed because OpenAPI extension package was missing; added Microsoft.AspNetCore.OpenApi 8.0.0. Latest workflow run 40539484300 was in progress at last check.
+
+
+## 2026-10-27 reliability/parity follow-up
+
+- [IMPLEMENTED — CI PENDING] StrategyReport rows with explicit MCC OHLCV v1 payloads convert into the exact Chart Parity Template schema; dashboard downloads the parity CSV.
+- [IMPLEMENTED — CI PENDING] Alpaca pagination, transient retry, range filtering, duplicate timestamp handling; added request-driven `/api/market-data/bars` persistence endpoint.
+- [CI WARNING] The first parity UI build failed because `StrategyReportParseResult` lacked the new `ParityRows` property. Corrected, and a regression test was added. Workflow run 40545469124 queued at last check.
+- [NOT COMPLETE] No continuous background collector/recovery, no scanner candidate provider, no full live Boring Overnight computation, no verified TOS watchlist sync, no current V14.5 exact-source bubble consolidation. The API remains decision-support-only and order submission is not implemented.
