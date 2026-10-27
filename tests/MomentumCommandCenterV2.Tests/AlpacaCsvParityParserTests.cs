@@ -34,4 +34,26 @@ public sealed class AlpacaCsvParityParserTests
     {
         Assert.Throws<FormatException>(() => AlpacaCsvParityParser.Parse("symbol,price\nTTE,92.85\n", "TTE", "1m"));
     }
+
+    [Fact]
+    public void ParsesCheckedInAlpacaHistoricalBarsJsonEvenWhenNamedCsv()
+    {
+        const string json = """ 
+            {
+              "symbol":"TTE",
+              "timeframe":"5m",
+              "provider":"Alpaca",
+              "feed":"iex",
+              "bars":[
+                {"symbol":"TTE","timestamp":"2026-10-26T13:30:00+00:00","open":92.85,"high":93.05,"low":92.82,"close":93.01,"volume":1612}
+              ]
+            }
+            """;
+        var row = Assert.Single(AlpacaCsvParityParser.Parse(json));
+        Assert.Equal("TTE", row["Symbol"]);
+        Assert.Equal("5m", row["Timeframe"]);
+        Assert.Equal("93.01", row["PayloadClose"]);
+        Assert.Equal("1612", row["PayloadVolume"]);
+        Assert.Equal("", row["ChartClose"]);
+    }
 }
