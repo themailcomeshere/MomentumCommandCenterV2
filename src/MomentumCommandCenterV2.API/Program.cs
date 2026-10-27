@@ -7,6 +7,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
+builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -22,11 +23,8 @@ builder.Services.AddSingleton<IMarketDataProvider>(sp => sp.GetRequiredService<M
 
 var app = builder.Build();
 app.UseExceptionHandler();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 var frontendPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "..", "frontend"));
 if (Directory.Exists(frontendPath))
 {
@@ -42,7 +40,9 @@ app.MapGet("/api/health", () => Results.Ok(new
     mode = "decision-support-only",
     orderSubmission = "NOT IMPLEMENTED",
     timestampUtc = DateTimeOffset.UtcNow
-}));
+}))
+.WithSummary("Check API liveness")
+.WithDescription("Example response: { \"status\": \"OK\", \"mode\": \"decision-support-only\", \"orderSubmission\": \"NOT IMPLEMENTED\" }.");
 
 app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers) =>
     Results.Ok(providers.Select(p => new
@@ -59,7 +59,9 @@ app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers)
         lastSuccessfulDataValidationBarCount = p.LastSuccessfulDataValidationBarCount,
         capabilities = p.Capabilities,
         credentialLocation = "server environment / user secrets; never frontend"
-    })));
+    })))
+.WithSummary("Show configured provider status")
+.WithDescription("Example: Alpaca configured=true, status=VALIDATED_DATA_RETURNED after a non-empty response in this process. This does not prove streaming or complete coverage.");
 
 app.MapGet("/api/market-data/compare", async (
     string symbol,
@@ -110,7 +112,9 @@ app.MapGet("/api/market-data/compare", async (
         results,
         interpretation = "Gap counts are timestamp intervals between returned bars, not proof of provider failure or zero trading. Compare only like-for-like feeds, sessions, entitlements, and aggregation rules."
     });
-});
+})
+.WithSummary("Compare historical OHLCV bars across configured providers")
+.WithDescription("Example query: symbol=SPY, timeframe=5m, from=2026-10-23T13:30:00Z, to=2026-10-23T13:50:00Z. Maximum window 31 days.");
 
 app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, CancellationToken cancellationToken) =>
 {
@@ -167,7 +171,9 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
             "Data freshness, feed entitlements, extended-hours coverage, and bar parity must be validated before trading reliance."
         }
     });
-});
+})
+.WithSummary("Get the partial market Morning Brief")
+.WithDescription("No parameters. Example status: PARTIAL — MARKET SNAPSHOT ONLY; missing sector flow, movers, catalysts, and scoring remain DATA? until providers are wired.");
 
 app.MapPost("/api/boring-overnight/evaluate", (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request) =>
 {
@@ -182,9 +188,67 @@ app.MapPost("/api/boring-overnight/evaluate", (MomentumCommandCenterV2.API.Borin
 })
 .WithName("EvaluateBoringOvernight")
 .WithSummary("Evaluate Boring Overnight hard gates from a supplied, timestamped candidate snapshot")
-.WithDescription("Decision-support only. Missing/stale data or unknown catalyst status cannot produce READY. This endpoint does not discover candidates or submit orders.")
+.WithDescription("Example: { \"symbol\": \"SPY\", \"dataFresh\": true, \"price\": 600, \"sma20\": 590, \"averageDailyVolume20\": 1000000, \"overnightWinRatePct\": 75, \"averageOvernightPct20\": 0.35, \"averageOvernightPct5\": 0.55, \"medianOvernightPct20\": 0.3, \"currentOvernightPct\": 0.25, \"excluded\": false, \"catalystStatus\": \"CLEAR\", \"fiveMinutePermission\": true, \"fiveMinuteStructure\": \"BULLISH\", \"oneMinuteState\": \"EXECUTION READY\", \"extensionAtr\": 0.8, \"currentVolumeVsAverage\": 1.2, \"dailyRangePct\": 1.8, \"atrPct\": 1.5 }. Percent values are percentage points (0.5 = 0.5%). DATA? means missing critical inputs; BLOCKED means hard-gate failure; WATCH means a warning. Caller-supplied data only; no orders are submitted.")
 .Produces<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluation>()
 .ProducesValidationProblem(400);
+
+
+app.MapPost("/api/strategy-report/upload", async (HttpRequest request, CancellationToken cancellationToken) =>
+{
+    if (!request.HasFormContentType)
+        return Results.BadRequest(new { error = "Use multipart/form-data with a file field named 'file'." });
+    var form = await request.ReadFormAsync(cancellationToken);
+    var file = form.Files.GetFile("file");
+    if (file is null || file.Length == 0)
+        return Results.BadRequest(new { error = "Upload a non-empty CSV in the 'file' field." });
+    if (file.Length > 10 * 1024 * 1024)
+        return Results.BadRequest(new { error = "Maximum upload size is 10 MB." });
+    if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "Only .csv files are accepted." });
+    try
+    {
+        using var reader = new StreamReader(file.OpenReadStream());
+        var csv = await reader.ReadToEndAsync(cancellationToken);
+        var parsed = MomentumCommandCenterV2.API.StrategyReports.StrategyReportCsvParser.Parse(csv);
+        return Results.Ok(new
+        {
+            fileName = Path.GetFileName(file.FileName),
+            uploadedBytes = file.Length,
+            parsedAtUtc = DateTimeOffset.UtcNow,
+            parsed
+        });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (FormatException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("UploadStrategyReportCsv")
+.WithSummary("Upload and parse a Thinkorswim StrategyReport CSV")
+.WithDescription("Swagger example: choose multipart file field 'file' and upload a CSV exported from Thinkorswim. Example response includes headers, row count, up to 100 preview rows, detected likely timestamp/symbol/event columns, and warnings. This preserves report rows; it does not invent missing OHLCV bars or infer unreported fills.")
+.Produces<MomentumCommandCenterV2.API.StrategyReports.StrategyReportParseResult>()
+.ProducesProblem(400);
+
+app.MapGet("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
+    Results.Ok(new { count = (await store.GetAsync(ct)).Count, symbols = await store.GetAsync(ct) }))
+.WithSummary("List MCC exclusion-watchlist symbols")
+.WithDescription("Example response: { \"count\": 2, \"symbols\": [{ \"symbol\": \"XYZ\", \"reason\": \"User excluded\", \"updatedAtUtc\": \"2026-10-27T15:00:00Z\" }] }. This is MCC's local persisted list, not a sync to Thinkorswim.");
+
+app.MapPost("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, MomentumCommandCenterV2.API.Watchlists.AddExclusionRequest request, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(request.Symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    var entries = await store.AddAsync(request.Symbol, request.Reason, ct);
+    return Results.Ok(new { added = request.Symbol.ToUpperInvariant(), count = entries.Count, symbols = entries });
+})
+.WithSummary("Add a symbol to MCC's exclusion watchlist")
+.WithDescription("Example request: { \"symbol\": \"TTE\", \"reason\": \"Manual exclusion\" }. This prevents the symbol from qualifying once scanner integration reads this list. It does not modify a Thinkorswim watchlist.");
+
+app.MapDelete("/api/watchlists/exclusions/{symbol}", async (string symbol, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    var entries = await store.RemoveAsync(symbol, ct);
+    return Results.Ok(new { removed = symbol.ToUpperInvariant(), count = entries.Count, symbols = entries });
+})
+.WithSummary("Remove a symbol from MCC's exclusion watchlist")
+.WithDescription("Example: DELETE /api/watchlists/exclusions/TTE. This only edits MCC's local list; it does not remove anything from Thinkorswim.");
 
 app.Run();
 
