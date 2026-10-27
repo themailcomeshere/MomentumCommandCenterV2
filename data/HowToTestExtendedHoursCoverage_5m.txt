@@ -1,0 +1,3 @@
+DATA NOT FOUND IN SOURCES.
+
+This capture file was present but empty as of 2026-10-27. No SPY 5-minute response JSON is available here. Recapture the same requested window and save the complete /api/market-data/bars response before comparing SPY 5m coverage.
