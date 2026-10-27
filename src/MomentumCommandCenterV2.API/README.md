@@ -87,3 +87,10 @@ dotnet user-secrets set "MarketData:Collector:LookbackMinutes" "20"
 ```
 
 Restart the API and open `/api/market-data/collector/status`. It should report enabled=true and configured symbols. It polls overlapping 1m/5m history and persists idempotently. Clear the Symbols secret to disable. This is not a market-wide scanner or a websocket feed. Do not store provider credentials in tracked files.
+
+
+## Bounded scanner and CSV parity import (2026-10-27)
+
+`GET /api/scanner/universe` scans only the symbols explicitly supplied in the query string (maximum 50 symbols, 7-day window). It ranks by absolute observed price change and reports bar count, timestamp range, age of latest bar, observed high-low range and summed volume. It is not market-wide movers discovery and does not provide a recommendation or probability. Do not use it as a replacement for validated 5M permission/1M execution gates.
+
+`POST /api/market-data/import-csv` accepts a standard Alpaca/IEX OHLCV CSV with timestamp/time, open, high, low, close and volume columns. Include form fields `symbol` and `timeframe` when those columns are absent. It outputs the 17-column parity schema, placing imported data in Payload* only; Chart* stays blank until a separate chart source is supplied.
