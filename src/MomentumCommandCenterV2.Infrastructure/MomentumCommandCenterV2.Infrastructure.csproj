@@ -15,4 +15,8 @@
     <EmbeddedResource Include="Resources/schwab-exclusions.txt" LogicalName="MomentumCommandCenterV2.Infrastructure.Resources.schwab-exclusions.txt" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
+  </ItemGroup>
+
 </Project>
