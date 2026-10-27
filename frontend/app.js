@@ -230,14 +230,51 @@ providerCompareButton?.addEventListener("click", async () => {
 });
 
 async function loadProviderStatus() {
+ const setText = (id, value) => { const node = $(id); if (node) node.textContent = value; };
  try {
   const response = await fetch("/api/providers/status", {headers:{Accept:"application/json"}});
-  if (!response.ok) return;
+  if (!response.ok) throw new Error("HTTP " + response.status);
   const data = await response.json();
   const alpaca = data.find(item => item.provider === "Alpaca"), massive = data.find(item => item.provider === "Massive");
-  if (alpaca) $("alpacaConnection").textContent = alpaca.status;
-  if (massive) $("massiveConnection").textContent = massive.status;
- } catch { /* Static-file preview remains usable offline. */ }
+  for (const [prefix, provider] of [["alpaca", alpaca], ["massive", massive]]) {
+   if (!provider) continue;
+   setText(prefix + "Connection", provider.status || "UNKNOWN");
+   const validation = provider.lastSuccessfulDataValidationUtc
+    ? new Date(provider.lastSuccessfulDataValidationUtc).toLocaleString("en-US", {timeZone:"America/Phoenix"})
+    : "No successful non-empty response in this API process";
+   const bars = provider.lastSuccessfulDataValidationBarCount ?? 0;
+   setText(prefix + "Latest", provider.validated
+    ? bars + " bars returned · last validated " + validation
+    : "DATA NOT LOADED · " + validation);
+   setText(prefix + "Coverage", "Not measured by status endpoint; run a date-window comparison");
+   setText(prefix + "Recovery", "Historical REST only · collector/restart state loading…");
+   const caps = (provider.capabilities || []).join("; ");
+   const feedMatch = caps.match(/Configured feed: ([^;]+)/i);
+   if (prefix === "alpaca" && feedMatch) {
+    const feedNode = document.querySelector("#alpacaTitle")?.closest(".provider-card")?.querySelector(".provider-card-heading .chip");
+    if (feedNode) feedNode.textContent = "Configured feed: " + feedMatch[1];
+   }
+  }
+  try {
+   const collectorResponse = await fetch("/api/market-data/collector/status", {headers:{Accept:"application/json"}});
+   if (collectorResponse.ok) {
+    const collector = await collectorResponse.json();
+    const summary = collector.enabled
+     ? "Collector cycles " + collector.cycles + " · new observations " + collector.newlyPersistedObservations + " · last-cycle errors " + collector.lastCycleErrors
+     : "Collector disabled · configure MarketData:Collector:Symbols";
+    setText("alpacaRecovery", summary + " · restart recovery still needs a controlled test");
+   }
+  } catch { setText("alpacaRecovery", "Collector status unavailable"); }
+ } catch {
+  setText("alpacaConnection", "API NOT CONNECTED (static preview or API unavailable)");
+  setText("alpacaLatest", "DATA NOT LOADED");
+  setText("alpacaCoverage", "Not measured");
+  setText("alpacaRecovery", "Not run");
+  setText("massiveConnection", "API NOT CONNECTED (static preview or API unavailable)");
+  setText("massiveLatest", "DATA NOT LOADED");
+  setText("massiveCoverage", "Not measured");
+  setText("massiveRecovery", "Not run");
+ }
 }
 loadProviderStatus();
 
