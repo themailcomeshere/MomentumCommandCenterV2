@@ -155,12 +155,18 @@ public static class StrategyReportCsvParser
             result["PayloadClose"] = parts[8].Trim();
             result["PayloadVolume"] = parts[9].Trim().TrimEnd(';');
 
-            var chartTime = GetValue(row, "Date/Time") ?? GetValue(row, "DateTime") ?? GetValue(row, "Timestamp") ?? GetValue(row, "Time");
+            // StrategyReport Date/Time is an order-event timestamp, not proof of the chart bar timestamp.
+            // Only fill ChartTimestamp when the source explicitly labels a chart timestamp.
+            var chartTime = GetValue(row, "ChartTimestamp");
             if (!string.IsNullOrWhiteSpace(chartTime)) result["ChartTimestamp"] = chartTime;
             var chartMeaning = GetValue(row, "ChartTimestampMeaning");
-            if (!string.IsNullOrWhiteSpace(chartMeaning)) result["ChartTimestampMeaning"] = chartMeaning;
+            result["ChartTimestampMeaning"] = chartMeaning ??
+                (GetValue(row, "Date/Time") is not null
+                    ? "StrategyReport Date/Time is an order-event timestamp; chart-bar timestamp not supplied."
+                    : "Chart-bar timestamp not supplied.");
             var finding = GetValue(row, "Finding");
-            if (!string.IsNullOrWhiteSpace(finding)) result["Finding"] = finding;
+            result["Finding"] = finding ??
+                "Payload OHLCV extracted. Chart-side OHLCV and chart-bar timestamp require separate chart/template evidence.";
             output.Add(result);
         }
         return output;
