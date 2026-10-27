@@ -525,3 +525,10 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - Added opt-in `MarketDataCollectionWorker` registered as a hosted service. It is disabled unless `MarketData:Collector:Symbols` is configured with comma/semicolon-separated symbols. Default poll interval 60 seconds; default overlapping lookback 20 minutes. It fetches 1m and 5m bars from configured providers, persists through the idempotent JSONL store, and retries the overlap after process restart.
 - New status endpoint: `GET /api/market-data/collector/status`. Configure `MarketData:Collector:Symbols=SPY,QQQ,TTE,FMS` in local User Secrets or environment variables. The collector does not discover symbols, run news/catalyst checks, or recreate the Thinkorswim study state. It is an explicit-symbol ingestion worker, not the complete overnight scanner.
 - Latest CI run for registration commit `4412e08941382a2d931bdfe4416a11ecbe0982f8` was in progress at last check; verify the newest head before pull.
+
+
+### TTE bubble-stack fix artifact — 2026-10-27
+
+- Created local artifact `V14_5_Bubble_Stack_Replacement.txt` (conversation file) based on the V14.5 state/event names in the Library copy. It replaces multiple independent event bubbles with one composite bubble per bar and includes EOD transition text, so simultaneous candidate/ready/blocked events cannot print over each other as separate bubbles.
+- This is a replacement section, not a full regenerated study. The Library V14.5 copy is older and has line-wrapping/comment corruption; do not overwrite the user's cleaned current V14.5 file with that stale full copy. Replace the entire state-bubble section in the current cleaned source, remove any separate EOD-only AddChartBubble, and verify in Thinkorswim. Not compiled/visually verified in TOS.
+- CI for the collector first failed on an unused constructor parameter. Removed it in commit `72d4034468d0837c38a4baf726e43ca68ad9f7bf`; current workflow 40546245830 was in progress at last check.
