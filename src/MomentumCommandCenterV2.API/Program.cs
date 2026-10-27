@@ -22,8 +22,11 @@ builder.Services.AddSingleton<IMarketDataProvider>(sp => sp.GetRequiredService<M
 
 var app = builder.Build();
 app.UseExceptionHandler();
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 var frontendPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "..", "frontend"));
 if (Directory.Exists(frontendPath))
 {
