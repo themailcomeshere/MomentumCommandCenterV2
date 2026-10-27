@@ -601,3 +601,10 @@ The collector's configured universe is only SPY, QQQ, TTE, FMS; it is not market
 - The exact cause of the stale dashboard display is not proven; stale browser assets or a different origin/instance are the leading checks.
 - Exact TTE parity cannot be assessed until the matching Thinkorswim export is available.
 - No overnight shortlist or limit-sell prices are supported without the six chart images and entry/risk assumptions.
+
+
+
+### Scanner MVP added after the handoff note
+- New `GET /api/scanner/universe` scans a caller-supplied list of 1–50 symbols for a maximum 7-day window, on 1m or 5m, via selected configured provider. It returns observed bar count, first/latest timestamps, latest-bar age, window change %, observed range %, and summed volume; it persists retrieved bars.
+- Endpoint is deliberately descriptive. It does not produce candidate-quality probabilities or entry signals and is not market-wide discovery. Relative volume baseline, quote/spread, catalyst/news, halt, sector, and Thinkorswim permission/entry state remain absent.
+- SPY 5m capture file `data/HowToTestExtendedHoursCoverage_5m.txt` is empty; the response is Data not found in sources. Recapture it before claiming SPY 5m coverage.
