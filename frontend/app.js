@@ -232,20 +232,20 @@ providerCompareButton?.addEventListener("click", async () => {
 async function loadProviderStatus() {
  const setText = (id, value) => { const node = $(id); if (node) node.textContent = value; };
  try {
-  const response = await fetch("/api/providers/status", {headers:{Accept:"application/json"}});
+  const response = await fetch("/api/providers/status", {cache:"no-store",headers:{Accept:"application/json"}});
   if (!response.ok) throw new Error("HTTP " + response.status);
   const data = await response.json();
   const alpaca = data.find(item => item.provider === "Alpaca"), massive = data.find(item => item.provider === "Massive");
   for (const [prefix, provider] of [["alpaca", alpaca], ["massive", massive]]) {
    if (!provider) continue;
-   setText(prefix + "Connection", provider.status || "UNKNOWN");
+   setText(prefix + "Connection", provider.validated ? "CONNECTED · DATA RETURNED" : (provider.configured ? "CONFIGURED · NOT YET VALIDATED" : "NOT CONFIGURED"));
    const validation = provider.lastSuccessfulDataValidationUtc
     ? new Date(provider.lastSuccessfulDataValidationUtc).toLocaleString("en-US", {timeZone:"America/Phoenix"})
     : "No successful non-empty response in this API process";
    const bars = provider.lastSuccessfulDataValidationBarCount ?? 0;
    setText(prefix + "Latest", provider.validated
     ? bars + " bars returned · last validated " + validation
-    : "DATA NOT LOADED · " + validation);
+    : "No successful non-empty response · " + validation);
    setText(prefix + "Coverage", "Not measured by status endpoint; run a date-window comparison");
    setText(prefix + "Recovery", "Historical REST only · collector/restart state loading…");
    const caps = (provider.capabilities || []).join("; ");
@@ -256,7 +256,7 @@ async function loadProviderStatus() {
    }
   }
   try {
-   const collectorResponse = await fetch("/api/market-data/collector/status", {headers:{Accept:"application/json"}});
+   const collectorResponse = await fetch("/api/market-data/collector/status", {cache:"no-store",headers:{Accept:"application/json"}});
    if (collectorResponse.ok) {
     const collector = await collectorResponse.json();
     const summary = collector.enabled
