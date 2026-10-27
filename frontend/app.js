@@ -63,7 +63,7 @@ if($("apiScanFrom")&&$("apiScanTo")){
 $("apiScannerForm")?.addEventListener("submit",async event=>{
  event.preventDefault();
  const button=$("apiScanRun"),source=$("scannerSource");
- const symbols=$("apiScanSymbols").value.trim().split(/[\\s,;]+/).filter(Boolean);
+ const symbols=$("apiScanSymbols").value.trim().split(/[\s,;]+/).filter(Boolean);
  if(!symbols.length||symbols.length>50){source.textContent="Enter between 1 and 50 symbols.";return;}
  const from=new Date($("apiScanFrom").value),to=new Date($("apiScanTo").value);
  if(!Number.isFinite(from.getTime())||!Number.isFinite(to.getTime())||from>=to){source.textContent="Invalid scan window; From must precede To.";return;}
