@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace MomentumCommandCenterV2.API.MarketData;
 
 /// <summary>
-/// PURPOSE: Convert an Alpaca/IEX OHLCV CSV export into MCC's canonical 17-column parity shape.
+/// PURPOSE: Convert an Alpaca/IEX OHLCV CSV or historical-bars JSON export into MCC's canonical 17-column parity shape.
 /// WHEN CALLED: POST /api/market-data/import-csv receives a CSV file.
 /// IMPORTANT: Export values populate Payload* only. Chart* and ChartTimestamp remain blank until an independent chart export is supplied.
 /// </summary>
