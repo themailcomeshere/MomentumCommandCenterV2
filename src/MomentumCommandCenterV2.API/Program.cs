@@ -119,6 +119,47 @@ app.MapGet("/api/market-data/compare", async (
 .WithSummary("Compare historical OHLCV bars across configured providers")
 .WithDescription("Example query: symbol=SPY, timeframe=5m, from=2026-10-23T13:30:00Z, to=2026-10-23T13:50:00Z. Maximum window 31 days.");
 
+app.MapGet("/api/market-data/bars", async (
+    string symbol,
+    string timeframe,
+    DateTimeOffset from,
+    DateTimeOffset to,
+    string? providerName,
+    IEnumerable<IMarketDataProvider> providers,
+    IMarketBarObservationStore barStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsValidSymbol(symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (!TryGetTimeframe(timeframe, out var span)) return Results.BadRequest(new { error = "Timeframe must be 1m or 5m." });
+    if (from >= to || to - from > TimeSpan.FromDays(31)) return Results.BadRequest(new { error = "Require from < to and a window of 31 days or less." });
+    var selected = providers.FirstOrDefault(p => string.Equals(p.ProviderName, providerName ?? "Alpaca", StringComparison.OrdinalIgnoreCase));
+    if (selected is null) return Results.BadRequest(new { error = "Unknown provider. Use Alpaca or Massive." });
+    try
+    {
+        var bars = (await selected.GetBarsAsync(symbol.ToUpperInvariant(), span, from, to, cancellationToken))
+            .OrderBy(b => b.Timestamp).ToArray();
+        var persisted = await barStore.AppendAsync(bars, cancellationToken);
+        var gaps = FindGaps(bars, span);
+        return Results.Ok(new
+        {
+            symbol = symbol.ToUpperInvariant(), timeframe = timeframe.ToLowerInvariant(),
+            provider = selected.ProviderName, feed = bars.FirstOrDefault()?.Feed,
+            requestedFromUtc = from, requestedToUtc = to, retrievedAtUtc = DateTimeOffset.UtcNow,
+            barCount = bars.Length, newlyPersistedObservationCount = persisted,
+            firstSourceTimestampUtc = bars.FirstOrDefault()?.Timestamp,
+            latestSourceTimestampUtc = bars.LastOrDefault()?.Timestamp,
+            gapCount = gaps.Count, sampleGapStartsUtc = gaps.Take(25).ToArray(),
+            sessionNote = "Provider timestamps are preserved in UTC. Historical bars may include extended-hours trades; confirm feed entitlement and requested window. Gaps are not automatically treated as zero activity.",
+            bars
+        });
+    }
+    catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+    { return Results.Problem($"{ex.GetType().Name}: {ex.Message}", statusCode: 502); }
+})
+.WithSummary("Retrieve and persist historical 1m/5m bars from one provider")
+.WithDescription("Example: symbol=TTE, timeframe=1m, from=2026-10-26T11:00:00Z, to=2026-10-26T20:00:00Z, providerName=Alpaca. Returns source timestamps, feed, gaps, raw normalized bars, and newly persisted observation count. Supports up to 31 days per request.");
+
 app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, CancellationToken cancellationToken) =>
 {
     var configured = providers.Where(p => p.IsConfigured).ToArray();
