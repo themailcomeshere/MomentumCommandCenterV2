@@ -344,3 +344,29 @@ Goal: get the safest useful MCC workflow into manual use this week; do not call 
 - [BLOCKED — BORING OVERNIGHT] The available files do not cover the full 07:00–20:00 Eastern GTC_EXT window; `eligible-window-high-excursions.csv` is placeholder data. Actual fills/fees are also not found in the audited sources.
 - [CI] Feature-branch run `40380221253` passed for commit `cbbb601b`; later documentation commits triggered new runs. Verify exact branch-head CI before promoting either code or docs.
 - [INTEGRATION] Feature branch is divergent from master. Reconcile deliberately; do not merge wholesale.
+
+
+## 20. Implementation status update — 2026-10-27
+
+### StrategyReport → parity-template ingestion
+- [IN PR #7 — IMPLEMENTED, CI PENDING] Added `StrategyReportParityParser` to extract embedded `MCC_OHLCV|v1|...` rows from semicolon-delimited StrategyReport exports and normalize them to UTC OHLCV rows; ignores transport-close rows, validates payload/version/OHLC bounds, and does not synthesize missing bars.
+- [IN PR #7 — IMPLEMENTED, CI PENDING] Added deterministic normalized semicolon-delimited parity CSV output and unit tests.
+- [BLOCKED — TEMPLATE/API NOT LOCATED] The exact canonical parity workbook and the Swagger upload controller/API are not present in the accessible `master` tree inspected this turn. The parser is not yet wired to the upload endpoint and cannot be marked as end-to-end complete. Obtain the canonical template and locate the API project/repository; validate against a real StrategyReport export.
+
+### Alpaca historical collector foundation
+- [IN PR #7 — IMPLEMENTED, CI PENDING] Added read-only historical OHLCV retrieval with pagination, page-token loop protection, chronological output, bounded retries, Retry-After support, parameter validation and unit tests.
+- [NOT DONE] Durable persistence/idempotent upsert, collector checkpoints/recovery, explicit gaps/overlap repair, corrected persistence-count semantics, and scanner/Boring Overnight integration remain unfinished.
+- [NOT DONE] Verify provider feed entitlement and coverage for the user's actual extended-hours session; Alpaca IEX is not presumed equivalent to Schwab GTC_EXT.
+- [SAFETY GATE] Never return READY when historical data is stale, incomplete, unpersisted, or excluded. Counts must separately identify requested/fetched/validated/inserted/updated/duplicate/rejected/gap observations.
+
+### TTE bubble-stack defect
+- [USER SCREENSHOT CONFIRMS SYMPTOM — 2026-10-27] TTE screenshot shows overlapping/repeated yellow PREPARE TO SELL and red SELL bubbles around nearby bars, plus simultaneous 1M/5M status labels.
+- [NOT PATCHED] Exact installed `MCC_1M_14_5_EOD_BubbleFix2` source was not found in the accessible Library results. Do not patch an older 1M study based only on the screenshot.
+- [NEXT] Identify the installed source; audit all `AddChartBubble` call sites across the 1M and 5M studies. Emit one composite state/event bubble per bar per study, use transition-only display by default, and assign distinct deterministic vertical lanes to the remaining 1M/5M bubbles. Preserve state/EOD semantics and test in Thinkorswim.
+
+### Validation / current data blockers
+- October 2 XRPN remains blocked because the purported 1M partner is HPK. Do not use it for XRPN READY analysis.
+- October 19 XRPN pair supports partial OHLCV consistency checks only. Missing timestamps remain gaps, not presumed no-trade; OHLCV does not include internal ThinkScript permission/block/READY states.
+- Boring Overnight historical-reach research remains blocked until source-backed regular-session close and complete 7:00 AM–8:00 PM ET eligible-window data are available.
+- PR #7 is open against master; the latest queried workflow/status endpoints returned no runs/statuses. CI is not verified green. Do not merge until the run result is confirmed.
+- Handoff: `docs/project-control/Momentum_Command_Center_HANDOFF_2026-10-27.md`.
