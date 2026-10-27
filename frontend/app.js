@@ -51,6 +51,45 @@ const scannerData={
  ]
 };
 
+
+function localDateTimeValue(date){
+ const pad=value=>String(value).padStart(2,"0");
+ return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+"T"+pad(date.getHours())+":"+pad(date.getMinutes());
+}
+if($("apiScanFrom")&&$("apiScanTo")){
+ const end=new Date(),start=new Date(end.getTime()-6*60*60*1000);
+ $("apiScanFrom").value=localDateTimeValue(start);$("apiScanTo").value=localDateTimeValue(end);
+}
+$("apiScannerForm")?.addEventListener("submit",async event=>{
+ event.preventDefault();
+ const button=$("apiScanRun"),source=$("scannerSource");
+ const symbols=$("apiScanSymbols").value.trim().split(/[\\s,;]+/).filter(Boolean);
+ if(!symbols.length||symbols.length>50){source.textContent="Enter between 1 and 50 symbols.";return;}
+ const from=new Date($("apiScanFrom").value),to=new Date($("apiScanTo").value);
+ if(!Number.isFinite(from.getTime())||!Number.isFinite(to.getTime())||from>=to){source.textContent="Invalid scan window; From must precede To.";return;}
+ button.disabled=true;source.textContent="Requesting historical bars from MCC API…";
+ try{
+  const params=new URLSearchParams({symbols:symbols.join(","),timeframe:$("apiScanTimeframe").value,from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
+  const response=await fetch("/api/scanner/universe?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||("HTTP "+response.status));
+  scannerData.api=(data.results||[]).map(item=>({
+   symbol:item.symbol,
+   score:item.changePercent==null?"—":(item.changePercent>=0?"+":"")+item.changePercent.toFixed(2)+"%",
+   status:item.status,
+   extension:item.observedRangePercent==null?"DATA?":item.observedRangePercent.toFixed(2)+"% range",
+   freshness:item.latestBarAgeMinutes==null?"UNKNOWN":item.latestBarAgeMinutes+" min old",
+   reason:item.barCount+" bars · volume "+(item.summedVolume??"DATA?")+" · "+item.interpretation
+  }));
+  let option=document.querySelector('#scannerGroup option[value="api"]');
+  if(!option){option=document.createElement("option");option.value="api";option.textContent="API historical scan";$("scannerGroup").append(option);}
+  $("scannerGroup").value="api";
+  source.textContent="API scan · "+data.scannedSymbolCount+" supplied symbols · "+data.provider+" · "+data.timeframe+" · "+new Date(data.generatedAtUtc).toLocaleTimeString();
+  renderScanner();
+ }catch(error){source.textContent="API scan failed: "+error.message+" · confirm this dashboard is served by MCC API.";}
+ finally{button.disabled=false;}
+});
+
 function renderScanner(){
  const rows=$("scannerRows"),group=$("scannerGroup").value;
  rows.replaceChildren(...(scannerData[group]||[]).map(candidate=>{
