@@ -73,3 +73,6 @@ public sealed class ExclusionWatchlistStore
 }
 
 public sealed record ExclusionWatchlistEntry(string Symbol, string Reason, DateTimeOffset UpdatedAtUtc);
+
+/// <summary>Request body for adding a symbol to MCC local exclusions.</summary>
+public sealed record AddExclusionRequest(string Symbol, string? Reason);
