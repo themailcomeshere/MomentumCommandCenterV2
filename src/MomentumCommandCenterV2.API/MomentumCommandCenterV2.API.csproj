@@ -10,4 +10,7 @@
     <ProjectReference Include="..\MomentumCommandCenterV2.Application\MomentumCommandCenterV2.Application.csproj" />
     <ProjectReference Include="..\MomentumCommandCenterV2.Infrastructure\MomentumCommandCenterV2.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
 </Project>
