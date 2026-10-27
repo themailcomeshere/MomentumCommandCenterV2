@@ -549,3 +549,14 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 
 - [DONE — INITIAL PUBLIC CATALYST CHECK] CCI Q3 earnings/outlook release confirmed for Oct 21 after close; include recent post-earnings risk in manual review. NICE official IR event page lists no upcoming events, but full current-news/catalyst clearance remains OPEN. Sources and details: docs/Validation/Overnight-Candidate-Review-20261026.md.
+
+
+## MCC readiness sprint — 2026-10-27
+
+- [IMPLEMENTED — CI PENDING] Added Swagger/OpenAPI (`/swagger`) to the ASP.NET Core API and documented local launch / smoke-test flow in `docs/API-Swagger-Workflow.md`. Use the actual host/port printed by ASP.NET Core. Swagger is a test interface, not evidence of provider entitlement or production readiness.
+- [IMPLEMENTED — CI PENDING] Added `POST /api/boring-overnight/evaluate` and `BoringOvernightEvaluator`. The evaluator applies deterministic hard gates: data freshness, excluded-list state, price > $5 and > SMA20, 20D average daily volume >= 500,000, ON win rate >= 60%, 20D average ON >= +0.10%, 5D average ON strictly greater than 20D average, catalyst clearance, 5M permission + bullish structure, and no 1M SELL/GET OUT/BLOCK state. Missing/unknown critical inputs return DATA?; hard-gate failures return BLOCKED; heat/extension warnings return WATCH. It does not discover candidates, source inputs, calculate a validated limit target, or submit orders.
+- [ADDED TESTS — CI PENDING] Added tests for unknown catalyst/permission, volume-gate failure and extension warning.
+- [DONE — RESEARCH POLICY] Added `docs/Validation/Boring-Overnight-Target-Policy-20261027.md`. Keep +0.5% as a comparison heuristic; do not call median ON % a 50% limit-touch/fill probability. Complete GTC_EXT windows and walk-forward target-touch research remain required.
+- [OPEN — THINKSCRIPT ARTIFACT MISMATCH] User reports no bubbles after applying the prior fix, with no compile error. The repository `docs/Charts/1M/MainStudy.txt` is V14.4.10, while the uploaded local reference is `MomentumCommandCenterV3_2_1M_V14_5.txt`; these are not proven to be the same source. Prior bubble change did not resolve the installed chart. Do not claim fixed; identify and patch the exact installed V14.5 source, then verify a historical EOD transition bubble in TOS.
+- [OPEN — CURRENT-HEAD CI] Run/inspect Release build and tests for the exact latest branch head after these changes; do not reuse prior green workflow status.
+- [OPEN — END-TO-END INTEGRATION] Wire evaluator inputs to provider-backed and persisted scanner/catalyst/indicator data with timestamps/provenance. Until then, endpoint is a deterministic policy test harness, not an autonomous nightly workflow.
