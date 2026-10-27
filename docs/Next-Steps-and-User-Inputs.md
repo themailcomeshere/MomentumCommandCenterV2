@@ -224,3 +224,20 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 - CCI reported Q3 results and updated outlook after close on Oct 21, 2026. Treat as recent post-earnings context and inspect price/volume stability before considering a boring overnight hold: https://crowncastle.gcs-web.com/news-releases/news-release-details/crown-castle-reports-third-quarter-2026-results-and-updates.
 - NICE's official IR events page currently lists no upcoming events, but that is not a full catalyst clearance: https://www.nice.com/investors.
 - These checks do not change the result: CCI and NICE remain WATCH / NOT READY until all hard gates and current chart conditions pass.
+
+
+## New actions after 2026-10-27 API / Boring Overnight work
+
+### User actions
+1. Pull the latest `feature/opportunity-quality-classification` branch only after reviewing its changes; do not merge the entire branch into master blindly.
+2. Run `dotnet run --project src/MomentumCommandCenterV2.API --configuration Release` and open `/swagger` on the exact origin printed by ASP.NET Core.
+3. In Swagger, run `GET /api/health`, then `GET /api/providers/status`, then the historical `GET /api/market-data/compare` request. Keep the response sanitized. A successful historical request does not validate websocket/streaming or all extended-hours windows.
+4. Optionally exercise `POST /api/boring-overnight/evaluate` with known, timestamped candidate inputs. Treat DATA? as incomplete evidence and BLOCKED/WATCH as non-eligible; this endpoint is not yet wired to scanner or catalyst providers.
+5. Install `/mnt/data/MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt` in the lower 1M study. Inspect a chart that includes the bar immediately before the EOD transition. Send the resulting screenshot only if no EOD bubble appears; no compile error alone does not prove runtime behavior.
+
+### Engineering actions still open
+- Confirm CI for exact latest branch head and correct any failures.
+- Wire Boring Overnight evaluator inputs to provider-backed/persisted data, and connect catalyst review; do not let missing inputs default to READY.
+- Implement complete GTC_EXT collector and walk-forward target-touch research before choosing a numeric target formula.
+- Resolve ThinkScript version/source parity; repository `docs/Charts/1M/MainStudy.txt` is V14.4.10 and is not the uploaded V14.5 source.
+- Continue Alpaca proof-of-fit: pagination/retries, persistence semantics, extended-hours coverage, websocket/collector recovery and TOS parity. Massive remains unconfigured/deferred.
