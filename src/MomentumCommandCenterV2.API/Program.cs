@@ -371,7 +371,7 @@ app.MapPost("/api/market-data/import-csv", async (HttpRequest request, Cancellat
 })
 .WithName("ImportAlpacaCsvForParity")
 .WithSummary("Import Alpaca/IEX OHLCV CSV into MCC parity rows")
-.WithDescription("Upload multipart/form-data with file field 'file'. Optional form fields: symbol and timeframe (1m or 5m) if absent from the CSV. The response has all 17 canonical parity columns. It does not synthesize chart values.")
+.WithDescription("Upload multipart/form-data with file field 'file'. Accepts a comma-delimited OHLCV CSV or an Alpaca historical-bars JSON response (a JSON response may have a .csv filename). Optional form fields: symbol and timeframe (1m or 5m) if absent from the payload. The response has all 17 canonical parity columns. It does not synthesize chart values.")
 .ProducesProblem(400)
 .WithOpenApi(operation =>
 {
