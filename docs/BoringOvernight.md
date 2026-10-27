@@ -145,3 +145,12 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 - A new API evaluator exists at `POST /api/boring-overnight/evaluate`. It applies the documented hard gates for price, SMA20, average daily volume, overnight win rate, 20D average, strict 5D > 20D, excluded-list status, catalyst status, 5M permission/structure, 1M state, freshness and extension/current-day heat warnings.
 - This is the first deterministic evaluator slice, not the full scanner-to-decision pipeline. Inputs are caller-supplied and must be sourced/timestamped by the caller. Automatic candidate discovery, catalyst feed integration, persisted candidate metrics, and validated sell-target selection are still open.
 - `docs/Validation/Boring-Overnight-Target-Policy-20261027.md` defines why the +0.5% heuristic and median ON % must be evaluated against complete eligible-window bars and walk-forward outcomes before selecting a target.
+
+
+## 2026-10-27 — implementation checkpoint
+
+- StrategyReport uploads now parse the actual Thinkorswim semicolon-delimited report format and convert explicit MCC_OHLCV v1 payloads into the repository's exact 17-column parity template. Chart-side comparison fields stay blank unless present in source. No order price is treated as OHLCV, and no parity rows are fabricated if the export has no explicit payload.
+- Collector recovery now uses persisted source-timestamp watermarks per provider/symbol/timeframe, a configurable overlap, atomic checkpoint writes and 30-day backfill chunks. The worker's new-observation counter reflects actual newly appended observations, not total bars returned.
+- These source changes are on feature/opportunity-quality-classification. Current-head CI has not been verified; do not treat the prior successful workflow for commit 0caf00004a837e269c175f7d4c34827120ac8fe6 as validation of the latest code.
+- Still blocked: source-backed daily/overnight metric calculation, full GTC_EXT session coverage, session-aware gap classification, catalyst/news source, authoritative 5M Permission/structure and 1M state. The evaluator remains a deterministic hard-gate function over caller-supplied inputs; it is not yet an autonomous provider-backed Boring Overnight scanner.
+- Do not optimize or promote the +0.5% target from OHLCV alone. Need complete source-backed eligible-window bars, missing interval accounting, walk-forward touch-rate evaluation and separate actual-fill evidence.
