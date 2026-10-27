@@ -64,4 +64,22 @@
  <p class="notice">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
 </section>
 <section class="workbench-grid"><article class="panel"><div class="section-heading"><div><div class="eyebrow">SCANNER WORKBENCH</div><h2>Candidate discovery</h2></div><label class="file-button" for="scannerFile">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls"><select id="scannerGroup"><option value="momentum">A · Momentum Hunter</option><option value="breakout">B · Breakout Trigger</option><option value="reclaim">C · Reclaim / Continuation</option><option value="discovery">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div><div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Score</th><th>Status</th><th>Extension</th><th>Freshness</th><th>Reason</th><th></th></tr></thead><tbody id="scannerRows"></tbody></table></div><p class="notice">Local workbench only. Imported rows are evidence for review, not live scanner results or trading instructions. Extension/freshness fields are not calculated unless supplied in your CSV.</p></article><article class="panel"><div class="section-heading"><div><div class="eyebrow">WATCHLIST</div><h2>Working candidates</h2></div><button id="clearWatchlist" class="quiet-button">Clear</button></div><form id="watchlistForm" class="watchlist-form"><input id="watchSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker"><button type="submit">Add</button></form><ul id="watchlistRows" class="watchlist"></ul><p class="notice">Watchlist is stored only in this browser using local storage. It does not submit orders or connect to a broker.</p></article></section>
-<footer>Local scaffold · Static HTML/CSS/JS · No broker connection · No order placement</footer></main><script src="./app.js"></script></body></html>
+
+<section class="integration-grid">
+ <article class="panel">
+  <div class="section-heading"><div><div class="eyebrow">EXCLUSIONS · API-BACKED</div><h2>MCC exclusion watchlist</h2></div><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button></div>
+  <form id="exclusionForm" class="watchlist-form"><input id="exclusionSymbol" maxlength="8" placeholder="Ticker (e.g. TTE)" aria-label="Symbol to exclude" required><input id="exclusionReason" maxlength="200" placeholder="Reason (optional)" aria-label="Exclusion reason"><button type="submit">Add exclusion</button></form>
+  <p id="exclusionStatus" class="muted">Loading local MCC exclusions…</p><ul id="exclusionRows" class="watchlist"></ul>
+  <p class="notice">This list is persisted by MCC and used by the Boring Overnight evaluator. It does not sync with Thinkorswim's personal watchlist. Keep both lists aligned manually until a supported import/sync path is verified.</p>
+ </article>
+ <article class="panel">
+  <div class="section-heading"><div><div class="eyebrow">THINKORSWIM · CSV</div><h2>StrategyReport upload</h2></div></div>
+  <form id="strategyReportForm" class="upload-form"><label for="strategyReportFile">StrategyReport CSV (max 10 MB)</label><input id="strategyReportFile" type="file" accept=".csv,text/csv" required><button type="submit">Upload and parse</button></form>
+  <p id="strategyReportStatus" class="muted">Choose a TOS StrategyReport export to parse through the API.</p>
+  <div id="strategyReportSummary" class="upload-summary hidden"></div>
+  <button id="downloadStrategyReportJson" type="button" class="quiet-button hidden">Download parsed JSON</button>
+  <p class="notice">The API preserves report rows and warnings. A StrategyReport is not assumed to be continuous OHLCV data and does not prove fills unless the export records them.</p>
+ </article>
+</section>
+
+<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js"></script></body></html>
