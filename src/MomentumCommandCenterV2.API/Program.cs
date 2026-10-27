@@ -121,6 +121,92 @@ app.MapGet("/api/market-data/compare", async (
 .WithSummary("Compare historical OHLCV bars across configured providers")
 .WithDescription("Example query: symbol=SPY, timeframe=5m, from=2026-10-23T13:30:00Z, to=2026-10-23T13:50:00Z. Maximum window 31 days.");
 
+app.MapGet("/api/scanner/universe", async (
+    string symbols,
+    string timeframe,
+    DateTimeOffset from,
+    DateTimeOffset to,
+    string? providerName,
+    IEnumerable<IMarketDataProvider> providers,
+    IMarketBarObservationStore barStore,
+    CancellationToken cancellationToken) =>
+{
+    var requestedSymbols = symbols.Split(new[] { ',', ';', ' ', '\t', '\r', '\n' },
+        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(s => s.ToUpperInvariant()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    if (requestedSymbols.Length == 0 || requestedSymbols.Length > 50 || requestedSymbols.Any(s => !IsValidSymbol(s)))
+        return Results.BadRequest(new { error = "Provide 1–50 valid comma-separated symbols (1–8 letters, digits, dot, or hyphen)." });
+    if (!TryGetTimeframe(timeframe, out var span))
+        return Results.BadRequest(new { error = "Timeframe must be 1m or 5m." });
+    if (from >= to || to - from > TimeSpan.FromDays(7))
+        return Results.BadRequest(new { error = "Require from < to and a window of 7 days or less for universe scans." });
+    var provider = providers.FirstOrDefault(p => string.Equals(p.ProviderName, providerName ?? "Alpaca", StringComparison.OrdinalIgnoreCase));
+    if (provider is null) return Results.BadRequest(new { error = "Unknown provider. Use Alpaca or Massive." });
+
+    var results = await Task.WhenAll(requestedSymbols.Select(async symbol =>
+    {
+        try
+        {
+            var bars = (await provider.GetBarsAsync(symbol, span, from, to, cancellationToken))
+                .OrderBy(b => b.Timestamp).GroupBy(b => b.Timestamp).Select(g => g.First()).ToArray();
+            var persisted = await barStore.AppendAsync(bars, cancellationToken);
+            if (bars.Length == 0)
+                return new {
+                    symbol, provider = provider.ProviderName, timeframe, status = "NO_BARS_RETURNED",
+                    barCount = 0, persistedObservationCount = persisted, firstTimestampUtc = (DateTimeOffset?)null,
+                    latestTimestampUtc = (DateTimeOffset?)null, latestBarAgeMinutes = (double?)null,
+                    changePercent = (double?)null, observedRangePercent = (double?)null, summedVolume = (long?)null,
+                    interpretation = "No bars returned for this symbol/window; not proof that the symbol had zero trading activity."
+                };
+            var first = bars[0]; var latest = bars[^1];
+            var high = bars.Max(b => b.High); var low = bars.Min(b => b.Low);
+            var change = first.Close == 0 ? (double?)null : (latest.Close - first.Close) / first.Close * 100.0;
+            var range = first.Close == 0 ? (double?)null : (high - low) / first.Close * 100.0;
+            return new {
+                symbol, provider = provider.ProviderName, timeframe, status = "OBSERVED",
+                barCount = bars.Length, persistedObservationCount = persisted, firstTimestampUtc = (DateTimeOffset?)first.Timestamp,
+                latestTimestampUtc = (DateTimeOffset?)latest.Timestamp,
+                latestBarAgeMinutes = (double?)Math.Round(Math.Max(0, (DateTimeOffset.UtcNow - latest.Timestamp).TotalMinutes), 2),
+                changePercent = change is null ? null : Math.Round(change.Value, 4),
+                observedRangePercent = range is null ? null : Math.Round(range.Value, 4),
+                summedVolume = (long?)bars.Sum(b => b.Volume),
+                interpretation = "Observed historical bars only. No relative-volume baseline, quote/spread, catalyst, halt, sector, or Thinkorswim eligibility data is included."
+            };
+        }
+        catch (Exception ex) when (ex is ProviderNotConfiguredException or HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            return new {
+                symbol, provider = provider.ProviderName, timeframe, status = "REQUEST_FAILED",
+                barCount = 0, persistedObservationCount = 0, firstTimestampUtc = (DateTimeOffset?)null,
+                latestTimestampUtc = (DateTimeOffset?)null, latestBarAgeMinutes = (double?)null,
+                changePercent = (double?)null, observedRangePercent = (double?)null, summedVolume = (long?)null,
+                interpretation = ex.Message
+            };
+        }
+    }));
+    return Results.Ok(new {
+        generatedAtUtc = DateTimeOffset.UtcNow,
+        provider = provider.ProviderName,
+        timeframe,
+        fromUtc = from,
+        toUtc = to,
+        requestedSymbolCount = requestedSymbols.Length,
+        scannedSymbolCount = results.Length,
+        scope = "USER_SUPPLIED_UNIVERSE_ONLY",
+        results = results.OrderByDescending(r => Math.Abs(r.changePercent ?? 0)).ToArray(),
+        limitations = new[] {
+            "This is not market-wide discovery; only supplied symbols are scanned.",
+            "Change/range/volume are descriptive, not a recommendation or probability.",
+            "No relative-volume baseline, spread/liquidity, catalyst/news, halt, sector, or Thinkorswim state is available.",
+            "Do not treat missing bars as zero activity or a clean session."
+        }
+    });
+})
+.WithName("ScanUserSuppliedUniverse")
+.WithSummary("Scan a user-supplied symbol universe using historical OHLCV")
+.WithDescription("GET /api/scanner/universe?symbols=SPY,QQQ,TTE&timeframe=5m&from=2026-10-26T13:30:00Z&to=2026-10-26T20:00:00Z&providerName=Alpaca. This is a bounded, descriptive scan of supplied symbols, not market-wide movers discovery or a trade signal.")
+.ProducesProblem(400);
+
 app.MapGet("/api/market-data/collector/status", (MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker worker) =>
     Results.Ok(worker.Snapshot()))
 .WithSummary("Show background historical collector state")
