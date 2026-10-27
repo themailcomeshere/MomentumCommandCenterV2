@@ -109,6 +109,12 @@ public sealed class AlpacaMarketDataAdapterTests
     /// PURPOSE: Captures the outgoing request while replacing network I/O with a deterministic response.
     /// WHEN CALLED: Used only by this test class.
     /// </summary>
+    private sealed class SequencedHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(responseFactory(request));
+    }
+
     private sealed class RecordingHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory) : HttpMessageHandler
     {
         public HttpRequestMessage? Request { get; private set; }
