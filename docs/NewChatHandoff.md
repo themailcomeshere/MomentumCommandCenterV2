@@ -487,3 +487,13 @@ Replace placeholders locally; never paste actual values into chat, source contro
 
 
 - Additional TOS follow-up: generated a corrected copy of the uploaded V14.5 source as `/mnt/data/MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt`. It adds a one-time red EOD GET OUT bubble when `finalState` transitions into `EOD_GET_OUT`. This file is a local generated artifact, not yet committed to the repository. User must install this exact V14.5 file into the lower 1M study and inspect a chart containing the EOD transition; if the chart still shows no bubbles, collect a screenshot including the prior bar and confirm the installed study source/version. This remains unverified in TOS.
+
+
+## Update — 2026-10-27: StrategyReport API, exclusions, Swagger examples, ThinkScript cleanup
+
+- Latest branch head at handoff update: feature branch contains `POST /api/strategy-report/upload`; it accepts multipart/form-data field `file`, .csv only, maximum 10 MB, parses up to 10,000 valid rows, returns original headers, full parsed rows, first 100 preview rows, row warnings and likely timestamp/symbol/event columns. It does not infer absent bars/fills. Parser tests added; latest CI run must be verified.
+- Added MCC local exclusion watchlist endpoints: `GET /api/watchlists/exclusions`, `POST /api/watchlists/exclusions` with `{ "symbol": "TTE", "reason": "Manual exclusion" }`, and `DELETE /api/watchlists/exclusions/TTE`. Persisted at API `App_Data/exclusions-watchlist.json`. Boring Overnight evaluation now reads this list and overrides caller-supplied `excluded` state.
+- Important limitation: these endpoints do NOT sync to the Thinkorswim personal watchlist. No supported TOS API for personal watchlist CRUD has been verified in sources. Treat MCC's list as separate until export/import or another supported integration is established.
+- Swagger is now enabled outside Development too, at `/swagger`, with example descriptions and a multipart file picker schema for StrategyReport. Only expose on a trusted local network; no authentication is implemented.
+- The cleaned V14.5 ThinkScript file is available in the conversation attachment `MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt`. It reflows statements, comments wrapped prose that was being parsed as code, and adds a red EOD transition bubble. Not TOS-compiled/visually verified; user reported earlier file errors and no bubbles. Test this exact file, don't assume success.
+- User-reported prior local Release test: 91 passed before this new change set. GitHub Actions run 40538766766 for the current head was queued at the last check; no current-head pass claim.
