@@ -131,6 +131,7 @@ public sealed record StrategyReportParseResult(
     int ParsedRowCount,
     IReadOnlyList<IReadOnlyDictionary<string, string>> PreviewRows,
     IReadOnlyList<IReadOnlyDictionary<string, string>> Rows,
+    IReadOnlyList<IReadOnlyDictionary<string, string>> ParityRows,
     IReadOnlyList<string> Warnings,
     string? LikelyTimestampColumn,
     string? LikelySymbolColumn,
