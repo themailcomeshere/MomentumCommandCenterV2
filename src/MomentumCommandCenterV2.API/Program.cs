@@ -372,7 +372,32 @@ app.MapPost("/api/market-data/import-csv", async (HttpRequest request, Cancellat
 .WithName("ImportAlpacaCsvForParity")
 .WithSummary("Import Alpaca/IEX OHLCV CSV into MCC parity rows")
 .WithDescription("Upload multipart/form-data with file field 'file'. Optional form fields: symbol and timeframe (1m or 5m) if absent from the CSV. The response has all 17 canonical parity columns. It does not synthesize chart values.")
-.ProducesProblem(400);
+.ProducesProblem(400)
+.WithOpenApi(operation =>
+{
+    operation.RequestBody = new OpenApiRequestBody
+    {
+        Required = true,
+        Content =
+        {
+            ["multipart/form-data"] = new OpenApiMediaType
+            {
+                Schema = new OpenApiSchema
+                {
+                    Type = "object",
+                    Required = new HashSet<string> { "file" },
+                    Properties =
+                    {
+                        ["file"] = new OpenApiSchema { Type = "string", Format = "binary", Description = "Alpaca/IEX OHLCV CSV, max 10 MB." },
+                        ["symbol"] = new OpenApiSchema { Type = "string", Description = "Optional fallback symbol when absent from CSV." },
+                        ["timeframe"] = new OpenApiSchema { Type = "string", Enum = new List<Microsoft.OpenApi.Any.IOpenApiAny> { new OpenApiString("1m"), new OpenApiString("5m") }, Description = "Optional fallback timeframe when absent from CSV." }
+                    }
+                }
+            }
+        }
+    };
+    return operation;
+});
 
 app.MapPost("/api/strategy-report/upload", async (HttpRequest request, CancellationToken cancellationToken) =>
 {
