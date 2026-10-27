@@ -76,3 +76,16 @@ When launched through the API, the dashboard now includes:
 - **StrategyReport upload**: select a Thinkorswim CSV, upload it, review parsed row/column counts and warnings, inspect a preview, and download the complete parsed JSON.
 
 The exclusion list is local to the API host and stored at `App_Data/exclusions-watchlist.json`. Back it up if needed. There is no verified direct Thinkorswim watchlist sync.
+
+
+## Historical bar ingestion for diagnostics
+
+Use `GET /api/market-data/bars` with `symbol`, `timeframe=1m|5m`, `from`, `to`, and optional `providerName=Alpaca|Massive`. Example: `/api/market-data/bars?symbol=TTE&timeframe=1m&from=2026-10-26T11:00:00Z&to=2026-10-26T20:00:00Z&providerName=Alpaca`. Maximum 31 days. Response includes normalized bars, feed, first/latest source timestamp, gaps, and `newlyPersistedObservationCount`. Repeating the same query may return a zero newly-persisted count because observations are idempotent; that does not mean no bars were retrieved.
+
+## StrategyReport → Chart Parity Template
+
+Upload the exported CSV to `POST /api/strategy-report/upload`. If rows contain the MCC-owned `MCC_OHLCV|v1|...` payload, response `parsed.parityRows` is mapped to the Chart Parity Template's 17 columns and the dashboard enables **Download Parity Template CSV**. Chart-side values remain blank for manual chart transcription. Rows without the explicit payload are preserved in ordinary parsed rows but are not converted to invented OHLCV.
+
+## Limits of current Alpaca work
+
+Historical requests paginate with a safety cap and retry transient failures. The new endpoint is request-driven, not a background collector. Alpaca data does not supply the authoritative Thinkorswim study states or current news/catalyst data; the live overnight scanner must return DATA? when these required sources are absent.
