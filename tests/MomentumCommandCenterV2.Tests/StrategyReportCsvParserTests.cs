@@ -50,7 +50,8 @@ public sealed class StrategyReportCsvParserTests
         Assert.Equal("14.85", parity["PayloadOpen"]);
         Assert.Equal("14.87", parity["PayloadClose"]);
         Assert.Equal("8210", parity["PayloadVolume"]);
-        Assert.Equal("10/19/26 10:30 AM", parity["ChartTimestamp"]);
+        Assert.Equal("", parity["ChartTimestamp"]);
+        Assert.Contains("order-event timestamp", parity["ChartTimestampMeaning"], StringComparison.OrdinalIgnoreCase);
         Assert.Equal("2026-10-19T13:28:00.0000000Z", DateTimeOffset.Parse(parity["PayloadTimestampUtc"]).UtcDateTime.ToString("O"));
     }
 
