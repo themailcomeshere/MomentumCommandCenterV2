@@ -24,7 +24,10 @@ public static class AlpacaCsvParityParser
         if (string.IsNullOrWhiteSpace(csv)) throw new ArgumentException("CSV file is empty.", nameof(csv));
         var trimmed = csv.TrimStart('\uFEFF', ' ', '\t', '\r', '\n');
         if (trimmed.StartsWith("{", StringComparison.Ordinal))
-            return ParseAlpacaBarsJson(trimmed, defaultSymbol, defaultTimeframe);
+        {
+            try { return ParseAlpacaBarsJson(trimmed, defaultSymbol, defaultTimeframe); }
+            catch (JsonException ex) { throw new FormatException("JSON import is not a valid Alpaca historical-bars response.", ex); }
+        }
 
         var records = ParseRecords(csv);
         var headerIndex = records.FindIndex(row =>
