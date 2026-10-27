@@ -15,7 +15,7 @@ public sealed class MarketDataCollectionWorker(
     ILogger<MarketDataCollectionWorker> logger) : BackgroundService
 {
     private readonly string[] _symbols = (configuration["MarketData:Collector:Symbols"] ?? "")
-        .Split(new[] { ',', ';', ' ', '\\t', '\\r', '\\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Select(x => x.ToUpperInvariant()).Where(x => x.Length <= 8 && x.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
         .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     private readonly int _intervalSeconds = Math.Clamp(configuration.GetValue("MarketData:Collector:IntervalSeconds", 60), 15, 3600);

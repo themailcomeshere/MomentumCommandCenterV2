@@ -82,9 +82,10 @@ public static class StrategyReportCsvParser
         var offset = 0;
         while (offset <= normalized.Length)
         {
-            var newline = normalized.IndexOf('\n', offset);
-            var length = newline < 0 ? normalized.Length - offset : newline - offset;
-            var trimmed = normalized.Substring(offset, length).TrimStart('\uFEFF').Trim();
+            var newline = csv.IndexOf('\n', offset);
+            var length = newline < 0 ? csv.Length - offset : newline - offset;
+            var line = csv.Substring(offset, length).TrimEnd('\r');
+            var trimmed = line.TrimStart('\uFEFF').Trim();
             if (trimmed.Length > 0 && (trimmed.StartsWith("Id;Strategy;Side;", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("Id,Strategy,Side,", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("SourceRow,", StringComparison.OrdinalIgnoreCase) ||
