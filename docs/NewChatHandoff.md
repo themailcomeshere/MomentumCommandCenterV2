@@ -484,3 +484,6 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - TOS bubble issue is NOT resolved. User applied the prior change without errors and sees no bubbles. Repository `docs/Charts/1M/MainStudy.txt` is V14.4.10, while the uploaded source reference is `MomentumCommandCenterV3_2_1M_V14_5.txt`. Exact installed source parity is not established; patch the exact V14.5 source and test on a historical EOD transition rather than re-editing the older reference blindly.
 - Alpaca proof-of-fit remains historical REST only. No websocket, broad scanner/movers, or full GTC_EXT collector is implemented. Keep Massive deferred.
 - Do not merge the divergent feature branch wholesale into master. Use a scoped PR after current-head CI and code review.
+
+
+- Additional TOS follow-up: generated a corrected copy of the uploaded V14.5 source as `/mnt/data/MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt`. It adds a one-time red EOD GET OUT bubble when `finalState` transitions into `EOD_GET_OUT`. This file is a local generated artifact, not yet committed to the repository. User must install this exact V14.5 file into the lower 1M study and inspect a chart containing the EOD transition; if the chart still shows no bubbles, collect a screenshot including the prior bar and confirm the installed study source/version. This remains unverified in TOS.
