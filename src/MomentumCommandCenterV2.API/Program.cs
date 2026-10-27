@@ -4,6 +4,8 @@ using MomentumCommandCenterV2.API.MarketData;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
@@ -20,6 +22,8 @@ builder.Services.AddSingleton<IMarketDataProvider>(sp => sp.GetRequiredService<M
 
 var app = builder.Build();
 app.UseExceptionHandler();
+app.UseSwagger();
+app.UseSwaggerUI();
 var frontendPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "..", "frontend"));
 if (Directory.Exists(frontendPath))
 {
@@ -161,6 +165,23 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         }
     });
 });
+
+app.MapPost("/api/boring-overnight/evaluate", (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request) =>
+{
+    if (!IsValidSymbol(request.Symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (request.CatalystStatus is not null &&
+        !new[] { "CLEAR", "RISK", "UNKNOWN" }.Contains(request.CatalystStatus, StringComparer.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "catalystStatus must be CLEAR, RISK, or UNKNOWN." });
+
+    var result = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(request);
+    return Results.Ok(result);
+})
+.WithName("EvaluateBoringOvernight")
+.WithSummary("Evaluate Boring Overnight hard gates from a supplied, timestamped candidate snapshot")
+.WithDescription("Decision-support only. Missing/stale data or unknown catalyst status cannot produce READY. This endpoint does not discover candidates or submit orders.")
+.Produces<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluation>()
+.ProducesValidationProblem(400);
 
 app.Run();
 
