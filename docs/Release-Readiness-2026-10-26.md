@@ -112,3 +112,13 @@
 - [PASS — PRIOR-HEAD CI] GitHub Actions passed on commit 4f5ed265e54e9a924935a58b8b3233b31b264279 (run 40414827751); user reports 88 tests passed. Newer source/docs commits need a current-head CI check.
 - [OPEN — FULL OVERNIGHT RESEARCH] Source-backed prior regular close plus complete next 07:00–20:00 Eastern GTC_EXT bars are still required. Preserve gaps as DATA_GAP; screenshots cannot establish target-touch rates or fills.
 - [OPEN — REMAINING ENGINEERING] Pagination/retries, collector lifecycle/recovery, durable checkpoints, session-aware gap states, storage hardening, Morning Brief/scanner integrations, and fixture-based Boring Overnight calculations remain important before live reliance.
+
+
+## Follow-up — 2026-10-27
+
+- [IMPLEMENTED — CI PENDING] Swagger/OpenAPI UI added at `/swagger` with developer workflow documentation.
+- [IMPLEMENTED — CI PENDING] Deterministic Boring Overnight hard-gate API added at `POST /api/boring-overnight/evaluate`, with tests for missing critical data, a hard-gate failure, and a WATCH warning. Inputs are supplied by the caller; automatic provider/scanner/catalyst wiring is still absent.
+- [PARTIAL — ALPACA] User smoke test confirms successful historical Alpaca IEX bars. Latest compare response reports `persistedObservationCount=0`; investigate whether observations were idempotent duplicates already in the JSONL store. Do not claim persistence of new observations from this response.
+- [BLOCKED — THINKSCRIPT] The user's installed chart still has no bubbles after the previous attempted fix. Source identity mismatch exists between the repository V14.4.10 MainStudy and uploaded V14.5 reference. Installed-study bubble fix must be corrected and verified in Thinkorswim.
+- [OPEN — TARGET RESEARCH] See `docs/Validation/Boring-Overnight-Target-Policy-20261027.md`. No optimized target can be selected from the current data; full eligible-window bars, prior-only rolling metrics and walk-forward evaluation are required.
+- [OPEN — CURRENT-HEAD CI] Verify the exact current branch head before any release recommendation.
