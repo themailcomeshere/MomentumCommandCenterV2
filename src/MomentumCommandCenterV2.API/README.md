@@ -74,3 +74,16 @@ Use the Alpaca key and secret already saved in this machine's .NET User Secrets 
 6. Report only sanitized output: HTTP status, provider status/error, feed name, returned bar count, source timestamps, duplicate count and gap count. Remove keys, secrets, authorization headers and tokens.
 
 Keep the feed set to iex unless the Alpaca account explicitly entitles a different feed. No paid subscription and no Massive account are required for this first Alpaca-only smoke test. A successful request still does not establish that the account/feed is suitable for live trading or that extended-hours coverage matches Thinkorswim.
+
+
+## Optional historical collector
+
+The hosted collector is disabled by default. To enable a narrow test universe using .NET User Secrets from the API project directory:
+
+```powershell
+dotnet user-secrets set "MarketData:Collector:Symbols" "SPY,QQQ,TTE,FMS"
+dotnet user-secrets set "MarketData:Collector:IntervalSeconds" "60"
+dotnet user-secrets set "MarketData:Collector:LookbackMinutes" "20"
+```
+
+Restart the API and open `/api/market-data/collector/status`. It should report enabled=true and configured symbols. It polls overlapping 1m/5m history and persists idempotently. Clear the Symbols secret to disable. This is not a market-wide scanner or a websocket feed. Do not store provider credentials in tracked files.
