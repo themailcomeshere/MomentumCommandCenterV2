@@ -612,3 +612,8 @@ The collector's configured universe is only SPY, QQQ, TTE, FMS; it is not market
 
 ### TTE 1m-to-5m consistency check
 The saved TTE IEX response files were compared by UTC five-minute bucket. All 75 saved TTE 5m bars matched the OHLCV aggregation of the corresponding saved TTE 1m rows; 0 mismatches. This only proves internal consistency between these two saved IEX responses, not parity with Thinkorswim. SPY 5m response file was empty and remains missing.
+
+
+### Dashboard scanner UI and CI status
+- The Candidate discovery panel now has an API scan form for a comma-separated user universe, 1m/5m, and a start/end window in browser-local time (sent to API as UTC). Results display observed change, range, volume, freshness, and returned-bar count. It does not discover symbols market-wide or imply a trade signal.
+- The first scanner API CI run caught nullable conditional inference errors in the new endpoint; fixed with explicit nullable doubles. GitHub Actions passed build+tests at `7eb26118f360ba0d9cc0b2dbc274ca346bc99240`. Current branch advanced afterward with frontend scanner UI and asset/style updates; latest-head Actions is in progress and still needs a green result.
