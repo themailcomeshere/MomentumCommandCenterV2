@@ -43,7 +43,7 @@ public static class StrategyReportCsvParser
         var likelyTime = headers.FirstOrDefault(h => h.Contains("time", StringComparison.OrdinalIgnoreCase) || h.Contains("date", StringComparison.OrdinalIgnoreCase));
         var likelySymbol = headers.FirstOrDefault(h => h.Contains("symbol", StringComparison.OrdinalIgnoreCase));
         var likelyEvent = headers.FirstOrDefault(h => h.Contains("signal", StringComparison.OrdinalIgnoreCase) || h.Contains("strategy", StringComparison.OrdinalIgnoreCase) || h.Contains("order", StringComparison.OrdinalIgnoreCase) || h.Contains("event", StringComparison.OrdinalIgnoreCase));
-        return new StrategyReportParseResult(headers, rows.Count, rows.Take(100).ToArray(), warnings,
+        return new StrategyReportParseResult(headers, rows.Count, rows.Take(100).ToArray(), rows, warnings,
             likelyTime, likelySymbol, likelyEvent,
             "Parsed CSV fields as exported; this upload does not reconstruct missing OHLCV bars or infer trades not represented in the report.");
     }
@@ -82,6 +82,7 @@ public sealed record StrategyReportParseResult(
     IReadOnlyList<string> Headers,
     int ParsedRowCount,
     IReadOnlyList<IReadOnlyDictionary<string, string>> PreviewRows,
+    IReadOnlyList<IReadOnlyDictionary<string, string>> Rows,
     IReadOnlyList<string> Warnings,
     string? LikelyTimestampColumn,
     string? LikelySymbolColumn,
