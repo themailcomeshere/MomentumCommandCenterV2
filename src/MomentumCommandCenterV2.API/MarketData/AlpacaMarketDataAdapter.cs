@@ -1,15 +1,18 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace MomentumCommandCenterV2.API.MarketData;
 
 /// <summary>
-/// PURPOSE: Fetches normalized historical stock bars from Alpaca's market-data REST API.
-/// WHEN CALLED: Provider comparison or Morning Brief when Alpaca credentials are configured.
-/// IMPORTANT: Uses server-side credentials only; account feed entitlements are not assumed.
+/// Historical Alpaca REST adapter with bounded pagination and transient retry handling.
+/// Credentials remain server-side. A successful response containing bars is not proof of full-session coverage.
 /// </summary>
 public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguration configuration) : IMarketDataProvider
 {
+    private const int PageSize = 10000;
+    private const int MaxPages = 100;
+    private const int MaxAttempts = 3;
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"];
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"];
     private readonly string _feed = configuration["MarketData:Alpaca:Feed"] ?? "iex";
@@ -35,43 +38,99 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         Volatile.Write(ref _lastSuccessfulValidationBarCount, barCount);
         Interlocked.Exchange(ref _lastSuccessfulValidationUnixMilliseconds, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
     }
+
     public IReadOnlyList<string> Capabilities { get; } = new[]
     {
-        "Historical 1m/5m OHLCV bars", "REST only; no websocket yet", "Feed selection configured server-side",
-        "Scanner/movers endpoint not implemented"
+        "Historical 1m/5m OHLCV bars", "REST with bounded pagination and transient retries",
+        "Feed selection configured server-side", "Extended-hours bars included when provider returns them",
+        "Scanner/movers discovery still depends on configured scanner source"
     };
 
-    /// <summary>
-    /// PURPOSE: Requests historical OHLCV bars and preserves provider timestamps as UTC instants.
-    /// WHEN CALLED: API requests compare the same symbol, timeframe, and UTC window across providers.
-    /// </summary>
     public async Task<IReadOnlyList<MarketBar>> GetBarsAsync(
         string symbol, TimeSpan timeframe, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
     {
         if (!IsConfigured) throw new ProviderNotConfiguredException("Set MarketData:Alpaca:ApiKey and ApiSecret (or ALPACA_API_KEY / ALPACA_API_SECRET).");
         var minutes = timeframe == TimeSpan.FromMinutes(1) ? 1 : timeframe == TimeSpan.FromMinutes(5) ? 5 : 0;
         if (minutes == 0) throw new ArgumentOutOfRangeException(nameof(timeframe), "Only 1m and 5m are supported.");
+        if (from >= to) throw new ArgumentException("from must be earlier than to.");
+        if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8) throw new ArgumentException("Symbol must be 1-8 characters.", nameof(symbol));
 
-        using var request = new HttpRequestMessage(HttpMethod.Get,
-            $"v2/stocks/{Uri.EscapeDataString(symbol)}/bars?timeframe={minutes}Min&start={Uri.EscapeDataString(from.UtcDateTime.ToString("O"))}&end={Uri.EscapeDataString(to.UtcDateTime.ToString("O"))}&limit=10000&feed={Uri.EscapeDataString(_feed)}&sort=asc");
-        request.Headers.Add("APCA-API-KEY-ID", _key!);
-        request.Headers.Add("APCA-API-SECRET-KEY", _secret!);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException($"Alpaca returned {(int)response.StatusCode} {response.ReasonPhrase}: {TrimError(body)}");
-        using var document = JsonDocument.Parse(body);
-        if (!document.RootElement.TryGetProperty("bars", out var bars) || bars.ValueKind != JsonValueKind.Array)
-            throw new InvalidOperationException("Alpaca response did not contain a bars array.");
         var result = new List<MarketBar>();
-        foreach (var item in bars.EnumerateArray())
-            result.Add(new MarketBar(symbol, item.GetProperty("t").GetDateTimeOffset(),
-                item.GetProperty("o").GetDouble(), item.GetProperty("h").GetDouble(),
-                item.GetProperty("l").GetDouble(), item.GetProperty("c").GetDouble(),
-                item.GetProperty("v").GetInt64(), ProviderName, _feed));
-        RecordSuccessfulValidation(result.Count);
-        return result;
+        string? pageToken = null;
+        var seenTokens = new HashSet<string>(StringComparer.Ordinal);
+        for (var page = 0; page < MaxPages; page++)
+        {
+            var query = $"v2/stocks/{Uri.EscapeDataString(symbol.ToUpperInvariant())}/bars?timeframe={minutes}Min" +
+                $"&start={Uri.EscapeDataString(from.UtcDateTime.ToString("O"))}" +
+                $"&end={Uri.EscapeDataString(to.UtcDateTime.ToString("O"))}" +
+                $"&limit={PageSize}&feed={Uri.EscapeDataString(_feed)}&sort=asc" +
+                (string.IsNullOrWhiteSpace(pageToken) ? "" : $"&page_token={Uri.EscapeDataString(pageToken)}");
+            using var response = await SendWithRetryAsync(query, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                throw new HttpRequestException($"Alpaca returned {(int)response.StatusCode} {response.ReasonPhrase}: {TrimError(body)}");
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+            if (!root.TryGetProperty("bars", out var bars) || bars.ValueKind != JsonValueKind.Array)
+                throw new InvalidOperationException("Alpaca response did not contain a bars array.");
+            foreach (var item in bars.EnumerateArray())
+            {
+                var timestamp = item.GetProperty("t").GetDateTimeOffset();
+                if (timestamp < from || timestamp > to) continue;
+                result.Add(new MarketBar(symbol.ToUpperInvariant(), timestamp,
+                    item.GetProperty("o").GetDouble(), item.GetProperty("h").GetDouble(),
+                    item.GetProperty("l").GetDouble(), item.GetProperty("c").GetDouble(),
+                    item.GetProperty("v").GetInt64(), ProviderName, _feed));
+            }
+
+            pageToken = root.TryGetProperty("next_page_token", out var next) && next.ValueKind == JsonValueKind.String
+                ? next.GetString() : null;
+            if (string.IsNullOrWhiteSpace(pageToken)) break;
+            if (!seenTokens.Add(pageToken))
+                throw new InvalidOperationException("Alpaca pagination repeated a page token; stopping to avoid duplicate/infinite retrieval.");
+            if (page == MaxPages - 1)
+                throw new InvalidOperationException($"Alpaca result exceeded the safety limit of {MaxPages} pages; narrow the requested time window.");
+        }
+
+        var normalized = result.OrderBy(b => b.Timestamp).GroupBy(b => b.Timestamp).Select(g => g.First()).ToArray();
+        RecordSuccessfulValidation(normalized.Length);
+        return normalized;
+    }
+
+    private async Task<HttpResponseMessage> SendWithRetryAsync(string relativeUrl, CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
+            request.Headers.Add("APCA-API-KEY-ID", _key!);
+            request.Headers.Add("APCA-API-SECRET-KEY", _secret!);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpResponseMessage response;
+            try
+            {
+                response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            }
+            catch (HttpRequestException) when (attempt < MaxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(200 * attempt), cancellationToken);
+                continue;
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested && attempt < MaxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(200 * attempt), cancellationToken);
+                continue;
+            }
+
+            if ((response.StatusCode == HttpStatusCode.RequestTimeout ||
+                 (int)response.StatusCode == 429 || (int)response.StatusCode >= 500) && attempt < MaxAttempts)
+            {
+                var retryAfter = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMilliseconds(250 * attempt);
+                response.Dispose();
+                await Task.Delay(retryAfter > TimeSpan.FromSeconds(5) ? TimeSpan.FromSeconds(5) : retryAfter, cancellationToken);
+                continue;
+            }
+            return response;
+        }
     }
 
     private static string TrimError(string body) => body.Length <= 500 ? body : body[..500];
