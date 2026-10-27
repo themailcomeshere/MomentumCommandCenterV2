@@ -563,3 +563,15 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 
 - [PATCH ARTIFACT CREATED — TOS USER VERIFICATION REQUIRED] Generated `/mnt/data/MomentumCommandCenterV3_2_1M_V14_5_EOD_Bubble_Fix.txt` from the uploaded V14.5 source (not the repository's older V14.4.10 MainStudy). It adds a single bubble on transition into `EOD_GET_OUT`. Install this exact source in the lower 1M study and visually verify on a chart spanning the transition. Do not mark complete until verified; local artifact has not been committed as a canonical repository source yet.
+
+
+## API usability / StrategyReport / exclusion watchlist — 2026-10-27
+
+- [IMPLEMENTED — CURRENT-HEAD CI PENDING] Added `POST /api/strategy-report/upload` for multipart CSV upload, 10 MB limit, 10,000 data-row limit, quoted-field parsing, row-width warnings, full parsed rows plus 100-row preview, and likely timestamp/symbol/event column detection. It preserves what the report contains; it does not reconstruct continuous OHLCV or infer fills absent from the file. Parser unit tests added.
+- [IMPLEMENTED — CURRENT-HEAD CI PENDING] Added local persisted MCC exclusion list at `GET/POST/DELETE /api/watchlists/exclusions`. Boring Overnight evaluation now derives the excluded flag from this list instead of trusting the request field. Store lives under API `App_Data/exclusions-watchlist.json`; ensure this directory is writable and protected by local deployment policy.
+- [LIMITATION] This is MCC's local list, not a direct Thinkorswim watchlist integration. Data not found in sources for an official TOS API that lets MCC read or mutate the user's personal watchlists. If TOS watchlist membership must be authoritative, add a documented export/import workflow or supported connector after verifying the actual TOS export format.
+- [IMPLEMENTED — CURRENT-HEAD CI PENDING] Added example-oriented summaries/descriptions for health, provider status, market data compare, Morning Brief, Boring Overnight evaluation, CSV upload and exclusion watchlist endpoints. Swagger enabled regardless of Development environment so local Release runs can use `/swagger`; do not expose unauthenticated Swagger/API publicly.
+- [OPEN] Verify current-head workflow run 40538766766, then test CSV upload with a real StrategyReport export, add/remove exclusion symbol, and confirm the evaluator blocks it.
+- [OPEN] Add an MCC frontend upload control and exclusion-watchlist management panel after API contracts are verified.
+- [OPEN] Test JSONL persistence count semantics and continue Alpaca pagination/retry, collector recovery, and source-backed scanner wiring.
+- [OPEN — THINKSCRIPT] Rebuilt the V14.5 file as a cleaned single-statement-per-line source, commented the wrapped prose fragments that caused invalid statements, and added the EOD transition bubble. This is a locally generated artifact, not yet compile-verified by Thinkorswim; user must test the exact file.
