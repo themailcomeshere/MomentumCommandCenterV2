@@ -23,6 +23,8 @@ public static class StrategyReportCsvParser
         if (string.IsNullOrWhiteSpace(csv))
             throw new ArgumentException("CSV file is empty.", nameof(csv));
         if (maxRows < 1) throw new ArgumentOutOfRangeException(nameof(maxRows));
+        // Normalize before calculating header offsets; otherwise CRLF files produce mismatched slices.
+        csv = csv.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
 
         var preamble = new List<string>();
         var dataStart = FindHeaderStart(csv, preamble);
