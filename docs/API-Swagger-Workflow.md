@@ -66,3 +66,13 @@ The evaluator automatically checks this local list. It is not synchronized to th
 ## Current verification
 
 User previously reported 91 passing Release tests before this change set. Current-head GitHub Actions run must finish successfully before the new endpoints are treated as verified. Never expose unauthenticated Swagger/API beyond a trusted local environment.
+
+
+## Dashboard tools
+
+When launched through the API, the dashboard now includes:
+
+- **MCC exclusion watchlist**: add/remove/refresh symbols against the persisted API list. This is the list used by the Boring Overnight evaluator. It is separate from the browser-local Working Candidates list and separate from Thinkorswim's personal watchlist.
+- **StrategyReport upload**: select a Thinkorswim CSV, upload it, review parsed row/column counts and warnings, inspect a preview, and download the complete parsed JSON.
+
+The exclusion list is local to the API host and stored at `App_Data/exclusions-watchlist.json`. Back it up if needed. There is no verified direct Thinkorswim watchlist sync.
