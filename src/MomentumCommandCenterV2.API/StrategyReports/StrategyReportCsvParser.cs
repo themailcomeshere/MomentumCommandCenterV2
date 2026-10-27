@@ -75,20 +75,23 @@ public static class StrategyReportCsvParser
 
     private static int FindHeaderStart(string csv, List<string> preamble)
     {
+        // Normalize line endings first so header offsets always index the same string.
+        var normalized = csv.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n');
         var offset = 0;
-        while (offset <= csv.Length)
+        while (offset <= normalized.Length)
         {
-            var newline = csv.IndexOf('\\n', offset);
-            var length = newline < 0 ? csv.Length - offset : newline - offset;
-            var line = csv.Substring(offset, length).TrimEnd('\\r');
-            var trimmed = line.TrimStart('\\uFEFF').Trim();
+            var newline = normalized.IndexOf('\n', offset);
+            var length = newline < 0 ? normalized.Length - offset : newline - offset;
+            var trimmed = normalized.Substring(offset, length).TrimStart('\uFEFF').Trim();
             if (trimmed.Length > 0 && (trimmed.StartsWith("Id;Strategy;Side;", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("Id,Strategy,Side,", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("SourceRow,", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("Symbol,", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("Symbol;", StringComparison.OrdinalIgnoreCase)))
+            {
+                preamble.AddRange(normalized[..offset].Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
                 return offset;
-            if (trimmed.Length > 0) preamble.Add(trimmed);
+            }
             if (newline < 0) break;
             offset = newline + 1;
         }
