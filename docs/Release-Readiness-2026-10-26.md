@@ -134,3 +134,7 @@
 - [IMPLEMENTED — CI PENDING] Swagger examples added across current API routes; upload has multipart file schema. Swagger enabled for Release local runs. Do not expose unauthenticated API/Swagger publicly.
 - [BLOCKED — USER VERIFICATION] Cleaned V14.5 source artifact and EOD bubble change not compiled/verified in Thinkorswim.
 - [OPEN — CURRENT-HEAD CI] Workflow run 40538766766 was queued at last check. User-reported 91 passes applies to earlier code only.
+
+
+- [IMPLEMENTED — CURRENT-HEAD CI PENDING] Dashboard now exposes API-backed exclusion management and StrategyReport upload/parse/JSON export. Verify browser workflows against the running Release API.
+- [CI FIX APPLIED — RECHECK REQUIRED] Build failed because OpenAPI extension package was missing; added Microsoft.AspNetCore.OpenApi 8.0.0. Latest workflow run 40539484300 was in progress at last check.
