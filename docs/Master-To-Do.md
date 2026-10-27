@@ -575,3 +575,7 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 - [OPEN] Add an MCC frontend upload control and exclusion-watchlist management panel after API contracts are verified.
 - [OPEN] Test JSONL persistence count semantics and continue Alpaca pagination/retry, collector recovery, and source-backed scanner wiring.
 - [OPEN — THINKSCRIPT] Rebuilt the V14.5 file as a cleaned single-statement-per-line source, commented the wrapped prose fragments that caused invalid statements, and added the EOD transition bubble. This is a locally generated artifact, not yet compile-verified by Thinkorswim; user must test the exact file.
+
+
+- [IMPLEMENTED — CURRENT-HEAD CI PENDING] Added API-backed frontend panels for MCC exclusions and StrategyReport CSV upload. Exclusions can be added/removed and refreshed from the persisted API list. StrategyReport upload renders row/column summary, warnings, first 100-row preview and offers full parsed JSON download. Existing "Working candidates" browser-local watchlist remains separate and must not be confused with exclusions.
+- [CI INVESTIGATION] Workflow run 40538986271 failed because `WithOpenApi` was missing from the .NET 8 API project's references. Added `Microsoft.AspNetCore.OpenApi` 8.0.0 and re-triggered build. Newer workflow 40539484300 is in progress at latest UI/style commit; verify its result before calling the current head green.
