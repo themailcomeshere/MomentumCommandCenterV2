@@ -532,3 +532,31 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - Created local artifact `V14_5_Bubble_Stack_Replacement.txt` (conversation file) based on the V14.5 state/event names in the Library copy. It replaces multiple independent event bubbles with one composite bubble per bar and includes EOD transition text, so simultaneous candidate/ready/blocked events cannot print over each other as separate bubbles.
 - This is a replacement section, not a full regenerated study. The Library V14.5 copy is older and has line-wrapping/comment corruption; do not overwrite the user's cleaned current V14.5 file with that stale full copy. Replace the entire state-bubble section in the current cleaned source, remove any separate EOD-only AddChartBubble, and verify in Thinkorswim. Not compiled/visually verified in TOS.
 - CI for the collector first failed on an unused constructor parameter. Removed it in commit `72d4034468d0837c38a4baf726e43ca68ad9f7bf`; current workflow 40546245830 was in progress at last check.
+
+## Current handoff — 2026-10-27 (after user-fixed commit)
+
+### Latest user fix inspected
+The user-fixed commit is 0caf00004a837e269c175f7d4c34827120ac8fe6 (“Fixed broken commit”). Its diff adds the missing Swashbuckle.AspNetCore.SwaggerGen import to API Program.cs and Xunit to parser tests. The prior handoff records workflow 40541586544 green for that SHA. That validates only the earlier commit, not newer work.
+
+### Assistant changes on feature/opportunity-quality-classification
+- Reworked StrategyReport parsing for the actual Thinkorswim format (preamble + semicolon table) and conversion of explicit MCC_OHLCV v1 payloads into the exact 17-column parity template. Handles comma-grouped epoch timestamps and Windows CRLF offsets. Added regression tests for real-format exports and no-payload non-fabrication.
+- Added durable collector watermarks per provider/symbol/timeframe, overlap recovery, atomic checkpoint saves and bounded 30-day catch-up chunks after downtime. Collector status exposes checkpoint/watermark information.
+- Corrected collector newly-persisted count to increment only by the store append count.
+- New commits: 1c0b54e parser rewrite; bf62d3b parser tests; c7acc54 durable collector watermarks; d1af047 persistence counter; a69771c CRLF offset fix. Verify exact current head/CI before trusting or pulling; current-head workflow status has not been verified.
+
+### PR status
+No open PRs were returned by the current open-PR search. PR #7 is closed and must not be merged. Re-query before creating a new PR.
+
+### What is not complete
+- Collector is historical REST polling, not websocket streaming. Test checkpoint persistence/corruption, filesystem failures, restarts, cancellation and real provider recovery.
+- Alpaca pagination/retries are present. Extended-hours completeness still needs a source-matched premarket/RTH/postmarket test with the configured feed.
+- Gap counts are timestamp gaps, not session-aware missing-bar classifications.
+- Provider-backed scanner/Boring Overnight is not complete: evaluator accepts a caller-supplied snapshot and cannot source verified daily/overnight metrics, catalyst status, authoritative 5M permission/structure or 1M state by itself. Do not infer those states from OHLCV; missing critical values remain DATA?.
+- Latest source/test changes need a green current-head workflow and local Release tests before they are considered validated.
+
+### User's specific next actions
+1. Verify GitHub Actions for exact feature branch head; then pull and run dotnet test MomentumCommandCenterV2.sln --configuration Release. Report tested SHA and counts.
+2. Upload a committed real-format StrategyReport to Swagger and verify non-empty parityRows with exactly 17 template columns and correct values.
+3. Configure collector symbols locally, inspect /api/market-data/collector/status, restart the API, and verify watermarks resume and new persisted counts remain idempotent.
+4. Test a known symbol/date across premarket, RTH and postmarket using the configured feed; compare source timestamps to TOS export.
+5. Keep scanner DATA? for missing catalyst/TOS-state/daily metrics until those sources are wired and validated.
