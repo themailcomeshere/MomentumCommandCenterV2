@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Any;
 using MomentumCommandCenterV2.API.MarketData;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -193,8 +194,13 @@ app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API
 .WithSummary("Evaluate Boring Overnight hard gates from a supplied, timestamped candidate snapshot")
 .WithDescription("Example: { \"symbol\": \"SPY\", \"dataFresh\": true, \"price\": 600, \"sma20\": 590, \"averageDailyVolume20\": 1000000, \"overnightWinRatePct\": 75, \"averageOvernightPct20\": 0.35, \"averageOvernightPct5\": 0.55, \"medianOvernightPct20\": 0.3, \"currentOvernightPct\": 0.25, \"excluded\": false, \"catalystStatus\": \"CLEAR\", \"fiveMinutePermission\": true, \"fiveMinuteStructure\": \"BULLISH\", \"oneMinuteState\": \"EXECUTION READY\", \"extensionAtr\": 0.8, \"currentVolumeVsAverage\": 1.2, \"dailyRangePct\": 1.8, \"atrPct\": 1.5 }. Percent values are percentage points (0.5 = 0.5%). DATA? means missing critical inputs; BLOCKED means hard-gate failure; WATCH means a warning. Caller-supplied data only; no orders are submitted.")
 .Produces<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluation>()
-.ProducesValidationProblem(400);
-
+.ProducesValidationProblem(400)
+.WithOpenApi(operation =>
+{
+    if (operation.RequestBody?.Content.TryGetValue("application/json", out var body) == true)
+        body.Example = OpenApiAnyFactory.CreateFromJson("""{"symbol":"SPY","dataFresh":true,"price":600,"sma20":590,"averageDailyVolume20":1000000,"overnightWinRatePct":75,"averageOvernightPct20":0.35,"averageOvernightPct5":0.55,"medianOvernightPct20":0.3,"currentOvernightPct":0.25,"excluded":false,"catalystStatus":"CLEAR","fiveMinutePermission":true,"fiveMinuteStructure":"BULLISH","oneMinuteState":"EXECUTION READY","extensionAtr":0.8,"currentVolumeVsAverage":1.2,"dailyRangePct":1.8,"atrPct":1.5}""");
+    return operation;
+});
 
 app.MapPost("/api/strategy-report/upload", async (HttpRequest request, CancellationToken cancellationToken) =>
 {
