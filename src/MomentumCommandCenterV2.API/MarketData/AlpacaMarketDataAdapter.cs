@@ -39,10 +39,12 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         Interlocked.Exchange(ref _lastSuccessfulValidationUnixMilliseconds, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
     }
 
-    public IReadOnlyList<string> Capabilities { get; } = new[]
+    public IReadOnlyList<string> Capabilities => new[]
     {
-        "Historical 1m/5m OHLCV bars", "REST with bounded pagination and transient retries",
-        "Feed selection configured server-side", "Extended-hours bars included when provider returns them",
+        "Historical 1m/5m OHLCV bars",
+        "REST with bounded pagination and transient retries",
+        $"Configured feed: {_feed}",
+        "Extended-hours bars included only when provider returns them for this feed/entitlement",
         "Scanner/movers discovery still depends on configured scanner source"
     };
 
