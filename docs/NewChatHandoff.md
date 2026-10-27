@@ -470,3 +470,17 @@ Replace placeholders locally; never paste actual values into chat, source contro
 - CCI: company source confirms Q3 2026 results and full-year outlook update were released Oct 21 after close. Treat as a recent earnings/outlook event; review post-earnings volatility before any boring overnight classification. Source: https://crowncastle.gcs-web.com/news-releases/news-release-details/crown-castle-reports-third-quarter-2026-results-and-updates.
 - NICE: official investor-relations event page currently lists no upcoming events, but that does not prove absence of company news or catalyst risk. Source: https://www.nice.com/investors.
 - Current outcome remains WATCH / NOT READY for both. See docs/Validation/Overnight-Candidate-Review-20261026.md for values and caveats.
+
+
+## Update — 2026-10-27 (API smoke test, Swagger, Boring Overnight, TOS bubble)
+
+- User independently ran `GET /api/health`: status OK, decision-support-only, order submission NOT IMPLEMENTED.
+- User independently ran `/api/providers/status`: Alpaca `VALIDATED_DATA_RETURNED`, last successful response 18 bars. This means a non-empty data response was returned during that API process; it is not proof of streaming or full coverage.
+- User ran `/api/market-data/compare` for SPY 5m on 2026-10-23 13:30Z–13:50Z: Alpaca returned 5 IEX bars, timestamps 13:30Z and 13:50Z, no duplicates/gaps/error, but `persistedObservationCount=0` in this latest response. Massive remains unconfigured. Investigate why the API returns zero newly persisted observations (could be idempotent already-seen bars; verify store semantics before treating as a defect).
+- User reports `dotnet test MomentumCommandCenterV2.sln --configuration Release`: 88 passed. This is user-reported test evidence; check CI against exact branch head after the latest commits.
+- Added Swashbuckle and Swagger UI at `/swagger`; documented usage in `docs/API-Swagger-Workflow.md`. Local launch: `dotnet run --project src/MomentumCommandCenterV2.API --configuration Release`; open `/swagger` on the printed origin.
+- Added `POST /api/boring-overnight/evaluate` plus deterministic hard-gate evaluator and unit tests. This is not yet connected to live scanner inputs. Missing critical data/catalyst/permission yields DATA?; hard failures BLOCKED; extension/current-day heat warnings WATCH. No orders are submitted.
+- Limit target analysis is in `docs/Validation/Boring-Overnight-Target-Policy-20261027.md`. Do not declare +0.5% optimal or use median ON % as a fill probability without complete 07:00–20:00 Eastern GTC_EXT bars, walk-forward testing, and actual fill data.
+- TOS bubble issue is NOT resolved. User applied the prior change without errors and sees no bubbles. Repository `docs/Charts/1M/MainStudy.txt` is V14.4.10, while the uploaded source reference is `MomentumCommandCenterV3_2_1M_V14_5.txt`. Exact installed source parity is not established; patch the exact V14.5 source and test on a historical EOD transition rather than re-editing the older reference blindly.
+- Alpaca proof-of-fit remains historical REST only. No websocket, broad scanner/movers, or full GTC_EXT collector is implemented. Keep Massive deferred.
+- Do not merge the divergent feature branch wholesale into master. Use a scoped PR after current-head CI and code review.
