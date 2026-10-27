@@ -623,3 +623,5 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 3. Configure MarketData:Collector:Symbols locally (e.g. SPY,QQQ,TTE,FMS). Inspect GET /api/market-data/collector/status before and after stopping/restarting the API; verify watermarks persist, advance, and identical bars do not inflate new-write counts.
 4. Validate one completed symbol/date across premarket, regular session and postmarket using the configured Alpaca feed; compare returned timestamps to a source export. Do not mark coverage complete from one SPY window.
 5. Keep missing catalyst/TOS-state/daily metrics as DATA? until a real source is wired and validated.
+
+- [CORRECTION — PARITY TIMESTAMP SEMANTICS] The StrategyReport `Date/Time` column is an order-event timestamp and must not be copied into `ChartTimestamp`. The parser now leaves `ChartTimestamp` blank unless the source explicitly labels a chart timestamp, and records why in `ChartTimestampMeaning` / `Finding`. The regression test asserts this separation.
