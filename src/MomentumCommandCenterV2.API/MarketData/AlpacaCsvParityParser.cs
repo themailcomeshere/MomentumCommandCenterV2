@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 
 namespace MomentumCommandCenterV2.API.MarketData;
 
@@ -21,6 +22,10 @@ public static class AlpacaCsvParityParser
         string csv, string? defaultSymbol = null, string? defaultTimeframe = null)
     {
         if (string.IsNullOrWhiteSpace(csv)) throw new ArgumentException("CSV file is empty.", nameof(csv));
+        var trimmed = csv.TrimStart('\uFEFF', ' ', '\t', '\r', '\n');
+        if (trimmed.StartsWith("{", StringComparison.Ordinal))
+            return ParseAlpacaBarsJson(trimmed, defaultSymbol, defaultTimeframe);
+
         var records = ParseRecords(csv);
         var headerIndex = records.FindIndex(row =>
         {
@@ -79,6 +84,65 @@ public static class AlpacaCsvParityParser
         }
         if (result.Count == 0) throw new FormatException("No OHLCV data rows were found after the CSV header.");
         return result;
+    }
+
+    private static IReadOnlyList<IReadOnlyDictionary<string, string>> ParseAlpacaBarsJson(
+        string json, string? defaultSymbol, string? defaultTimeframe)
+    {
+        using var document = JsonDocument.Parse(json);
+        var root = document.RootElement;
+        if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("bars", out var bars)
+            || bars.ValueKind != JsonValueKind.Array)
+            throw new FormatException("JSON import must be an Alpaca historical-bars response containing a 'bars' array.");
+
+        var rootSymbol = JsonText(root, "symbol") ?? defaultSymbol?.Trim();
+        var rootTimeframe = JsonText(root, "timeframe") ?? defaultTimeframe?.Trim();
+        var result = new List<IReadOnlyDictionary<string, string>>();
+        var sourceRow = 0;
+        foreach (var bar in bars.EnumerateArray())
+        {
+            sourceRow++;
+            var symbol = JsonText(bar, "symbol") ?? rootSymbol ?? "";
+            var timeframe = JsonText(bar, "timeframe") ?? rootTimeframe ?? "";
+            if (string.IsNullOrWhiteSpace(symbol))
+                throw new FormatException($"JSON bar {sourceRow} has no symbol. Include a symbol in the response or supply the symbol form field.");
+            if (timeframe is not ("1m" or "5m"))
+                throw new FormatException($"JSON bar {sourceRow} has unsupported or missing timeframe '{timeframe}'. Include timeframe in the response or supply 1m or 5m.");
+            var timestampText = JsonText(bar, "timestamp") ?? JsonText(bar, "t");
+            if (!DateTimeOffset.TryParse(timestampText, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var timestamp))
+                throw new FormatException($"JSON bar {sourceRow} has an invalid timestamp: '{timestampText}'.");
+
+            string Numeric(string name) => Number(JsonText(bar, name) ?? "", sourceRow, name);
+            result.Add(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["SourceRow"] = sourceRow.ToString(CultureInfo.InvariantCulture),
+                ["Symbol"] = symbol.ToUpperInvariant(),
+                ["Timeframe"] = timeframe,
+                ["PayloadTimestampUtc"] = timestamp.UtcDateTime.ToString("O", CultureInfo.InvariantCulture),
+                ["PayloadOpen"] = Numeric("open"), ["PayloadHigh"] = Numeric("high"),
+                ["PayloadLow"] = Numeric("low"), ["PayloadClose"] = Numeric("close"),
+                ["PayloadVolume"] = Numeric("volume"), ["ChartTimestamp"] = "",
+                ["ChartOpen"] = "", ["ChartHigh"] = "", ["ChartLow"] = "",
+                ["ChartClose"] = "", ["ChartVolume"] = "",
+                ["ChartTimestampMeaning"] = "Blank: no independent chart export was supplied.",
+                ["Finding"] = "Imported Alpaca historical-bars JSON; chart parity is unverified."
+            });
+        }
+        if (result.Count == 0) throw new FormatException("No OHLCV data rows were found in the JSON bars array.");
+        return result;
+    }
+
+    private static string? JsonText(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out var value)) return null;
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number => value.GetRawText(),
+            JsonValueKind.Null or JsonValueKind.Undefined => null,
+            _ => value.GetRawText()
+        };
     }
 
     private static string Number(string value, int rowNumber, string field)
