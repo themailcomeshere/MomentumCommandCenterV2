@@ -158,7 +158,7 @@ public static class StrategyReportCsvParser
             result["PayloadHigh"] = parts[6].Trim();
             result["PayloadLow"] = parts[7].Trim();
             result["PayloadClose"] = parts[8].Trim();
-            result["PayloadVolume"] = parts[9].Trim().TrimEnd(';');
+            result["PayloadVolume"] = parts[9].Replace(",", "", StringComparison.Ordinal).Trim().TrimEnd(';');
 
             // StrategyReport Date/Time is an order-event timestamp, not proof of the chart bar timestamp.
             // Only fill ChartTimestamp when the source explicitly labels a chart timestamp.
