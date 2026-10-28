@@ -880,3 +880,9 @@ Continue work without waiting for another confirmation when a task can be safely
 - [NEXT] Verify current data, catalyst/event status, 20D volume, price/20D-SMA, maintained exclusion list, identity, and chart state before any Boring Overnight READY.
 - [NEXT ENGINEERING] Boring Overnight remains snapshot-fed; daily/overnight metric calculation, GTC_EXT session collection, catalyst inputs and live scanner discovery are not fully wired end-to-end. Keep unknown/stale inputs fail-closed.
 - [BLOCKED BY IMAGE RETRIEVAL] The linked individual symbol charts were not readable through the current GitHub image route. The ranking is limited to the accessible scanner screenshot and supplied MCC table.
+
+
+## Unified candidate review scaffold — 2026-10-28
+
+- [DONE — CONTRACT SCAFFOLD] Added docs/Architecture/Unified-Candidate-Review-Contract.md defining the unified candidate review record, precedence, data provenance, freshness behavior, reason codes, implementation seams, acceptance criteria and blockers.
+- [NOT YET IMPLEMENTED] The contract is not yet wired to domain types, API, persistence, provider data or dashboard. Continue implementation from this contract; do not mark the feature complete based on documentation alone.
