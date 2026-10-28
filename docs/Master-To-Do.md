@@ -732,3 +732,43 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 ### Release status
 - Source implemented; CI/browser execution for commits above is **not yet verified in this work session**. Local test suite was reported by the user as 100 succeeded before these new changes; that prior run does not cover this implementation.
+
+
+## 2026-10-27 — To-Do execution pass and dashboard Arizona timestamps
+
+### Completed in this pass
+- [DONE — SOURCE CHANGE] Scan & Analyze's REASON summary now formats each latest 1M/5M source timestamp in `America/Phoenix` and labels it “Arizona”; it no longer emits the latest bar timestamp as an ISO UTC string inside the reason text. UTC request bounds, API fields, and provider/persistence timestamps remain UTC by design. Commit: `fc17f9febce848abee86f35bdf99232a4f5172dc`.
+- [DONE — IMPLEMENTATION SCAFFOLD] Added `docs/Implementation-Backlog-Scaffold-20261027.md`: workstream contracts, acceptance criteria, deterministic test cases, external blockers, and release gates covering dashboard/time, scanner discovery/qualification, providers/collector, Boring Overnight, TOS parity, extended continuation, Morning Report/Red Zone, import/parity, tests, and operating docs. This is explicit scaffolding, not a claim those blocked integrations are complete.
+- [DONE — SOURCE AUDIT] Re-read the canonical Master To-Do, current handoff, API routes, and Scan & Analyze code. The dashboard's current Scan & Analyze still retrieves descriptive Alpaca OHLCV; it does not yet calculate validated qualification or TOS state parity.
+- [DONE — DOCUMENTATION] Updated handoff to identify the timestamp fix, backlog scaffold, exact current branch state, and next validation actions.
+
+### Per-workstream disposition (all canonical To-Do areas)
+- [PARTIAL — 5M AUTHORITY] Source/screenshot evidence supports the observed PBLOCK=2 / EOD=0 revocation; no defect proven. Preserve Permission logic. Remaining: installed-study parity and explicit decision on persistent-latch semantics.
+- [PARTIAL — 5M→1M HANDOFF] Source audit exists. Remaining same-bar installed-state tests for fresh/in-trend/continuation/confirmation/armed READY/expiry/re-entry; do not weaken the gate without evidence.
+- [PARTIAL — 1M EXECUTION / RUNNER] Diagnostics and source references exist; complete installed-version reconciliation and transition tests remain evidence-dependent. No unsupported study logic changes made.
+- [PARTIAL — BORING OVERNIGHT] Criteria and API evaluator scaffold exist; full independent historical edge/boringness, complete eligible window, event clearance and validated ranking are not connected. Unknown inputs must fail closed.
+- [PARTIAL — EXTENDED CONTINUATION] Separate-state design and contracts scaffolded. Exact ATR-extension parity, live context and historical shadow results remain required before actionable ranking.
+- [PARTIAL — SCANNER] Scan & Analyze collects both 1M and 5M OHLCV for a supplied list and summarizes it. Market-wide discovery, append-only discovery event store, explicit freshness policy, quote/spread/liquidity, catalyst/halt/sector context, exact extension, and TOS gates remain open. Provider choice/entitlement is a blocker for live discovery; no guessed provider endpoint added.
+- [PARTIAL — C# / API / COLLECTOR] Historical REST adapters, bars endpoint, persistence/collector and status routes exist. Durable restart proof, correction/retention policy, session-aware gap classification, websocket/reconnect/backfill and production monitoring remain open.
+- [PARTIAL — MORNING REPORT / RED ZONE] UI, report/export and API snapshot scaffolds exist. Persisted report snapshots and qualified-candidate ranking remain unconnected; demo/import data must remain visibly non-live.
+- [PARTIAL — IMPORT / PARITY] Alpaca CSV/JSON import and StrategyReport separation exist. Rename the JSON fixture truthfully, add filename/header/payload provenance checks, and preserve gaps/partial windows. TOS state parity is still blocked by missing diagnostics.
+- [PARTIAL — VALIDATION] Existing sampled OHLCV parity evidence is useful but not full-session parity. Add time conversion, freshness, evaluator, persistence/restart and deterministic report tests; run CI/tests at the exact new head.
+- [PARTIAL — README / USER WORKFLOW / VS LOADABILITY] Handoff and canonical To-Do updated. If an actual C# project still fails to load, exact Visual Studio Output error remains necessary; solution folders are not projects.
+- [HOLD — BROKER] Schwab API, credentials and order placement remain intentionally unimplemented. Manual Schwab workflow stays the boundary.
+
+### Blockers retained rather than guessed
+- Live scanner/provider: provider choice, credentials, entitlements and licensing.
+- TOS parity: installed study version and same-bar internal diagnostics.
+- Boring Overnight: complete source-backed regular close and eligible overnight-window OHLCV; session boundary decision; actual fills are a separate dataset.
+- Catalyst clearance: source with known coverage, timestamps and latency.
+- Freshness: separate approved policy for intraday execution and overnight research.
+- Visual Studio: exact project name and first load error if an actual project remains incompatible.
+
+### Immediate validation after pull
+1. Confirm branch and exact head; run `dotnet test MomentumCommandCenterV2.sln --configuration Release`.
+2. Open the dashboard served by the API and scan a known window. Confirm the REASON field's latest 1M and 5M timestamps display Arizona time, while the completion status still exposes UTC request boundaries for audit.
+3. Verify a known timestamp on the Windows browser configured to a non-Arizona timezone; test both a winter date and a summer date.
+4. Verify CI for the exact resulting head. Do not treat source changes or previous-head test counts as current-head verification.
+
+### Release status
+- Source/docs updated; local browser behavior and exact-head CI/test results are not verified by this source-editing pass. MCC remains a historical-data research workbench, not a live trading-ready scanner.
