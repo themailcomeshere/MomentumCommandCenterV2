@@ -279,3 +279,30 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 
 - Contract: docs/Architecture/Unified-Candidate-Review-Contract.md. It specifies the candidate snapshot/assessment boundary, fail-closed freshness and catalyst handling, separate execution vs. quality state, provenance, reason codes, API/UI seams and acceptance criteria.
 - This is a design scaffold only. Application types, deterministic evaluator, persisted observations, provider wiring, API endpoint and dashboard display remain open. Start with immutable input/output types and unit tests; do not invent freshness thresholds before provider/session contracts are agreed.
+
+
+## RTO / AMT direct Project Source chart review — 2026-10-28
+
+### What I reviewed
+- Direct Project Source screenshots: RTO `Screenshot 2026-10-28 160419.png`; AMT `Screenshot 2026-10-28 152731.png`.
+- Full visual notes: `docs/Validation/RTO-AMT-Chart-Review-20261028.md`.
+
+### Findings
+- **RTO:** 5M pane displayed Runner Rising, Permission YES, RSI 61.1, extension 0.49 ATR and RVOL 4.32. Lower 1M pane displayed GET OUT / EOD GET OUT after intraday weakness and a late rebound. Best historical profile of this shortlist remains RTO, but these charts do not establish an eligible new late-day overnight entry.
+- **AMT:** 5M pane displayed extension 2.03 ATR and a large selloff/recovery (marked low about $175.78; right-edge price about $184.02). Lower 1M pane displayed GET OUT / EOD GET OUT. Deprioritize for this session's boring-first selection.
+- **Order:** RTO further review; AMT defer; SXC remains third/caution based on previously supplied 6.20% range. None is READY.
+- The upper and lower panes show different Permission labels. Do not infer a defect until the exact timestamps and study inputs are aligned.
+
+### Next engineering work — no new user action required now
+1. Add/test source-backed True Range, ATR and ATR-normalized extension calculations with explicit timeframe/lookback and provenance.
+2. Compare MCC ATR/extension values against the exact selected TOS study/timeframe before using them as a gate.
+3. Preserve separate historical Boringness, 5M authority, 1M execution/EOD, RVOL, catalyst, and freshness fields in the unified review.
+4. Continue implementing the end-to-end data path: completed close/open overnight returns, full eligible GTC_EXT window, catalyst/exclusion evidence, persisted candidate snapshots and shared evaluator integration.
+5. Run build/tests and exact-head CI after source changes. Do not mark the work complete based on documentation or screenshot analysis alone.
+
+### User action
+- None for this review. For later live-data validation, run local checks and share sanitized results only; never send credentials/secrets.
+
+## [Uncertainties]
+- The screenshots are visual evidence for the selected chart bars, not live quotes.
+- Catalyst clearance, current source freshness, complete historical ON samples, daily average volume, price/20D-SMA and spread are not proven by these images.
