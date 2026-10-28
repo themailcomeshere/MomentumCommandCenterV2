@@ -306,3 +306,24 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 ## [Uncertainties]
 - The screenshots are visual evidence for the selected chart bars, not live quotes.
 - Catalyst clearance, current source freshness, complete historical ON samples, daily average volume, price/20D-SMA and spread are not proven by these images.
+
+
+## EOD signal semantics and evaluator correction — 2026-10-28
+
+### Source changes made on the requested branch
+- Updated `src/MomentumCommandCenterV2.API/BoringOvernight/BoringOvernightEvaluator.cs` to accept optional `EodSignal` separately from the 1M execution state. `GET OUT` / `SELL` is explicitly a signal, not an end-of-day clock/session state; it blocks a fresh overnight entry and indicates position management for an existing holding.
+- Added tests in `tests/MomentumCommandCenterV2.Tests/BoringOvernightEvaluatorTests.cs` for GET OUT/SELL semantics.
+- Source commit: `89ad3ad03cf80552a973419f0665d54245f753a7`; test commit: `fa03c32bbd5692e55fed5225b7fd87106e9dbef0`. Current-head CI/build status has not yet been verified.
+
+### Re-evaluated chart shortlist
+- **RTO:** top of the three for further review. 5M Runner Rising / Permission YES / bullish regime / 0.49 ATR extension are constructive. However, 1M/EOD GET OUT is an active exit signal, and RVOL 4.32 needs investigation. Not READY for a new overnight entry.
+- **AMT:** defer for boring-first entry: ~2.03 ATR extension, large intraday selloff/recovery, and active 1M/EOD GET OUT exit signal. If held, treat the signal as position management.
+- **SXC:** no individual SXC chart in the reviewed source set; scanner range 6.20% is too high for the low-noise preference. WATCH/DEFER pending chart and hard-gate verification.
+- The differing 5M/1M Permission labels still require bar-time alignment; do not infer a code defect from a screenshot alone.
+
+### Remaining P0 work
+1. Implement/test source-backed True Range, ATR and normalized extension from OHLCV.
+2. Connect the shared evaluator to source-backed historical overnight metrics, current data freshness, catalyst status, exclusion evidence, and persisted decision snapshots.
+3. Complete market-calendar-aware close/open return pairing and full eligible GTC_EXT-window coverage.
+4. Integrate candidate qualification into scanner, Morning Report, and MarketWatch without letting ranking/score override hard gates.
+5. Run build/tests and verify CI on the exact branch head. Do not claim CI passed until evidence is available.
