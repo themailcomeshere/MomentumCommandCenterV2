@@ -181,3 +181,16 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 ## ATR calculation implementation — 2026-10-28
 
 The new `BoringOvernightAtrCalculator` computes True Range and Wilder ATR from source OHLCV bars, with explicit timeframe and period, plus ATR% and signed ATR extension from a supplied reference price. It rejects insufficient history, mixed symbols/timeframes, duplicate timestamps and invalid OHLCV. Tests are committed but have not been verified by a successful build/CI run. Do not use the values as a qualification gate until exact Thinkorswim study parity is established.
+
+
+## Dynamic Hold Overnight decision bubble — 2026-10-28
+
+The independent EOD GET OUT bubble should be replaced by a time-gated outcome of the Boring Overnight hold evaluation, not exist in a vacuum. See docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md.
+
+During 12:30–12:55 in an explicitly configured local timezone:
+- READY -> green HOLD OVERNIGHT.
+- Known failed/caution outcome -> red EOD GET OUT.
+- Missing or invalid required evidence -> yellow DATA? — NO HOLD.
+- Outside the window -> NO DECISION; neither HOLD nor GET OUT is asserted by this windowed decision.
+
+The server-side decision helper and tests are committed. The actual ThinkScript source is absent from this branch, and the helper is not yet wired to persisted source-backed inputs; do not treat the TOS bubble as implemented. User must confirm Arizona versus chart timezone and provide the current ThinkScript source.
