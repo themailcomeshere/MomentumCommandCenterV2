@@ -46,32 +46,22 @@ public sealed class BoringOvernightEvaluatorTests
         Assert.Contains(result.Reasons, reason => reason.Contains("Invalid input", StringComparison.Ordinal));
     }
 
-    [Fact]
-    public void EodGetOutIsAnExitSignalNotAnEndOfDayLabel()
+    [Theory]
+    [InlineData("SELL")]
+    [InlineData("GET OUT")]
+    [InlineData("BLOCK")]
+    public void OneMinuteExecutionExitStateBlocksOvernightQualification(string state)
     {
         var result = BoringOvernightEvaluator.Evaluate(
-            ReadyRequest() with { EodSignal = "GET OUT" });
+            ReadyRequest() with { OneMinuteState = state });
 
         Assert.Equal("BLOCKED", result.Status);
         Assert.False(result.Eligible);
         Assert.Contains(result.Blockers, x =>
-            x.Contains("active position", StringComparison.OrdinalIgnoreCase) &&
-            x.Contains("new overnight position", StringComparison.OrdinalIgnoreCase));
+            x.Contains("1M state", StringComparison.OrdinalIgnoreCase));
         Assert.DoesNotContain(result.Reasons, x =>
             x.Contains("market is closed", StringComparison.OrdinalIgnoreCase) ||
-            x.Contains("end of day", StringComparison.OrdinalIgnoreCase));
-    }
-
-    [Theory]
-    [InlineData("SELL")]
-    [InlineData("GET OUT")]
-    public void EodExitSignalBlocksNewEntryButDoesNotChangeClockState(string signal)
-    {
-        var result = BoringOvernightEvaluator.Evaluate(
-            ReadyRequest() with { EodSignal = signal });
-
-        Assert.Equal("BLOCKED", result.Status);
-        Assert.False(result.Eligible);
+            x.Contains("trading day has ended", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
