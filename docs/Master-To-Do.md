@@ -803,3 +803,7 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 ### Status of all remaining unchecked items
 Continue work without waiting for another confirmation when a task can be safely implemented from existing contracts. For items requiring a user choice, credentials/entitlements, licensed source, installed Thinkorswim study diagnostics, full source-backed overnight data, or proof from the user's environment: scaffold the interfaces, fail-closed behavior, tests and acceptance criteria; leave the specific external evidence item open. See `docs/Implementation-Backlog-Scaffold-20261027.md`. Do not relabel scaffolding as completed functionality.
+
+
+- [DONE — SOURCE, 2026-10-28 follow-up] Scanner summary also excludes missing high/low fields from range inputs and requires finite first/last close values before calculating change. This prevents malformed/missing price fields from being displayed as a numeric movement result.
+- [VALIDATION] This follow-up is source-only verified by inspection. The available GitHub combined-status lookup returned no status records for the latest source commit; do not treat the prior green CI as proof for this exact head.
