@@ -865,3 +865,17 @@ Continue work without waiting for another confirmation when a task can be safely
 - [BLOCKED — FRESH DATA] Current quote refresh, catalyst/news clearance, and next-session event risk were not verified. Catalyst status: Data not found in sources.
 - [NEXT IMPLEMENTATION] MCC should expose a unified candidate-review record that combines overnight statistics, 5M setup/permission, 1M execution state, sample completeness/freshness, extension/range, catalyst status, and a clear human-readable action. Do not fabricate weights; preserve raw fields and show missing inputs.
 - [NEXT IMPLEMENTATION] Add a freshness gate that explicitly marks stale bar windows as stale and prevents an old `OBSERVED` row from being mistaken for a current entry. Define the age threshold from the application's session/data contract before enforcing it.
+
+
+## Overnight Scanner review and action checkpoint (2026-10-28)
+
+- [DONE — EVIDENCE REVIEWED] Added docs/Validation/Overnight-Scanner-Review-20261028.md using the readable scanner screenshot and supplied MCC 1M/5M table. Linked individual chart images could not be inspected; no candle-pattern claims were fabricated.
+- [PRELIMINARY RANKING] RTO first, AMT second, SXC third for further Boring Overnight chart review. None is READY. SXC's 6.20% intraday range conflicts with the low-noise objective; RTO has a 1.29% range and 70% ON win rate.
+- [WATCH / TOO HOT] TRMD, EVR, MANH, OSW and STNG have current ON moves above the preferred below-3% boringness range; deprioritize for today's boring-first shortlist.
+- [DATA STALE] MFM has only 8 bars and last observations around 12:25–12:28 Arizona; mark DATA? / not actionable.
+- [IDENTITY CHECK] Confirm BNC instrument identity; scanner description reads “BNB Standard Corp”.
+- [OPERATING RULE CLARIFIED] Red EOD: GET OUT at 12:55 Arizona is intentional for the live dashboard.
+- [OPEN] All supplied MCC rows are OBSERVED · NOT QUALIFIED. Do not turn scanner rank into execution authorization.
+- [NEXT] Verify current data, catalyst/event status, 20D volume, price/20D-SMA, maintained exclusion list, identity, and chart state before any Boring Overnight READY.
+- [NEXT ENGINEERING] Boring Overnight remains snapshot-fed; daily/overnight metric calculation, GTC_EXT session collection, catalyst inputs and live scanner discovery are not fully wired end-to-end. Keep unknown/stale inputs fail-closed.
+- [BLOCKED BY IMAGE RETRIEVAL] The linked individual symbol charts were not readable through the current GitHub image route. The ranking is limited to the accessible scanner screenshot and supplied MCC table.
