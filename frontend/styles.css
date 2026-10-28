@@ -891,3 +891,65 @@ th {
 .scanner-api-controls input, .scanner-api-controls select { min-width: 130px; max-width: 100%; }
 .scanner-api-controls #apiScanSymbols { min-width: 220px; }
 .scanner-api-controls .notice { margin-bottom: 0; }
+
+
+/* Scan & Analyze: keep long diagnostic reasons inside the table's own scroll region. */
+.scanner-api-controls,
+.scanner-api-controls ~ .table-wrap {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.scanner-api-controls ~ .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+}
+
+.scanner-api-controls ~ .table-wrap table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.scanner-api-controls ~ .table-wrap th,
+.scanner-api-controls ~ .table-wrap td {
+    min-width: 0;
+}
+
+.scanner-api-controls ~ .table-wrap th:nth-child(1),
+.scanner-api-controls ~ .table-wrap td:nth-child(1) { width: 8%; }
+.scanner-api-controls ~ .table-wrap th:nth-child(2),
+.scanner-api-controls ~ .table-wrap td:nth-child(2) { width: 12%; }
+.scanner-api-controls ~ .table-wrap th:nth-child(3),
+.scanner-api-controls ~ .table-wrap td:nth-child(3) { width: 14%; }
+.scanner-api-controls ~ .table-wrap th:nth-child(4),
+.scanner-api-controls ~ .table-wrap td:nth-child(4) { width: 14%; }
+.scanner-api-controls ~ .table-wrap th:nth-child(5),
+.scanner-api-controls ~ .table-wrap td:nth-child(5) { width: 15%; }
+.scanner-api-controls ~ .table-wrap th:nth-child(6),
+.scanner-api-controls ~ .table-wrap td:nth-child(6) {
+    width: 32%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+.scanner-api-controls ~ .table-wrap th:nth-child(7),
+.scanner-api-controls ~ .table-wrap td:nth-child(7) { width: 5%; }
+
+.scanner-api-controls ~ .table-wrap td:nth-child(2),
+.scanner-api-controls ~ .table-wrap td:nth-child(3),
+.scanner-api-controls ~ .table-wrap td:nth-child(4),
+.scanner-api-controls ~ .table-wrap td:nth-child(5) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+/* Prevent grid children from forcing the dashboard wider than its viewport. */
+.layout,
+.layout > *,
+.workbench-grid,
+.workbench-grid > *,
+.panel {
+    min-width: 0;
+}
