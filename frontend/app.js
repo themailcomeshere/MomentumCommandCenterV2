@@ -216,6 +216,8 @@ renderMorningReport();
 
 
 // Provider comparison now calls the same-origin API. Keys never enter browser code.
+const providerDateInput = $("providerDate");
+if (providerDateInput && !providerDateInput.value) providerDateInput.value = phoenixLocalInput(new Date());
 const providerCompareButton = $("providerCompareRun");
 const formatBar = bar => bar ? new Date(bar.timestamp).toLocaleString("en-US", {timeZone:"America/Phoenix", hour12:false}) + " Arizona · O " + bar.open + " H " + bar.high + " L " + bar.low + " C " + bar.close + " · V " + bar.volume : "DATA?";
 function renderProviderResult(prefix, result) {
