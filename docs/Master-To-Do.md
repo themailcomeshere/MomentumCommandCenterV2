@@ -886,3 +886,14 @@ Continue work without waiting for another confirmation when a task can be safely
 
 - [DONE — CONTRACT SCAFFOLD] Added docs/Architecture/Unified-Candidate-Review-Contract.md defining the unified candidate review record, precedence, data provenance, freshness behavior, reason codes, implementation seams, acceptance criteria and blockers.
 - [NOT YET IMPLEMENTED] The contract is not yet wired to domain types, API, persistence, provider data or dashboard. Continue implementation from this contract; do not mark the feature complete based on documentation alone.
+
+
+## RTO / AMT chart review — 2026-10-28
+
+- [DONE — PROJECT SOURCES REVIEWED] Visually reviewed the directly uploaded RTO and AMT Thinkorswim screenshots; detailed observations are in `docs/Validation/RTO-AMT-Chart-Review-20261028.md`.
+- [RTO — HISTORICAL SHORTLIST ONLY] 5M pane shows Runner Rising, Permission YES, RSI 61.1 and extension 0.49 ATR; lower 1M pane shows GET OUT / EOD GET OUT and a session of weakness followed by a late rebound. Do not treat the 5M green state as late-day overnight-entry authorization.
+- [AMT — DEPRIORITIZE FOR THIS SESSION] 5M pane shows extension 2.03 ATR and the chart shows a large selloff/recovery from about $175.78 toward $184.02; lower 1M pane ends in GET OUT / EOD GET OUT. Not a boring-first entry from this chart evidence.
+- [NO CANDIDATE PROMOTED] RTO remains first for further research, AMT deferred, SXC remains third/caution. No `READY` status established; hard gates and catalyst/data freshness remain unverified.
+- [NOW — ENGINEERING] Add source-backed ATR/true-range and ATR-normalized extension calculations with explicit timeframe/lookback and tests; compare against TOS outputs before qualification integration. Preserve distinct 5M authority, 1M execution/EOD, RVOL, historical Boringness and freshness fields.
+- [OPEN — STATE RECONCILIATION] The top 5M and lower 1M panes display differing Permission labels. Align exact bar timestamps and study inputs before asserting a bug or changing logic.
+- [OPEN — END-TO-END] Boring Overnight remains caller-snapshot-fed; market-calendar-aware close/open pairing, complete GTC_EXT bars, catalyst provider, persistent decision snapshots, and scanner/Morning Report/MarketWatch integration are not verified as end-to-end.
