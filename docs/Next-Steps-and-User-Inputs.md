@@ -273,3 +273,9 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 - Current-head CI result was not retrieved in this review.
 - Individual chart images were not visually inspected.
 - Candidate catalyst status, daily volume, price vs. 20D SMA, full exclusion-list status and BNC identity remain unverified.
+
+
+## Unified candidate review scaffold — 2026-10-28
+
+- Contract: docs/Architecture/Unified-Candidate-Review-Contract.md. It specifies the candidate snapshot/assessment boundary, fail-closed freshness and catalyst handling, separate execution vs. quality state, provenance, reason codes, API/UI seams and acceptance criteria.
+- This is a design scaffold only. Application types, deterministic evaluator, persisted observations, provider wiring, API endpoint and dashboard display remain open. Start with immutable input/output types and unit tests; do not invent freshness thresholds before provider/session contracts are agreed.
