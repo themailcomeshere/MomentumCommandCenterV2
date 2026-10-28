@@ -1195,13 +1195,15 @@ AddLabel(
         "NO",
     if swingBuyEnvironment then Color.GREEN else Color.GRAY
 );
+# The 5M study communicates the intraday entry cutoff only. The
+# overnight hold decision is emitted by the 1M study during its Arizona window.
 AddLabel(
     showLabels,
-    "EOD: " +
+    "ENTRY CUTOFF: " +
     if eodExitWindow then
-        "GET OUT"
+        "ACTIVE"
     else
-        "ACTIVE",
+        "INACTIVE",
     if eodExitWindow then Color.ORANGE else Color.GREEN
 );
 # ============================================================
