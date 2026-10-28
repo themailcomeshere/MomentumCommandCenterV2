@@ -176,3 +176,8 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 ## Signal semantics and entry qualification — 2026-10-28
 
 `EOD: GET OUT` is a study signal, not an end-of-day/session-state label. It does not mean the market is closed. Treat it as an exit/position-management instruction for a held position; do not open a new Boring Overnight position while the active exit signal is present. The evaluator now models optional `EodSignal` separately, with tests for GET OUT and SELL. This is a signal interpretation fix only; it does not provide live data, a catalyst check, or a READY decision.
+
+
+## ATR calculation implementation — 2026-10-28
+
+The new `BoringOvernightAtrCalculator` computes True Range and Wilder ATR from source OHLCV bars, with explicit timeframe and period, plus ATR% and signed ATR extension from a supplied reference price. It rejects insufficient history, mixed symbols/timeframes, duplicate timestamps and invalid OHLCV. Tests are committed but have not been verified by a successful build/CI run. Do not use the values as a qualification gate until exact Thinkorswim study parity is established.
