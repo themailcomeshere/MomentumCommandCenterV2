@@ -74,7 +74,7 @@ public sealed class JsonlMarketBarObservationStoreTests
         {
             Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
             await Assert.ThrowsAsync<InvalidDataException>(() =>
-                new JsonlMarketBarObservationStore().AppendAsync(new[] { invalidBar }, CancellationToken.None));
+                new JsonlMarketBarObservationStore().AppendAsync(new[] { CreateBar(), invalidBar }, CancellationToken.None));
             Assert.False(File.Exists(path));
         }
         finally
