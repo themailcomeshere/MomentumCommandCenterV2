@@ -856,15 +856,16 @@ Continue work without waiting for another confirmation when a task can be safely
 
 
 
-## Overnight Scanner review — 2026-10-28
+## Overnight Scanner review — 2026-10-28 (evidence correction)
 
-- [DONE — REVIEW RECORDED] Added `docs/Overnight-Scanner-Review-2026-10-28.md` with chart-by-chart review of the scanner plus all 11 supplied ticker charts.
-- [DONE — USER CLARIFICATION APPLIED] The 1M `EOD: GET OUT` state at 12:55 Arizona is treated as the intended live-dashboard exit behavior, not as an automatic candidate disqualification. Keep 5M setup/permission distinct from 1M execution/exit state.
-- [DONE — REVIEW RESULT] First review tier: EVR (best continuation structure), RTO (lowest intraday range, but transitioning), SXC (strong recovery/momentum, but high extension and spike risk). Secondary watch: AMT and OSW. Other names have explicit reject/wait reasons in the review artifact.
-- [IMPORTANT] All supplied MCC rows say `OBSERVED · NOT QUALIFIED`; the snapshots are around 12:55–12:59 Arizona and are stale relative to the later review time. Do not present these as live entries.
+- [CORRECTED] The earlier wording claiming all 11 individual ticker charts had been reviewed is not supported by the evidence accessible in this session. The GitHub image route did not return those image contents. Do not treat the earlier EVR-first / SXC-recovery chart-pattern claims as verified from today's source evidence.
+- [DONE — REVIEW RECORDED] Added `docs/Validation/Overnight-Scanner-Review-20261028.md`, based on the readable scanner screenshot and the MCC table supplied by the user.
+- [PRELIMINARY BORING OVERNIGHT ORDER] RTO, AMT, SXC for further chart review only. RTO has a reported 1.29% MCC range and 70% ON win rate; SXC has a 6.20% range and should not automatically be ranked first for a low-noise strategy.
+- [DONE — USER CLARIFICATION APPLIED] The red 1M `EOD: GET OUT` state at 12:55 Arizona is intended live-dashboard behavior, not a surprise or automatic candidate disqualification. Keep 5M setup/permission distinct from 1M execution/exit state.
+- [IMPORTANT] All supplied MCC rows say `OBSERVED · NOT QUALIFIED`; the snapshots are around 12:55–12:59 Arizona and are not current actionable entries.
 - [BLOCKED — FRESH DATA] Current quote refresh, catalyst/news clearance, and next-session event risk were not verified. Catalyst status: Data not found in sources.
-- [NEXT IMPLEMENTATION] MCC should expose a unified candidate-review record that combines overnight statistics, 5M setup/permission, 1M execution state, sample completeness/freshness, extension/range, catalyst status, and a clear human-readable action. Do not fabricate weights; preserve raw fields and show missing inputs.
-- [NEXT IMPLEMENTATION] Add a freshness gate that explicitly marks stale bar windows as stale and prevents an old `OBSERVED` row from being mistaken for a current entry. Define the age threshold from the application's session/data contract before enforcing it.
+- [NEXT IMPLEMENTATION] MCC should expose a unified candidate-review record combining overnight statistics, 5M setup/permission, 1M execution state, sample completeness/freshness, extension/range, catalyst status, and a human-readable action. Do not fabricate weights; preserve raw fields and missing-input reasons.
+- [NEXT IMPLEMENTATION] Add a freshness gate that marks stale bar windows and prevents old `OBSERVED` rows from being mistaken for current entries. Define age thresholds from the application's session/data contract before enforcing them.
 
 
 ## Overnight Scanner review and action checkpoint (2026-10-28)
