@@ -327,3 +327,11 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 3. Complete market-calendar-aware close/open return pairing and full eligible GTC_EXT-window coverage.
 4. Integrate candidate qualification into scanner, Morning Report, and MarketWatch without letting ranking/score override hard gates.
 5. Run build/tests and verify CI on the exact branch head. Do not claim CI passed until evidence is available.
+
+
+## ATR implementation — 2026-10-28
+
+- Added `src/MomentumCommandCenterV2.API/BoringOvernight/BoringOvernightAtrCalculator.cs` and tests. It computes Wilder ATR/True Range from source bars with explicit timeframe and period, reports ATR%, and computes signed extension only against an explicit reference price.
+- This is implemented but not yet connected to the Boring Overnight evaluator. First compare its outputs against the selected Thinkorswim study using matching symbol, timeframe, bar window and period. Do not infer parity from similar names.
+- Latest branch head at this update: `6f000252ba9724dda40687748a6905b17072ae0a`. GitHub CI/status lookup returned no records, and a local build was unavailable because this execution environment could not resolve github.com. Tests are added but not verified as passing.
+- The largest remaining P0 engineering gap is still the end-to-end pipeline: historical overnight close/open pairing, full eligible GTC_EXT data, catalyst/exclusion evidence, persistent candidate decisions, and scanner/Morning Report/MarketWatch integration.
