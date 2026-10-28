@@ -897,3 +897,14 @@ Continue work without waiting for another confirmation when a task can be safely
 - [NOW — ENGINEERING] Add source-backed ATR/true-range and ATR-normalized extension calculations with explicit timeframe/lookback and tests; compare against TOS outputs before qualification integration. Preserve distinct 5M authority, 1M execution/EOD, RVOL, historical Boringness and freshness fields.
 - [OPEN — STATE RECONCILIATION] The top 5M and lower 1M panes display differing Permission labels. Align exact bar timestamps and study inputs before asserting a bug or changing logic.
 - [OPEN — END-TO-END] Boring Overnight remains caller-snapshot-fed; market-calendar-aware close/open pairing, complete GTC_EXT bars, catalyst provider, persistent decision snapshots, and scanner/Morning Report/MarketWatch integration are not verified as end-to-end.
+
+
+## Signal semantics and implementation — 2026-10-28
+
+- [DONE — CODE] Corrected `BoringOvernightEvaluator` on `feature/opportunity-quality-classification` to model `EodSignal` separately from clock/session state. `GET OUT` / `SELL` is explicitly an active exit signal: it blocks a fresh overnight entry and tells the operator to manage an existing position, but does not mean the trading day has ended. Commit: `89ad3ad03cf80552a973419f0665d54245f753a7`.
+- [DONE — TESTS ADDED] Added tests covering `EodSignal=GET OUT` and `SELL` to ensure status is BLOCKED for a new entry and the reason is not misrepresented as market/session closure. Test commit: `fa03c32bbd5692e55fed5225b7fd87106e9dbef0`. CI/build still requires verification on this exact head.
+- [RTO — RE-RANKED WITH SIGNAL SEMANTICS] Best of RTO/AMT/SXC for further boring-first review, not READY: supportive 5M trend/permission and modest 0.49 ATR extension, but active 1M/EOD GET OUT is an exit signal and RVOL 4.32 needs review.
+- [AMT — DEFER] Active 1M/EOD GET OUT is an exit signal; extension ~2.03 ATR and large intraday selloff/recovery conflict with boring-first entry.
+- [SXC — DATA GAP] No SXC chart was available in this review; the 6.20% scanner range is high relative to the low-noise objective. Keep WATCH/DEFER, not READY.
+- [OPEN — ATR ENGINEERING] Implement explicit source-backed True Range/ATR/ATR-normalized extension from OHLCV with configurable timeframe/lookback and unit tests; do not integrate as authoritative until parity against selected TOS study output.
+- [OPEN — END-TO-END P0] Historical close/open pairing, complete GTC_EXT eligible-window coverage, catalyst provider, persisted candidate decisions, and live scanner/Morning Report/MarketWatch integration remain incomplete. Unknown/stale inputs must fail closed.
