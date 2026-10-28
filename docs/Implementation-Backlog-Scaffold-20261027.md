@@ -80,3 +80,29 @@ Keep one canonical Master To-Do and one New Chat Handoff; domain docs remain lin
 ## Release gate
 
 Do not label MCC production/live-trading ready until: exact-head CI/tests pass; provider access and entitlements are verified; full-session OHLCV parity and gaps are classified; TOS state parity is demonstrated; scanner qualification passes fixture and shadow-mode tests; overnight evaluator is validated on independent data; restart/reconnect/backfill are verified; and missing/stale/catalyst-unknown inputs fail closed. Until then the deliverable is a local research workbench with historical API adapters and explicitly bounded analysis.
+
+
+## 2026-10-28 — Sparse-bar correctness and provider-date default
+
+### Implemented
+- Scan & Analyze now filters malformed source timestamps and sorts valid bars before calculating summaries.
+- A change and high-low range are calculated only when at least two valid bars exist. A single returned bar is no longer represented as `0.00% change` and `0.00% range`.
+- The result status is now `INSUFFICIENT DATA` unless both 1M and 5M have at least two valid bars. Reason text explicitly flags a timeframe that returned only one bar or no bars and explains that change/range cannot be calculated.
+- Provider comparison's Test Date no longer contains a stale hard-coded date. When empty, it defaults to the current calendar date in `America/Phoenix`, independent of the workstation timezone.
+- The provider comparison's Arizona end-of-day bound includes the final millisecond.
+
+### PMI observation (user-reported)
+- Requested symbol PMI, 2026-10-26 Arizona 06:02–16:02; only one bar was returned per timeframe, timestamp 06:55 Arizona, volume 120.
+- The prior 0.00% result was an arithmetic artifact: first bar and last bar were the same single observation. It did **not** establish that PMI did not move.
+- New UI behavior correctly marks this result insufficient and avoids inventing movement. The reason for the provider returning one bar is not established from current sources; inspect the API payload's provider/feed, raw bars, request window, and provider status before diagnosing ticker support, entitlement, or historical coverage.
+
+### Verification supplied by user
+- User reports pull, API-hosted dashboard, Scan & Analyze, Arizona display, 100 tests, and exact-head CI green all succeeded after the previous change set.
+- User's so-called “Summer” example used 2026-10-26, which is autumn, not a summer date. A true summer-date check remains open. Arizona stays on MST (UTC−07:00) year-round, but test at least a July date to validate the code path.
+- New source changes in this section have not yet been run by the user or verified by a new CI run.
+
+### Next validation
+- Re-run PMI for the same 10-hour window and confirm 1M/5M show `INSUFFICIENT DATA`, score/change as unavailable, and a reason coverage warning.
+- Repeat on a known liquid symbol and verify multiple bars and nonzero changes when source bars support them.
+- Inspect `GET /api/market-data/bars` response for PMI and compare provider/feed, first/latest timestamps, barCount and gapCount with Provider Comparison. Do not attribute the one-bar response to a provider limitation until those observations are reviewed.
+- Confirm Test Date defaults to today's Arizona date on initial page load, while preserving a date the user selects during the session.
