@@ -488,12 +488,12 @@ function summarizeBars(payload) {
  if(!bars.length) return {count:0,latestAge:null,change:null,range:null,volume:null,first:null,last:null,feed:payload.feed||"unknown"};
  const first=bars[0],last=bars[bars.length-1];
  const enoughBars=bars.length>=2;
- const highs=bars.map(b=>Number(b.high)).filter(Number.isFinite),lows=bars.map(b=>Number(b.low)).filter(Number.isFinite);
+ const highs=bars.filter(b=>b.high!==null&&b.high!==undefined).map(b=>Number(b.high)).filter(Number.isFinite),lows=bars.filter(b=>b.low!==null&&b.low!==undefined).map(b=>Number(b.low)).filter(Number.isFinite);
  const max=highs.length?Math.max(...highs):null,min=lows.length?Math.min(...lows):null;
  const volume=bars.reduce((sum,b)=>sum+(Number(b.volume)||0),0);
  return {
   count:bars.length,latestAge:Math.max(0,(Date.now()-new Date(last.timestamp).getTime())/60000),
-  change:enoughBars&&Number(first.close)!==0?(Number(last.close)/Number(first.close)-1)*100:null,
+  change:enoughBars&&Number.isFinite(Number(first.close))&&Number.isFinite(Number(last.close))&&Number(first.close)!==0?(Number(last.close)/Number(first.close)-1)*100:null,
   range:enoughBars&&min!==null&&max!==null&&Number(first.close)!==0?(max-min)/Number(first.close)*100:null,
   volume,first:first.timestamp,last:last.timestamp,feed:payload.feed||"unknown"
  };
