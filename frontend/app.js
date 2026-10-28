@@ -234,7 +234,7 @@ providerCompareButton?.addEventListener("click", async () => {
   $("providerCompareNotice").textContent = "Invalid test inputs. Enter a valid ticker and date.";
   return;
  }
- const from = new Date(date + "T00:00:00-07:00"), to = new Date(date + "T23:59:59-07:00");
+ const from = new Date(date + "T00:00:00-07:00"), to = new Date(date + "T23:59:59.999-07:00");
  const params = new URLSearchParams({symbol, timeframe: interval, from: from.toISOString(), to: to.toISOString()});
  $("providerCompareNotice").textContent = "Requesting the same UTC window from configured providers…";
  providerCompareButton.disabled = true;
@@ -482,16 +482,17 @@ function phoenixLocalToUtc(value) {
  return new Date(guess).toISOString();
 }
 function summarizeBars(payload) {
- const bars=Array.isArray(payload.bars)?payload.bars:[];
+ const bars=(Array.isArray(payload.bars)?payload.bars:[]).filter(b=>b&&Number.isFinite(new Date(b.timestamp).getTime())).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
  if(!bars.length) return {count:0,latestAge:null,change:null,range:null,volume:null,first:null,last:null,feed:payload.feed||"unknown"};
  const first=bars[0],last=bars[bars.length-1];
+ const enoughBars=bars.length>=2;
  const highs=bars.map(b=>Number(b.high)).filter(Number.isFinite),lows=bars.map(b=>Number(b.low)).filter(Number.isFinite);
  const max=highs.length?Math.max(...highs):null,min=lows.length?Math.min(...lows):null;
  const volume=bars.reduce((sum,b)=>sum+(Number(b.volume)||0),0);
  return {
   count:bars.length,latestAge:Math.max(0,(Date.now()-new Date(last.timestamp).getTime())/60000),
-  change:Number(first.close)!==0?(Number(last.close)/Number(first.close)-1)*100:null,
-  range:min!==null&&max!==null&&Number(first.close)!==0?(max-min)/Number(first.close)*100:null,
+  change:enoughBars&&Number(first.close)!==0?(Number(last.close)/Number(first.close)-1)*100:null,
+  range:enoughBars&&min!==null&&max!==null&&Number(first.close)!==0?(max-min)/Number(first.close)*100:null,
   volume,first:first.timestamp,last:last.timestamp,feed:payload.feed||"unknown"
  };
 }
@@ -541,12 +542,13 @@ if(scanAnalyzeForm) {
    }
    rows.replaceChildren(...results.map(item=>{
     const tr=document.createElement("tr"),cell=value=>{const td=document.createElement("td");td.textContent=value??"DATA?";return td;};
-    const bothPresent=item.one.count>0&&item.five.count>0;
-    const errors=[item.one.error?"1M: "+item.one.error:"",item.five.error?"5M: "+item.five.error:""].filter(Boolean);
-    const status=bothPresent?"OBSERVED · NOT QUALIFIED":"INSUFFICIENT DATA";
+    const bothPresent=item.one.count>=2&&item.five.count>=2;
+     const errors=[item.one.error?"1M: "+item.one.error:"",item.five.error?"5M: "+item.five.error:""].filter(Boolean);
+     const sparse=[item.one.count===1?"1M returned only 1 bar; change/range unavailable":item.one.count===0?"1M returned no bars":"",item.five.count===1?"5M returned only 1 bar; change/range unavailable":item.five.count===0?"5M returned no bars":""].filter(Boolean);
+     const status=bothPresent?"OBSERVED · NOT QUALIFIED":"INSUFFICIENT DATA";
     const formatArizonaTimestamp=value=>{const date=new Date(value);return Number.isNaN(date.getTime())?"DATA?":new Intl.DateTimeFormat("en-US",{timeZone:"America/Phoenix",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(date)+" Arizona";};
-     const summary=s=>s.count?(s.count+" bars; "+(s.change===null?"change DATA?":s.change.toFixed(2)+"% change")+"; "+(s.range===null?"range DATA?":s.range.toFixed(2)+"% range")+"; vol "+Math.round(s.volume)+"; latest "+formatArizonaTimestamp(s.last)):(s.error||"No bars returned");
-    tr.append(cell(item.symbol),cell(item.five.change===null||item.five.change===undefined?"—":(item.five.change>=0?"+":"")+item.five.change.toFixed(2)+"% (5M)"),cell(status),cell("5M "+(item.five.range==null?"DATA?":item.five.range.toFixed(2)+"%")+" · 1M "+(item.one.range==null?"DATA?":item.one.range.toFixed(2)+"%")),cell("5M "+(item.five.latestAge==null?"UNKNOWN":item.five.latestAge.toFixed(1)+"m")+" · 1M "+(item.one.latestAge==null?"UNKNOWN":item.one.latestAge.toFixed(1)+"m")),cell("5M: "+summary(item.five)+" | 1M: "+summary(item.one)+(errors.length?" | Errors: "+errors.join("; "):"")),document.createElement("td"));
+     const summary=s=>s.count?(s.count+" bars; "+(s.change===null?"change unavailable (need ≥2 valid bars)":s.change.toFixed(2)+"% change")+"; "+(s.range===null?"range unavailable (need ≥2 valid bars)":s.range.toFixed(2)+"% range")+"; vol "+Math.round(s.volume)+"; latest "+formatArizonaTimestamp(s.last)):(s.error||"No bars returned");
+     tr.append(cell(item.symbol),cell(item.five.change===null||item.five.change===undefined?"— (insufficient bars)":(item.five.change>=0?"+":"")+item.five.change.toFixed(2)+"% (5M)"),cell(status),cell("5M "+(item.five.range==null?"DATA? (need ≥2 bars)":item.five.range.toFixed(2)+"%")+" · 1M "+(item.one.range==null?"DATA? (need ≥2 bars)":item.one.range.toFixed(2)+"%")),cell("5M "+(item.five.latestAge==null?"UNKNOWN":item.five.latestAge.toFixed(1)+"m")+" · 1M "+(item.one.latestAge==null?"UNKNOWN":item.one.latestAge.toFixed(1)+"m")),cell("5M: "+summary(item.five)+" | 1M: "+summary(item.one)+(sparse.length?" | COVERAGE WARNING: "+sparse.join("; "):"")+(errors.length?" | Errors: "+errors.join("; "):"")),document.createElement("td"));
     const watch=document.createElement("button");watch.type="button";watch.className="row-action";watch.textContent="Watch";watch.addEventListener("click",()=>addWatch(item.symbol));tr.lastElementChild.append(watch);return tr;
    }));
    const errors=results.reduce((n,r)=>n+Number(Boolean(r.one.error))+Number(Boolean(r.five.error)),0);
