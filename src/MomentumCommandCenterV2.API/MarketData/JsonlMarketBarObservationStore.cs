@@ -31,6 +31,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         try
         {
             await EnsureIndexLoadedAsync(cancellationToken);
+            // Validate the entire batch before opening the append stream. A malformed later
+            // bar must not leave a partially written batch of otherwise valid observations.
+            foreach (var bar in bars) Validate(bar);
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_path))!);
             var appended = 0;
             await using var stream = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read,
@@ -38,7 +41,6 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
             await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
             foreach (var bar in bars)
             {
-                Validate(bar);
                 var key = (bar.Provider, bar.Symbol.ToUpperInvariant(), bar.Timestamp);
                 var hash = Hash(bar);
                 if (_latest.TryGetValue(key, out var previous) && previous.Hash == hash)
