@@ -154,3 +154,10 @@
 
 - [CI FIX APPLIED — RECHECK REQUIRED] Background collector build initially failed on unused constructor parameter; removed in commit `72d4034468d0837c38a4baf726e43ca68ad9f7bf`. Workflow run 40546245830 was in progress at last check.
 - [TOS USER VALIDATION REQUIRED] Composite single-bubble replacement file created; exact current V14.5 file in Thinkorswim still needs the replacement applied and visually checked.
+
+
+## Follow-up correction — validation hardening compile fix — 2026-10-28
+
+- [FIX COMMITTED] The first validation-hardening CI run failed during build with CS0136 because a local variable named reasons conflicted with a later declaration in the evaluator. Renamed the early-return variable to invalidReasons in commit 65c83f7918200e413a5b20fb7942392357c7d193.
+- [PENDING — CURRENT HEAD] Re-run build and tests on the exact latest head after this fix. The previous run 40737130070 is a known failure and must not be reported as passing.
+- [NEXT] Verify the new evaluator tests for NaN/infinite values and invalid symbols, and the store tests for invalid OHLCV, once the workflow completes.
