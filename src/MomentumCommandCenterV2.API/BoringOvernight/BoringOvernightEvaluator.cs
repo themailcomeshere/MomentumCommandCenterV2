@@ -118,14 +118,6 @@ public static class BoringOvernightEvaluator
         if (r.CurrentOvernightPct is >= 3.0)
             warnings.Add("Current overnight move is at or above 3%; treat as too hot.");
 
-        // EOD is a study signal, not a clock/session label. GET OUT is an active exit
-        // instruction for an existing position and disqualifies a fresh entry; it must
-        // never be interpreted as "the trading day has ended".
-        if (!string.IsNullOrWhiteSpace(r.EodSignal) &&
-            (r.EodSignal.Contains("GET OUT", StringComparison.OrdinalIgnoreCase) ||
-             r.EodSignal.Contains("SELL", StringComparison.OrdinalIgnoreCase)))
-            blockers.Add("EOD study signal is GET OUT/SELL: manage an existing position per the exit signal; do not open a new overnight position.");
-
         var uniqueMissing = missing.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var uniqueBlockers = blockers.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         var uniqueWarnings = warnings.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -167,8 +159,7 @@ public sealed record BoringOvernightEvaluationRequest(
     double? ExtensionAtr,
     double? CurrentVolumeVsAverage,
     double? DailyRangePct,
-    double? AtrPct,
-    string? EodSignal = null);
+    double? AtrPct);
 
 public sealed record BoringOvernightEvaluation(
     string Symbol,
