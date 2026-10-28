@@ -8,7 +8,27 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Keep Swagger UI organized by workflow rather than the default minimal-API group.
+    options.TagActionsBy(api =>
+    {
+        var path = "/" + (api.RelativePath ?? string.Empty).Split('?')[0].TrimStart('/');
+        var tag = path switch
+        {
+            "/api/health" or "/api/providers/status" => "System & Provider Health",
+            "/api/market-data/compare" or "/api/market-data/bars" or "/api/market-data/import-csv" => "Market Data",
+            "/api/scanner/universe" => "Scanner & Discovery",
+            "/api/market-data/collector/status" => "Collection & Operations",
+            "/api/watchlists/exclusions" or var p when path.StartsWith("/api/watchlists/exclusions/", StringComparison.OrdinalIgnoreCase) => "Watchlists & Exclusions",
+            "/api/strategy-report/upload" => "Strategy Reports",
+            "/api/boring-overnight/evaluate" => "Boring Overnight",
+            "/api/morning-brief" => "Morning Report",
+            _ => "Other"
+        };
+        return new[] { tag };
+    });
+});
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>());
