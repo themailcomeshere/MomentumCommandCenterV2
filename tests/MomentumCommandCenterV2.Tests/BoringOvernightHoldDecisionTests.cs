@@ -10,6 +10,18 @@ public sealed class BoringOvernightHoldDecisionTests
             OperatingSystem.IsWindows() ? "US Mountain Standard Time" : "America/Phoenix");
 
     [Fact]
+    public void ArizonaConvenienceEntryPointUsesPhoenixTimezone()
+    {
+        // 2026-10-28 is in US daylight time: 12:45 Phoenix == 19:45 UTC.
+        var result = BoringOvernightHoldDecision.EvaluateForArizona(
+            ReadyEvaluation(),
+            new DateTimeOffset(2026, 10, 28, 19, 45, 0, TimeSpan.Zero));
+        Assert.Equal("HOLD_OVERNIGHT", result.Status);
+        Assert.Equal(12, result.EvaluatedAtLocal.Hour);
+        Assert.Equal(45, result.EvaluatedAtLocal.Minute);
+    }
+
+    [Fact]
     public void ReadyCandidateInsideWindowProducesGreenHoldOvernight()
     {
         var result = BoringOvernightHoldDecision.Evaluate(
