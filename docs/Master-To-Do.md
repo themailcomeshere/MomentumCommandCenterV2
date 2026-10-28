@@ -772,3 +772,34 @@ Use `docs/Release-Readiness-2026-10-26.md` as the concise launch-gate summary. T
 
 ### Release status
 - Source/docs updated; local browser behavior and exact-head CI/test results are not verified by this source-editing pass. MCC remains a historical-data research workbench, not a live trading-ready scanner.
+
+
+## 2026-10-28 — User validation feedback, sparse scanner results, provider date default
+
+### User-confirmed verification of prior commit
+- [USER VERIFIED] Pulled `feature/opportunity-quality-classification`, API-hosted dashboard starts, Scan & Analyze runs, 1M/5M times align, Arizona timestamp display looks correct, `dotnet test MomentumCommandCenterV2.sln --configuration Release` reports 100 passed, and CI shows all green for the prior head.
+- [OPEN VALIDATION] User's “Summer” timestamp example was 2026-10-26, which is autumn; a true summer-date check (e.g. July) is still needed. Arizona does not observe daylight-saving time and remains UTC−07:00, but verify the timezone formatter with a real summer date.
+
+### Implemented in this pass
+- [DONE — SOURCE] Scan & Analyze filters invalid timestamps and sorts returned bars chronologically before summarizing.
+- [DONE — SOURCE] Change and high-low range now require at least two valid bars. One bar no longer produces false `0.00% change` / `0.00% range`.
+- [DONE — SOURCE] Status is `INSUFFICIENT DATA` unless each timeframe returns at least two valid bars. REASON explains missing/one-bar observations and shows a coverage warning. A bar count is an observation count, not proof of full-window coverage.
+- [DONE — SOURCE] Provider Comparison Test Date defaults to the current Arizona calendar date when the field is empty; removed the stale static 2026-10-22 value. Date end includes the last millisecond of Arizona day.
+- [DONE — DOCS] Implementation scaffold extended with PMI diagnosis boundaries and the next verification sequence.
+
+### PMI case interpretation
+- [USER REPORTED] PMI on 2026-10-26, Arizona 06:02–16:02, returned one 1M bar and one 5M bar, both timestamped 06:55 Arizona, volume 120. Latest bar age was about 3015.6 minutes.
+- [CONCLUSION] Previous `+0.00%` / `0.00% range` was mathematically produced from the same lone observation as both first and last. It did not mean PMI was flat or that a decline had not occurred.
+- [NOW CORRECTED] One bar is explicitly insufficient to calculate change/range; status and reason report the shortage instead of implying no movement.
+- [STILL UNKNOWN] Why the provider returned only one bar. Data not found in sources to attribute this to a ticker issue, provider coverage, feed entitlement, request behavior, or API normalization. Inspect raw `GET /api/market-data/bars` payload and provider/feed/gap metadata before assigning a cause.
+
+### Next checklist — do not skip
+- [ ] Run PMI again on the same window; confirm both timeframes are `INSUFFICIENT DATA`, change/range unavailable, and the REASON names the one-bar coverage warning.
+- [ ] Compare PMI response metadata (`provider`, `feed`, `barCount`, first/latest source timestamps, `gapCount`) with Provider Comparison results. Diagnose from returned evidence, not assumptions.
+- [ ] Run a known liquid symbol for the same interval to check the multi-bar path.
+- [ ] Verify Provider Comparison Test Date initially defaults to today's Arizona date, but preserves the user's changed selection.
+- [ ] Verify an actual July date (not 2026-10-26) from a browser whose OS timezone is not Arizona.
+- [ ] Run Release tests and CI at the exact source head containing the sparse-bar and provider-date changes.
+
+### Status of all remaining unchecked items
+Continue work without waiting for another confirmation when a task can be safely implemented from existing contracts. For items requiring a user choice, credentials/entitlements, licensed source, installed Thinkorswim study diagnostics, full source-backed overnight data, or proof from the user's environment: scaffold the interfaces, fail-closed behavior, tests and acceptance criteria; leave the specific external evidence item open. See `docs/Implementation-Backlog-Scaffold-20261027.md`. Do not relabel scaffolding as completed functionality.
