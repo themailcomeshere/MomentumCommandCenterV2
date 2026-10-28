@@ -446,3 +446,114 @@ $("downloadParityCsv")?.addEventListener("click", () => {
  const link = document.createElement("a"); link.href = url; link.download = "mcc-chart-parity-template.csv";
  document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
 });
+
+
+
+/*
+/// MODULE: Scan & Analyze (Arizona-local input, Alpaca 1M + 5M bars)
+/// PURPOSE: Fetch both supported timeframes for each user-supplied symbol and summarize returned bars.
+/// WHEN CALLED: Submits the Scan & Analyze form on the API-served dashboard.
+/// SAFETY: Descriptive OHLCV only; never fabricates Thinkorswim states or a Boring Overnight qualification.
+*/
+function phoenixParts(date) {
+ const parts = new Intl.DateTimeFormat("en-CA", {timeZone:"America/Phoenix",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(date);
+ return Object.fromEntries(parts.filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
+}
+function phoenixLocalInput(date) {
+ const p=phoenixParts(date);
+ return p.year+"-"+p.month+"-"+p.day+"T"+p.hour+":"+p.minute;
+}
+function phoenixLocalToUtc(value) {
+ const match=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+ if(!match) throw new Error("Enter a valid Arizona local date and time.");
+ const target={year:+match[1],month:+match[2],day:+match[3],hour:+match[4],minute:+match[5]};
+ const targetAsUtc=Date.UTC(target.year,target.month-1,target.day,target.hour,target.minute);
+ let guess=targetAsUtc;
+ for(let i=0;i<4;i++){
+  const p=phoenixParts(new Date(guess));
+  const represented=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);
+  const delta=targetAsUtc-represented;
+  if(delta===0) return new Date(guess).toISOString();
+  guess+=delta;
+ }
+ const p=phoenixParts(new Date(guess));
+ if(+p.year!==target.year||+p.month!==target.month||+p.day!==target.day||+p.hour!==target.hour||+p.minute!==target.minute)
+  throw new Error("Could not resolve that Arizona local time.");
+ return new Date(guess).toISOString();
+}
+function summarizeBars(payload) {
+ const bars=Array.isArray(payload.bars)?payload.bars:[];
+ if(!bars.length) return {count:0,latestAge:null,change:null,range:null,volume:null,first:null,last:null,feed:payload.feed||"unknown"};
+ const first=bars[0],last=bars[bars.length-1];
+ const highs=bars.map(b=>Number(b.high)).filter(Number.isFinite),lows=bars.map(b=>Number(b.low)).filter(Number.isFinite);
+ const max=highs.length?Math.max(...highs):null,min=lows.length?Math.min(...lows):null;
+ const volume=bars.reduce((sum,b)=>sum+(Number(b.volume)||0),0);
+ return {
+  count:bars.length,latestAge:Math.max(0,(Date.now()-new Date(last.timestamp).getTime())/60000),
+  change:Number(first.close)!==0?(Number(last.close)/Number(first.close)-1)*100:null,
+  range:min!==null&&max!==null&&Number(first.close)!==0?(max-min)/Number(first.close)*100:null,
+  volume,first:first.timestamp,last:last.timestamp,feed:payload.feed||"unknown"
+ };
+}
+async function getBarsForScan(symbol,timeframe,fromUtc,toUtc) {
+ const params=new URLSearchParams({symbol,timeframe,from:fromUtc,to:toUtc,providerName:"Alpaca"});
+ const response=await fetch("/api/market-data/bars?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+ const body=await response.json();
+ if(!response.ok) throw new Error(body.detail||body.error||("HTTP "+response.status));
+ return summarizeBars(body);
+}
+const scanAnalyzeForm=$("scanAnalyzeForm");
+if(scanAnalyzeForm) {
+ const runButton=$("apiScanRun");
+ if(runButton) runButton.textContent="Scan & Analyze (1M + 5M)";
+ const fromInput=$("apiScanFrom"),toInput=$("apiScanTo");
+ if(fromInput&&toInput) {
+  const now=new Date();
+  fromInput.value=phoenixLocalInput(new Date(now.getTime()-6*60*60*1000));
+  toInput.value=phoenixLocalInput(now);
+  fromInput.setAttribute("aria-label","From time in Arizona local time");
+  toInput.setAttribute("aria-label","To time in Arizona local time");
+ }
+ scanAnalyzeForm.addEventListener("submit",async event=>{
+  event.preventDefault();
+  const button=$("apiScanRun"),source=$("scannerSource"),rows=$("scannerRows");
+  const symbols=[...new Set($("apiScanSymbols").value.trim().split(/[\s,;]+/).filter(Boolean).map(s=>s.toUpperCase()))];
+  if(!symbols.length||symbols.length>25){source.textContent="Enter 1–25 unique symbols. Scan & Analyze retrieves two timeframes per symbol.";return;}
+  if(symbols.some(s=>!/^[A-Z0-9.-]{1,8}$/.test(s))){source.textContent="One or more symbols contain invalid characters.";return;}
+  let fromUtc,toUtc;
+  try {fromUtc=phoenixLocalToUtc(fromInput.value);toUtc=phoenixLocalToUtc(toInput.value);}
+  catch(error){source.textContent=error.message;return;}
+  if(new Date(fromUtc)>=new Date(toUtc)||new Date(toUtc)-new Date(fromUtc)>31*86400000){source.textContent="Require From before To and a maximum 31-day window.";return;}
+  button.disabled=true;rows.replaceChildren();source.textContent="Scanning "+symbols.length+" symbols on Alpaca 1M and 5M…";
+  const results=[];
+  try {
+   for(let offset=0;offset<symbols.length;offset+=3) {
+    const batch=symbols.slice(offset,offset+3);
+    const batchResults=await Promise.all(batch.map(async symbol=>{
+     const [one,five]=await Promise.all([
+      getBarsForScan(symbol,"1m",fromUtc,toUtc).catch(error=>({error:error.message,count:0})),
+      getBarsForScan(symbol,"5m",fromUtc,toUtc).catch(error=>({error:error.message,count:0}))
+     ]);
+     return {symbol,one,five};
+    }));
+    results.push(...batchResults);
+    source.textContent="Scanned "+results.length+" / "+symbols.length+" symbols…";
+   }
+   rows.replaceChildren(...results.map(item=>{
+    const tr=document.createElement("tr"),cell=value=>{const td=document.createElement("td");td.textContent=value??"DATA?";return td;};
+    const bothPresent=item.one.count>0&&item.five.count>0;
+    const errors=[item.one.error?"1M: "+item.one.error:"",item.five.error?"5M: "+item.five.error:""].filter(Boolean);
+    const status=bothPresent?"OBSERVED · NOT QUALIFIED":"INSUFFICIENT DATA";
+    const summary=s=>s.count?(s.count+" bars; "+(s.change===null?"change DATA?":s.change.toFixed(2)+"% change")+"; "+(s.range===null?"range DATA?":s.range.toFixed(2)+"% range")+"; vol "+Math.round(s.volume)+"; latest "+new Date(s.last).toISOString()):(s.error||"No bars returned");
+    tr.append(cell(item.symbol),cell(item.five.change===null||item.five.change===undefined?"—":(item.five.change>=0?"+":"")+item.five.change.toFixed(2)+"% (5M)"),cell(status),cell("5M "+(item.five.range==null?"DATA?":item.five.range.toFixed(2)+"%")+" · 1M "+(item.one.range==null?"DATA?":item.one.range.toFixed(2)+"%")),cell("5M "+(item.five.latestAge==null?"UNKNOWN":item.five.latestAge.toFixed(1)+"m")+" · 1M "+(item.one.latestAge==null?"UNKNOWN":item.one.latestAge.toFixed(1)+"m")),cell("5M: "+summary(item.five)+" | 1M: "+summary(item.one)+(errors.length?" | Errors: "+errors.join("; "):"")),document.createElement("td"));
+    const watch=document.createElement("button");watch.type="button";watch.className="row-action";watch.textContent="Watch";watch.addEventListener("click",()=>addWatch(item.symbol));tr.lastElementChild.append(watch);return tr;
+   }));
+   const errors=results.reduce((n,r)=>n+Number(Boolean(r.one.error))+Number(Boolean(r.five.error)),0);
+   source.textContent="Scan complete · "+results.length+" symbols · 1M + 5M · Alpaca · "+errors+" timeframe request errors · Arizona "+fromInput.value+" → "+toInput.value+" ("+fromUtc+" → "+toUtc+" UTC). OHLCV summaries only; qualification gates are not connected.";
+   let option=document.querySelector('#scannerGroup option[value="scanAnalyze"]');
+   if(!option){option=document.createElement("option");option.value="scanAnalyze";option.textContent="Scan & Analyze results";$("scannerGroup").append(option);}
+   $("scannerGroup").value="scanAnalyze";
+  } catch(error) {source.textContent="Scan & Analyze failed: "+error.message;}
+  finally {button.disabled=false;}
+ });
+}
