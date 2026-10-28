@@ -696,3 +696,30 @@ The saved TTE IEX response files were compared by UTC five-minute bucket. All 75
 
 ### Release status
 - Source implemented; CI/browser execution for commits above is **not yet verified in this work session**. Local test suite was reported by the user as 100 succeeded before these new changes; that prior run does not cover this implementation.
+
+
+## 2026-10-27 — To-Do execution pass and Arizona REASON timestamps
+
+### Source change
+- Updated `frontend/app.js` so the Scan & Analyze REASON text renders latest 1M and 5M source-bar timestamps in `America/Phoenix`, with an explicit “Arizona” label. The previous summary used `toISOString()`, which displayed UTC. API payloads, provider timestamps, storage, and the UTC request-window audit text remain UTC intentionally.
+- Commit: `fc17f9febce848abee86f35bdf99232a4f5172dc`.
+- New technical backlog companion: `docs/Implementation-Backlog-Scaffold-20261027.md`. It maps acceptance criteria and test cases across the canonical To-Do areas, distinguishes existing implementation from scaffold and blocked work, and states release gates.
+- Canonical To-Do updated with per-workstream disposition, blockers, and post-pull validation steps. Commit: `5646ea90dbb491bc134e4f98c204a019d6f5d7ca`.
+
+### Current disposition
+- **Working source baseline:** Scan & Analyze requests both Alpaca 1M and 5M bars for each supplied symbol and now formats latest bar times in Arizona local time in its REASON column. UTC remains the canonical API/storage representation.
+- **Not implemented by this pass:** full scanner qualification, market-wide discovery, quote/spread and catalyst feeds, exact ATR-extension parity, TOS Permission/READY state ingestion, validated Boring Overnight historical scoring, complete report persistence/ranking, and production-grade websocket/reconnect/backfill. These are recorded with interfaces and acceptance criteria in the implementation scaffold rather than represented as complete.
+- **Study logic:** no changes to 5M Permission or 1M execution gates because existing evidence does not prove a defect; same-bar installed-study diagnostics remain required.
+- **External dependencies:** live provider selection/entitlements/credentials; installed TOS source and diagnostics; full eligible overnight OHLCV and session-boundary decision; timestamped catalyst source; freshness policy; exact Visual Studio project-load error if still applicable.
+- **Broker boundary:** no Schwab API or order placement; manual entry only.
+
+### User verification after pulling
+1. Pull `feature/opportunity-quality-classification` and record `git rev-parse HEAD`.
+2. Run `dotnet test MomentumCommandCenterV2.sln --configuration Release`.
+3. Start the API and use its hosted dashboard. Scan a known historical window with at least one bar in both timeframes.
+4. In the REASON cell, verify each latest timestamp ends with “Arizona” and matches the expected local time. Completion status may still show UTC boundaries; that is intentional for request auditability.
+5. Check Arizona conversion on a winter and summer date, including from a browser whose OS timezone is not Arizona.
+6. Check the CI workflow attached to the exact head. The previous 100-test user result predates these changes; current-head results are **not verified** by source edits.
+
+### Release status / uncertainty
+Source and documentation are committed on the feature branch. Browser execution and current-head CI/test results are not verified here. Do not describe MCC as production/live-trading ready.
