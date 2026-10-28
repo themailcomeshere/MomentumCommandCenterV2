@@ -194,3 +194,10 @@ During 12:30–12:55 in an explicitly configured local timezone:
 - Outside the window -> NO DECISION; neither HOLD nor GET OUT is asserted by this windowed decision.
 
 The server-side decision helper and tests are committed. The actual ThinkScript source is absent from this branch, and the helper is not yet wired to persisted source-backed inputs; do not treat the TOS bubble as implemented. User must confirm Arizona versus chart timezone and provide the current ThinkScript source.
+
+
+## Arizona-time decision bubble implementation — 2026-10-28
+
+The user confirmed America/Phoenix. The canonical 1M study now evaluates the chart-visible technical state at the final bar of the 12:30–12:55 Arizona window. It emits red EOD GET OUT for known chart-technical failures; otherwise it emits yellow DATA? — NO HOLD because the ThinkScript source does not contain the external overnight history, catalyst, exclusion and freshness evidence. It intentionally does not emit green HOLD OVERNIGHT until those inputs are authoritatively connected.
+
+The 5M label is now ENTRY CUTOFF ACTIVE/INACTIVE. The existing 3:55 PM Arizona cutoff continues to block intraday entries but is not itself an overnight hold decision. See docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md for the full contract and docs/Next-Steps-and-User-Inputs.md for installation instructions.
