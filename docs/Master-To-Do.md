@@ -852,3 +852,16 @@ Continue work without waiting for another confirmation when a task can be safely
 - [DONE — SOURCE] The raw market-bar store validates the complete batch before opening its append stream; malformed later bars cannot leave earlier bars from that batch partially persisted.
 - [STILL OPEN] Provider Comparison date must be confirmed in the user's browser after refresh; BrowserLink warning remains unisolated; live provider credentials/entitlements and source-backed overnight coverage remain external/data blockers.
 - This verification applies to source commit 9c1b677682f7dd659d355669ddceb99194a7d5fb. Any later source or documentation commit requires checking its own CI run before calling that new head verified.
+
+
+
+
+## Overnight Scanner review — 2026-10-28
+
+- [DONE — REVIEW RECORDED] Added `docs/Overnight-Scanner-Review-2026-10-28.md` with chart-by-chart review of the scanner plus all 11 supplied ticker charts.
+- [DONE — USER CLARIFICATION APPLIED] The 1M `EOD: GET OUT` state at 12:55 Arizona is treated as the intended live-dashboard exit behavior, not as an automatic candidate disqualification. Keep 5M setup/permission distinct from 1M execution/exit state.
+- [DONE — REVIEW RESULT] First review tier: EVR (best continuation structure), RTO (lowest intraday range, but transitioning), SXC (strong recovery/momentum, but high extension and spike risk). Secondary watch: AMT and OSW. Other names have explicit reject/wait reasons in the review artifact.
+- [IMPORTANT] All supplied MCC rows say `OBSERVED · NOT QUALIFIED`; the snapshots are around 12:55–12:59 Arizona and are stale relative to the later review time. Do not present these as live entries.
+- [BLOCKED — FRESH DATA] Current quote refresh, catalyst/news clearance, and next-session event risk were not verified. Catalyst status: Data not found in sources.
+- [NEXT IMPLEMENTATION] MCC should expose a unified candidate-review record that combines overnight statistics, 5M setup/permission, 1M execution state, sample completeness/freshness, extension/range, catalyst status, and a clear human-readable action. Do not fabricate weights; preserve raw fields and show missing inputs.
+- [NEXT IMPLEMENTATION] Add a freshness gate that explicitly marks stale bar windows as stale and prevents an old `OBSERVED` row from being mistaken for a current entry. Define the age threshold from the application's session/data contract before enforcing it.

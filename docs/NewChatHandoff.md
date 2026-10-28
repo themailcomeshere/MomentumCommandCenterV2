@@ -810,3 +810,23 @@ The unchecked To-Do items are not abandoned. Continue implementation where sourc
 - [DONE — SOURCE] The raw market-bar store validates the complete batch before opening its append stream; malformed later bars cannot leave earlier bars from that batch partially persisted.
 - [STILL OPEN] Provider Comparison date must be confirmed in the user's browser after refresh; BrowserLink warning remains unisolated; live provider credentials/entitlements and source-backed overnight coverage remain external/data blockers.
 - This verification applies to source commit 9c1b677682f7dd659d355669ddceb99194a7d5fb. Any later source or documentation commit requires checking its own CI run before calling that new head verified.
+
+
+
+
+## Handoff — Overnight Scanner review, 2026-10-28
+
+Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candidate review. The scanner screenshot and all 11 chart screenshots are in `src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/` on `feature/opportunity-quality-classification`.
+
+### Candidate review result
+- First tier: EVR, RTO, SXC. EVR has the clearest bullish continuation/consolidation structure (5M permission yes, bullish regime, 1.88 ATR extension); RTO has the lowest supplied intraday range (1.29%) but remains structurally transitioning and its 1M chart ends `GET OUT`; SXC has a credible recovery and strong 5M state but is extended (3.87 ATR), RSI 73.6, 6.20% range and a large final volume bar.
+- Secondary watch: AMT and OSW; both have strong late movement but elevated extension/range risk.
+- Reject/wait: BNC (high scanner rank but weak intraday chart and 1M GET OUT), MANH (bearish), MFM (only 8 bars and stale), RNG (bearish/no permission/5.47 ATR), STNG (spike/fade, extended, 1M GET OUT), TRMD (WAIT/no permission/transitioning).
+- User clarification: the 1M `EOD: GET OUT` at 12:55 Arizona is intentional dashboard exit behavior. Do not treat that label as a surprise or blanket scanner disqualification; interpret 5M setup separately from 1M execution/exit.
+- Every supplied MCC row is `OBSERVED · NOT QUALIFIED`, with bar timestamps around 12:55–12:59 Arizona. These screenshots are not current live entry evidence. Catalyst/news clearance is Data not found in sources.
+
+### Implementation follow-ups
+1. Implement a candidate-review record preserving overnight metrics, 5M setup/permission, 1M execution state, sample completeness/freshness, extension/range and catalyst status; expose missing inputs rather than inventing values or weights.
+2. Add explicit stale-data status and define the threshold from the application's documented data/session contract before enforcing it.
+3. Keep overnight quality distinct from intraday execution eligibility. High scanner rank must not override bearish structure, stale data, missing permission, or 1M exit state.
+4. No order was submitted. Refresh data and verify catalyst/event risk before any next-session decision.
