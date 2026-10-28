@@ -171,3 +171,8 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 - [FIX COMMITTED] The first validation-hardening CI run failed during build with CS0136 because a local variable named reasons conflicted with a later declaration in the evaluator. Renamed the early-return variable to invalidReasons in commit 65c83f7918200e413a5b20fb7942392357c7d193.
 - [PENDING — CURRENT HEAD] Re-run build and tests on the exact latest head after this fix. The previous run 40737130070 is a known failure and must not be reported as passing.
 - [NEXT] Verify the new evaluator tests for NaN/infinite values and invalid symbols, and the store tests for invalid OHLCV, once the workflow completes.
+
+
+## Signal semantics and entry qualification — 2026-10-28
+
+`EOD: GET OUT` is a study signal, not an end-of-day/session-state label. It does not mean the market is closed. Treat it as an exit/position-management instruction for a held position; do not open a new Boring Overnight position while the active exit signal is present. The evaluator now models optional `EodSignal` separately, with tests for GET OUT and SELL. This is a signal interpretation fix only; it does not provide live data, a catalyst check, or a READY decision.
