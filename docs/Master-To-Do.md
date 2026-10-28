@@ -923,7 +923,20 @@ Continue work without waiting for another confirmation when a task can be safely
 
 - [DONE — DECISION HELPER + TESTS ADDED] Added BoringOvernightHoldDecision and tests. Inside the configurable 12:30–12:55 local-time window, READY => green HOLD OVERNIGHT; known non-READY => red EOD GET OUT; missing/invalid evidence => yellow DATA? — NO HOLD. Outside the window it returns NO DECISION and does not emit either trading bubble. Timezone is an explicit input, not guessed.
 - [DONE — DESIGN DOCUMENT] Added docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md with decision semantics, color/status mapping, qualification gate contract, production checklist, and precise user instructions.
-- [NOT YET INTEGRATED] Helper still accepts a supplied evaluator result; it is not yet wired to persisted source-backed candidate data. The actual ThinkScript study containing the existing EOD bubble is not present in the tracked branch, so the chart bubble itself has not been edited.
-- [USER INPUT REQUIRED] Confirm whether the 12:30–12:55 window means America/Phoenix or the Thinkorswim chart's configured timezone, and provide/commit the exact ThinkScript source containing the current bubble. Do not reconstruct unseen code.
-- [OPEN P0] Implement the same mutually-exclusive decision in the actual TOS study after source is available; validate compile, DST/timezone behavior, same-bar 1M/5M alignment, and parity against the server-side evaluator.
+- [PARTIAL — API HELPER NOT YET INTEGRATED] Helper accepts a supplied evaluator result; it is not yet wired to persisted source-backed candidate data.
+- [DONE — THINKSCRIPT SOURCE UPDATED] Updated docs/Charts/1M/MainStudy.txt: 12:30–12:55 Arizona decision window; red EOD GET OUT only on a known chart-technical failure at the final window bar; yellow DATA? — NO HOLD when chart technical checks pass but required external qualification evidence is unavailable. The ThinkScript study deliberately does not emit green HOLD OVERNIGHT because the historical metrics/catalyst/exclusion/freshness evidence is not connected.
+- [DONE — 5M LABEL CLARIFIED] docs/Charts/5M/MainStudy.txt now labels the clock-based control as ENTRY CUTOFF, not EOD GET OUT. The late-session entry cutoff logic remains in place.
+- [DONE — TIMEZONE CONFIRMED] User selected Arizona time (America/Phoenix). The 1M study converts the window to Eastern clock inputs (15:30–15:55 ET during DST; 14:30–14:55 ET during standard time), because thinkScript time functions use Eastern time.
+- [USER ACTION REQUIRED] Copy the updated docs/Charts/1M/MainStudy.txt into the existing 1M Thinkorswim study, save/compile, and validate the decision output on the 12:55 Arizona bar. Do not treat yellow DATA? as a failure; it indicates external qualification data is not yet wired.
+- [OPEN P0] Validate ThinkScript compilation and same-bar 1M/5M alignment; wire complete qualification data into the server/API and decide how that authoritative result will reach the chart without manual stale inputs.
 - [OPEN P0] Complete historical overnight metrics, GTC_EXT coverage, catalyst/exclusion/freshness evidence, persisted decisions, scanner/Morning Report/MarketWatch integration, and build/test verification.
+
+
+## Dynamic Overnight bubble — implementation update 2026-10-28
+
+- Removed the independent EOD clock-state override from the 1M `finalState`. The 3:55 PM Arizona cutoff still blocks intraday entries, but it no longer forces the 1M state to GET OUT or independently asserts an overnight decision.
+- Added the 12:30–12:55 PM Arizona window; the 1M study evaluates its chart-visible technical blockers at the 12:55 bar. A known technical failure emits red EOD GET OUT. If technical checks do not fail, it emits yellow DATA? — NO HOLD because overnight history, catalyst, exclusions and data freshness are not available in ThinkScript.
+- The 5M study's time-based label now says ENTRY CUTOFF ACTIVE/INACTIVE instead of EOD GET OUT/ACTIVE. The late-session entry cutoff behavior is preserved.
+- Removed EodSignal as an evaluator input to avoid circular qualification: EOD GET OUT is now an output of the decision, not an independent input that makes the decision fail itself. 1M SELL/GET OUT/BLOCK execution state remains a legitimate gate.
+- Arizona convenience overload and timezone test added to the server decision helper.
+- Commits: 89e05e0f99fc78a72328b3f8bc52fc2c1b2283bb (1M study), 1fa0e0a49625af0ce970ddd2279f169bcfb62413 (label placement), e8c28953eec60b0ede81847587f247b2aefb360d (Arizona API overload), a4138830e7d96b28755b3a80648c091444687d61 (timezone test), 685994a2545998cdf2601d309eca505a7deb4042 (5M label), 6e28eed55b4f365ff5e38aa937ea6da4b164f9e6 (remove circular EOD input), 70d8b4befd218ae53475e9485c6bf44bee6a4c2a (test update).
