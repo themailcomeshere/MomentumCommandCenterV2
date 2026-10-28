@@ -14,7 +14,7 @@ public sealed class BoringOvernightAtrCalculatorTests
             Bar(0, 10m, 11m, 9m, 10m),
             Bar(1, 10m, 12m, 10m, 11m), // TR = 2
             Bar(2, 11m, 13m, 10m, 12m), // TR = 3
-            Bar(3, 12m, 13m, 11m, 12m)  // TR = 2; 2-period Wilder ATR = 2.5
+            Bar(3, 12m, 13m, 11m, 12m)  // TR = 2; 2-period Wilder ATR seed 2.5, smoothed with final TR to 2.25
         };
 
         var result = BoringOvernightAtrCalculator.Calculate(bars, 2);
@@ -23,7 +23,7 @@ public sealed class BoringOvernightAtrCalculatorTests
         Assert.Equal(BarTimeframe.FiveMinute, result.Timeframe);
         Assert.Equal(2m, result.LatestTrueRange);
         Assert.Equal(2.5m, result.Atr);
-        Assert.Equal(2.5m / 12m * 100m, result.AtrPercent);
+        Assert.Equal(2.25m / 12m * 100m, result.AtrPercent);
         Assert.Contains("Wilder ATR", result.Provenance);
     }
 
