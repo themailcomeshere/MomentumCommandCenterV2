@@ -1418,13 +1418,7 @@ AddLabel(
     "CONTINUATION CANDIDATE",
     Color.GREEN
 );
-# EOD GET OUT is now emitted only by the time-gated Boring Overnight
-# decision event, never merely because a clock cutoff was reached.
-AddLabel(
-    showLabels and eodGetOutEvent,
-    "EOD: GET OUT",
-    Color.RED
-);
+# The EOD result label is emitted alongside the time-gated decision below.
 # ============================================================
 # AGGRESSIVE LANE STATUS
 # ============================================================
@@ -1488,6 +1482,17 @@ def eodGetOutEvent =
     overnightDecisionEvent and overnightTechnicalFail;
 def overnightDataEvent =
     overnightDecisionEvent and !overnightTechnicalFail;
+
+AddLabel(
+    showLabels and eodGetOutEvent,
+    "EOD: GET OUT",
+    Color.RED
+);
+AddLabel(
+    showLabels and overnightDataEvent,
+    "OVERNIGHT: DATA? — NO HOLD",
+    Color.YELLOW
+);
 def executionExpiredEvent =
     executionExpired and !executionExpired[1];
 def swingReclaimBubbleEvent =
