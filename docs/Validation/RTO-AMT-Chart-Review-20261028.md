@@ -35,11 +35,20 @@ No candidate is promoted to `READY`. The screenshots do not establish price/20D-
 ## MCC implementation implications
 
 - Preserve separate fields for historical Boringness, current 5M permission/structure, 1M execution/EOD state, ATR extension, RVOL, and data freshness.
-- Do not let a green 5M permission label override a red 1M `GET OUT` / EOD state when deciding whether a *new* late-day overnight entry is appropriate.
+- Interpret red `EOD: GET OUT` as an active study signal, not a clock or session-end state. It is an exit/position-management instruction; it does not mean the market day has ended. For a *new* overnight entry, treat an active GET OUT/SELL signal as a no-entry condition, while separately respecting higher-timeframe 5M authority.
 - Calculate ATR and ATR-normalized extension from source-backed bars with an explicitly versioned timeframe/lookback. Keep the exact TOS study output as a comparison oracle until parity is tested.
 - Treat the screenshot as historical chart evidence, not live/current provider data.
 
 ## [Uncertainties]
-- The screenshots show chart-selected-bar labels; exact timestamps for every displayed label cannot be independently read from the image at pixel precision.
+- The screenshots show chart-selected-bar labels; exact timestamps for every displayed label cannot be independently read from the image at pixel precision. The user confirms red `EOD: GET OUT` is a signal, not a session-end label.
 - The cause of the differing 5M permission labels between panes is not established; do not infer a logic defect without aligning the pane timestamps and study inputs.
 - No catalyst/news feed, source-backed daily-volume history, complete overnight return history, or live quote freshness was available in these screenshots.
+
+
+## Signal-semantics correction — 2026-10-28
+
+- `EOD: GET OUT` is an active study signal, not an end-of-day/session-state label. Do not infer that the market is closed or that the label is merely a clock boundary.
+- For a held position, treat GET OUT as an exit/position-management signal. For a fresh Boring Overnight entry, it remains a no-entry condition; this distinction prevents accidentally interpreting an exit instruction as entry permission.
+- RTO: 5M is supportive (Runner Rising, Permission YES, bullish regime established, extension 0.49 ATR), but 1M GET OUT / EOD GET OUT is an active exit signal and RVOL 4.32 warrants investigation. Best of the three for further review, but not READY for a new overnight entry.
+- AMT: 5M Permission YES does not cancel the active 1M GET OUT signal. Extension around 2.03 ATR and the large selloff/rebound make it a poor boring-first entry for this snapshot. If already held, follow the exit signal.
+- SXC: no individual SXC chart was available in the reviewed source set. The scanner's 6.20% range is inconsistent with the low-noise preference; keep WATCH/DEFER pending chart and hard-gate verification.
