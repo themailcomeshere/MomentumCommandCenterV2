@@ -37,9 +37,9 @@ public static class BoringOvernightEvaluator
 
         if (invalid.Count > 0)
         {
-            var reasons = invalid.Select(name => $"Invalid input: {name}.").ToArray();
+            var invalidReasons = invalid.Select(name => $"Invalid input: {name}.").ToArray();
             var symbol = string.IsNullOrWhiteSpace(r.Symbol) ? "UNKNOWN" : r.Symbol.Trim().ToUpperInvariant();
-            return new BoringOvernightEvaluation(symbol, "DATA?", false, reasons,
+            return new BoringOvernightEvaluation(symbol, "DATA?", false, invalidReasons,
                 Array.Empty<string>(), Array.Empty<string>(), invalid,
                 "Invalid input data fails closed. No order was submitted.");
         }
