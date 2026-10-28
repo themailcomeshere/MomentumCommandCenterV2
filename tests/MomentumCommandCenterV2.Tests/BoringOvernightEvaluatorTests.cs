@@ -47,6 +47,34 @@ public sealed class BoringOvernightEvaluatorTests
     }
 
     [Fact]
+    public void EodGetOutIsAnExitSignalNotAnEndOfDayLabel()
+    {
+        var result = BoringOvernightEvaluator.Evaluate(
+            ReadyRequest() with { EodSignal = "GET OUT" });
+
+        Assert.Equal("BLOCKED", result.Status);
+        Assert.False(result.Eligible);
+        Assert.Contains(result.Blockers, x =>
+            x.Contains("active position", StringComparison.OrdinalIgnoreCase) &&
+            x.Contains("new overnight position", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(result.Reasons, x =>
+            x.Contains("market is closed", StringComparison.OrdinalIgnoreCase) ||
+            x.Contains("end of day", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Theory]
+    [InlineData("SELL")]
+    [InlineData("GET OUT")]
+    public void EodExitSignalBlocksNewEntryButDoesNotChangeClockState(string signal)
+    {
+        var result = BoringOvernightEvaluator.Evaluate(
+            ReadyRequest() with { EodSignal = signal });
+
+        Assert.Equal("BLOCKED", result.Status);
+        Assert.False(result.Eligible);
+    }
+
+    [Fact]
     public void InvalidSymbolFailsClosedWithoutThrowing()
     {
         var result = BoringOvernightEvaluator.Evaluate(ReadyRequest() with { Symbol = "TEST/../../" });
