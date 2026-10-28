@@ -8,6 +8,42 @@ public static class BoringOvernightEvaluator
 {
     public static BoringOvernightEvaluation Evaluate(BoringOvernightEvaluationRequest r)
     {
+        // Reject malformed numeric payloads before any comparison. NaN bypasses ordinary
+        // range comparisons, and Infinity can otherwise accidentally satisfy some gates.
+        var invalid = new List<string>();
+        if (string.IsNullOrWhiteSpace(r.Symbol) ||
+            r.Symbol.Length > 8 ||
+            !r.Symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
+            invalid.Add("symbol");
+
+        var numericInputs = new (string Name, double? Value)[]
+        {
+            ("price", r.Price),
+            ("sma20", r.Sma20),
+            ("averageDailyVolume20", r.AverageDailyVolume20),
+            ("overnightWinRatePct", r.OvernightWinRatePct),
+            ("averageOvernightPct20", r.AverageOvernightPct20),
+            ("averageOvernightPct5", r.AverageOvernightPct5),
+            ("medianOvernightPct20", r.MedianOvernightPct20),
+            ("currentOvernightPct", r.CurrentOvernightPct),
+            ("extensionAtr", r.ExtensionAtr),
+            ("currentVolumeVsAverage", r.CurrentVolumeVsAverage),
+            ("dailyRangePct", r.DailyRangePct),
+            ("atrPct", r.AtrPct)
+        };
+        invalid.AddRange(numericInputs
+            .Where(input => input.Value.HasValue && !double.IsFinite(input.Value.Value))
+            .Select(input => input.Name + " (non-finite)"));
+
+        if (invalid.Count > 0)
+        {
+            var reasons = invalid.Select(name => $"Invalid input: {name}.").ToArray();
+            var symbol = string.IsNullOrWhiteSpace(r.Symbol) ? "UNKNOWN" : r.Symbol.Trim().ToUpperInvariant();
+            return new BoringOvernightEvaluation(symbol, "DATA?", false, reasons,
+                Array.Empty<string>(), Array.Empty<string>(), invalid,
+                "Invalid input data fails closed. No order was submitted.");
+        }
+
         var missing = new List<string>();
         var blockers = new List<string>();
         var warnings = new List<string>();

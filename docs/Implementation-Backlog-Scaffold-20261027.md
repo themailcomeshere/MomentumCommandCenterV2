@@ -106,3 +106,14 @@ Do not label MCC production/live-trading ready until: exact-head CI/tests pass; 
 - Repeat on a known liquid symbol and verify multiple bars and nonzero changes when source bars support them.
 - Inspect `GET /api/market-data/bars` response for PMI and compare provider/feed, first/latest timestamps, barCount and gapCount with Provider Comparison. Do not attribute the one-bar response to a provider limitation until those observations are reviewed.
 - Confirm Test Date defaults to today's Arizona date on initial page load, while preserving a date the user selects during the session.
+
+
+## Implementation checkpoint — fail-closed validation hardening — 2026-10-28
+
+- [DONE — SOURCE IN THIS COMMIT] Boring Overnight evaluator now rejects blank/invalid symbols and non-finite numeric values (NaN, positive infinity, negative infinity) as DATA? before gate evaluation. This closes a correctness hole because NaN comparisons can all evaluate false and accidentally let a malformed snapshot appear eligible.
+- [DONE — TESTS ADDED IN THIS COMMIT] Added evaluator regression cases for NaN/infinities and invalid symbols, plus raw market-bar store tests for non-finite prices, impossible OHLC relationships, and negative volume.
+- [PENDING — CI] Run the Release build/test workflow for this exact commit before treating the new cases as passing.
+- [NOT IMPLEMENTED / BLOCKED BY EVIDENCE] Do not claim autonomous Boring Overnight qualification: daily/overnight metric computation, complete GTC_EXT session coverage, session-aware gap classification, catalyst source, and authoritative TOS states still require implementation and/or source evidence. The evaluator continues to accept caller-supplied snapshots only.
+- [NOT IMPLEMENTED / BLOCKED BY EXTERNAL SETUP] Live scanner discovery and provider proof remain blocked by provider selection, credentials/entitlements, coverage/licensing, and real-data smoke tests. The current collector is explicit-symbol historical REST polling, not a market-wide scanner or websocket stream.
+- [USER/LOCAL VALIDATION OPEN] Confirm the Provider Comparison date after browser refresh; source initialization and cache-bust are committed, but browser behavior has not been independently observed here.
+- [OPEN] BrowserLink $.noConflict is not a function remains unisolated. Compare with Browser Link disabled before adding application workarounds.

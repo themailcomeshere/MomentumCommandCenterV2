@@ -158,3 +158,14 @@ The domain assessor and unit tests exist, but the classification remains a stand
 The October 19 XRPN 1M/5M export pair has been checked for internal OHLCV consistency on complete windows, but the files do not contain the internal ThinkScript gate states. It therefore does not calibrate the assessor or explain READY frequency. See `docs/Validation/OHLCV-Opportunity-Readiness-Audit-20261026.md`.
 
 **Presentation rule (implemented 2026-10-26):** Display labels now use `QUALITY — HIGH`, `QUALITY — MODERATE`, `QUALITY — LOW`, and `TIMING — EXTENDED` instead of labels beginning with `READY`. When surfaced, show separate fields for `Execution: EXECUTION READY / NOT READY / UNKNOWN` and `Opportunity quality: HIGH / MODERATE / LOW / EXTENDED / UNKNOWN`. The quality field must never create or imply the actual execution event. Unit tests were updated for the label and invalid negative metrics; the current branch CI result must still be checked before calling these changes verified. The default bands remain provisional and must not be promoted based on unit tests or this small OHLCV sample.
+
+
+## Implementation checkpoint — fail-closed validation hardening — 2026-10-28
+
+- [DONE — SOURCE IN THIS COMMIT] Boring Overnight evaluator now rejects blank/invalid symbols and non-finite numeric values (NaN, positive infinity, negative infinity) as DATA? before gate evaluation. This closes a correctness hole because NaN comparisons can all evaluate false and accidentally let a malformed snapshot appear eligible.
+- [DONE — TESTS ADDED IN THIS COMMIT] Added evaluator regression cases for NaN/infinities and invalid symbols, plus raw market-bar store tests for non-finite prices, impossible OHLC relationships, and negative volume.
+- [PENDING — CI] Run the Release build/test workflow for this exact commit before treating the new cases as passing.
+- [NOT IMPLEMENTED / BLOCKED BY EVIDENCE] Do not claim autonomous Boring Overnight qualification: daily/overnight metric computation, complete GTC_EXT session coverage, session-aware gap classification, catalyst source, and authoritative TOS states still require implementation and/or source evidence. The evaluator continues to accept caller-supplied snapshots only.
+- [NOT IMPLEMENTED / BLOCKED BY EXTERNAL SETUP] Live scanner discovery and provider proof remain blocked by provider selection, credentials/entitlements, coverage/licensing, and real-data smoke tests. The current collector is explicit-symbol historical REST polling, not a market-wide scanner or websocket stream.
+- [USER/LOCAL VALIDATION OPEN] Confirm the Provider Comparison date after browser refresh; source initialization and cache-bust are committed, but browser behavior has not been independently observed here.
+- [OPEN] BrowserLink $.noConflict is not a function remains unisolated. Compare with Browser Link disabled before adding application workarounds.

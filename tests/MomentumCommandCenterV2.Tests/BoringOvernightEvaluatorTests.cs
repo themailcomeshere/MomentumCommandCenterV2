@@ -32,6 +32,30 @@ public sealed class BoringOvernightEvaluatorTests
         Assert.NotEmpty(result.Warnings);
     }
 
+    [Theory]
+    [InlineData(double.NaN, "price (non-finite)")]
+    [InlineData(double.PositiveInfinity, "price (non-finite)")]
+    [InlineData(double.NegativeInfinity, "price (non-finite)")]
+    public void NonFiniteNumericInputFailsClosed(double price, string expectedMissingInput)
+    {
+        var result = BoringOvernightEvaluator.Evaluate(ReadyRequest() with { Price = price });
+
+        Assert.Equal("DATA?", result.Status);
+        Assert.False(result.Eligible);
+        Assert.Contains(expectedMissingInput, result.MissingInputs);
+        Assert.Contains(result.Reasons, reason => reason.Contains("Invalid input", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void InvalidSymbolFailsClosedWithoutThrowing()
+    {
+        var result = BoringOvernightEvaluator.Evaluate(ReadyRequest() with { Symbol = "TEST/../../" });
+
+        Assert.Equal("DATA?", result.Status);
+        Assert.False(result.Eligible);
+        Assert.Contains("symbol", result.MissingInputs);
+    }
+
     private static BoringOvernightEvaluationRequest ReadyRequest() => new(
         "TEST", true, 25, 24, 1_000_000, 75, 0.45, 0.65, 0.40, 0.25,
         false, "CLEAR", true, "BULLISH", "EXECUTION READY", 0.8, 1.2, 1.8, 1.5);

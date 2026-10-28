@@ -154,3 +154,13 @@ This document consolidates the strategy and cheat-sheet criteria present in the 
 - These source changes are on feature/opportunity-quality-classification. Current-head CI has not been verified; do not treat the prior successful workflow for commit 0caf00004a837e269c175f7d4c34827120ac8fe6 as validation of the latest code.
 - Still blocked: source-backed daily/overnight metric calculation, full GTC_EXT session coverage, session-aware gap classification, catalyst/news source, authoritative 5M Permission/structure and 1M state. The evaluator remains a deterministic hard-gate function over caller-supplied inputs; it is not yet an autonomous provider-backed Boring Overnight scanner.
 - Do not optimize or promote the +0.5% target from OHLCV alone. Need complete source-backed eligible-window bars, missing interval accounting, walk-forward touch-rate evaluation and separate actual-fill evidence.
+
+## Implementation checkpoint — fail-closed validation hardening — 2026-10-28
+
+- [DONE — SOURCE IN THIS COMMIT] Boring Overnight evaluator now rejects blank/invalid symbols and non-finite numeric values (NaN, positive infinity, negative infinity) as DATA? before gate evaluation. This closes a correctness hole because NaN comparisons can all evaluate false and accidentally let a malformed snapshot appear eligible.
+- [DONE — TESTS ADDED IN THIS COMMIT] Added evaluator regression cases for NaN/infinities and invalid symbols, plus raw market-bar store tests for non-finite prices, impossible OHLC relationships, and negative volume.
+- [PENDING — CI] Run the Release build/test workflow for this exact commit before treating the new cases as passing.
+- [NOT IMPLEMENTED / BLOCKED BY EVIDENCE] Do not claim autonomous Boring Overnight qualification: daily/overnight metric computation, complete GTC_EXT session coverage, session-aware gap classification, catalyst source, and authoritative TOS states still require implementation and/or source evidence. The evaluator continues to accept caller-supplied snapshots only.
+- [NOT IMPLEMENTED / BLOCKED BY EXTERNAL SETUP] Live scanner discovery and provider proof remain blocked by provider selection, credentials/entitlements, coverage/licensing, and real-data smoke tests. The current collector is explicit-symbol historical REST polling, not a market-wide scanner or websocket stream.
+- [USER/LOCAL VALIDATION OPEN] Confirm the Provider Comparison date after browser refresh; source initialization and cache-bust are committed, but browser behavior has not been independently observed here.
+- [OPEN] BrowserLink $.noConflict is not a function remains unisolated. Compare with Browser Link disabled before adding application workarounds.

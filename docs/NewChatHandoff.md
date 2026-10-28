@@ -775,3 +775,14 @@ The unchecked To-Do items are not abandoned. Continue implementation where sourc
 2. Run `dotnet test MomentumCommandCenterV2.sln --configuration Release` locally; record the exact commit SHA tested.
 3. Refresh the API-served dashboard with the new cache-busted script and confirm Provider Comparison date is populated in Arizona time. The expected input format is date-only, not datetime-local.
 4. If the BrowserLink console warning persists, disable Browser Link and repeat to isolate injected tooling from application code.
+
+
+## Implementation checkpoint — fail-closed validation hardening — 2026-10-28
+
+- [DONE — SOURCE IN THIS COMMIT] Boring Overnight evaluator now rejects blank/invalid symbols and non-finite numeric values (NaN, positive infinity, negative infinity) as DATA? before gate evaluation. This closes a correctness hole because NaN comparisons can all evaluate false and accidentally let a malformed snapshot appear eligible.
+- [DONE — TESTS ADDED IN THIS COMMIT] Added evaluator regression cases for NaN/infinities and invalid symbols, plus raw market-bar store tests for non-finite prices, impossible OHLC relationships, and negative volume.
+- [PENDING — CI] Run the Release build/test workflow for this exact commit before treating the new cases as passing.
+- [NOT IMPLEMENTED / BLOCKED BY EVIDENCE] Do not claim autonomous Boring Overnight qualification: daily/overnight metric computation, complete GTC_EXT session coverage, session-aware gap classification, catalyst source, and authoritative TOS states still require implementation and/or source evidence. The evaluator continues to accept caller-supplied snapshots only.
+- [NOT IMPLEMENTED / BLOCKED BY EXTERNAL SETUP] Live scanner discovery and provider proof remain blocked by provider selection, credentials/entitlements, coverage/licensing, and real-data smoke tests. The current collector is explicit-symbol historical REST polling, not a market-wide scanner or websocket stream.
+- [USER/LOCAL VALIDATION OPEN] Confirm the Provider Comparison date after browser refresh; source initialization and cache-bust are committed, but browser behavior has not been independently observed here.
+- [OPEN] BrowserLink $.noConflict is not a function remains unisolated. Compare with Browser Link disabled before adding application workarounds.

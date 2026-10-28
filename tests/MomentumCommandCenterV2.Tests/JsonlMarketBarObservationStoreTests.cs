@@ -63,6 +63,36 @@ public sealed class JsonlMarketBarObservationStoreTests
         }
     }
 
+    [Theory]
+    [MemberData(nameof(InvalidBars))]
+    public async Task InvalidOhlcvIsRejectedBeforeItCanBePersisted(MarketBar invalidBar)
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            await Assert.ThrowsAsync<InvalidDataException>(() =>
+                new JsonlMarketBarObservationStore().AppendAsync(new[] { invalidBar }, CancellationToken.None));
+            Assert.False(File.Exists(path));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    public static IEnumerable<object[]> InvalidBars()
+    {
+        var valid = CreateBar();
+        yield return new object[] { valid with { Close = double.NaN } };
+        yield return new object[] { valid with { High = 8.0 } };
+        yield return new object[] { valid with { Volume = -1 } };
+        yield return new object[] { valid with { Low = 12.0 } };
+    }
+
     private static MarketBar CreateBar() => new(
         "TEST", new DateTimeOffset(2026, 10, 22, 16, 0, 0, TimeSpan.Zero),
         10.0, 11.0, 9.0, 10.5, 1000, "TestProvider", "test-feed");
