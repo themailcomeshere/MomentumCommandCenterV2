@@ -1,0 +1,59 @@
+# Boring Overnight Hold Decision Bubble
+
+**Status:** Decision contract and server-side decision helper committed; Thinkorswim bubble implementation and runtime validation remain open.
+
+## Decision
+
+The red EOD GET OUT bubble and green HOLD OVERNIGHT bubble must not exist as unconditional, independent signals. They are mutually exclusive outcomes of the same Boring Overnight qualification decision, evaluated only inside the configured local-time window.
+
+Default window: **12:30 through 12:55 local chart/trading time, inclusive**. The timezone must be explicitly configured; never assume the host computer timezone or silently mix Arizona and Eastern time.
+
+| Condition inside the window | Bubble text | Color | Meaning |
+|---|---|---|---|
+| All required gates pass and evaluation is READY | HOLD OVERNIGHT | Green | The supplied snapshot qualifies under the configured boring-first rules |
+| A known hard gate fails or a caution prevents qualification | EOD GET OUT | Red | Do not hold overnight under this decision; if a position is held, apply the user's position-management plan |
+| Required evidence is missing, stale, or invalid | DATA? — NO HOLD | Yellow | Do not claim the candidate is safe or qualified; missing evidence is not a pass |
+| Outside the configured time window | No hold/get-out bubble; neutral diagnostic optional | Neutral | This decision has not been evaluated in its authorized time window |
+
+The EOD GET OUT wording is a **decision result**, not a statement about the clock. HOLD OVERNIGHT and EOD GET OUT must derive from the same timestamped input snapshot and versioned rule set.
+
+## Qualification gates
+
+Use the existing Boring Overnight hard gates as a baseline: price above $5; 20-day average volume at least 500,000; overnight win rate at least 60%; 20-day average overnight return at least +0.10%; 5-day average overnight return strictly greater than the 20-day average; price above 20-day SMA; not excluded; catalyst clearance; fresh data; 5M permission and bullish structure; 1M execution state not SELL/GET OUT/BLOCK; and no unresolved high-extension / abnormal-volatility warning. A score must never override a hard gate.
+
+A READY result is possible only when all required inputs are present, fresh, and verified. A missing catalyst provider, missing historical window, stale feed, unverified exclusion lookup, or missing TOS parity must not silently pass. If the policy treats a warning as non-qualifying, it must map to EOD GET OUT; otherwise explicitly document why that warning is allowed.
+
+## Signal and position semantics
+
+- The existing EOD study signal must not be interpreted as a time-of-day state.
+- The proposed bubble is a **position decision** made during the window, not an independent EOD condition.
+- HOLD OVERNIGHT means the candidate meets the configured rules for holding overnight; it is not an order or guarantee.
+- EOD GET OUT means the candidate fails the configured overnight hold decision. It is not by itself an automated order.
+- DATA? — NO HOLD prevents missing data from being mislabeled as a confirmed negative.
+- Keep higher-timeframe 5M authority, 1M execution, candidate quality, and position-management output distinct internally even if the chart renders one final bubble.
+
+## Implementation already committed
+
+- BoringOvernightHoldDecision converts an evaluator result into a time-gated decision, using an explicit TimeZoneInfo.
+- Green HOLD OVERNIGHT only for READY inside the window.
+- Red EOD GET OUT for known non-READY outcomes inside the window.
+- Yellow DATA? — NO HOLD for missing/invalid evidence inside the window.
+- Outside the window it emits NO DECISION, not either of the two trading bubbles.
+- Unit tests cover both window boundaries, outside-window behavior, READY, blocked, and DATA? outcomes.
+
+## Still required before production
+
+1. Wire the decision helper to the real persisted, source-backed candidate snapshot.
+2. Verify local-time convention with the user and Thinkorswim chart settings, including DST and the Arizona/Eastern distinction.
+3. Implement the matching ThinkScript bubble/color logic in the actual installed study source. The tracked branch has no corresponding ThinkScript study file, so repository-side script edits cannot be made safely until the exact source is added or supplied.
+4. Validate the ThinkScript compile and same-bar parity in Thinkorswim, including 1M/5M timestamp alignment.
+5. Complete overnight return history, GTC_EXT coverage, catalyst/exclusion evidence, and freshness gating.
+6. Run build/tests and record verified results; current CI status must not be assumed.
+
+## User instructions / only required confirmation
+
+1. Confirm whether “local time” for the bubble means **Arizona time (America/Phoenix)** or the **Thinkorswim chart's configured time zone**. The server-side helper requires an explicit timezone; the current code does not silently choose one.
+2. Add/commit the exact current ThinkScript source for the study containing the existing EOD bubble to this repository (or attach that source in the Project) so the bubble logic can be updated without reconstructing unseen code.
+3. In Thinkorswim, validate the study after the source update. Do not use a green bubble until its same-bar inputs and all required evidence are verified.
+
+No broker credentials or order permissions are needed; this feature must remain a decision aid, not automatic order submission.
