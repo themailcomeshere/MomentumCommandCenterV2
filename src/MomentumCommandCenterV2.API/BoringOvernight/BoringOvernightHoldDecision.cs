@@ -6,6 +6,29 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public static class BoringOvernightHoldDecision
 {
+    public static BoringOvernightHoldDecisionResult EvaluateForArizona(
+        BoringOvernightEvaluation evaluation,
+        DateTimeOffset evaluatedAt,
+        TimeOnly? windowStart = null,
+        TimeOnly? windowEnd = null)
+    {
+        var zone = ResolveArizonaTimeZone();
+        return Evaluate(evaluation, evaluatedAt, zone, windowStart, windowEnd);
+    }
+
+    private static TimeZoneInfo ResolveArizonaTimeZone()
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById("America/Phoenix"); }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("US Mountain Standard Time");
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("US Mountain Standard Time");
+        }
+    }
+
     public static BoringOvernightHoldDecisionResult Evaluate(
         BoringOvernightEvaluation evaluation,
         DateTimeOffset evaluatedAt,
