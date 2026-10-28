@@ -1,7 +1,7 @@
 # ============================================================
 # MOMENTUM COMMAND CENTER V3.2
 # 1M COMMAND CENTER — EXTENDED HOURS
-# V14.4.10 — ISOLATED AGGRESSIVE-LANE AUDIT MODE
+# V14.4.11 — TIME-GATED BORING OVERNIGHT DECISION
 #
 # VERSION / SOURCE NOTES
 #   Built from the saved V14.4.8 BubbleLadder Fix source.
@@ -24,7 +24,9 @@
 #        candidate can be a valid aggressive trigger context; it is not
 #        itself permission. Normal 5M permission requirements remain intact.
 #     6. Preserves VWAP-margin, ATR-extension, structural-damage, major-failure,
-#        confirmed-weakness, swing/runner, and EOD protections.
+#        confirmed-weakness, swing/runner, and intraday entry-cutoff protections.
+#     7. Emits a time-gated Boring Overnight decision event at 12:55 Arizona;
+#        missing external qualification evidence is DATA? — NO HOLD, never green.
 #
 # PURPOSE / TIMEFRAME AUTHORITY
 #   1M = EXECUTION / CONFIRMATION / TIMING / SHORT-TERM EXIT
@@ -121,6 +123,13 @@ def eodHourArizona = 15;
 def eodMinuteArizona = 55;
 input eodTimeEasternDaylight = 1855;
 input eodTimeEasternStandard = 1955;
+# Boring Overnight decision window: 12:30–12:55 PM Arizona, inclusive.
+# SecondsFromTime/SecondsTillTime use Eastern time, so translate Arizona
+# using the same DST calendar above: AZ is UTC-7 year-round.
+input overnightStartEasternDaylight = 1530;
+input overnightEndEasternDaylight = 1555;
+input overnightStartEasternStandard = 1430;
+input overnightEndEasternStandard = 1455;
 # ============================================================
 # SESSION / TIMEZONE
 #
@@ -190,6 +199,17 @@ def extendedSession =
     !regularSession;
 def eodExitWindow =
     afterEOD;
+# This is the decision window, not the late-session entry cutoff above.
+def overnightWindowStartReached =
+    if easternDaylightTime
+    then SecondsFromTime(overnightStartEasternDaylight) >= 0
+    else SecondsFromTime(overnightStartEasternStandard) >= 0;
+def overnightWindowEndNotPassed =
+    if easternDaylightTime
+    then SecondsTillTime(overnightEndEasternDaylight) >= 0
+    else SecondsTillTime(overnightEndEasternStandard) >= 0;
+def overnightDecisionWindow =
+    overnightWindowStartReached and overnightWindowEndNotPassed;
 # ============================================================
 # TIME DIAGNOSTICS
 #
@@ -1276,9 +1296,7 @@ def sellConfirmed =
 # FINAL 1M STATE
 # ============================================================
 def finalState =
-    if eodExitWindow then
-        EOD_GET_OUT
-    else if sellConfirmed then
+    if sellConfirmed then
         SELL
     else if prepareToSell then
         PREPARE_SELL
@@ -1400,8 +1418,10 @@ AddLabel(
     "CONTINUATION CANDIDATE",
     Color.GREEN
 );
+# EOD GET OUT is now emitted only by the time-gated Boring Overnight
+# decision event, never merely because a clock cutoff was reached.
 AddLabel(
-    showLabels and eodExitWindow,
+    showLabels and eodGetOutEvent,
     "EOD: GET OUT",
     Color.RED
 );
@@ -1444,10 +1464,30 @@ def fiveBuyEvent =
     fiveState == FIVE_BUY and fiveState[1] != FIVE_BUY;
 def sellBubbleEvent =
     finalState == SELL and finalState[1] != SELL;
-# GET OUT is a real final state, but historically it only appeared as a label.
-# Emit one red bubble when the chart first enters the EOD exit state.
+# Evaluate chart-visible technical blockers at the final 1M bar of the
+# Arizona 12:30–12:55 decision window. External overnight statistics,
+# catalyst clearance, exclusions and source freshness are not available
+# to this ThinkScript study, so technical strength alone cannot produce HOLD.
+def overnightDecisionEvent =
+    overnightDecisionWindow and
+    (if easternDaylightTime
+     then SecondsTillTime(overnightEndEasternDaylight) == 0
+     else SecondsTillTime(overnightEndEasternStandard) == 0);
+def overnightTechnicalFail =
+    !fivePermission or
+    !priceAboveVWAP or
+    fiveBearishStack or
+    fiveStructuralDamagePersistent or
+    fiveMajorFailurePersistent or
+    fiveConfirmedWeakness or
+    fiveRunnerWaningPersistent or
+    extensionDanger or
+    sellConfirmed or
+    prepareToSell;
 def eodGetOutEvent =
-    finalState == EOD_GET_OUT and finalState[1] != EOD_GET_OUT;
+    overnightDecisionEvent and overnightTechnicalFail;
+def overnightDataEvent =
+    overnightDecisionEvent and !overnightTechnicalFail;
 def executionExpiredEvent =
     executionExpired and !executionExpired[1];
 def swingReclaimBubbleEvent =
@@ -1462,7 +1502,7 @@ def candidateBlockedBubbleEvent =
     executionCandidateBlockCode <= 10;
 
 def stateBubbleEvent =
-    readyEvent or executionExpiredEvent or eodGetOutEvent or prepareToBuyEvent or
+    readyEvent or executionExpiredEvent or eodGetOutEvent or overnightDataEvent or prepareToBuyEvent or
     prepareSellEvent or aggressivePrepareEvent or aggressiveBuyEvent or
     fivePrepareBuyEvent or fiveRunnerWaningEvent or sellBubbleEvent or
     fiveBuyEvent or candidateBlockedBubbleEvent or anyCandidateBubbleEvent or
@@ -1492,6 +1532,7 @@ AddChartBubble(
     if compositeBubbleBelow then low - atr else high + atr,
     (
     (if eodGetOutEvent then "EOD GET OUT\n" else "") +
+    (if overnightDataEvent then "DATA? — NO HOLD\n" else "") +
     (if readyEvent then "EXECUTION READY\n" else "") +
     (if executionExpiredEvent then "EXECUTION EXPIRED\n" else "") +
     (if prepareToBuyEvent then "PREPARE TO BUY\n" else "") +
@@ -1546,6 +1587,7 @@ AddChartBubble(
      else "")
     ),
     if eodGetOutEvent then Color.RED
+    else if overnightDataEvent then Color.YELLOW
     else if readyEvent then Color.GREEN
     else if sellBubbleEvent or (candidateBlockedBubbleEvent and
         (executionCandidateBlockCode == 1 or executionCandidateBlockCode == 2 or
