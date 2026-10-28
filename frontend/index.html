@@ -65,14 +65,14 @@
 </section>
 <section class="workbench-grid"><article class="panel"><div class="section-heading"><div><div class="eyebrow">SCANNER WORKBENCH</div><h2>Candidate discovery</h2></div><label class="file-button" for="scannerFile">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls"><select id="scannerGroup"><option value="momentum">A · Momentum Hunter</option><option value="breakout">B · Breakout Trigger</option><option value="reclaim">C · Reclaim / Continuation</option><option value="discovery">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
 <div class="scanner-api-controls">
- <form id="apiScannerForm">
+ <form id="scanAnalyzeForm">
   <label>Symbols <input id="apiScanSymbols" value="SPY,QQQ,TTE,FMS" maxlength="500" aria-label="Comma-separated symbols to scan"></label>
   <label>Bars <select id="apiScanTimeframe"><option value="1m">1 minute</option><option value="5m" selected>5 minutes</option></select></label>
-  <label>From (local time) <input id="apiScanFrom" type="datetime-local" required></label>
-  <label>To (local time) <input id="apiScanTo" type="datetime-local" required></label>
-  <button id="apiScanRun" type="submit">Run API scan</button>
+  <label>From (Arizona local time) <input id="apiScanFrom" type="datetime-local" required></label>
+  <label>To (Arizona local time) <input id="apiScanTo" type="datetime-local" required></label>
+  <button id="apiScanRun" type="submit">Scan & Analyze (1M + 5M)</button>
  </form>
- <p class="notice">Historical REST scan of the symbols entered above only. It is not market-wide discovery and does not calculate relative volume, spread, catalysts, or Thinkorswim entry eligibility.</p>
+ <p class="notice">Fetches Alpaca 1M and 5M bars for each supplied symbol. Enter times in Arizona local time; MCC converts them to UTC. Summaries are not Thinkorswim states or a Boring Overnight qualification.</p>
 </div><div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Score</th><th>Status</th><th>Extension</th><th>Freshness</th><th>Reason</th><th></th></tr></thead><tbody id="scannerRows"></tbody></table></div><p class="notice">Local workbench only. Imported rows are evidence for review, not live scanner results or trading instructions. Extension/freshness fields are not calculated unless supplied in your CSV.</p></article><article class="panel"><div class="section-heading"><div><div class="eyebrow">WATCHLIST</div><h2>Working candidates</h2></div><button id="clearWatchlist" class="quiet-button">Clear</button></div><form id="watchlistForm" class="watchlist-form"><input id="watchSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker"><button type="submit">Add</button></form><ul id="watchlistRows" class="watchlist"></ul><p class="notice">Watchlist is stored only in this browser using local storage. It does not submit orders or connect to a broker.</p></article></section>
 
 <section class="integration-grid">
@@ -92,4 +92,4 @@
  </article>
 </section>
 
-<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261027-upload-js-fix"></script></body></html>
+<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261027-scan-analyze-phoenix"></script></body></html>
