@@ -241,3 +241,35 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 - Implement complete GTC_EXT collector and walk-forward target-touch research before choosing a numeric target formula.
 - Resolve ThinkScript version/source parity; repository `docs/Charts/1M/MainStudy.txt` is V14.4.10 and is not the uploaded V14.5 source.
 - Continue Alpaca proof-of-fit: pagination/retries, persistence semantics, extended-hours coverage, websocket/collector recovery and TOS parity. Massive remains unconfigured/deferred.
+
+
+## New Chat Handoff — 2026-10-28 (Overnight Scanner + V3 implementation)
+
+### Today's scanner review
+- Review artifact: docs/Validation/Overnight-Scanner-Review-20261028.md.
+- Preliminary Boring Overnight chart-review order: RTO, AMT, SXC. None is READY.
+- SXC is not automatically best: MCC reports a 6.20% intraday range. RTO's reported range is 1.29%, with 70% ON win rate, +0.30% median ON return and +1.60% 5D ON return.
+- TRMD (4.19% current ON), EVR (5.83%), MANH (7.06%), OSW (6.73%), and STNG (6.53%) are above the preferred <3% current ON range.
+- MFM is stale/incomplete (8 bars; last around 12:25–12:28 Arizona). Treat as DATA? / not actionable.
+- Confirm BNC identity; screenshot description says “BNB Standard Corp”.
+- All supplied MCC rows were OBSERVED · NOT QUALIFIED. Scanner ranking does not override qualification.
+- Red EOD: GET OUT at 12:55 Arizona is expected by the user's live-dashboard design.
+
+### Implementation state and immediate order
+1. **CI/build truth:** inspect GitHub Actions for the latest branch head after commit 65c83f7918200e413a5b20fb7942392357c7d193. A prior run failed with CS0136 and a fix was committed; current-head green status is not established by this review.
+2. **Boring Overnight evaluator:** invalid-input hardening is committed, but daily/overnight metric computation, GTC_EXT session collector, catalyst provider and scanner discovery are not fully integrated.
+3. **Scanner/Morning Report:** provider-neutral contract exists; no verified live market-wide scanner feed, background overnight collector, catalyst source, or fully automatic Morning Report is established. A browser tab is not overnight collection.
+4. **Provider proof:** continue free Alpaca proof-of-fit only when the user runs local credentials/smoke test. Never request or store secrets in chat. Massive and paid plans remain deferred.
+5. **TOS parity:** repository chart source does not prove installed-study parity. Preserve 5M authority / 1M execution hierarchy and exact ATR-extension gate; do not weaken gates to increase READY frequency.
+6. **Boring Overnight hard gates:** current ON <3% is a preferred range/penalty, not a substitute for hard gates. Required evidence includes price, 20D volume, 20D/5D ON return, win rate, price vs. 20D SMA, exclusions, catalyst status, freshness and relevant 5M/1M states.
+7. **No trade recommendation from today's table:** RTO, AMT and SXC are chart-review candidates only. Missing catalyst/volume/price-SMA/exclusion evidence means WATCH or DATA?, never READY.
+
+### Known blockers / user actions
+- No immediate credential or preference decision is needed to continue code work. For live-data smoke testing, configure free Alpaca locally using API README instructions and share sanitized responses only.
+- Individual screenshots 1–12 were not readable through the current GitHub image route. The preliminary ranking is based on the readable scanner screenshot and supplied MCC table.
+- Engineering: verify current-head CI; complete Boring Overnight data calculations and catalyst inputs; implement persistent background collection/recovery; integrate snapshot/reason provenance; validate before calling anything live/actionable.
+
+## [Uncertainties]
+- Current-head CI result was not retrieved in this review.
+- Individual chart images were not visually inspected.
+- Candidate catalyst status, daily volume, price vs. 20D SMA, full exclusion-list status and BNC identity remain unverified.
