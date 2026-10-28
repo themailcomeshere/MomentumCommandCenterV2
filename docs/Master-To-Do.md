@@ -917,3 +917,13 @@ Continue work without waiting for another confirmation when a task can be safely
 - [NOT YET QUALIFICATION-AUTHORITATIVE] The calculator is not yet wired into candidate evaluation. Its Wilder ATR and extension convention must be compared with the exact selected TOS study/timeframe/lookback before it is used as a gate.
 - [OPEN — END-TO-END P0] Close/open overnight pairing, complete GTC_EXT coverage, catalyst evidence, persisted decisions, and scanner/Morning Report/MarketWatch integration remain incomplete.
 - [CI UNKNOWN] GitHub status checks and commit-associated workflow lookup returned no records for the latest documentation head. Local build/test execution could not run in this environment because direct GitHub network access is unavailable. Do not mark tests as passed until CI or a local build confirms them.
+
+
+## Time-gated Boring Overnight decision bubble — 2026-10-28
+
+- [DONE — DECISION HELPER + TESTS ADDED] Added BoringOvernightHoldDecision and tests. Inside the configurable 12:30–12:55 local-time window, READY => green HOLD OVERNIGHT; known non-READY => red EOD GET OUT; missing/invalid evidence => yellow DATA? — NO HOLD. Outside the window it returns NO DECISION and does not emit either trading bubble. Timezone is an explicit input, not guessed.
+- [DONE — DESIGN DOCUMENT] Added docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md with decision semantics, color/status mapping, qualification gate contract, production checklist, and precise user instructions.
+- [NOT YET INTEGRATED] Helper still accepts a supplied evaluator result; it is not yet wired to persisted source-backed candidate data. The actual ThinkScript study containing the existing EOD bubble is not present in the tracked branch, so the chart bubble itself has not been edited.
+- [USER INPUT REQUIRED] Confirm whether the 12:30–12:55 window means America/Phoenix or the Thinkorswim chart's configured timezone, and provide/commit the exact ThinkScript source containing the current bubble. Do not reconstruct unseen code.
+- [OPEN P0] Implement the same mutually-exclusive decision in the actual TOS study after source is available; validate compile, DST/timezone behavior, same-bar 1M/5M alignment, and parity against the server-side evaluator.
+- [OPEN P0] Complete historical overnight metrics, GTC_EXT coverage, catalyst/exclusion/freshness evidence, persisted decisions, scanner/Morning Report/MarketWatch integration, and build/test verification.
