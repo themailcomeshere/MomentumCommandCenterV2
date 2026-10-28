@@ -168,3 +168,13 @@
 - [DONE — SOURCE COMMITTED] The raw-bar store now validates every bar in a batch before opening the append stream. A malformed later row can no longer leave earlier rows from that same batch partially persisted.
 - [TEST ADDED] Invalid-OHLCV tests now submit a valid bar followed by the invalid bar and assert the store creates no file.
 - [PENDING — CI] Confirm the latest branch-head workflow passes build and tests; earlier validation commit 4208441 failed build, and commit 65c83f7 fixes that compiler issue. Neither failure is considered green.
+
+
+## Verification resolution — validation hardening CI green — 2026-10-28
+
+- [DONE — CURRENT SOURCE HEAD VERIFIED] Commit 9c1b677682f7dd659d355669ddceb99194a7d5fb passed GitHub Actions run [40737545891](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40737545891).
+- [PASS] Release build succeeded.
+- [PASS] 108/108 tests passed, including the new Boring Overnight non-finite/symbol fail-closed tests and malformed OHLCV batch-validation tests.
+- [DONE — SOURCE] The raw market-bar store validates the complete batch before opening its append stream; malformed later bars cannot leave earlier bars from that batch partially persisted.
+- [STILL OPEN] Provider Comparison date must be confirmed in the user's browser after refresh; BrowserLink warning remains unisolated; live provider credentials/entitlements and source-backed overnight coverage remain external/data blockers.
+- This verification applies to source commit 9c1b677682f7dd659d355669ddceb99194a7d5fb. Any later source or documentation commit requires checking its own CI run before calling that new head verified.
