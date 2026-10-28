@@ -908,3 +908,12 @@ Continue work without waiting for another confirmation when a task can be safely
 - [SXC — DATA GAP] No SXC chart was available in this review; the 6.20% scanner range is high relative to the low-noise objective. Keep WATCH/DEFER, not READY.
 - [OPEN — ATR ENGINEERING] Implement explicit source-backed True Range/ATR/ATR-normalized extension from OHLCV with configurable timeframe/lookback and unit tests; do not integrate as authoritative until parity against selected TOS study output.
 - [OPEN — END-TO-END P0] Historical close/open pairing, complete GTC_EXT eligible-window coverage, catalyst provider, persisted candidate decisions, and live scanner/Morning Report/MarketWatch integration remain incomplete. Unknown/stale inputs must fail closed.
+
+
+## ATR implementation progress — 2026-10-28
+
+- [DONE — SOURCE + TESTS ADDED] Added `BoringOvernightAtrCalculator` using explicit OHLCV bars, timeframe, period, Wilder smoothing, latest True Range, ATR%, and signed ATR extension from an explicitly supplied reference price. Missing history, mixed symbol/timeframe, duplicate timestamps and invalid OHLCV fail closed.
+- [DONE — TESTS ADDED] Added tests for Wilder ATR smoothing, ATR%, signed extension, insufficient history, and mixed timeframes. Source commit: `ea8a27700f6609d1e78a7a9d93a3d192426448dc`; tests committed in `0c9be200270327ba70b4ef93a36f535be2b3422b`, with corrected smoothing expectation in `6f000252ba9724dda40687748a6905b17072ae0a`.
+- [NOT YET QUALIFICATION-AUTHORITATIVE] The calculator is not yet wired into candidate evaluation. Its Wilder ATR and extension convention must be compared with the exact selected TOS study/timeframe/lookback before it is used as a gate.
+- [OPEN — END-TO-END P0] Close/open overnight pairing, complete GTC_EXT coverage, catalyst evidence, persisted decisions, and scanner/Morning Report/MarketWatch integration remain incomplete.
+- [CI UNKNOWN] GitHub status checks and commit-associated workflow lookup returned no records for the latest documentation head. Local build/test execution could not run in this environment because direct GitHub network access is unavailable. Do not mark tests as passed until CI or a local build confirms them.
