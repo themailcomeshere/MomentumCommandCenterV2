@@ -337,17 +337,23 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 - The largest remaining P0 engineering gap is still the end-to-end pipeline: historical overnight close/open pairing, full eligible GTC_EXT data, catalyst/exclusion evidence, persistent candidate decisions, and scanner/Morning Report/MarketWatch integration.
 
 
-## Boring Overnight bubble redesign — 2026-10-28
+## Boring Overnight bubble redesign — implementation update 2026-10-28
 
 ### Implemented
-- Added BoringOvernightHoldDecision and unit tests. During 12:30–12:55 in an explicitly supplied timezone: READY produces green HOLD OVERNIGHT; known non-READY produces red EOD GET OUT; DATA? produces yellow DATA? — NO HOLD. Outside the window, it produces NO DECISION.
-- Added docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md. Latest source/test commits: 916ff129b26f6603334a3418e5ee4eaa889aa280 and ab664923dd8c778e7ae2316f9f9878685eaf8c7b; specification commit bacff1ad9f440f20d1464efbfc94500c01a79293.
+- User confirmed Arizona time (America/Phoenix).
+- Updated the canonical 1M ThinkScript source to evaluate at the 12:55 Arizona bar inside a 12:30–12:55 window. Known chart-technical failure => red EOD GET OUT; chart checks otherwise pass but external evidence is unavailable => yellow DATA? — NO HOLD. The study does not show green HOLD OVERNIGHT without complete qualification evidence.
+- Removed the unconditional EOD clock override from 1M final state. Kept the 3:55 PM Arizona cutoff as a separate intraday-entry control.
+- Changed the 5M label to ENTRY CUTOFF ACTIVE/INACTIVE.
+- Removed EodSignal from the evaluator inputs to prevent circular logic; actual 1M SELL/GET OUT/BLOCK remains a hard gate.
+- Added Arizona timezone convenience entry point and test to the server-side decision helper.
+- Design contract: docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md.
 
 ### Instructions for the user
-1. Confirm one detail: does “local time” mean Arizona time (America/Phoenix) or the time zone configured on the Thinkorswim chart? The decision helper deliberately requires an explicit timezone.
-2. Add or attach the exact current ThinkScript source for the study that creates the existing EOD GET OUT bubble. It is not in the tracked repository tree, so safe direct script editing is blocked until the source is available.
-3. Once that source is present, the next implementation step is to replace independent EOD bubble logic with the mutually exclusive, time-gated HOLD OVERNIGHT / EOD GET OUT / DATA? decision, and then validate it in Thinkorswim.
+1. Open the 1M study in Thinkorswim, replace its source with the contents of [docs/Charts/1M/MainStudy.txt](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Charts/1M/MainStudy.txt), save, and confirm Thinkorswim compiles it.
+2. Review the 12:55 PM Arizona bar. If the chart technical gates fail, the decision bubble should be red EOD GET OUT; if those chart checks pass, it should be yellow DATA? — NO HOLD until the missing external overnight qualification inputs are connected.
+3. Replace the 5M study with [docs/Charts/5M/MainStudy.txt](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Charts/5M/MainStudy.txt) to replace the clock-based EOD label with ENTRY CUTOFF. Existing late-session entry blocking remains.
 
 ### Still open
-- The helper is not yet connected to persisted live candidate inputs; the TOS bubble is not yet implemented in the study; full historical GTC_EXT, catalyst, exclusion and freshness evidence is still incomplete.
-- Build/test and CI for the exact latest branch head remain unverified. Do not treat the added tests as passing until a successful run is recorded.
+- The API decision helper is not connected to persisted candidate snapshots or surfaced to Thinkorswim.
+- Historical overnight metrics, complete GTC_EXT coverage, catalyst/exclusion/freshness evidence and scanner/report integration remain incomplete.
+- Build/test and CI for the exact latest branch head remain unverified.
