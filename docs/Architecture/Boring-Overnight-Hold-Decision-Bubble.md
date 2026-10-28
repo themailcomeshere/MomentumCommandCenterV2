@@ -21,7 +21,7 @@ The EOD GET OUT wording is a **decision result**, not a statement about the cloc
 
 Use the existing Boring Overnight hard gates as a baseline: price above $5; 20-day average volume at least 500,000; overnight win rate at least 60%; 20-day average overnight return at least +0.10%; 5-day average overnight return strictly greater than the 20-day average; price above 20-day SMA; not excluded; catalyst clearance; fresh data; 5M permission and bullish structure; 1M execution state not SELL/GET OUT/BLOCK; and no unresolved high-extension / abnormal-volatility warning. A score must never override a hard gate.
 
-A READY result is possible only when all required inputs are present, fresh, and verified. A missing catalyst provider, missing historical window, stale feed, unverified exclusion lookup, or missing TOS parity must not silently pass. If the policy treats a warning as non-qualifying, it must map to EOD GET OUT; otherwise explicitly document why that warning is allowed.
+A READY result is possible only when all required inputs are present, fresh, and verified. A missing catalyst provider, missing historical window, stale feed, unverified exclusion lookup, or missing TOS parity must not silently pass. The current ThinkScript source cannot access these external inputs and therefore intentionally returns DATA? — NO HOLD when chart-only technical gates pass. It must not infer READY from technical indicators alone. If the policy treats a warning as non-qualifying, it must map to EOD GET OUT; otherwise explicitly document why that warning is allowed.
 
 ## Signal and position semantics
 
@@ -45,15 +45,15 @@ A READY result is possible only when all required inputs are present, fresh, and
 
 1. Wire the decision helper to the real persisted, source-backed candidate snapshot.
 2. Verify local-time convention with the user and Thinkorswim chart settings, including DST and the Arizona/Eastern distinction.
-3. Implement the matching ThinkScript bubble/color logic in the actual installed study source. The tracked branch has no corresponding ThinkScript study file, so repository-side script edits cannot be made safely until the exact source is added or supplied.
+3. [IMPLEMENTED IN REPOSITORY SOURCE] Updated docs/Charts/1M/MainStudy.txt and docs/Charts/5M/MainStudy.txt. The 1M study evaluates at the 12:55 Arizona bar; known chart technical failures are red EOD GET OUT, and passing chart checks with missing external qualification evidence are yellow DATA? — NO HOLD. The 5M label now reports ENTRY CUTOFF rather than a clock-based EOD GET OUT.
 4. Validate the ThinkScript compile and same-bar parity in Thinkorswim, including 1M/5M timestamp alignment.
 5. Complete overnight return history, GTC_EXT coverage, catalyst/exclusion evidence, and freshness gating.
 6. Run build/tests and record verified results; current CI status must not be assumed.
 
-## User instructions / only required confirmation
+## User instructions
 
-1. Confirm whether “local time” for the bubble means **Arizona time (America/Phoenix)** or the **Thinkorswim chart's configured time zone**. The server-side helper requires an explicit timezone; the current code does not silently choose one.
-2. Add/commit the exact current ThinkScript source for the study containing the existing EOD bubble to this repository (or attach that source in the Project) so the bubble logic can be updated without reconstructing unseen code.
-3. In Thinkorswim, validate the study after the source update. Do not use a green bubble until its same-bar inputs and all required evidence are verified.
+1. The timezone is confirmed as **Arizona time (America/Phoenix)**.
+2. Install the updated 1M source from docs/Charts/1M/MainStudy.txt in Thinkorswim and confirm it compiles. Install docs/Charts/5M/MainStudy.txt to update the 5M cutoff label.
+3. Validate the 12:55 Arizona bar. Expected current behavior is red EOD GET OUT for a known technical failure, otherwise yellow DATA? — NO HOLD. Green HOLD OVERNIGHT is intentionally unavailable in ThinkScript until complete overnight history, catalyst, exclusion and freshness evidence is connected to the authoritative decision path.
 
 No broker credentials or order permissions are needed; this feature must remain a decision aid, not automatic order submission.
