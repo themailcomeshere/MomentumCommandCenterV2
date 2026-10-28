@@ -723,3 +723,34 @@ The saved TTE IEX response files were compared by UTC five-minute bucket. All 75
 
 ### Release status / uncertainty
 Source and documentation are committed on the feature branch. Browser execution and current-head CI/test results are not verified here. Do not describe MCC as production/live-trading ready.
+
+
+## 2026-10-28 — User feedback and sparse-bar scanner correction
+
+### User-confirmed previous-head results
+- User pulled the feature branch; API-hosted dashboard and Scan & Analyze work.
+- User reports 1M/5M timestamps align, Arizona local timestamps look correct, `dotnet test MomentumCommandCenterV2.sln --configuration Release` passed 100 tests, and CI shows green checks for that prior head.
+- The reported “Summer” example was dated 2026-10-26 (autumn), so true July-date validation remains open.
+
+### Source changes in current pass
+- Scan & Analyze filters bars with invalid timestamps and sorts observations chronologically before summaries.
+- A minimum of two valid bars is required to compute close-to-close change or high-low range. A single observation is no longer treated as a zero-change period.
+- Status is `INSUFFICIENT DATA` unless both 1M and 5M return at least two valid bars. Reason text includes one-bar/no-bar warnings and explicitly says change/range require at least two bars.
+- Provider Comparison Test Date no longer defaults to a stale fixed date. An empty date field is initialized to today's date in `America/Phoenix`; user-selected dates are not overwritten. The Arizona day end includes the final millisecond.
+- Technical backlog and Master To-Do now record acceptance criteria, user feedback, diagnosis boundaries and validation sequence.
+
+### PMI diagnosis
+The user's PMI request for 2026-10-26 Arizona 06:02–16:02 returned one bar per timeframe at 06:55 Arizona, volume 120. The previous 0.00% change/range came from comparing the lone bar to itself; it did not establish that the stock was flat. The UI now reports insufficient data and does not calculate those metrics.
+
+**Root cause of the one-bar response remains unknown.** Data not found in sources to prove whether this is ticker support, feed/entitlement, source coverage, API behavior, or an upstream result. Inspect the actual `GET /api/market-data/bars` payload and Provider Comparison metadata before diagnosing.
+
+### Required user validation after pull
+1. Re-run PMI over the same 2026-10-26 06:02–16:02 Arizona window; confirm both timeframes show `INSUFFICIENT DATA`, change/range unavailable, and a coverage warning.
+2. Inspect API response `provider`, `feed`, `barCount`, first/latest timestamps and `gapCount` for PMI; compare against Provider Comparison.
+3. Run a known liquid symbol for the same window to confirm the multi-bar path still computes change/range.
+4. Confirm Provider Comparison Test Date defaults to today's Arizona date on initial load and does not overwrite a manually selected date.
+5. Test a real July date from a non-Arizona browser timezone. Arizona remains UTC−07:00 year-round.
+6. Run Release tests and verify CI on the exact latest source head; the user's 100-test and green-CI confirmation applies to the prior head, not these latest edits.
+
+### Remaining work
+The unchecked To-Do items are not abandoned. Continue implementation where source/contract evidence is sufficient. Where the work requires credentials, licensed feed access, an operator decision, installed Thinkorswim diagnostics, a complete overnight dataset, or local machine proof, build the interface/contracts/fail-closed path and test scaffold, then leave the external proof explicitly blocked. Full list and release criteria: `docs/Implementation-Backlog-Scaffold-20261027.md` and `docs/Master-To-Do.md`.
