@@ -14,19 +14,25 @@ builder.Services.AddSwaggerGen(options =>
     options.TagActionsBy(api =>
     {
         var path = "/" + (api.RelativePath ?? string.Empty).Split('?')[0].TrimStart('/');
-        var tag = path switch
-        {
-            "/api/health" or "/api/providers/status" => "System & Provider Health",
-            "/api/market-data/compare" or "/api/market-data/bars" or "/api/market-data/import-csv" => "Market Data",
-            "/api/scanner/universe" => "Scanner & Discovery",
-            "/api/market-data/collector/status" => "Collection & Operations",
-            "/api/watchlists/exclusions" => "Watchlists & Exclusions",
-            _ when path.StartsWith("/api/watchlists/exclusions/", StringComparison.OrdinalIgnoreCase) => "Watchlists & Exclusions",
-            "/api/strategy-report/upload" => "Strategy Reports",
-            "/api/boring-overnight/evaluate" => "Boring Overnight",
-            "/api/morning-brief" => "Morning Report",
-            _ => "Other"
-        };
+        string tag;
+        if (path == "/api/health" || path == "/api/providers/status")
+            tag = "System & Provider Health";
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv")
+            tag = "Market Data";
+        else if (path == "/api/scanner/universe")
+            tag = "Scanner & Discovery";
+        else if (path == "/api/market-data/collector/status")
+            tag = "Collection & Operations";
+        else if (path == "/api/watchlists/exclusions" || path.StartsWith("/api/watchlists/exclusions/", StringComparison.OrdinalIgnoreCase))
+            tag = "Watchlists & Exclusions";
+        else if (path == "/api/strategy-report/upload")
+            tag = "Strategy Reports";
+        else if (path == "/api/boring-overnight/evaluate")
+            tag = "Boring Overnight";
+        else if (path == "/api/morning-brief")
+            tag = "Morning Report";
+        else
+            tag = "Other";
         return new[] { tag };
     });
 });
