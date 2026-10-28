@@ -754,3 +754,7 @@ The user's PMI request for 2026-10-26 Arizona 06:02–16:02 returned one bar per
 
 ### Remaining work
 The unchecked To-Do items are not abandoned. Continue implementation where source/contract evidence is sufficient. Where the work requires credentials, licensed feed access, an operator decision, installed Thinkorswim diagnostics, a complete overnight dataset, or local machine proof, build the interface/contracts/fail-closed path and test scaffold, then leave the external proof explicitly blocked. Full list and release criteria: `docs/Implementation-Backlog-Scaffold-20261027.md` and `docs/Master-To-Do.md`.
+
+
+- Follow-up source guard: change now requires finite first/last close values; missing high/low fields are excluded from range inputs. Commit: `286f195f787edde03a2ff7882eb0b68c6bbd0543`.
+- Latest source-head CI status is not confirmed: GitHub status lookup returned no status records for that SHA. The user's green CI report applies to the prior head.
