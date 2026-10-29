@@ -1,3 +1,11 @@
+## 2026-10-29 — RTO bars:null follow-up
+
+- [VERIFIED LIVE BY USER] Retesting RTO for UTC `2026-10-28T20:00:00Z`–`2026-10-28T23:55:00Z` returned HTTP 502 because the successful Alpaca JSON payload had top-level `bars: null`, `next_page_token`, and `symbol`. This is different from the previously anticipated symbol-keyed array shape.
+- [CODE CHANGE — TEST PENDING] The adapter now treats `bars: null` on the first page with no continuation token as an empty result, not as a successful data validation. It still rejects missing `bars`, and rejects null bars on a continuation page to avoid silently returning partial paginated data.
+- [INTERPRETATION] An empty result is not proof of zero trading, nor does it establish whether the cause is feed entitlement, historical availability, symbol coverage, or a provider behavior. The actual cause remains unresolved without a provider response that includes an explanatory code/message or a non-empty RTO result.
+- [NEXT LIVE TEST] Pull/restart with this change, repeat the exact RTO request, and inspect whether the endpoint returns HTTP 200 with `barCount: 0` / empty bars. If empty, compare the same time window against a known liquid symbol and a nearby regular-session RTO window. Do not mark the provider validated from an empty result.
+- [OPEN — OVERNIGHT P0] Timeframe-aware observation identity, authoritative exchange sessions/calendar, automated 20-session boundary pairs, independently sourced catalyst/market evidence, and persistence/display of the final evaluator decision remain incomplete. These remain release blockers for Overnight readiness.
+
 ## 2026-10-29 — Live Alpaca REST verification and RTO payload-shape follow-up
 
 - [VERIFIED LIVE BY USER] `/api/providers/status` reports Alpaca configured and `VALIDATED_DATA_RETURNED`, last successful validation at `2026-10-29T17:44:51.874Z`, 54 bars. This validates a non-empty response in that running API process, not every symbol/session/feed entitlement.
