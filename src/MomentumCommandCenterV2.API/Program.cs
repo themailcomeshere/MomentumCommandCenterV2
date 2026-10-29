@@ -40,6 +40,7 @@ builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservat
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>());
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
+builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore>();
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -338,6 +339,59 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
 })
 .WithSummary("Get the partial market Morning Brief")
 .WithDescription("No parameters. Example status: PARTIAL — MARKET SNAPSHOT ONLY; missing sector flow, movers, catalysts, and scoring remain DATA? until providers are wired.");
+
+app.MapPost("/api/boring-overnight/snapshots", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput input,
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore store,
+    MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(input.Symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (input.EvaluationRequest is null)
+        return Results.BadRequest(new { error = "evaluationRequest is required." });
+    var exclusions = await exclusionStore.GetAsync(ct);
+    var excluded = exclusions.Any(x => x.Symbol.Equals(input.Symbol, StringComparison.OrdinalIgnoreCase));
+    var snapshotInput = input with
+    {
+        EvaluationRequest = input.EvaluationRequest with { Excluded = excluded }
+    };
+    try
+    {
+        var snapshot = await store.AppendAsync(snapshotInput, ct);
+        var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(
+            snapshot.EvaluationRequest);
+        return Results.Created($"/api/boring-overnight/snapshots?symbol={snapshot.Symbol}&limit=1",
+            new { snapshot, evaluation, note = "Persisted caller-supplied evidence; provenance is recorded but not independently verified. Missing required evidence remains DATA?." });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("RecordBoringOvernightSnapshot")
+.WithSummary("Append and evaluate a timestamped Boring Overnight candidate snapshot")
+.WithDescription("Persists source/provider/feed, as-of timestamp, per-field source timestamps, calculation version, and the explicit evaluation inputs. Caller-supplied data is not independently verified; this endpoint does not clear catalysts or submit orders.")
+.ProducesProblem(400);
+
+app.MapGet("/api/boring-overnight/snapshots", async (
+    string? symbol,
+    int? limit,
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore store,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var snapshots = await store.GetLatestAsync(symbol, limit ?? 50, ct);
+        return Results.Ok(new
+        {
+            count = snapshots.Count,
+            snapshots,
+            note = "Append-only audit records. Source timestamps and provenance are caller-supplied and are not independently verified."
+        });
+    }
+    catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("GetBoringOvernightSnapshots")
+.WithSummary("Read recent persisted Boring Overnight candidate snapshots")
+.WithDescription("Optional query parameters: symbol and limit (1–500). Returns persisted snapshots ordered by as-of time, newest first.");
 
 app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore, CancellationToken ct) =>
 {
