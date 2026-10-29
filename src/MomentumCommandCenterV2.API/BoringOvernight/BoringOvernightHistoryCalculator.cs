@@ -35,6 +35,12 @@ public static class BoringOvernightHistoryCalculator
         var duplicateIds = relevant.GroupBy(x => x.ObservationId, StringComparer.Ordinal).Any(g => g.Count() > 1);
         if (duplicateIds) throw new InvalidDataException("Duplicate observation IDs were supplied.");
 
+        // Do not silently combine IEX/SIP (or other) feed rows when the caller omitted feed.
+        var distinctFeeds = relevant.Select(x => x.Bar.Feed ?? string.Empty)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (feed is null && distinctFeeds.Length > 1)
+            throw new InvalidDataException("Feed must be specified when stored observations span multiple feeds.");
+
         var latestByTimestamp = relevant
             .GroupBy(x => x.SourceTimestamp)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.ReceivedAt).First());
