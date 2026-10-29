@@ -567,3 +567,107 @@ if(scanAnalyzeForm) {
   finally {button.disabled=false;}
  });
 }
+
+
+/*
+/// MODULE: Boring Overnight bar retrieval and audit view
+/// PURPOSE: Fetch user-selected 1m/5m bars through the API and display persisted evaluation snapshots.
+/// WHEN CALLED: User switches to Overnight mode and submits the Overnight form.
+/// IMPORTANT: This does not synthesize session boundaries or qualify a candidate. Provider coverage is reported as returned.
+*/
+function overnightArizonaTimestamp(value) {
+ const date = new Date(value);
+ if (!Number.isFinite(date.getTime())) return "DATA?";
+ return new Intl.DateTimeFormat("en-US", {
+  timeZone:"America/Phoenix", year:"numeric", month:"2-digit", day:"2-digit",
+  hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false
+ }).format(date) + " Arizona";
+}
+function initializeOvernightWindow() {
+ const from = $("overnightFrom"), to = $("overnightTo");
+ if (!from || !to || (from.value && to.value)) return;
+ const now = new Date(), p = phoenixParts(now);
+ const hour = Number(p.hour), minute = Number(p.minute);
+ const start = new Date(now.getTime());
+ if (hour < 13 || (hour === 13 && minute === 0)) start.setDate(start.getDate() - 1);
+ const startParts = phoenixParts(start);
+ from.value = startParts.year+"-"+startParts.month+"-"+startParts.day+"T13:00";
+ to.value = phoenixLocalInput(now);
+}
+async function overnightFetchJson(url, options) {
+ const response = await fetch(url, {cache:"no-store", headers:{Accept:"application/json",...(options&&options.headers||{})}, ...(options||{})});
+ const body = await response.json().catch(()=>({}));
+ if (!response.ok) throw new Error(body.error || body.detail || ("HTTP "+response.status));
+ return body;
+}
+async function refreshOvernightSnapshots() {
+ const status = $("overnightStatus"), rows = $("overnightSnapshotRows");
+ if (!status || !rows) return;
+ status.textContent = "Loading saved Overnight evaluations…";
+ try {
+  const symbol = $("overnightSymbol").value.trim().toUpperCase();
+  const params = new URLSearchParams({limit:"50"});
+  if (/^[A-Z0-9.-]{1,8}$/.test(symbol)) params.set("symbol",symbol);
+  const data = await overnightFetchJson("/api/boring-overnight/snapshots?"+params.toString());
+  const snapshots = Array.isArray(data.snapshots) ? data.snapshots : [];
+  rows.replaceChildren(...(snapshots.length ? snapshots.map(snapshot => {
+   const tr = document.createElement("tr");
+   const evaluation = snapshot.evaluation || snapshot.Evaluation || {};
+   const reasons = evaluation.reasonCodes || evaluation.ReasonCodes || evaluation.reasons || evaluation.Reasons || [];
+   const values = [
+    snapshot.symbol || snapshot.Symbol || "DATA?",
+    snapshot.asOfUtc || snapshot.AsOfUtc || "DATA?",
+    snapshot.recordedAtUtc || snapshot.RecordedAtUtc || "DATA?",
+    (snapshot.provider || snapshot.Provider || "DATA?")+" / "+(snapshot.feed || snapshot.Feed || "DATA?"),
+    evaluation.decision || evaluation.Decision || evaluation.status || evaluation.Status || "NOT INCLUDED",
+    Array.isArray(reasons) ? reasons.join(", ") : String(reasons || "No reason codes returned")
+   ];
+   for (const value of values) { const td=document.createElement("td"); td.textContent=String(value); tr.append(td); }
+   return tr;
+  }) : [Object.assign(document.createElement("tr"),{innerHTML:"<td colspan='6'>No saved evaluations found for this query.</td>"})]));
+  status.textContent = "Loaded "+snapshots.length+" saved evaluation(s). "+(data.note||"");
+ } catch(error) {
+  status.textContent = "Could not load saved evaluations: "+error.message;
+ }
+}
+$("overnightBarsForm")?.addEventListener("submit", async event => {
+ event.preventDefault();
+ const button = $("overnightFetch"), status = $("overnightStatus");
+ const symbol = $("overnightSymbol").value.trim().toUpperCase();
+ if (!/^[A-Z0-9.-]{1,8}$/.test(symbol)) { status.textContent="Enter a valid symbol (1–8 letters, digits, dot, or hyphen)."; return; }
+ let fromUtc, toUtc;
+ try { fromUtc=phoenixLocalToUtc($("overnightFrom").value); toUtc=phoenixLocalToUtc($("overnightTo").value); }
+ catch(error) { status.textContent=error.message; return; }
+ if (new Date(fromUtc)>=new Date(toUtc) || new Date(toUtc)-new Date(fromUtc)>31*86400000) {
+  status.textContent="Require From before To and a maximum 31-day window."; return;
+ }
+ button.disabled=true; status.textContent="Requesting "+symbol+" "+$("overnightTimeframe").value+" bars from Alpaca…";
+ try {
+  const params = new URLSearchParams({symbol,timeframe:$("overnightTimeframe").value,from:fromUtc,to:toUtc,providerName:"Alpaca"});
+  const data = await overnightFetchJson("/api/market-data/bars?"+params.toString());
+  $("overnightProvider").textContent=(data.provider||"DATA?")+" / "+(data.feed||"feed not reported");
+  $("overnightCount").textContent=String(data.barCount??0);
+  $("overnightFirst").textContent=data.firstSourceTimestampUtc?overnightArizonaTimestamp(data.firstSourceTimestampUtc)+" · "+data.firstSourceTimestampUtc:"NO BARS";
+  $("overnightLatest").textContent=data.latestSourceTimestampUtc?overnightArizonaTimestamp(data.latestSourceTimestampUtc)+" · "+data.latestSourceTimestampUtc:"NO BARS";
+  const latest = data.latestSourceTimestampUtc ? new Date(data.latestSourceTimestampUtc) : null;
+  $("overnightAge").textContent=latest?Math.max(0,(Date.now()-latest.getTime())/60000).toFixed(1)+" minutes":"UNKNOWN";
+  $("overnightGaps").textContent=String(data.gapCount??"UNKNOWN");
+  const bars=Array.isArray(data.bars)?data.bars:[];
+  const extended=bars.filter(bar=>{
+   const parts=phoenixParts(new Date(bar.timestamp));
+   const hour=Number(parts.hour), minute=Number(parts.minute);
+   return hour>13 || (hour===13 && minute>=0);
+  }).length;
+  $("overnightInterpretation").textContent=bars.length
+   ? "Retrieved "+bars.length+" "+$("overnightTimeframe").value+" bars; "+extended+" have Arizona timestamps at or after 1:00 PM. Newly persisted observations: "+(data.newlyPersistedObservationCount??"UNKNOWN")+". Returned bars are source evidence only; inspect session coverage and feed before evaluating."
+   : "The API returned zero bars for this symbol and time window. This is not proof of zero trading; verify provider status, symbol entitlement, feed and requested timestamps.";
+  status.textContent="Bar request complete · "+symbol+" · "+$("overnightTimeframe").value+" · Arizona "+$("overnightFrom").value+" → "+$("overnightTo").value+" · UTC "+fromUtc+" → "+toUtc+".";
+  await refreshOvernightSnapshots();
+ } catch(error) {
+  status.textContent="Overnight bar request failed: "+error.message+" · Check provider configuration and API logs.";
+  $("overnightInterpretation").textContent="No successful response. Do not infer missing bars or Overnight qualification.";
+ } finally { button.disabled=false; }
+});
+$("overnightRefreshSnapshots")?.addEventListener("click",refreshOvernightSnapshots);
+$("mode")?.addEventListener("change",()=>{ if($("mode").value==="overnight"){initializeOvernightWindow();refreshOvernightSnapshots();} });
+initializeOvernightWindow();
