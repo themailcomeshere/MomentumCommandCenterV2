@@ -51,7 +51,25 @@
 </section>
 <section class="layout"><article class="panel"><div class="section-heading"><div><div class="eyebrow">DECISION EXPLANATION</div><h2>Why this classification?</h2></div><span class="muted">Reason codes</span></div><ul id="reasons" class="reason-list"><li>Low relative volume — participation is modest.</li><li>Recent movement capacity is limited.</li><li>Execution eligibility is a separate gate.</li></ul><div class="notice">This panel explains a classification. It is not an entry instruction, a profit probability, or a substitute for the source 5M/1M studies.</div></article>
 <article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">Permission: YES (demo)</strong><p>Structure and permission are the higher-timeframe gate.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">Execution event: ACTIVE (demo)</strong><p>Timing is finite; a stale READY event should expire.</p></div></div><div class="divider"></div><div class="section-heading"><h3>Replay inspection</h3><span id="replayLabel" class="muted">Snapshot 3 of 5</span></div><div class="bar-strip" id="bars"></div><p class="muted small">Demo bars are hand-authored UI fixtures, not provider data.</p></article></section>
-<section id="overnightPanel" class="panel hidden"><div class="section-heading"><div><div class="eyebrow">BORING OVERNIGHT</div><h2>Design vs. Use</h2></div><span class="chip">Research checklist</span></div><div class="overnight-grid"><div><h3>Design — evaluate the candidate</h3><p>Overnight edge, boringness, liquidity, hard gates, catalyst risk, and current-day behavior remain separate inputs.</p></div><div><h3>Use — make the nightly decision</h3><p>Review score and reason codes, verify events and chart structure, then choose READY, WATCH, REJECT, or zero position.</p></div></div><p class="notice">The UI does not calculate overnight scores yet. Catalyst-clear status is never inferred from missing data.</p></section>
+<section id="overnightPanel" class="panel hidden">
+ <div class="section-heading"><div><div class="eyebrow">BORING OVERNIGHT · API-BACKED</div><h2>Overnight scan &amp; analysis</h2></div><span class="chip">Research only · no orders</span></div>
+ <p class="notice">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
+ <form id="overnightBarsForm" class="overnight-controls">
+  <label>Symbol <input id="overnightSymbol" value="RTO" maxlength="8" required></label>
+  <label>Bar interval <select id="overnightTimeframe"><option value="1m" selected>1 minute</option><option value="5m">5 minutes</option></select></label>
+  <label>From (Arizona local) <input id="overnightFrom" type="datetime-local" required></label>
+  <label>To (Arizona local) <input id="overnightTo" type="datetime-local" required></label>
+  <button id="overnightFetch" type="submit">Fetch &amp; analyze bars</button>
+  <button id="overnightRefreshSnapshots" type="button" class="quiet-button">Refresh saved evaluations</button>
+ </form>
+ <p id="overnightStatus" class="muted" role="status">Ready to request bars.</p>
+ <div class="overnight-results-grid">
+  <article class="overnight-result"><h3>Requested bar coverage</h3><dl><div><dt>Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div><dt>Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div><dt>First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div><dt>Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div><dt>Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div><dt>Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
+  <article class="overnight-result"><h3>What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice">The API's historical Overnight evaluator still requires 20 exact session boundary pairs. Timeframe identity is not stored separately yet, and the dashboard will not infer that missing information or fabricate a READY decision.</p></article>
+ </div>
+ <div class="section-heading overnight-snapshot-heading"><div><h3>Saved Overnight evaluations</h3><p class="muted">Read from <code>/api/boring-overnight/snapshots</code>; an empty list means none were persisted at this API store path.</p></div></div>
+ <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>As of (UTC)</th><th>Recorded (UTC)</th><th>Provider / feed</th><th>Decision</th><th>Reason codes</th></tr></thead><tbody id="overnightSnapshotRows"><tr><td colspan="6">No saved evaluations loaded yet.</td></tr></tbody></table></div>
+</section>
 <section class="panel feedback-panel">
  <div class="section-heading"><div><div class="eyebrow">PRODUCT FEEDBACK</div><h2>Dashboard notes</h2></div><span class="muted">Saved in this browser only</span></div>
  <form id="feedbackForm" class="feedback-form">
