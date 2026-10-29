@@ -645,3 +645,19 @@ The JSON contains 20 illustrative weekday boundary entries and uses common 1-min
 - Still not automated: the evaluate-with-history endpoint requires 20 exact close/open boundaries; there is no authoritative exchange-calendar generator yet. Do not infer READY.
 - Storage caveat: persisted observations do not currently include timeframe in their identity. The direct fetch supports 1m/5m, but a 1m/5m-isolated historical evaluation requires a storage schema/identity fix first.
 - Next: add timeframe identity to persisted observations and then add exchange-calendar-based boundary generation and UI evaluation. Test with the supplied RTO query and compare the displayed Arizona timestamps to the source response.
+
+
+## 2026-10-29 — Six-workstream audit and validation handoff
+
+The full audit is in `docs/Validation/MCC-Remaining-Work-Audit-20261029.md`. Status summary:
+
+1. **5M→1M parity:** repository source comparison done; actual installed-source and matched-bar behavioral parity still required. Use `docs/Validation/5M-to-1M-User-Validation-Steps.md`; provide installed source/input overrides and matched chart examples.
+2. **Runner/exit:** source roles reviewed; validate 5M runner/waning/swing/failure and 1M short-term invalidation/exit on identical historical bars before encoding transition fixtures.
+3. **Broad scanner:** no production discovery provider or hosted discovery poller is configured. Provider selection/entitlement is required before implementation can be truthfully called market-wide.
+4. **Collector:** REST polling, overlap, checkpoint and JSONL correction foundations exist. Persisted bar identity omits timeframe; resolve that before timeframe-specific history use. Perform restart/outage/empty/error/correction fault tests with explicit temporary paths.
+5. **Morning Brief:** requirements exist, but benchmark health, breadth, movers, sector and sourced catalyst feeds plus immutable snapshots are not connected end-to-end. Keep unsupported fields DATA? / UNKNOWN.
+6. **Browser/release:** recent GitHub Actions workflow `40966465421` passed, but no browser-level test was run. Pull final branch, restart API, hard-refresh, execute workspace matrix, inspect console/network/accessibility/responsive behavior, and run the full .NET test suite on the same SHA.
+
+**User's post-market comparison:** SPY/IEX returned two observations (20:00Z and 20:54Z); RTO returned zero. This establishes one SPY post-market observation at 20:54Z, not full coverage or the reason RTO is empty. The separate Requested bar coverage panel is still NOT LOADED. No Overnight qualification request or final evaluation was run.
+
+**Release status: NOT RELEASE-READY.** Do not clear these six items until the specific evidence/tests in the audit are complete.
