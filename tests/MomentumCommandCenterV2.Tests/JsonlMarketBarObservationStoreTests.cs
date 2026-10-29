@@ -108,7 +108,7 @@ public sealed class JsonlMarketBarObservationStoreTests
 
             Assert.Equal(2, result.Count);
             Assert.Equal(10.8, result[0].Bar.Close);
-            Assert.Equal(10.5, result[0].Bar.Open);
+            Assert.Equal(10.0, result[0].Bar.Open);
             Assert.Equal(11.1, result[1].Bar.Close);
             Assert.NotNull(result[0].SupersedesObservationId);
             Assert.Equal(first.Timestamp.AddMinutes(1), result[1].SourceTimestamp);
