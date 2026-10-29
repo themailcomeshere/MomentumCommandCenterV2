@@ -27,7 +27,7 @@ builder.Services.AddSwaggerGen(options =>
             tag = "Watchlists & Exclusions";
         else if (path == "/api/strategy-report/upload")
             tag = "Strategy Reports";
-        else if (path == "/api/boring-overnight/evaluate")
+        else if (path.StartsWith("/api/boring-overnight/", StringComparison.OrdinalIgnoreCase))
             tag = "Boring Overnight";
         else if (path == "/api/morning-brief")
             tag = "Morning Report";
@@ -392,6 +392,42 @@ app.MapGet("/api/boring-overnight/snapshots", async (
 .WithName("GetBoringOvernightSnapshots")
 .WithSummary("Read recent persisted Boring Overnight candidate snapshots")
 .WithDescription("Optional query parameters: symbol and limit (1–500). Returns persisted snapshots ordered by as-of time, newest first.");
+
+app.MapPost("/api/boring-overnight/history", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryRequest request,
+    IMarketBarObservationStore store,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(request.Symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (string.IsNullOrWhiteSpace(request.Provider))
+        return Results.BadRequest(new { error = "provider is required and must match stored observations." });
+    if (request.Boundaries is null || request.Boundaries.Count == 0)
+        return Results.BadRequest(new { error = "At least one explicit close/open session boundary is required." });
+
+    try
+    {
+        var fromUtc = request.Boundaries.Min(x => x.PreviousCloseBarTimestampUtc);
+        var toUtc = request.Boundaries.Max(x => x.NextOpenBarTimestampUtc);
+        if (fromUtc.Offset != TimeSpan.Zero || toUtc.Offset != TimeSpan.Zero || fromUtc > toUtc)
+            return Results.BadRequest(new { error = "Boundary timestamps must be UTC and form a valid window." });
+
+        var observations = await store.GetLatestAsync(
+            request.Symbol, request.Provider, fromUtc, toUtc, 10000, ct);
+        var result = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
+            request.Symbol, request.Provider, request.Feed, observations, request.Boundaries, request.RequiredWindow);
+        return Results.Ok(new
+        {
+            result,
+            note = "Calculated from persisted raw bars using caller-supplied exact session boundary timestamps. Validate exchange-calendar dates, provider/feed coverage, and corporate-action adjustments independently. This endpoint does not mark catalysts clear or authorize a hold."
+        });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (InvalidDataException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("CalculateBoringOvernightHistory")
+.WithSummary("Calculate historical Overnight returns from persisted bars and explicit session boundaries")
+.WithDescription("Provide symbol, provider, optional feed, requiredWindow (minimum 5), and one boundary per next-session date. Each boundary must identify exact UTC timestamps for the previous regular-session close bar and next regular-session open bar. Missing pairs suppress rolling metrics.");
 
 app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore, CancellationToken ct) =>
 {
