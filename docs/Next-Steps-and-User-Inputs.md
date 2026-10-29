@@ -420,3 +420,16 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
 5. Do not use READY as a trade authorization: snapshot provenance is caller-supplied; metrics are not yet computed from validated overnight bar pairs, catalyst feed is not connected, and TOS study parity is not established by this endpoint.
 
 - Added `BoringOvernightCandidateSnapshotStoreTests` for round-trip provenance, symbol filtering, non-UTC rejection, and mismatched-symbol rejection. Source/API CI runs `40818681818` and `40818694414` passed; run for test commit `8139ef7eb6934fad423c41a29a28cfac4e4bc23b` was queued when this handoff note was written. Confirm latest run before calling HEAD green.
+
+
+### New implementation while user runs local snapshot steps — raw market-bar query
+- Extended the market-bar store with `GetLatestAsync(symbol, provider, fromUtc, toUtc, limit)`. It reads JSONL observations and returns the latest correction for each provider/symbol/source timestamp while preserving prior correction records in storage.
+- Added `GET /api/market-data/stored-bars` with required `symbol`, `fromUtc`, `toUtc` (UTC ISO-8601); optional `provider`, `limit` (1–10000). Example: `/api/market-data/stored-bars?symbol=RTO&fromUtc=2026-10-27T00:00:00Z&toUtc=2026-10-29T00:00:00Z&limit=1000`.
+- Added tests for latest-correction selection, provider/time-window filtering, and invalid range/limit. Workflow for the interface-only intermediate commit failed as expected because implementation had not yet been committed; implementation and tests are now committed in later revisions. Check the newest workflow before declaring current HEAD green.
+- This endpoint returns raw OHLCV observations, not overnight return metrics. It does not pair regular-session close with next-session open or fill gaps. That service is the next implementation task.
+
+### Next development slice
+1. Confirm current CI is green.
+2. Implement a pure, timezone-explicit overnight pairing/calculation service over queried bars. Require explicit session dates and close/open source bars; surface incomplete sessions and duplicates as data-quality failures, not zeros.
+3. Unit-test overnight return convention, session boundaries, missing/duplicate bars, corrected bars, and lookback window/count.
+4. Only then map calculated, provenance-carrying metrics into the evaluator request. Do not synthesize catalyst clearance or TOS technical values.
