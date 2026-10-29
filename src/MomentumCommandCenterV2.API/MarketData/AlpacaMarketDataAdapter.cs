@@ -73,7 +73,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
                 throw new HttpRequestException($"Alpaca returned {(int)response.StatusCode} {response.ReasonPhrase}: {TrimError(body)}");
             using var document = JsonDocument.Parse(body);
             var root = document.RootElement;
-            if (!root.TryGetProperty("bars", out var bars) || bars.ValueKind != JsonValueKind.Array)
+            if (!TryGetBarsArray(root, symbol, out var bars))
                 throw new InvalidOperationException(DescribeUnexpectedBarsPayload(root));
             foreach (var item in bars.EnumerateArray())
             {
@@ -135,6 +135,37 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         }
     }
 
+    private static bool TryGetBarsArray(JsonElement root, string symbol, out JsonElement bars)
+    {
+        bars = default;
+        if (root.ValueKind != JsonValueKind.Object ||
+            !root.TryGetProperty("bars", out var barsElement))
+            return false;
+
+        // Alpaca commonly returns a single-symbol bars array. Some response shapes wrap
+        // per-symbol arrays under bars.{SYMBOL}; accept the requested symbol only.
+        if (barsElement.ValueKind == JsonValueKind.Array)
+        {
+            bars = barsElement;
+            return true;
+        }
+
+        if (barsElement.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in barsElement.EnumerateObject())
+            {
+                if (!string.Equals(property.Name, symbol, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (property.Value.ValueKind != JsonValueKind.Array)
+                    return false;
+                bars = property.Value;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static string DescribeUnexpectedBarsPayload(JsonElement root)
     {
         var keys = root.ValueKind == JsonValueKind.Object
@@ -147,7 +178,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             message = message.Length <= 300 ? message : message[..300];
         var detail = string.IsNullOrWhiteSpace(message) ? "" : $" Provider message: {message}";
         var codeDetail = string.IsNullOrWhiteSpace(code) ? "" : $" Provider code: {code}.";
-        return $"Alpaca HTTP response was successful but did not contain a bars array. Top-level keys: [{keys}].{codeDetail}{detail} Check the requested URL/window, feed entitlement, and provider response schema.";
+        return $"Alpaca HTTP response was successful but did not contain a usable bars array for the requested symbol. Top-level keys: [{keys}].{codeDetail}{detail} Check the requested URL/window, feed entitlement, and provider response schema.";
     }
 
     private static string TrimError(string body) => body.Length <= 500 ? body : body[..500];
