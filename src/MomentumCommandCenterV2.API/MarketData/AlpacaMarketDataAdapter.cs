@@ -74,7 +74,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             using var document = JsonDocument.Parse(body);
             var root = document.RootElement;
             if (!root.TryGetProperty("bars", out var bars) || bars.ValueKind != JsonValueKind.Array)
-                throw new InvalidOperationException("Alpaca response did not contain a bars array.");
+                throw new InvalidOperationException(DescribeUnexpectedBarsPayload(root));
             foreach (var item in bars.EnumerateArray())
             {
                 var timestamp = item.GetProperty("t").GetDateTimeOffset();
@@ -133,6 +133,21 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             }
             return response;
         }
+    }
+
+    private static string DescribeUnexpectedBarsPayload(JsonElement root)
+    {
+        var keys = root.ValueKind == JsonValueKind.Object
+            ? string.Join(", ", root.EnumerateObject().Select(property => property.Name).Take(12))
+            : root.ValueKind.ToString();
+        var code = root.TryGetProperty("code", out var codeElement) ? codeElement.ToString() : null;
+        var message = root.TryGetProperty("message", out var messageElement) ? messageElement.ToString()
+            : root.TryGetProperty("error", out var errorElement) ? errorElement.ToString() : null;
+        if (!string.IsNullOrWhiteSpace(message))
+            message = message.Length <= 300 ? message : message[..300];
+        var detail = string.IsNullOrWhiteSpace(message) ? "" : $" Provider message: {message}";
+        var codeDetail = string.IsNullOrWhiteSpace(code) ? "" : $" Provider code: {code}.";
+        return $"Alpaca HTTP response was successful but did not contain a bars array. Top-level keys: [{keys}].{codeDetail}{detail} Check the requested URL/window, feed entitlement, and provider response schema.";
     }
 
     private static string TrimError(string body) => body.Length <= 500 ? body : body[..500];
