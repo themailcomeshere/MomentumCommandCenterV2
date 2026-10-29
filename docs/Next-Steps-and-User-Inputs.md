@@ -1,3 +1,21 @@
+## 2026-10-29 — RTO regular-close vs post-market result and exact control test
+
+### Results supplied by user
+- RTO 1m, Alpaca, 2026-10-28 20:00–23:55 UTC: barCount 0, feed null, no source timestamps. The API safely normalized the provider's bars:null response to an empty result.
+- RTO 1m, Alpaca/IEX, 2026-10-28 19:00–23:55 UTC: 47 bars from 19:01 through 19:59 UTC; six gaps. No bars after 19:59 UTC.
+- Timezone interpretation: October 28 was during US Eastern daylight time (UTC−4). 19:00–19:59 UTC = 15:00–15:59 ET, the final regular-session hour. 20:00 UTC = 16:00 ET, the regular close. Thus the 20:00–23:55 UTC request is post-market; the longer request only confirms regular-session RTO bars and does not show extended-hours bars.
+
+### Next test — use SPY as the liquid-symbol control
+Call this exact URL against the same local API:
+/api/market-data/bars?symbol=SPY&timeframe=1m&from=2026-10-28T20:00:00Z&to=2026-10-28T23:55:00Z&providerName=Alpaca
+
+Capture HTTP status, feed, barCount, first/latest source timestamps, and sanitized error fields. SPY is a reasonable liquid control, but a zero result still would not prove a global Alpaca outage or entitlement issue. It may reflect IEX venue coverage, whether that symbol printed eligible trades in the interval, or provider query/entitlement behavior. If SPY returns post-market bars, the Alpaca/IEX route can deliver some extended-hours data for that symbol/window; RTO-specific availability remains a separate question.
+
+Optional boundary check:
+/api/market-data/bars?symbol=RTO&timeframe=1m&from=2026-10-28T19:50:00Z&to=2026-10-28T20:10:00Z&providerName=Alpaca
+
+Do not change feed configuration or infer SIP entitlement. Do not synthesize missing observations. Keep RTO after-hours coverage marked UNVERIFIED until a source response establishes it.
+
 ## 2026-10-29 — RTO bars:null test follow-up
 
 The latest user retest returned HTTP 502 with a successful Alpaca response whose `bars` value was explicitly `null`. This is not the same shape as the earlier hypothesis (`bars: { "RTO": [...] }`). Adapter handling is being hardened so an explicit null bars field on the first page is treated as an empty result, while missing bars and null continuation pages remain errors. An empty response is not proof of no trading and must not count as successful data validation.
