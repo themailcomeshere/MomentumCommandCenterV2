@@ -63,6 +63,18 @@
   <button id="overnightRefreshSnapshots" type="button" class="quiet-button">Refresh saved evaluations</button>
  </form>
  <p id="overnightStatus" class="muted" role="status">Ready to request bars.</p>
+ <section class="overnight-coverage-audit" aria-labelledby="overnightCoverageTitle">
+  <div class="section-heading"><div><div class="eyebrow">PROVIDER COVERAGE AUDIT</div><h3 id="overnightCoverageTitle">Post-market control test</h3><p class="muted">Fetches the selected ticker and SPY over the identical UTC window. This is a coverage diagnostic, not a trading signal.</p></div></div>
+  <form id="overnightCoverageForm" class="overnight-controls">
+   <label>From (UTC) <input id="overnightCoverageFrom" type="datetime-local" value="2026-10-28T20:00" required></label>
+   <label>To (UTC) <input id="overnightCoverageTo" type="datetime-local" value="2026-10-28T23:55" required></label>
+   <button id="overnightCoverageRun" type="submit">Compare ticker vs SPY</button>
+  </form>
+  <p id="overnightCoverageStatus" class="muted" role="status">No control test run in this session.</p>
+  <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Provider / feed</th><th>Bars</th><th>First / latest source time (UTC)</th><th>Interpretation</th></tr></thead><tbody id="overnightCoverageRows"><tr><td colspan="5">No coverage results.</td></tr></tbody></table></div>
+  <p class="notice">On 2026-10-28, 20:00 UTC was 16:00 EDT (regular close); later timestamps are post-market. Sparse IEX bars prove only that the feed returned those observations for that symbol/window. Empty results do not prove no trading or identify entitlement cause.</p>
+ </section>
+
  <div class="overnight-results-grid">
   <article class="overnight-result"><h3>Requested bar coverage</h3><dl><div><dt>Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div><dt>Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div><dt>First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div><dt>Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div><dt>Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div><dt>Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
   <article class="overnight-result"><h3>What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice">The API's historical Overnight evaluator still requires 20 exact session boundary pairs. Timeframe identity is not stored separately yet, and the dashboard will not infer that missing information or fabricate a READY decision.</p></article>
