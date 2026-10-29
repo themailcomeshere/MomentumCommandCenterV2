@@ -1010,3 +1010,5 @@ Continue work without waiting for another confirmation when a task can be safely
 - [IMPLEMENTED — INSTRUCTIONS ADDED, CI PENDING] Added `docs/templates/README-boring-overnight-api-templates.md` explaining UTC-to-Arizona conversion, how to fill boundaries from stored-bars, what to inspect in the response, the snapshot count=0 diagnostic, and the negative test.
 - [NEXT P0] Replace illustrative timestamps in the template with exact timestamps from the user's actual provider/feed store. Add authoritative exchange calendar/session boundary generation and validation before treating computed returns as production-grade.
 - [CI CHECK] At time of documentation, CI for the new UTC-description, template, and README commits still needs checking on latest HEAD. Do not mark the current branch green until its latest workflow passes.
+
+- [DOCS REFINED] Template instructions explicitly identify the example `asOfUtc` value and require replacing it with the actual evaluation timestamp; the JSON remains parseable rather than using a non-date placeholder.
