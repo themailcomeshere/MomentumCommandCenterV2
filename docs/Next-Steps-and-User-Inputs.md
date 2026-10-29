@@ -1,3 +1,12 @@
+## 2026-10-29 — RTO bars:null test follow-up
+
+The latest user retest returned HTTP 502 with a successful Alpaca response whose `bars` value was explicitly `null`. This is not the same shape as the earlier hypothesis (`bars: { "RTO": [...] }`). Adapter handling is being hardened so an explicit null bars field on the first page is treated as an empty result, while missing bars and null continuation pages remain errors. An empty response is not proof of no trading and must not count as successful data validation.
+
+After pulling the branch and restarting the API, rerun:
+`/api/market-data/bars?symbol=RTO&timeframe=1m&from=2026-10-28T20:00:00Z&to=2026-10-28T23:55:00Z&providerName=Alpaca`
+
+Expected safe behavior after this change: HTTP 200 with an empty normalized result, not a fabricated bar or provider validation. If the result is empty, test a known liquid symbol over the same interval and RTO over a nearby regular-session interval; send only sanitized status, feed, count, timestamps, and provider code/message. Cause of RTO's null bars remains unknown until provider evidence distinguishes no data from entitlement/symbol/session behavior.
+
 ## 2026-10-29 — Live Alpaca verification results and next Overnight test
 
 ### Live result supplied by user
