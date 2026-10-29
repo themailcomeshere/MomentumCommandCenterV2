@@ -106,6 +106,34 @@ public sealed class AlpacaMarketDataAdapterTests
     }
 
     [Fact]
+    public async Task GetBarsAsync_NullBarsResponse_ReturnsEmptyWithoutMarkingDataValidated()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                \"\"\"{"bars":null,"next_page_token":null,"symbol":"RTO"}\"\"\",
+                Encoding.UTF8,
+                "application/json")
+        });
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(client, configuration);
+
+        var bars = await adapter.GetBarsAsync("RTO", TimeSpan.FromMinutes(1),
+            DateTimeOffset.Parse("2026-10-28T20:00:00Z"), DateTimeOffset.Parse("2026-10-28T23:55:00Z"),
+            CancellationToken.None);
+
+        Assert.Empty(bars);
+        Assert.False(adapter.HasSuccessfulDataValidation);
+        Assert.Null(adapter.LastSuccessfulDataValidationUtc);
+    }
+
+    [Fact]
     public async Task GetBarsAsync_SymbolKeyedBarsObject_ParsesRequestedSymbolBars()
     {
         var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
