@@ -1012,3 +1012,11 @@ Continue work without waiting for another confirmation when a task can be safely
 - [CI CHECK] At time of documentation, CI for the new UTC-description, template, and README commits still needs checking on latest HEAD. Do not mark the current branch green until its latest workflow passes.
 
 - [DOCS REFINED] Template instructions explicitly identify the example `asOfUtc` value and require replacing it with the actual evaluation timestamp; the JSON remains parseable rather than using a non-date placeholder.
+
+
+## Overnight dashboard bar workflow — 2026-10-29
+
+- [IMPLEMENTED — CI PENDING] Replaced the static Boring Overnight checklist with an API-backed bar retrieval panel. It supports user-selected 1m/5m bars, Arizona-local From/To inputs converted to UTC, requests that extend past 1:00 PM Arizona, reports first/latest source timestamps, feed, bar count, gaps, and newly persisted observations, and reads saved evaluation snapshots.
+- [IMPORTANT LIMITATION] This dashboard panel fetches and displays source bars; it does not auto-generate the 20 Overnight session boundary pairs or declare a candidate READY. Stored bar observations do not currently carry an explicit timeframe identity, so the 1m/5m choice is valid for the direct fetch request but must not be used to claim that persisted-bars history is timeframe-isolated. Fix storage identity before automating historical evaluation.
+- [NEXT P0] Add timeframe to persisted observation identity and query filters so 1m and 5m observations at the same source timestamp cannot overwrite or masquerade as each other.
+- [NEXT P0] Add an authoritative exchange calendar/session-boundary service, then wire the dashboard to the evaluate-with-history endpoint without manually authored 20-pair JSON. Until then, exact session boundary input remains an API limitation and missing history must fail closed.
