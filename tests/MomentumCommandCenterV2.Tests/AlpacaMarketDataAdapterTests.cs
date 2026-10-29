@@ -111,7 +111,7 @@ public sealed class AlpacaMarketDataAdapterTests
         var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(
-                \"\"\"{"bars":null,"next_page_token":null,"symbol":"RTO"}\"\"\",
+                """{"bars":null,"next_page_token":null,"symbol":"RTO"}""",
                 Encoding.UTF8,
                 "application/json")
         });
