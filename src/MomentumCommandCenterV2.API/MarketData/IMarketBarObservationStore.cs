@@ -11,6 +11,19 @@ public interface IMarketBarObservationStore
     /// WHEN CALLED: A provider adapter returns a batch of normalized OHLCV bars.
     /// </summary>
     Task<int> AppendAsync(IReadOnlyCollection<MarketBar> bars, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// PURPOSE: Query the latest known version of each stored provider/symbol/timestamp bar.
+    /// WHEN CALLED: Historical calculations, parity checks, and audit endpoints read persisted observations.
+    /// IMPORTANT: Returned bars are raw source observations, not session-paired Overnight returns.
+    /// </summary>
+    Task<IReadOnlyList<MarketBarObservation>> GetLatestAsync(
+        string symbol,
+        string? provider,
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        int limit,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>
