@@ -612,15 +612,21 @@ async function refreshOvernightSnapshots() {
   const snapshots = Array.isArray(data.snapshots) ? data.snapshots : [];
   rows.replaceChildren(...(snapshots.length ? snapshots.map(snapshot => {
    const tr = document.createElement("tr");
-   const evaluation = snapshot.evaluation || snapshot.Evaluation || {};
-   const reasons = evaluation.reasonCodes || evaluation.ReasonCodes || evaluation.reasons || evaluation.Reasons || [];
+   const request = snapshot.evaluationRequest || snapshot.EvaluationRequest || {};
+   const gateInputs = [
+    "dataFresh="+(request.dataFresh ?? request.DataFresh ?? "UNKNOWN"),
+    "catalyst="+(request.catalystStatus || request.CatalystStatus || "UNKNOWN"),
+    "5M permission="+(request.fiveMinutePermission ?? request.FiveMinutePermission ?? "UNKNOWN"),
+    "5M structure="+(request.fiveMinuteStructure || request.FiveMinuteStructure || "UNKNOWN"),
+    "1M state="+(request.oneMinuteState || request.OneMinuteState || "UNKNOWN")
+   ].join(" · ");
    const values = [
     snapshot.symbol || snapshot.Symbol || "DATA?",
     snapshot.asOfUtc || snapshot.AsOfUtc || "DATA?",
     snapshot.recordedAtUtc || snapshot.RecordedAtUtc || "DATA?",
     (snapshot.provider || snapshot.Provider || "DATA?")+" / "+(snapshot.feed || snapshot.Feed || "DATA?"),
-    evaluation.decision || evaluation.Decision || evaluation.status || evaluation.Status || "NOT INCLUDED",
-    Array.isArray(reasons) ? reasons.join(", ") : String(reasons || "No reason codes returned")
+    "INPUT SNAPSHOT — NOT A DECISION",
+    gateInputs
    ];
    for (const value of values) { const td=document.createElement("td"); td.textContent=String(value); tr.append(td); }
    return tr;
