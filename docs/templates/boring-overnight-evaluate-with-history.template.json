@@ -3,7 +3,7 @@
   "provider": "Alpaca",
   "feed": "iex",
   "requiredWindow": 20,
-  "asOfUtc": "REPLACE_WITH_CURRENT_UTC_TIMESTAMP_ENDING_IN_Z",
+  "asOfUtc": "2026-10-29T16:47:00Z",
   "source": "Alpaca stored bars; verify source and feed",
   "calculationVersion": "boring-overnight-history-v1",
   "fieldSourceTimestampsUtc": {},
