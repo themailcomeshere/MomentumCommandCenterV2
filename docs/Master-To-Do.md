@@ -1,3 +1,13 @@
+## 2026-10-29 — Alpaca live-response diagnostics and Overnight stale-result fix
+
+- [DONE — CODE] The Overnight dashboard now clears all previously displayed bar counts/timestamps/gap values before each request and when a request fails. A failed request can no longer leave an older successful response looking like the result for the newly selected date window.
+- [DONE — CODE] When Alpaca returns HTTP 2xx JSON without the expected `bars` array, the API now reports top-level response keys and sanitized provider `code`/`message` fields (bounded length) instead of only saying the bars array is missing. No credential/header values are included.
+- [DONE — TEST ADDED] Added a fixture test for an unexpected 2xx payload, checking diagnostic content and that the adapter does not mark the provider validated. Fixture tests do not prove live Alpaca connectivity.
+- [NEXT — USER LIVE TEST] Restart the API and request a small recent completed 1m window during regular market hours using `/api/market-data/bars`; compare it with `/api/market-data/compare`. Record HTTP status, provider/feed, requested UTC window, bar count, first/latest source timestamps and sanitized error fields. Do not share credentials or headers.
+- [OPEN — DATA/ENTITLEMENT] The actual Alpaca response for the user's failed Oct 28 RTO after-hours window is not available to this repository session. We cannot conclude whether it was a feed entitlement issue, provider payload variation, a historical window limitation, or another cause until the new diagnostic response is captured.
+- [OPEN — OVERNIGHT P0] Timeframe is still not part of persisted bar identity. Do not use stored observations for timeframe-specific Overnight metrics until that identity/query filter is implemented.
+- [OPEN — OVERNIGHT P0] Authoritative exchange calendar/session boundaries and full 20-pair automated evaluation remain incomplete. Unknown catalyst evidence continues to block READY.
+
 ## Current implementation status — 2026-10-29 (Arizona time)
 
 - [DONE — CI VERIFIED BASELINE] Prior workflow `40820328662` passed for commit `ff1e00450904fe0939cbf62c5bfabbefced0a2ea`. History-backed service/test/API commits `65603d9`, `76d90c2`, `cc1d852` each have green CI runs. Catalyst fail-closed fix `9ae6b79f43c07293b545b6447fdc82104b7f2790` and newest docs are pending their own workflow results.
