@@ -75,6 +75,17 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             var root = document.RootElement;
             if (!TryGetBarsArray(root, symbol, out var bars))
                 throw new InvalidOperationException(DescribeUnexpectedBarsPayload(root, symbol));
+
+            // A successful response with bars:null and no continuation token is an
+            // empty result for this symbol/window, not a usable-data validation.
+            // Null on a continuation page is unexpected and must not return partial data.
+            if (bars.ValueKind == JsonValueKind.Null)
+            {
+                if (!string.IsNullOrWhiteSpace(pageToken))
+                    throw new InvalidOperationException(DescribeUnexpectedBarsPayload(root, symbol));
+                break;
+            }
+
             foreach (var item in bars.EnumerateArray())
             {
                 var timestamp = item.GetProperty("t").GetDateTimeOffset();
@@ -144,7 +155,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
 
         // Alpaca commonly returns a single-symbol bars array. Some response shapes wrap
         // per-symbol arrays under bars.{SYMBOL}; accept the requested symbol only.
-        if (barsElement.ValueKind == JsonValueKind.Array)
+        if (barsElement.ValueKind == JsonValueKind.Array || barsElement.ValueKind == JsonValueKind.Null)
         {
             bars = barsElement;
             return true;
