@@ -429,6 +429,66 @@ app.MapPost("/api/boring-overnight/history", async (
 .WithSummary("Calculate historical Overnight returns from persisted bars and explicit session boundaries")
 .WithDescription("Provide symbol, provider, optional feed, requiredWindow (minimum 5), and one boundary per next-session date. Each boundary must identify exact UTC timestamps for the previous regular-session close bar and next regular-session open bar. Missing pairs suppress rolling metrics.");
 
+app.MapPost("/api/boring-overnight/evaluate-with-history", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationRequest request,
+    IMarketBarObservationStore barStore,
+    MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore snapshotStore,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(request.Symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (request.EvaluationRequest is null ||
+        !request.Symbol.Equals(request.EvaluationRequest.Symbol, StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "evaluationRequest is required and its symbol must match symbol." });
+    if (string.IsNullOrWhiteSpace(request.Provider))
+        return Results.BadRequest(new { error = "provider is required and must match stored observations." });
+    if (request.RequiredWindow < 5)
+        return Results.BadRequest(new { error = "requiredWindow must be at least 5." });
+    if (request.Boundaries is null || request.Boundaries.Count < request.RequiredWindow)
+        return Results.BadRequest(new { error = "Provide at least requiredWindow explicit close/open boundaries." });
+    if (request.AsOfUtc == default || request.AsOfUtc.Offset != TimeSpan.Zero)
+        return Results.BadRequest(new { error = "asOfUtc must be a non-default UTC timestamp." });
+    if (string.IsNullOrWhiteSpace(request.Source) || string.IsNullOrWhiteSpace(request.CalculationVersion))
+        return Results.BadRequest(new { error = "source and calculationVersion are required." });
+
+    try
+    {
+        var fromUtc = request.Boundaries.Min(x => x.PreviousCloseBarTimestampUtc);
+        var toUtc = request.Boundaries.Max(x => x.NextOpenBarTimestampUtc);
+        if (fromUtc.Offset != TimeSpan.Zero || toUtc.Offset != TimeSpan.Zero || fromUtc > toUtc)
+            return Results.BadRequest(new { error = "Boundary timestamps must be UTC and form a valid window." });
+
+        var observations = await barStore.GetLatestAsync(request.Symbol, request.Provider, fromUtc, toUtc, 10000, ct);
+        var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
+            request.Symbol, request.Provider, request.Feed, observations, request.Boundaries, request.RequiredWindow);
+        var effectiveRequest = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService
+            .ApplyHistory(request.EvaluationRequest, history);
+        var exclusions = await exclusionStore.GetAsync(ct);
+        var excluded = exclusions.Any(x => x.Symbol.Equals(request.Symbol, StringComparison.OrdinalIgnoreCase));
+        effectiveRequest = effectiveRequest with { Excluded = excluded };
+
+        var snapshotInput = new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
+            request.Symbol, request.AsOfUtc, request.Source, request.Provider, request.Feed,
+            request.CalculationVersion, request.FieldSourceTimestampsUtc ?? new Dictionary<string, DateTimeOffset>(),
+            effectiveRequest);
+        var snapshot = await snapshotStore.AppendAsync(snapshotInput, ct);
+        var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
+        return Results.Created($"/api/boring-overnight/snapshots?symbol={snapshot.Symbol}&limit=1", new
+        {
+            snapshot,
+            evaluation,
+            history,
+            note = "Historical evaluator fields are overwritten from persisted bars only when all requested pairs exist and required history is complete. Incomplete history forces those fields to null and therefore DATA?. Caller-provided non-history fields, source labels and timestamps are not independently verified; catalyst status and Thinkorswim state remain externally supplied. No orders are submitted."
+        });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (InvalidDataException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("EvaluateBoringOvernightWithHistory")
+.WithSummary("Calculate persisted-bar Overnight history, evaluate hard gates, and persist the result")
+.WithDescription("Combines explicit UTC close/open boundaries with stored OHLCV, overwrites all historical overnight evaluator fields with calculated values (or null if incomplete), resolves the local exclusion list, and appends an auditable candidate snapshot. Catalyst and chart-study values are not independently verified.");
+
 app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore, CancellationToken ct) =>
 {
     if (!IsValidSymbol(request.Symbol))
