@@ -493,3 +493,36 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
 - Added a regression test for mixed-feed rejection.
 - Commits: `0b5fd60494ffaa6cacd28d0e79dcdfcb3987f0eb` and `355bb7b2c1ae3c45759fa86104af071b5d34b264`.
 - CI for the feed guard/test and the newest branch head was queued/in progress at the last check. Verify the latest run before relying on this change.
+
+
+## 2026-10-29 — UTC/AZ Swagger examples and ready-to-edit 20-pair template
+
+### What changed
+- Updated Swagger descriptions to explicitly require ISO-8601 UTC timestamps ending in `Z`; relevant endpoints include UTC examples and Arizona equivalents.
+- Added `docs/templates/boring-overnight-evaluate-with-history.template.json` with the complete request shape and 20 boundary entries.
+- Added `docs/templates/README-boring-overnight-api-templates.md` with step-by-step template instructions, timezone examples, response inspection, snapshot diagnostics, and negative-test instructions.
+- Updated `src/MomentumCommandCenterV2.API/README.md` with the API-wide timestamp convention and template links.
+- Commits: Swagger UTC examples `6b16d431c1551e2819b0a08b632c2af95f09d4b7`; JSON template `6d8faa7decafaf9091f042dcc5798d8a28f152aa`; template instructions `58a49feb3a570b17f11ed2987e05b36230f0d71b`; snapshot endpoint descriptions `c81f99b1fb4e3579520614553a0b548112299b9c`; API README `893af0adb6007ea53b5a1b3b7440000de598ffe2`.
+
+### UTC and Arizona conversion
+All API DateTimeOffset input values must end in `Z`. For October 26, 2026, Arizona is UTC−07:00:
+- `2026-10-26T13:30:00Z` = 06:30 Arizona.
+- `2026-10-26T19:59:00Z` = 12:59 Arizona.
+- `2026-10-26T20:00:00Z` = 13:00 Arizona.
+
+### Your next steps
+1. Wait for latest branch-head CI to pass.
+2. Open `docs/templates/boring-overnight-evaluate-with-history.template.json`.
+3. In Swagger, call `GET /api/market-data/stored-bars?symbol=SPY&fromUtc=2026-09-30T13:30:00Z&toUtc=2026-10-28T20:00:00Z&provider=Alpaca&limit=10000`. This is an example query window, not a guarantee those bars exist; adjust the range to your actual stored data.
+4. Replace every illustrative boundary timestamp with exact `sourceTimestamp` values for the actual regular-session last bar and next session's first bar from the returned records. Confirm provider and feed consistency. Do not rely on the example timestamps merely because they look like market open/close.
+5. Replace `asOfUtc` with the actual evaluation time in UTC ending in `Z`; fill non-history evaluation inputs only from real sources. Leave unknown inputs null and keep catalyst status UNKNOWN.
+6. Submit the template to `POST /api/boring-overnight/evaluate-with-history`.
+7. Inspect `history.allPairsComplete`, `history.enoughHistory`, `history.missing`, observation IDs, metrics, `evaluation`, and `snapshot`.
+8. For the negative test, change one boundary to an exact UTC timestamp inside the queried range for which no stored bar exists; submit and confirm history metrics are null.
+9. Read back `GET /api/boring-overnight/snapshots?symbol=SPY&limit=10`. If it says `count: 0`, check that the POST succeeded, you are using the same API process/store path, and `MCC_BORING_OVERNIGHT_SNAPSHOT_PATH` did not change.
+
+### Important template limitation
+The JSON contains 20 illustrative weekday boundary entries and uses common 1-minute bar-start timestamps as examples. Those are **not verified observations from your local store**. Exact matching is required, so the request is not expected to produce complete history until timestamps are checked and replaced. The API does not yet validate an authoritative exchange calendar or automatically generate session boundaries.
+
+[Uncertainties]
+- Data not found in sources for the exact timestamps/feed/session coverage currently persisted on the user's local machine. Latest CI for the UTC-description/template commits must also be checked before testing.
