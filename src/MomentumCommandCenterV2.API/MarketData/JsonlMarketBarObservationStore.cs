@@ -69,6 +69,58 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     }
 
     /// <summary>
+    /// PURPOSE: Read the latest retained observation for each source bar in a requested window.
+    /// WHEN CALLED: A consumer needs source-backed historical bars for analysis.
+    /// IMPORTANT: Corrections remain in JSONL; this query returns the latest version per provider/symbol/timestamp.
+    /// </summary>
+    public async Task<IReadOnlyList<MarketBarObservation>> GetLatestAsync(
+        string symbol,
+        string? provider,
+        DateTimeOffset fromUtc,
+        DateTimeOffset toUtc,
+        int limit,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(symbol))
+            throw new ArgumentException("Symbol is required.", nameof(symbol));
+        if (fromUtc.Offset != TimeSpan.Zero || toUtc.Offset != TimeSpan.Zero || fromUtc > toUtc)
+            throw new ArgumentException("fromUtc and toUtc must be UTC timestamps and fromUtc must not exceed toUtc.");
+        if (limit is < 1 or > 10000)
+            throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be 1–10000.");
+
+        await _gate.WaitAsync(cancellationToken);
+        try
+        {
+            if (!File.Exists(_path)) return Array.Empty<MarketBarObservation>();
+            var latest = new Dictionary<(string Provider, string Symbol, DateTimeOffset Timestamp), MarketBarObservation>();
+            using var reader = new StreamReader(new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
+            while (await reader.ReadLineAsync(cancellationToken) is { } line)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                var observation = JsonSerializer.Deserialize<MarketBarObservation>(line, JsonOptions)
+                    ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
+                if (!observation.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    (provider is not null && !observation.Provider.Equals(provider.Trim(), StringComparison.OrdinalIgnoreCase)) ||
+                    observation.SourceTimestamp < fromUtc || observation.SourceTimestamp > toUtc)
+                    continue;
+
+                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), observation.SourceTimestamp);
+                latest[key] = observation;
+            }
+
+            return latest.Values
+                .OrderBy(x => x.SourceTimestamp)
+                .ThenBy(x => x.Provider, StringComparer.OrdinalIgnoreCase)
+                .TakeLast(limit)
+                .ToArray();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    /// <summary>
     /// PURPOSE: Rebuild the idempotency/correction index from prior append-only observations.
     /// WHEN CALLED: The first append after process start.
     /// </summary>
