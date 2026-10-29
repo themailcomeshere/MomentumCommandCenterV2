@@ -447,3 +447,5 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
 3. Build explicit session boundary entries using validated regular-session close/open bar timestamps for each trading date. Do not assume calendar continuity across weekends/holidays.
 4. Call `POST /api/boring-overnight/history` with those boundaries; inspect `missing`, `allPairsComplete`, `enoughHistory`, and the source observation IDs.
 5. Do not map these metrics to a production READY decision until session-boundary generation, provider coverage, corporate-action treatment, and calculation parity are independently validated.
+
+- Latest CI follow-up: fixed the two failing test expectations (corrected raw bar open remains 10.0; missing second pair is missing its previous-close timestamp). Commit `edef25ded7db56af767a71d8be037e32ef566f56`, workflow `40820294911` was in progress when this note was prepared. Check latest workflow before assuming all tests pass.
