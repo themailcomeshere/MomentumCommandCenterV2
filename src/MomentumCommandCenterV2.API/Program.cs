@@ -147,7 +147,7 @@ app.MapGet("/api/market-data/compare", async (
     });
 })
 .WithSummary("Compare historical OHLCV bars across configured providers")
-.WithDescription("Example query: symbol=SPY, timeframe=5m, from=2026-10-23T13:30:00Z, to=2026-10-23T13:50:00Z. Maximum window 31 days.");
+.WithDescription("UTC-only example: symbol=SPY, timeframe=5m, from=2026-10-23T13:30:00Z, to=2026-10-23T13:50:00Z. On 2026-10-23, 13:30Z = 06:30 Arizona time (America/Phoenix). Use ISO-8601 UTC timestamps ending in Z for all from/to parameters; maximum window 31 days.");
 
 app.MapGet("/api/scanner/universe", async (
     string symbols,
@@ -232,7 +232,7 @@ app.MapGet("/api/scanner/universe", async (
 })
 .WithName("ScanUserSuppliedUniverse")
 .WithSummary("Scan a user-supplied symbol universe using historical OHLCV")
-.WithDescription("GET /api/scanner/universe?symbols=SPY,QQQ,TTE&timeframe=5m&from=2026-10-26T13:30:00Z&to=2026-10-26T20:00:00Z&providerName=Alpaca. This is a bounded, descriptive scan of supplied symbols, not market-wide movers discovery or a trade signal.")
+.WithDescription("UTC-only example: GET /api/scanner/universe?symbols=SPY,QQQ,TTE&timeframe=5m&from=2026-10-26T13:30:00Z&to=2026-10-26T20:00:00Z&providerName=Alpaca. On 2026-10-26, 13:30Z = 06:30 Arizona and 20:00Z = 13:00 Arizona. Use ISO-8601 UTC timestamps ending in Z. This is a bounded, descriptive scan of supplied symbols, not market-wide movers discovery or a trade signal.")
 .ProducesProblem(400);
 
 app.MapGet("/api/market-data/collector/status", (MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker worker) =>
@@ -279,7 +279,7 @@ app.MapGet("/api/market-data/bars", async (
     { return Results.Problem($"{ex.GetType().Name}: {ex.Message}", statusCode: 502); }
 })
 .WithSummary("Retrieve and persist historical 1m/5m bars from one provider")
-.WithDescription("Example: symbol=TTE, timeframe=1m, from=2026-10-26T11:00:00Z, to=2026-10-26T20:00:00Z, providerName=Alpaca. Returns source timestamps, feed, gaps, raw normalized bars, and newly persisted observation count. Supports up to 31 days per request.");
+.WithDescription("UTC-only example: symbol=TTE, timeframe=1m, from=2026-10-26T13:30:00Z, to=2026-10-26T20:00:00Z, providerName=Alpaca. On 2026-10-26, this is 06:30–13:00 Arizona time (America/Phoenix). Use ISO-8601 UTC timestamps ending in Z for from/to. Returns source timestamps, feed, gaps, raw normalized bars, and newly persisted observation count. Supports up to 31 days per request.");
 
 app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, CancellationToken cancellationToken) =>
 {
@@ -427,7 +427,7 @@ app.MapPost("/api/boring-overnight/history", async (
 })
 .WithName("CalculateBoringOvernightHistory")
 .WithSummary("Calculate historical Overnight returns from persisted bars and explicit session boundaries")
-.WithDescription("Provide symbol, provider, optional feed, requiredWindow (minimum 5), and one boundary per next-session date. Each boundary must identify exact UTC timestamps for the previous regular-session close bar and next regular-session open bar. Missing pairs suppress rolling metrics.");
+.WithDescription("All boundary timestamps must be ISO-8601 UTC values ending in Z. Example on 2026-10-26 (when US markets are on EDT): next regular-session open bar may have a source timestamp like 2026-10-26T13:30:00Z (06:30 Arizona); the final regular-session 1-minute bar may be timestamped 2026-10-26T19:59:00Z (12:59 Arizona), depending on provider bar-start conventions. Verify both exact timestamps in stored-bars; do not assume these example values exist. Supply symbol, provider, optional feed, requiredWindow (minimum 5), and one boundary per next-session date. Missing pairs suppress rolling metrics.");
 
 app.MapPost("/api/boring-overnight/evaluate-with-history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationRequest request,
@@ -488,7 +488,7 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
 })
 .WithName("EvaluateBoringOvernightWithHistory")
 .WithSummary("Calculate persisted-bar Overnight history, evaluate hard gates, and persist the result")
-.WithDescription("Combines explicit UTC close/open boundaries with stored OHLCV, overwrites all historical overnight evaluator fields with calculated values (or null if incomplete), resolves the local exclusion list, and appends an auditable candidate snapshot. Catalyst and chart-study values are not independently verified.");
+.WithDescription("All date-time values in the body must be ISO-8601 UTC timestamps ending in Z. Arizona conversion example for 2026-10-26: 2026-10-26T13:30:00Z = 06:30 Arizona; 2026-10-26T19:59:00Z = 12:59 Arizona. The sample boundary timestamps are illustrative only and must be replaced with exact timestamps returned by stored-bars. This endpoint calculates from persisted OHLCV, overwrites historical evaluator fields with calculated values (or null if incomplete), resolves the local exclusion list, forces catalystStatus=UNKNOWN until a validated catalyst provider is connected, and appends an auditable snapshot. Other non-history fields remain caller-supplied.");
 
 app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore, CancellationToken ct) =>
 {
@@ -547,7 +547,7 @@ app.MapGet("/api/market-data/stored-bars", async (
 })
 .WithName("GetStoredMarketBars")
 .WithSummary("Query persisted raw OHLCV observations")
-.WithDescription("Required query parameters: symbol, fromUtc, toUtc. Optional provider and limit (1–10000). Timestamps must be UTC ISO-8601. Corrections remain in append-only history, while the response returns the latest version per provider/symbol/timestamp.");
+.WithDescription("Copy/paste UTC example: /api/market-data/stored-bars?symbol=SPY&fromUtc=2026-10-26T13:30:00Z&toUtc=2026-10-26T20:00:00Z&provider=Alpaca&limit=1000. On 2026-10-26 these are 06:30 and 13:00 Arizona time (America/Phoenix). Always enter UTC ISO-8601 timestamps ending in Z; do not enter Arizona local time directly. Required: symbol, fromUtc, toUtc. Optional: provider, limit (1–10000). Corrections remain in append-only history; the response returns the latest version per provider/symbol/source timestamp.");
 
 app.MapPost("/api/market-data/import-csv", async (HttpRequest request, CancellationToken cancellationToken) =>
 {
