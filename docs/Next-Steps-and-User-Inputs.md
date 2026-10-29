@@ -469,6 +469,7 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
    - UTC `asOfUtc`, truthful `source`, `calculationVersion`, and `fieldSourceTimestampsUtc`
    - `evaluationRequest` containing the non-history fields (price, SMA20, average daily volume, current overnight move, exclusion placeholder, catalyst status, 5M permission/structure, 1M state, extension, RVOL/volume ratio, daily range and ATR%). Set unknown/unverified values to null or UNKNOWN; do not imply they were validated.
    - The endpoint resolves `excluded` from MCC's local exclusion watchlist. Do not rely on the caller's excluded value.
+   - The endpoint forcibly overrides `catalystStatus` to `UNKNOWN`: no validated catalyst provider is connected. Even if a test payload says `CLEAR`, this workflow must not return READY until that source integration exists.
 6. Inspect the response's `history`: `allPairsComplete`, `enoughHistory`, `validPairCount`, `missing`, each return's source observation IDs, and the calculated metrics. Inspect `evaluation` and the persisted `snapshot`.
 7. Negative test: remove one boundary timestamp from the stored data (or use a boundary that genuinely has no stored bar) and repeat. The historical evaluator fields must be null and the result must not be READY.
 8. Read the audit record back with `GET /api/boring-overnight/snapshots?symbol=SYMBOL&limit=10`.
@@ -481,7 +482,7 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
 
 ### Latest verification
 - Prior verified baseline: CI run `40820328662` passed for commit `ff1e00450904fe0939cbf62c5bfabbefced0a2ea`.
-- The history-backed evaluator commits above are newer and require their own latest-head CI verification.
+- CI passed for the history service commit `65603d909dfdac07a27df8eccecdaff7f0f1f46f`, tests `76d90c2abf96c05a9e59a918a72b71b07dc62f02`, and endpoint `cc1d852c0ac316c0efd3637c9d2d6611f6f3ca8f`. The subsequent fail-closed catalyst override `9ae6b79f43c07293b545b6447fdc82104b7f2790` and latest documentation commits were still queued/in progress at last check; verify current-head CI before local testing.
 
 [Uncertainties]
 - Data not found in sources for an authoritative exchange-calendar implementation already integrated into MCC, a connected catalyst provider, or verified source timestamps for the user's local market-data store.
