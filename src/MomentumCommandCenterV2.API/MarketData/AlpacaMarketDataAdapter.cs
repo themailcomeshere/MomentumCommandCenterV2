@@ -74,7 +74,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             using var document = JsonDocument.Parse(body);
             var root = document.RootElement;
             if (!TryGetBarsArray(root, symbol, out var bars))
-                throw new InvalidOperationException(DescribeUnexpectedBarsPayload(root));
+                throw new InvalidOperationException(DescribeUnexpectedBarsPayload(root, symbol));
             foreach (var item in bars.EnumerateArray())
             {
                 var timestamp = item.GetProperty("t").GetDateTimeOffset();
@@ -166,7 +166,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         return false;
     }
 
-    private static string DescribeUnexpectedBarsPayload(JsonElement root)
+    private static string DescribeUnexpectedBarsPayload(JsonElement root, string symbol)
     {
         var keys = root.ValueKind == JsonValueKind.Object
             ? string.Join(", ", root.EnumerateObject().Select(property => property.Name).Take(12))
@@ -176,9 +176,15 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             : root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out var errorElement) ? errorElement.ToString() : null;
         if (!string.IsNullOrWhiteSpace(message))
             message = message.Length <= 300 ? message : message[..300];
+        var barsShape = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("bars", out var barsElement)
+            ? $" bars value kind: {barsElement.ValueKind}" +
+              (barsElement.ValueKind == JsonValueKind.Object
+                  ? $"; bars object keys: [{string.Join(", ", barsElement.EnumerateObject().Select(property => property.Name).Take(12))}]"
+                  : "")
+            : " bars property: absent";
         var detail = string.IsNullOrWhiteSpace(message) ? "" : $" Provider message: {message}";
         var codeDetail = string.IsNullOrWhiteSpace(code) ? "" : $" Provider code: {code}.";
-        return $"Alpaca HTTP response was successful but did not contain a usable bars array for the requested symbol. Top-level keys: [{keys}].{codeDetail}{detail} Check the requested URL/window, feed entitlement, and provider response schema.";
+        return $"Alpaca HTTP response was successful but did not contain a usable bars array for requested symbol '{symbol}'. Top-level keys: [{keys}];{barsShape}.{codeDetail}{detail} Check the requested URL/window, feed entitlement, and provider response schema.";
     }
 
     private static string TrimError(string body) => body.Length <= 500 ? body : body[..500];
