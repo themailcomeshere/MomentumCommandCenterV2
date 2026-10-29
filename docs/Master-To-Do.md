@@ -972,3 +972,6 @@ Continue work without waiting for another confirmation when a task can be safely
 5. Add catalyst/exclusion evidence adapters only when sources are real and validated.
 6. Integrate with scanner/Morning Brief; clearly label bounded versus market-wide discovery.
 7. Finish TOS parity, GTC_EXT outcomes and out-of-sample research before actionable READY is enabled.
+
+- [IMPLEMENTED — CI PENDING] Added append-only Boring Overnight candidate snapshot storage in `BoringOvernightCandidateSnapshotStore.cs` and endpoints `POST /api/boring-overnight/snapshots` / `GET /api/boring-overnight/snapshots`. Records include as-of/recorded timestamps, source/provider/feed, calculation version, field source timestamps and the evaluator request; API overwrites caller-supplied exclusion flag with MCC's local exclusion list before evaluation. Provenance is recorded, not independently verified. Commit `5de6613ea951d4d38ba160c1108a22ed4ae64870`; run `40818694414` queued at time of this note.
+- [OPEN] Add automated tests for snapshot JSONL persistence, query ordering, validation and evaluator integration. Do not treat endpoint availability as a completed qualification pipeline: overnight statistics are not yet derived from validated session-paired bars.
