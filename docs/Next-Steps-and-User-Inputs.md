@@ -526,3 +526,5 @@ The JSON contains 20 illustrative weekday boundary entries and uses common 1-min
 
 [Uncertainties]
 - Data not found in sources for the exact timestamps/feed/session coverage currently persisted on the user's local machine. Latest CI for the UTC-description/template commits must also be checked before testing.
+
+- Template README follow-up: clarified that the example `asOfUtc` timestamp must be replaced with the actual UTC evaluation time; the JSON template keeps a valid ISO-8601 value so Swagger can deserialize it after the user edits it.
