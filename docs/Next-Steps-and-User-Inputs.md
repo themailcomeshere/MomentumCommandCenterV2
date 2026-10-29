@@ -1,3 +1,36 @@
+## 2026-10-29 — Verify a real Alpaca response (not just configuration)
+
+### What the dashboard failure told us
+
+The Overnight page reported `Alpaca response did not contain a bars array`, while still displaying 133 bars with timestamps from Oct 29. Those bars were stale UI values from a prior successful request, not evidence for the failed Oct 28 request. The dashboard now clears old result fields before each request and marks them unavailable after failure.
+
+The API now includes the unexpected HTTP-2xx JSON response's top-level keys and bounded `code`/`message` values in this specific error path. This is intended to distinguish a provider payload/schema response from an ordinary HTTP error without logging credentials. The real payload for the failed request is not available here; root cause is not yet confirmed.
+
+### Exact live test
+
+1. Stop and restart the local API from the repository root:
+   `dotnet run --project src/MomentumCommandCenterV2.API`
+2. Open `/api/health`. Expect HTTP 200 and `status: OK`.
+3. Open `/api/providers/status`. Confirm Alpaca says `configured: true`. This is configuration only, not proof of a successful live request.
+4. During regular market hours, use a recent, completed 10–20 minute window for a liquid symbol (SPY is a good connectivity probe) and call:
+   `/api/market-data/bars?symbol=SPY&timeframe=1m&from=<START_UTC_Z>&to=<END_UTC_Z>&providerName=Alpaca`
+   Replace both placeholders with real UTC timestamps ending in `Z`; do not put Arizona-local timestamps in these API parameters. Choose a window that has already completed and is within the provider's historical availability.
+5. Run the same request through `/api/market-data/compare?symbol=SPY&timeframe=1m&from=<START_UTC_Z>&to=<END_UTC_Z>`. It requests all configured providers, so an unconfigured Massive error is expected and should be reported separately.
+6. A successful live verification requires more than HTTP 200: the Alpaca result must have a valid `bars` array (or normalized `barCount`), plausible source timestamps inside the requested window, the expected configured feed, and a non-empty result for a window expected to trade. An empty array proves only that the request returned no bars for that query; it does not prove zero trading.
+7. To investigate the original after-hours case, repeat the direct endpoint for RTO with Arizona 2026-10-28 13:00–16:50 converted to UTC:
+   `from=2026-10-28T20:00:00Z`, `to=2026-10-28T23:50:00Z`.
+   Capture the new error or returned timestamps. Extended-hours coverage depends on feed/entitlement and available source bars.
+8. Share only sanitized fields: HTTP status, provider name, feed, requested UTC range, returned bar count, first/latest source timestamps, and error `code`/`message`. Never share keys, secrets, request authorization headers, or tokens.
+
+### Interpreting the result
+
+- `NOT_CONFIGURED`: local API configuration/User Secrets problem.
+- HTTP 401/403: likely authentication/authorization/feed access; retain the exact sanitized provider message.
+- HTTP 2xx but no `bars` array: inspect top-level keys and sanitized `code`/`message`; the adapter now exposes these diagnostics.
+- HTTP 200 with `bars: []`: request succeeded but returned no observations for that symbol/window/feed. Check timestamps, session, symbol and entitlement; do not infer no trading.
+- Non-empty bars: confirms a real REST response for that specific symbol/window/feed only. It does not establish complete extended-hours coverage, production suitability, WebSocket connectivity, or Overnight qualification.
+- `/api/providers/status` should change to `VALIDATED_DATA_RETURNED` only after this process instance has returned at least one bar successfully. Restarting the API resets this in-memory validation indicator until the next successful non-empty response.
+
 # MCC Next Steps and External Dependencies
 
 **Updated:** 2026-10-23 (Arizona time)
