@@ -60,7 +60,7 @@ public sealed class BoringOvernightHistoryCalculatorTests
         Assert.Equal(2, result.MissingPairCount);
         Assert.Null(result.WinRatePct);
         Assert.Null(result.AverageReturnPct20D);
-        Assert.Equal("NEXT_SESSION_OPEN_MISSING", result.Missing[1].ReasonCode);
+        Assert.Equal("PREVIOUS_SESSION_CLOSE_MISSING", result.Missing[1].ReasonCode);
     }
 
     [Fact]
