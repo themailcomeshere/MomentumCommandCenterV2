@@ -84,6 +84,65 @@ public sealed class JsonlMarketBarObservationStoreTests
         }
     }
 
+
+    [Fact]
+    public async Task QueryReturnsLatestCorrectionForEachTimestampAndFiltersProviderWindow()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var store = new JsonlMarketBarObservationStore();
+            var first = CreateBar();
+            var corrected = first with { High = 11.2, Close = 10.8 };
+            var second = first with { Timestamp = first.Timestamp.AddMinutes(1), Open = 10.5, High = 11.5, Low = 10.2, Close = 11.1 };
+            var otherProvider = second with { Provider = "OtherProvider" };
+            Assert.Equal(1, await store.AppendAsync(new[] { first }, CancellationToken.None));
+            Assert.Equal(1, await store.AppendAsync(new[] { corrected }, CancellationToken.None));
+            Assert.Equal(2, await store.AppendAsync(new[] { second, otherProvider }, CancellationToken.None));
+
+            var result = await store.GetLatestAsync(
+                "test", "TestProvider", first.Timestamp, second.Timestamp, 100, CancellationToken.None);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(10.8, result[0].Bar.Close);
+            Assert.Equal(10.5, result[0].Bar.Open);
+            Assert.Equal(11.1, result[1].Bar.Close);
+            Assert.Equal(corrected.ContentHash, result[0].ContentHash);
+            Assert.Equal(first.Timestamp.AddMinutes(1), result[1].SourceTimestamp);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task QueryRejectsInvalidWindowAndLimit()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var store = new JsonlMarketBarObservationStore();
+            var now = DateTimeOffset.UtcNow;
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                store.GetLatestAsync("TEST", null, now.AddMinutes(1), now, 10, CancellationToken.None));
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+                store.GetLatestAsync("TEST", null, now, now, 0, CancellationToken.None));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
     public static IEnumerable<object[]> InvalidBars()
     {
         var valid = CreateBar();
