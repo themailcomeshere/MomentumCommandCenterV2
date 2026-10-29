@@ -532,9 +532,9 @@ The JSON contains 20 illustrative weekday boundary entries and uses common 1-min
 
 ## 2026-10-29 — Overnight dashboard now requests after-hours bars
 
-- The Boring Overnight panel is no longer a static research checklist. In Overnight mode it exposes a symbol, 1m/5m bar interval, Arizona-local From/To, a Fetch & analyze bars action, and a saved-evaluations table.
+- The Boring Overnight panel is no longer a static research checklist. In Overnight mode it exposes a symbol, 1m/5m bar interval, Arizona-local From/To, a Fetch & analyze bars action, and a saved-input-snapshots table.
 - Default window starts at 1:00 PM Arizona on the current day if it is already after 1:00 PM; otherwise it starts at 1:00 PM Arizona the prior day and ends at the current time. The window is only a default and can be edited. The UI sends UTC ISO-8601 values to the API.
-- The panel calls GET /api/market-data/bars and GET /api/boring-overnight/snapshots. It reports actual returned coverage and does not treat no bars as zero activity.
+- The panel calls GET /api/market-data/bars and GET /api/boring-overnight/snapshots. It reports actual returned coverage and does not treat no bars as zero activity. The snapshot endpoint stores evaluator inputs, not the evaluator's final decision.
 - Still not automated: the evaluate-with-history endpoint requires 20 exact close/open boundaries; there is no authoritative exchange-calendar generator yet. Do not infer READY.
 - Storage caveat: persisted observations do not currently include timeframe in their identity. The direct fetch supports 1m/5m, but a 1m/5m-isolated historical evaluation requires a storage schema/identity fix first.
 - Next: add timeframe identity to persisted observations and then add exchange-calendar-based boundary generation and UI evaluation. Test with the supplied RTO query and compare the displayed Arizona timestamps to the source response.
