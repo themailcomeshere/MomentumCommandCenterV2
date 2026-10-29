@@ -977,3 +977,10 @@ Continue work without waiting for another confirmation when a task can be safely
 - [OPEN] Add automated tests for snapshot JSONL persistence, query ordering, validation and evaluator integration. Do not treat endpoint availability as a completed qualification pipeline: overnight statistics are not yet derived from validated session-paired bars.
 
 - [DONE — CI VERIFIED] Added `BoringOvernightCandidateSnapshotStoreTests` covering provenance round-trip, case-insensitive symbol reads, non-UTC as-of rejection, and symbol mismatch rejection. CI passed for snapshot store and API source commits: run `40818681818` and run `40818694414`. The newer test commit `8139ef7eb6934fad423c41a29a28cfac4e4bc23b` has its own run queued; wait for that result before declaring current HEAD green.
+
+
+### Persisted raw market-bar query — 2026-10-28
+- [IMPLEMENTED — CI PENDING] Extended `IMarketBarObservationStore` with a read/query contract and implemented latest-version-per-source-timestamp retrieval in `JsonlMarketBarObservationStore`. Historical corrections remain append-only; queries return the latest correction for each provider/symbol/timestamp.
+- [IMPLEMENTED — CI PENDING] Added `GET /api/market-data/stored-bars?symbol=RTO&fromUtc=2026-10-27T00:00:00Z&toUtc=2026-10-29T00:00:00Z&provider=Alpaca&limit=1000`. It returns raw persisted observations only; it does not infer market sessions or calculate overnight returns.
+- [IMPLEMENTED — CI PENDING] Added tests for correction-aware query results, provider/window filtering, and invalid query inputs. CI for the interface-only intermediate commit failed because the interface was temporarily ahead of its implementation; subsequent commits add the implementation and tests. Verify latest HEAD before calling this green.
+- [NEXT] Use the new read path as the foundation for a separately tested session calendar/overnight pairing service. Do not derive Overnight win-rate or return metrics until the regular-session close and next-session open definitions, timezone, eligible bar windows, and missing-session policy are explicit and tested.
