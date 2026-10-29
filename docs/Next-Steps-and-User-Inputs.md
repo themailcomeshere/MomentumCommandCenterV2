@@ -433,3 +433,17 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
 2. Implement a pure, timezone-explicit overnight pairing/calculation service over queried bars. Require explicit session dates and close/open source bars; surface incomplete sessions and duplicates as data-quality failures, not zeros.
 3. Unit-test overnight return convention, session boundaries, missing/duplicate bars, corrected bars, and lookback window/count.
 4. Only then map calculated, provenance-carrying metrics into the evaluator request. Do not synthesize catalyst clearance or TOS technical values.
+
+
+### Overnight history calculator implementation
+- Added `BoringOvernightHistoryCalculator`, which calculates close-to-next-open return percentages from persisted `MarketBarObservation` rows and explicit `OvernightSessionBoundary` records. The caller must provide exact UTC bar timestamps and session dates; this deliberately avoids guessed holidays or session boundaries.
+- Added `POST /api/boring-overnight/history`. Body fields: `symbol`, `provider`, optional `feed`, `requiredWindow` (minimum 5), and `boundaries` with `previousSessionDate`, `nextSessionDate`, `previousCloseBarTimestampUtc`, `nextOpenBarTimestampUtc`. Response includes each return, source observation IDs, missing boundary reasons, and whether all pairs/history are complete. Rolling metrics remain null unless all supplied pairs exist and required history is met.
+- Tests cover 20 pairs, missing boundary fail-closed behavior, and duplicate next-session dates.
+- CI exposed a test fixture expectation error in the market-bar query test: the corrected fixture kept Open at 10.0 while changing High/Close. The assertion is corrected to 10.0; new CI is pending.
+
+### Suggested API sequence after CI passes
+1. Import or collect raw OHLCV into the persisted store using existing provider/CSV workflows.
+2. Query `GET /api/market-data/stored-bars` to inspect actual stored source timestamps and confirm provider/feed coverage.
+3. Build explicit session boundary entries using validated regular-session close/open bar timestamps for each trading date. Do not assume calendar continuity across weekends/holidays.
+4. Call `POST /api/boring-overnight/history` with those boundaries; inspect `missing`, `allPairsComplete`, `enoughHistory`, and the source observation IDs.
+5. Do not map these metrics to a production READY decision until session-boundary generation, provider coverage, corporate-action treatment, and calculation parity are independently validated.
