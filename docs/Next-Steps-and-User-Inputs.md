@@ -1,3 +1,25 @@
+## 2026-10-29 — Live Alpaca verification results and next Overnight test
+
+### Live result supplied by user
+
+- `/api/providers/status`: Alpaca is configured and validated; last successful data validation was `2026-10-29T17:44:51.874Z` with 54 bars. Massive is not configured.
+- `/api/market-data/bars`: SPY, 1m, `2026-10-29T17:20:00Z` to `2026-10-29T17:40:00Z`, Alpaca/IEX returned 21 bars; first and latest source timestamps match the requested window, gap count is zero, no provider error. This verifies the live Alpaca REST request path for this specific window.
+- `/api/market-data/compare`: same 21 Alpaca bars and no error. `persistedObservationCount: 0` is expected after the preceding bars endpoint already persisted the same observations; it means no new records were appended on the second request, not that the fetch failed.
+- This regular-session SPY test does not establish after-hours availability for RTO or any other symbol.
+
+### RTO failure and code change
+
+The RTO request for Arizona 2026-10-28 13:00–16:55 failed with top-level response keys `bars`, `next_page_token`, and `symbol`. The adapter previously accepted only `bars: [...]`. It now accepts either a direct array or a symbol-keyed object such as `bars: { "RTO": [...] }`, and only reads the array for the requested symbol. A regression test covers the symbol-keyed shape. The exact nested payload shape was not included in the captured error, so the parser fix needs live retesting before declaring the cause confirmed.
+
+### Next action — exact test
+
+1. Pull the latest `feature/opportunity-quality-classification` branch and restart the local API so the new adapter is running.
+2. Request:
+   `/api/market-data/bars?symbol=RTO&timeframe=1m&from=2026-10-28T20:00:00Z&to=2026-10-28T23:55:00Z&providerName=Alpaca`
+3. If successful, confirm the returned bar timestamps are on Oct 28, within the requested UTC range, and the `symbol` is RTO. Note count, first/latest timestamp, feed, and gap count.
+4. If it fails, share the sanitized error only. The improved diagnostic now reports top-level keys, the `bars` value kind and nested keys, requested symbol, and bounded provider code/message if present.
+5. Do not infer that extended-hours coverage is complete from a successful regular-session SPY request. A successful empty response also does not mean zero trading.
+
 ## 2026-10-29 — Verify a real Alpaca response (not just configuration)
 
 ### What the dashboard failure told us
