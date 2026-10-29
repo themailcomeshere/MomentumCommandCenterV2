@@ -22,7 +22,7 @@ public sealed class BoringOvernightAtrCalculatorTests
         Assert.Equal(2, result.Period);
         Assert.Equal(BarTimeframe.FiveMinute, result.Timeframe);
         Assert.Equal(2m, result.LatestTrueRange);
-        Assert.Equal(2.5m, result.Atr);
+        Assert.Equal(2.25m, result.Atr);
         Assert.Equal(2.25m / 12m * 100m, result.AtrPercent);
         Assert.Contains("Wilder ATR", result.Provenance);
     }
