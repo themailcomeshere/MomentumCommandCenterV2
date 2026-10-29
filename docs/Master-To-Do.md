@@ -1,3 +1,12 @@
+## 2026-10-29 — RTO live retest: regular-session bars present, after-hours not demonstrated
+
+- [VERIFIED LIVE BY USER] Exact RTO request for 2026-10-28 20:00–23:55 UTC returned a normalized empty result: feed null, barCount 0, no timestamps, no gaps. The null-bars adapter behavior is now confirmed in the user's running API. An empty response is not proof of no trading and does not validate an extended-hours feed.
+- [VERIFIED LIVE BY USER] RTO request for 2026-10-28 19:00–23:55 UTC returned 47 IEX bars, first 19:01 UTC and last 19:59 UTC, with six reported missing-minute gaps. All returned bars are within the first hour only.
+- [TIME CONVERSION — IMPORTANT] On 2026-10-28, US Eastern daylight time was UTC−4. Therefore 19:00–19:59 UTC is 15:00–15:59 ET (the final regular-session hour); 20:00 UTC is 16:00 ET (regular close); 20:00–23:55 UTC is 16:00–19:55 ET (post-market). The second request proves RTO regular-session data near the close, not extended-hours coverage.
+- [INTERPRETATION] These two responses alone do not establish that Alpaca globally fails to return extended-hours bars. Need a same-window liquid-symbol control (SPY) using the same provider/feed, plus ideally a symbol known to have post-market trades. Compare response timestamps and feed. Do not switch from IEX to SIP or claim an entitlement defect without account/provider evidence.
+- [NEXT LIVE TEST] Query SPY with timeframe=1m, from=2026-10-28T20:00:00Z, to=2026-10-28T23:55:00Z, providerName=Alpaca. Then, if practical, query RTO for 2026-10-28T19:50:00Z–2026-10-28T20:10:00Z to verify the close boundary. Record feed, barCount, first/latest timestamps and sanitized provider errors. SPY returning bars after 20:00Z demonstrates some IEX post-market coverage for that symbol/window; SPY empty means the cause remains ambiguous (IEX venue coverage, no eligible trades, provider request semantics, or entitlement).
+- [OPEN — OVERNIGHT P0] The current evidence is sufficient to label RTO extended-hours coverage unverified/absent in this request, not to diagnose its cause. Keep missing bars as missing; never synthesize or carry forward regular-session prices into post-market.
+
 ## 2026-10-29 — RTO bars:null follow-up
 
 - [VERIFIED LIVE BY USER] Retesting RTO for UTC `2026-10-28T20:00:00Z`–`2026-10-28T23:55:00Z` returned HTTP 502 because the successful Alpaca JSON payload had top-level `bars: null`, `next_page_token`, and `symbol`. This is different from the previously anticipated symbol-keyed array shape.
