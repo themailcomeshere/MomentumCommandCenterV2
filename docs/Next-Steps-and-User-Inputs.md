@@ -377,3 +377,28 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 
 ### User input currently needed
 - None for the next offline implementation steps. Later live provider smoke tests still require the user to configure credentials locally; never request secrets in chat.
+
+
+## Handoff refresh — CI recovery and next implementation slice (2026-10-28)
+
+### Verified
+- CI red X was one stale test assertion, not a production ATR calculation defect. The explicit-bar test documents a 2-period Wilder seed of 2.5 followed by smoothing with TR=2, yielding 2.25. Updated expected ATR to 2.25; no calculator logic changed.
+- Commit: `96283fb20c054aee326205ff6d19c438f3033862`. GitHub Actions run `40818276331` completed successfully. This is a green result for that commit, not a guarantee that future commits remain green.
+- User-confirmed chart behavior remains: SXC red `EOD GET OUT`; RTO yellow `DATA? — NO HOLD`. Missing qualification evidence must continue to fail closed.
+
+### Implementation priority — do not stop at scaffolding
+1. Add append-only Boring Overnight candidate snapshots with source/provider/feed, as-of timestamps, field-level provenance, evaluator/calculation version, and missing/stale evidence.
+2. Add query/read access to persisted OHLCV observations, retaining correction lineage. Do not compute history from the write-only store or silently use missing bars as zero activity.
+3. Calculate overnight edge/boringness only from correctly paired, session-valid overnight observations; reject incomplete history and disclose the window/count.
+4. Connect persisted evidence to the evaluator and expose why a candidate is DATA?, WATCH, BLOCKED, or READY. Keep catalyst UNKNOWN and unverified TOS states from passing READY.
+5. Add tests for the new path and confirm the current branch's CI is green after source changes.
+6. Integrate only after validated snapshots exist; clearly distinguish user-supplied-universe scanning from market-wide discovery.
+
+### User actions (only where truly blocked)
+- **Provider credentials:** If using Alpaca, configure credentials locally following `src/MomentumCommandCenterV2.API/README.md`; never send secrets in chat. Then run a small live smoke test and share sanitized status/error and timestamp.
+- **Thinkorswim parity:** When requested, provide exact chart/CSV evidence for the specific symbols/timeframes/intervals under review. Existing XRPN evidence is already recorded; do not ask for it again. Repository source cannot prove which study is installed in the live TOS workspace.
+- **Catalysts:** No connected, validated news/event feed is established in source. Until one is selected and connected, catalyst status stays UNKNOWN and output stays DATA? / manual review.
+- **Outcome research:** GTC_EXT fills, target-touch and adverse-excursion outcomes need timestamped exports. No target probability or profitability estimate is supported without these data.
+
+### Current boundary
+No automatic orders. No assumed Thinkorswim API. No green overnight hold based on caller-supplied fields alone. Exclusion store is MCC-local and not proof of synchronization with Schwab/TOS lists.
