@@ -402,3 +402,19 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 
 ### Current boundary
 No automatic orders. No assumed Thinkorswim API. No green overnight hold based on caller-supplied fields alone. Exclusion store is MCC-local and not proof of synchronization with Schwab/TOS lists.
+
+
+### Latest code slice (2026-10-28)
+- Added append-only JSONL candidate snapshot persistence and API routes:
+  - `POST /api/boring-overnight/snapshots`: records a timestamped snapshot with source/provider/feed, calculation version, field-level source timestamps, and evaluator inputs; returns the evaluated result.
+  - `GET /api/boring-overnight/snapshots?symbol=RTO&limit=50`: retrieves newest persisted records (limit 1–500).
+- Storage path defaults to the local application-data directory under `MomentumCommandCenterV2/boring-overnight-snapshots.jsonl`; override with `MCC_BORING_OVERNIGHT_SNAPSHOT_PATH`.
+- Exclusion is resolved against MCC's local exclusion store at submission time. Source provenance is recorded but not independently verified. This is not yet an OHLCV-derived metric pipeline.
+- CI run `40818694414` for commit `5de6613ea951d4d38ba160c1108a22ed4ae64870` was queued at the time of the documentation update. Confirm its final conclusion before using the new endpoints.
+
+### Instructions for the user
+1. After CI is green, pull branch `feature/opportunity-quality-classification` and start the API using the repository's normal local run instructions.
+2. Open Swagger at the API's configured Swagger URL and expand **Boring Overnight**. First test `GET /api/boring-overnight/snapshots` (empty history is expected initially).
+3. To record a test snapshot, use `POST /api/boring-overnight/snapshots` with a real symbol, UTC `asOfUtc` (ISO-8601 ending in `Z`), a truthful `source`, a `calculationVersion`, `fieldSourceTimestampsUtc`, and the required `evaluationRequest` fields. Do not label manual or stale values provider-verified. Use test data only until feed parity and event sources are validated.
+4. Read it back with `GET /api/boring-overnight/snapshots?symbol=SYMBOL&limit=10`. Confirm the stored as-of/source timestamps and the DATA?/BLOCKED/WATCH/READY result match the submitted evidence.
+5. Do not use READY as a trade authorization: snapshot provenance is caller-supplied; metrics are not yet computed from validated overnight bar pairs, catalyst feed is not connected, and TOS study parity is not established by this endpoint.
