@@ -169,3 +169,10 @@ public sealed record BoringOvernightHistoryResult(
     IReadOnlyList<OvernightReturnObservation> Returns,
     IReadOnlyList<OvernightMissingBoundary> Missing,
     string ProvenanceNote);
+
+public sealed record BoringOvernightHistoryRequest(
+    string Symbol,
+    string Provider,
+    string? Feed,
+    IReadOnlyList<OvernightSessionBoundary> Boundaries,
+    int RequiredWindow = 20);
