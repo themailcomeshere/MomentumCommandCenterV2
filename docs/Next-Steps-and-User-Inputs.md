@@ -357,3 +357,23 @@ User confirms the existing AHR/FMS/NNN screenshots are for 2026-10-21–2026-10-
 - The API decision helper is not connected to persisted candidate snapshots or surfaced to Thinkorswim.
 - Historical overnight metrics, complete GTC_EXT coverage, catalyst/exclusion/freshness evidence and scanner/report integration remain incomplete.
 - Build/test and CI for the exact latest branch head remain unverified.
+
+
+## 2026-10-28 — Boring Overnight bubble validation
+
+### Confirmed user actions
+- [x] Updated 1M study installed successfully in Thinkorswim.
+- [x] Updated 5M study installed successfully in Thinkorswim.
+- [x] User reports the 12:55 PM Arizona bar behaves as designed: SXC shows red `EOD GET OUT` with a chart-technical blocker; RTO shows yellow `DATA? — NO HOLD` when chart checks pass but external qualification evidence is missing.
+- [x] Green `HOLD OVERNIGHT` remains intentionally unavailable pending full qualification inputs.
+- Evidence: [RTO screenshot](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/Screenshot%202026-10-28%20212531.png), [SXC screenshot](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/Screenshot%202026-10-28%20212549.png).
+
+### Engineering work can continue without more screenshots
+- [ ] Connect `BoringOvernightHoldDecision` to persisted, timestamped candidate snapshots rather than manually supplied/unpersisted inputs.
+- [ ] Derive and persist overnight win rate, mean/median returns, 5D-vs-20D comparison, volume/price/SMA gates and source/freshness metadata from validated bars with the exact eligible session boundary.
+- [ ] Add source-backed exclusion lookup and a catalyst provider contract; until connected and current, event/exclusion status must remain UNKNOWN and prevent READY.
+- [ ] Integrate the final decision and reason codes into scanner / Morning Brief / report surfaces without allowing ranking scores to bypass 5M permission or 1M execution gates.
+- [ ] Add integration tests for READY / BLOCKED / DATA? and stale/missing evidence, then verify CI at the exact branch head.
+
+### User input currently needed
+- None for the next offline implementation steps. Later live provider smoke tests still require the user to configure credentials locally; never request secrets in chat.
