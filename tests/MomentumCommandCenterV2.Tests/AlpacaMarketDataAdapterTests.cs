@@ -106,6 +106,37 @@ public sealed class AlpacaMarketDataAdapterTests
     }
 
     [Fact]
+    public async Task GetBarsAsync_SymbolKeyedBarsObject_ParsesRequestedSymbolBars()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """{"bars":{"RTO":[{"t":"2026-10-28T20:00:00Z","o":42.6,"h":42.61,"l":42.6,"c":42.61,"v":191}]},"next_page_token":null,"symbol":"RTO"}""",
+                Encoding.UTF8,
+                "application/json")
+        });
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(client, configuration);
+
+        var bars = await adapter.GetBarsAsync("RTO", TimeSpan.FromMinutes(1),
+            DateTimeOffset.Parse("2026-10-28T20:00:00Z"), DateTimeOffset.Parse("2026-10-28T23:55:00Z"),
+            CancellationToken.None);
+
+        Assert.Single(bars);
+        Assert.Equal("RTO", bars[0].Symbol);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-28T20:00:00Z"), bars[0].Timestamp);
+        Assert.Equal(42.61, bars[0].Close);
+        Assert.Equal(191, bars[0].Volume);
+        Assert.True(adapter.HasSuccessfulDataValidation);
+    }
+
+    [Fact]
     public async Task GetBarsAsync_UnexpectedSuccessfulPayload_ReportsProviderDiagnosticsWithoutMarkingValidated()
     {
         var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
