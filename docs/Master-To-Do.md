@@ -1,3 +1,15 @@
+## Current implementation status — 2026-10-29 (Arizona time)
+
+- [DONE — CI VERIFIED] The latest existing workflow before this slice passed: `40820328662` for commit `ff1e00450904fe0939cbf62c5bfabbefced0a2ea`. New commits below require their own CI result before being marked verified.
+- [IMPLEMENTED — CI PENDING] Added `BoringOvernightHistoryEvaluationService`. It replaces caller-entered overnight win rate, 20-session average, 5-session average, and 20-session median with values derived from the history calculator. If history is incomplete or too short, all four fields are set to null; no manual-value fallback is permitted.
+- [IMPLEMENTED — CI PENDING] Added `POST /api/boring-overnight/evaluate-with-history`: reads stored bars, calculates history using explicit UTC close/open boundaries, resolves MCC's local exclusion list, evaluates the hard gates, and appends the resulting candidate snapshot. This closes the gap between raw stored-bar history and the evaluator/snapshot workflow, but does not independently verify non-history inputs.
+- [IMPLEMENTED — TESTS ADDED, CI PENDING] Added tests that prove history values override caller-supplied metrics, incomplete history clears those metrics, and symbol mismatches are rejected.
+- [NEXT P0] Add authoritative exchange-calendar/session boundary generation and validation (holidays, half-days, DST, provider bar timestamp convention). Until then the API requires explicit boundary timestamps.
+- [NEXT P0] Replace externally supplied catalyst status, 5M Permission/structure, 1M state, price/SMA/volume and freshness with independently sourced, timestamped evidence. Unknown catalyst status must continue to block READY.
+- [NEXT P0] Validate corporate-action adjustment and full eligible GTC_EXT window coverage; compare MCC ATR/extension and boundary pairing against matching Thinkorswim/provider data.
+- [NEXT P1] Integrate the persisted evaluated snapshot into scanner, Morning Brief and MarketWatch surfaces after evidence contracts and tests are stable.
+- [USER ACTION — LOCAL VALIDATION] After CI passes, pull the branch and run the API tests described in `docs/Next-Steps-and-User-Inputs.md`. Do not send credentials.
+
 ## Local Alpaca setup and XRPN evidence — 2026-10-23
 
 - [DONE — SOURCE CHANGE, CI PENDING] Added API `UserSecretsId`, removed empty credential placeholders from tracked `appsettings.json`, documented local User Secrets commands, and standardized Alpaca credential resolution on ASP.NET Core configuration.
