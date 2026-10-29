@@ -57,3 +57,14 @@ A READY result is possible only when all required inputs are present, fresh, and
 3. Validate the 12:55 Arizona bar. Expected current behavior is red EOD GET OUT for a known technical failure, otherwise yellow DATA? — NO HOLD. Green HOLD OVERNIGHT is intentionally unavailable in ThinkScript until complete overnight history, catalyst, exclusion and freshness evidence is connected to the authoritative decision path.
 
 No broker credentials or order permissions are needed; this feature must remain a decision aid, not automatic order submission.
+
+
+## 2026-10-28 runtime validation
+
+User reports successful installation/compilation of both updated studies and confirms the intended 12:55 PM Arizona outcomes:
+
+- **SXC:** red `EOD GET OUT` when a defined chart-technical blocker is present. [Screenshot](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/Screenshot%202026-10-28%20212549.png)
+- **RTO:** yellow `DATA? — NO HOLD` when chart checks pass but required external qualification evidence is unavailable. [Screenshot](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/Screenshot%202026-10-28%20212531.png)
+- Green `HOLD OVERNIGHT` remains intentionally unavailable until the full qualification inputs are wired into the authoritative server-side decision path.
+
+This is user-reported runtime validation of the chart behavior; it is not proof of server/TOS parity, complete external data coverage, or CI status. The next implementation task is to feed the decision helper from persisted timestamped candidate snapshots and validated overnight/catalyst/exclusion/freshness inputs, preserving fail-closed DATA? behavior.
