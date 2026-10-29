@@ -140,9 +140,9 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         var keys = root.ValueKind == JsonValueKind.Object
             ? string.Join(", ", root.EnumerateObject().Select(property => property.Name).Take(12))
             : root.ValueKind.ToString();
-        var code = root.TryGetProperty("code", out var codeElement) ? codeElement.ToString() : null;
-        var message = root.TryGetProperty("message", out var messageElement) ? messageElement.ToString()
-            : root.TryGetProperty("error", out var errorElement) ? errorElement.ToString() : null;
+        var code = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("code", out var codeElement) ? codeElement.ToString() : null;
+        var message = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("message", out var messageElement) ? messageElement.ToString()
+            : root.ValueKind == JsonValueKind.Object && root.TryGetProperty("error", out var errorElement) ? errorElement.ToString() : null;
         if (!string.IsNullOrWhiteSpace(message))
             message = message.Length <= 300 ? message : message[..300];
         var detail = string.IsNullOrWhiteSpace(message) ? "" : $" Provider message: {message}";
