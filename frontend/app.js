@@ -631,7 +631,7 @@ async function refreshOvernightSnapshots() {
    for (const value of values) { const td=document.createElement("td"); td.textContent=String(value); tr.append(td); }
    return tr;
   }) : [Object.assign(document.createElement("tr"),{innerHTML:"<td colspan='6'>No saved evaluations found for this query.</td>"})]));
-  status.textContent = "Loaded "+snapshots.length+" saved evaluation(s). "+(data.note||"");
+  status.textContent = "Loaded "+snapshots.length+" saved input snapshot(s); GET returns inputs, not the evaluator decision. "+(data.note||"");
  } catch(error) {
   status.textContent = "Could not load saved evaluations: "+error.message;
  }
