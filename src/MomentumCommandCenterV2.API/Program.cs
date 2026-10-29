@@ -368,7 +368,7 @@ app.MapPost("/api/boring-overnight/snapshots", async (
 })
 .WithName("RecordBoringOvernightSnapshot")
 .WithSummary("Append and evaluate a timestamped Boring Overnight candidate snapshot")
-.WithDescription("Persists source/provider/feed, as-of timestamp, per-field source timestamps, calculation version, and the explicit evaluation inputs. Caller-supplied data is not independently verified; this endpoint does not clear catalysts or submit orders.")
+.WithDescription("All DateTimeOffset fields in the JSON body (asOfUtc and fieldSourceTimestampsUtc values) must be ISO-8601 UTC timestamps ending in Z; example: 2026-10-29T16:47:00Z. For October 29, 2026, that example is 09:47 Arizona time. Persists source/provider/feed, as-of timestamp, per-field source timestamps, calculation version, and explicit evaluation inputs. Caller-supplied data is not independently verified; this endpoint does not clear catalysts or submit orders.")
 .ProducesProblem(400);
 
 app.MapGet("/api/boring-overnight/snapshots", async (
@@ -391,7 +391,7 @@ app.MapGet("/api/boring-overnight/snapshots", async (
 })
 .WithName("GetBoringOvernightSnapshots")
 .WithSummary("Read recent persisted Boring Overnight candidate snapshots")
-.WithDescription("Optional query parameters: symbol and limit (1–500). Returns persisted snapshots ordered by as-of time, newest first.");
+.WithDescription("Optional query parameters: symbol and limit (1–500). Returned asOfUtc, RecordedAtUtc, and field source timestamps are UTC. A count of zero means no records were found at the store path used by this running API instance. Returns persisted snapshots ordered by as-of time, newest first.");
 
 app.MapPost("/api/boring-overnight/history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryRequest request,
