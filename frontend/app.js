@@ -647,7 +647,16 @@ $("overnightBarsForm")?.addEventListener("submit", async event => {
  if (new Date(fromUtc)>=new Date(toUtc) || new Date(toUtc)-new Date(fromUtc)>31*86400000) {
   status.textContent="Require From before To and a maximum 31-day window."; return;
  }
- button.disabled=true; status.textContent="Requesting "+symbol+" "+$("overnightTimeframe").value+" bars from Alpaca…";
+ button.disabled=true;
+ // Clear the previous response before starting a new request so failed requests cannot leave stale bars visible.
+ $("overnightProvider").textContent="REQUEST IN PROGRESS";
+ $("overnightCount").textContent="—";
+ $("overnightFirst").textContent="—";
+ $("overnightLatest").textContent="—";
+ $("overnightAge").textContent="—";
+ $("overnightGaps").textContent="—";
+ $("overnightInterpretation").textContent="Waiting for the API response. No prior response is being reused.";
+ status.textContent="Requesting "+symbol+" "+$("overnightTimeframe").value+" bars from Alpaca · Arizona "+$("overnightFrom").value+" → "+$("overnightTo").value+" · UTC "+fromUtc+" → "+toUtc+"…";
  try {
   const params = new URLSearchParams({symbol,timeframe:$("overnightTimeframe").value,from:fromUtc,to:toUtc,providerName:"Alpaca"});
   const data = await overnightFetchJson("/api/market-data/bars?"+params.toString());
@@ -670,8 +679,14 @@ $("overnightBarsForm")?.addEventListener("submit", async event => {
   status.textContent="Bar request complete · "+symbol+" · "+$("overnightTimeframe").value+" · Arizona "+$("overnightFrom").value+" → "+$("overnightTo").value+" · UTC "+fromUtc+" → "+toUtc+".";
   await refreshOvernightSnapshots();
  } catch(error) {
-  status.textContent="Overnight bar request failed: "+error.message+" · Check provider configuration and API logs.";
-  $("overnightInterpretation").textContent="No successful response. Do not infer missing bars or Overnight qualification.";
+  $("overnightProvider").textContent="REQUEST FAILED · NO NEW DATA";
+  $("overnightCount").textContent="NOT AVAILABLE";
+  $("overnightFirst").textContent="NOT AVAILABLE";
+  $("overnightLatest").textContent="NOT AVAILABLE";
+  $("overnightAge").textContent="NOT AVAILABLE";
+  $("overnightGaps").textContent="NOT CALCULATED";
+  status.textContent="Overnight bar request failed: "+error.message+" · Requested Arizona "+$("overnightFrom").value+" → "+$("overnightTo").value+" · UTC "+fromUtc+" → "+toUtc+". Check provider configuration and API logs.";
+  $("overnightInterpretation").textContent="No successful response for this request. Previous results were cleared. Do not infer missing bars or Overnight qualification.";
  } finally { button.disabled=false; }
 });
 $("overnightRefreshSnapshots")?.addEventListener("click",refreshOvernightSnapshots);
