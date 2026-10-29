@@ -486,3 +486,10 @@ No automatic orders. No assumed Thinkorswim API. No green overnight hold based o
 
 [Uncertainties]
 - Data not found in sources for an authoritative exchange-calendar implementation already integrated into MCC, a connected catalyst provider, or verified source timestamps for the user's local market-data store.
+
+
+### Additional data-integrity guard — 2026-10-29
+- The history calculator now rejects mixed-feed observations when the request omits `feed`, rather than selecting the newest row across feeds for the same source timestamp.
+- Added a regression test for mixed-feed rejection.
+- Commits: `0b5fd60494ffaa6cacd28d0e79dcdfcb3987f0eb` and `355bb7b2c1ae3c45759fa86104af071b5d34b264`.
+- CI for the feed guard/test and the newest branch head was queued/in progress at the last check. Verify the latest run before relying on this change.
