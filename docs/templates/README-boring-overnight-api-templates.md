@@ -13,7 +13,7 @@ Use the Swagger descriptions for each endpoint; they now show UTC query examples
 
 ## Template file
 
-Open [boring-overnight-evaluate-with-history.template.json](boring-overnight-evaluate-with-history.template.json) and paste its JSON into Swagger's `POST /api/boring-overnight/evaluate-with-history` request body **only after replacing the marked placeholders and verifying the bar timestamps**.
+Open [boring-overnight-evaluate-with-history.template.json](boring-overnight-evaluate-with-history.template.json) and paste its JSON into Swagger's `POST /api/boring-overnight/evaluate-with-history` request body **only after updating `asOfUtc` to the actual current UTC time and verifying/replacing all boundary timestamps against stored bars**.
 
 The file has 20 boundary objects and all required JSON fields. Its date range and timestamps are **illustrative examples, not evidence that those bars exist in your local store**. The timestamps `19:59:00Z` and `13:30:00Z` assume one-minute bar-start timestamps for the last regular-session bar and first regular-session bar. Providers/feeds may differ. Exact matching is required by the API.
 
@@ -23,7 +23,7 @@ The file has 20 boundary objects and all required JSON fields. Its date range an
 2. Inspect each returned observation's source timestamp, provider, feed, symbol, and OHLC. Confirm the feed is the same for all boundary bars.
 3. For each session, select the exact regular-session final bar and the next session's first regular-session bar. Copy each bar's exact source timestamp into the corresponding boundary. Do not convert an Arizona timestamp and then guess its UTC equivalent; copy source timestamps from the response.
 4. Confirm every `previousSessionDate` and `nextSessionDate` refers to an actual exchange session. The API does not currently generate or validate the authoritative exchange calendar.
-5. Replace `asOfUtc` with the actual UTC time at which you are evaluating the snapshot (ending in `Z`). Replace `source`, `calculationVersion`, and `fieldSourceTimestampsUtc` with truthful provenance. Keep the timestamp dictionary empty only if you do not have field-level source timestamps to report; do not invent them.
+5. Replace the example `asOfUtc` value (`2026-10-29T16:47:00Z`) with the actual UTC time at which you are evaluating the snapshot (ending in `Z`). Replace `source`, `calculationVersion`, and `fieldSourceTimestampsUtc` with truthful provenance. Keep the timestamp dictionary empty only if you do not have field-level source timestamps to report; do not invent them.
 6. Fill the non-history fields in `evaluationRequest` only from actual data. Nulls intentionally produce `DATA?`; do not use example guesses to make a candidate qualify. The integrated endpoint overrides caller-supplied historical metrics and forces `catalystStatus` to `UNKNOWN` until a validated catalyst source is connected.
 
 ## What to expect
