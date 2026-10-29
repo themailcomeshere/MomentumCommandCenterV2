@@ -950,3 +950,25 @@ Continue work without waiting for another confirmation when a task can be safely
 - [EXPECTED / NOT A DEFECT] Green `HOLD OVERNIGHT` is not expected until the full qualification inputs are connected. The observed RTO DATA? result is fail-closed behavior, not permission to hold.
 - [NEXT — IMPLEMENTATION, NO NEW USER INPUT REQUIRED] Connect the server-side decision helper to timestamped persisted candidate snapshots and provider-backed overnight metrics, exclusions, catalyst state and freshness. Keep unknown or stale evidence in DATA? and known technical/hard-gate failures blocked. Add API/scanner/report integration only after the authoritative input contract is complete.
 - [OPEN — VERIFICATION LIMIT] The screenshots and runtime outcomes are reported by the user; no automated screenshot parsing or same-bar 1M/5M parity run was performed here. Repository CI/build status for the current head remains unverified until checked explicitly.
+
+
+## CI recovery and working-state implementation — 2026-10-28
+
+- [DONE — CI VERIFIED] Fixed the stale Wilder ATR test expectation: for the documented 2-period sequence, the seeded ATR is 2.5 and the next Wilder-smoothed value is 2.25. Implementation unchanged. Commit `96283fb20c054aee326205ff6d19c438f3033862`; GitHub Actions run `40818276331` completed successfully. This verifies the pipeline at that commit only; rerun after subsequent source changes.
+- [NOW — OVERNIGHT FIRST] Replace caller-assembled qualification payloads with a reproducible, timestamped candidate snapshot contract that records symbol, as-of time, source/provider/feed, source timestamps, calculation version, required fields, missing/stale fields, and reason codes. Persist snapshots append-only; never overwrite history or allow missing evidence to pass READY.
+- [NOW] Add a queryable read path over stored OHLCV observations and calculate overnight statistics only from explicitly paired, session-valid close/open observations. Preserve source/provider/feed and correction lineage. Reject incomplete windows; do not treat gaps as zero activity.
+- [NOW] Add focused tests for snapshot round-trip, idempotency/corrections, stale/missing inputs, session boundaries, and hard-gate fail-closed behavior. Verify CI after every source commit.
+- [OPEN — EXTERNAL INPUT REQUIRED] Live catalyst clearance cannot be completed without a selected/connected news or event source. Keep UNKNOWN => DATA? and provide a precise missing-evidence reason; do not fabricate clearance.
+- [OPEN — EXTERNAL INPUT REQUIRED] A real market-wide scanner requires a selected, entitled provider and validated symbol universe. Existing bounded user-supplied-universe scans are not market-wide discovery.
+- [OPEN — USER WORKSPACE REQUIRED] Thinkorswim installed-study parity and chart exports cannot be established by repository tests alone. Keep 5M authority and 1M execution gates unchanged until exact source/output comparisons are available.
+- [OPEN — VALIDATION REQUIRED] GTC_EXT fill/outcome research, overnight target-touch probability, spread/slippage, and out-of-sample performance require actual timestamped trade/bar outcomes. No profitability claim is supported yet.
+- [DONE — STATUS LABEL CONFIRMED BY USER] User observed red `EOD GET OUT` on SXC and yellow `DATA? — NO HOLD` on RTO. The green hold state is intentionally unavailable while external qualification evidence is missing.
+
+### Immediate execution order
+1. Build append-only candidate snapshot persistence + read/query contract.
+2. Build validated overnight-stat calculation from real session-paired bars.
+3. Connect evaluator to persisted snapshot and explicit freshness/provenance; maintain fail-closed semantics.
+4. Add tests and keep CI green.
+5. Add catalyst/exclusion evidence adapters only when sources are real and validated.
+6. Integrate with scanner/Morning Brief; clearly label bounded versus market-wide discovery.
+7. Finish TOS parity, GTC_EXT outcomes and out-of-sample research before actionable READY is enabled.
