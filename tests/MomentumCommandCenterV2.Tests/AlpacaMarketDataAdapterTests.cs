@@ -105,6 +105,36 @@ public sealed class AlpacaMarketDataAdapterTests
         Assert.Null(handler.Request);
     }
 
+    [Fact]
+    public async Task GetBarsAsync_UnexpectedSuccessfulPayload_ReportsProviderDiagnosticsWithoutMarkingValidated()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """{"code":42210000,"message":"requested feed is not available","other":"ignored"}""",
+                Encoding.UTF8,
+                "application/json")
+        });
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(client, configuration);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            adapter.GetBarsAsync("RTO", TimeSpan.FromMinutes(1),
+                DateTimeOffset.Parse("2026-10-28T20:00:00Z"), DateTimeOffset.Parse("2026-10-28T23:50:00Z"),
+                CancellationToken.None));
+
+        Assert.Contains("Top-level keys: [code, message, other]", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("42210000", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("requested feed is not available", exception.Message, StringComparison.Ordinal);
+        Assert.False(adapter.HasSuccessfulDataValidation);
+    }
+
     /// <summary>
     /// PURPOSE: Captures the outgoing request while replacing network I/O with a deterministic response.
     /// WHEN CALLED: Used only by this test class.
