@@ -1,3 +1,28 @@
+## 2026-10-29 — SPY post-market control result and dashboard changes
+
+### User-supplied live result
+- SPY 1m Alpaca/IEX, 2026-10-28 20:00–23:55 UTC: 2 bars, at 20:00 UTC and 20:54 UTC; gapCount 1. The 20:54 UTC bar is 16:54 EDT, an actual post-market timestamp. This proves at least one SPY post-market observation was returned through the configured IEX route in this window, but coverage is sparse.
+- RTO returned zero bars for the same post-market interval. The contrast means do not diagnose a global extended-hours failure. RTO-specific cause remains unknown; venue coverage, eligible prints, provider behavior and entitlement are still possible factors.
+
+### Dashboard changes on this branch
+- Added a Post-market control test to the Boring Overnight panel. Enter a UTC From/To window and submit Compare ticker vs SPY. It fetches the current Overnight symbol and SPY at the selected timeframe over the same window.
+- Result rows display provider/feed, returned bar count, first/latest source timestamps and an explicit coverage interpretation. Zero bars remain EMPTY/CAUSE UNKNOWN; small counts are SPARSE, not complete session coverage.
+- Default audit window is 2026-10-28 20:00–23:55 UTC, matching the live comparison. The control is diagnostic only and does not change provider feed settings or make qualification decisions.
+
+### Local validation
+1. Pull `feature/opportunity-quality-classification`, restart the API and hard-refresh the browser.
+2. Switch Workspace to Boring Overnight. Keep the ticker as RTO and interval 1 minute.
+3. In Post-market control test, leave 2026-10-28 20:00 to 23:55 UTC and click Compare ticker vs SPY.
+4. Expect two rows. SPY should report 2 bars and latest timestamp 2026-10-28T20:54:00Z if provider history is unchanged; RTO should report zero for the supplied test. If historical provider responses differ, record actual returned values rather than treating these as fixed fixtures.
+5. Change the ticker and UTC window to test another symbol. The control always queries SPY over the same interval.
+6. Confirm that empty and sparse results are described as inconclusive; no fabricated bars or READY decisions should appear.
+
+### Still open — not falsely marked complete
+- Automatic authoritative exchange-session boundary generation and 20-pair history calculation wiring.
+- Timeframe-aware persisted observation identity/migration.
+- Persist and display final evaluator decisions and reasons (snapshot GET currently returns inputs).
+- Independently sourced market state, catalyst, 5M Permission/structure, 1M state, price/SMA/volume and freshness.
+- Scanner broad-market discovery, Morning Brief enrichment, collector recovery/backfill and full dashboard browser regression.
 ## 2026-10-29 — RTO regular-close vs post-market result and exact control test
 
 ### Results supplied by user
