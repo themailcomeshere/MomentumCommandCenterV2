@@ -466,7 +466,8 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
             .ApplyHistory(request.EvaluationRequest, history);
         var exclusions = await exclusionStore.GetAsync(ct);
         var excluded = exclusions.Any(x => x.Symbol.Equals(request.Symbol, StringComparison.OrdinalIgnoreCase));
-        effectiveRequest = effectiveRequest with { Excluded = excluded };
+        // No connected, validated catalyst provider exists yet. Never trust a caller-supplied CLEAR here.
+        effectiveRequest = effectiveRequest with { Excluded = excluded, CatalystStatus = "UNKNOWN" };
 
         var snapshotInput = new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
             request.Symbol, request.AsOfUtc, request.Source, request.Provider, request.Feed,
