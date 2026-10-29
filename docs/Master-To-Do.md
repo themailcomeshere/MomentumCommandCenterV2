@@ -940,3 +940,13 @@ Continue work without waiting for another confirmation when a task can be safely
 - Removed EodSignal as an evaluator input to avoid circular qualification: EOD GET OUT is now an output of the decision, not an independent input that makes the decision fail itself. 1M SELL/GET OUT/BLOCK execution state remains a legitimate gate.
 - Arizona convenience overload and timezone test added to the server decision helper.
 - Commits: 89e05e0f99fc78a72328b3f8bc52fc2c1b2283bb (1M study), 1fa0e0a49625af0ce970ddd2279f169bcfb62413 (label placement), e8c28953eec60b0ede81847587f247b2aefb360d (Arizona API overload), a4138830e7d96b28755b3a80648c091444687d61 (timezone test), 685994a2545998cdf2601d309eca505a7deb4042 (5M label), 6e28eed55b4f365ff5e38aa937ea6da4b164f9e6 (remove circular EOD input), 70d8b4befd218ae53475e9485c6bf44bee6a4c2a (test update).
+
+
+## 2026-10-28 — Arizona 12:55 Boring Overnight bubble validation
+
+- [DONE — USER-REPORTED RUNTIME VALIDATION] User installed the updated 1M and 5M studies successfully; both compiled.
+- [DONE — USER-REPORTED 1M OUTCOME] At the 12:55 PM Arizona decision bar, SXC displays red `EOD GET OUT` when a defined chart-technical blocker is present. Evidence: [SXC screenshot](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/Screenshot%202026-10-28%20212549.png).
+- [DONE — USER-REPORTED 1M OUTCOME] RTO displays yellow `DATA? — NO HOLD` when the chart checks do not fail but external qualification evidence is unavailable. Evidence: [RTO screenshot](https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/src/MomentumCommandCenterV2.Application/Images/Screenshots/10282026/Screenshot%202026-10-28%20212531.png).
+- [EXPECTED / NOT A DEFECT] Green `HOLD OVERNIGHT` is not expected until the full qualification inputs are connected. The observed RTO DATA? result is fail-closed behavior, not permission to hold.
+- [NEXT — IMPLEMENTATION, NO NEW USER INPUT REQUIRED] Connect the server-side decision helper to timestamped persisted candidate snapshots and provider-backed overnight metrics, exclusions, catalyst state and freshness. Keep unknown or stale evidence in DATA? and known technical/hard-gate failures blocked. Add API/scanner/report integration only after the authoritative input contract is complete.
+- [OPEN — VERIFICATION LIMIT] The screenshots and runtime outcomes are reported by the user; no automated screenshot parsing or same-bar 1M/5M parity run was performed here. Repository CI/build status for the current head remains unverified until checked explicitly.
