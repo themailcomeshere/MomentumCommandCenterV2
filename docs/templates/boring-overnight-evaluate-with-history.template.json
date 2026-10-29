@@ -1,0 +1,153 @@
+{
+  "symbol": "SPY",
+  "provider": "Alpaca",
+  "feed": "iex",
+  "requiredWindow": 20,
+  "asOfUtc": "REPLACE_WITH_CURRENT_UTC_TIMESTAMP_ENDING_IN_Z",
+  "source": "Alpaca stored bars; verify source and feed",
+  "calculationVersion": "boring-overnight-history-v1",
+  "fieldSourceTimestampsUtc": {},
+  "boundaries": [
+    {
+      "previousSessionDate": "2026-09-30",
+      "nextSessionDate": "2026-10-01",
+      "previousCloseBarTimestampUtc": "2026-09-30T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-01T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-01",
+      "nextSessionDate": "2026-10-02",
+      "previousCloseBarTimestampUtc": "2026-10-01T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-02T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-02",
+      "nextSessionDate": "2026-10-05",
+      "previousCloseBarTimestampUtc": "2026-10-02T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-05T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-05",
+      "nextSessionDate": "2026-10-06",
+      "previousCloseBarTimestampUtc": "2026-10-05T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-06T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-06",
+      "nextSessionDate": "2026-10-07",
+      "previousCloseBarTimestampUtc": "2026-10-06T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-07T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-07",
+      "nextSessionDate": "2026-10-08",
+      "previousCloseBarTimestampUtc": "2026-10-07T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-08T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-08",
+      "nextSessionDate": "2026-10-09",
+      "previousCloseBarTimestampUtc": "2026-10-08T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-09T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-09",
+      "nextSessionDate": "2026-10-12",
+      "previousCloseBarTimestampUtc": "2026-10-09T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-12T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-12",
+      "nextSessionDate": "2026-10-13",
+      "previousCloseBarTimestampUtc": "2026-10-12T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-13T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-13",
+      "nextSessionDate": "2026-10-14",
+      "previousCloseBarTimestampUtc": "2026-10-13T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-14T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-14",
+      "nextSessionDate": "2026-10-15",
+      "previousCloseBarTimestampUtc": "2026-10-14T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-15T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-15",
+      "nextSessionDate": "2026-10-16",
+      "previousCloseBarTimestampUtc": "2026-10-15T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-16T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-16",
+      "nextSessionDate": "2026-10-19",
+      "previousCloseBarTimestampUtc": "2026-10-16T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-19T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-19",
+      "nextSessionDate": "2026-10-20",
+      "previousCloseBarTimestampUtc": "2026-10-19T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-20T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-20",
+      "nextSessionDate": "2026-10-21",
+      "previousCloseBarTimestampUtc": "2026-10-20T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-21T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-21",
+      "nextSessionDate": "2026-10-22",
+      "previousCloseBarTimestampUtc": "2026-10-21T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-22T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-22",
+      "nextSessionDate": "2026-10-23",
+      "previousCloseBarTimestampUtc": "2026-10-22T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-23T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-23",
+      "nextSessionDate": "2026-10-26",
+      "previousCloseBarTimestampUtc": "2026-10-23T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-26T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-26",
+      "nextSessionDate": "2026-10-27",
+      "previousCloseBarTimestampUtc": "2026-10-26T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-27T13:30:00Z"
+    },
+    {
+      "previousSessionDate": "2026-10-27",
+      "nextSessionDate": "2026-10-28",
+      "previousCloseBarTimestampUtc": "2026-10-27T19:59:00Z",
+      "nextOpenBarTimestampUtc": "2026-10-28T13:30:00Z"
+    }
+  ],
+  "evaluationRequest": {
+    "symbol": "SPY",
+    "dataFresh": null,
+    "price": null,
+    "sma20": null,
+    "averageDailyVolume20": null,
+    "overnightWinRatePct": null,
+    "averageOvernightPct20": null,
+    "averageOvernightPct5": null,
+    "medianOvernightPct20": null,
+    "currentOvernightPct": null,
+    "excluded": null,
+    "catalystStatus": "UNKNOWN",
+    "fiveMinutePermission": null,
+    "fiveMinuteStructure": null,
+    "oneMinuteState": null,
+    "extensionAtr": null,
+    "currentVolumeVsAverage": null,
+    "dailyRangePct": null,
+    "atrPct": null
+  }
+}
