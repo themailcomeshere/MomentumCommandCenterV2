@@ -17,7 +17,7 @@ builder.Services.AddSwaggerGen(options =>
         string tag;
         if (path == "/api/health" || path == "/api/providers/status")
             tag = "System & Provider Health";
-        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv")
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars")
             tag = "Market Data";
         else if (path == "/api/scanner/universe")
             tag = "Scanner & Discovery";
@@ -417,6 +417,40 @@ app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API
         body.Example = OpenApiAnyFactory.CreateFromJson("""{"symbol":"SPY","dataFresh":true,"price":600,"sma20":590,"averageDailyVolume20":1000000,"overnightWinRatePct":75,"averageOvernightPct20":0.35,"averageOvernightPct5":0.55,"medianOvernightPct20":0.3,"currentOvernightPct":0.25,"excluded":false,"catalystStatus":"CLEAR","fiveMinutePermission":true,"fiveMinuteStructure":"BULLISH","oneMinuteState":"EXECUTION READY","extensionAtr":0.8,"currentVolumeVsAverage":1.2,"dailyRangePct":1.8,"atrPct":1.5}""");
     return operation;
 });
+
+app.MapGet("/api/market-data/stored-bars", async (
+    string symbol,
+    DateTimeOffset fromUtc,
+    DateTimeOffset toUtc,
+    string? provider,
+    int? limit,
+    IMarketBarObservationStore store,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (fromUtc.Offset != TimeSpan.Zero || toUtc.Offset != TimeSpan.Zero || fromUtc > toUtc)
+        return Results.BadRequest(new { error = "fromUtc and toUtc must be UTC timestamps, and fromUtc must not exceed toUtc." });
+    try
+    {
+        var observations = await store.GetLatestAsync(symbol, provider, fromUtc, toUtc, limit ?? 1000, ct);
+        return Results.Ok(new
+        {
+            symbol = symbol.ToUpperInvariant(),
+            provider,
+            fromUtc,
+            toUtc,
+            count = observations.Count,
+            observations,
+            note = "Returns the latest stored version per provider/symbol/source timestamp. These are raw bars; this endpoint does not infer session boundaries or calculate Overnight returns."
+        });
+    }
+    catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("GetStoredMarketBars")
+.WithSummary("Query persisted raw OHLCV observations")
+.WithDescription("Required query parameters: symbol, fromUtc, toUtc. Optional provider and limit (1–10000). Timestamps must be UTC ISO-8601. Corrections remain in append-only history, while the response returns the latest version per provider/symbol/timestamp.");
 
 app.MapPost("/api/market-data/import-csv", async (HttpRequest request, CancellationToken cancellationToken) =>
 {
