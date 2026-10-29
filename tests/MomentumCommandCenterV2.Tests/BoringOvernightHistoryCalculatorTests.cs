@@ -75,6 +75,21 @@ public sealed class BoringOvernightHistoryCalculatorTests
             new[] { boundary, boundary }, 5));
     }
 
+    [Fact]
+    public void RejectsMixedFeedsWhenFeedIsNotSpecified()
+    {
+        var closeTs = new DateTimeOffset(2026, 10, 1, 20, 0, 0, TimeSpan.Zero);
+        var openTs = closeTs.AddHours(17);
+        var iex = Observation("close-iex", closeTs, 100, 100, "TestProvider");
+        var sipBar = new MarketBar("TEST", closeTs, 100, 101, 99, 100, 1000, "TestProvider", "sip");
+        var sip = new MarketBarObservation("close-sip", closeTs.AddMinutes(2), "TestProvider", "TEST", closeTs, sipBar, "close-sip", null);
+        var boundary = new OvernightSessionBoundary(
+            new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 2), closeTs, openTs);
+
+        Assert.Throws<InvalidDataException>(() => BoringOvernightHistoryCalculator.Calculate(
+            "TEST", "TestProvider", null, new[] { iex, sip }, new[] { boundary }, 5));
+    }
+
     private static MarketBarObservation Observation(
         string id, DateTimeOffset timestamp, double open, double close, string provider)
     {
