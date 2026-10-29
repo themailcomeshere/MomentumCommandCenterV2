@@ -689,6 +689,42 @@ $("overnightBarsForm")?.addEventListener("submit", async event => {
   $("overnightInterpretation").textContent="No successful response for this request. Previous results were cleared. Do not infer missing bars or Overnight qualification.";
  } finally { button.disabled=false; }
 });
+/*
+/// MODULE: Overnight provider coverage control
+/// PURPOSE: Compare selected symbol and SPY over the same explicit UTC window.
+/// SAFETY: Descriptive coverage only; no inference of no-trade, entitlement, or qualification from empty/sparse responses.
+*/
+$("overnightCoverageForm")?.addEventListener("submit", async event => {
+ event.preventDefault();
+ const status=$("overnightCoverageStatus"), rows=$("overnightCoverageRows"), button=$("overnightCoverageRun");
+ const symbol=$("overnightSymbol").value.trim().toUpperCase();
+ const fromValue=$("overnightCoverageFrom").value, toValue=$("overnightCoverageTo").value;
+ const fromUtc=new Date(fromValue+"Z"), toUtc=new Date(toValue+"Z");
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid Overnight symbol first.";return;}
+ if(!Number.isFinite(fromUtc.getTime())||!Number.isFinite(toUtc.getTime())||fromUtc>=toUtc||toUtc-fromUtc>31*86400000){status.textContent="Enter a valid UTC window (From before To; maximum 31 days).";return;}
+ const symbols=[...new Set([symbol,"SPY"])];
+ button.disabled=true; rows.replaceChildren(); status.textContent="Requesting "+symbols.join(" and ")+" over the same UTC window…";
+ try {
+  const results=await Promise.all(symbols.map(async ticker=>{
+   const params=new URLSearchParams({symbol:ticker,timeframe:$("overnightTimeframe").value,from:fromUtc.toISOString(),to:toUtc.toISOString(),providerName:"Alpaca"});
+   try{return {symbol:ticker,data:await overnightFetchJson("/api/market-data/bars?"+params.toString())};}
+   catch(error){return {symbol:ticker,error:error.message};}
+  }));
+  for(const result of results){
+   const tr=document.createElement("tr");
+   const data=result.data||{}, count=Number(data.barCount??(data.bars||[]).length)||0;
+   const first=data.firstSourceTimestampUtc||"—", latest=data.latestSourceTimestampUtc||"—";
+   const interpretation=result.error?"REQUEST FAILED":count===0?"EMPTY RESPONSE · CAUSE UNKNOWN":count<5?"SPARSE SOURCE COVERAGE · NOT COMPLETE SESSION COVERAGE":"BARS RETURNED · COVERAGE STILL REQUIRES REVIEW";
+   const values=[result.symbol,result.error?"Alpaca · unavailable":(data.provider||"Alpaca")+" / "+(data.feed||"feed unknown"),result.error?"—":String(count),result.error?"—":first+" / "+latest,interpretation+(result.error?": "+result.error:"")];
+   for(const value of values){const td=document.createElement("td");td.textContent=String(value);tr.append(td);} rows.append(tr);
+  }
+  const spy=results.find(x=>x.symbol==="SPY"), selected=results.find(x=>x.symbol===symbol);
+  const spyCount=Number(spy?.data?.barCount??0), selectedCount=Number(selected?.data?.barCount??0);
+  status.textContent="Control complete · "+(spyCount>0?"SPY returned "+spyCount+" post-market observation(s); IEX delivered some data in this window.":"SPY returned no bars; feed coverage remains unresolved.")+" "+(symbol==="SPY"?"Selected ticker is the control symbol.":symbol+" returned "+selectedCount+" bar(s). Sparse results are not proof of complete coverage.");
+ } catch(error){status.textContent="Coverage comparison failed: "+error.message;}
+ finally{button.disabled=false;}
+});
+
 $("overnightRefreshSnapshots")?.addEventListener("click",refreshOvernightSnapshots);
 $("mode")?.addEventListener("change",()=>{ if($("mode").value==="overnight"){initializeOvernightWindow();refreshOvernightSnapshots();} });
 initializeOvernightWindow();
