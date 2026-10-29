@@ -36,6 +36,21 @@ Environment-variable alternatives for the API process use standard ASP.NET Core 
 
 For Massive later, use `MarketData:Massive:ApiKey` with User Secrets or `MarketData__Massive__ApiKey` as an environment variable. Never expose credentials to the frontend.
 
+## API timestamp convention (UTC and Arizona)
+
+All API date/time query parameters and JSON-body date/time fields use ISO-8601 **UTC timestamps ending in `Z`**. Do not enter Arizona local time directly into these fields. Swagger descriptions include UTC examples; where relevant they also show the Arizona equivalent.
+
+For October 26, 2026 (Arizona is UTC−07:00):
+- `2026-10-26T13:30:00Z` = 06:30 Arizona.
+- `2026-10-26T19:59:00Z` = 12:59 Arizona.
+- `2026-10-26T20:00:00Z` = 13:00 Arizona.
+
+Overnight boundary timestamps must be copied from the stored-bars response, not inferred from these examples. Bar timestamps commonly identify the start of a bar, and exact conventions depend on the provider/feed.
+
+Request templates:
+- [20-pair evaluate-with-history JSON template](../../../docs/templates/boring-overnight-evaluate-with-history.template.json)
+- [Template instructions, UTC/AZ conversion, and negative test](../../../docs/templates/README-boring-overnight-api-templates.md)
+
 ## Endpoints
 
 - GET /api/health
