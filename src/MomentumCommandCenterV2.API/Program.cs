@@ -40,6 +40,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
+builder.Services.AddSingleton<LiveSymbolAssessmentService>();
 builder.Services.AddSingleton<IScannerDiscoveryEventStore>(_ => new JsonlScannerDiscoveryEventStore(
     Environment.GetEnvironmentVariable("MCC_SCANNER_DISCOVERY_PATH")
     ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -286,6 +287,27 @@ app.MapGet("/api/market-data/collector/status", (MomentumCommandCenterV2.API.Mar
     Results.Ok(worker.Snapshot()))
 .WithSummary("Show background historical collector state")
 .WithDescription("Configure MarketData:Collector:Symbols as a comma- or semicolon-separated list to enable. Collector polls overlapping recent 1m/5m windows, persists idempotently, and retries via provider adapter. It is not a market-wide scanner or websocket.");
+
+app.MapGet("/api/market-data/live-assessment", async (
+    string symbol,
+    string? providerName,
+    LiveSymbolAssessmentService assessmentService,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var result = await assessmentService.GetAsync(symbol, providerName ?? "Alpaca", cancellationToken);
+        return Results.Ok(result);
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or System.Text.Json.JsonException)
+    { return Results.Problem($"Live assessment failed: {ex.GetType().Name}: {ex.Message}", statusCode: 502); }
+})
+.WithSummary("Calculate live 5M permission and 1M execution from provider OHLCV")
+.WithDescription("Returns timestamped 1m/5m technical snapshots, same-time-of-day 5m relative volume, freshness, V2 permission/execution state, and recent 1m chart bars. REST-polls Alpaca and caches for 30 seconds; not websocket/tick streaming. 5M permission is withheld unless at least 50 completed bars per timeframe, fresh observations, and five prior same-slot 5m volume samples are available.");
 
 app.MapGet("/api/market-data/bars", async (
     string symbol,
