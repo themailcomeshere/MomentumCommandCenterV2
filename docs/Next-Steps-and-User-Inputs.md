@@ -673,3 +673,22 @@ The full audit is in `docs/Validation/MCC-Remaining-Work-Audit-20261029.md`. Sta
 - **Collector + browser tests:** follow `docs/Validation/Collector-MorningBrief-Browser-Runbook-20261029.md` exactly. Use temporary store/checkpoint paths, verify 1m/5m keys, restart, simulate an outage, inspect backfill, then run the scanner/Morning Brief/Overnight browser matrix and `dotnet test .\MomentumCommandCenterV2.sln`.
 - CI for the latest code/test commits is green. Local Alpaca entitlement, collector outage recovery, matched Thinkorswim state tape, and browser validation are still user-runtime gates.
 - Release status remains NOT RELEASE-READY.
+
+
+## 2026-10-29 — Latest user test results and dashboard follow-up
+
+### RTO 5M/1M screenshot
+- Latest capture explicitly shows 5M `GET OUT` in the top status strip and 1M `EXECUTION EXPIRED` in the lower strip. The 1M pane does not show `GET OUT` or `EOD GET OUT` in this capture.
+- This is not a same-bar parity finding. Exported OHLCV files under `data/validation/RTO` need exact filename/content retrieval and timestamp alignment before replay. Current exact export filenames and rows: Data not found in sources.
+- Tomorrow's user action: no need to re-upload ThinkScript study sources. Use the already stored installed/repository study files. If exact exported files are present in GitHub, provide their path or confirm the committed filenames so they can be read without guessing.
+
+### Collector output interpretation
+- The repeated poll returning zero newly persisted observations is a positive idempotency signal for data already present.
+- Configuration/checkpoint mismatch remains open: configured SPY/QQQ/IWM/RTO/AMT; persisted checkpoint keys SPY/QQQ/TTE/FMS. Verify why configured symbols lack watermarks and why previous symbols remain. Do not fabricate checkpoint entries for symbols with no returned bars.
+- Alpaca status `VALIDATED_DATA_RETURNED` with one bar confirms a non-empty response only.
+
+### Tomorrow's remaining user validation
+- [ ] Perform collector restart and controlled backfill/fault recovery (user said steps 9–11 will be done tomorrow).
+- [ ] Run browser checks for price-line charts, Red Zone focus, News Link tooltip, ATG/ATL label and Arizona source time.
+- [ ] Capture console/network results after hard refresh. The reported `$.noConflict is not a function` BrowserLink message and favicon 404 need to be rechecked after current UI changes; they were not silently classified as fixed.
+- [ ] Complete exact RTO CSV parse/state-tape validation after filenames are established.
