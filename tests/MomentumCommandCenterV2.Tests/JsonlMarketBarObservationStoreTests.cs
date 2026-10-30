@@ -218,7 +218,7 @@ public sealed class JsonlMarketBarObservationStoreTests
         {
             Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
             var store = new JsonlMarketBarObservationStore();
-            var rest = CreateBar() with { SourceTransport = "REST" };
+            var rest = CreateBar() with { SourceTransport = "REST", Timeframe = "1m" };
             var websocket = rest with { SourceTransport = "WEBSOCKET" };
             Assert.Equal(1, await store.AppendAsync(new[] { rest }, CancellationToken.None));
             Assert.Equal(1, await store.AppendAsync(new[] { websocket }, CancellationToken.None));
