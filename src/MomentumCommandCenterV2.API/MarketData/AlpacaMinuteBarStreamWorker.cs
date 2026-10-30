@@ -234,7 +234,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
             foreach (var observation in observations)
             {
                 _barsBySymbol.AddOrUpdate(observation.Symbol, 1, (_, count) => count + 1);
-                _lastBarBySymbolUnixMs[observation.Symbol] = observation.Timestamp.ToUnixTimeMilliseconds();
+                _lastBarBySymbolUnixMs.AddOrUpdate(observation.Symbol, observation.Timestamp.ToUnixTimeMilliseconds(), (_, current) => Math.Max(current, observation.Timestamp.ToUnixTimeMilliseconds()));
             }
             Interlocked.Exchange(ref _lastBarUnixMs, observations.Max(x => x.Timestamp).ToUnixTimeMilliseconds());
         }
