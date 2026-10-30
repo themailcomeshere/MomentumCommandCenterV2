@@ -240,7 +240,7 @@ public sealed class LiveSymbolAssessmentService(
     };
 
     private static string FreshnessLabel(bool fresh, double? ageSeconds) =>
-        ageSeconds is null ? "UNKNOWN" : fresh ? $"FRESH · {Math.Max(0, ageSeconds.Value):0}s" : $"STALE · {Math.Max(0, ageSeconds.Value):0}s";
+        ageSeconds is null ? "UNKNOWN" : fresh ? "FRESH" : "STALE";
 }
 
 /// <summary>
@@ -411,7 +411,11 @@ public static class LiveSymbolTechnicalCalculator
         var current = bars[index];
         var localDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(current.Timestamp, Eastern).DateTime);
         var sessionBars = bars.Take(index + 1)
-            .Where(bar => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(bar.Timestamp, Eastern).DateTime) == localDate)
+            .Where(bar =>
+            {
+                var local = TimeZoneInfo.ConvertTime(bar.Timestamp, Eastern);
+                return DateOnly.FromDateTime(local.DateTime) == localDate && SessionSlot(local, 1) is not null;
+            })
             .ToArray();
         var volume = sessionBars.Sum(x => (decimal)x.Volume);
         if (volume <= 0m) return (decimal)current.Close;
