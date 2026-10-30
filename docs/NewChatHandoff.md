@@ -1,3 +1,16 @@
+## Latest validation checkpoint — 2026-10-30
+
+- Current implementation adds live Decision Explanation, six-factor V2 score breakdown, colored Red Zone score bands, exact UNKNOWN reasons, 15-second REST refresh, and a 10-second assessment cache.
+- [USER CONFIRMED] Direct `GET /api/market-data/live-assessment` endpoint test returned Success.
+- [PASS] Frontend `app.js` JavaScript syntax check.
+- [PASS] GitHub Actions run 661 for commit `8ff0ea4a01af356c55c901321585fb92b5d90241`.
+- [PASS] GitHub Actions run 662 for commit `c5e14a6f30a463062e3d7ef221b73a1ca505ba60`.
+- [IN PROGRESS] GitHub Actions run 663 for commit `d2dbd628fa40de11e49b0693b25280e2dc22453e` (state-label formatting). Do not mark the current branch head validated until this completes.
+- [OPEN — USER BROWSER TEST] The new live Decision Explanation, score colors, UNKNOWN explanations, and Product Feedback bottom placement need a local browser check.
+- [OPEN — SYMBOL DATA] Exact RKLX/ASTX/XRPN evaluation reasons were not supplied in this conversation. The updated cards now show each symbol's server-returned status/reason; inspect those instead of guessing.
+- [OPEN — STREAM] Current path is 15-second REST polling, not websocket. The V2 rules operate on completed 1m/5m bars; websocket minute bars are the next latency option if 15-second pickup is insufficient. Raw tick streaming is not required by the current engine.
+- [OPEN — POSITIONS] Schwab/Thinkorswim read-only position integration is design-only; see `docs/Thinkorswim-Schwab-Integration-Plan.md`.
+
 ## 2026-10-30 — Live Decision Explanation, score semantics, replay clarification
 
 - [DONE — CODE] Added `fiveMinute.scoreBreakdown` to the live-assessment API. It returns the six V2 5M conditions individually (true/false/null), score maximum 6, and permission threshold 5.
