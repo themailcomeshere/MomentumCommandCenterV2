@@ -328,7 +328,7 @@ app.MapGet("/api/market-data/bars", async (
 .WithSummary("Retrieve and persist historical 1m/5m bars from one provider")
 .WithDescription("UTC-only example: symbol=TTE, timeframe=1m, from=2026-10-26T13:30:00Z, to=2026-10-26T20:00:00Z, providerName=Alpaca. On 2026-10-26, this is 06:30–13:00 Arizona time (America/Phoenix). Use ISO-8601 UTC timestamps ending in Z for from/to. Returns source timestamps, feed, gaps, raw normalized bars, and newly persisted observation count. Supports up to 31 days per request.");
 
-app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, CancellationToken cancellationToken) =>
+app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, CancellationToken cancellationToken) =>
 {
     var configured = providers.Where(p => p.IsConfigured).ToArray();
     var benchmarkSymbols = new[] { "SPY", "QQQ", "IWM" };
