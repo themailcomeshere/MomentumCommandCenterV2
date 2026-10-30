@@ -1,3 +1,49 @@
+## Handoff checkpoint — live symbol assessment implementation (2026-10-30)
+
+### Current branch and implementation
+- Branch: `feature/opportunity-quality-classification`. Inspect branch HEAD before modifying files.
+- Added `src/MomentumCommandCenterV2.API/MarketData/LiveSymbolAssessmentService.cs`.
+- Added `GET /api/market-data/live-assessment?symbol=XYZ&providerName=Alpaca` in API Program.cs and registered the service.
+- Added `tests/MomentumCommandCenterV2.Tests/LiveSymbolTechnicalCalculatorTests.cs`.
+- Frontend now uses the assessment endpoint for Main Chart and every visible Red Zone card.
+- Main Chart and Red Zone auto-refresh every 60 seconds; server caches per symbol/provider for 30 seconds.
+- Header now contains the workspace toolbar. System Readiness is a compact 2×2 grid to the right of the brand.
+- Scanner Workbench table wrapper is 600px high, scrolls vertically/horizontally, keeps header sticky and keeps the Watch action column sticky at the right edge.
+
+### Assessment calculations and decision semantics
+- Provider requests: Alpaca 1m lookback 3 calendar days; Alpaca 5m lookback 21 calendar days. Returned completed bars are persisted to the append-only observation store.
+- Indicators: EMA9, EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP.
+- Extension: non-negative 1m close-to-EMA9 distance in 1m ATR units.
+- 5m relative volume: current bar volume divided by average volume from the same regular-session 5m clock slot across up to ten previous sessions. Requires at least five prior session samples. It is calculated from OHLCV; it is not a provider-supplied consolidated RVOL value.
+- Uses the existing Core `V2SignalEngine` to calculate 5M permission and 1M entry-context execution. Response exposes score, permission, structure, momentum, entryAllowed, state/action, extension and reason.
+- 1m freshness maximum: 120 seconds after expected bar close. 5m freshness maximum: 360 seconds after expected bar close.
+- Minimum indicator history: 50 completed bars for each timeframe; a previous 5m snapshot is required for deterioration context.
+- Fails closed: stale bars, insufficient history, insufficient same-slot RVOL samples or outside regular session => no 5M permission / 1M execution decision; response includes explicit status and reason.
+- Assessment is called with `hasPosition=false`. It is for candidate entry evaluation, not existing-position management.
+- Main Chart displays the latest 180 completed 1m bars. Provider/feed and source timestamps are included in assessment metadata.
+
+### How to interpret manual Red Zone pins
+A pin is now a request to assess a ticker, not a source-data record. Once the provider returns bars and the minimum calculations are available, the card updates automatically. If the symbol is unsupported, has insufficient history, has stale bars, or lacks five same-slot RVOL samples, the card must show the corresponding UNKNOWN/insufficient/stale state rather than invent a value.
+
+### Known limitations — do not overstate “live”
+- Historical REST polling every 60 seconds with a 30-second server cache; not websocket/tick streaming.
+- No guaranteed quote/tick-level freshness.
+- The configured Alpaca feed and account entitlement determine coverage; response reports feed when available.
+- No NBBO spread, order-book depth, halt/catalyst classification, news interpretation, or Thinkorswim study inputs.
+- The existing V2 engine is used as-is; thresholds remain the existing V2Config defaults and are not newly calibrated here.
+- Market-wide discovery remains a separate top-movers/SIP-dependent feature. Pinning manually adds a symbol to the browser-local Red Zone, not to Alpaca's market-wide scanner.
+- BrowserLink `$.noConflict` remains a separate unresolved development-host issue from previous handoff.
+
+### Next required validation
+1. Check latest branch SHA and GitHub Actions run. Do not rely on older passing .NET runs.
+2. Run all .NET tests; specifically inspect the new LiveSymbolTechnicalCalculatorTests.
+3. During US regular session, call `/api/market-data/live-assessment?symbol=SPY` and another known liquid symbol. Inspect provider/feed, 1m/5m bar counts, completed/source timestamps, freshness, same-slot RVOL sample count, 5M score/permission, 1M entry state and reason.
+4. Test a manually pinned symbol absent from the scanner discovery data. It should still populate from market-data API if the provider supports it.
+5. Test unconfigured provider, invalid symbol, stale/out-of-session, low-history and low-RVOL-baseline cases; confirm no fabricated green state.
+6. Verify Main Chart and all visible Red Zone cards refresh on cadence; confirm browser console and Network panel.
+7. Verify 600px scanner table scrolling, sticky Watch action column, compact header, 2×2 readiness and toolbar placement.
+8. Decide whether to move from 60-second historical REST polling to websocket/streaming only after evaluating latency and provider entitlement requirements.
+
 ## Checkpoint — MCC dashboard layout and browser-feedback pass (2026-10-30)
 
 ### Repository state
