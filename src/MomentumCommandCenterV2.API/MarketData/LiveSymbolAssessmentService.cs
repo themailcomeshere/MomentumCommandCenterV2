@@ -128,6 +128,17 @@ public sealed class LiveSymbolAssessmentService(
                 : one is null || five is null
                     ? "INSUFFICIENT_HISTORY"
                     : "LIVE_OBSERVATIONS";
+            var scoringConfig = new V2Config();
+            var scoreCriteria = new[]
+            {
+                new { key = "closeAboveVwap", label = "5M close > VWAP", passed = five is null ? (bool?)null : five.Close > five.Vwap },
+                new { key = "closeAboveEma9", label = "5M close > EMA 9", passed = five is null ? (bool?)null : five.Close > five.Ema9 },
+                new { key = "ema9AboveEma20", label = "5M EMA 9 > EMA 20", passed = five is null ? (bool?)null : five.Ema9 > five.Ema20 },
+                new { key = "ema20AboveSma50", label = "5M EMA 20 > SMA 50", passed = five is null ? (bool?)null : five.Ema20 > five.Sma50 },
+                new { key = "rsiSupportive", label = $"5M RSI >= {scoringConfig.MinRsi:0}", passed = five is null ? (bool?)null : five.Rsi >= scoringConfig.MinRsi },
+                new { key = "rvolSupportive", label = $"5M RVOL >= {scoringConfig.MinRvol:0.00}", passed = rvol.Value.HasValue ? rvol.Value.Value >= scoringConfig.MinRvol : (bool?)null }
+            };
+
             var result = new
             {
                 symbol = normalizedSymbol,
@@ -172,7 +183,14 @@ public sealed class LiveSymbolAssessmentService(
                     macdSignal = five?.MacdSignal,
                     atr = five?.Atr,
                     relativeVolume = rvol.Value,
-                    relativeVolumeBaselineSamples = rvol.Samples
+                    relativeVolumeBaselineSamples = rvol.Samples,
+                    scoreBreakdown = new
+                    {
+                        score = decision?.Score,
+                        maxScore = 6,
+                        permissionThreshold = 5,
+                        criteria = scoreCriteria
+                    }
                 },
                 decision = decision is null ? null : new
                 {
