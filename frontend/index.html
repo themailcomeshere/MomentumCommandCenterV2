@@ -6,7 +6,7 @@
  <div class="topbar-layout">
   <div class="topbar-brand">
    <div><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div>
-   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 60s AUTO-REFRESH</div><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
+   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 15s AUTO-REFRESH</div><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
   </div>
   <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
    <div class="topbar-readiness-heading"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></div>
@@ -19,7 +19,7 @@
   </section>
  </div>
  
-<section id="workspace-toolbar" class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option>MNSB</option><option>DEMO</option><option>XRPN</option></select></div><div><label for="snapshot">Replay point</label><input id="snapshot" type="range" min="0" max="4" value="2"></div><button id="reset">Reset demo</button></section>
+<section id="workspace-toolbar" class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option selected>SPY</option><option>RKLX</option><option>ASTX</option><option>XRPN</option><option>MNSB</option><option>DEMO</option></select></div><button id="reset">Reset workspace</button></section>
 </header>
 <main>
 
@@ -52,10 +52,10 @@
 </div>
 <section id="opportunity-status" class="status-grid">
 <article class="panel hero-card"><div class="eyebrow">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
-<article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">$11.29</strong><small>Illustrative only</small></article><article class="panel metric"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">1.2×</strong><small>Demo value — not calculated</small></article><article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">0.7 ATR</strong><small>Illustrative only</small></article>
+<article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">Loading…</strong><small>Latest completed 1M bar</small></article><article class="panel metric"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small>5M same-time-of-day RVOL</small></article><article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">Loading…</strong><small>1M close vs EMA9 in ATR units</small></article>
 </section>
-<section id="decision-layout" class="layout"><article class="panel"><div class="section-heading"><div><div class="eyebrow">DECISION EXPLANATION</div><h2>Why this classification?</h2></div><span class="muted">Reason codes</span></div><ul id="reasons" class="reason-list"><li>Low relative volume — participation is modest.</li><li>Recent movement capacity is limited.</li><li>Execution eligibility is a separate gate.</li></ul><div class="notice">This panel explains a classification. It is not an entry instruction, a profit probability, or a substitute for the source 5M/1M studies.</div></article>
-<article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">Permission: YES (demo)</strong><p>Structure and permission are the higher-timeframe gate.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">Execution event: ACTIVE (demo)</strong><p>Timing is finite; a stale READY event should expire.</p></div></div><div class="divider"></div><div class="section-heading"><h3>Replay inspection</h3><span id="replayLabel" class="muted">Snapshot 3 of 5</span></div><div class="bar-strip" id="bars"></div><p class="muted small">Replay bar strip is illustrative only; it is not linked to the live price chart.</p></article></section>
+<section id="decision-layout" class="layout"><article class="panel"><div class="section-heading"><div><div class="eyebrow">DECISION EXPLANATION · LIVE API</div><h2>Why this classification?</h2></div><span id="decisionScore" class="redzone-score score-unknown">Loading live score…</span></div><ul id="reasons" class="reason-list"><li>Waiting for live 1M/5M source bars.</li></ul><p id="decisionSource" class="muted small">Source, feed, timestamps, and evaluation state will appear here.</p><div class="notice">The six V2 score conditions are evaluated from completed 5M OHLCV bars. A 5M permission score is not an entry signal; the 1M execution gate must also confirm. Decision support only — no orders are submitted.</div></article>
+<article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">5M permission: LOADING</strong><p>Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">1M execution: LOADING</strong><p>Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="divider"></div><div class="section-heading"><h3>Historical replay</h3><span class="muted">Not implemented</span></div><p class="muted small">The former Replay point slider only switched between five hard-coded demo examples. It did not replay historical bars or recalculate decisions, so it has been removed from the active workflow. Historical decision replay is a separate feature to build.</p></article></section>
 <section id="overnightPanel" data-section-id="overnight-analysis" class="panel hidden">
  <div class="section-heading"><div><div class="eyebrow">BORING OVERNIGHT · API-BACKED</div><h2>Overnight scan &amp; analysis</h2></div><span class="chip">Research only · no orders</span></div>
  <p class="notice">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
@@ -86,17 +86,6 @@
  </div>
  <div class="section-heading overnight-snapshot-heading"><div><h3>Saved Overnight input snapshots</h3><p class="muted">Read from <code>/api/boring-overnight/snapshots</code>. These are persisted evaluator inputs, not stored final decisions.</p></div></div>
  <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>As of (UTC)</th><th>Recorded (UTC)</th><th>Provider / feed</th><th>Record type</th><th>Key gate inputs (not a decision)</th></tr></thead><tbody id="overnightSnapshotRows"><tr><td colspan="6">No saved evaluations loaded yet.</td></tr></tbody></table></div>
-</section>
-<section id="dashboard-feedback" class="panel feedback-panel">
- <div class="section-heading"><div><div class="eyebrow">PRODUCT FEEDBACK</div><h2>Dashboard notes</h2></div><span class="muted">Saved in this browser only</span></div>
- <form id="feedbackForm" class="feedback-form">
-  <label for="feedbackArea">Area</label><select id="feedbackArea"><option>Dashboard layout</option><option>Opportunity classification</option><option>5M → 1M handoff</option><option>Scanner workflow</option><option>EXT / pullback watch</option><option>Boring Overnight</option><option>Data quality / freshness</option><option>Other</option></select>
-  <label for="feedbackPriority">Priority</label><select id="feedbackPriority"><option>Idea</option><option>Confusing</option><option>Bug / mismatch</option><option>High priority</option></select>
-  <label for="feedbackText">What should change?</label><textarea id="feedbackText" rows="3" maxlength="2000" placeholder="Describe what you expected, what you saw, and which symbol/timeframe or replay snapshot applies." required></textarea>
-  <div class="feedback-actions"><button type="submit">Save note</button><button id="exportFeedback" type="button" class="quiet-button">Export notes</button><button id="clearFeedback" type="button" class="quiet-button">Clear notes</button></div>
- </form>
- <ul id="feedbackRows" class="feedback-list"></ul>
- <p class="notice">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
 </section>
 <section id="scanner-workbench" class="workbench-grid"><article class="panel"><div class="section-heading"><div><div class="eyebrow">SCANNER WORKBENCH</div><h2>Candidate discovery</h2></div><label class="file-button" for="scannerFile">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls"><select id="scannerGroup"><option value="momentum">A · Momentum Hunter</option><option value="breakout">B · Breakout Trigger</option><option value="reclaim">C · Reclaim / Continuation</option><option value="discovery">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
 <div class="scanner-live-toolbar"><button id="refreshMarketMovers" type="button">Refresh Alpaca market movers</button><span id="liveMoversStatus" class="muted">Live discovery requires API credentials and SIP screener entitlement.</span></div><p class="muted small"><span class="legend-line">¹ ATG = Alpaca Top Gainers</span><span class="legend-line">² ATL = Alpaca Top Losers</span><span class="legend-line">Change = provider-reported percent change</span><span class="legend-line">Source = provider update timestamp (Arizona time)</span></p>
@@ -139,6 +128,17 @@
  <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
 </section>
 
+<section id="dashboard-feedback" class="panel feedback-panel">
+ <div class="section-heading"><div><div class="eyebrow">PRODUCT FEEDBACK</div><h2>Dashboard notes</h2></div><span class="muted">Saved in this browser only</span></div>
+ <form id="feedbackForm" class="feedback-form">
+  <label for="feedbackArea">Area</label><select id="feedbackArea"><option>Dashboard layout</option><option>Opportunity classification</option><option>5M → 1M handoff</option><option>Scanner workflow</option><option>EXT / pullback watch</option><option>Boring Overnight</option><option>Data quality / freshness</option><option>Other</option></select>
+  <label for="feedbackPriority">Priority</label><select id="feedbackPriority"><option>Idea</option><option>Confusing</option><option>Bug / mismatch</option><option>High priority</option></select>
+  <label for="feedbackText">What should change?</label><textarea id="feedbackText" rows="3" maxlength="2000" placeholder="Describe what you expected, what you saw, and which symbol/timeframe or replay snapshot applies." required></textarea>
+  <div class="feedback-actions"><button type="submit">Save note</button><button id="exportFeedback" type="button" class="quiet-button">Export notes</button><button id="clearFeedback" type="button" class="quiet-button">Clear notes</button></div>
+ </form>
+ <ul id="feedbackRows" class="feedback-list"></ul>
+ <p class="notice">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
+</section>
 <section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
 <dialog id="quickStartDialog" class="quick-start-dialog" aria-labelledby="quickStartTitle">
  <div class="section-heading"><div><div class="eyebrow">MCC WORKFLOW</div><h2 id="quickStartTitle">Quick Start</h2></div><button id="closeQuickStart" type="button" class="quiet-button">Close</button></div>
