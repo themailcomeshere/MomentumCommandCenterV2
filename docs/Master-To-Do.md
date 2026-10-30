@@ -1,3 +1,20 @@
+## 2026-10-30 — Live Decision Explanation, score semantics, replay clarification
+
+- [DONE — CODE] Added `fiveMinute.scoreBreakdown` to the live-assessment API. It returns the six V2 5M conditions individually (true/false/null), score maximum 6, and permission threshold 5.
+- [DONE — CODE] Replaced the top-level demo snapshot Decision Explanation with symbol-specific live API data. It now shows the engine state/reason, 5M score conditions, 1M/5M source timestamps, freshness, feed, RVOL baseline sample count, and 1M entry context.
+- [DONE — CODE] Red Zone score display is color-coded: 0–2 red with X; 3–4 amber; 5–6 green. The green **EXECUTION READY** label is reserved for `decision.entryAllowed=true`; a strong 5M score without 1M confirmation says to wait.
+- [DONE — CODE] UNKNOWN cards now display the exact API evaluation status/reason rather than an unexplained UNKNOWN.
+- [DONE — CODE] Removed the misleading Replay point slider. It previously selected five hard-coded examples, not historical bars or historical decisions. The UI now explicitly says historical replay is not implemented.
+- [DONE — CODE] Moved Product Feedback to the bottom, after Provider Comparison.
+- [DONE — CODE] Changed the dashboard refresh cadence to 15 seconds and the per-symbol API cache to 10 seconds. This remains REST polling, not streaming.
+- [DONE — DOCS] Updated this To-Do, New Chat Handoff, User Manual, and Live Symbol Assessment guide; added a Schwab/Thinkorswim integration plan.
+- [VALIDATION] GitHub Actions run 648 passed for commit `c808456b1cb36382fe9491735e79c6de336f47e8` (nullable RVOL compile fix). The current Decision Explanation/score/UI commits are newer and require their own CI run before acceptance.
+- [OPEN — USER TEST] Confirm live Decision Explanation follows selected symbol; verify 6-factor criteria and timestamp/feed; confirm 0–2 red, 3–4 amber, 5–6 green, and entry-ready only when 1M entryAllowed is true.
+- [OPEN — SYMBOL DIAGNOSIS] RKLX, ASTX, and XRPN previously displayed UNKNOWN. The new UI shows each symbol's actual `evaluationStatus` and `evaluationReason`; inspect those responses to establish the individual cause. Do not assume the same cause for all three.
+- [OPEN — REPLAY] Implement true historical decision replay using stored 1m/5m bars, explicit as-of time, and the same versioned V2 engine/config. Preserve historical data quality and never use today's future bars.
+- [OPEN — STREAMING DECISION] 15-second REST polling is adequate for first testing completed 1m/5m candle decisions but is not push streaming. If lower latency is needed, add Alpaca websocket minute bars and updated-bar corrections; do not start with raw tick processing because current V2 rules evaluate completed bars.
+- [OPEN — THINKORSWIM/SCHWAB] Read-only Schwab Trader API position integration plan is documented in `docs/Thinkorswim-Schwab-Integration-Plan.md`. Requires user-owned Schwab developer app, approved API access, OAuth token lifecycle, secure token storage, account/position mapping, and reconciliation. Do not enable order submission as part of the position-read phase.
+
 ## User browser verification update — 2026-10-30
 
 - [USER VERIFIED] Morning Brief News Link hover.
