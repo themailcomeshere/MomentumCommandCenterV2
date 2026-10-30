@@ -51,6 +51,32 @@ const scannerData={
  ]
 };
 
+$("refreshMarketMovers")?.addEventListener("click",async()=>{
+ const button=$("refreshMarketMovers"),status=$("liveMoversStatus");
+ button.disabled=true;status.textContent="Loading persisted Alpaca discovery events…";
+ try{
+  const response=await fetch("/api/scanner/discoveries?limit=200",{cache:"no-store",headers:{Accept:"application/json"}});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.error||("HTTP "+response.status));
+  scannerData.live=(data.discoveries||[]).map(envelope=>{
+   const item=envelope.discovery||{},fields=item.rawFields||{};
+   const move=fields.percent_change==null?"DATA?":(Number(fields.percent_change)>=0?"+":"")+Number(fields.percent_change).toFixed(2)+"%";
+   const received=envelope.receivedAt?new Date(envelope.receivedAt):null;
+   const age=received&&!Number.isNaN(received.getTime())?Math.max(0,Math.round((Date.now()-received.getTime())/60000))+" min since receipt":"UNKNOWN";
+   return {symbol:item.symbol,score:move,status:"DISCOVERY — NOT QUALIFIED",extension:"NOT CALCULATED",freshness:age,
+    reason:(item.scannerGroup||"Alpaca discovery")+" · change "+(fields.change??"DATA?")+" · source "+(item.sourceTimestamp||"UNKNOWN")};
+  });
+  let option=document.querySelector('#scannerGroup option[value="live"]');
+  if(!option){option=document.createElement("option");option.value="live";option.textContent="E · Alpaca live discovery";$("scannerGroup").append(option);}
+  $("scannerGroup").value="live";
+  const health=data.health||{};
+  status.textContent="Alpaca · "+(health.status||"UNKNOWN")+" · "+(data.count??0)+" persisted events · "+(data.configured?"credentials configured":"credentials missing")+" · source is SIP-based";
+  renderScanner();
+ }catch(error){status.textContent="Market-mover retrieval failed: "+error.message;}
+ finally{button.disabled=false;}
+});
+
+
 
 function localDateTimeValue(date){
  const pad=value=>String(value).padStart(2,"0");
