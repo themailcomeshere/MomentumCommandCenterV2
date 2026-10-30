@@ -73,7 +73,7 @@ public sealed class MassiveMarketDataAdapter(HttpClient httpClient, IConfigurati
             if (timestamp < from || timestamp > to) continue;
             result.Add(new MarketBar(symbol, timestamp, item.GetProperty("o").GetDouble(),
                 item.GetProperty("h").GetDouble(), item.GetProperty("l").GetDouble(),
-                item.GetProperty("c").GetDouble(), item.GetProperty("v").GetInt64(), ProviderName, "Massive aggregate"));
+                item.GetProperty("c").GetDouble(), item.GetProperty("v").GetInt64(), ProviderName, "Massive aggregate", $"{multiplier}m"));
         }
         RecordSuccessfulValidation(result.Count);
         return result;
