@@ -1205,3 +1205,30 @@ main{margin-top:16px}
  .morning-brief-details>summary .chip{display:none}
  .morning-brief-dialog{padding:14px}
 }
+
+
+/* Historical replay controls and auditable response. */
+.replay-controls{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;
+ margin:12px 0;
+}
+.replay-controls label{display:grid;gap:5px;color:var(--muted);font-size:11px}
+.replay-controls input,.replay-controls select{min-width:0;width:100%}
+.replay-controls .replay-position-toggle{display:flex;align-items:center;gap:8px}
+.replay-controls .replay-position-toggle input{width:auto}
+.replay-result{min-width:0}
+.replay-result pre,.replay-audit{
+ max-height:260px;
+ overflow:auto;
+ padding:10px;
+ border:1px solid var(--line);
+ border-radius:8px;
+ background:rgba(0,0,0,.18);
+ color:var(--muted);
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+ font-size:10px;
+}
+@media(max-width:600px){.replay-controls{grid-template-columns:minmax(0,1fr)}}
