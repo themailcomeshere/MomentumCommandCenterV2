@@ -1,3 +1,22 @@
+## 2026-10-30 — Live symbol assessment / Main Chart / Red Zone
+
+- [DONE — CODE] Added `GET /api/market-data/live-assessment?symbol=...` and `LiveSymbolAssessmentService`. It retrieves Alpaca 1m bars over a 3-calendar-day lookback and 5m bars over a 21-calendar-day lookback, persists both source sets, and caches each symbol/provider assessment for 30 seconds.
+- [DONE — CODE] Added deterministic OHLCV calculations for EMA9, EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP.
+- [DONE — CODE] Added same-time-of-day 5m relative volume: current 5m bar volume divided by the mean volume for the same regular-session 5m slot across up to ten previous sessions. Requires at least five prior session samples; this is a calculated same-slot baseline, not a vendor-provided consolidated RVOL value.
+- [DONE — CODE] Connected the existing `V2SignalEngine` to current completed 1m/5m snapshots. Response includes 5M score/permission, 5M structure, 1M structure/momentum, entry permission, state/action, extension and reason.
+- [DONE — CODE] Added explicit fail-closed statuses for insufficient history, stale source bars, insufficient same-slot RVOL baseline and outside-regular-session requests. Permission/execution are not calculated in those states.
+- [DONE — CODE] Red Zone now requests a live assessment for every visible pinned/discovered ticker and updates extension, 1m/5m freshness, V2 score, 5M permission, 1M execution and mini-chart. A manually pinned ticker is no longer permanently stuck at DATA?/UNKNOWN; those values resolve when the provider returns sufficient source evidence.
+- [DONE — CODE] Main Chart now consumes the same live-assessment endpoint and uses returned 1m OHLCV bars. Symbol changes refresh the chart; browser refreshes the focused chart and Red Zone cards every 60 seconds.
+- [DONE — CODE] Moved `workspace-toolbar` inside the header. System Readiness now sits to the right of the brand in a 2×2 grid.
+- [DONE — CODE] Scoped Scanner Workbench `.table-wrap` to 600px height with vertical and horizontal scrolling, sticky table headers, and a sticky right-side Watch action column to keep Watch visible while horizontally scrolling.
+- [DONE — TESTS ADDED] Added `LiveSymbolTechnicalCalculatorTests.cs` covering indicator snapshots, same-time-of-day RVOL sample sufficiency, and Eastern regular-session boundaries.
+- [LIMITATION — IMPORTANT] This is near-live historical REST polling, not a websocket/tick stream. The browser refresh cadence is 60 seconds and the server assessment cache is 30 seconds. It does not guarantee every trade/quote update.
+- [LIMITATION — IMPORTANT] V2 is evaluated with `hasPosition=false` because MCC does not yet have a broker-position source. The resulting 1M execution label is an entry-context assessment, not open-position management.
+- [LIMITATION — IMPORTANT] No catalyst/news classification, halt status, NBBO spread, order-book depth, or Thinkorswim study values are inferred. Provider/feed entitlement still determines bar coverage.
+- [OPEN — VALIDATION] Run GitHub Actions for the latest head and inspect test results. Then test live API response with a known liquid ticker during regular session; verify returned source timestamps, feed, bar counts, same-slot baseline sample count, V2 output, and failure behavior with an unconfigured/invalid symbol.
+- [OPEN — USER BROWSER RETEST] Pull latest branch and verify: manual pin resolves from actual provider data; extension and freshness update; 5M permission and 1M execution show real engine output; Main Chart displays latest 1m bars; data refreshes on 60s cadence; stale/out-of-session/insufficient baseline states fail closed; table-wrap is 600px and Watch remains visible; header compactness and 2×2 readiness; toolbar inside header.
+- [OPEN — PRODUCT] True websocket streaming / trade-level live charting remains future work if the 60-second REST refresh is not sufficiently current.
+
 ## 2026-10-30 — MCC browser feedback / layout pass
 - [DONE — USER CONFIRMED] Morning Brief News Link hover behavior works in the user's local browser.
 - [DONE — CODE] Split the Alpaca market-mover footnote into separate lines for ATG, ATL, Change, and Source.
