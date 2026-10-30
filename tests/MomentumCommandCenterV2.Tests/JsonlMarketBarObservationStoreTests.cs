@@ -208,6 +208,34 @@ public sealed class JsonlMarketBarObservationStoreTests
         }
     }
 
+    [Fact]
+    public async Task TransportChangeIsRecordedEvenWhenOhlcvValuesAreIdentical()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var store = new JsonlMarketBarObservationStore();
+            var rest = CreateBar() with { SourceTransport = "REST" };
+            var websocket = rest with { SourceTransport = "WEBSOCKET" };
+            Assert.Equal(1, await store.AppendAsync(new[] { rest }, CancellationToken.None));
+            Assert.Equal(1, await store.AppendAsync(new[] { websocket }, CancellationToken.None));
+
+            var rows = await store.GetLatestAsync("TEST", "TestProvider", rest.Timestamp, rest.Timestamp, 10, CancellationToken.None, "1m");
+            Assert.Single(rows);
+            Assert.Equal("WEBSOCKET", rows[0].Bar.SourceTransport);
+            Assert.NotNull(rows[0].SupersedesObservationId);
+            Assert.Equal(2, (await File.ReadAllLinesAsync(path)).Length);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
     public static IEnumerable<object[]> InvalidBars()
     {
         var valid = CreateBar();
