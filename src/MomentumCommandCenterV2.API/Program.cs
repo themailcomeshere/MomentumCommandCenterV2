@@ -20,7 +20,7 @@ builder.Services.AddSwaggerGen(options =>
         string tag;
         if (path == "/api/health" || path == "/api/providers/status")
             tag = "System & Provider Health";
-        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars")
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay")
             tag = "Market Data";
         else if (path == "/api/scanner/universe")
             tag = "Scanner & Discovery";
@@ -308,6 +308,32 @@ app.MapGet("/api/market-data/live-assessment", async (
 })
 .WithSummary("Calculate live 5M permission and 1M execution from provider OHLCV")
 .WithDescription("Returns timestamped 1m/5m technical snapshots, same-time-of-day 5m relative volume, freshness, V2 permission/execution state, and recent 1m chart bars. REST-polls Alpaca and caches for 30 seconds; not websocket/tick streaming. 5M permission is withheld unless at least 50 completed bars per timeframe, fresh observations, and five prior same-slot 5m volume samples are available.");
+
+app.MapGet("/api/market-data/replay", async (
+    string symbol,
+    DateTimeOffset asOfUtc,
+    string? providerName,
+    string? feed,
+    bool? hasPosition,
+    IMarketBarObservationStore barStore,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (asOfUtc.Offset != TimeSpan.Zero)
+        return Results.BadRequest(new { error = "asOfUtc must be an ISO-8601 UTC timestamp ending in Z." });
+    try
+    {
+        var service = new HistoricalDecisionReplayService(barStore);
+        var result = await service.ReplayAsync(
+            symbol, providerName ?? "Alpaca", feed, asOfUtc, hasPosition ?? false, cancellationToken);
+        return Results.Ok(result);
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (InvalidDataException ex) { return Results.Problem(ex.Message, statusCode: 500); }
+})
+.WithSummary("Replay a historical V2 decision from persisted 1m/5m OHLCV")
+.WithDescription("Query parameters: symbol, asOfUtc (UTC timestamp ending in Z), optional providerName (default Alpaca), optional feed, optional hasPosition (default false). Uses only stored completed bars at or before asOfUtc and the current V2SignalEngine/default configuration. It does not fetch missing bars, infer historical broker positions, or submit orders.");
 
 app.MapGet("/api/market-data/bars", async (
     string symbol,
