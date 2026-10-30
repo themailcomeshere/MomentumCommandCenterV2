@@ -8,7 +8,7 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// <summary>
 /// PURPOSE: Retrieves current Alpaca 1m/5m observations and evaluates the existing V2 signal engine.
 /// WHEN CALLED: The MCC live-symbol assessment endpoint is requested by Main Chart or Red Zone.
-/// IMPORTANT: Uses bounded historical REST polling, not websocket/tick streaming. Permission is withheld when source evidence is incomplete.
+/// IMPORTANT: Uses a fresh, provenance-confirmed WebSocket 1m series when eligible; otherwise falls back to 1m REST. 5m permission remains REST-backed. Permission is withheld when source evidence is incomplete.
 /// </summary>
 public sealed class LiveSymbolAssessmentService(
     IEnumerable<IMarketDataProvider> providers,
