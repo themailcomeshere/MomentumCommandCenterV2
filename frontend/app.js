@@ -27,9 +27,10 @@ function render(){
  document.querySelector(".hero-card .eyebrow").textContent=overnight?"OVERNIGHT WORKFLOW · MOCKUP":"OPPORTUNITY CLASSIFICATION";
 }
 $("snapshot").addEventListener("input",render);$("mode").addEventListener("change",render);
-$("symbol").addEventListener("change",()=>{const chosen=$("symbol").value;if(chosen==="MNSB"){render();$("freshness").textContent="Data: SIMULATED";}else{$("headline").textContent=chosen+" is a placeholder selection; no symbol data is loaded.";$("freshness").textContent="Data: NOT LOADED";}});
+$("symbol").addEventListener("change",()=>{const chosen=$("symbol").value;if(chosen==="MNSB"){render();$("freshness").textContent="Data: SIMULATED";}else{$("headline").textContent=chosen+" is a placeholder selection; no symbol data is loaded.";$("freshness").textContent="Data: NOT LOADED";}refreshFocusedPriceChart();});
 $("reset").addEventListener("click",()=>{$("mode").value="momentum";$("symbol").value="MNSB";$("snapshot").value="2";$("freshness").textContent="Data: SIMULATED";render();});
  render();
+refreshFocusedPriceChart();
 
 const scannerData={
  momentum:[
@@ -61,10 +62,13 @@ $("refreshMarketMovers")?.addEventListener("click",async()=>{
   scannerData.live=(data.discoveries||[]).map(envelope=>{
    const item=envelope.discovery||{},fields=item.rawFields||{};
    const move=fields.percent_change==null?"DATA?":(Number(fields.percent_change)>=0?"+":"")+Number(fields.percent_change).toFixed(2)+"%";
+  const groupCode=item.scannerGroup==="ALPACA_TOP_GAINERS"?"ATG¹":item.scannerGroup==="ALPACA_TOP_LOSERS"?"ATL¹":(item.scannerGroup||"DISCOVERY");
+  const sourceDate=item.sourceTimestamp?new Date(item.sourceTimestamp):null;
+  const sourceLocal=sourceDate&&!Number.isNaN(sourceDate.getTime())?sourceDate.toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true})+" Arizona":"UNKNOWN";
    const received=envelope.receivedAt?new Date(envelope.receivedAt):null;
    const age=received&&!Number.isNaN(received.getTime())?Math.max(0,Math.round((Date.now()-received.getTime())/60000))+" min since receipt":"UNKNOWN";
    return {symbol:item.symbol,score:move,status:"DISCOVERY — NOT QUALIFIED",extension:"NOT CALCULATED",freshness:age,
-    reason:(item.scannerGroup||"Alpaca discovery")+" · change "+(fields.change??"DATA?")+" · source "+(item.sourceTimestamp||"UNKNOWN")};
+    reason:groupCode+" · change "+(fields.percent_change==null?"DATA?":(Number(fields.percent_change)*1).toFixed(2)+"%")+" · source "+sourceLocal};
   });
   let option=document.querySelector('#scannerGroup option[value="live"]');
   if(!option){option=document.createElement("option");option.value="live";option.textContent="E · Alpaca live discovery";$("scannerGroup").append(option);}
@@ -77,6 +81,36 @@ $("refreshMarketMovers")?.addEventListener("click",async()=>{
 });
 
 
+
+
+/// MODULE: API-backed focus charts
+/// PURPOSE: Draw real close-price lines for the focused symbol and Red Zone candidates.
+/// DATA RULE: An empty/failed request is displayed as unavailable, never as a flat/zero line.
+const svgNs="http://www.w3.org/2000/svg";
+async function fetchPriceSeries(symbol,minutes=180){
+ const to=new Date(),from=new Date(to.getTime()-minutes*60000);
+ const params=new URLSearchParams({symbol,timeframe:"1m",from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
+ const response=await fetch("/api/market-data/bars?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+ const body=await response.json();if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
+ return (Array.isArray(body.bars)?body.bars:[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+}
+function drawPriceLine(container,bars,label){
+ container.replaceChildren();
+ if(!bars.length){const p=document.createElement("p");p.className="chart-unavailable";p.textContent=label+" · price history unavailable (no returned bars)";container.append(p);return;}
+ const width=600,height=150,pad=12,values=bars.map(b=>Number(b.close)),min=Math.min(...values),max=Math.max(...values),span=max-min||Math.max(Math.abs(max)*0.001,0.01);
+ const points=values.map((v,i)=>{const x=pad+i/(Math.max(1,values.length-1))*(width-2*pad),y=height-pad-(v-min)/span*(height-2*pad);return x.toFixed(1)+","+y.toFixed(1);}).join(" ");
+ const svg=document.createElementNS(svgNs,"svg");svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.setAttribute("role","img");svg.setAttribute("aria-label",label+" close price line");
+ const line=document.createElementNS(svgNs,"polyline");line.setAttribute("points",points);line.setAttribute("fill","none");line.setAttribute("stroke","currentColor");line.setAttribute("stroke-width","2.5");line.setAttribute("stroke-linecap","round");line.setAttribute("stroke-linejoin","round");
+ svg.append(line);
+ const meta=document.createElement("div");meta.className="chart-meta";meta.textContent=bars.length+" × 1m bars · "+new Date(bars[0].timestamp).toLocaleTimeString()+"–"+new Date(bars[bars.length-1].timestamp).toLocaleTimeString()+" · latest $"+values[values.length-1].toFixed(2);
+ container.append(svg,meta);
+}
+async function refreshFocusedPriceChart(){
+ const host=$("focusPriceChart");if(!host)return;
+ const symbol=($("symbol")?.value||"").trim().toUpperCase();host.replaceChildren();
+ const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute close";host.append(title);
+ try{drawPriceLine(host,await fetchPriceSeries(symbol),symbol);}catch(e){const p=document.createElement("p");p.className="chart-unavailable";p.textContent="Price history unavailable · "+e.message;host.append(p);}
+}
 
 function localDateTimeValue(date){
  const pad=value=>String(value).padStart(2,"0");
@@ -227,7 +261,11 @@ function renderMorningReport(){
   const fresh=document.createElement("p");fresh.textContent="Freshness: "+(item.freshness||"UNKNOWN");
   const reason=document.createElement("p");reason.className="redzone-reason";reason.textContent=item.reason||"No reason supplied.";
   const gate=document.createElement("div");gate.className="gate-warning";gate.textContent="5M Permission: UNKNOWN · 1M execution: UNKNOWN";
-  card.append(top,symbol,score,ext,fresh,reason,gate);return card;
+  const chart=document.createElement("div");chart.className="redzone-sparkline";chart.textContent="Loading 1M price…";
+  card.append(top,symbol,score,ext,fresh,reason,chart,gate);
+  fetchPriceSeries(item.symbol,180).then(bars=>drawPriceLine(chart,bars,item.symbol)).catch(()=>{chart.textContent="Price history unavailable";});
+  card.addEventListener("click",()=>{const selector=$("symbol");if(selector&&[...selector.options].some(o=>o.value===item.symbol)){selector.value=item.symbol;refreshFocusedPriceChart();}});
+  return card;
  }):[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:"No candidate rows available. Import a CSV or select a demo scanner group."})]));
 }
 $("scannerGroup")?.addEventListener("change",renderMorningReport);
@@ -372,10 +410,17 @@ async function loadMorningBrief() {
   lines.push("Breadth: " + (breadth.status || "DATA NOT FOUND IN SOURCES") + " · " + (breadth.note || "Full-market advancing/declining breadth is not validated."));
   const headlines = report.newsHeadlines || {};
   lines.push("News: " + (headlines.status || "UNKNOWN") + " · source " + (headlines.source || "unknown"));
-  (headlines.items || []).slice(0,8).forEach(item => {
-   lines.push((item.headline || "Headline unavailable") + " · " + (item.symbols || []).join(", ") + " · published " + (item.publishedAtUtc || "UNKNOWN") + " · " + (item.url || "URL unavailable"));
-  });
-  $("morningApiSnapshot")?.replaceChildren(...lines.map(line => { const p=document.createElement("p"); p.textContent=line; return p; }));
+  const snapshot=$("morningApiSnapshot");
+  if(snapshot){
+   const nodes=lines.map(line=>{const p=document.createElement("p");p.textContent=line;return p;});
+   (headlines.items||[]).slice(0,8).forEach(item=>{
+    const p=document.createElement("p");
+    p.append(document.createTextNode((item.headline||"Headline unavailable")+" · "+(item.symbols||[]).join(", ")+" · published "+(item.publishedAtUtc?new Date(item.publishedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" Arizona":"UNKNOWN")+" · "));
+    if(item.url){const a=document.createElement("a");a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="News Link";a.title=item.url;p.append(a);}else{p.append(document.createTextNode("News Link unavailable"));}
+    nodes.push(p);
+   });
+   snapshot.replaceChildren(...nodes);
+  }
  } catch {
   $("overnightServiceState").textContent = "Morning Brief API: NOT CONNECTED";
   $("overnightServiceDetail").textContent = "Serve this dashboard through MomentumCommandCenterV2.API to load provider status and the partial Morning Brief. Direct file preview remains demo-only.";
