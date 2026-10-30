@@ -15,7 +15,7 @@ public sealed class LiveSymbolAssessmentService(
     IMarketBarObservationStore barStore,
     ILogger<LiveSymbolAssessmentService> logger)
 {
-    private static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(10);
     private readonly ConcurrentDictionary<string, (DateTimeOffset ExpiresAt, object Value)> _cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new(StringComparer.OrdinalIgnoreCase);
 
