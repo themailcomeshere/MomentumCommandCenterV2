@@ -31,6 +31,9 @@ public sealed class AlpacaMinuteBarStreamWorker(
     private long _lastMessageUnixMs;
     private long _lastBarUnixMs;
     private long _persistedBars;
+    private long _receivedBars;
+    private readonly ConcurrentDictionary<string, long> _barsBySymbol = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, long> _lastBarBySymbolUnixMs = new(StringComparer.OrdinalIgnoreCase);
     private int _connected;
     private string _state = "DISABLED";
     private string? _lastError;
@@ -50,6 +53,8 @@ public sealed class AlpacaMinuteBarStreamWorker(
         lastMessageUtc = Timestamp(Interlocked.Read(ref _lastMessageUnixMs)),
         lastBarUtc = Timestamp(Interlocked.Read(ref _lastBarUnixMs)),
         persistedBars = Interlocked.Read(ref _persistedBars),
+        receivedBars = Interlocked.Read(ref _receivedBars),
+        barsBySymbol = _barsBySymbol.ToDictionary(x => x.Key, x => new { barCount = x.Value, lastBarUtc = Timestamp(_lastBarBySymbolUnixMs.GetValueOrDefault(x.Key)) }),
         lastError = _lastError,
         note = "Minute bars and late updatedBars only; this is not a trade/quote tick stream."
     };
@@ -223,8 +228,14 @@ public sealed class AlpacaMinuteBarStreamWorker(
                     GetLong(item, "v"), "Alpaca", _feed, "1m", "WEBSOCKET"));
             }
             if (observations.Count == 0) continue;
-            await store.AppendAsync(observations, ct);
-            Interlocked.Add(ref _persistedBars, observations.Count);
+            var persisted = await store.AppendAsync(observations, ct);
+            Interlocked.Add(ref _receivedBars, observations.Count);
+            Interlocked.Add(ref _persistedBars, persisted);
+            foreach (var observation in observations)
+            {
+                _barsBySymbol.AddOrUpdate(observation.Symbol, 1, (_, count) => count + 1);
+                _lastBarBySymbolUnixMs[observation.Symbol] = observation.Timestamp.ToUnixTimeMilliseconds();
+            }
             Interlocked.Exchange(ref _lastBarUnixMs, observations.Max(x => x.Timestamp).ToUnixTimeMilliseconds());
         }
     }
