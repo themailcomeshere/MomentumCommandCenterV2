@@ -50,6 +50,11 @@ builder.Services.AddHttpClient<AlpacaScannerDiscoverySource>(client =>
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
     client.Timeout = TimeSpan.FromSeconds(15);
 });
+builder.Services.AddHttpClient<AlpacaNewsClient>(client =>
+{
+    client.BaseAddress = new Uri("https://data.alpaca.markets/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
 builder.Services.AddSingleton<IScannerDiscoverySource>(sp => sp.GetRequiredService<AlpacaScannerDiscoverySource>());
 builder.Services.AddSingleton<AlpacaScannerDiscoveryHostedService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaScannerDiscoveryHostedService>());
