@@ -17,7 +17,7 @@ Returns provider/feed, evaluation timestamp, overall data status, separate 1m an
 - Returned observations are appended to the existing market-bar observation store.
 - Per-symbol/provider response cache: 10 seconds.
 - Browser refresh cadence: 15 seconds while the page is visible.
-- Current implementation uses Alpaca REST historical bars; it is not a websocket or tick stream. The shorter cadence improves completed-bar pickup but does not provide push delivery.
+- 5m permission bars use Alpaca REST historical bars. The 1m execution series uses the confirmed Alpaca WebSocket-persisted series when the stream is subscribed, at least 50 completed bars are available, the latest completed bar is fresh, and its stored SourceTransport is WEBSOCKET; otherwise 1m falls back to REST. The dashboard is not a raw tick stream.
 
 ## Indicators
 
@@ -100,7 +100,7 @@ A symbol-specific cause must be read from that symbol's response; do not infer i
 
 ## Refresh and streaming decision
 
-The dashboard now refreshes every 15 seconds while visible; the API cache is 10 seconds. This remains REST polling. The V2 engine consumes completed 1m and 5m bars, so trade-by-trade tick processing is not required for its current rule set. The next latency upgrade, if needed, is Alpaca's websocket **minute-bar** channel (including updated bars), not an unfiltered tick stream. Streaming should be added with explicit connection/auth/subscription status, reconnect handling, late-bar corrections, and persisted source timestamps before it is treated as a decision source.
+The dashboard refreshes every 15 seconds while visible; the API cache is 10 seconds. When the optional Alpaca WebSocket worker is confirmed subscribed and has at least 50 completed 1m bars with a fresh latest observation tagged WEBSOCKET, the live assessment uses that stored 1m series. Otherwise it falls back to REST. The 5m permission series remains REST. The worker handles auth, subscription acknowledgement, reconnects, normal bars, and late updatedBars corrections. The engine consumes completed bars, not raw trade ticks.
 
 ## Replay status
 
@@ -150,4 +150,4 @@ Status:
 - Reconnects with exponential backoff and reports last message/bar, persisted count, and last error.
 - It does not process raw trade ticks or submit orders.
 
-Important: this worker currently archives WebSocket bars; the live assessment still gets its decision inputs from the REST provider path. Do not label V2 decision evaluation as WebSocket-driven until the live service consumes stream observations and REST/stream parity is validated.
+Important: the live assessment consumes a WebSocket-sourced 1m latest bar only when the subscription is confirmed, at least 50 completed bars are present, the bar is fresh, and the stored transport provenance is WEBSOCKET. Otherwise it falls back to REST. The 5m permission bars remain REST-backed. REST/WebSocket parity and runtime acceptance remain open.
