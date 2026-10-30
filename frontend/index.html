@@ -2,32 +2,32 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Momentum Command Center — Workbench</title><link rel="stylesheet" href="./styles.css"></head>
 <body>
-<header class="topbar"><div><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div><div class="demo-flag"><span></span> DEMO DATA · NOT LIVE</div></header>
-<main>
-<section class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option>MNSB</option><option>DEMO</option><option>XRPN</option></select></div><div><label for="snapshot">Replay point</label><input id="snapshot" type="range" min="0" max="4" value="2"></div><button id="reset">Reset demo</button></section>
-<section class="panel readiness-panel">
- <div class="section-heading"><div><div class="eyebrow">SYSTEM READINESS</div><h2>What is connected?</h2></div><span class="chip">Local prototype</span></div>
- <div class="readiness-grid">
-  <div><span class="readiness-dot demo"></span><strong>Market data</strong><span>Demo fixtures only</span></div>
-  <div><span class="readiness-dot blocked"></span><strong>Thinkorswim</strong><span>No API/session connection</span></div>
-  <div><span class="readiness-dot blocked"></span><strong>Live scanner</strong><span>Alpaca movers adapter added · SIP entitlement pending</span></div>
-  <div><span class="readiness-dot blocked"></span><strong>Trade execution</strong><span>Not implemented by design</span></div>
+<header class="topbar" id="mcc-header">
+ <div class="topbar-brand"><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div>
+ <div class="topbar-tools">
+  <div class="demo-flag"><span></span> DEMO DATA · NOT LIVE</div>
+  <button id="openQuickStart" type="button" class="quiet-button">Quick start</button>
  </div>
- <p class="muted readiness-note">This dashboard is for workflow feedback. Values remain illustrative until an API request succeeds; Alpaca discovery rows are source observations, not trading signals.</p>
+ <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
+  <div class="topbar-readiness-heading"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Local prototype</span></div>
+  <div class="readiness-grid">
+   <div><span class="readiness-dot demo"></span><strong>Market data</strong><span>API request required</span></div>
+   <div><span class="readiness-dot blocked"></span><strong>Thinkorswim</strong><span>No API/session connection</span></div>
+   <div><span class="readiness-dot blocked"></span><strong>Live scanner</strong><span>Alpaca discovery adapter</span></div>
+   <div><span class="readiness-dot blocked"></span><strong>Trade execution</strong><span>Not implemented by design</span></div>
+  </div>
+ </section>
+</header>
+<main>
+<section id="workspace-toolbar" class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option>MNSB</option><option>DEMO</option><option>XRPN</option></select></div><div><label for="snapshot">Replay point</label><input id="snapshot" type="range" min="0" max="4" value="2"></div><button id="reset">Reset demo</button></section>
+<section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
+ <div class="section-heading"><div><div class="eyebrow">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted">1-minute close-price history for the selected symbol. Selecting a Red Zone tile focuses this chart and refreshes the related decision panels.</p></div><span id="mainChartSymbol" class="chip">MNSB</span></div>
+ <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
 </section>
 
-<section class="panel provider-compare" aria-labelledby="providerCompareTitle">
- <div class="section-heading"><div><div class="eyebrow">DATA PROVIDER PROOF OF FIT</div><h2 id="providerCompareTitle">Provider comparison</h2><p class="muted">API-backed status · parallel historical adapter comparison · no live streaming</p></div><span class="chip warning-chip">API STATUS · HISTORICAL REST</span></div>
- <div class="provider-compare-toolbar"><label for="providerSymbol">Test symbol <input id="providerSymbol" value="UPC" maxlength="8" aria-label="Provider test symbol"></label><label for="providerInterval">Aggregation <select id="providerInterval"><option value="1m">1 minute</option><option value="5m">5 minutes</option></select></label><label for="providerDate">Test date <input id="providerDate" type="date"></label><button id="providerCompareRun" type="button">Prepare comparison</button></div>
- <div class="provider-cards">
-  <article class="provider-card" aria-labelledby="alpacaTitle"><div class="provider-card-heading"><div><div class="eyebrow">ADAPTER A</div><h3 id="alpacaTitle">Alpaca</h3></div><span class="chip">Free tier: IEX</span></div><p class="provider-plan">Paid test target: Algo Trader Plus · public list price $99/mo</p><dl><div><dt>Feed</dt><dd>IEX-only on Basic; SIP coverage requires eligible paid access</dd></div><div><dt>Connection</dt><dd id="alpacaConnection">NOT CONNECTED</dd></div><div><dt>Latest observation</dt><dd id="alpacaLatest">DATA NOT LOADED</dd></div><div><dt>Coverage / freshness</dt><dd id="alpacaCoverage">Not measured</dd></div><div><dt>Gap / recovery test</dt><dd id="alpacaRecovery">Not run</dd></div></dl><p class="provider-status">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
-  <article class="provider-card" aria-labelledby="massiveTitle"><div class="provider-card-heading"><div><div class="eyebrow">ADAPTER B</div><h3 id="massiveTitle">Massive Stocks</h3></div><span class="chip">Free tier: delayed / limited</span></div><p class="provider-plan">Paid test target: Advanced · public list price $199/mo</p><dl><div><dt>Feed</dt><dd>Real-time plan target with trades, quotes, aggregates and snapshots</dd></div><div><dt>Connection</dt><dd id="massiveConnection">NOT CONNECTED</dd></div><div><dt>Latest observation</dt><dd id="massiveLatest">DATA NOT LOADED</dd></div><div><dt>Coverage / freshness</dt><dd id="massiveCoverage">Not measured</dd></div><div><dt>Gap / recovery test</dt><dd id="massiveRecovery">Not run</dd></div></dl><p class="provider-status">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
- </div>
- <div class="table-wrap provider-results-wrap"><table><thead><tr><th>Comparison field</th><th>Alpaca</th><th>Massive</th></tr></thead><tbody id="providerComparisonRows"><tr><td>Request</td><td colspan="2">Choose symbol, interval, and date, then prepare a comparison record. This does not fetch data.</td></tr></tbody></table></div>
- <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
-</section>
-<div class="command-layout" aria-label="Morning command workspace">
-<section class="panel morning-report" aria-labelledby="morningReportTitle">
+
+<div id="morning-command" class="command-layout" aria-label="Morning command workspace">
+<section id="morning-brief" class="panel morning-report" aria-labelledby="morningReportTitle">
  <div class="section-heading"><div><div class="eyebrow">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Morning Command Brief</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions"><span class="chip warning-chip">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
  <div class="report-banner"><span class="readiness-dot blocked"></span><div><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
  <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p>API market observations: NOT CONNECTED in static preview.</p></div>
@@ -39,19 +39,21 @@
  </div>
  <p class="notice">Arizona time does not observe daylight saving time. The report must eventually show Arizona time plus the correct Eastern market/session context. This preview has no market feed, so it cannot establish current session status or quote freshness.</p>
 </section>
-<section class="panel redzone-panel">
- <div class="section-heading"><div><div class="eyebrow">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2>Red Zone</h2><p class="muted">Up to four ranked tiles; candidate rank is not entry permission.</p></div><span class="chip">Preview only</span></div>
+<section id="red-zone" class="panel redzone-panel">
+ <div class="section-heading"><div><div class="eyebrow">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2>Red Zone</h2><p class="muted">Up to four ranked tiles. Pin your own symbols or dismiss scanner rows; ranking is not entry permission.</p></div><div class="report-actions"><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><span class="chip">Preview / discovery</span></div></div>
+ <form id="redZoneAddForm" class="redzone-manage-form"><label for="redZoneAddSymbol">Add a symbol</label><input id="redZoneAddSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker to pin in Red Zone"><button type="submit">Pin to Red Zone</button><button id="restoreRedZone" type="button" class="quiet-button">Restore dismissed</button></form>
+ <p id="redZoneManageStatus" class="muted" role="status">Scanner rows refresh from the selected scanner group. Pinned and dismissed choices are saved in this browser.</p>
  <div id="redZoneGrid" class="redzone-grid"><article class="redzone-empty">No candidate rows available.</article></div>
  <p class="notice">Tiles below are built from local demo/import or fetched discovery rows; each tile attempts a recent Alpaca 1-minute price line. Missing data remains unavailable.  Rank is the supplied scanner score, not a validated MCC opportunity score. Missing source, freshness, 5M Permission, or 1M event must never be treated as passing.</p>
 </section>
 </div>
-<section class="status-grid">
+<section id="opportunity-status" class="status-grid">
 <article class="panel hero-card"><div class="eyebrow">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
 <article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">$11.29</strong><small>Illustrative only</small></article><article class="panel metric"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">1.2×</strong><small>Demo value — not calculated</small></article><article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">0.7 ATR</strong><small>Illustrative only</small></article>
 </section>
-<section class="layout"><article class="panel"><div class="section-heading"><div><div class="eyebrow">DECISION EXPLANATION</div><h2>Why this classification?</h2></div><span class="muted">Reason codes</span></div><ul id="reasons" class="reason-list"><li>Low relative volume — participation is modest.</li><li>Recent movement capacity is limited.</li><li>Execution eligibility is a separate gate.</li></ul><div class="notice">This panel explains a classification. It is not an entry instruction, a profit probability, or a substitute for the source 5M/1M studies.</div></article>
-<article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">Permission: YES (demo)</strong><p>Structure and permission are the higher-timeframe gate.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">Execution event: ACTIVE (demo)</strong><p>Timing is finite; a stale READY event should expire.</p></div></div><div class="divider"></div><div class="section-heading"><h3>Replay inspection</h3><span id="replayLabel" class="muted">Snapshot 3 of 5</span></div><div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted">Select a symbol to load its 1-minute price line from Alpaca.</p></div><div class="bar-strip" id="bars"></div><p class="muted small">The price line is API-backed; the compact bar strip below remains a demo replay control.</p></article></section>
-<section id="overnightPanel" class="panel hidden">
+<section id="decision-layout" class="layout"><article class="panel"><div class="section-heading"><div><div class="eyebrow">DECISION EXPLANATION</div><h2>Why this classification?</h2></div><span class="muted">Reason codes</span></div><ul id="reasons" class="reason-list"><li>Low relative volume — participation is modest.</li><li>Recent movement capacity is limited.</li><li>Execution eligibility is a separate gate.</li></ul><div class="notice">This panel explains a classification. It is not an entry instruction, a profit probability, or a substitute for the source 5M/1M studies.</div></article>
+<article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">Permission: YES (demo)</strong><p>Structure and permission are the higher-timeframe gate.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">Execution event: ACTIVE (demo)</strong><p>Timing is finite; a stale READY event should expire.</p></div></div><div class="divider"></div><div class="section-heading"><h3>Replay inspection</h3><span id="replayLabel" class="muted">Snapshot 3 of 5</span></div><div class="bar-strip" id="bars"></div><p class="muted small">Replay bar strip is illustrative only; it is not linked to the live price chart.</p></article></section>
+<section id="overnightPanel" data-section-id="overnight-analysis" class="panel hidden">
  <div class="section-heading"><div><div class="eyebrow">BORING OVERNIGHT · API-BACKED</div><h2>Overnight scan &amp; analysis</h2></div><span class="chip">Research only · no orders</span></div>
  <p class="notice">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
  <form id="overnightBarsForm" class="overnight-controls">
@@ -82,7 +84,7 @@
  <div class="section-heading overnight-snapshot-heading"><div><h3>Saved Overnight input snapshots</h3><p class="muted">Read from <code>/api/boring-overnight/snapshots</code>. These are persisted evaluator inputs, not stored final decisions.</p></div></div>
  <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>As of (UTC)</th><th>Recorded (UTC)</th><th>Provider / feed</th><th>Record type</th><th>Key gate inputs (not a decision)</th></tr></thead><tbody id="overnightSnapshotRows"><tr><td colspan="6">No saved evaluations loaded yet.</td></tr></tbody></table></div>
 </section>
-<section class="panel feedback-panel">
+<section id="dashboard-feedback" class="panel feedback-panel">
  <div class="section-heading"><div><div class="eyebrow">PRODUCT FEEDBACK</div><h2>Dashboard notes</h2></div><span class="muted">Saved in this browser only</span></div>
  <form id="feedbackForm" class="feedback-form">
   <label for="feedbackArea">Area</label><select id="feedbackArea"><option>Dashboard layout</option><option>Opportunity classification</option><option>5M → 1M handoff</option><option>Scanner workflow</option><option>EXT / pullback watch</option><option>Boring Overnight</option><option>Data quality / freshness</option><option>Other</option></select>
@@ -93,8 +95,8 @@
  <ul id="feedbackRows" class="feedback-list"></ul>
  <p class="notice">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
 </section>
-<section class="workbench-grid"><article class="panel"><div class="section-heading"><div><div class="eyebrow">SCANNER WORKBENCH</div><h2>Candidate discovery</h2></div><label class="file-button" for="scannerFile">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls"><select id="scannerGroup"><option value="momentum">A · Momentum Hunter</option><option value="breakout">B · Breakout Trigger</option><option value="reclaim">C · Reclaim / Continuation</option><option value="discovery">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
-<div class="scanner-live-toolbar"><button id="refreshMarketMovers" type="button">Refresh Alpaca market movers</button><span id="liveMoversStatus" class="muted">Live discovery requires API credentials and SIP screener entitlement.</span></div><p class="muted small">¹ ATG = Alpaca Top Gainers; ATL = Alpaca Top Losers. “Change” is the provider-reported percent change. “Source” is the provider update timestamp, shown in Arizona local time.</p>
+<section id="scanner-workbench" class="workbench-grid"><article class="panel"><div class="section-heading"><div><div class="eyebrow">SCANNER WORKBENCH</div><h2>Candidate discovery</h2></div><label class="file-button" for="scannerFile">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls"><select id="scannerGroup"><option value="momentum">A · Momentum Hunter</option><option value="breakout">B · Breakout Trigger</option><option value="reclaim">C · Reclaim / Continuation</option><option value="discovery">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
+<div class="scanner-live-toolbar"><button id="refreshMarketMovers" type="button">Refresh Alpaca market movers</button><span id="liveMoversStatus" class="muted">Live discovery requires API credentials and SIP screener entitlement.</span></div><p class="muted small"><span class="legend-line">¹ ATG = Alpaca Top Gainers</span><span class="legend-line">² ATL = Alpaca Top Losers</span><span class="legend-line">Change = provider-reported percent change</span><span class="legend-line">Source = provider update timestamp (Arizona time)</span></p>
 <div class="scanner-api-controls">
  <form id="scanAnalyzeForm">
   <label>Symbols <input id="apiScanSymbols" value="SPY,QQQ,TTE,FMS" maxlength="500" aria-label="Comma-separated symbols to scan"></label>
@@ -106,7 +108,7 @@
  <p class="notice">Fetches Alpaca 1M and 5M bars for each supplied symbol. Enter times in Arizona local time; MCC converts them to UTC. Summaries are not Thinkorswim states or a Boring Overnight qualification.</p>
 </div><div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Score</th><th>Status</th><th>Extension</th><th>Freshness</th><th>Reason</th><th></th></tr></thead><tbody id="scannerRows"></tbody></table></div><p class="notice">Local workbench only. Imported rows are evidence for review, not live scanner results or trading instructions. Extension/freshness fields are not calculated unless supplied in your CSV.</p></article><article class="panel"><div class="section-heading"><div><div class="eyebrow">WATCHLIST</div><h2>Working candidates</h2></div><button id="clearWatchlist" class="quiet-button">Clear</button></div><form id="watchlistForm" class="watchlist-form"><input id="watchSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker"><button type="submit">Add</button></form><ul id="watchlistRows" class="watchlist"></ul><p class="notice">Watchlist is stored only in this browser using local storage. It does not submit orders or connect to a broker.</p></article></section>
 
-<section class="integration-grid">
+<section id="data-integrations" class="integration-grid">
  <article class="panel">
   <div class="section-heading"><div><div class="eyebrow">EXCLUSIONS · API-BACKED</div><h2>MCC exclusion watchlist</h2></div><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button></div>
   <form id="exclusionForm" class="watchlist-form"><input id="exclusionSymbol" maxlength="8" placeholder="Ticker (e.g. TTE)" aria-label="Symbol to exclude" required><input id="exclusionReason" maxlength="200" placeholder="Reason (optional)" aria-label="Exclusion reason"><button type="submit">Add exclusion</button></form>
@@ -123,4 +125,30 @@
  </article>
 </section>
 
+<section id="provider-comparison" class="panel provider-compare" aria-labelledby="providerCompareTitle">
+ <div class="section-heading"><div><div class="eyebrow">DATA PROVIDER DIAGNOSTICS · NOT A DAILY STEP</div><h2 id="providerCompareTitle">Provider comparison</h2><p class="muted">Use when onboarding or re-testing a data provider, not as part of the normal morning scan.</p></div><span class="chip warning-chip">API STATUS · HISTORICAL REST</span></div>
+ <div class="provider-compare-toolbar"><label for="providerSymbol">Test symbol <input id="providerSymbol" value="UPC" maxlength="8" aria-label="Provider test symbol"></label><label for="providerInterval">Aggregation <select id="providerInterval"><option value="1m">1 minute</option><option value="5m">5 minutes</option></select></label><label for="providerDate">Test date <input id="providerDate" type="date"></label><button id="providerCompareRun" type="button">Prepare comparison</button></div>
+ <div class="provider-cards">
+  <article class="provider-card" aria-labelledby="alpacaTitle"><div class="provider-card-heading"><div><div class="eyebrow">ADAPTER A</div><h3 id="alpacaTitle">Alpaca</h3></div><span class="chip">Free tier: IEX</span></div><p class="provider-plan">Paid test target: Algo Trader Plus · public list price $99/mo</p><dl><div><dt>Feed</dt><dd>IEX-only on Basic; SIP coverage requires eligible paid access</dd></div><div><dt>Connection</dt><dd id="alpacaConnection">NOT CONNECTED</dd></div><div><dt>Latest observation</dt><dd id="alpacaLatest">DATA NOT LOADED</dd></div><div><dt>Coverage / freshness</dt><dd id="alpacaCoverage">Not measured</dd></div><div><dt>Gap / recovery test</dt><dd id="alpacaRecovery">Not run</dd></div></dl><p class="provider-status">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
+  <article class="provider-card" aria-labelledby="massiveTitle"><div class="provider-card-heading"><div><div class="eyebrow">ADAPTER B</div><h3 id="massiveTitle">Massive Stocks</h3></div><span class="chip">Free tier: delayed / limited</span></div><p class="provider-plan">Paid test target: Advanced · public list price $199/mo</p><dl><div><dt>Feed</dt><dd>Real-time plan target with trades, quotes, aggregates and snapshots</dd></div><div><dt>Connection</dt><dd id="massiveConnection">NOT CONNECTED</dd></div><div><dt>Latest observation</dt><dd id="massiveLatest">DATA NOT LOADED</dd></div><div><dt>Coverage / freshness</dt><dd id="massiveCoverage">Not measured</dd></div><div><dt>Gap / recovery test</dt><dd id="massiveRecovery">Not run</dd></div></dl><p class="provider-status">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
+ </div>
+ <div class="table-wrap provider-results-wrap"><table><thead><tr><th>Comparison field</th><th>Alpaca</th><th>Massive</th></tr></thead><tbody id="providerComparisonRows"><tr><td>Request</td><td colspan="2">Choose symbol, interval, and date, then prepare a comparison record. This does not fetch data.</td></tr></tbody></table></div>
+ <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
+</section>
+
+<section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
+<dialog id="quickStartDialog" class="quick-start-dialog" aria-labelledby="quickStartTitle">
+ <div class="section-heading"><div><div class="eyebrow">MCC WORKFLOW</div><h2 id="quickStartTitle">Quick Start</h2></div><button id="closeQuickStart" type="button" class="quiet-button">Close</button></div>
+ <ol class="quick-start-steps">
+  <li><strong>Review Morning Command Brief.</strong> Check the timestamp, source status, market context, and unavailable inputs.</li>
+  <li><strong>Refresh Alpaca market movers.</strong> Load persisted discovery events; treat them as candidates, not qualified trades.</li>
+  <li><strong>Review Red Zone.</strong> Inspect up to four candidates. Pin symbols you want to keep visible, dismiss rows you do not want, or restore dismissed rows.</li>
+  <li><strong>Inspect the Main Chart.</strong> Select a symbol or click a Red Zone tile. The chart and decision panels follow the focused symbol.</li>
+  <li><strong>Use Scan &amp; Analyze.</strong> Enter symbols and an Arizona-time window to retrieve 1M/5M bars and inspect source coverage and reasons.</li>
+  <li><strong>Review the 5M → 1M decision context.</strong> Keep higher-timeframe permission separate from the 1M execution event. Missing evidence is not a pass.</li>
+  <li><strong>Use Boring Overnight separately.</strong> Run historical bar and coverage checks; do not treat incomplete history or missing catalyst data as READY.</li>
+  <li><strong>Provider comparison is diagnostic.</strong> Run it only when testing Alpaca vs Massive for a chosen date and timeframe, not every morning.</li>
+ </ol>
+ <p class="notice">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
+</dialog>
 <footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261028-provider-date-and-swagger-fix"></script></body></html>
