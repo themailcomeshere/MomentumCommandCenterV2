@@ -46,33 +46,40 @@ const scannerData={
  ]
 };
 
-$("refreshMarketMovers")?.addEventListener("click",async()=>{
+async function refreshLiveMovers(selectLive=true,quiet=false){
  const button=$("refreshMarketMovers"),status=$("liveMoversStatus");
- button.disabled=true;status.textContent="Loading persisted Alpaca discovery events…";
+ if(button&&button.disabled&&!quiet)return;
+ if(button&&!quiet)button.disabled=true;
+ if(status&&!quiet)status.textContent="Loading persisted Alpaca discovery events…";
  try{
   const response=await fetch("/api/scanner/discoveries?limit=200",{cache:"no-store",headers:{Accept:"application/json"}});
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||("HTTP "+response.status));
+  const seen=new Set();
   scannerData.live=(data.discoveries||[]).map(envelope=>{
-   const item=envelope.discovery||{},fields=item.rawFields||{};
-   const move=fields.percent_change==null?"DATA?":(Number(fields.percent_change)>=0?"+":"")+Number(fields.percent_change).toFixed(2)+"%";
-  const groupCode=item.scannerGroup==="ALPACA_TOP_GAINERS"?"ATG¹":item.scannerGroup==="ALPACA_TOP_LOSERS"?"ATL¹":(item.scannerGroup||"DISCOVERY");
-  const sourceDate=item.sourceTimestamp?new Date(item.sourceTimestamp):null;
-  const sourceLocal=sourceDate&&!Number.isNaN(sourceDate.getTime())?sourceDate.toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true})+" Arizona":"UNKNOWN";
+   const item=envelope.discovery||{},fields=item.rawFields||{},ticker=String(item.symbol||"").toUpperCase();
+   if(!ticker||seen.has(ticker))return null;seen.add(ticker);
+   const pct=fields.percent_change==null?null:Number(fields.percent_change);
+   const move=pct===null||!Number.isFinite(pct)?"DATA?":(pct>=0?"+":"")+pct.toFixed(2)+"%";
+   const groupCode=item.scannerGroup==="ALPACA_TOP_GAINERS"?"ATG¹":item.scannerGroup==="ALPACA_TOP_LOSERS"?"ATL¹":(item.scannerGroup||"DISCOVERY");
+   const sourceDate=item.sourceTimestamp?new Date(item.sourceTimestamp):null;
+   const sourceLocal=sourceDate&&!Number.isNaN(sourceDate.getTime())?sourceDate.toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true})+" Arizona":"UNKNOWN";
    const received=envelope.receivedAt?new Date(envelope.receivedAt):null;
    const age=received&&!Number.isNaN(received.getTime())?Math.max(0,Math.round((Date.now()-received.getTime())/60000))+" min since receipt":"UNKNOWN";
-   return {symbol:item.symbol,score:move,status:"DISCOVERY — NOT QUALIFIED",extension:"NOT CALCULATED",freshness:age,
-    reason:groupCode+" · change "+(fields.percent_change==null?"DATA?":(Number(fields.percent_change)*1).toFixed(2)+"%")+" · source "+sourceLocal};
-  });
+   return {symbol:ticker,score:pct,scoreLabel:move,status:"DISCOVERY — NOT QUALIFIED",extension:"NOT CALCULATED",freshness:age,
+    reason:groupCode+" · change "+move+" · source "+sourceLocal};
+  }).filter(Boolean);
   let option=document.querySelector('#scannerGroup option[value="live"]');
   if(!option){option=document.createElement("option");option.value="live";option.textContent="E · Alpaca live discovery";$("scannerGroup").append(option);}
-  $("scannerGroup").value="live";
+  if(selectLive)$("scannerGroup").value="live";
   const health=data.health||{};
-  status.textContent="Alpaca · "+(health.status||"UNKNOWN")+" · "+(data.count??0)+" persisted events · "+(data.configured?"credentials configured":"credentials missing")+" · source is SIP-based";
-  renderScanner();renderMorningReport();
- }catch(error){status.textContent="Market-mover retrieval failed: "+error.message;}
- finally{button.disabled=false;}
-});
+  if(status)status.textContent="Alpaca · "+(health.status||"UNKNOWN")+" · "+(data.count??0)+" persisted events · "+(data.configured?"credentials configured":"credentials missing")+" · source is SIP-based"+(quiet?" · auto-refresh 30s":"");
+  if($("scannerGroup")?.value==="live"){renderScanner();renderMorningReport();}
+ }catch(error){if(status)status.textContent="Market-mover retrieval failed: "+error.message;}
+ finally{if(button&&!quiet)button.disabled=false;}
+}
+$("refreshMarketMovers")?.addEventListener("click",()=>void refreshLiveMovers(true,false));
+window.setInterval(()=>{if(document.visibilityState==="visible"&&$("scannerGroup")?.value==="live")void refreshLiveMovers(false,true);},30000);
 
 
 
@@ -229,7 +236,7 @@ function renderScanner(){
   const tr=document.createElement("tr");
   const statusClass=candidate.status==="BLOCKED"?"status-blocked":candidate.status==="WATCH"?"status-watch":"status-ready";
   const cell=value=>{const td=document.createElement("td");td.textContent=value??"DATA?";return td;};
-  tr.append(cell(candidate.symbol),cell(candidate.score),cell(candidate.status),cell(candidate.extension||"DATA?"),cell(candidate.freshness||"UNKNOWN"),cell(candidate.reason),document.createElement("td"));
+  tr.append(cell(candidate.symbol),cell(candidate.scoreLabel??candidate.score),cell(candidate.status),cell(candidate.extension||"DATA?"),cell(candidate.freshness||"UNKNOWN"),cell(candidate.reason),document.createElement("td"));
   const button=document.createElement("button");button.className="row-action";button.textContent="Watch";button.type="button";button.addEventListener("click",()=>addWatch(candidate.symbol));tr.lastElementChild.append(button);return tr;
  }));
 }
@@ -382,7 +389,9 @@ function renderMorningReport(){
  const sortedRows=sourceRows.slice().sort((a,b)=>{
   const sa=Number(a.score),sb=Number(b.score);
   if(Number.isFinite(sa)!==Number.isFinite(sb))return Number.isFinite(sb)-Number.isFinite(sa);
-  return (Number.isFinite(sb)?sb:-Infinity)-(Number.isFinite(sa)?sa:-Infinity)||String(a.symbol).localeCompare(String(b.symbol));
+  const av=Number.isFinite(sa)?(group==="live"?Math.abs(sa):sa):-Infinity;
+  const bv=Number.isFinite(sb)?(group==="live"?Math.abs(sb):sb):-Infinity;
+  return bv-av||String(a.symbol).localeCompare(String(b.symbol));
  });
  const dismissed=new Set(state.dismissed);
  const pinnedSet=new Set(state.pinned);
