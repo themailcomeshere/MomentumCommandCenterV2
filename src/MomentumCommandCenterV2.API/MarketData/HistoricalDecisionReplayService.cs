@@ -22,6 +22,8 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
         var normalizedSymbol = symbol.Trim().ToUpperInvariant();
         if (asOfUtc.Offset != TimeSpan.Zero)
             throw new ArgumentException("asOfUtc must be an ISO-8601 UTC timestamp ending in Z.");
+        if (asOfUtc > DateTimeOffset.UtcNow)
+            throw new ArgumentException("asOfUtc cannot be in the future.");
         if (string.IsNullOrWhiteSpace(provider))
             throw new ArgumentException("provider is required.");
         if (string.IsNullOrWhiteSpace(feed))
