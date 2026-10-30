@@ -28,10 +28,9 @@ function render(){
 }
 $("snapshot").addEventListener("input",render);$("mode").addEventListener("change",render);
 $("symbol").addEventListener("change",()=>{const chosen=$("symbol").value;if(chosen==="MNSB"){render();$("freshness").textContent="Data: SIMULATED";}else{$("headline").textContent=chosen+" is a placeholder selection; no symbol data is loaded.";$("freshness").textContent="Data: NOT LOADED";}refreshFocusedPriceChart();});
-$("reset").addEventListener("click",()=>{$("mode").value="momentum";$("symbol").value="MNSB";$("snapshot").value="2";$("freshness").textContent="Data: SIMULATED";render();});
+$("reset").addEventListener("click",()=>{$("mode").value="momentum";$("symbol").value="MNSB";$("snapshot").value="2";$("freshness").textContent="Data: SIMULATED";render();refreshFocusedPriceChart();});
  render();
 refreshFocusedPriceChart();
-$("symbol")?.addEventListener("change",refreshFocusedPriceChart);
 window.setInterval(()=>{
  if(document.visibilityState==="visible"){
   void refreshRedZoneAssessments();
