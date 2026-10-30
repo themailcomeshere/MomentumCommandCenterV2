@@ -69,3 +69,26 @@ Interim alternative: a user-supplied positions export/import or manually entered
 - Confirm Schwab Developer Portal Individual Trader API approval and exact products available to the account.
 - Confirm whether MCC needs only position state or also live account balances, open orders, fills, and executions.
 - Decide whether the initial integration should be read-only Schwab API or a manually imported position snapshot while access is pending.
+
+
+## Implementation status update — 2026-10-30
+
+Read-only Schwab position synchronization is **not implemented yet**. The repository now has a historical replay toggle that can simulate the existing engine's boolean `hasPosition` input, but it does not retrieve a real Schwab account or position.
+
+### User setup required before connector implementation
+1. Register/log in to the Schwab Developer Portal.
+2. Add the Individual Developer role to the portal profile (a Schwab brokerage account is required).
+3. Request access to Trader API Individual and the Accounts & Trading production API product.
+4. Create an approved app and register its callback URL. The callback must match the actual MCC API deployment URL; do not invent a localhost/production URL before the hosting choice is known.
+5. Keep the app key/secret private and enter them into server-side secret storage. Do not paste credentials or OAuth tokens into chat, source control, frontend JavaScript, or screenshots.
+
+The official product page does not publish a clear monthly API price. Confirm fees, entitlements, and approval with Schwab before relying on a cost assumption.
+
+### Connector acceptance criteria
+- OAuth authorization-code flow with state validation and secure token refresh/storage.
+- Read-only account-number/hash and position retrieval; no order endpoints wired into MCC.
+- Normalize symbol, signed quantity, long/short side, average entry price, market value, and source/update timestamp.
+- Distinguish no position from failed/stale/unauthorized sync; unknown position state must fail closed.
+- Reconcile repeated snapshots and record provenance; never silently treat a missing account response as flat.
+- Position-aware engine input must expand beyond a boolean before production use; test quantity/side/entry-aware management explicitly.
+- Order placement stays out of scope and disabled.
