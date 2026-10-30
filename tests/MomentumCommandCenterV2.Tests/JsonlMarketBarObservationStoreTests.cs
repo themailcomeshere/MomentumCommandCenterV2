@@ -155,6 +155,37 @@ public sealed class JsonlMarketBarObservationStoreTests
     }
 
     [Fact]
+    public async Task LegacyRowsWithoutTimeframeRemainUnknownAndAreExcludedFromFilteredReads()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        var timestamp = DateTimeOffset.Parse("2026-10-22T16:00:00Z");
+        try
+        {
+            Directory.CreateDirectory(directory);
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var legacy = $$"""
+            {"observationId":"legacy","receivedAt":"2026-10-22T16:01:00Z","provider":"TestProvider","symbol":"TEST","sourceTimestamp":"{{timestamp:O}}","bar":{"symbol":"TEST","timestamp":"{{timestamp:O}}","open":10,"high":11,"low":9,"close":10.5,"volume":1000,"provider":"TestProvider","feed":"test-feed"},"contentHash":"legacy-hash","supersedesObservationId":null}
+            """;
+            await File.WriteAllTextAsync(path, legacy + Environment.NewLine);
+            var store = new JsonlMarketBarObservationStore();
+
+            var allRows = await store.GetLatestAsync("TEST", "TestProvider", timestamp, timestamp, 10, CancellationToken.None);
+            var oneMinuteRows = await store.GetLatestAsync("TEST", "TestProvider", timestamp, timestamp, 10, CancellationToken.None, "1m");
+
+            Assert.Single(allRows);
+            Assert.Equal("UNKNOWN", allRows[0].Bar.Timeframe);
+            Assert.Empty(oneMinuteRows);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task QueryRejectsInvalidWindowAndLimit()
     {
         var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
