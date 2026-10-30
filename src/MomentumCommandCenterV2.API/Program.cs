@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Any;
 using MomentumCommandCenterV2.API.MarketData;
@@ -10,6 +11,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
+builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -395,8 +397,10 @@ app.MapGet("/api/market-data/bars", async (
 .WithSummary("Retrieve and persist historical 1m/5m bars from one provider")
 .WithDescription("UTC-only example: symbol=TTE, timeframe=1m, from=2026-10-26T13:30:00Z, to=2026-10-26T20:00:00Z, providerName=Alpaca. On 2026-10-26, this is 06:30–13:00 Arizona time (America/Phoenix). Use ISO-8601 UTC timestamps ending in Z for from/to. Returns source timestamps, feed, gaps, raw normalized bars, and newly persisted observation count. Supports up to 31 days per request.");
 
-app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, CancellationToken cancellationToken) =>
+app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, IMemoryCache cache, CancellationToken cancellationToken) =>
 {
+    if (cache.TryGetValue("mcc:morning-brief:v1", out object? cachedReport) && cachedReport is not null)
+        return Results.Ok(cachedReport);
     var configured = providers.Where(p => p.IsConfigured).ToArray();
     var benchmarkSymbols = new[] { "SPY", "QQQ", "IWM", "XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY" };
     var benchmarkRows = new List<object>();
@@ -461,7 +465,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         note = "Top 50 gainers and losers only; not complete-market breadth or a full symbol universe. Verify SIP entitlement and source timestamp freshness."
     };
 
-    return Results.Ok(new
+    var report = new
     {
         generatedAtUtc = DateTimeOffset.UtcNow,
         displayTimezone = "America/Phoenix",
@@ -480,7 +484,9 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
             "No market regime, sector leadership, catalyst, or probability is inferred from missing inputs.",
             "Data freshness, feed entitlements, extended-hours coverage, and bar parity must be validated before trading reliance."
         }
-    });
+    };
+    cache.Set("mcc:morning-brief:v1", report, TimeSpan.FromSeconds(60));
+    return Results.Ok(report);
 })
 .WithSummary("Get the partial market Morning Brief")
 .WithDescription("No parameters. Example status: PARTIAL — MARKET SNAPSHOT ONLY; missing sector flow, movers, catalysts, and scoring remain DATA? until providers are wired.");
