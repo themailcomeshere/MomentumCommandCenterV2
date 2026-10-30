@@ -366,7 +366,7 @@ function renderMorningReport(){
   const status=document.createElement("span");status.className="chip";status.textContent=item.status||"DATA?";
   top.append(rank,status);
   const symbol=document.createElement("h3");symbol.textContent=item.symbol||"UNKNOWN";
-  const score=document.createElement("div");score.className="redzone-score";score.textContent="V2 5M score: "+(item.score??"LOADING");
+  const score=document.createElement("div");score.className="redzone-score score-unknown";score.textContent="V2 5M score: LOADING live assessment…";
   const ext=document.createElement("p");ext.textContent="Extension: loading live 1M bars…";
   const fresh=document.createElement("p");fresh.textContent="Freshness: requesting 1M/5M source timestamps…";
   const reason=document.createElement("p");reason.className="redzone-reason";reason.textContent=item.reason||"No reason supplied.";
