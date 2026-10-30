@@ -5,12 +5,12 @@
 - [x] Investigated all four `data/ChatTests/MarketData_*.json` files. SPY, RKLX, ASTX, and XRPN all returned `STALE_MARKET_DATA`; all four reported REST as the 1M source. Their evaluation timestamps were 20:08–20:12 UTC, after the 20:00 UTC / 1:00 PM Arizona regular-session close.
 - [x] Recorded the separate RKLX in-session observation: 5M bar age 982s (360s limit), source 19:05 UTC / expected close 19:10 UTC, observed around 19:26 UTC. Exact provider/feed cause remains unresolved.
 - [x] Added dynamic Alpaca subscription endpoint `POST /api/market-data/stream/subscribe?symbol=XYZ`. MCC requests subscriptions for the selected symbol and Red Zone cards; `StreamSymbols` is now only the initial server-side seed.
-- [x] Dynamic symbols remain in API memory and are automatically re-subscribed after WebSocket reconnect. They are not persisted across API restarts; the front end re-requests the currently selected and visible Red Zone symbols.
+- [x] Dynamic symbols remain in API memory and are automatically re-subscribed after WebSocket reconnect. Default cap is 30 symbols (`MarketData:Alpaca:StreamMaxSymbols` can be changed to match entitlement); symbols are not persisted across API restarts, and the front end re-requests the currently selected and visible Red Zone symbols.
 - [x] Stream status now reports acknowledged symbols, per-symbol bar counts/last timestamps, and separate received vs persisted totals.
 - [x] Morning Brief modal now opens immediately using the existing rendered report; it no longer waits for a second full API call on every open. The client reuses a 60-second cached report and refreshes in the background when stale.
 - [x] Removed the duplicate Morning Command Brief heading from the modal body.
 - [x] Moved Opportunity Classification, Last Price, RVOL, and ATR Extension into the Main Chart heading on the right; constrained the chart width.
-- [x] Red Zone explicitly uses a four-column desktop grid with responsive 2-column/tablet and 1-column/mobile layouts.
+- [x] Red Zone now occupies the full available row and uses a four-column desktop grid with responsive 2-column/tablet and 1-column/mobile layouts.
 - [x] Timeframe Handoff now explains how to use 5M permission vs 1M execution and how often to review each.
 - [x] Historical replay now accepts Arizona-local date/time and converts it to UTC in the browser. Missing replay query parameters now return HTTP 400 with a clear explanation instead of an unhandled 500.
 - [x] Added opt-in two-tone sound alert when a new ticker enters the four visible Red Zone slots. Sound must be enabled by clicking the control; live Alpaca discovery refreshes every 30 seconds while the Live Discovery group is selected.
