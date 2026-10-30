@@ -90,13 +90,13 @@ The service invokes the engine with `hasPosition=false`. Output includes V2 5M s
 - Every visible Red Zone candidate (manual or scanner-derived) requests this endpoint.
 - Red Zone displays V2 score, extension, 1m/5m freshness, 5M permission, 1M execution state/reason and a 1m sparkline.
 - Main Chart consumes the same endpoint and renders up to 180 completed 1m bars.
-- Main Chart and Red Zone refresh every 60 seconds.
-- Server-side cache reduces duplicate requests.
+- Main Chart and Red Zone refresh every 15 seconds while the page is visible.
+- The live-assessment API cache is 10 seconds and reduces duplicate provider requests.
 - Manual pins remain browser-local; market data assessment is independent of scanner-row membership.
 
 ## Known boundaries
 
-- REST polling is near-live but not tick-level streaming.
+- The 1m execution series uses a fresh, provenance-confirmed WebSocket series when subscribed, populated with at least 50 completed bars, and its latest bar is fresh; otherwise 1m falls back to REST. 5m permission remains REST-backed. This is completed-minute-bar streaming, not raw trade/quote ticks.
 - Alpaca feed/entitlement governs source coverage.
 - No NBBO spread, order book, halt, catalyst/news classification, Thinkorswim studies, broker positions or order execution.
 - Existing V2 thresholds are used as-is; this implementation does not recalibrate them.
