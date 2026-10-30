@@ -400,7 +400,7 @@ app.MapGet("/api/market-data/bars", async (
 app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, IMemoryCache cache, CancellationToken cancellationToken) =>
 {
     if (cache.TryGetValue("mcc:morning-brief:v1", out object? cachedReport) && cachedReport is not null)
-        return Results.Ok(cachedReport);
+        return Results.Json(cachedReport);
     var configured = providers.Where(p => p.IsConfigured).ToArray();
     var benchmarkSymbols = new[] { "SPY", "QQQ", "IWM", "XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY" };
     var benchmarkRows = new List<object>();
@@ -486,7 +486,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         }
     };
     cache.Set("mcc:morning-brief:v1", report, TimeSpan.FromSeconds(60));
-    return Results.Ok(report);
+    return Results.Json(report);
 })
 .WithSummary("Get the partial market Morning Brief")
 .WithDescription("No parameters. Example status: PARTIAL — MARKET SNAPSHOT ONLY; missing sector flow, movers, catalysts, and scoring remain DATA? until providers are wired.");
