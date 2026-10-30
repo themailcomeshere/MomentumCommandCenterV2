@@ -68,7 +68,8 @@ public sealed class LiveSymbolAssessmentService(
                 var streamAge = streamLatest is null
                     ? (double?)null
                     : (now - streamLatest.Timestamp.AddMinutes(1)).TotalSeconds;
-                if (streamBars.Count >= 50 && streamAge is >= 0 and <= 120)
+                if (streamBars.Count >= 50 && streamAge is >= 0 and <= 120 &&
+                    string.Equals(streamLatest?.SourceTransport, "WEBSOCKET", StringComparison.OrdinalIgnoreCase))
                 {
                     oneMinute = streamBars;
                     oneMinuteFromWebSocket = true;
@@ -191,7 +192,7 @@ public sealed class LiveSymbolAssessmentService(
                 oneMinute = new
                 {
                     barCount = oneMinute.Count,
-                    sourceTransport = oneMinuteFromWebSocket ? "ALPACA_WEBSOCKET_PERSISTED" : "ALPACA_REST_HISTORICAL",
+                    sourceTransport = oneMinuteFromWebSocket ? "ALPACA_WEBSOCKET_LATEST_BAR" : (oneLatest?.SourceTransport ?? "UNKNOWN"),
                     sourceTimestampUtc = oneLatest?.Timestamp,
                     completedAtUtc = oneCloseAt,
                     ageSeconds = oneAgeSeconds,
