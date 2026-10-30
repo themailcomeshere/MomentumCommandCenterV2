@@ -100,3 +100,25 @@ The six requested workstreams were audited. **None can honestly be marked fully 
 
 
 <!-- Follow-up: CI workflows for the prior documentation commits were confirmed green on 2026-10-29. -->
+
+
+## Follow-up engineering pass — 2026-10-29
+
+The prior audit-only pass was insufficient. This pass adds code:
+- API market bars now carry timeframe. Alpaca/Massive tag 1m/5m. JSONL identity and correction hashes include provider, symbol, timeframe, feed, and source timestamp.
+- `stored-bars` accepts a timeframe filter; Overnight history endpoints explicitly read 1m bars.
+- Legacy JSONL records without timeframe remain `UNKNOWN`, are excluded from timeframe-filtered reads, and must be re-fetched to create correctly tagged history.
+- Added regression tests for same-timestamp 1m/5m separation and legacy UNKNOWN handling.
+- Added Alpaca SIP top-50 gainers/losers source, polling host, JSONL discovery persistence, API read endpoint, and Candidate discovery UI button. Events remain discovery-only.
+- Morning Brief now returns Alpaca movers/collector status, timestamped unclassified Alpaca news, and SPY/QQQ/IWM plus 11 sector ETF proxy observations. Full-market breadth and catalyst classification remain DATA NOT FOUND IN SOURCES.
+- Added `docs/Validation/Runner-Exit-State-Validation-20261029.md` and `docs/Validation/Collector-MorningBrief-Browser-Runbook-20261029.md`.
+
+The October 28 RTO/AMT screenshot review was already performed and remains documented. It is not a matched timestamp replay tape. Repository comparison also found installed 1M V14.4.10 versus repository V14.4.11; V14.4.11 adds the time-gated Overnight DATA? / EOD decision event. Exact source matching for the later screenshot label is not established. The replay engine prevents 5M look-ahead but does not evaluate ThinkScript runner/exit states.
+
+CI is green for the new code/test/UI changes, including runs `40997173692` and `40997116517`. Local SIP entitlement, collector outage/restart/backfill, matched Thinkorswim state tape, and browser regression remain open. Release remains **NOT RELEASE-READY**.
+
+## [Uncertainties]
+- Alpaca SIP screener entitlement is account-specific and not verified.
+- Sector ETF returns are proxies, not constituent breadth or industry money flow.
+- News is unclassified; catalyst type/confidence is not inferred.
+- Local API restart, outage/backfill, and browser tests require the user's runtime.
