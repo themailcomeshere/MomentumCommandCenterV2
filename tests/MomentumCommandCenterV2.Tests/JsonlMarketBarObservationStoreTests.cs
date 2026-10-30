@@ -121,6 +121,40 @@ public sealed class JsonlMarketBarObservationStoreTests
     }
 
     [Fact]
+    public async Task SameProviderSymbolAndTimestampRemainDistinctAcrossTimeframes()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var store = new JsonlMarketBarObservationStore();
+            var oneMinute = CreateBar() with { Timeframe = "1m" };
+            var fiveMinute = CreateBar() with { Timeframe = "5m", High = 12.0, Close = 11.5 };
+            Assert.Equal(1, await store.AppendAsync(new[] { oneMinute }, CancellationToken.None));
+            Assert.Equal(1, await store.AppendAsync(new[] { fiveMinute }, CancellationToken.None));
+            Assert.Equal(0, await store.AppendAsync(new[] { oneMinute }, CancellationToken.None));
+
+            var oneMinuteRows = await store.GetLatestAsync("TEST", "TestProvider", oneMinute.Timestamp,
+                oneMinute.Timestamp, 10, CancellationToken.None, "1m");
+            var fiveMinuteRows = await store.GetLatestAsync("TEST", "TestProvider", oneMinute.Timestamp,
+                oneMinute.Timestamp, 10, CancellationToken.None, "5m");
+            Assert.Single(oneMinuteRows);
+            Assert.Single(fiveMinuteRows);
+            Assert.Equal("1m", oneMinuteRows[0].Bar.Timeframe);
+            Assert.Equal("5m", fiveMinuteRows[0].Bar.Timeframe);
+            Assert.Equal(11.5, fiveMinuteRows[0].Bar.Close);
+            Assert.Equal(2, (await File.ReadAllLinesAsync(path)).Length);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task QueryRejectsInvalidWindowAndLimit()
     {
         var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
