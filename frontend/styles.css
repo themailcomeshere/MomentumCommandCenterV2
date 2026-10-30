@@ -1092,10 +1092,10 @@ main{margin-top:16px}
 #scanner-workbench .table-wrap{
  height:600px;
  max-height:600px;
- overflow-y:auto;
+ overflow-y:scroll;
  overflow-x:auto;
  overscroll-behavior:contain;
- scrollbar-gutter:stable both-edges;
+ scrollbar-gutter:stable;
  border:1px solid var(--line);
  border-radius:9px;
  position:relative;
