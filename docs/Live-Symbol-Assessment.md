@@ -25,10 +25,10 @@ Calculated independently for 1m and 5m:
 - EMA 9
 - EMA 20
 - SMA 50
-- RSI 14
+- RSI 14 (Wilder smoothing)
 - MACD 12/26 with 9-period signal
-- ATR 14
-- Session VWAP (volume-weighted typical price)
+- ATR 14 (Wilder smoothing)
+- Regular-session VWAP (volume-weighted typical price, regular-session bars only)
 
 Extension is the non-negative 1m close-to-EMA9 distance in 1m ATR units:
 `max(0, (1m close - 1m EMA9) / 1m ATR14)`.
