@@ -1,3 +1,27 @@
+## User browser verification update — 2026-10-30
+
+- [USER VERIFIED] Morning Brief News Link hover.
+- [USER VERIFIED] Superscript legend lines.
+- [USER VERIFIED] Main Chart placement.
+- [USER VERIFIED] Red Zone focus updates.
+- [USER VERIFIED] Red Zone refresh.
+- [USER VERIFIED] Manual Red Zone management.
+- [USER VERIFIED] System Readiness topbar.
+- [USER VERIFIED] Provider Comparison placement at bottom.
+- [USER VERIFIED] Quick Start modal.
+- [USER VERIFIED] Favicon 404 no longer present.
+- [IMPLEMENTED; USER RETEST PENDING] Section IDs.
+- [STILL ONGOING] BrowserLink `$.noConflict` error. Do not mark fixed until the injecting script and stack are identified.
+
+## Final implementation checkpoint — live data and layout (2026-10-30)
+
+- Current implementation includes `GET /api/market-data/live-assessment`, `LiveSymbolAssessmentService`, the live frontend consumers, 600px scanner table, compact topbar, tests, and documentation.
+- The latest technical-calculation refinements use Wilder RSI14 and ATR14, regular-session-only VWAP, same-clock-slot 5m RVOL, and explicit future timestamp status.
+- Live UI is REST-polled every 60 seconds; API results are cached for 30 seconds. This is not streaming/tick data.
+- Latest code SHA before this documentation update: `bc1d7f9bf3c862d8780c665b1b68585991d64644`.
+- GitHub Actions for this work have been created but are still queued; no successful build/test result exists yet for the live-assessment changes. Previous successful run 620 predates this feature and must not be used as evidence that the new service compiles.
+- Browser runtime acceptance is pending for the new live endpoint, auto-updating Red Zone/Main Chart, 600px table, sticky Watch action and compact header.
+
 ## Handoff checkpoint — live symbol assessment implementation (2026-10-30)
 
 ### Current branch and implementation
