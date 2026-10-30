@@ -80,6 +80,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 await SendAsync(socket, new { action = "auth", key = _key, secret = _secret }, stoppingToken);
                 await ReceiveUntilAuthenticatedAsync(socket, stoppingToken);
                 await SendAsync(socket, new { action = "subscribe", bars = _symbols }, stoppingToken);
+                await ReceiveUntilSubscribedAsync(socket, stoppingToken);
                 _state = "SUBSCRIBED";
                 delay = TimeSpan.FromSeconds(2);
                 await ReceiveLoopAsync(socket, stoppingToken);
@@ -119,6 +120,32 @@ public sealed class AlpacaMinuteBarStreamWorker(
         }
     }
 
+    private async Task ReceiveUntilSubscribedAsync(ClientWebSocket socket, CancellationToken ct)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(10));
+        while (true)
+        {
+            using var document = await ReceiveDocumentAsync(socket, timeout.Token);
+            Interlocked.Exchange(ref _lastMessageUnixMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            foreach (var item in document.RootElement.EnumerateArray())
+            {
+                var type = GetString(item, "T");
+                if (type == "error") throw new InvalidOperationException("Alpaca stream subscription error: " + GetString(item, "msg"));
+                if (type == "subscription")
+                {
+                    var acknowledged = item.TryGetProperty("bars", out var bars) && bars.ValueKind == JsonValueKind.Array
+                        ? bars.EnumerateArray().Select(x => x.GetString()).Where(x => x is not null).ToArray()
+                        : Array.Empty<string?>();
+                    var missing = _symbols.Except(acknowledged!, StringComparer.OrdinalIgnoreCase).ToArray();
+                    if (missing.Length > 0)
+                        throw new InvalidOperationException("Alpaca did not acknowledge minute-bar subscriptions for: " + string.Join(", ", missing));
+                    return;
+                }
+            }
+        }
+    }
+
     private async Task ReceiveLoopAsync(ClientWebSocket socket, CancellationToken ct)
     {
         while (socket.State == WebSocketState.Open && !ct.IsCancellationRequested)
@@ -150,7 +177,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
     private static async Task SendAsync(ClientWebSocket socket, object message, CancellationToken ct)
     {
         var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-        await socket.SendAsync(bytes, WebSocketMessageType.Text, true, ct);
+        await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, ct);
     }
 
     private static async Task<JsonDocument> ReceiveDocumentAsync(ClientWebSocket socket, CancellationToken ct)
@@ -160,7 +187,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
         WebSocketReceiveResult result;
         do
         {
-            result = await socket.ReceiveAsync(buffer, ct);
+            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), ct);
             if (result.MessageType == WebSocketMessageType.Close)
                 throw new WebSocketException("Alpaca stream sent a close frame.");
             output.Write(buffer, 0, result.Count);
