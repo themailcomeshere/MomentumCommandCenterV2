@@ -1089,3 +1089,26 @@ Continue work without waiting for another confirmation when a task can be safely
 - [PARTIAL] Collector local restart/outage/backfill validation and browser regression remain.
 - Runbooks: `docs/Validation/Collector-MorningBrief-Browser-Runbook-20261029.md` and `docs/Validation/Runner-Exit-State-Validation-20261029.md`.
 - CI green for current code/test changes. Release remains NOT RELEASE-READY until local provider, collector, matched-bar, and browser evidence passes.
+
+
+## 2026-10-29 — RTO runner evidence, collector reconciliation, and dashboard chart UX
+
+### Verified from user's latest RTO chart and local API output
+- [EVIDENCE RECEIVED] New RTO 5M/1M screenshot shows 5M status `5M STATE: GET OUT`, while the 1M status strip shows `1M STATE: EXECUTION EXPIRED`. The 1M pane does **not** show `GET OUT` or `EOD GET OUT` in this capture. Do not reuse the earlier Oct 28 screenshot description for this separate chart.
+- [PARTIAL] The 5M pane contains a visible progression of permission/diagnostic bubbles and a later runner event. Exact event-to-event parity still requires timestamp-aligned 1M/5M CSV rows. The exported files were said to be committed under `data/validation/RTO`, but their exact filenames/content were not exposed by the repository file reads available in this pass: Data not found in sources. Do not claim the exports have been parsed.
+- [PARTIAL — COLLECTOR] User confirmed repeated ingestion returned `newlyPersistedObservations: 0` with zero cycle errors, consistent with idempotent replay for the observations already present.
+- [OPEN — COLLECTOR SYMBOL/WATERMARK RECONCILIATION] Status reports configured symbols SPY, QQQ, IWM, RTO, AMT, but the checkpoint contains only SPY, QQQ, TTE, FMS keys. There are no shown IWM/RTO/AMT watermarks; TTE/FMS keys appear to be retained from a prior symbol configuration. Verify current worker's configured symbol set and actual returned bars before calling per-symbol collection complete. Do not create watermarks for empty responses.
+- [VERIFIED USER OUTPUT] Alpaca provider status reports configured/validated and one returned bar. This is a successful non-empty data validation, not a full coverage or scanner-entitlement proof.
+- [USER CONFIRMED] Morning Brief market/sector/news content displayed substantial data. User requests each headline's URL be presented as a `News Link` hyperlink with the raw URL as hover tooltip.
+
+### Dashboard changes committed
+- [DONE — CODE] Morning Brief news headline URLs render as `News Link` anchors with the URL in the title tooltip; published timestamps display in Arizona time.
+- [DONE — CODE] Discovery group labels render as ATG¹ / ATL¹; change is displayed as a percentage and source timestamp as Arizona local time. Added the abbreviation/field footnote to Candidate Discovery.
+- [DONE — CODE] Added API-backed 1-minute close-price line charts to the focused-symbol chart area and Red Zone cards. Empty/failed responses display as unavailable; they are not rendered as flat/zero lines. Selecting a candidate tile focuses the matching symbol when that symbol exists in the main selector.
+- [OPEN — BROWSER VALIDATION] Verify API response shape, price line rendering, card click-to-focus, hover tooltip, responsive layout, and no console errors in the local browser.
+
+### Remaining RTO validation
+- [NEXT] Locate/confirm the exact 1M and 5M export filenames in `data/validation/RTO`; parse both and report row counts, first/last timestamps, timezone convention, OHLCV validity, duplicate/gap counts.
+- [NEXT] Join bars by explicit Arizona-local candle time after proving whether export timestamps are bar starts or closes. Do not shift timestamps by assumption.
+- [NEXT] Build the state tape from matched 5M/1M study event labels and assert only observed transitions. Keep 5M permission and 1M execution/exit state as separate state machines.
+- [OPEN] Matched timestamp parity and runner/exit replay remain unvalidated. No change to ThinkScript trading gates is authorized by this screenshot alone.
