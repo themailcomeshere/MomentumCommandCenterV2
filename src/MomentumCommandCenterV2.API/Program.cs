@@ -376,7 +376,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         newsItems = await newsClient.GetLatestAsync(50, cancellationToken);
         newsStatus = newsItems.Count == 0 ? "NO_HEADLINES_RETURNED" : "OBSERVED — UNCLASSIFIED HEADLINES";
     }
-    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or ProviderNotConfiguredException)
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException or ProviderNotConfiguredException)
     {
         newsItems = Array.Empty<AlpacaNewsItem>();
         newsStatus = "UNKNOWN — " + ex.GetType().Name + ": " + ex.Message;
