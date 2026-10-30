@@ -238,15 +238,30 @@ renderFeedback();
 /// MODULE: Morning Report Preview
 /// PURPOSE: Presents a transparent, locally derived report preview from demo/import rows.
 /// IMPORTANT: This is NOT a market-data collector, live scanner, or validated opportunity ranker.
+function readRedZoneState(){
+ try{
+  const value=JSON.parse(localStorage.getItem("mcc.redZoneState.v1")||"{}");
+  return {pinned:Array.isArray(value.pinned)?value.pinned.filter(x=>typeof x==="string"):[],dismissed:Array.isArray(value.dismissed)?value.dismissed.filter(x=>typeof x==="string"):[]};
+ }catch{return {pinned:[],dismissed:[]};}
+}
+function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
 function renderMorningReport(){
  const grid=$("redZoneGrid");if(!grid)return;
  const group=$("scannerGroup")?.value||"momentum";
  const sourceRows=Array.isArray(scannerData[group])?scannerData[group]:[];
- const ranked=sourceRows.slice().sort((a,b)=>{
+ const state=readRedZoneState();
+ const bySymbol=new Map(sourceRows.filter(x=>x&&x.symbol).map(x=>[String(x.symbol).toUpperCase(),x]));
+ const pinnedRows=state.pinned.map(symbol=>bySymbol.get(symbol)||({symbol,score:"DATA?",status:"MANUAL — REVIEW",extension:"DATA?",freshness:"UNKNOWN",reason:"Manually pinned candidate. Source data, 5M Permission, and 1M execution are not established."}));
+ const sortedRows=sourceRows.slice().sort((a,b)=>{
   const sa=Number(a.score),sb=Number(b.score);
   if(Number.isFinite(sa)!==Number.isFinite(sb))return Number.isFinite(sb)-Number.isFinite(sa);
   return (Number.isFinite(sb)?sb:-Infinity)-(Number.isFinite(sa)?sa:-Infinity)||String(a.symbol).localeCompare(String(b.symbol));
- }).slice(0,4);
+ });
+ const dismissed=new Set(state.dismissed);
+ const pinnedSet=new Set(state.pinned);
+ const ranked=[...pinnedRows,...sortedRows.filter(item=>!dismissed.has(String(item.symbol||"").toUpperCase())&&!pinnedSet.has(String(item.symbol||"").toUpperCase()))]
+  .filter((item,index,all)=>all.findIndex(x=>String(x.symbol||"").toUpperCase()===String(item.symbol||"").toUpperCase())===index)
+  .slice(0,4);
  $("morningTopCount").textContent=String(ranked.length);
  $("reportSubtitle").textContent="Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp";
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
@@ -262,15 +277,46 @@ function renderMorningReport(){
   const reason=document.createElement("p");reason.className="redzone-reason";reason.textContent=item.reason||"No reason supplied.";
   const gate=document.createElement("div");gate.className="gate-warning";gate.textContent="5M Permission: UNKNOWN · 1M execution: UNKNOWN";
   const chart=document.createElement("div");chart.className="redzone-sparkline";chart.textContent="Loading 1M price…";
-  card.append(top,symbol,score,ext,fresh,reason,chart,gate);
+  const actions=document.createElement("div");actions.className="redzone-actions";
+  const focusButton=document.createElement("button");focusButton.type="button";focusButton.className="quiet-button";focusButton.textContent="Open in Main Chart";
+  const manageButton=document.createElement("button");manageButton.type="button";manageButton.className="quiet-button";manageButton.textContent=pinnedSet.has(String(item.symbol||"").toUpperCase())?"Remove pin":"Dismiss";
+  manageButton.addEventListener("click",event=>{
+   event.stopPropagation();
+   const current=readRedZoneState(),ticker=String(item.symbol||"").toUpperCase();
+   if(current.pinned.includes(ticker))current.pinned=current.pinned.filter(x=>x!==ticker);
+   else current.dismissed=[...new Set([...current.dismissed,ticker])];
+   writeRedZoneState(current);
+  });
+  actions.append(focusButton,manageButton);
+  card.append(top,symbol,score,ext,fresh,reason,chart,gate,actions);
   fetchPriceSeries(item.symbol,180).then(bars=>drawPriceLine(chart,bars,item.symbol)).catch(()=>{chart.textContent="Price history unavailable";});
   card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","Focus "+(item.symbol||"candidate")+" price chart");
-  const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}selector.value=item.symbol;refreshFocusedPriceChart();}};
+  const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}selector.value=item.symbol;render();refreshFocusedPriceChart();}};
+  focusButton.addEventListener("click",event=>{event.stopPropagation();focus();});
   card.addEventListener("click",focus);card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();focus();}});
   return card;
  }):[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:"No candidate rows available. Import a CSV or select a demo scanner group."})]));
 }
 $("scannerGroup")?.addEventListener("change",renderMorningReport);
+$("redZoneAddForm")?.addEventListener("submit",event=>{
+ event.preventDefault();
+ const input=$("redZoneAddSymbol"),ticker=(input?.value||"").trim().toUpperCase();
+ if(!/^[A-Z][A-Z0-9.-]{0,7}$/.test(ticker)){ $("redZoneManageStatus").textContent="Enter a valid ticker symbol."; return; }
+ const state=readRedZoneState();
+ state.pinned=[...new Set([...state.pinned,ticker])];
+ state.dismissed=state.dismissed.filter(x=>x!==ticker);
+ writeRedZoneState(state);
+ input.value="";
+ $("redZoneManageStatus").textContent=ticker+" pinned to Red Zone. Missing evidence remains DATA? until supplied.";
+});
+$("restoreRedZone")?.addEventListener("click",()=>{
+ const state=readRedZoneState();state.dismissed=[];writeRedZoneState(state);
+ $("redZoneManageStatus").textContent="Dismissed scanner candidates restored.";
+});
+$("refreshRedZone")?.addEventListener("click",()=>{
+ renderMorningReport();refreshFocusedPriceChart();
+ $("redZoneManageStatus").textContent="Red Zone refreshed from the currently selected scanner group. Use Refresh Alpaca market movers to retrieve new provider discoveries.";
+});
 $("exportMorningReport")?.addEventListener("click",()=>{
  const group=$("scannerGroup")?.value||"momentum";
  const rows=Array.isArray(scannerData[group])?scannerData[group]:[];
