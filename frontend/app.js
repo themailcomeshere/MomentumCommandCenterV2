@@ -164,7 +164,7 @@ async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
  const symbol=($("symbol")?.value||"").trim().toUpperCase();host.replaceChildren();
  const symbolBadge=$("mainChartSymbol");if(symbolBadge)symbolBadge.textContent=symbol||"NO SYMBOL";
- const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute OHLCV close · auto-refresh 60s";host.append(title);
+ const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute OHLCV close · auto-refresh 15s";host.append(title);
  try{
   const data=await fetchLiveAssessment(symbol);
   drawPriceLine(host,data.oneMinute?.chartBars||[],symbol);
