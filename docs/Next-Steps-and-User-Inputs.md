@@ -661,3 +661,15 @@ The full audit is in `docs/Validation/MCC-Remaining-Work-Audit-20261029.md`. Sta
 **User's post-market comparison:** SPY/IEX returned two observations (20:00Z and 20:54Z); RTO returned zero. This establishes one SPY post-market observation at 20:54Z, not full coverage or the reason RTO is empty. The separate Requested bar coverage panel is still NOT LOADED. No Overnight qualification request or final evaluation was run.
 
 **Release status: NOT RELEASE-READY.** Do not clear these six items until the specific evidence/tests in the audit are complete.
+
+
+## 2026-10-29 — Engineering handoff after code development
+
+- Pull `feature/opportunity-quality-classification`; current implementation adds timeframe-safe JSONL identity, Alpaca SIP movers polling and UI, Alpaca timestamped news, sector ETF proxy observations, and Morning Brief rendering.
+- **Overnight timeframe fix:** new provider bars include `bar.timeframe` 1m/5m; persisted identity includes timeframe and feed. Legacy rows remain UNKNOWN. Re-fetch any required Overnight 1m history using `/api/market-data/bars`; then use `/api/market-data/stored-bars?...&timeframe=1m`. Do not manually label old JSONL rows.
+- **Scanner:** click **Refresh Alpaca market movers** or call `/api/scanner/discoveries?limit=200`. Alpaca movers is SIP-based; if the account lacks screener entitlement, record the 401/403 response. The integration is top-50 gainers/losers, not full-market breadth or 5M/1M eligibility.
+- **Morning Brief:** `/api/morning-brief` now returns SPY/QQQ/IWM, 11 sector ETF proxies, movers/collector health, and timestamped unclassified Alpaca headlines. Full-market breadth and catalyst classification remain unknown.
+- **Runner/exit:** October 28 RTO/AMT screenshot review is already done. See `docs/Validation/Runner-Exit-State-Validation-20261029.md` for the installed-source version discrepancy and exact matched-bar replay capture procedure.
+- **Collector + browser tests:** follow `docs/Validation/Collector-MorningBrief-Browser-Runbook-20261029.md` exactly. Use temporary store/checkpoint paths, verify 1m/5m keys, restart, simulate an outage, inspect backfill, then run the scanner/Morning Brief/Overnight browser matrix and `dotnet test .\MomentumCommandCenterV2.sln`.
+- CI for the latest code/test commits is green. Local Alpaca entitlement, collector outage recovery, matched Thinkorswim state tape, and browser validation are still user-runtime gates.
+- Release status remains NOT RELEASE-READY.
