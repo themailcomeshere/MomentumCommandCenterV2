@@ -6,7 +6,7 @@
  <div class="topbar-layout">
   <div class="topbar-brand">
    <div><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div>
-   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 15s AUTO-REFRESH</div><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
+   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 15s AUTO-REFRESH</div><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
   </div>
   <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
    <div class="topbar-readiness-heading"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></div>
@@ -30,18 +30,6 @@
 
 
 <div id="morning-command" class="command-layout" aria-label="Morning command workspace">
-<section id="morning-brief" class="panel morning-report" aria-labelledby="morningReportTitle">
- <div class="section-heading"><div><div class="eyebrow">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Morning Command Brief</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions"><span class="chip warning-chip">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
- <div class="report-banner"><span class="readiness-dot blocked"></span><div><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
- <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p>API market observations: NOT CONNECTED in static preview.</p></div>
- <div class="morning-summary-grid">
-  <article><span class="eyebrow">SCANNER FEED</span><strong>Not connected</strong><small>Provider not selected</small></article>
-  <article><span class="eyebrow">WATCHLIST</span><strong id="morningWatchCount">0</strong><small>Browser-local symbols only</small></article>
-  <article><span class="eyebrow">TOP CANDIDATES</span><strong id="morningTopCount">0</strong><small>Demo/import rows only</small></article>
-  <article><span class="eyebrow">BORING OVERNIGHT</span><strong>NOT CALCULATED</strong><small>Pipeline not wired</small></article>
- </div>
- <p class="notice">Arizona time does not observe daylight saving time. The report must eventually show Arizona time plus the correct Eastern market/session context. This preview has no market feed, so it cannot establish current session status or quote freshness.</p>
-</section>
 <section id="red-zone" class="panel redzone-panel">
  <div class="section-heading"><div><div class="eyebrow">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2>Red Zone</h2><p class="muted">Up to four ranked tiles. Pin your own symbols or dismiss scanner rows; ranking is not entry permission.</p></div><div class="report-actions"><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><span class="chip">Preview / discovery</span></div></div>
  <form id="redZoneAddForm" class="redzone-manage-form"><label for="redZoneAddSymbol">Add a symbol</label><input id="redZoneAddSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker to pin in Red Zone"><button type="submit">Pin to Red Zone</button><button id="restoreRedZone" type="button" class="quiet-button">Restore dismissed</button></form>
@@ -128,6 +116,22 @@
  <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
 </section>
 
+<details id="morningBriefDetails" class="morning-brief-details">
+ <summary><span><strong>Morning Command Brief</strong><small>Expand for the latest market snapshot, movers, sector proxies, and source limitations</small></span><span class="chip">COLLAPSED BY DEFAULT</span></summary>
+ <section id="morning-brief" class="panel morning-report" aria-labelledby="morningReportTitle">
+ <div class="section-heading"><div><div class="eyebrow">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Morning Command Brief</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions"><span class="chip warning-chip">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
+ <div class="report-banner"><span class="readiness-dot blocked"></span><div><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
+ <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p>API market observations: NOT CONNECTED in static preview.</p></div>
+ <div class="morning-summary-grid">
+  <article><span class="eyebrow">SCANNER FEED</span><strong>Not connected</strong><small>Provider not selected</small></article>
+  <article><span class="eyebrow">WATCHLIST</span><strong id="morningWatchCount">0</strong><small>Browser-local symbols only</small></article>
+  <article><span class="eyebrow">TOP CANDIDATES</span><strong id="morningTopCount">0</strong><small>Demo/import rows only</small></article>
+  <article><span class="eyebrow">BORING OVERNIGHT</span><strong>NOT CALCULATED</strong><small>Pipeline not wired</small></article>
+ </div>
+ <p class="notice">Arizona time does not observe daylight saving time. The report must eventually show Arizona time plus the correct Eastern market/session context. This preview has no market feed, so it cannot establish current session status or quote freshness.</p>
+</section>
+</details>
+
 <section id="dashboard-feedback" class="panel feedback-panel">
  <div class="section-heading"><div><div class="eyebrow">PRODUCT FEEDBACK</div><h2>Dashboard notes</h2></div><span class="muted">Saved in this browser only</span></div>
  <form id="feedbackForm" class="feedback-form">
@@ -140,6 +144,11 @@
  <p class="notice">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
 </section>
 <section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
+<dialog id="morningBriefDialog" class="morning-brief-dialog" aria-labelledby="morningBriefDialogTitle">
+ <div class="section-heading"><div><div class="eyebrow">MORNING REPORT · LIVE API SNAPSHOT</div><h2 id="morningBriefDialogTitle">Morning Command Brief</h2></div><div class="report-actions"><button id="exportMorningReportModal" type="button" class="quiet-button">Export report JSON</button><button id="closeMorningBrief" type="button" class="quiet-button">Close</button></div></div>
+ <div id="morningBriefModalContent" class="morning-brief-modal-content"><p class="muted">Loading the latest API-backed brief…</p></div>
+ <p class="notice">Partial market snapshot only. Missing inputs remain DATA NOT FOUND IN SOURCES; this is not a trade instruction.</p>
+</dialog>
 <dialog id="quickStartDialog" class="quick-start-dialog" aria-labelledby="quickStartTitle">
  <div class="section-heading"><div><div class="eyebrow">MCC WORKFLOW</div><h2 id="quickStartTitle">Quick Start</h2></div><button id="closeQuickStart" type="button" class="quiet-button">Close</button></div>
  <ol class="quick-start-steps">
