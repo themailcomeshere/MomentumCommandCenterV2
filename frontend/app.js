@@ -131,7 +131,7 @@ async function fetchLiveAssessment(symbol){
 }
 function sourceFreshness(label,ageSeconds){
  if(!label)return "UNKNOWN";
- return label+(Number.isFinite(Number(ageSeconds))?" · "+Math.max(0,Number(ageSeconds)).toFixed(0)+"s":"");
+ return label+(ageSeconds!==null&&ageSeconds!==undefined&&Number.isFinite(Number(ageSeconds))?" · "+Math.max(0,Number(ageSeconds)).toFixed(0)+"s":"");
 }
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
