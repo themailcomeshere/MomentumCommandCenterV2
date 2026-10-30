@@ -737,6 +737,11 @@ th {
     margin: 8px 0;
 }
 
+.redzone-score.score-low { color: var(--red); }
+.redzone-score.score-mid { color: var(--yellow); }
+.redzone-score.score-high { color: var(--green); }
+.redzone-score.score-unknown { color: var(--muted); }
+
 .redzone-reason {
     min-height: 52px;
 }
