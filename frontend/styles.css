@@ -976,3 +976,13 @@ th {
 .overnight-coverage-audit table{width:100%;border-collapse:collapse}
 .overnight-coverage-audit th,.overnight-coverage-audit td{padding:.65rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--border,#d7dce2);font-size:.88rem}
 .overnight-coverage-audit td:last-child{min-width:14rem}
+
+/* API-backed price-line charts in the focused chart and Red Zone tiles. */
+.focus-price-chart,.redzone-sparkline{min-width:0;margin:10px 0;padding:8px;border:1px solid var(--line);border-radius:9px;background:#0c1527;color:#7db8ff}
+.focus-price-chart svg{display:block;width:100%;height:150px}
+.redzone-sparkline svg{display:block;width:100%;height:76px}
+.chart-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.chart-title{font-size:12px;font-weight:700;margin-bottom:5px}
+.chart-unavailable{font-size:11px;color:var(--muted);margin:8px 0}
+.redzone-card{cursor:pointer}
+.redzone-card:focus-within,.redzone-card:hover{border-color:var(--blue)}
