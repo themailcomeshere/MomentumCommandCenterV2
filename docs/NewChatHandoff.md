@@ -1,3 +1,11 @@
+## Validation checkpoint — hybrid WebSocket 1m / REST 5m — 2026-10-30
+
+- `MarketBar.SourceTransport` records REST vs WEBSOCKET provenance. The raw store includes transport in its content hash, so an identical OHLCV bar received over WebSocket is retained as a new observation rather than lost to deduplication.
+- Live assessment selects stored 1m bars only when stream subscription is confirmed, at least 50 completed 1m bars are present, the latest bar is within the 120-second freshness limit, and the latest observation is tagged WEBSOCKET. It falls back to REST otherwise. 5m permission remains REST.
+- Decision Explanation, Main Chart, and the header show the actual transport.
+- GitHub Actions run 707 passed Release build and **152/152 tests** for the transport-provenance test fixture correction. The initial new test failed because its fixture had `Timeframe=UNKNOWN`; fixed by setting `1m`. Runs 708–710 passed for the subsequent frontend changes. Run 711 was still in progress at the time of this checkpoint.
+- Browser runtime and actual provider/WebSocket acceptance remain unverified. Keep WebSocket disabled until server-side configuration is intentionally enabled.
+
 ## Current handoff — Morning Brief, replay, streaming, and Schwab position sync — 2026-10-30
 
 ## Current handoff — Morning Brief, replay, streaming, and Schwab position sync — 2026-10-30
