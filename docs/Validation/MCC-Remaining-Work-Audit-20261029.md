@@ -97,3 +97,6 @@ The six requested workstreams were audited. **None can honestly be marked fully 
 - The selected production scanner/news provider, account entitlement, and licensing scope are not specified in source.
 - Collector recovery depends on the local API configuration, durable file paths, provider history limits, and runtime failure modes; no controlled local runtime test was available.
 - Browser behavior and API/UI integration may differ from static source inspection; no browser automation/runtime was available.
+
+
+<!-- Follow-up: CI workflows for the prior documentation commits were confirmed green on 2026-10-29. -->
