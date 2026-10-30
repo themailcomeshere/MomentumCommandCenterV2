@@ -413,7 +413,7 @@ app.MapPost("/api/boring-overnight/history", async (
             return Results.BadRequest(new { error = "Boundary timestamps must be UTC and form a valid window." });
 
         var observations = await store.GetLatestAsync(
-            request.Symbol, request.Provider, fromUtc, toUtc, 10000, ct);
+            request.Symbol, request.Provider, fromUtc, toUtc, 10000, ct, "1m");
         var result = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, request.Provider, request.Feed, observations, request.Boundaries, request.RequiredWindow);
         return Results.Ok(new
@@ -459,7 +459,7 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
         if (fromUtc.Offset != TimeSpan.Zero || toUtc.Offset != TimeSpan.Zero || fromUtc > toUtc)
             return Results.BadRequest(new { error = "Boundary timestamps must be UTC and form a valid window." });
 
-        var observations = await barStore.GetLatestAsync(request.Symbol, request.Provider, fromUtc, toUtc, 10000, ct);
+        var observations = await barStore.GetLatestAsync(request.Symbol, request.Provider, fromUtc, toUtc, 10000, ct, "1m");
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, request.Provider, request.Feed, observations, request.Boundaries, request.RequiredWindow);
         var effectiveRequest = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService
@@ -520,6 +520,7 @@ app.MapGet("/api/market-data/stored-bars", async (
     DateTimeOffset fromUtc,
     DateTimeOffset toUtc,
     string? provider,
+    string? timeframe,
     int? limit,
     IMarketBarObservationStore store,
     CancellationToken ct) =>
@@ -530,7 +531,9 @@ app.MapGet("/api/market-data/stored-bars", async (
         return Results.BadRequest(new { error = "fromUtc and toUtc must be UTC timestamps, and fromUtc must not exceed toUtc." });
     try
     {
-        var observations = await store.GetLatestAsync(symbol, provider, fromUtc, toUtc, limit ?? 1000, ct);
+        if (timeframe is not null && !TryGetTimeframe(timeframe, out _))
+            return Results.BadRequest(new { error = "timeframe must be 1m or 5m when supplied." });
+        var observations = await store.GetLatestAsync(symbol, provider, fromUtc, toUtc, limit ?? 1000, ct, timeframe);
         return Results.Ok(new
         {
             symbol = symbol.ToUpperInvariant(),
@@ -539,7 +542,7 @@ app.MapGet("/api/market-data/stored-bars", async (
             toUtc,
             count = observations.Count,
             observations,
-            note = "Returns the latest stored version per provider/symbol/source timestamp. These are raw bars; this endpoint does not infer session boundaries or calculate Overnight returns."
+            note = "Returns the latest stored version per provider/symbol/timeframe/feed/source timestamp. Legacy rows without timeframe are UNKNOWN and are excluded when a timeframe filter is requested. These are raw bars; this endpoint does not infer session boundaries or calculate Overnight returns."
         });
     }
     catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
