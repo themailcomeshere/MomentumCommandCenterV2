@@ -400,7 +400,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         displayTimezone = "America/Phoenix",
         status = configured.Length == 0 ? "DATA? — NO PROVIDER CONFIGURED" : "PARTIAL — MARKET SNAPSHOT ONLY",
         marketLandscape = benchmarkRows,
-        sectorFlow = new { status = "DATA NOT FOUND IN SOURCES", reason = "No sector classification / breadth feed is implemented." },
+        sectorFlow = new { status = "SECTOR ETF PROXIES INCLUDED IN MARKET LANDSCAPE", proxySymbols = new[] { "XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY" }, note = "Read matching symbols in marketLandscape. ETF proxy performance is not constituent-level breadth or industry money flow." },
         movers = moversSummary,
         newsHeadlines = new { status = newsStatus, source = "Alpaca News API", items = newsItems, classification = "UNCLASSIFIED SOURCE HEADLINES" },
         catalysts = new { status = "DATA NOT FOUND IN SOURCES", reason = "No news / catalyst provider is configured." },
