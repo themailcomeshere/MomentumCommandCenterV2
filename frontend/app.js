@@ -573,6 +573,25 @@ async function loadMorningBrief() {
 }
 loadMorningBrief();
 
+/// MODULE: Morning Command Brief modal
+/// PURPOSE: Reuse the same live API brief in the header modal and the collapsed full-width footer section.
+/// SAFETY: The modal is a read-only snapshot; export delegates to the existing JSON export action.
+const morningBriefDialog=$("morningBriefDialog");
+$("openMorningBrief")?.addEventListener("click",async()=>{
+ if(!morningBriefDialog||morningBriefDialog.open)return;
+ await loadMorningBrief();
+ const source=$("morning-brief"),host=$("morningBriefModalContent");
+ if(source&&host){
+  const clone=source.cloneNode(true);
+  clone.removeAttribute("id");
+  clone.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+  clone.querySelectorAll("button").forEach(button=>button.remove());
+  host.replaceChildren(clone);
+ }
+ morningBriefDialog.showModal();
+});
+$("closeMorningBrief")?.addEventListener("click",()=>morningBriefDialog?.close());
+$("exportMorningReportModal")?.addEventListener("click",()=>$("exportMorningReport")?.click());
 
 /* API-backed exclusion watchlist and StrategyReport upload. */
 let latestStrategyReportJson = null;
