@@ -30,6 +30,9 @@ public sealed class AlpacaMinuteBarStreamWorker(
     private string _state = "DISABLED";
     private string? _lastError;
 
+    public bool IsSubscribed => Volatile.Read(ref _connected) == 1 && string.Equals(_state, "SUBSCRIBED", StringComparison.Ordinal);
+    public string Feed => _feed;
+
     public object Snapshot() => new
     {
         enabled = _enabled,
