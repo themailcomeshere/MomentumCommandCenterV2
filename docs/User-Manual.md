@@ -2,15 +2,15 @@
 
 **Status:** Workflow specification for the current prototype; not a claim that the production features are implemented.
 **Branch:** `feature/opportunity-quality-classification`
-**Last reviewed:** 2026-10-22
+**Last reviewed:** 2026-10-30
 
 ## 1. What MCC is today
 
 MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. The current Dashboard is a static HTML/CSS/JavaScript workbench. It is opened in a browser; it is not currently a Windows `.exe` application.
 
-Open `frontend/index.html` in a browser. The page can show illustrative demo snapshots, import a local CSV, add/remove symbols from a watchlist stored in that browser, and save/export feedback notes. The watchlist and feedback notebook use browser local storage. They do not sync to GitHub or another computer automatically.
+Open the MCC frontend through the running .NET API host (or its configured static-file host). The page can show illustrative demo/replay panels, import a local CSV, maintain a browser-local watchlist/Red Zone pins, and request live Alpaca historical 1m/5m bars for focused and pinned symbols. The live assessment endpoint calculates technical indicators and calls the existing V2 signal engine. Watchlist and manual Red Zone pin/dismiss state remain in browser local storage; they do not sync to GitHub or another computer automatically.
 
-**Current limits:** demo fixtures are not live prices; no market-data provider or live scanner is connected; Thinkorswim is not connected as a feed/API; the C# engine is not wired into this front end; the overnight score is not calculated by the page; news/catalysts are not fetched; no broker integration or order submission exists. The UI's readiness panel is the source of truth for these limits.
+**Current limits:** market data is near-live historical REST polling (60-second browser refresh with a 30-second API cache), not websocket/tick streaming; provider feed/entitlement controls coverage; market-wide scanner discovery is a separate SIP-dependent top-movers feed; Thinkorswim is not connected; broker positions/order execution are not connected; no catalyst/halt/NBBO/order-book classification is inferred; Boring Overnight is a separate historical evaluation workflow. Decision values are withheld when bar history, freshness, or the same-time-of-day 5m volume baseline is insufficient.
 
 ## 2. Intended 08:30 Arizona Morning Report
 
