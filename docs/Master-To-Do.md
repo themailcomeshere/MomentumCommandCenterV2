@@ -1,3 +1,13 @@
+## Validation and hybrid-source checkpoint — 2026-10-30
+
+- [DONE — SOURCE] Raw `MarketBar` observations now retain `SourceTransport` (`REST` or `WEBSOCKET`). The append-only store includes transport in its content hash, so identical OHLCV arriving by a different transport is recorded as a provenance change rather than silently deduplicated.
+- [DONE — SOURCE] Live assessment uses the persisted 1m series only when the Alpaca WebSocket is confirmed subscribed, at least 50 completed 1m bars are available, the latest bar is fresh, and the latest observation is explicitly tagged `WEBSOCKET`. Otherwise it falls back to REST. 5m permission remains REST.
+- [DONE — UI] Decision Explanation, Main Chart, and the header now identify the actual 1m transport and 5m REST source. Header transport label follows the selected symbol's assessment.
+- [PASS — TESTS] GitHub Actions run **707** for commit `8b015d73e88cda62ffef79e9a103836218b5a8e9`: Release build succeeded; **152/152 tests passed**. The new transport-provenance test initially failed because its fixture omitted `Timeframe="1m"`; that fixture was corrected. Runs 701–706 are historical failures from that one test-fixture issue and are superseded by the passing run 707.
+- [PASS — CI] Runs 708, 709, and 710 passed for frontend cache-bust/header updates. Run 711 for commit `980dea5d3cf4e217fab072689db04f7b6c0971e6` was in progress at this checkpoint.
+- [OPEN — CURRENT HEAD] Verify CI for the latest documentation and cache-bust commits before treating the newest branch head as validated.
+- [OPEN — RUNTIME] WebSocket is optional and disabled by default. User must configure it server-side and verify subscription, bar arrival, reconnect, and 1m/REST parity. Browser runtime verification remains outstanding.
+
 ## Active implementation checkpoint — Morning Brief, replay, stream, and stale diagnostics — 2026-10-30
 
 ## Active implementation checkpoint — Morning Brief, replay, stream, and stale diagnostics — 2026-10-30
