@@ -2,7 +2,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using MomentumCommandCenterV2.Application.Interfaces;
 using MomentumCommandCenterV2.Application.Models;
-using MomentumCommandCenterV2.Core.Models.Enums;
 
 namespace MomentumCommandCenterV2.API.MarketData;
 
