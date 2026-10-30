@@ -290,7 +290,7 @@ app.MapGet("/api/scanner/universe", async (
 app.MapGet("/api/market-data/stream/status", (AlpacaMinuteBarStreamWorker worker) =>
     Results.Ok(worker.Snapshot()))
 .WithSummary("Show Alpaca minute-bar WebSocket stream health")
-.WithDescription("The optional stream is disabled by default. Enable MarketData:Alpaca:StreamEnabled and configure StreamSymbols (or collector symbols). Free Basic accounts use IEX; SIP requires eligible market-data access. The worker persists minute bars and late-bar corrections but does not submit orders.");
+.WithDescription("The optional stream is disabled by default. Enable MarketData:Alpaca:StreamEnabled and configure StreamSymbols (or collector symbols) as the initial seed. MCC can add symbols dynamically through POST /api/market-data/stream/subscribe. Free Basic accounts use IEX; SIP requires eligible market-data access. The worker persists minute bars and late-bar corrections but does not submit orders.");
 
 app.MapPost("/api/market-data/stream/subscribe", async (string symbol, AlpacaMinuteBarStreamWorker worker, CancellationToken ct) =>
 {
@@ -324,7 +324,7 @@ app.MapGet("/api/market-data/live-assessment", async (
     { return Results.Problem($"Live assessment failed: {ex.GetType().Name}: {ex.Message}", statusCode: 502); }
 })
 .WithSummary("Calculate live 5M permission and 1M execution from provider OHLCV")
-.WithDescription("Returns timestamped 1m/5m technical snapshots, same-time-of-day 5m relative volume, freshness, V2 permission/execution state, and recent 1m chart bars. REST-polls Alpaca and caches for 30 seconds; not websocket/tick streaming. 5M permission is withheld unless at least 50 completed bars per timeframe, fresh observations, and five prior same-slot 5m volume samples are available.");
+.WithDescription("Returns timestamped 1m/5m technical snapshots, same-time-of-day 5m relative volume, freshness, V2 permission/execution state, and recent 1m chart bars. Uses fresh WebSocket-persisted 1m bars when the subscription, 50-bar history, latest-bar freshness, and source-provenance checks pass; otherwise 1m falls back to historical REST. 5M permission remains REST-backed. The API assessment cache is 10 seconds; the browser refreshes every 15 seconds. 5M permission is withheld unless completed history, freshness, and five prior same-slot 5m volume samples are available.");
 
 app.MapGet("/api/market-data/replay", async (
     string? symbol,
