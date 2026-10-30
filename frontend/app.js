@@ -319,6 +319,33 @@ function readRedZoneState(){
 }
 function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
 let redZoneAssessmentRefreshers=[];
+let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
+function playRedZoneAlert(){
+ if(!redZoneSoundEnabled)return;
+ const AudioContextType=window.AudioContext||window.webkitAudioContext;
+ if(!AudioContextType)return;
+ try{
+  redZoneAudioContext=redZoneAudioContext||new AudioContextType();
+  if(redZoneAudioContext.state==="suspended")void redZoneAudioContext.resume();
+  const now=redZoneAudioContext.currentTime;
+  [880,1175].forEach((frequency,index)=>{
+   const oscillator=redZoneAudioContext.createOscillator(),gain=redZoneAudioContext.createGain(),start=now+index*.18;
+   oscillator.type="sine";oscillator.frequency.value=frequency;
+   gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.16,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+.13);
+   oscillator.connect(gain);gain.connect(redZoneAudioContext.destination);oscillator.start(start);oscillator.stop(start+.14);
+  });
+ }catch(error){const button=$("toggleRedZoneSound");if(button)button.title="Sound unavailable: "+error.message;}
+}
+$("toggleRedZoneSound")?.addEventListener("click",async()=>{
+ redZoneSoundEnabled=!redZoneSoundEnabled;
+ const button=$("toggleRedZoneSound");
+ if(button){button.textContent=redZoneSoundEnabled?"Sound alerts: ON":"Enable sound alerts";button.setAttribute("aria-pressed",String(redZoneSoundEnabled));}
+ if(redZoneSoundEnabled){
+  const AudioContextType=window.AudioContext||window.webkitAudioContext;
+  if(AudioContextType){redZoneAudioContext=redZoneAudioContext||new AudioContextType();if(redZoneAudioContext.state==="suspended")await redZoneAudioContext.resume();playRedZoneAlert();}
+  else{redZoneSoundEnabled=false;if(button){button.textContent="Sound unavailable";button.setAttribute("aria-pressed","false");}}
+ }
+});
 async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,reasonNode,gateNode,chartNode){
  void ensureMinuteBarSubscription(symbol);
  try{
@@ -362,6 +389,12 @@ function renderMorningReport(){
  const ranked=[...pinnedRows,...sortedRows.filter(item=>!dismissed.has(String(item.symbol||"").toUpperCase())&&!pinnedSet.has(String(item.symbol||"").toUpperCase()))]
   .filter((item,index,all)=>all.findIndex(x=>String(x.symbol||"").toUpperCase()===String(item.symbol||"").toUpperCase())===index)
   .slice(0,4);
+ const currentSymbols=new Set(ranked.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
+ if(previousRedZoneSymbols&&!suppressNextRedZoneAlert&&redZoneSoundEnabled){
+  const added=[...currentSymbols].filter(symbol=>!previousRedZoneSymbols.has(symbol));
+  if(added.length){playRedZoneAlert();const soundButton=$("toggleRedZoneSound");if(soundButton)soundButton.title="New Red Zone priority stock: "+added.join(", ");}
+ }
+ previousRedZoneSymbols=currentSymbols;suppressNextRedZoneAlert=false;
  $("morningTopCount").textContent=String(ranked.length);
  $("reportSubtitle").textContent="Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp";
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
@@ -398,7 +431,7 @@ function renderMorningReport(){
   return card;
  }):[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:"No candidate rows available. Import a CSV or select a demo scanner group."})]));
 }
-$("scannerGroup")?.addEventListener("change",renderMorningReport);
+$("scannerGroup")?.addEventListener("change",()=>{suppressNextRedZoneAlert=true;renderMorningReport();});
 $("redZoneAddForm")?.addEventListener("submit",event=>{
  event.preventDefault();
  const input=$("redZoneAddSymbol"),ticker=(input?.value||"").trim().toUpperCase();
@@ -1024,28 +1057,31 @@ initializeOvernightWindow();
 /// MODULE: Historical V2 decision replay
 /// PURPOSE: Requests deterministic point-in-time decisions from persisted bars using the same V2 engine.
 /// SAFETY: Requires an explicit UTC as-of timestamp and feed; server excludes bars whose close occurs after that time.
+const replayAsOfLocal=$("replayAsOfLocal");
+if(replayAsOfLocal&&!replayAsOfLocal.value)replayAsOfLocal.value=phoenixLocalInput(new Date());
 $("historicalReplayForm")?.addEventListener("submit",async event=>{
  event.preventDefault();
  const symbol=($("replaySymbol")?.value||"").trim().toUpperCase();
  const feed=$("replayFeed")?.value||"";
- const asOfUtc=($("replayAsOfUtc")?.value||"").trim();
+ const localAsOf=($("replayAsOfLocal")?.value||"").trim();
  const hasPosition=$("replayHasPosition")?.checked===true;
  const status=$("replayStatus"),host=$("replayResult"),button=$("replayRun");
  if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid ticker symbol.";return;}
- if(!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$/.test(asOfUtc)||!Number.isFinite(Date.parse(asOfUtc))){status.textContent="Enter an explicit UTC timestamp ending in Z, including seconds (example: 2026-10-30T14:35:00Z).";return;}
+ let asOfUtc;
+ try{asOfUtc=phoenixLocalToUtc(localAsOf);}catch(error){status.textContent=error.message;return;}
  const params=new URLSearchParams({symbol,providerName:"Alpaca",feed,asOfUtc,hasPosition:String(hasPosition)});
- button.disabled=true;status.textContent="Replaying persisted bars through V2SignalEngine…";host.replaceChildren();
+ button.disabled=true;status.textContent="Replaying persisted bars through V2SignalEngine… Arizona "+localAsOf+" ("+asOfUtc+" UTC).";host.replaceChildren();
  try{
   const response=await fetch("/api/market-data/replay?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
   const data=await response.json();if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
   const decision=data.decision||{};
   const summary=document.createElement("p");
   summary.textContent=data.status==="REPLAYED"
-   ? "REPLAYED · "+symbol+" · "+feed.toUpperCase()+" · "+(decision.state||"UNKNOWN")+" / "+(decision.action||"UNKNOWN")+" · score "+(decision.score??"DATA?")+" · hasPosition="+hasPosition+" · "+(decision.reason||"No reason returned.")
+   ? "REPLAYED · "+symbol+" · "+feed.toUpperCase()+" · Arizona "+localAsOf+" · "+(decision.state||"UNKNOWN")+" / "+(decision.action||"UNKNOWN")+" · score "+(decision.score??"DATA?")+" · hasPosition="+hasPosition+" · "+(decision.reason||"No reason returned.")
    : data.status+" · "+symbol+" · 1M bars "+(data.oneMinuteBars??"DATA?")+" · 5M bars "+(data.fiveMinuteBars??"DATA?")+" · "+(data.note||"No decision returned.");
   host.append(summary);
   const audit=document.createElement("pre");audit.className="replay-audit";audit.textContent=JSON.stringify(data,null,2);host.append(audit);
-  status.textContent="Replay complete. No order was submitted. Historical position state is simulated only; broker positions are not connected.";
+  status.textContent="Replay complete. Arizona local time was converted to UTC. No order was submitted. Historical position state is simulated only; broker positions are not connected.";
  }catch(error){status.textContent="Replay failed: "+error.message;host.textContent="No decision returned. Check that the API is current and stored-bar history exists.";}
  finally{button.disabled=false;}
 });
