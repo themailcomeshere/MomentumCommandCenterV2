@@ -290,6 +290,14 @@ app.MapGet("/api/market-data/stream/status", (AlpacaMinuteBarStreamWorker worker
 .WithSummary("Show Alpaca minute-bar WebSocket stream health")
 .WithDescription("The optional stream is disabled by default. Enable MarketData:Alpaca:StreamEnabled and configure StreamSymbols (or collector symbols). Free Basic accounts use IEX; SIP requires eligible market-data access. The worker persists minute bars and late-bar corrections but does not submit orders.");
 
+app.MapPost("/api/market-data/stream/subscribe", async (string symbol, AlpacaMinuteBarStreamWorker worker, CancellationToken ct) =>
+{
+    try { return Results.Ok(await worker.SubscribeAsync(symbol, ct)); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithSummary("Dynamically subscribe a symbol to Alpaca 1-minute bars")
+.WithDescription("POST with query parameter symbol=XYZ. MCC calls this when a symbol is selected or added to Red Zone. Symbols are held in API memory and are automatically re-subscribed after reconnect; the front end does not need StreamSymbols edits for each symbol. The configured StreamSymbols list remains the initial seed after an API restart.");
+
 app.MapGet("/api/market-data/collector/status", (MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker worker) =>
     Results.Ok(worker.Snapshot()))
 .WithSummary("Show background historical collector state")
