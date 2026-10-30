@@ -3,6 +3,9 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Any;
 using MomentumCommandCenterV2.API.MarketData;
+using MomentumCommandCenterV2.Application.Interfaces;
+using MomentumCommandCenterV2.Application.Services;
+using MomentumCommandCenterV2.Infrastructure.Persistence;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +40,19 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
+builder.Services.AddSingleton<IScannerDiscoveryEventStore>(_ => new JsonlScannerDiscoveryEventStore(
+    Environment.GetEnvironmentVariable("MCC_SCANNER_DISCOVERY_PATH")
+    ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "MomentumCommandCenterV2", "scanner-discoveries.jsonl")));
+builder.Services.AddSingleton<ScannerDiscoveryIngestionService>();
+builder.Services.AddHttpClient<AlpacaScannerDiscoverySource>(client =>
+{
+    client.BaseAddress = new Uri("https://data.alpaca.markets/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+builder.Services.AddSingleton<IScannerDiscoverySource>(sp => sp.GetRequiredService<AlpacaScannerDiscoverySource>());
+builder.Services.AddSingleton<AlpacaScannerDiscoveryHostedService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaScannerDiscoveryHostedService>());
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>());
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
