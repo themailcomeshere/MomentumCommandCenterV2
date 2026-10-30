@@ -1283,6 +1283,7 @@ main{margin-top:16px}
 .handoff-howto ul{margin:0;padding-left:18px}
 .handoff-howto li{margin:5px 0}
 @media(max-width:1050px){
+ .command-layout{grid-template-columns:minmax(0,1fr)}
  .main-chart-header{grid-template-columns:1fr}
  #opportunity-status.status-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
