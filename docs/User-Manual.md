@@ -163,3 +163,32 @@ The user intends to leave the released/deployed MCC program open overnight so sc
 Run the API locally with `dotnet run --project src/MomentumCommandCenterV2.API --configuration Release` and open `/swagger` on the host/port printed by ASP.NET Core. Use Swagger to run the health, provider-status, market-data comparison and Boring Overnight evaluator endpoints without manually building URLs. Swagger does not guarantee authentication, data entitlement, completeness, or trading readiness. Never enter API keys into Swagger requests.
 
 `POST /api/boring-overnight/evaluate` is a deterministic policy-test endpoint. It expects caller-supplied snapshot fields; it is not yet connected to automatic scanner/catalyst collection. Missing or unknown critical values should remain DATA? rather than being guessed. It does not calculate a validated overnight limit target and never submits orders.
+
+
+## Dashboard interaction guide — 2026-10-30
+
+### Main Chart
+The Main Chart is at the top of the main workspace. It displays an API-backed 1-minute close-price line for the selected symbol. Choose a symbol from the workspace toolbar or activate a Red Zone card to focus it. This is not yet an OHLC candlestick chart and does not plot the Thinkorswim 5M/1M study states.
+
+### Morning Command Brief and discovery
+1. Review the Morning Command Brief and source/freshness notices.
+2. Select a scanner group and use **Refresh Alpaca market movers** to load persisted Alpaca discovery events.
+3. Discovery rows are not qualified trading signals. Review them in Red Zone and use Scan & Analyze for explicit 1M/5M bar windows.
+
+### Red Zone controls
+- **Refresh Red Zone** redraws the currently selected candidate source and retries the Red Zone price-chart requests.
+- **Refresh Alpaca market movers** fetches persisted provider discoveries and changes the selected scanner group to the live-discovery group.
+- **Pin to Red Zone** manually adds a ticker to the top of the four-card display.
+- **Dismiss** hides an automatically sourced candidate from Red Zone.
+- **Restore dismissed** clears dismissals and allows those source candidates to appear again.
+- Pins and dismissals are stored in this browser's localStorage. They do not sync to another browser/device or to the server. Clearing site data can erase them.
+- A manually pinned symbol without an underlying scanner row displays `MANUAL — REVIEW`; it has no invented score, freshness, permission, or execution state.
+
+### Provider Comparison
+Provider Comparison is in the diagnostics area and is not part of the normal morning routine. Use it when evaluating or re-testing Alpaca versus Massive: choose a ticker, 1m/5m interval and date, then prepare a same-window historical REST comparison. Inspect bars, first/latest timestamps, timestamp gaps and duplicates. This is not a streaming test, complete-session guarantee, reconnect/backfill test, entitlement check, or provider approval.
+
+### Quick Start
+Open Quick Start from the header or the footer. It summarizes the normal order: review the brief, refresh discovery, inspect Red Zone, focus the Main Chart, run Scan & Analyze, review 5M/1M context, and use Overnight separately.
+
+### Prototype limitations
+The opportunity status and decision explanation areas still use illustrative replay snapshots; they do not calculate symbol-specific 5M Permission or 1M execution state when a Red Zone tile is selected. Treat those fields as demo-only until the calculation pipeline is connected. No broker connection or order submission exists.
