@@ -165,7 +165,7 @@ async function refreshDecisionExplanation(){
 }
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
- const symbol=($("symbol")?.value||"").trim().toUpperCase();host.replaceChildren();
+ const symbol=($("symbol")?.value||"").trim().toUpperCase();void ensureMinuteBarSubscription(symbol);host.replaceChildren();
  const symbolBadge=$("mainChartSymbol");if(symbolBadge)symbolBadge.textContent=symbol||"NO SYMBOL";
  const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute OHLCV close · auto-refresh 15s";host.append(title);
  try{
@@ -320,6 +320,7 @@ function readRedZoneState(){
 function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
 let redZoneAssessmentRefreshers=[];
 async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,reasonNode,gateNode,chartNode){
+ void ensureMinuteBarSubscription(symbol);
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
@@ -536,57 +537,80 @@ async function loadProviderStatus() {
 }
 loadProviderStatus();
 
+const requestedMinuteBarSymbols=new Set();
+async function ensureMinuteBarSubscription(symbol){
+ const ticker=String(symbol||"").trim().toUpperCase();
+ if(!/^[A-Z0-9.-]{1,8}$/.test(ticker)||requestedMinuteBarSymbols.has(ticker))return;
+ requestedMinuteBarSymbols.add(ticker);
+ try{
+  const response=await fetch("/api/market-data/stream/subscribe?symbol="+encodeURIComponent(ticker),{method:"POST",cache:"no-store",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const result=await response.json();
+  if(!result.accepted&&result.state!=="DISABLED"&&result.state!=="MISCONFIGURED")requestedMinuteBarSymbols.delete(ticker);
+ }catch(error){/* REST assessment remains the fallback when streaming is unavailable. */}
+}
 async function loadMinuteBarStreamStatus(){
  const node=$("streamStatus");if(!node)return;
  try{
   const response=await fetch("/api/market-data/stream/status",{cache:"no-store",headers:{Accept:"application/json"}});
   if(!response.ok)throw new Error("HTTP "+response.status);
   const state=await response.json();
+  const selected=$("symbol")?.value;
+  if(state.enabled&&selected)void ensureMinuteBarSubscription(selected);
   node.textContent=!state.enabled?"WS minute bars: DISABLED":state.connected
-   ?"WS minute bars: CONNECTED · "+(state.feed||"feed")+" · "+(state.symbols||[]).length+" symbols"
+   ?"WS minute bars: CONNECTED · "+(state.feed||"feed")+" · "+(state.subscribedSymbols||[]).length+" subscribed"
    :"WS minute bars: "+(state.state||"UNKNOWN")+(state.lastError?" · "+state.lastError:"");
-  node.title="Optional persisted minute-bar stream; live V2 assessment still reports its own REST/stream source independently. Last bar: "+(state.lastBarUtc||"none");
+  node.title="Dynamic symbol subscriptions are added when selected or shown in Red Zone. Configured symbols are only the initial seed. Subscribed: "+((state.subscribedSymbols||[]).join(", ")||"none acknowledged")+" · Last bar: "+(state.lastBarUtc||"none");
  }catch(error){node.textContent="WS minute bars: STATUS UNAVAILABLE";node.title=error.message;}
 }
 void loadMinuteBarStreamStatus();
 
-async function loadMorningBrief() {
- try {
-  const response = await fetch("/api/morning-brief", {headers:{Accept:"application/json"}});
-  if (!response.ok) throw new Error("HTTP " + response.status);
-  const report = await response.json();
-  $("overnightServiceState").textContent = "Morning Brief API: " + report.status;
-  $("overnightServiceDetail").textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString() + ". Benchmark bars, Alpaca mover observations, sector ETF proxies, and unclassified news headlines are source data only; no trading decision is inferred.";
-  $("reportSubtitle").textContent = "API report generated " + new Date(report.generatedAtUtc).toLocaleString() + " · source timestamps retained in response";
-  const market = report.marketLandscape || [];
-  const lines = market.map(item => {
-   const obs = (item.observations || []).map(o => o.provider + ": " + (o.latest ? formatBar(o.latest) : (o.status || "DATA?"))).join(" | ");
-   const moves = (item.observations || []).map(o => o.changeFromFirstPercent == null ? "" : o.provider + " window change " + o.changeFromFirstPercent + "%").filter(Boolean).join(" | ");
-   return item.symbol + " — " + (obs || "DATA? No configured market-data source.") + (moves ? " · " + moves : "");
-  });
-  const movers = report.movers || {};
-  lines.push("Movers: " + (movers.status || "UNKNOWN") + " · " + (movers.recentDiscoveryCount ?? 0) + " recent persisted observations · " + (movers.source || "source unknown"));
-  const sector = report.sectorFlow || {};
-  lines.push("Sector proxies: " + (sector.status || "DATA?") + " · " + ((sector.proxySymbols || []).join(", ") || "DATA NOT FOUND"));
-  const breadth = report.breadth || {};
-  lines.push("Breadth: " + (breadth.status || "DATA NOT FOUND IN SOURCES") + " · " + (breadth.note || "Full-market advancing/declining breadth is not validated."));
-  const headlines = report.newsHeadlines || {};
-  lines.push("News: " + (headlines.status || "UNKNOWN") + " · source " + (headlines.source || "unknown"));
-  const snapshot=$("morningApiSnapshot");
-  if(snapshot){
-   const nodes=lines.map(line=>{const p=document.createElement("p");p.textContent=line;return p;});
-   (headlines.items||[]).slice(0,8).forEach(item=>{
-    const p=document.createElement("p");
-    p.append(document.createTextNode((item.headline||"Headline unavailable")+" · "+(item.symbols||[]).join(", ")+" · published "+(item.publishedAtUtc?new Date(item.publishedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" Arizona":"UNKNOWN")+" · "));
-    if(item.url){const a=document.createElement("a");a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="News Link";a.title=item.url;p.append(a);}else{p.append(document.createTextNode("News Link unavailable"));}
-    nodes.push(p);
+let morningBriefCache=null,morningBriefLoadedAt=0,morningBriefRequest=null;
+async function loadMorningBrief(force=false) {
+ if(!force&&morningBriefCache&&Date.now()-morningBriefLoadedAt<60000)return morningBriefCache;
+ if(morningBriefRequest)return morningBriefRequest;
+ morningBriefRequest=(async()=>{
+  try {
+   const response = await fetch("/api/morning-brief", {headers:{Accept:"application/json"},cache:"no-store"});
+   if (!response.ok) throw new Error("HTTP " + response.status);
+   const report = await response.json();
+   morningBriefCache=report;morningBriefLoadedAt=Date.now();
+   $("overnightServiceState").textContent = "Morning Brief API: " + report.status;
+   $("overnightServiceDetail").textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"}) + " Arizona. Benchmark bars, Alpaca mover observations, sector ETF proxies, and unclassified news headlines are source data only; no trading decision is inferred.";
+   $("reportSubtitle").textContent = "API report generated " + new Date(report.generatedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"}) + " Arizona · source timestamps retained in response";
+   const market = report.marketLandscape || [];
+   const lines = market.map(item => {
+    const obs = (item.observations || []).map(o => o.provider + ": " + (o.latest ? formatBar(o.latest) : (o.status || "DATA?"))).join(" | ");
+    const moves = (item.observations || []).map(o => o.changeFromFirstPercent == null ? "" : o.provider + " window change " + o.changeFromFirstPercent + "%").filter(Boolean).join(" | ");
+    return item.symbol + " — " + (obs || "DATA? No configured market-data source.") + (moves ? " · " + moves : "");
    });
-   snapshot.replaceChildren(...nodes);
+   const movers = report.movers || {};
+   lines.push("Movers: " + (movers.status || "UNKNOWN") + " · " + (movers.recentDiscoveryCount ?? 0) + " recent persisted observations · " + (movers.source || "source unknown"));
+   const sector = report.sectorFlow || {};
+   lines.push("Sector proxies: " + (sector.status || "DATA?") + " · " + ((sector.proxySymbols || []).join(", ") || "DATA NOT FOUND"));
+   const breadth = report.breadth || {};
+   lines.push("Breadth: " + (breadth.status || "DATA NOT FOUND IN SOURCES") + " · " + (breadth.note || "Full-market advancing/declining breadth is not validated."));
+   const headlines = report.newsHeadlines || {};
+   lines.push("News: " + (headlines.status || "UNKNOWN") + " · source " + (headlines.source || "unknown"));
+   const snapshot=$("morningApiSnapshot");
+   if(snapshot){
+    const nodes=lines.map(line=>{const p=document.createElement("p");p.textContent=line;return p;});
+    (headlines.items||[]).slice(0,8).forEach(item=>{
+     const p=document.createElement("p");
+     p.append(document.createTextNode((item.headline||"Headline unavailable")+" · "+(item.symbols||[]).join(", ")+" · published "+(item.publishedAtUtc?new Date(item.publishedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" Arizona":"UNKNOWN")+" · "));
+     if(item.url){const a=document.createElement("a");a.href=item.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="News Link";a.title=item.url;p.append(a);}else{p.append(document.createTextNode("News Link unavailable"));}
+     nodes.push(p);
+    });
+    snapshot.replaceChildren(...nodes);
+   }
+   return report;
+  } catch(error) {
+   $("overnightServiceState").textContent = "Morning Brief API: NOT CONNECTED";
+   $("overnightServiceDetail").textContent = "Morning Brief request failed: "+error.message+". Direct file preview remains demo-only.";
+   return null;
   }
- } catch {
-  $("overnightServiceState").textContent = "Morning Brief API: NOT CONNECTED";
-  $("overnightServiceDetail").textContent = "Serve this dashboard through MomentumCommandCenterV2.API to load provider status and the partial Morning Brief. Direct file preview remains demo-only.";
- }
+ })();
+ try{return await morningBriefRequest;}finally{morningBriefRequest=null;}
 }
 loadMorningBrief();
 
@@ -594,18 +618,22 @@ loadMorningBrief();
 /// PURPOSE: Reuse the same live API brief in the header modal and the collapsed full-width footer section.
 /// SAFETY: The modal is a read-only snapshot; export delegates to the existing JSON export action.
 const morningBriefDialog=$("morningBriefDialog");
-$("openMorningBrief")?.addEventListener("click",async()=>{
- if(!morningBriefDialog||morningBriefDialog.open)return;
- await loadMorningBrief();
+function renderMorningBriefModal(){
  const source=$("morning-brief"),host=$("morningBriefModalContent");
- if(source&&host){
-  const clone=source.cloneNode(true);
-  clone.removeAttribute("id");
-  clone.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
-  clone.querySelectorAll("button").forEach(button=>button.remove());
-  host.replaceChildren(clone);
- }
+ if(!source||!host)return;
+ const clone=source.cloneNode(true);
+ clone.removeAttribute("id");
+ clone.querySelector(".section-heading")?.remove();
+ clone.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+ clone.querySelectorAll("button").forEach(button=>button.remove());
+ host.replaceChildren(clone);
+}
+$("openMorningBrief")?.addEventListener("click",()=>{
+ if(!morningBriefDialog||morningBriefDialog.open)return;
+ renderMorningBriefModal();
  morningBriefDialog.showModal();
+ if(!morningBriefCache||Date.now()-morningBriefLoadedAt>=60000)
+  void loadMorningBrief(true).then(renderMorningBriefModal);
 });
 $("closeMorningBrief")?.addEventListener("click",()=>morningBriefDialog?.close());
 $("exportMorningReportModal")?.addEventListener("click",()=>$("exportMorningReport")?.click());
