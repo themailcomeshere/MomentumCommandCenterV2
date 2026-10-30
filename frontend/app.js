@@ -293,7 +293,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   statusNode.textContent=decision?decision.state.replaceAll("_"," "):(data.evaluationStatus||data.status||"DATA?");
   scoreNode.textContent="V2 5M score: "+(decision?decision.score+"/6":"UNKNOWN");
-  extensionNode.textContent="Extension: "+(Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
+  extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
   reasonNode.textContent=decision?.reason||data.evaluationReason||"Decision not evaluated.";
   gateNode.textContent="5M Permission: "+(decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN")+
