@@ -1,3 +1,30 @@
+## Recent workflow updates — 2026-10-30
+
+### Alpaca WebSocket symbols
+You no longer need to edit `MarketData:Alpaca:StreamSymbols` every time you select a ticker. That setting seeds the stream at API startup. MCC now requests a dynamic subscription when you select a symbol or show a Red Zone candidate. Dynamic symbols remain in API memory and are re-subscribed after a WebSocket reconnect; they are not saved across an API restart, so the browser requests its active symbols again after reload.
+
+Check `/api/market-data/stream/status`:
+- `subscribedSymbols` confirms acknowledged symbols.
+- `barsBySymbol` shows each symbol's received bar count and latest bar timestamp.
+- `persistedBars` counts newly stored observations; `receivedBars` counts received bar messages.
+- A connected stream does not guarantee the live assessment has switched from REST. The assessment needs at least 50 completed 1M bars, a fresh latest bar, and a latest observation tagged WebSocket. 5M permission remains REST-backed.
+
+### Red Zone sound alert
+Click **Enable sound alerts** in the Red Zone header. MCC plays a test tone and alerts when a new ticker enters the four visible Red Zone priority slots. For live Alpaca discovery, click **Refresh Alpaca market movers** and leave scanner group **E · Alpaca live discovery** selected; the page then refreshes discoveries every 30 seconds while visible. Browser audio must be enabled by a user gesture. The alert is a discovery notification, not an entry signal.
+
+### Timeframe Handoff and replay
+Use 5M first to establish directional permission. If permission is YES, wait for a separate completed 1M execution confirmation. Review 1M as each minute completes and recheck 5M when a new 5M bar closes. The dashboard refreshes every 15 seconds; it is not a tick feed. Stale or UNKNOWN means wait.
+
+Historical replay now takes **As-of (Arizona local time)**. MCC converts the local time to UTC for the API. Replay uses stored completed bars only, current V2 configuration, and the simulated-position checkbox; it does not place orders or recover historical broker positions.
+
+### Morning Command Brief
+The header button opens the report immediately from the latest rendered snapshot. The browser reuses a report for 60 seconds and refreshes stale data in the background. The full-width footer accordion and modal share the same report content.
+
+### Current evidence limitation
+The 2026-10-30 uploaded SPY/RKLX/ASTX/XRPN captures all show stale data and REST as the 1M source. Those captures were generated after the regular-session close; a separate RKLX 5M stale observation occurred during regular hours and remains under investigation. See [MarketData-ChatTests-20261030.md](MarketData-ChatTests-20261030.md).
+
+---
+
 # Morning Command Brief, Historical Replay, and Alpaca Streaming
 
 **Branch:** `feature/opportunity-quality-classification`  
