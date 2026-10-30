@@ -866,3 +866,8 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 2. Add explicit stale-data status and define the threshold from the application's documented data/session contract before enforcing it.
 3. Keep overnight quality distinct from intraday execution eligibility. High scanner rank must not override bearish structure, stale data, missing permission, or 1M exit state.
 4. No order was submitted. Refresh data and verify catalyst/event risk before any next-session decision.
+
+## CI checkpoint — 2026-10-30
+
+- [CI VERIFIED] GitHub Actions run **41095950730 / run 618** completed successfully for commit `7c7e20810b70f2a6620fb8f752844a15eed130c3`. This run includes the dashboard code, favicon, user manual, provider comparison note, browser runbook, and master To-Do updates committed through that SHA. The workflow is the repository's .NET build/test workflow; it does not execute browser UI tests.
+- [BROWSER VALIDATION OPEN] Local browser acceptance remains outstanding for the new layout and favicon, and the BrowserLink `$.noConflict` error remains unresolved pending its injected script URL/stack trace.
