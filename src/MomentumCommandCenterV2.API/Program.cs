@@ -165,6 +165,32 @@ app.MapGet("/api/market-data/compare", async (
 .WithSummary("Compare historical OHLCV bars across configured providers")
 .WithDescription("UTC-only example: symbol=SPY, timeframe=5m, from=2026-10-23T13:30:00Z, to=2026-10-23T13:50:00Z. On 2026-10-23, 13:30Z = 06:30 Arizona time (America/Phoenix). Use ISO-8601 UTC timestamps ending in Z for all from/to parameters; maximum window 31 days.");
 
+app.MapGet("/api/scanner/discoveries", async (
+    int? limit,
+    IScannerDiscoveryEventStore store,
+    AlpacaScannerDiscoverySource source,
+    AlpacaScannerDiscoveryHostedService worker,
+    CancellationToken ct) =>
+{
+    var take = limit ?? 200;
+    if (take is < 1 or > 2000)
+        return Results.BadRequest(new { error = "limit must be between 1 and 2000." });
+    var all = await store.ReadAllAsync(ct);
+    return Results.Ok(new
+    {
+        provider = "Alpaca",
+        source = "SIP-based stock movers endpoint",
+        configured = source.IsConfigured,
+        health = worker.Health,
+        count = all.Count,
+        returned = Math.Min(take, all.Count),
+        discoveries = all.OrderByDescending(x => x.ReceivedAt).Take(take).ToArray(),
+        note = "Top gainers/losers discovery only. These events are not a complete exchange universe and do not create 5M Permission or 1M READY."
+    });
+})
+.WithSummary("Read persisted Alpaca market-mover discoveries")
+.WithDescription("Reads append-only top-50 gainers and losers observations collected by the hosted Alpaca screener poller. The endpoint uses Alpaca's SIP-based movers source; an entitlement or API error appears in collector health.");
+
 app.MapGet("/api/scanner/universe", async (
     string symbols,
     string timeframe,
