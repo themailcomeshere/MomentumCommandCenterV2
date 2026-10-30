@@ -13,7 +13,8 @@ public sealed record MarketBar(
     double Close,
     long Volume,
     string Provider,
-    string? Feed);
+    string? Feed,
+    string Timeframe = "UNKNOWN");
 
 /// <summary>
 /// PURPOSE: Server-side contract shared by provider adapters.
