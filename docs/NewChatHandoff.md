@@ -1,3 +1,39 @@
+## Checkpoint — MCC dashboard layout and browser-feedback pass (2026-10-30)
+
+### Repository state
+- Working branch: `feature/opportunity-quality-classification`.
+- Latest known commits from this pass: app logic `c4bc11c3b894fb027bb1608c3e9976ae2e17da35`, explicit favicon link `7f1f6cb8f22737b88021c84ac74d750daf1ed8a8`, favicon asset `da8480a2f2687080951ea6ad9fd8d5857852a278`. Documentation updates may advance the branch further; always inspect current branch HEAD before editing.
+- GitHub Actions .NET build/test passed on `c4bc11c3b894fb027bb1608c3e9976ae2e17da35` (run 41095658724). This does not validate browser rendering or frontend JavaScript.
+- User confirmed Morning Brief News Link hover works locally. BrowserLink `$.noConflict` error was reported as still present.
+
+### Dashboard changes in this pass
+- Main Chart is the focused symbol's API-backed 1-minute close-price line and now sits immediately below the workspace toolbar at the top of main.
+- Red Zone focus calls `render()` and `refreshFocusedPriceChart()`; this makes the opportunity-status and decision-layout panels rerender on candidate focus. Current status metrics remain illustrative snapshots, not calculated symbol-specific signals.
+- **Refresh Red Zone** re-renders the currently selected scanner group and reloads each tile's chart. **Refresh Alpaca market movers** is the action that queries persisted Alpaca discovery events and switches the scanner group to the live-discovery results.
+- Red Zone manual pin/dismiss/restore uses browser localStorage key `mcc.redZoneState.v1`. Pins/dismissals are browser-local, not account- or server-synced. Manual ticker without a source row is explicitly `MANUAL — REVIEW` with DATA?/UNKNOWN fields.
+- System Readiness moved into header topbar. Major sections have IDs. Provider Comparison moved to the diagnostics area and is not a daily step. Quick Start modal added, with header and footer openers. Market-mover legend lines are separated.
+- Explicit `frontend/favicon.svg` link and asset added. This is a code-level remedy only until local browser confirms the 404 is gone.
+
+### Known limits / unresolved browser errors
+- BrowserLink `$.noConflict`: no reference found in frontend app/index or API Program.cs. Likely development-host injected, but this is not confirmed. Inspect console stack and script URL in the user's browser; do not suppress globally or change jQuery behavior speculatively.
+- Favicon 404: asset/link added; still requires browser/network verification after pull/reload.
+- Provider Comparison checks historical REST requests only. It does not test streaming, reconnect/backfill, complete-session coverage, or provider entitlements.
+- Main Chart is a price line, not candlesticks or an MCC 1M/5M state chart.
+- `status-grid` / `layout` refresh via renderer, but their decision snapshot content is still demo fixture content; it is not symbol-specific 5M permission or 1M execution.
+- Red Zone pin/dismiss controls affect the visible four-card composition; they do not create a server-side watchlist or alter the provider scanner.
+
+### Next browser pass
+1. Pull latest branch and capture `git rev-parse HEAD`.
+2. Confirm News Link hover; inspect all four legend lines.
+3. Confirm Main Chart is first main content section after toolbar.
+4. Focus a Red Zone card and confirm symbol badge, chart, opportunity-status, and decision-layout all respond.
+5. Test Refresh Red Zone, Refresh Alpaca market movers, manual pin, dismiss, restore, page reload persistence.
+6. Confirm System Readiness is in the topbar and major section IDs exist.
+7. Open/close Quick Start from both entry points; check Escape and mobile layout.
+8. Open Provider Comparison only as a diagnostic; confirm it is after the main workflow.
+9. Check favicon network response and BrowserLink console stack/script URL. Do not mark BrowserLink fixed without identifying its origin.
+10. Run `dotnet test .\\MomentumCommandCenterV2.sln` and record exact tested SHA; note that .NET tests do not substitute for browser checks.
+
 ## Checkpoint update — local Alpaca configuration and XRPN evidence (2026-10-23)
 
 - Added the API project's `.NET User Secrets` identity and documented local Alpaca setup commands in `src/MomentumCommandCenterV2.API/README.md`. Tracked `appsettings.json` now contains only the non-secret default feed (`iex`); do not place API keys there.
