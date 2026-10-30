@@ -110,6 +110,7 @@ function sourceFreshness(label,ageSeconds){
  if(!label)return "UNKNOWN";
  return label+(ageSeconds!==null&&ageSeconds!==undefined&&Number.isFinite(Number(ageSeconds))?" · "+Math.max(0,Number(ageSeconds)).toFixed(0)+"s":"");
 }
+function humanizeSignalState(value){return String(value||"UNKNOWN").replace(/([a-z])([A-Z])/g,"$1 $2").replaceAll("_"," ").toUpperCase();}
 function formatMetric(value,digits=2,suffix=""){return value===null||value===undefined||!Number.isFinite(Number(value))?"UNKNOWN":Number(value).toFixed(digits)+suffix;}
 function setV2ScoreDisplay(node,decision,evaluationStatus){
  if(!node)return;
@@ -130,7 +131,7 @@ async function refreshDecisionExplanation(){
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   const permission=decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
-  classification.textContent=ready?"EXECUTION READY":decision?String(decision.state||"EVALUATED").replaceAll("_"," ").toUpperCase():(data.evaluationStatus||"DATA UNAVAILABLE").replaceAll("_"," ");
+  classification.textContent=ready?"EXECUTION READY":decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||"DATA UNAVAILABLE");
   classification.className="classification "+(ready?"high":decision?.fiveMinutePermission?"boring":"watch");
   if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(2);
@@ -318,7 +319,7 @@ let redZoneAssessmentRefreshers=[];
 async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,reasonNode,gateNode,chartNode){
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
-  statusNode.textContent=decision?decision.state.replaceAll("_"," "):(data.evaluationStatus||data.status||"DATA?");
+  statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
   setV2ScoreDisplay(scoreNode,decision,data.evaluationStatus);
   extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
