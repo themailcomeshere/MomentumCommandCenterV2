@@ -93,7 +93,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
                 result.Add(new MarketBar(symbol.ToUpperInvariant(), timestamp,
                     item.GetProperty("o").GetDouble(), item.GetProperty("h").GetDouble(),
                     item.GetProperty("l").GetDouble(), item.GetProperty("c").GetDouble(),
-                    item.GetProperty("v").GetInt64(), ProviderName, _feed));
+                    item.GetProperty("v").GetInt64(), ProviderName, _feed, $"{minutes}m"));
             }
 
             pageToken = root.TryGetProperty("next_page_token", out var next) && next.ValueKind == JsonValueKind.String
