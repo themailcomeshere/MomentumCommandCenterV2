@@ -14,7 +14,8 @@ public sealed record MarketBar(
     long Volume,
     string Provider,
     string? Feed,
-    string Timeframe = "UNKNOWN");
+    string Timeframe = "UNKNOWN",
+    string SourceTransport = "REST");
 
 /// <summary>
 /// PURPOSE: Server-side contract shared by provider adapters.
