@@ -75,7 +75,7 @@ $("refreshMarketMovers")?.addEventListener("click",async()=>{
   $("scannerGroup").value="live";
   const health=data.health||{};
   status.textContent="Alpaca · "+(health.status||"UNKNOWN")+" · "+(data.count??0)+" persisted events · "+(data.configured?"credentials configured":"credentials missing")+" · source is SIP-based";
-  renderScanner();
+  renderScanner();renderMorningReport();
  }catch(error){status.textContent="Market-mover retrieval failed: "+error.message;}
  finally{button.disabled=false;}
 });
@@ -145,7 +145,7 @@ $("apiScannerForm")?.addEventListener("submit",async event=>{
   if(!option){option=document.createElement("option");option.value="api";option.textContent="API historical scan";$("scannerGroup").append(option);}
   $("scannerGroup").value="api";
   source.textContent="API scan · "+data.scannedSymbolCount+" supplied symbols · "+data.provider+" · "+data.timeframe+" · "+new Date(data.generatedAtUtc).toLocaleTimeString();
-  renderScanner();
+  renderScanner();renderMorningReport();
  }catch(error){source.textContent="API scan failed: "+error.message+" · confirm this dashboard is served by MCC API.";}
  finally{button.disabled=false;}
 });
@@ -264,7 +264,9 @@ function renderMorningReport(){
   const chart=document.createElement("div");chart.className="redzone-sparkline";chart.textContent="Loading 1M price…";
   card.append(top,symbol,score,ext,fresh,reason,chart,gate);
   fetchPriceSeries(item.symbol,180).then(bars=>drawPriceLine(chart,bars,item.symbol)).catch(()=>{chart.textContent="Price history unavailable";});
-  card.addEventListener("click",()=>{const selector=$("symbol");if(selector&&[...selector.options].some(o=>o.value===item.symbol)){selector.value=item.symbol;refreshFocusedPriceChart();}});
+  card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","Focus "+(item.symbol||"candidate")+" price chart");
+  const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}selector.value=item.symbol;refreshFocusedPriceChart();}};
+  card.addEventListener("click",focus);card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();focus();}});
   return card;
  }):[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:"No candidate rows available. Import a CSV or select a demo scanner group."})]));
 }
