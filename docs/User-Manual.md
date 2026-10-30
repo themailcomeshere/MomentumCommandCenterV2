@@ -242,3 +242,13 @@ The API calls the existing V2SignalEngine with `hasPosition=false`. This is an e
 
 ### Replay point
 The former slider only selected one of five fixed demo examples. It did not replay chart history or recalculate a past V2 decision. It has been removed from the active workspace. Historical decision replay is not implemented yet.
+
+
+## Morning Command Brief, replay, and stream status — 2026-10-30
+
+- Open **Morning Command Brief** from the header for a modal, or expand the collapsed full-width Morning Command Brief near the bottom of the page. Both show the same partial API-generated report.
+- The report is a source snapshot, not a trade recommendation. Missing breadth, catalysts, probabilities, Red Zone qualification, and Boring Overnight calculations remain unavailable.
+- Historical Decision Replay requires a symbol, exact feed (IEX/SIP), and explicit UTC as-of timestamp ending in Z. It uses persisted completed bars only; the API does not fetch missing replay history.
+- The replay checkbox simulates the engine's existing boolean position state. It does not connect to Schwab or represent actual shares/entry price.
+- The header WebSocket chip reports the optional Alpaca minute-bar archive. It is disabled by default and does not mean the live V2 assessment is stream-driven; the live assessment remains REST-backed until separate source integration/parity validation.
+- If a live assessment says stale, inspect its `freshnessDiagnostics` for 1m/5m age, threshold, source timestamp, and expected close. A generic stale message cannot diagnose a specific ticker.
