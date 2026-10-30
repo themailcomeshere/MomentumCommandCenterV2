@@ -402,6 +402,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         marketLandscape = benchmarkRows,
         sectorFlow = new { status = "DATA NOT FOUND IN SOURCES", reason = "No sector classification / breadth feed is implemented." },
         movers = moversSummary,
+        newsHeadlines = new { status = newsStatus, source = "Alpaca News API", items = newsItems, classification = "UNCLASSIFIED SOURCE HEADLINES" },
         catalysts = new { status = "DATA NOT FOUND IN SOURCES", reason = "No news / catalyst provider is configured." },
         historicalExpectations = new { status = "INSUFFICIENT HISTORY", reason = "No validated out-of-sample outcome dataset is wired into this API." },
         redZone = new { status = "NOT CALCULATED", reason = "No validated discovery, 5M authority, and 1M execution pipeline is connected." },
