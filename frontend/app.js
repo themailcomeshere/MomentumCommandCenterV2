@@ -149,7 +149,7 @@ async function refreshDecisionExplanation(){
   if(five.sourceTimestampUtc)lines.push("5M source bar: "+new Date(five.sourceTimestampUtc).toLocaleString());
   if(one.ema9!=null&&one.ema20!=null)lines.push("1M EMA9 "+formatMetric(one.ema9)+" · EMA20 "+formatMetric(one.ema20)+" · RSI "+formatMetric(one.rsi,1));
   if(reasons)reasons.replaceChildren(...lines.map(line=>{const li=document.createElement("li");li.textContent=line;return li;}));
-  if(sourceNode)sourceNode.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"feed UNKNOWN")+" · "+(data.evaluationStatus||"UNKNOWN")+" · evaluated "+(data.evaluatedAtUtc?new Date(data.evaluatedAtUtc).toLocaleTimeString():"UNKNOWN");
+  if(sourceNode)sourceNode.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"feed UNKNOWN")+" · 1M "+(one.sourceTransport||"UNKNOWN")+" · 5M REST · "+(data.evaluationStatus||"UNKNOWN")+" · evaluated "+(data.evaluatedAtUtc?new Date(data.evaluatedAtUtc).toLocaleTimeString():"UNKNOWN");
  }catch(error){
   classification.textContent="DATA UNAVAILABLE";classification.className="classification watch";
   if(headline)headline.textContent="Live assessment request failed: "+error.message;
@@ -174,6 +174,7 @@ async function refreshFocusedPriceChart(){
   detail.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"feed unknown")+
    " · 1M "+sourceFreshness(data.oneMinute?.freshness,data.oneMinute?.ageSeconds)+
    " · 5M "+sourceFreshness(data.fiveMinute?.freshness,data.fiveMinute?.ageSeconds)+
+   " · 1M transport "+(data.oneMinute?.sourceTransport||"UNKNOWN")+" · 5M transport REST"+
    " · 5M permission "+(decision.fiveMinutePermission===true?"YES":decision.fiveMinutePermission===false?"NO":"UNKNOWN")+
    " · 1M execution "+(decision.oneMinuteExecution||data.evaluationStatus||"UNKNOWN")+
    " · evaluated "+(data.evaluatedAtUtc||"UNKNOWN");
