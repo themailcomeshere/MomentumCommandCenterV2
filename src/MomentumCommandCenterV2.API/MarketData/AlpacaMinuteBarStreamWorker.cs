@@ -168,7 +168,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 observations.Add(new MarketBar(
                     symbol, timestamp.ToUniversalTime(),
                     GetDouble(item, "o"), GetDouble(item, "h"), GetDouble(item, "l"), GetDouble(item, "c"),
-                    GetLong(item, "v"), "Alpaca", _feed, "1m"));
+                    GetLong(item, "v"), "Alpaca", _feed, "1m", "WEBSOCKET"));
             }
             if (observations.Count == 0) continue;
             await store.AppendAsync(observations, ct);
