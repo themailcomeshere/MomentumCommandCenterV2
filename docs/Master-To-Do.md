@@ -1,3 +1,37 @@
+## Active implementation checkpoint — Morning Brief, replay, stream, and stale diagnostics — 2026-10-30
+
+## Active implementation checkpoint — Morning Brief, replay, stream, and stale diagnostics — 2026-10-30
+
+### Completed in source (CI and browser acceptance pending)
+- [DONE — UI] Morning Command Brief now has two entry points: a full-width collapsed-by-default section near the bottom of MCC and a header button that opens a modal. Both show the same API-backed report snapshot.
+- [DONE — API] Live assessment stale-data failures now identify which timeframe(s) are stale and include observed age, threshold, source timestamp, expected close, and feed. The response also includes structured `freshnessDiagnostics`.
+- [DONE — API/UI] Added `GET /api/market-data/replay` and a Historical Decision Replay panel. It requires an explicit UTC as-of timestamp and one explicit feed; only completed stored bars at or before as-of are considered. Missing history returns an explicit status.
+- [DONE — API] Replay calls the same current `V2SignalEngine` with the default `V2Config`. The UI checkbox allows a simulated `hasPosition=true` run to exercise the existing position-management branch. This is a simulation, not a Schwab position read.
+- [DONE — API] Added an optional Alpaca WebSocket minute-bar worker. It is disabled by default, authenticates, confirms the subscription acknowledgement, reconnects with backoff, persists `bars` and late `updatedBars` as append-only observations, and exposes `/api/market-data/stream/status`.
+- [DONE — UI] Added a header status indicator for the optional WebSocket minute-bar collector. It distinguishes disabled/connected/error states. The live decision assessment still identifies its own REST source; WebSocket ingestion is currently a persisted collection path, not yet the live assessment's authoritative 1M source.
+- [DONE — SAFETY] Order submission remains unimplemented and disabled.
+
+### Critical open work
+- [PRIORITY 1 — USER DATA REQUIRED] After pulling this branch and refreshing MCC, request the live-assessment JSON for RKLX, ASTX, and XRPN. The new stale reason now tells us whether 1M, 5M, or both exceeded their freshness limits, with exact ages/timestamps/feed. The generic message previously supplied does not contain those per-symbol values. **Data not found in sources.** Do not assume the three tickers have the same stale timeframe or cause.
+- [OPEN — REPLAY VALIDATION] Run the new replay panel against a timestamp with known stored 1M/5M bars. Confirm it returns REPLAYED, uses the selected feed, excludes all bars after as-of, and returns INSUFFICIENT_STORED_HISTORY when coverage is missing. Historical V2 config versioning is not yet archived; replay uses the current default config.
+- [OPEN — STREAM VALIDATION] Configure the worker, verify `/api/market-data/stream/status` reports SUBSCRIBED/CONNECTED, and verify 1m bars plus late corrections are appended. Current live assessment still calls REST; do not describe WebSocket as the active decision source until stream-backed assessment integration and parity are tested.
+- [OPEN — STREAM CONFIG] Set `MarketData:Alpaca:StreamEnabled=true` and `MarketData:Alpaca:StreamSymbols=SPY,RKLX,ASTX,XRPN` in server-side configuration. Keep the existing feed selection aligned with entitlement (`iex` for Basic; `sip` only when authorized). Do not place credentials in frontend files or chat.
+- [OPEN — SCHWAB] Read-only Schwab OAuth/account/position synchronization is not yet implemented. The API product has no clearly published monthly price on its official product page; confirm any fees/approval with Schwab. User must register an Individual Developer role, request Trader API Individual access, create an approved app, and provide the app key/secret plus callback URL through secure server-side configuration. Never share credentials in chat.
+- [OPEN — POSITION-AWARE] The replay checkbox tests the engine's existing boolean `hasPosition` branch only. Actual broker positions, quantity, side, average entry, sync freshness, and unknown/stale-position fail-closed behavior are not connected. Add a normalized read-only position snapshot before claiming real position-aware operation.
+- [OPEN — BROWSER] User has confirmed the red X/low score presentation, but must verify the new Morning Brief locations/modal, replay controls, and WebSocket status chip after pulling latest branch.
+- [OPEN — BRIEF DATA] `/api/morning-brief` is still a partial market snapshot. It does not yet establish complete-market breadth, verified sector money flow, classified catalysts, historical outcome probabilities, a validated Red Zone rank, or Boring Overnight qualification. Missing inputs must remain DATA NOT FOUND IN SOURCES.
+
+### Acceptance checklist
+1. Run Release build/tests and inspect CI for the exact new branch head.
+2. Pull branch and hard-refresh MCC.
+3. Open Morning Command Brief from the header; close it; expand/collapse the full-width footer section. Verify both show the same current API report timestamp.
+4. Inspect RKLX, ASTX, XRPN and copy each full live-assessment JSON response; compare `freshnessDiagnostics.oneMinute` and `fiveMinute`.
+5. Replay one known timestamp with adequate stored history; repeat with `hasPosition=true`; inspect the full audit JSON and confirm future-bar exclusion.
+6. Enable WebSocket only after server configuration; verify subscription acknowledgement, bar count, reconnect state, and late-bar corrections. Compare streamed 1M bars with REST for the same feed.
+7. Complete Schwab Developer Portal setup and supply only non-secret callback/approval facts here; enter secrets directly into server-side secret storage.
+8. Keep order submission disabled.
+
+
 ## Validation status correction — 2026-10-30
 
 - GitHub Actions run 663 **PASSED** for live Decision Explanation / score UI commit `d2dbd628fa40de11e49b0693b25280e2dc22453e`.
