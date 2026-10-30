@@ -18,6 +18,8 @@ Use 5M first to establish directional permission. If permission is YES, wait for
 Historical replay now takes **As-of (Arizona local time)**. MCC converts the local time to UTC for the API. Replay uses stored completed bars only, current V2 configuration, and the simulated-position checkbox; it does not place orders or recover historical broker positions.
 
 ### Morning Command Brief
+
+The API and browser cache the generated report for 60 seconds. The header modal opens immediately from the latest rendered report and refreshes stale content in the background; it does not wait for a new full report calculation on every open. The expanded footer section uses the same report and labels its body **Market snapshot** to avoid repeating the section title.
 The header button opens the report immediately from the latest rendered snapshot. The browser reuses a report for 60 seconds and refreshes stale data in the background. The full-width footer accordion and modal share the same report content.
 
 ### Current evidence limitation
