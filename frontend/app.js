@@ -356,13 +356,24 @@ async function loadMorningBrief() {
   if (!response.ok) throw new Error("HTTP " + response.status);
   const report = await response.json();
   $("overnightServiceState").textContent = "Morning Brief API: " + report.status;
-  $("overnightServiceDetail").textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString() + ". Observed market bars only; scanner, catalyst, sector, Red Zone and overnight scoring remain explicitly unavailable until their sources are connected.";
+  $("overnightServiceDetail").textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString() + ". Benchmark bars, Alpaca mover observations, sector ETF proxies, and unclassified news headlines are source data only; no trading decision is inferred.";
   $("reportSubtitle").textContent = "API report generated " + new Date(report.generatedAtUtc).toLocaleString() + " · source timestamps retained in response";
   const market = report.marketLandscape || [];
   const lines = market.map(item => {
    const obs = (item.observations || []).map(o => o.provider + ": " + (o.latest ? formatBar(o.latest) : (o.status || "DATA?"))).join(" | ");
    const moves = (item.observations || []).map(o => o.changeFromFirstPercent == null ? "" : o.provider + " window change " + o.changeFromFirstPercent + "%").filter(Boolean).join(" | ");
    return item.symbol + " — " + (obs || "DATA? No configured market-data source.") + (moves ? " · " + moves : "");
+  });
+  const movers = report.movers || {};
+  lines.push("Movers: " + (movers.status || "UNKNOWN") + " · " + (movers.recentDiscoveryCount ?? 0) + " recent persisted observations · " + (movers.source || "source unknown"));
+  const sector = report.sectorFlow || {};
+  lines.push("Sector proxies: " + (sector.status || "DATA?") + " · " + ((sector.proxySymbols || []).join(", ") || "DATA NOT FOUND"));
+  const breadth = report.breadth || {};
+  lines.push("Breadth: " + (breadth.status || "DATA NOT FOUND IN SOURCES") + " · " + (breadth.note || "Full-market advancing/declining breadth is not validated."));
+  const headlines = report.newsHeadlines || {};
+  lines.push("News: " + (headlines.status || "UNKNOWN") + " · source " + (headlines.source || "unknown"));
+  (headlines.items || []).slice(0,8).forEach(item => {
+   lines.push((item.headline || "Headline unavailable") + " · " + (item.symbols || []).join(", ") + " · published " + (item.publishedAtUtc || "UNKNOWN") + " · " + (item.url || "URL unavailable"));
   });
   $("morningApiSnapshot")?.replaceChildren(...lines.map(line => { const p=document.createElement("p"); p.textContent=line; return p; }));
  } catch {
