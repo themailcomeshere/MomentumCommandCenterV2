@@ -359,6 +359,24 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         benchmarkRows.Add(new { symbol, observations });
     }
 
+    var recentDiscoveries = (await discoveryStore.ReadAllAsync(cancellationToken))
+        .Where(x => x.ReceivedAt >= DateTimeOffset.UtcNow.AddHours(-24))
+        .OrderByDescending(x => x.ReceivedAt)
+        .Take(100)
+        .ToArray();
+    var discoveryHealth = discoveryWorker.Health;
+    var moversSummary = new
+    {
+        status = discoveryHealth.LastSuccessAt is null
+            ? (discoveryHealth.Status == ScannerCollectorHealthStatus.Degraded ? "SOURCE_DEGRADED" : "DATA? — NO SUCCESSFUL POLL")
+            : "OBSERVED — TOP MOVERS ONLY",
+        source = "Alpaca SIP stock movers",
+        collectorHealth = discoveryHealth,
+        recentDiscoveryCount = recentDiscoveries.Length,
+        discoveries = recentDiscoveries,
+        note = "Top 50 gainers and losers only; not complete-market breadth or a full symbol universe. Verify SIP entitlement and source timestamp freshness."
+    };
+
     return Results.Ok(new
     {
         generatedAtUtc = DateTimeOffset.UtcNow,
@@ -366,7 +384,7 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         status = configured.Length == 0 ? "DATA? — NO PROVIDER CONFIGURED" : "PARTIAL — MARKET SNAPSHOT ONLY",
         marketLandscape = benchmarkRows,
         sectorFlow = new { status = "DATA NOT FOUND IN SOURCES", reason = "No sector classification / breadth feed is implemented." },
-        movers = new { status = "DATA NOT FOUND IN SOURCES", reason = "Broad-market scanner endpoint is not yet implemented." },
+        movers = moversSummary,
         catalysts = new { status = "DATA NOT FOUND IN SOURCES", reason = "No news / catalyst provider is configured." },
         historicalExpectations = new { status = "INSUFFICIENT HISTORY", reason = "No validated out-of-sample outcome dataset is wired into this API." },
         redZone = new { status = "NOT CALCULATED", reason = "No validated discovery, 5M authority, and 1M execution pipeline is connected." },
