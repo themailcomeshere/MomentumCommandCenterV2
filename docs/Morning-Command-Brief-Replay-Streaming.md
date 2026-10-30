@@ -55,7 +55,7 @@ Verify:
 4. The worker reconnects after a deliberate network interruption.
 5. Late `updatedBars` corrections are appended rather than overwriting prior observations.
 
-The stream currently persists 1m bars and late corrections. The live V2 assessment still obtains its decision inputs through REST; 5m permission is not yet stream-driven. This staged design must not be described as a WebSocket-driven signal engine.
+The stream persists 1m bars and late corrections. The live V2 assessment uses the persisted 1m series when subscription is confirmed, at least 50 completed bars are available, the latest bar is fresh, and its source transport is WEBSOCKET. It falls back to REST otherwise. 5m permission remains REST-backed. This is a hybrid 1m WebSocket / 5m REST decision path, not a raw-tick signal engine.
 
 ## Stale market data
 
