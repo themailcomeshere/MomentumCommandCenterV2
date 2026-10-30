@@ -14,7 +14,7 @@ $("symbol")?.addEventListener("change",()=>{render();void refreshFocusedPriceCha
 $("reset")?.addEventListener("click",()=>{if($("mode"))$("mode").value="momentum";render();void refreshFocusedPriceChart();});
 render();
 void refreshFocusedPriceChart();
-window.setInterval(()=>{if(document.visibilityState==="visible"){void refreshRedZoneAssessments();void refreshFocusedPriceChart();void refreshDecisionExplanation();}},15000);
+window.setInterval(()=>{if(document.visibilityState==="visible"){void refreshRedZoneAssessments();void refreshFocusedPriceChart();void refreshDecisionExplanation();void loadMinuteBarStreamStatus();}},15000);
 
 
 /// MODULE: Quick Start guide
@@ -532,6 +532,20 @@ async function loadProviderStatus() {
  }
 }
 loadProviderStatus();
+
+async function loadMinuteBarStreamStatus(){
+ const node=$("streamStatus");if(!node)return;
+ try{
+  const response=await fetch("/api/market-data/stream/status",{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const state=await response.json();
+  node.textContent=!state.enabled?"WS minute bars: DISABLED":state.connected
+   ?"WS minute bars: CONNECTED · "+(state.feed||"feed")+" · "+(state.symbols||[]).length+" symbols"
+   :"WS minute bars: "+(state.state||"UNKNOWN")+(state.lastError?" · "+state.lastError:"");
+  node.title="Optional persisted minute-bar stream; live V2 assessment still reports its own REST/stream source independently. Last bar: "+(state.lastBarUtc||"none");
+ }catch(error){node.textContent="WS minute bars: STATUS UNAVAILABLE";node.title=error.message;}
+}
+void loadMinuteBarStreamStatus();
 
 async function loadMorningBrief() {
  try {
