@@ -1113,7 +1113,7 @@ main{margin-top:16px}
  z-index:2;
  background:#15243a;
 }
-#scanner-workbench .table-wrap th:last-child,#scanner-workbench #scanner-workbench .table-wrap td:last-child{
+#scanner-workbench .table-wrap th:last-child,#scanner-workbench .table-wrap td:last-child{
  position:sticky;
  right:0;
  z-index:3;
@@ -1126,7 +1126,7 @@ main{margin-top:16px}
 #scanner-workbench .table-wrap td:last-child{background:#101b2d}
 #scanner-workbench .table-wrap .row-action{white-space:nowrap;min-width:60px;padding:6px 8px}
 #scanner-workbench .table-wrap td{max-width:420px;white-space:normal;vertical-align:top}
-.table-wrap td:first-child,.table-wrap td:nth-child(2),.table-wrap td:nth-child(3),#scanner-workbench .table-wrap td:last-child{white-space:nowrap}
+#scanner-workbench .table-wrap td:first-child,#scanner-workbench .table-wrap td:nth-child(2),#scanner-workbench .table-wrap td:nth-child(3),#scanner-workbench .table-wrap td:last-child{white-space:nowrap}
 .redzone-card .gate-warning{overflow-wrap:anywhere}
 .redzone-card .chart-meta{overflow-wrap:anywhere}
 .main-chart-section .chart-meta{line-height:1.45;overflow-wrap:anywhere}
