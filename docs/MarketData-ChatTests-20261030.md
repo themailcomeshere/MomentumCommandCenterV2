@@ -50,7 +50,7 @@ The WebSocket worker starts with the configured symbols and only stores bars rec
 - Dynamic subscriptions are retained in API memory and re-sent after reconnect; they are not persisted across API restarts. The front end re-requests visible symbols after reload.
 - Stream status now exposes acknowledged `subscribedSymbols`, per-symbol received bar counts, last bar timestamps, and separate received/persisted totals.
 - The live assessment remains REST fallback until the WebSocket latest-bar/history/freshness gates pass. 5M remains REST.
-- Added opt-in Red Zone sound alert for a newly appearing ticker in the four visible priority slots. The user must enable sound with a click because browsers require a user gesture. Live Alpaca discovery refreshes every 30 seconds while the Live Discovery scanner group is selected.
+- Added opt-in Red Zone sound alert for a newly appearing ticker in the four visible priority slots. The user must enable sound with a click because browsers require a user gesture. Live Alpaca discovery refreshes every 30 seconds while the Live Discovery scanner group is selected. The Red Zone section occupies the full available row and uses a 4-column desktop layout.
 
 ## Required runtime acceptance
 
