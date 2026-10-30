@@ -6,7 +6,7 @@
  <div class="topbar-layout">
   <div class="topbar-brand">
    <div><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div>
-   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 15s AUTO-REFRESH</div><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
+   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 15s AUTO-REFRESH</div><span id="streamStatus" class="chip">WS minute bars: checking…</span><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
   </div>
   <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
    <div class="topbar-readiness-heading"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></div>
@@ -163,4 +163,4 @@
  </ol>
  <p class="notice">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
 </dialog>
-<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261030-morning-brief-modal-freshness"></script></body></html>
+<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261030-morning-brief-ws-stream"></script></body></html>
