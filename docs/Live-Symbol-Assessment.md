@@ -15,9 +15,9 @@ Returns provider/feed, evaluation timestamp, overall data status, separate 1m an
 - 5m historical bars: 21 calendar-day lookback.
 - Only completed bars are used for indicators and decisions.
 - Returned observations are appended to the existing market-bar observation store.
-- Per-symbol/provider response cache: 30 seconds.
-- Browser refresh cadence: 60 seconds while the page is visible.
-- Current implementation uses Alpaca REST historical bars; it is not a websocket or tick stream.
+- Per-symbol/provider response cache: 10 seconds.
+- Browser refresh cadence: 15 seconds while the page is visible.
+- Current implementation uses Alpaca REST historical bars; it is not a websocket or tick stream. The shorter cadence improves completed-bar pickup but does not provide push delivery.
 
 ## Indicators
 
@@ -74,3 +74,34 @@ The service invokes the engine with `hasPosition=false`. Output includes V2 5M s
 - No NBBO spread, order book, halt, catalyst/news classification, Thinkorswim studies, broker positions or order execution.
 - Existing V2 thresholds are used as-is; this implementation does not recalibrate them.
 - Browser runtime acceptance and latest-head CI must be completed before treating the implementation as validated.
+
+
+## V2 score interpretation and user-facing explanation
+
+The live response now includes `fiveMinute.scoreBreakdown`:
+- Six criteria are returned individually with `true`, `false`, or `null` (unavailable).
+- The total score is only populated when the V2 engine actually evaluates the symbol.
+- Maximum score: 6. Minimum 5/6 is required for 5M long permission.
+- 0–2 is low alignment (red); 3–4 is partial alignment (amber); 5–6 is strong alignment (green).
+- A green score is not synonymous with an entry. The UI only labels **EXECUTION READY** when `decision.entryAllowed=true`; otherwise it shows 5M permission and the need to wait for 1M confirmation.
+
+Criteria use the same default `V2Config` values as the engine: close > VWAP, close > EMA9, EMA9 > EMA20, EMA20 > SMA50, RSI >= 50, and same-slot RVOL >= 1.50.
+
+## UNKNOWN diagnosis
+
+When no decision object is returned, the UI shows the server's exact `evaluationStatus` and `evaluationReason`. Typical fail-closed causes are:
+- `INSUFFICIENT_HISTORY`: fewer than 50 completed 1m bars or 51 completed 5m bars.
+- `STALE_MARKET_DATA`: latest completed bar is outside the freshness limit.
+- `RVOL_BASELINE_INSUFFICIENT`: fewer than five prior observations for the same 5m regular-session clock slot.
+- `OUTSIDE_REGULAR_SESSION`: the intraday engine is not evaluated outside US regular hours.
+- Request/provider errors: credentials, entitlement, symbol support, network, or provider response errors.
+
+A symbol-specific cause must be read from that symbol's response; do not infer it from another ticker's status.
+
+## Refresh and streaming decision
+
+The dashboard now refreshes every 15 seconds while visible; the API cache is 10 seconds. This remains REST polling. The V2 engine consumes completed 1m and 5m bars, so trade-by-trade tick processing is not required for its current rule set. The next latency upgrade, if needed, is Alpaca's websocket **minute-bar** channel (including updated bars), not an unfiltered tick stream. Streaming should be added with explicit connection/auth/subscription status, reconnect handling, late-bar corrections, and persisted source timestamps before it is treated as a decision source.
+
+## Replay status
+
+The former Replay point slider changed between five hard-coded illustrative snapshots. It did not replay historical market data or recompute V2 decisions. It has been removed from the active controls. True historical decision replay remains open work.
