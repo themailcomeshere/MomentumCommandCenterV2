@@ -369,6 +369,18 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
         .OrderByDescending(x => x.ReceivedAt)
         .Take(100)
         .ToArray();
+    IReadOnlyList<AlpacaNewsItem> newsItems;
+    string newsStatus;
+    try
+    {
+        newsItems = await newsClient.GetLatestAsync(50, cancellationToken);
+        newsStatus = newsItems.Count == 0 ? "NO_HEADLINES_RETURNED" : "OBSERVED — UNCLASSIFIED HEADLINES";
+    }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or ProviderNotConfiguredException)
+    {
+        newsItems = Array.Empty<AlpacaNewsItem>();
+        newsStatus = "UNKNOWN — " + ex.GetType().Name + ": " + ex.Message;
+    }
     var discoveryHealth = discoveryWorker.Health;
     var moversSummary = new
     {
