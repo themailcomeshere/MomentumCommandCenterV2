@@ -1077,3 +1077,15 @@ Continue work without waiting for another confirmation when a task can be safely
 - [BROWSER / RELEASE — CI PASS, BROWSER OPEN] Dashboard code/docs workflows including run `40966465421` passed. No browser-level regression, accessibility, responsive, or release test was executed. Not release-ready.
 - [USER LIVE TEST RESULT] RTO 0 bars/feed unknown; SPY Alpaca/IEX 2 bars (20:00Z, 20:54Z) in 20:00–23:55Z window. Confirms one SPY post-market observation only; RTO cause and complete session coverage remain unknown. The Requested bar coverage panel remains NOT LOADED because no request was run there.
 - [RELEASE GATE] All six requested workstreams remain partially implemented, unverified, or not implemented end-to-end. See the new audit document for exact test steps and release disposition. Do not mark READY or release-ready based on the control test.
+
+
+## 2026-10-29 — Engineering follow-up
+
+- [PARTIAL] 5M→1M source audit: installed study files are already in GitHub. Installed 1M is V14.4.10; repository 1M is V14.4.11. Exact installed source and matched-bar parity remain open.
+- [PARTIAL] Runner/exit: October 28 RTO/AMT screenshot review was completed. It is not a timestamp-aligned state tape. See `docs/Validation/Runner-Exit-State-Validation-20261029.md`.
+- [IMPLEMENTED FOUNDATION] Alpaca SIP top-50 gainers/losers source, polling host, JSONL persistence, API endpoint, and scanner UI refresh control added. Entitlement/full-universe coverage not verified.
+- [IMPLEMENTED] Persisted market-bar identity now includes timeframe and feed. Overnight history queries 1m only. Legacy rows stay UNKNOWN; new provider fetches are required to backfill correctly tagged history. Added regression tests.
+- [PARTIAL] Morning Brief now includes SPY/QQQ/IWM, 11 sector ETF proxies, Alpaca mover observations, and timestamped unclassified news. Full-market breadth and catalyst classification remain DATA NOT FOUND IN SOURCES.
+- [PARTIAL] Collector local restart/outage/backfill validation and browser regression remain.
+- Runbooks: `docs/Validation/Collector-MorningBrief-Browser-Runbook-20261029.md` and `docs/Validation/Runner-Exit-State-Validation-20261029.md`.
+- CI green for current code/test changes. Release remains NOT RELEASE-READY until local provider, collector, matched-bar, and browser evidence passes.
