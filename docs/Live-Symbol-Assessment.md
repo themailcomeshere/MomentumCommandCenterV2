@@ -105,3 +105,49 @@ The dashboard now refreshes every 15 seconds while visible; the API cache is 10 
 ## Replay status
 
 The former Replay point slider changed between five hard-coded illustrative snapshots. It did not replay historical market data or recompute V2 decisions. It has been removed from the active controls. True historical decision replay remains open work.
+
+
+## Freshness diagnostics update — 2026-10-30
+
+The live-assessment response now includes `freshnessDiagnostics` with separate 1m and 5m objects:
+- `isFresh`
+- `ageSeconds`
+- `limitSeconds` (120 for 1m; 360 for 5m)
+- `sourceTimestampUtc`
+- `expectedCloseUtc`
+- `staleTimeframes` array
+
+When stale, `evaluationReason` identifies each failing timeframe and reports its measured age, configured limit, source timestamp, expected close, and feed. The calculation uses expected close (bar timestamp + timeframe). This distinguishes an old 1m source bar from an old 5m source bar rather than collapsing both into one generic message.
+
+A stale reason is not a low score. It means no V2 permission or execution decision was evaluated.
+
+## Historical V2 replay endpoint
+
+`GET /api/market-data/replay?symbol=SPY&providerName=Alpaca&feed=iex&asOfUtc=2026-10-30T14:35:00Z&hasPosition=false`
+
+- Requires explicit UTC `asOfUtc` ending in Z and an explicit feed; this prevents mixing IEX and SIP observations.
+- Reads only the latest persisted observation per source timestamp from the current API instance's raw-bar store.
+- Uses only 1m/5m bars whose expected close is at or before the as-of timestamp.
+- Requires at least 50 completed 1m and 51 completed 5m bars, plus at least five same-time-slot RVOL samples for both current and previous 5m bars.
+- Calls the same `V2SignalEngine` with its current default `V2Config`.
+- Optional `hasPosition=true` exercises the existing boolean position-management branch. It does not import or infer an actual brokerage position.
+- Missing persisted history returns an explicit status; the endpoint does not silently backfill or invent bars.
+- Historical config/version archival is not implemented. Replay results therefore represent the current engine/config applied to old data, not necessarily the exact historical code/config that existed at that time.
+
+## Optional Alpaca WebSocket minute-bar collector
+
+Configuration (server-side only):
+- `MarketData:Alpaca:StreamEnabled=true`
+- `MarketData:Alpaca:StreamSymbols=SPY,RKLX,ASTX,XRPN`
+- Existing `MarketData:Alpaca:Feed` selects `iex` or `sip`; the feed must be entitled.
+
+Status:
+- `GET /api/market-data/stream/status`
+- Worker is disabled by default.
+- Authenticates and waits for the authenticated response.
+- Sends minute-bar subscriptions and waits for server subscription acknowledgement.
+- Persists both normal minute bars (`b`) and late updated bars (`u`) using the append-only observation store.
+- Reconnects with exponential backoff and reports last message/bar, persisted count, and last error.
+- It does not process raw trade ticks or submit orders.
+
+Important: this worker currently archives WebSocket bars; the live assessment still gets its decision inputs from the REST provider path. Do not label V2 decision evaluation as WebSocket-driven until the live service consumes stream observations and REST/stream parity is validated.
