@@ -331,7 +331,7 @@ app.MapGet("/api/market-data/bars", async (
 app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, CancellationToken cancellationToken) =>
 {
     var configured = providers.Where(p => p.IsConfigured).ToArray();
-    var benchmarkSymbols = new[] { "SPY", "QQQ", "IWM" };
+    var benchmarkSymbols = new[] { "SPY", "QQQ", "IWM", "XLB", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY" };
     var benchmarkRows = new List<object>();
     foreach (var symbol in benchmarkSymbols)
     {
