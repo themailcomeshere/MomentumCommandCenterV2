@@ -359,13 +359,23 @@ public static class LiveSymbolTechnicalCalculator
     private static decimal Rsi(IReadOnlyList<decimal> closes, int period)
     {
         if (closes.Count <= period) return 50m;
-        var changes = Enumerable.Range(closes.Count - period, period)
-            .Select(i => closes[i] - closes[i - 1])
-            .ToArray();
-        var gains = changes.Where(x => x > 0m).Sum() / period;
-        var losses = -changes.Where(x => x < 0m).Sum() / period;
-        if (losses == 0m) return gains == 0m ? 50m : 100m;
-        var relativeStrength = gains / losses;
+        decimal averageGain = 0m, averageLoss = 0m;
+        for (var i = 1; i <= period; i++)
+        {
+            var change = closes[i] - closes[i - 1];
+            averageGain += Math.Max(0m, change);
+            averageLoss += Math.Max(0m, -change);
+        }
+        averageGain /= period;
+        averageLoss /= period;
+        for (var i = period + 1; i < closes.Count; i++)
+        {
+            var change = closes[i] - closes[i - 1];
+            averageGain = (averageGain * (period - 1) + Math.Max(0m, change)) / period;
+            averageLoss = (averageLoss * (period - 1) + Math.Max(0m, -change)) / period;
+        }
+        if (averageLoss == 0m) return averageGain == 0m ? 50m : 100m;
+        var relativeStrength = averageGain / averageLoss;
         return 100m - 100m / (1m + relativeStrength);
     }
 
@@ -393,17 +403,28 @@ public static class LiveSymbolTechnicalCalculator
 
     private static decimal Atr(IReadOnlyList<MarketBar> bars, int index, int period)
     {
-        var start = Math.Max(0, index - period + 1);
-        var ranges = new List<decimal>();
-        for (var i = start; i <= index; i++)
+        if (index + 1 < period) return 0m;
+        decimal initialTotal = 0m;
+        decimal atr = 0m;
+        for (var i = 0; i <= index; i++)
         {
             var current = bars[i];
             var previousClose = i > 0 ? (decimal)bars[i - 1].Close : (decimal)current.Close;
             var high = (decimal)current.High;
             var low = (decimal)current.Low;
-            ranges.Add(Math.Max(high - low, Math.Max(Math.Abs(high - previousClose), Math.Abs(low - previousClose))));
+            var trueRange = Math.Max(high - low,
+                Math.Max(Math.Abs(high - previousClose), Math.Abs(low - previousClose)));
+            if (i < period)
+            {
+                initialTotal += trueRange;
+                if (i == period - 1) atr = initialTotal / period;
+            }
+            else
+            {
+                atr = (atr * (period - 1) + trueRange) / period;
+            }
         }
-        return ranges.Count == period ? ranges.Average() : 0m;
+        return atr;
     }
 
     private static decimal SessionVwap(IReadOnlyList<MarketBar> bars, int index)
