@@ -3,20 +3,22 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Momentum Command Center — Workbench</title><link rel="icon" type="image/svg+xml" href="./favicon.svg"><link rel="stylesheet" href="./styles.css"></head>
 <body>
 <header class="topbar" id="mcc-header">
- <div class="topbar-brand"><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div>
- <div class="topbar-tools">
-  <div class="demo-flag"><span></span> DEMO DATA · NOT LIVE</div>
-  <button id="openQuickStart" type="button" class="quiet-button">Quick start</button>
- </div>
- <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
-  <div class="topbar-readiness-heading"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Local prototype</span></div>
-  <div class="readiness-grid">
-   <div><span class="readiness-dot demo"></span><strong>Market data</strong><span>API request required</span></div>
-   <div><span class="readiness-dot blocked"></span><strong>Thinkorswim</strong><span>No API/session connection</span></div>
-   <div><span class="readiness-dot blocked"></span><strong>Live scanner</strong><span>Alpaca discovery adapter</span></div>
-   <div><span class="readiness-dot blocked"></span><strong>Trade execution</strong><span>Not implemented by design</span></div>
+ <div class="topbar-layout">
+  <div class="topbar-brand">
+   <div><div class="eyebrow">RESEARCH WORKBENCH</div><h1>Momentum Command Center</h1></div>
+   <div class="topbar-tools"><div class="demo-flag"><span></span> ALPACA REST · 60s AUTO-REFRESH</div><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
   </div>
- </section>
+  <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
+   <div class="topbar-readiness-heading"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></div>
+   <div class="readiness-grid">
+    <div><span class="readiness-dot demo"></span><strong>Market data</strong><span>Alpaca historical REST · 30s cache</span></div>
+    <div><span class="readiness-dot blocked"></span><strong>Thinkorswim</strong><span>No API/session connection</span></div>
+    <div><span class="readiness-dot demo"></span><strong>Live scanner</strong><span>Top movers · SIP entitlement required</span></div>
+    <div><span class="readiness-dot blocked"></span><strong>Trade execution</strong><span>Not implemented</span></div>
+   </div>
+  </section>
+ </div>
+ 
 </header>
 <main>
 <section id="workspace-toolbar" class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option>MNSB</option><option>DEMO</option><option>XRPN</option></select></div><div><label for="snapshot">Replay point</label><input id="snapshot" type="range" min="0" max="4" value="2"></div><button id="reset">Reset demo</button></section>
