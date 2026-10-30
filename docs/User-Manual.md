@@ -8,9 +8,9 @@
 
 MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-trader. The current Dashboard is a static HTML/CSS/JavaScript workbench. It is opened in a browser; it is not currently a Windows `.exe` application.
 
-Open the MCC frontend through the running .NET API host (or its configured static-file host). The page can show illustrative demo/replay panels, import a local CSV, maintain a browser-local watchlist/Red Zone pins, and request live Alpaca historical 1m/5m bars for focused and pinned symbols. The live assessment endpoint calculates technical indicators and calls the existing V2 signal engine. Watchlist and manual Red Zone pin/dismiss state remain in browser local storage; they do not sync to GitHub or another computer automatically.
+Open the MCC frontend through the running .NET API host (or its configured static-file host). The page imports a local CSV, maintains browser-local watchlist/Red Zone pins, and requests live Alpaca historical 1m/5m bars for focused and pinned symbols. Main Chart, Decision Explanation, and Red Zone now consume the live assessment endpoint, which calculates technical indicators and calls the existing V2 signal engine. Watchlist and manual Red Zone pin/dismiss state remain in browser local storage; they do not sync to GitHub or another computer automatically.
 
-**Current limits:** market data is near-live historical REST polling (60-second browser refresh with a 30-second API cache), not websocket/tick streaming; provider feed/entitlement controls coverage; market-wide scanner discovery is a separate SIP-dependent top-movers feed; Thinkorswim is not connected; broker positions/order execution are not connected; no catalyst/halt/NBBO/order-book classification is inferred; Boring Overnight is a separate historical evaluation workflow. Decision values are withheld when bar history, freshness, or the same-time-of-day 5m volume baseline is insufficient.
+**Current limits:** market data is near-live historical REST polling (15-second browser refresh with a 10-second API cache), not websocket/tick streaming; provider feed/entitlement controls coverage; market-wide scanner discovery is a separate SIP-dependent top-movers feed; Thinkorswim is not connected; broker positions/order execution are not connected; no catalyst/halt/NBBO/order-book classification is inferred; Boring Overnight is a separate historical evaluation workflow. Decision values are withheld when bar history, freshness, or the same-time-of-day 5m volume baseline is insufficient.
 
 ## 2. Intended 08:30 Arizona Morning Report
 
@@ -190,8 +190,8 @@ Provider Comparison is in the diagnostics area and is not part of the normal mor
 ### Quick Start
 Open Quick Start from the header or the footer. It summarizes the normal order: review the brief, refresh discovery, inspect Red Zone, focus the Main Chart, run Scan & Analyze, review 5M/1M context, and use Overnight separately.
 
-### Prototype limitations
-The opportunity status and decision explanation areas still use illustrative replay snapshots; they do not calculate symbol-specific 5M Permission or 1M execution state when a Red Zone tile is selected. Treat those fields as demo-only until the calculation pipeline is connected. No broker connection or order submission exists.
+### Current Decision Explanation
+The Decision Explanation panel follows the selected symbol and requests its live 1m/5m assessment. It shows the actual V2 engine decision, six individual 5M score conditions, source/feed, timestamps, freshness, and the server's evaluation reason when a score is UNKNOWN. A 5M score of 5/6 or 6/6 establishes 5M permission; **EXECUTION READY** appears only when the separate 1M entry gate also passes. No broker connection or order submission exists.
 
 
 ## Live Main Chart and Red Zone — 2026-10-30
@@ -201,8 +201,8 @@ Pinning a symbol adds it to the browser-local Red Zone list. MCC now automatical
 
 ### Automatic data refresh
 - Each visible Red Zone card requests a fresh assessment when rendered.
-- The browser refreshes Red Zone assessments and the focused Main Chart every 60 seconds while the page is visible.
-- The API caches each symbol/provider result for 30 seconds to avoid duplicate provider requests.
+- The browser refreshes Red Zone assessments, the focused Main Chart, and Decision Explanation every 15 seconds while the page is visible.
+- The API caches each symbol/provider result for 10 seconds to avoid duplicate provider requests.
 - The Main Chart displays up to the latest 180 completed 1-minute bars.
 - The service fetches 1m bars from the prior 3 calendar days and 5m bars from the prior 21 calendar days, then persists the returned observations.
 
@@ -231,3 +231,14 @@ The API calls the existing V2SignalEngine with `hasPosition=false`. This is an e
 - System Readiness is now a 2×2 grid to the right of the brand.
 - Workspace toolbar is inside the header.
 - Scanner Workbench table is 600px high with vertical/horizontal scrolling; its Watch action column remains sticky on the right while horizontally scrolling.
+
+
+### V2 score bands and UNKNOWN
+- 0–2/6: low alignment (red X).
+- 3–4/6: partial alignment (amber).
+- 5–6/6: strong alignment (green check). Five of six is the engine's minimum 5M permission threshold.
+- A high 5M score is not an entry signal. The 1M execution gate must independently pass before the card says **EXECUTION READY**.
+- UNKNOWN is not zero. The live card now reports the exact API status/reason, such as insufficient history, stale bars, insufficient same-slot RVOL samples, or outside regular session.
+
+### Replay point
+The former slider only selected one of five fixed demo examples. It did not replay chart history or recalculate a past V2 decision. It has been removed from the active workspace. Historical decision replay is not implemented yet.
