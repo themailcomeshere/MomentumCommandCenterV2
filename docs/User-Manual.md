@@ -10,7 +10,7 @@ MCC is a C#/.NET 8 research and trading decision-support prototype, not an auto-
 
 Open the MCC frontend through the running .NET API host (or its configured static-file host). The page imports a local CSV, maintains browser-local watchlist/Red Zone pins, and requests live Alpaca historical 1m/5m bars for focused and pinned symbols. Main Chart, Decision Explanation, and Red Zone now consume the live assessment endpoint, which calculates technical indicators and calls the existing V2 signal engine. Watchlist and manual Red Zone pin/dismiss state remain in browser local storage; they do not sync to GitHub or another computer automatically.
 
-**Current limits:** market data is near-live historical REST polling (15-second browser refresh with a 10-second API cache), not websocket/tick streaming; provider feed/entitlement controls coverage; market-wide scanner discovery is a separate SIP-dependent top-movers feed; Thinkorswim is not connected; broker positions/order execution are not connected; no catalyst/halt/NBBO/order-book classification is inferred; Boring Overnight is a separate historical evaluation workflow. Decision values are withheld when bar history, freshness, or the same-time-of-day 5m volume baseline is insufficient.
+**Current limits:** the live assessment uses a hybrid source: 1m WebSocket-persisted bars when connected, sufficiently populated, fresh, and provenance-confirmed, otherwise 1m REST; 5m permission remains historical REST (15-second browser refresh with a 10-second API cache). It is not a raw tick/quote stream; provider feed/entitlement controls coverage; market-wide scanner discovery is a separate SIP-dependent top-movers feed; Thinkorswim is not connected; broker positions/order execution are not connected; no catalyst/halt/NBBO/order-book classification is inferred; Boring Overnight is a separate historical evaluation workflow. Decision values are withheld when bar history, freshness, or the same-time-of-day 5m volume baseline is insufficient.
 
 ## 2. Intended 08:30 Arizona Morning Report
 
@@ -206,7 +206,7 @@ Pinning a symbol adds it to the browser-local Red Zone list. MCC now automatical
 - The Main Chart displays up to the latest 180 completed 1-minute bars.
 - The service fetches 1m bars from the prior 3 calendar days and 5m bars from the prior 21 calendar days, then persists the returned observations.
 
-This is near-live REST polling, not a websocket or tick stream. It does not promise quote-level or trade-level updates between refreshes.
+This is a hybrid completed-bar workflow, not a raw tick/quote stream. It does not promise quote-level updates or every trade between refreshes.
 
 ### What Red Zone values mean
 - **Extension:** Non-negative distance from the latest 1m close to its 1m EMA9, measured in 1m ATR14 units.
