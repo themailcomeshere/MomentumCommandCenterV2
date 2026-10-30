@@ -988,3 +988,33 @@ $("overnightCoverageForm")?.addEventListener("submit", async event => {
 $("overnightRefreshSnapshots")?.addEventListener("click",refreshOvernightSnapshots);
 $("mode")?.addEventListener("change",()=>{ if($("mode").value==="overnight"){initializeOvernightWindow();refreshOvernightSnapshots();} });
 initializeOvernightWindow();
+
+
+/// MODULE: Historical V2 decision replay
+/// PURPOSE: Requests deterministic point-in-time decisions from persisted bars using the same V2 engine.
+/// SAFETY: Requires an explicit UTC as-of timestamp and feed; server excludes bars whose close occurs after that time.
+$("historicalReplayForm")?.addEventListener("submit",async event=>{
+ event.preventDefault();
+ const symbol=($("replaySymbol")?.value||"").trim().toUpperCase();
+ const feed=$("replayFeed")?.value||"";
+ const asOfUtc=($("replayAsOfUtc")?.value||"").trim();
+ const hasPosition=$("replayHasPosition")?.checked===true;
+ const status=$("replayStatus"),host=$("replayResult"),button=$("replayRun");
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid ticker symbol.";return;}
+ if(!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$/.test(asOfUtc)||!Number.isFinite(Date.parse(asOfUtc))){status.textContent="Enter an explicit UTC timestamp ending in Z, including seconds (example: 2026-10-30T14:35:00Z).";return;}
+ const params=new URLSearchParams({symbol,providerName:"Alpaca",feed,asOfUtc,hasPosition:String(hasPosition)});
+ button.disabled=true;status.textContent="Replaying persisted bars through V2SignalEngine…";host.replaceChildren();
+ try{
+  const response=await fetch("/api/market-data/replay?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+  const data=await response.json();if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
+  const decision=data.decision||{};
+  const summary=document.createElement("p");
+  summary.textContent=data.status==="REPLAYED"
+   ? "REPLAYED · "+symbol+" · "+feed.toUpperCase()+" · "+(decision.state||"UNKNOWN")+" / "+(decision.action||"UNKNOWN")+" · score "+(decision.score??"DATA?")+" · hasPosition="+hasPosition+" · "+(decision.reason||"No reason returned.")
+   : data.status+" · "+symbol+" · 1M bars "+(data.oneMinuteBars??"DATA?")+" · 5M bars "+(data.fiveMinuteBars??"DATA?")+" · "+(data.note||"No decision returned.");
+  host.append(summary);
+  const audit=document.createElement("pre");audit.className="replay-audit";audit.textContent=JSON.stringify(data,null,2);host.append(audit);
+  status.textContent="Replay complete. No order was submitted. Historical position state is simulated only; broker positions are not connected.";
+ }catch(error){status.textContent="Replay failed: "+error.message;host.textContent="No decision returned. Check that the API is current and stored-bar history exists.";}
+ finally{button.disabled=false;}
+});
