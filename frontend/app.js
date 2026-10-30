@@ -31,6 +31,14 @@ $("symbol").addEventListener("change",()=>{const chosen=$("symbol").value;if(cho
 $("reset").addEventListener("click",()=>{$("mode").value="momentum";$("symbol").value="MNSB";$("snapshot").value="2";$("freshness").textContent="Data: SIMULATED";render();});
  render();
 refreshFocusedPriceChart();
+$("symbol")?.addEventListener("change",refreshFocusedPriceChart);
+window.setInterval(()=>{
+ if(document.visibilityState==="visible"){
+  void refreshRedZoneAssessments();
+  void refreshFocusedPriceChart();
+ }
+},60000);
+
 
 /// MODULE: Quick Start guide
 /// PURPOSE: Opens the user-facing workflow guide without navigating away from the dashboard.
@@ -114,12 +122,36 @@ function drawPriceLine(container,bars,label){
  const meta=document.createElement("div");meta.className="chart-meta";meta.textContent=bars.length+" × 1m bars · "+new Date(bars[0].timestamp).toLocaleTimeString()+"–"+new Date(bars[bars.length-1].timestamp).toLocaleTimeString()+" · latest $"+values[values.length-1].toFixed(2);
  container.append(svg,meta);
 }
+async function fetchLiveAssessment(symbol){
+ const params=new URLSearchParams({symbol,providerName:"Alpaca"});
+ const response=await fetch("/api/market-data/live-assessment?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+ const body=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
+ return body;
+}
+function sourceFreshness(label,ageSeconds){
+ if(!label)return "UNKNOWN";
+ return label+(Number.isFinite(Number(ageSeconds))?" · "+Math.max(0,Number(ageSeconds)).toFixed(0)+"s":"");
+}
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
  const symbol=($("symbol")?.value||"").trim().toUpperCase();host.replaceChildren();
  const symbolBadge=$("mainChartSymbol");if(symbolBadge)symbolBadge.textContent=symbol||"NO SYMBOL";
- const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute close";host.append(title);
- try{drawPriceLine(host,await fetchPriceSeries(symbol),symbol);}catch(e){const p=document.createElement("p");p.className="chart-unavailable";p.textContent="Price history unavailable · "+e.message;host.append(p);}
+ const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute OHLCV close · auto-refresh 60s";host.append(title);
+ try{
+  const data=await fetchLiveAssessment(symbol);
+  drawPriceLine(host,data.oneMinute?.chartBars||[],symbol);
+  const decision=data.decision||{};
+  const detail=document.createElement("p");detail.className="chart-meta";
+  detail.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"feed unknown")+
+   " · 1M "+sourceFreshness(data.oneMinute?.freshness,data.oneMinute?.ageSeconds)+
+   " · 5M "+sourceFreshness(data.fiveMinute?.freshness,data.fiveMinute?.ageSeconds)+
+   " · 5M permission "+(decision.fiveMinutePermission===true?"YES":decision.fiveMinutePermission===false?"NO":"UNKNOWN")+
+   " · 1M execution "+(decision.oneMinuteExecution||data.evaluationStatus||"UNKNOWN")+
+   " · evaluated "+(data.evaluatedAtUtc||"UNKNOWN");
+  host.append(detail);
+  if(data.evaluationReason&& !data.decision){const reason=document.createElement("p");reason.className="chart-meta";reason.textContent=data.evaluationReason;host.append(reason);}
+ }catch(e){const p=document.createElement("p");p.className="chart-unavailable";p.textContent="Live assessment unavailable · "+e.message;host.append(p);}
 }
 
 function localDateTimeValue(date){
@@ -255,8 +287,34 @@ function readRedZoneState(){
  }catch{return {pinned:[],dismissed:[]};}
 }
 function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
+let redZoneAssessmentRefreshers=[];
+async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,reasonNode,gateNode,chartNode){
+ try{
+  const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
+  statusNode.textContent=decision?decision.state.replaceAll("_"," "):(data.evaluationStatus||data.status||"DATA?");
+  scoreNode.textContent="V2 5M score: "+(decision?decision.score+"/6":"UNKNOWN");
+  extensionNode.textContent="Extension: "+(Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
+  freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
+  reasonNode.textContent=decision?.reason||data.evaluationReason||"Decision not evaluated.";
+  gateNode.textContent="5M Permission: "+(decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN")+
+   " · 1M execution: "+(decision?.oneMinuteExecution||"UNKNOWN");
+  drawPriceLine(chartNode,one.chartBars||[],symbol);
+ }catch(error){
+  statusNode.textContent="DATA UNAVAILABLE";
+  scoreNode.textContent="V2 5M score: UNKNOWN";
+  extensionNode.textContent="Extension: DATA? · live request failed";
+  freshnessNode.textContent="Freshness: UNKNOWN · "+error.message;
+  reasonNode.textContent="Live market assessment unavailable. No prior status is being represented as current.";
+  gateNode.textContent="5M Permission: UNKNOWN · 1M execution: UNKNOWN";
+  chartNode.textContent="Live price unavailable";
+ }
+}
+async function refreshRedZoneAssessments(){
+ await Promise.allSettled(redZoneAssessmentRefreshers.map(refresh=>refresh()));
+}
 function renderMorningReport(){
  const grid=$("redZoneGrid");if(!grid)return;
+ redZoneAssessmentRefreshers=[];
  const group=$("scannerGroup")?.value||"momentum";
  const sourceRows=Array.isArray(scannerData[group])?scannerData[group]:[];
  const state=readRedZoneState();
@@ -281,11 +339,11 @@ function renderMorningReport(){
   const status=document.createElement("span");status.className="chip";status.textContent=item.status||"DATA?";
   top.append(rank,status);
   const symbol=document.createElement("h3");symbol.textContent=item.symbol||"UNKNOWN";
-  const score=document.createElement("div");score.className="redzone-score";score.textContent="Supplied score: "+(item.score??"DATA?");
-  const ext=document.createElement("p");ext.textContent="Extension: "+(item.extension||"DATA?");
-  const fresh=document.createElement("p");fresh.textContent="Freshness: "+(item.freshness||"UNKNOWN");
+  const score=document.createElement("div");score.className="redzone-score";score.textContent="V2 5M score: "+(item.score??"LOADING");
+  const ext=document.createElement("p");ext.textContent="Extension: loading live 1M bars…";
+  const fresh=document.createElement("p");fresh.textContent="Freshness: requesting 1M/5M source timestamps…";
   const reason=document.createElement("p");reason.className="redzone-reason";reason.textContent=item.reason||"No reason supplied.";
-  const gate=document.createElement("div");gate.className="gate-warning";gate.textContent="5M Permission: UNKNOWN · 1M execution: UNKNOWN";
+  const gate=document.createElement("div");gate.className="gate-warning";gate.textContent="5M Permission: loading · 1M execution: loading";
   const chart=document.createElement("div");chart.className="redzone-sparkline";chart.textContent="Loading 1M price…";
   const actions=document.createElement("div");actions.className="redzone-actions";
   const focusButton=document.createElement("button");focusButton.type="button";focusButton.className="quiet-button";focusButton.textContent="Open in Main Chart";
@@ -299,7 +357,8 @@ function renderMorningReport(){
   });
   actions.append(focusButton,manageButton);
   card.append(top,symbol,score,ext,fresh,reason,chart,gate,actions);
-  fetchPriceSeries(item.symbol,180).then(bars=>drawPriceLine(chart,bars,item.symbol)).catch(()=>{chart.textContent="Price history unavailable";});
+  redZoneAssessmentRefreshers.push(()=>updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,reason,gate,chart));
+  void updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,reason,gate,chart);
   card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","Focus "+(item.symbol||"candidate")+" price chart");
   const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}selector.value=item.symbol;render();refreshFocusedPriceChart();}};
   focusButton.addEventListener("click",event=>{event.stopPropagation();focus();});
