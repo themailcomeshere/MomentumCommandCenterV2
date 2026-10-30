@@ -24,6 +24,8 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             throw new ArgumentException("asOfUtc must be an ISO-8601 UTC timestamp ending in Z.");
         if (string.IsNullOrWhiteSpace(provider))
             throw new ArgumentException("provider is required.");
+        if (string.IsNullOrWhiteSpace(feed))
+            throw new ArgumentException("feed is required so replay never mixes IEX, SIP, or other source observations.");
 
         var oneObservations = await store.GetLatestAsync(
             normalizedSymbol, provider, asOfUtc.AddDays(-3), asOfUtc, 10000, cancellationToken, "1m");
@@ -31,7 +33,7 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             normalizedSymbol, provider, asOfUtc.AddDays(-21), asOfUtc, 10000, cancellationToken, "5m");
 
         var oneBars = oneObservations
-            .Where(x => feed is null || string.Equals(x.Bar.Feed, feed, StringComparison.OrdinalIgnoreCase))
+            .Where(x => string.Equals(x.Bar.Feed, feed, StringComparison.OrdinalIgnoreCase))
             .Select(x => x.Bar)
             .Where(x => x.Timestamp.AddMinutes(1) <= asOfUtc)
             .OrderBy(x => x.Timestamp)
