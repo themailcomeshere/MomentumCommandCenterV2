@@ -17,7 +17,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     private readonly string _path = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH")
         ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "MomentumCommandCenterV2", "market-bars.jsonl");
-    private readonly Dictionary<(string Provider, string Symbol, DateTimeOffset Timestamp), (string Hash, string Id)> _latest = new();
+    private readonly Dictionary<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp), (string Hash, string Id)> _latest = new();
     private bool _loaded;
 
     /// <summary>
@@ -41,8 +41,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
             await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
             foreach (var bar in bars)
             {
-                var key = (bar.Provider, bar.Symbol.ToUpperInvariant(), bar.Timestamp);
-                var hash = Hash(bar);
+                var normalized = bar with { Symbol = bar.Symbol.ToUpperInvariant(), Timeframe = NormalizeTimeframe(bar.Timeframe) };
+                var key = (normalized.Provider, normalized.Symbol, normalized.Timeframe, normalized.Feed ?? string.Empty, normalized.Timestamp);
+                var hash = Hash(normalized);
                 if (_latest.TryGetValue(key, out var previous) && previous.Hash == hash)
                     continue;
 
@@ -52,7 +53,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
                     bar.Provider,
                     bar.Symbol.ToUpperInvariant(),
                     bar.Timestamp,
-                    bar with { Symbol = bar.Symbol.ToUpperInvariant() },
+                    normalized,
                     hash,
                     _latest.TryGetValue(key, out previous) ? previous.Id : null);
                 await writer.WriteLineAsync(JsonSerializer.Serialize(observation, JsonOptions).AsMemory(), cancellationToken);
@@ -79,7 +80,8 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         DateTimeOffset fromUtc,
         DateTimeOffset toUtc,
         int limit,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? timeframe = null)
     {
         if (string.IsNullOrWhiteSpace(symbol))
             throw new ArgumentException("Symbol is required.", nameof(symbol));
@@ -88,11 +90,12 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         if (limit is < 1 or > 10000)
             throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be 1–10000.");
 
+        var normalizedTimeframe = timeframe is null ? null : NormalizeTimeframe(timeframe);
         await _gate.WaitAsync(cancellationToken);
         try
         {
             if (!File.Exists(_path)) return Array.Empty<MarketBarObservation>();
-            var latest = new Dictionary<(string Provider, string Symbol, DateTimeOffset Timestamp), MarketBarObservation>();
+            var latest = new Dictionary<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp), MarketBarObservation>();
             using var reader = new StreamReader(new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             while (await reader.ReadLineAsync(cancellationToken) is { } line)
             {
@@ -101,10 +104,11 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
                     ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
                 if (!observation.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase) ||
                     (provider is not null && !observation.Provider.Equals(provider.Trim(), StringComparison.OrdinalIgnoreCase)) ||
+                    (normalizedTimeframe is not null && !NormalizeTimeframe(observation.Bar.Timeframe).Equals(normalizedTimeframe, StringComparison.OrdinalIgnoreCase)) ||
                     observation.SourceTimestamp < fromUtc || observation.SourceTimestamp > toUtc)
                     continue;
 
-                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), observation.SourceTimestamp);
+                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), NormalizeTimeframe(observation.Bar.Timeframe), observation.Bar.Feed ?? string.Empty, observation.SourceTimestamp);
                 latest[key] = observation;
             }
 
@@ -135,12 +139,20 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
                 if (string.IsNullOrWhiteSpace(line)) continue;
                 var observation = JsonSerializer.Deserialize<MarketBarObservation>(line, JsonOptions)
                     ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
-                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), observation.SourceTimestamp);
+                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), NormalizeTimeframe(observation.Bar.Timeframe), observation.Bar.Feed ?? string.Empty, observation.SourceTimestamp);
                 _latest[key] = (observation.ContentHash, observation.ObservationId);
             }
         }
         _loaded = true;
     }
+
+    private static string NormalizeTimeframe(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "UNKNOWN" : value.Trim().ToLowerInvariant() switch
+        {
+            "1min" or "1minute" => "1m",
+            "5min" or "5minute" => "5m",
+            var normalized => normalized
+        };
 
     /// <summary>
     /// PURPOSE: Reject malformed OHLCV instead of silently persisting impossible bars.
@@ -167,6 +179,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         var canonical = string.Join("|",
             bar.Provider,
             bar.Symbol.ToUpperInvariant(),
+            NormalizeTimeframe(bar.Timeframe),
             bar.Timestamp.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
             bar.Open.ToString("R", CultureInfo.InvariantCulture),
             bar.High.ToString("R", CultureInfo.InvariantCulture),
