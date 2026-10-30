@@ -20,7 +20,7 @@ builder.Services.AddSwaggerGen(options =>
         string tag;
         if (path == "/api/health" || path == "/api/providers/status")
             tag = "System & Provider Health";
-        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay")
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status")
             tag = "Market Data";
         else if (path == "/api/scanner/universe")
             tag = "Scanner & Discovery";
@@ -41,6 +41,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 builder.Services.AddSingleton<LiveSymbolAssessmentService>();
+builder.Services.AddSingleton<AlpacaMinuteBarStreamWorker>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaMinuteBarStreamWorker>());
 builder.Services.AddSingleton<IScannerDiscoveryEventStore>(_ => new JsonlScannerDiscoveryEventStore(
     Environment.GetEnvironmentVariable("MCC_SCANNER_DISCOVERY_PATH")
     ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -282,6 +284,11 @@ app.MapGet("/api/scanner/universe", async (
 .WithSummary("Scan a user-supplied symbol universe using historical OHLCV")
 .WithDescription("UTC-only example: GET /api/scanner/universe?symbols=SPY,QQQ,TTE&timeframe=5m&from=2026-10-26T13:30:00Z&to=2026-10-26T20:00:00Z&providerName=Alpaca. On 2026-10-26, 13:30Z = 06:30 Arizona and 20:00Z = 13:00 Arizona. Use ISO-8601 UTC timestamps ending in Z. This is a bounded, descriptive scan of supplied symbols, not market-wide movers discovery or a trade signal.")
 .ProducesProblem(400);
+
+app.MapGet("/api/market-data/stream/status", (AlpacaMinuteBarStreamWorker worker) =>
+    Results.Ok(worker.Snapshot()))
+.WithSummary("Show Alpaca minute-bar WebSocket stream health")
+.WithDescription("The optional stream is disabled by default. Enable MarketData:Alpaca:StreamEnabled and configure StreamSymbols (or collector symbols). Free Basic accounts use IEX; SIP requires eligible market-data access. The worker persists minute bars and late-bar corrections but does not submit orders.");
 
 app.MapGet("/api/market-data/collector/status", (MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker worker) =>
     Results.Ok(worker.Snapshot()))
