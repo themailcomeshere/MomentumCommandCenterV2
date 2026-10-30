@@ -240,7 +240,7 @@ public sealed class LiveSymbolAssessmentService(
     };
 
     private static string FreshnessLabel(bool fresh, double? ageSeconds) =>
-        ageSeconds is null ? "UNKNOWN" : fresh ? "FRESH" : "STALE";
+        ageSeconds is null ? "UNKNOWN" : ageSeconds < 0 ? "FUTURE_TIMESTAMP" : fresh ? "FRESH" : "STALE";
 }
 
 /// <summary>
