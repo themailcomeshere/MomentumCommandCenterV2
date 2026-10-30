@@ -8,8 +8,8 @@ Branch: `feature/opportunity-quality-classification`
 - Morning Command Brief moved to a full-width, collapsed-by-default section near the bottom of MCC; a header **Morning Command Brief** button opens a modal snapshot of the same report.
 - Live assessment stale-data response now reports per-timeframe stale age, threshold, source timestamp, expected close, and feed, plus structured `freshnessDiagnostics`.
 - Added historical replay API `GET /api/market-data/replay` and UI panel. Required inputs: symbol, explicit feed, UTC as-of timestamp ending in Z; optional `hasPosition=true` simulates the engine's existing position-management branch. The service loads only persisted 1m/5m bars completed by as-of, and uses the same current V2SignalEngine/default V2Config. No lookahead and no order placement.
-- Added optional Alpaca WebSocket minute-bar collector (disabled by default). It authenticates, checks subscription acknowledgement, receives `b` and `u` minute bars, persists corrections, reconnects with backoff, and exposes stream status. It is not yet the live assessment's authoritative 1M input; live decisions remain REST-backed.
-- Added header WebSocket collector health chip. Do not confuse connected stream ingestion with a stream-driven V2 decision.
+- Added optional Alpaca WebSocket minute-bar collector (disabled by default). It authenticates, checks subscription acknowledgement, receives `b` and `u` minute bars, persists corrections, reconnects with backoff, and exposes stream status. The live assessment uses the persisted 1m series when subscription is confirmed, at least 50 completed bars are available, the latest bar is fresh, and the latest observation is tagged WEBSOCKET. It falls back to REST otherwise; 5m permission remains REST-backed.
+- Added header WebSocket collector health chip. The 1m assessment uses WebSocket-sourced data only when the explicit source/history/freshness checks pass; the 5m permission series remains REST-backed.
 - Schwab integration is still blocked on the user's developer app approval/callback and secure server-side credentials. No read-only Schwab position connector is implemented yet.
 - Order execution remains disabled.
 
@@ -24,7 +24,7 @@ Branch: `feature/opportunity-quality-classification`
 ### Important limitations
 - Replay uses the current default V2 configuration; historical config versions are not yet archived.
 - Replay `hasPosition` is only a boolean simulation. No broker-sourced quantity, side, average entry, account mapping, or sync-health guard is present.
-- WebSocket bars are persisted but are not yet the live assessment's source of truth; 5M permission still comes from the REST historical-bar path.
+- WebSocket-sourced 1m bars now feed the live assessment when connection, 50-bar history, freshness, and provenance guards pass. The 1m path falls back to REST when they do not. 5m permission remains REST-backed.
 - Morning Brief remains a partial market snapshot; breadth, verified sector money flow, classified catalysts, probability/outcome history, validated Red Zone ranking, and Boring Overnight qualification remain incomplete.
 - CI and browser acceptance must be checked on the exact latest head before calling this pass validated.
 
@@ -49,7 +49,7 @@ Read `docs/Master-To-Do.md` for the complete acceptance checklist and `docs/Live
 - [IN PROGRESS] GitHub Actions run 663 for commit `d2dbd628fa40de11e49b0693b25280e2dc22453e` (state-label formatting). Do not mark the current branch head validated until this completes.
 - [OPEN — USER BROWSER TEST] The new live Decision Explanation, score colors, UNKNOWN explanations, and Product Feedback bottom placement need a local browser check.
 - [OPEN — SYMBOL DATA] Exact RKLX/ASTX/XRPN evaluation reasons were not supplied in this conversation. The updated cards now show each symbol's server-returned status/reason; inspect those instead of guessing.
-- [OPEN — STREAM] Current path is 15-second REST polling, not websocket. The V2 rules operate on completed 1m/5m bars; websocket minute bars are the next latency option if 15-second pickup is insufficient. Raw tick streaming is not required by the current engine.
+- [OPEN — STREAM] Current path is hybrid: 1m WebSocket when confirmed/fresh with enough stored history, otherwise 1m REST; 5m permission remains REST. Raw tick streaming is not required.
 - [OPEN — POSITIONS] Schwab/Thinkorswim read-only position integration is design-only; see `docs/Thinkorswim-Schwab-Integration-Plan.md`.
 
 ## 2026-10-30 — Live Decision Explanation, score semantics, replay clarification
