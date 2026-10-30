@@ -176,3 +176,20 @@ Pull the latest `feature/opportunity-quality-classification` branch before testi
 - [ ] Verify readiness is a compact 2×2 block right of the brand and workspace-toolbar is nested in header.
 - [ ] Record GitHub Actions run for latest head. .NET tests do not substitute for browser acceptance.
 
+
+
+## 10. User-confirmed prior UI items and live assessment test status — 2026-10-30
+
+User has confirmed: Morning Brief News Link hover, superscript legend lines, Main Chart placement, Red Zone focus updates, Red Zone refresh, manual Red Zone management, Readiness topbar, Provider Comparison bottom placement, Quick Start modal and favicon 404 correction. Section IDs are implemented. BrowserLink `$.noConflict` remains ongoing.
+
+For the new live assessment work, do not reuse the previous user-confirmation list as evidence. Separately test:
+- [ ] Pin a manual ticker not present in scanner data; it obtains actual provider OHLCV and updates values.
+- [ ] Check 1m/5m freshness, extension, 5M permission, 1M entry-context state, score and engine reason.
+- [ ] Check REST auto-refresh at 60 seconds and API cache behavior.
+- [ ] Check no stale/unknown state is shown as qualified.
+- [ ] Check the 600px scanner table, vertical scrollbar and sticky Watch column.
+- [ ] Check compact topbar, 2×2 readiness and workspace toolbar inside header.
+- [ ] Confirm live assessment API responds with expected 1m/5m data during regular hours.
+- [ ] Confirm out-of-session, stale, insufficient-history and insufficient-RVOL-baseline responses fail closed.
+- [ ] Record exact commit SHA and API provider/feed used.
+
