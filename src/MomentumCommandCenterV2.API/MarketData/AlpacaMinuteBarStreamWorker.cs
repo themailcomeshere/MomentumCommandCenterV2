@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -17,11 +18,15 @@ public sealed class AlpacaMinuteBarStreamWorker(
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"];
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"];
     private readonly string _feed = (configuration["MarketData:Alpaca:Feed"] ?? "iex").Trim().ToLowerInvariant();
-    private readonly string[] _symbols = (configuration["MarketData:Alpaca:StreamSymbols"]
-        ?? configuration["MarketData:Collector:Symbols"] ?? string.Empty)
-        .Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .Select(x => x.ToUpperInvariant()).Distinct(StringComparer.OrdinalIgnoreCase)
-        .Where(x => x.Length is >= 1 and <= 8).ToArray();
+    private readonly ConcurrentDictionary<string, byte> _symbols = new(
+        (configuration["MarketData:Alpaca:StreamSymbols"] ?? configuration["MarketData:Collector:Symbols"] ?? string.Empty)
+            .Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.ToUpperInvariant()).Where(x => x.Length is >= 1 and <= 8)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(x => x, _ => (byte)0, StringComparer.OrdinalIgnoreCase),
+        StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, byte> _acknowledgedSymbols = new(StringComparer.OrdinalIgnoreCase);
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
+    private ClientWebSocket? _activeSocket;
     private readonly bool _enabled = configuration.GetValue<bool>("MarketData:Alpaca:StreamEnabled");
     private long _lastMessageUnixMs;
     private long _lastBarUnixMs;
@@ -40,7 +45,8 @@ public sealed class AlpacaMinuteBarStreamWorker(
         connected = Volatile.Read(ref _connected) == 1,
         state = _state,
         feed = _feed,
-        symbols = _symbols,
+        symbols = _symbols.Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray(),
+        subscribedSymbols = _acknowledgedSymbols.Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray(),
         lastMessageUtc = Timestamp(Interlocked.Read(ref _lastMessageUnixMs)),
         lastBarUtc = Timestamp(Interlocked.Read(ref _lastBarUnixMs)),
         persistedBars = Interlocked.Read(ref _persistedBars),
@@ -55,7 +61,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
             _state = "DISABLED";
             return;
         }
-        if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret) || _symbols.Length == 0)
+        if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret) || _symbols.IsEmpty)
         {
             _state = "MISCONFIGURED";
             _lastError = "Configure Alpaca credentials and MarketData:Alpaca:StreamSymbols (or collector symbols).";
@@ -81,8 +87,9 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 _state = "AUTHENTICATING";
                 await SendAsync(socket, new { action = "auth", key = _key, secret = _secret }, stoppingToken);
                 await ReceiveUntilAuthenticatedAsync(socket, stoppingToken);
-                await SendAsync(socket, new { action = "subscribe", bars = _symbols }, stoppingToken);
+                await SendAsync(socket, new { action = "subscribe", bars = _symbols.Keys.ToArray() }, stoppingToken);
                 await ReceiveUntilSubscribedAsync(socket, stoppingToken);
+                _activeSocket = socket;
                 Volatile.Write(ref _connected, 1);
                 _state = "SUBSCRIBED";
                 delay = TimeSpan.FromSeconds(2);
@@ -97,13 +104,49 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 _state = "RECONNECTING";
                 logger.LogWarning(ex, "Alpaca minute-bar stream disconnected; reconnecting.");
             }
-            finally { Volatile.Write(ref _connected, 0); }
+            finally
+            {
+                Volatile.Write(ref _connected, 0);
+                _activeSocket = null;
+                _acknowledgedSymbols.Clear();
+            }
 
             try { await Task.Delay(delay, stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             delay = TimeSpan.FromSeconds(Math.Min(30, delay.TotalSeconds * 2));
         }
         _state = "STOPPED";
+    }
+
+    public async Task<object> SubscribeAsync(string symbol, CancellationToken cancellationToken)
+    {
+        var normalized = (symbol ?? string.Empty).Trim().ToUpperInvariant();
+        if (normalized.Length is < 1 or > 8 || normalized.Any(ch => !(ch is >= 'A' and <= 'Z' or >= '0' and <= '9' or '.' or '-')))
+            throw new ArgumentException("Symbol must be 1–8 letters, digits, dot, or hyphen.", nameof(symbol));
+        if (!_enabled)
+            return new { accepted = false, state = "DISABLED", symbol = normalized, note = "Enable MarketData:Alpaca:StreamEnabled on the API server." };
+        if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret))
+            return new { accepted = false, state = "MISCONFIGURED", symbol = normalized, note = "Alpaca server credentials are not configured." };
+
+        _symbols.TryAdd(normalized, 0);
+        var socket = _activeSocket;
+        if (Volatile.Read(ref _connected) != 1 || socket is null || socket.State != WebSocketState.Open)
+            return new { accepted = true, state = "PENDING_CONNECTION", symbol = normalized, note = "The symbol is queued and will be included on the next stream subscription." };
+        if (_acknowledgedSymbols.ContainsKey(normalized))
+            return new { accepted = true, state = "SUBSCRIBED", symbol = normalized, note = "The stream has acknowledged this symbol." };
+
+        await _sendLock.WaitAsync(cancellationToken);
+        try { await SendAsync(socket, new { action = "subscribe", bars = new[] { normalized } }, cancellationToken); }
+        finally { _sendLock.Release(); }
+
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (DateTimeOffset.UtcNow < deadline && !cancellationToken.IsCancellationRequested)
+        {
+            if (_acknowledgedSymbols.ContainsKey(normalized))
+                return new { accepted = true, state = "SUBSCRIBED", symbol = normalized, note = "Alpaca acknowledged the dynamic minute-bar subscription." };
+            await Task.Delay(100, cancellationToken);
+        }
+        return new { accepted = true, state = "PENDING_ACKNOWLEDGEMENT", symbol = normalized, note = "Subscription was sent; check stream/status for subscribedSymbols." };
     }
 
     private async Task ReceiveUntilAuthenticatedAsync(ClientWebSocket socket, CancellationToken ct)
@@ -140,7 +183,9 @@ public sealed class AlpacaMinuteBarStreamWorker(
                     var acknowledged = item.TryGetProperty("bars", out var bars) && bars.ValueKind == JsonValueKind.Array
                         ? bars.EnumerateArray().Select(x => x.GetString()).Where(x => x is not null).ToArray()
                         : Array.Empty<string?>();
-                    var missing = _symbols.Except(acknowledged!, StringComparer.OrdinalIgnoreCase).ToArray();
+                    foreach (var symbol in acknowledged.Where(x => !string.IsNullOrWhiteSpace(x)))
+                        _acknowledgedSymbols.TryAdd(symbol!, 0);
+                    var missing = _symbols.Keys.Except(_acknowledgedSymbols.Keys, StringComparer.OrdinalIgnoreCase).ToArray();
                     if (missing.Length > 0)
                         throw new InvalidOperationException("Alpaca did not acknowledge minute-bar subscriptions for: " + string.Join(", ", missing));
                     return;
@@ -161,6 +206,13 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 var type = GetString(item, "T");
                 if (type == "error")
                     throw new InvalidOperationException("Alpaca stream error: " + GetString(item, "msg"));
+                if (type == "subscription")
+                {
+                    if (item.TryGetProperty("bars", out var subscribed) && subscribed.ValueKind == JsonValueKind.Array)
+                        foreach (var name in subscribed.EnumerateArray().Select(x => x.GetString()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                            _acknowledgedSymbols.TryAdd(name!, 0);
+                    continue;
+                }
                 if (type is not ("b" or "u")) continue;
                 var symbol = GetString(item, "S");
                 if (string.IsNullOrWhiteSpace(symbol) || !DateTimeOffset.TryParse(GetString(item, "t"), out var timestamp))
