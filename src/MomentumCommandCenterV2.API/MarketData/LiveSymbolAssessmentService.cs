@@ -67,13 +67,13 @@ public sealed class LiveSymbolAssessmentService(
                 ? LiveSymbolTechnicalCalculator.CalculateSameTimeOfDayRelativeVolume(fiveMinute, fiveMinute.Count - 1)
                 : (Value: (decimal?)null, Samples: 0);
             var five = fiveMinute.Count >= 50
-                ? LiveSymbolTechnicalCalculator.Calculate(fiveMinute, fiveMinute.Count - 1, TimeSpan.FromMinutes(5), rvol.Value)
+                ? LiveSymbolTechnicalCalculator.Calculate(fiveMinute, fiveMinute.Count - 1, TimeSpan.FromMinutes(5), rvol.Value ?? 0m)
                 : null;
             var previousRvol = fiveMinute.Count >= 51
                 ? LiveSymbolTechnicalCalculator.CalculateSameTimeOfDayRelativeVolume(fiveMinute, fiveMinute.Count - 2)
                 : (Value: (decimal?)null, Samples: 0);
             var previousFive = fiveMinute.Count >= 51
-                ? LiveSymbolTechnicalCalculator.Calculate(fiveMinute, fiveMinute.Count - 2, TimeSpan.FromMinutes(5), previousRvol.Value)
+                ? LiveSymbolTechnicalCalculator.Calculate(fiveMinute, fiveMinute.Count - 2, TimeSpan.FromMinutes(5), previousRvol.Value ?? 0m)
                 : null;
 
             var oneLatest = oneMinute.LastOrDefault();
