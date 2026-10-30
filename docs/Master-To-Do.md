@@ -18,7 +18,7 @@
 - [x] Added dynamic Alpaca subscription endpoint `POST /api/market-data/stream/subscribe?symbol=XYZ`. MCC requests subscriptions for the selected symbol and Red Zone cards; `StreamSymbols` is now only the initial server-side seed.
 - [x] Dynamic symbols remain in API memory and are automatically re-subscribed after WebSocket reconnect. Default cap is 30 symbols (`MarketData:Alpaca:StreamMaxSymbols` can be changed to match entitlement); symbols are not persisted across API restarts, and the front end re-requests the currently selected and visible Red Zone symbols.
 - [x] Stream status now reports acknowledged symbols, per-symbol bar counts/last timestamps, and separate received vs persisted totals.
-- [x] Morning Brief modal now opens immediately using the existing rendered report; it no longer waits for a second full API call on every open. The client reuses a 60-second cached report and refreshes in the background when stale.
+- [x] Morning Brief modal now opens immediately using the existing rendered report; it no longer waits for a second full API call on every open. The API and browser each cache the report for 60 seconds; the modal opens immediately and refreshes stale data in the background.
 - [x] Removed the duplicate Morning Command Brief heading from the modal body.
 - [x] Moved Opportunity Classification, Last Price, RVOL, and ATR Extension into the Main Chart heading on the right; constrained the chart width.
 - [x] Red Zone now occupies the full available row and uses a four-column desktop grid with responsive 2-column/tablet and 1-column/mobile layouts.
