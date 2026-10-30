@@ -120,7 +120,9 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             oneMinuteBars = oneBars.Length,
             fiveMinuteBars = fiveBars.Length,
             oneMinuteSourceTimestampUtc = oneBars[^1].Timestamp,
+            oneMinuteSourceTransport = oneBars[^1].SourceTransport,
             fiveMinuteSourceTimestampUtc = fiveBars[^1].Timestamp,
+            fiveMinuteSourceTransport = fiveBars[^1].SourceTransport,
             previousFiveMinuteSourceTimestampUtc = fiveBars[^2].Timestamp,
             decision = new
             {
