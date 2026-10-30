@@ -19,9 +19,10 @@
   </section>
  </div>
  
+<section id="workspace-toolbar" class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option>MNSB</option><option>DEMO</option><option>XRPN</option></select></div><div><label for="snapshot">Replay point</label><input id="snapshot" type="range" min="0" max="4" value="2"></div><button id="reset">Reset demo</button></section>
 </header>
 <main>
-<section id="workspace-toolbar" class="toolbar panel"><div><label for="mode">Workspace</label><select id="mode"><option value="momentum">Intraday Momentum</option><option value="overnight">Boring Overnight</option></select></div><div><label for="symbol">Symbol</label><select id="symbol"><option>MNSB</option><option>DEMO</option><option>XRPN</option></select></div><div><label for="snapshot">Replay point</label><input id="snapshot" type="range" min="0" max="4" value="2"></div><button id="reset">Reset demo</button></section>
+
 <section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
  <div class="section-heading"><div><div class="eyebrow">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted">1-minute close-price history for the selected symbol. Selecting a Red Zone tile focuses this chart and refreshes the related decision panels.</p></div><span id="mainChartSymbol" class="chip">MNSB</span></div>
  <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
