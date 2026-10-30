@@ -1,6 +1,11 @@
 # Market Data / Scanner Provider Comparison
 
-**Reviewed:** 2026-10-23. Two initial REST historical-bar adapters are now implemented in `src/MomentumCommandCenterV2.API`; no provider is selected, account entitlement verified, or live request performed. Prices below are public individual-plan listings checked during the research review; verify again before purchase.
+## Where the dashboard comparison fits
+
+The Provider Comparison panel is a **diagnostic / provider-selection tool**, not a daily morning workflow step. Use it when first configuring a provider, changing account/feed/plan settings, or repeating a proof-of-fit test after an adapter change. Select the same symbol, date and interval for both adapters, then compare returned bars, first/latest timestamps, duplicates and timestamp gaps. A successful historical REST response does not establish full-session coverage, premarket/after-hours completeness, live streaming, reconnect/backfill, entitlement breadth, licensing, or suitability as the authoritative feed. Keep the panel in MCC for engineering and operations diagnostics; keep it out of the daily candidate-review sequence.
+
+
+**Reviewed:** 2026-10-30. Two initial REST historical-bar adapters are now implemented in `src/MomentumCommandCenterV2.API`; no provider is selected, account entitlement verified, or live request performed. Prices below are public individual-plan listings checked during the research review; verify again before purchase.
 
 ## What MCC ultimately needs
 
