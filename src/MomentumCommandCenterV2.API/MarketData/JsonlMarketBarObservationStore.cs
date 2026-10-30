@@ -186,7 +186,8 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
             bar.Low.ToString("R", CultureInfo.InvariantCulture),
             bar.Close.ToString("R", CultureInfo.InvariantCulture),
             bar.Volume.ToString(CultureInfo.InvariantCulture),
-            bar.Feed ?? string.Empty);
+            bar.Feed ?? string.Empty,
+            bar.SourceTransport ?? string.Empty);
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }
 }
