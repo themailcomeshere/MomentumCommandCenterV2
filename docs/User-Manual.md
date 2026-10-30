@@ -1,7 +1,7 @@
 ## Recent workflow updates — 2026-10-30
 
 ### Alpaca WebSocket symbols
-You no longer need to edit `MarketData:Alpaca:StreamSymbols` every time you select a ticker. That setting seeds the stream at API startup. MCC now requests a dynamic subscription when you select a symbol or show a Red Zone candidate. Dynamic symbols remain in API memory and are re-subscribed after a WebSocket reconnect; they are not saved across an API restart, so the browser requests its active symbols again after reload.
+You no longer need to edit `MarketData:Alpaca:StreamSymbols` every time you select a ticker. That setting seeds the stream at API startup. MCC now requests a dynamic subscription when you select a symbol or show a Red Zone candidate. Dynamic symbols remain in API memory and are re-subscribed after a WebSocket reconnect; the default cap is 30 symbols, configurable with `MarketData:Alpaca:StreamMaxSymbols` to match your plan entitlement. Symbols are not saved across an API restart, so the browser requests its active symbols again after reload.
 
 Check `/api/market-data/stream/status`:
 - `subscribedSymbols` confirms acknowledged symbols.
@@ -18,7 +18,7 @@ Use 5M first to establish directional permission. If permission is YES, wait for
 Historical replay now takes **As-of (Arizona local time)**. MCC converts the local time to UTC for the API. Replay uses stored completed bars only, current V2 configuration, and the simulated-position checkbox; it does not place orders or recover historical broker positions.
 
 ### Morning Command Brief
-The header button opens the report immediately from the latest rendered snapshot. The browser reuses a report for 60 seconds and refreshes stale data in the background. The full-width footer accordion and modal share the same report content.
+The header button opens the report immediately from the latest rendered snapshot. The API and browser each cache the report for 60 seconds. The modal opens immediately from the current snapshot; stale data refreshes in the background. The full-width footer accordion and modal share the same report content.
 
 ### Current evidence limitation
 The 2026-10-30 uploaded SPY/RKLX/ASTX/XRPN captures all show stale data and REST as the 1M source. Those captures were generated after the regular-session close; a separate RKLX 5M stale observation occurred during regular hours and remains under investigation. See [MarketData-ChatTests-20261030.md](MarketData-ChatTests-20261030.md).
