@@ -32,6 +32,15 @@ $("reset").addEventListener("click",()=>{$("mode").value="momentum";$("symbol").
  render();
 refreshFocusedPriceChart();
 
+/// MODULE: Quick Start guide
+/// PURPOSE: Opens the user-facing workflow guide without navigating away from the dashboard.
+const quickStartDialog=$("quickStartDialog");
+function openQuickStart(){if(quickStartDialog&&!quickStartDialog.open)quickStartDialog.showModal();}
+$("openQuickStart")?.addEventListener("click",openQuickStart);
+$("openQuickStartFooter")?.addEventListener("click",openQuickStart);
+$("closeQuickStart")?.addEventListener("click",()=>quickStartDialog?.close());
+
+
 const scannerData={
  momentum:[
   {symbol:"XRPN",score:86,status:"WATCH",reason:"Participation and setup require chart confirmation."},
@@ -108,6 +117,7 @@ function drawPriceLine(container,bars,label){
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
  const symbol=($("symbol")?.value||"").trim().toUpperCase();host.replaceChildren();
+ const symbolBadge=$("mainChartSymbol");if(symbolBadge)symbolBadge.textContent=symbol||"NO SYMBOL";
  const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute close";host.append(title);
  try{drawPriceLine(host,await fetchPriceSeries(symbol),symbol);}catch(e){const p=document.createElement("p");p.className="chart-unavailable";p.textContent="Price history unavailable · "+e.message;host.append(p);}
 }
