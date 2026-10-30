@@ -159,3 +159,20 @@ Pull the latest `feature/opportunity-quality-classification` branch before testi
 - BrowserLink error origin is not established. The current source inspection found no direct BrowserLink or `$.noConflict` usage in frontend app/index or API startup.
 - Favicon asset/link are present in source, but the local browser must confirm the 404 is gone.
 - Current Main Chart is a close-price line; demo decision panels do not yet show symbol-specific 5M/1M states.
+
+
+## 9. Live symbol assessment and compact dashboard retest — 2026-10-30
+
+- [ ] Pull latest branch and record exact SHA.
+- [ ] During regular US market hours, open `/api/market-data/live-assessment?symbol=SPY`; confirm 1m/5m bar counts, feed, source timestamps, completed timestamps and evaluation timestamp.
+- [ ] Confirm 1m freshness uses 120s and 5m freshness uses 360s after expected bar close.
+- [ ] Confirm at least five same-time-of-day prior 5m samples are required before 5M permission is evaluated.
+- [ ] Confirm 5M score/permission and 1M entry state/reason match the V2SignalEngine response.
+- [ ] Pin a ticker not present in scanner discovery; confirm the Red Zone card loads market data independently of scanner row membership.
+- [ ] Confirm Extension, 1M/5M Freshness, 5M Permission, 1M execution and sparkline update without a page reload.
+- [ ] Confirm Main Chart displays 1m bars for selected symbol and refreshes at 60s cadence.
+- [ ] Test stale data, insufficient history, no RVOL baseline, provider not configured, and outside-session behavior; no green/qualified state may appear without evidence.
+- [ ] Verify table-wrap is 600px tall with vertical scrolling and sticky Watch action at the right edge while horizontally scrolling.
+- [ ] Verify readiness is a compact 2×2 block right of the brand and workspace-toolbar is nested in header.
+- [ ] Record GitHub Actions run for latest head. .NET tests do not substitute for browser acceptance.
+
