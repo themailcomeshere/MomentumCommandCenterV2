@@ -97,7 +97,10 @@ public sealed class LiveSymbolAssessmentService(
             else if (!oneFresh || !fiveFresh)
             {
                 evaluationStatus = "STALE_MARKET_DATA";
-                evaluationReason = "The latest completed 1m or 5m source bar is outside the freshness limit. Permission and execution are not evaluated.";
+                var staleDetails = new List<string>();
+                if (!oneFresh) staleDetails.Add($"1m bar age {oneAgeSeconds?.ToString("0", System.Globalization.CultureInfo.InvariantCulture) ?? "unknown"}s (limit 120s; source {oneLatest?.Timestamp:O}; expected close {oneCloseAt:O})");
+                if (!fiveFresh) staleDetails.Add($"5m bar age {fiveAgeSeconds?.ToString("0", System.Globalization.CultureInfo.InvariantCulture) ?? "unknown"}s (limit 360s; source {fiveLatest?.Timestamp:O}; expected close {fiveCloseAt:O})");
+                evaluationReason = "STALE_MARKET_DATA: " + string.Join("; ", staleDetails) + $". Feed={oneLatest?.Feed ?? fiveLatest?.Feed ?? "unknown"}. Permission and execution are not evaluated.";
             }
             else if (rvol.Value is null)
             {
@@ -149,6 +152,12 @@ public sealed class LiveSymbolAssessmentService(
                 evaluationStatus,
                 evaluationReason,
                 dataFresh = oneFresh && fiveFresh,
+                freshnessDiagnostics = new
+                {
+                    oneMinute = new { isFresh = oneFresh, ageSeconds = oneAgeSeconds, limitSeconds = 120, sourceTimestampUtc = oneLatest?.Timestamp, expectedCloseUtc = oneCloseAt },
+                    fiveMinute = new { isFresh = fiveFresh, ageSeconds = fiveAgeSeconds, limitSeconds = 360, sourceTimestampUtc = fiveLatest?.Timestamp, expectedCloseUtc = fiveCloseAt },
+                    staleTimeframes = new[] { !oneFresh ? "1m" : null, !fiveFresh ? "5m" : null }.Where(x => x is not null).ToArray()
+                },
                 oneMinute = new
                 {
                     barCount = oneMinute.Count,
