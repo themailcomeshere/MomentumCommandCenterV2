@@ -25,6 +25,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
             .Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(x => x, _ => (byte)0, StringComparer.OrdinalIgnoreCase),
         StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> _acknowledgedSymbols = new(StringComparer.OrdinalIgnoreCase);
+    private readonly int _maxSymbols = Math.Clamp(configuration.GetValue<int?>("MarketData:Alpaca:StreamMaxSymbols") ?? 30, 1, 10000);
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private ClientWebSocket? _activeSocket;
     private readonly bool _enabled = configuration.GetValue<bool>("MarketData:Alpaca:StreamEnabled");
@@ -50,6 +51,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
         feed = _feed,
         symbols = _symbols.Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray(),
         subscribedSymbols = _acknowledgedSymbols.Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToArray(),
+        maxSymbols = _maxSymbols,
         lastMessageUtc = Timestamp(Interlocked.Read(ref _lastMessageUnixMs)),
         lastBarUtc = Timestamp(Interlocked.Read(ref _lastBarUnixMs)),
         persistedBars = Interlocked.Read(ref _persistedBars),
@@ -133,6 +135,8 @@ public sealed class AlpacaMinuteBarStreamWorker(
         if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret))
             return new { accepted = false, state = "MISCONFIGURED", symbol = normalized, note = "Alpaca server credentials are not configured." };
 
+        if (!_symbols.ContainsKey(normalized) && _symbols.Count >= _maxSymbols)
+            return new { accepted = false, state = "SYMBOL_LIMIT_REACHED", symbol = normalized, note = $"Stream symbol limit reached ({_maxSymbols}). Remove unused symbols or increase MarketData:Alpaca:StreamMaxSymbols if your Alpaca entitlement permits it." };
         _symbols.TryAdd(normalized, 0);
         var socket = _activeSocket;
         if (Volatile.Read(ref _connected) != 1 || socket is null || socket.State != WebSocketState.Open)
