@@ -192,3 +192,42 @@ Open Quick Start from the header or the footer. It summarizes the normal order: 
 
 ### Prototype limitations
 The opportunity status and decision explanation areas still use illustrative replay snapshots; they do not calculate symbol-specific 5M Permission or 1M execution state when a Red Zone tile is selected. Treat those fields as demo-only until the calculation pipeline is connected. No broker connection or order submission exists.
+
+
+## Live Main Chart and Red Zone — 2026-10-30
+
+### What happens when you pin a ticker
+Pinning a symbol adds it to the browser-local Red Zone list. MCC now automatically requests a live symbol assessment for each visible Red Zone symbol, including manually pinned symbols that do not appear in the scanner discovery rows. The assessment uses Alpaca historical REST bars and does not depend on the ticker having a scanner score.
+
+### Automatic data refresh
+- Each visible Red Zone card requests a fresh assessment when rendered.
+- The browser refreshes Red Zone assessments and the focused Main Chart every 60 seconds while the page is visible.
+- The API caches each symbol/provider result for 30 seconds to avoid duplicate provider requests.
+- The Main Chart displays up to the latest 180 completed 1-minute bars.
+- The service fetches 1m bars from the prior 3 calendar days and 5m bars from the prior 21 calendar days, then persists the returned observations.
+
+This is near-live REST polling, not a websocket or tick stream. It does not promise quote-level or trade-level updates between refreshes.
+
+### What Red Zone values mean
+- **Extension:** Non-negative distance from the latest 1m close to its 1m EMA9, measured in 1m ATR14 units.
+- **Freshness:** Age since the expected close of the latest completed 1m and 5m provider bars. The current limits are 120 seconds for 1m and 360 seconds for 5m.
+- **5M score / permission:** Calculated by the existing V2SignalEngine from 5m VWAP, EMA9, EMA20, SMA50, RSI14 and same-time-of-day relative volume.
+- **1M execution:** Entry-context state calculated by V2SignalEngine using 1m VWAP, EMA9/EMA20 structure, MACD, RSI and the 5m permission result. CONFIRMED means the engine's entryAllowed flag is true; WAITING means 5m permission exists but 1m entry conditions are incomplete; BLOCKED means 5m permission is absent.
+- **Relative volume:** Current 5m volume divided by average volume for the same 5-minute regular-session clock slot across up to ten prior sessions. At least five prior samples are required. This is a calculated same-time-of-day baseline, not an Alpaca-provided consolidated RVOL field.
+
+### Why a pinned ticker can still show UNKNOWN
+The ticker can be pinned even if it has no scanner source row. Market-data qualification still requires valid provider bars:
+- at least 50 completed 1m bars and 51 completed 5m bars (for current and previous 5m context);
+- fresh latest completed bars;
+- at least five prior regular-session volume samples for the current 5m clock slot;
+- evaluation during the US regular session.
+
+If any required evidence is missing, stale or unavailable, MCC withholds permission/execution and displays an explicit status/reason. Do not treat UNKNOWN as a pass or a failure of the stock itself.
+
+### Decision-engine boundary
+The API calls the existing V2SignalEngine with `hasPosition=false`. This is an entry-candidate assessment. It does not perform existing-position management, send orders, or connect to Thinkorswim. No catalyst, halt, NBBO spread, order-book depth, or news classification is inferred.
+
+### Layout
+- System Readiness is now a 2×2 grid to the right of the brand.
+- Workspace toolbar is inside the header.
+- Scanner Workbench table is 600px high with vertical/horizontal scrolling; its Watch action column remains sticky on the right while horizontally scrolling.
