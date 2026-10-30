@@ -75,12 +75,12 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 using var socket = new ClientWebSocket();
                 socket.Options.KeepAliveInterval = TimeSpan.FromSeconds(20);
                 await socket.ConnectAsync(new Uri($"wss://stream.data.alpaca.markets/v2/{_feed}"), stoppingToken);
-                Volatile.Write(ref _connected, 1);
                 _state = "AUTHENTICATING";
                 await SendAsync(socket, new { action = "auth", key = _key, secret = _secret }, stoppingToken);
                 await ReceiveUntilAuthenticatedAsync(socket, stoppingToken);
                 await SendAsync(socket, new { action = "subscribe", bars = _symbols }, stoppingToken);
                 await ReceiveUntilSubscribedAsync(socket, stoppingToken);
+                Volatile.Write(ref _connected, 1);
                 _state = "SUBSCRIBED";
                 delay = TimeSpan.FromSeconds(2);
                 await ReceiveLoopAsync(socket, stoppingToken);
@@ -88,7 +88,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
                     throw new WebSocketException("Alpaca WebSocket closed the connection.");
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) when (ex is WebSocketException or HttpRequestException or IOException or JsonException or InvalidOperationException)
+            catch (Exception ex) when (ex is WebSocketException or HttpRequestException or IOException or JsonException or InvalidOperationException || (ex is OperationCanceledException && !stoppingToken.IsCancellationRequested))
             {
                 _lastError = ex.GetType().Name + ": " + ex.Message;
                 _state = "RECONNECTING";
@@ -170,7 +170,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
             if (observations.Count == 0) continue;
             await store.AppendAsync(observations, ct);
             Interlocked.Add(ref _persistedBars, observations.Count);
-            Interlocked.Exchange(ref _lastBarUnixMs, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            Interlocked.Exchange(ref _lastBarUnixMs, observations.Max(x => x.Timestamp).ToUnixTimeMilliseconds());
         }
     }
 
