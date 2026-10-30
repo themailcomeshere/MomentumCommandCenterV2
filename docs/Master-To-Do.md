@@ -1,3 +1,14 @@
+## Latest verified checkpoint — 2026-10-30
+
+- Branch: `feature/opportunity-quality-classification`
+- Verified branch head at checkpoint: `0d669ad888400682575b7d8bd895f7ff55b2436d`
+- GitHub Actions run **707** passed Release build and **152/152 tests** after correcting the transport-provenance test fixture.
+- Runs **708–714** completed successfully, including hybrid transport UI/header, documentation, and latest cache-bust updates.
+- Frontend JavaScript syntax parsed successfully after Morning Brief, replay, and hybrid-source UI changes.
+- Browser acceptance remains with the user: modal/accordion behavior, actual symbol freshness JSON, replay against populated stored history, and live WebSocket subscription/data flow.
+- Historical per-symbol stale causes for RKLX, ASTX, and XRPN are not yet known. The generic stale response supplied earlier does not contain the timeframe ages or timestamps. **Data not found in sources.**
+- Schwab OAuth/account/position sync remains unimplemented pending the user's Developer Portal approval, callback URL, and secure server-side app credentials. Order execution remains disabled.
+
 ## Validation and hybrid-source checkpoint — 2026-10-30
 
 - [DONE — SOURCE] Raw `MarketBar` observations now retain `SourceTransport` (`REST` or `WEBSOCKET`). The append-only store includes transport in its content hash, so identical OHLCV arriving by a different transport is recorded as a provenance change rather than silently deduplicated.
