@@ -1,3 +1,11 @@
+## Validation status correction — 2026-10-30
+
+- GitHub Actions run 663 **PASSED** for live Decision Explanation / score UI commit `d2dbd628fa40de11e49b0693b25280e2dc22453e`.
+- GitHub Actions run 664 **PASSED** for the Master To-Do documentation update.
+- GitHub Actions run 665 is still running for the latest Handoff documentation update; the code itself has already passed run 663.
+- Frontend JavaScript syntax check passed. User confirmed the live assessment endpoint returned Success.
+- Local browser verification of this newest Decision Explanation/score presentation remains open.
+
 ## Latest validation checkpoint — 2026-10-30
 
 - Current implementation adds live Decision Explanation, six-factor V2 score breakdown, colored Red Zone score bands, exact UNKNOWN reasons, 15-second REST refresh, and a 10-second assessment cache.
