@@ -13,6 +13,8 @@ namespace MomentumCommandCenterV2.API.MarketData;
 public sealed class LiveSymbolAssessmentService(
     IEnumerable<IMarketDataProvider> providers,
     IMarketBarObservationStore barStore,
+    AlpacaMinuteBarStreamWorker streamWorker,
+    IConfiguration configuration,
     ILogger<LiveSymbolAssessmentService> logger)
 {
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(10);
@@ -48,13 +50,41 @@ public sealed class LiveSymbolAssessmentService(
 
             // 21 calendar days normally contain at least 10 regular sessions, including weekends/holidays.
             // A 3-day 1m window supplies enough history for the current EMA/SMA/ATR calculations.
-            var oneMinuteTask = provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(1),
-                now.AddDays(-3), now, cancellationToken);
+            IReadOnlyList<MarketBar> oneMinute = Array.Empty<MarketBar>();
+            var oneMinuteFromWebSocket = false;
+            var configuredFeed = configuration["MarketData:Alpaca:Feed"] ?? "iex";
+            if (string.Equals(provider.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase) &&
+                streamWorker.IsSubscribed &&
+                string.Equals(streamWorker.Feed, configuredFeed, StringComparison.OrdinalIgnoreCase))
+            {
+                var storedOneMinute = await barStore.GetLatestAsync(
+                    normalizedSymbol, provider.ProviderName, now.AddDays(-3), now, 10000, cancellationToken, "1m");
+                var streamBars = CompletedBars(
+                    storedOneMinute
+                        .Where(x => string.Equals(x.Bar.Feed, streamWorker.Feed, StringComparison.OrdinalIgnoreCase))
+                        .Select(x => x.Bar).ToArray(),
+                    TimeSpan.FromMinutes(1), now);
+                var streamLatest = streamBars.LastOrDefault();
+                var streamAge = streamLatest is null
+                    ? (double?)null
+                    : (now - streamLatest.Timestamp.AddMinutes(1)).TotalSeconds;
+                if (streamBars.Count >= 50 && streamAge is >= 0 and <= 120)
+                {
+                    oneMinute = streamBars;
+                    oneMinuteFromWebSocket = true;
+                }
+            }
+
+            var oneMinuteTask = oneMinuteFromWebSocket
+                ? Task.FromResult(oneMinute)
+                : provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(1),
+                    now.AddDays(-3), now, cancellationToken);
             var fiveMinuteTask = provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(5),
                 now.AddDays(-21), now, cancellationToken);
             await Task.WhenAll(oneMinuteTask, fiveMinuteTask);
 
-            var oneMinute = CompletedBars(await oneMinuteTask, TimeSpan.FromMinutes(1), now);
+            if (!oneMinuteFromWebSocket)
+                oneMinute = CompletedBars(await oneMinuteTask, TimeSpan.FromMinutes(1), now);
             var fiveMinute = CompletedBars(await fiveMinuteTask, TimeSpan.FromMinutes(5), now);
             await barStore.AppendAsync(oneMinute, cancellationToken);
             await barStore.AppendAsync(fiveMinute, cancellationToken);
@@ -161,6 +191,7 @@ public sealed class LiveSymbolAssessmentService(
                 oneMinute = new
                 {
                     barCount = oneMinute.Count,
+                    sourceTransport = oneMinuteFromWebSocket ? "ALPACA_WEBSOCKET_PERSISTED" : "ALPACA_REST_HISTORICAL",
                     sourceTimestampUtc = oneLatest?.Timestamp,
                     completedAtUtc = oneCloseAt,
                     ageSeconds = oneAgeSeconds,
@@ -226,7 +257,9 @@ public sealed class LiveSymbolAssessmentService(
                     freshness = "Age is measured from the expected bar close (bar timestamp + timeframe), not the bar-open timestamp.",
                     limitations = new[]
                     {
-                        "Historical REST polling, not websocket/tick streaming.",
+                        oneMinuteFromWebSocket
+                            ? "1m execution bars are read from the confirmed Alpaca WebSocket append-only store; 5m permission bars remain historical REST."
+                            : "1m/5m decision bars are sourced through historical REST; the optional WebSocket is not currently subscribed or lacks a fresh 50-bar 1m history.",
                         "Provider feed and entitlement determine coverage.",
                         "No catalyst, halt, spread, order-book, or Thinkorswim study data is inferred.",
                         "A true signal remains unavailable when history, freshness, or same-slot volume baseline is insufficient."
