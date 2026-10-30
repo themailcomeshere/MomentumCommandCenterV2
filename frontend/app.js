@@ -1,42 +1,20 @@
-/*
-/// MODULE: Demo Workbench State
-/// PURPOSE: Drives illustrative front-end states for layout testing only.
-/// WHEN CALLED: Runs in the browser when index.html loads or controls change.
-/// IMPORTANT: No market-data, broker, or order APIs are called.
-*/
-const snapshots=[
-{label:"Snapshot 1",price:"$11.21",rvol:"0.8×",extension:"0.4 ATR",classification:"WATCH — DEVELOPING",kind:"watch",headline:"The setup is developing, but the execution event is not active yet.",eligibility:"Eligibility: PASS (demo)",five:"Permission: YES (demo)",one:"Execution event: INACTIVE (demo)",reasons:["Execution event is inactive; do not treat this as READY.","Relative volume is below the illustrative participation band.","Wait for an actual 1M confirmation event."]},
-{label:"Snapshot 2",price:"$11.25",rvol:"1.1×",extension:"0.5 ATR",classification:"READY — BORING",kind:"boring",headline:"Technically eligible, but participation and movement capacity look modest in this illustration.",eligibility:"Eligibility: PASS (demo)",five:"Permission: YES (demo)",one:"Execution event: ACTIVE (demo)",reasons:["Low relative volume — participation is modest.","Recent movement capacity is limited in this illustration.","READY describes eligibility/timing; it does not rank opportunity quality."]},
-{label:"Snapshot 3",price:"$11.29",rvol:"1.2×",extension:"0.7 ATR",classification:"READY — BORING",kind:"boring",headline:"Technically eligible does not necessarily mean a high-opportunity trade.",eligibility:"Eligibility: PASS (demo)",five:"Permission: YES (demo)",one:"Execution event: ACTIVE (demo)",reasons:["Low relative volume — participation is modest.","Recent movement capacity is limited.","Confirm the actual chart, spread, resistance, and event context before acting."]},
-{label:"Snapshot 4",price:"$11.36",rvol:"2.7×",extension:"0.8 ATR",classification:"READY — HIGH",kind:"high",headline:"Stronger participation is shown in this demo; the label is not a forecast or a probability.",eligibility:"Eligibility: PASS (demo)",five:"Permission: YES (demo)",one:"Execution event: ACTIVE (demo)",reasons:["Strong relative volume in this illustrative snapshot.","Momentum and recent movement capacity are assumed for this mockup.","This label is provisional until source-data parity and historical validation are complete."]},
-{label:"Snapshot 5",price:"$11.44",rvol:"3.1×",extension:"1.8 ATR",classification:"READY — EXTENDED",kind:"extended",headline:"Strong movement can still mean poor entry timing. Avoid equating momentum with permission to chase.",eligibility:"Eligibility: PASS (demo)",five:"Permission: YES (demo)",one:"Execution event: ACTIVE (demo)",reasons:["ATR extension is above the illustrative warning threshold.","An extended entry can be downgraded even when momentum is strong.","Reassess timing and risk; this is not an order instruction."]}
-];
-const barHeights=[48,56,53,68,76],$=id=>document.getElementById(id);
+/// MODULE: Live Decision Workbench
+/// PURPOSE: Renders the focused symbol from the live assessment API; no synthetic snapshots are used.
+const $=id=>document.getElementById(id);
 const feedbackKey="mcc.dashboardFeedback.v1";
 function render(){
- const index=Number($("snapshot").value),item=snapshots[index],overnight=$("mode").value==="overnight";
- $("classification").textContent=overnight?"RESEARCH ONLY":item.classification;
- $("classification").className="classification "+(overnight?"watch":item.kind);
- $("headline").textContent=overnight?"The overnight scoring pipeline is not wired to live or historical inputs yet.":item.headline;
- $("price").textContent=item.price;$("rvol").textContent=item.rvol;$("extension").textContent=item.extension;
- $("eligibility").textContent=item.eligibility;$("fiveState").textContent=item.five;$("oneState").textContent=item.one;
- $("reasons").replaceChildren(...item.reasons.map(reason=>{const li=document.createElement("li");li.textContent=reason;return li;}));
- $("replayLabel").textContent=item.label+" of 5";
- $("bars").replaceChildren(...barHeights.map((height,i)=>{const el=document.createElement("div");el.className="bar"+(i===index?" active":"");el.style.height=height+"%";const label=document.createElement("span");label.textContent=i+1;el.append(label);return el;}));
- $("overnightPanel").classList.toggle("hidden",!overnight);
- document.querySelector(".hero-card .eyebrow").textContent=overnight?"OVERNIGHT WORKFLOW · MOCKUP":"OPPORTUNITY CLASSIFICATION";
+ const overnight=$("mode")?.value==="overnight";
+ $("overnightPanel")?.classList.toggle("hidden",!overnight);
+ const eyebrow=document.querySelector(".hero-card .eyebrow");
+ if(eyebrow)eyebrow.textContent=overnight?"BORING OVERNIGHT · RESEARCH":"LIVE OPPORTUNITY CLASSIFICATION";
+ void refreshDecisionExplanation();
 }
-$("snapshot").addEventListener("input",render);$("mode").addEventListener("change",render);
-$("symbol").addEventListener("change",()=>{const chosen=$("symbol").value;if(chosen==="MNSB"){render();$("freshness").textContent="Data: SIMULATED";}else{$("headline").textContent=chosen+" is a placeholder selection; no symbol data is loaded.";$("freshness").textContent="Data: NOT LOADED";}refreshFocusedPriceChart();});
-$("reset").addEventListener("click",()=>{$("mode").value="momentum";$("symbol").value="MNSB";$("snapshot").value="2";$("freshness").textContent="Data: SIMULATED";render();refreshFocusedPriceChart();});
- render();
-refreshFocusedPriceChart();
-window.setInterval(()=>{
- if(document.visibilityState==="visible"){
-  void refreshRedZoneAssessments();
-  void refreshFocusedPriceChart();
- }
-},60000);
+$("mode")?.addEventListener("change",render);
+$("symbol")?.addEventListener("change",()=>{render();void refreshFocusedPriceChart();});
+$("reset")?.addEventListener("click",()=>{if($("mode"))$("mode").value="momentum";render();void refreshFocusedPriceChart();});
+render();
+void refreshFocusedPriceChart();
+window.setInterval(()=>{if(document.visibilityState==="visible"){void refreshRedZoneAssessments();void refreshFocusedPriceChart();void refreshDecisionExplanation();}},15000);
 
 
 /// MODULE: Quick Start guide
@@ -131,6 +109,56 @@ async function fetchLiveAssessment(symbol){
 function sourceFreshness(label,ageSeconds){
  if(!label)return "UNKNOWN";
  return label+(ageSeconds!==null&&ageSeconds!==undefined&&Number.isFinite(Number(ageSeconds))?" · "+Math.max(0,Number(ageSeconds)).toFixed(0)+"s":"");
+}
+function formatMetric(value,digits=2,suffix=""){return value===null||value===undefined||!Number.isFinite(Number(value))?"UNKNOWN":Number(value).toFixed(digits)+suffix;}
+function setV2ScoreDisplay(node,decision,evaluationStatus){
+ if(!node)return;
+ if(!decision||!Number.isFinite(Number(decision.score))){node.className="redzone-score score-unknown";node.textContent="V2 5M score: UNKNOWN · "+(evaluationStatus||"NOT EVALUATED");return;}
+ const score=Number(decision.score),entryReady=decision.entryAllowed===true;
+ const band=score<=2?"score-low":score<=4?"score-mid":"score-high";
+ node.className="redzone-score "+band;
+ const marker=score<=2?"✕ ":score>=5?"✓ ":"";
+ const suffix=entryReady?" · EXECUTION READY":score>=5?" · 5M PERMISSION; WAIT FOR 1M":score<=2?" · LOW ALIGNMENT":" · PARTIAL ALIGNMENT";
+ node.textContent=marker+"V2 5M score: "+score+"/6"+suffix;
+}
+async function refreshDecisionExplanation(){
+ const symbol=($("symbol")?.value||"").trim().toUpperCase();
+ const classification=$("classification"),headline=$("headline"),price=$("price"),rvol=$("rvol"),extension=$("extension"),eligibility=$("eligibility"),freshness=$("freshness"),reasons=$("reasons"),fiveState=$("fiveState"),oneState=$("oneState"),scoreNode=$("decisionScore"),sourceNode=$("decisionSource");
+ if(!symbol||!classification)return;
+ classification.textContent="LOADING LIVE ASSESSMENT";classification.className="classification watch";
+ if(headline)headline.textContent="Requesting current completed 1M and 5M bars…";
+ try{
+  const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
+  const permission=decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
+  classification.textContent=ready?"EXECUTION READY":decision?String(decision.state||"EVALUATED").replaceAll("_"," ").toUpperCase():(data.evaluationStatus||"DATA UNAVAILABLE").replaceAll("_"," ");
+  classification.className="classification "+(ready?"high":decision?.fiveMinutePermission?"boring":"watch");
+  if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
+  if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(2);
+  if(rvol)rvol.textContent=five.relativeVolume==null?"UNKNOWN":Number(five.relativeVolume).toFixed(2)+"×";
+  if(extension)extension.textContent=one.extensionAtr==null?"DATA?":Number(one.extensionAtr).toFixed(2)+" ATR";
+  if(eligibility)eligibility.textContent="5M permission: "+permission;
+  if(freshness)freshness.textContent="1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
+  if(fiveState)fiveState.textContent="5M permission: "+permission+(decision?.fiveMinuteStructureBull===true?" · bullish structure":decision?.fiveMinuteStructureBull===false?" · structure not bullish":"");
+  if(oneState)oneState.textContent="1M execution: "+execution+(ready?" · entry gate passed":"");
+  setV2ScoreDisplay(scoreNode,decision,data.evaluationStatus);
+  const lines=[decision?.reason?"Decision: "+decision.reason:"Decision unavailable: "+(data.evaluationReason||data.evaluationStatus||"No evaluation details returned.")];
+  for(const criterion of (five.scoreBreakdown?.criteria||[])){const mark=criterion.passed===true?"✓":criterion.passed===false?"✕":"?";lines.push(mark+" "+criterion.label+(criterion.passed===null?" — unavailable":""));}
+  if(five.relativeVolumeBaselineSamples!==undefined)lines.push("5M same-time RVOL baseline: "+five.relativeVolumeBaselineSamples+" prior-session samples; minimum 5.");
+  if(one.sourceTimestampUtc)lines.push("1M source bar: "+new Date(one.sourceTimestampUtc).toLocaleString());
+  if(five.sourceTimestampUtc)lines.push("5M source bar: "+new Date(five.sourceTimestampUtc).toLocaleString());
+  if(one.ema9!=null&&one.ema20!=null)lines.push("1M EMA9 "+formatMetric(one.ema9)+" · EMA20 "+formatMetric(one.ema20)+" · RSI "+formatMetric(one.rsi,1));
+  if(reasons)reasons.replaceChildren(...lines.map(line=>{const li=document.createElement("li");li.textContent=line;return li;}));
+  if(sourceNode)sourceNode.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"feed UNKNOWN")+" · "+(data.evaluationStatus||"UNKNOWN")+" · evaluated "+(data.evaluatedAtUtc?new Date(data.evaluatedAtUtc).toLocaleTimeString():"UNKNOWN");
+ }catch(error){
+  classification.textContent="DATA UNAVAILABLE";classification.className="classification watch";
+  if(headline)headline.textContent="Live assessment request failed: "+error.message;
+  if(price)price.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
+  if(eligibility)eligibility.textContent="5M permission: UNKNOWN";if(freshness)freshness.textContent="Freshness: UNKNOWN";
+  if(fiveState)fiveState.textContent="5M permission: UNKNOWN";if(oneState)oneState.textContent="1M execution: UNKNOWN";
+  setV2ScoreDisplay(scoreNode,null,"REQUEST FAILED");
+  if(reasons)reasons.replaceChildren(Object.assign(document.createElement("li"),{textContent:error.message}));
+  if(sourceNode)sourceNode.textContent="No live assessment received.";
+ }
 }
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
@@ -291,7 +319,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   statusNode.textContent=decision?decision.state.replaceAll("_"," "):(data.evaluationStatus||data.status||"DATA?");
-  scoreNode.textContent="V2 5M score: "+(decision?decision.score+"/6":"UNKNOWN");
+  setV2ScoreDisplay(scoreNode,decision,data.evaluationStatus);
   extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
   reasonNode.textContent=decision?.reason||data.evaluationReason||"Decision not evaluated.";
@@ -300,7 +328,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   drawPriceLine(chartNode,one.chartBars||[],symbol);
  }catch(error){
   statusNode.textContent="DATA UNAVAILABLE";
-  scoreNode.textContent="V2 5M score: UNKNOWN";
+  setV2ScoreDisplay(scoreNode,null,"REQUEST FAILED");
   extensionNode.textContent="Extension: DATA? · live request failed";
   freshnessNode.textContent="Freshness: UNKNOWN · "+error.message;
   reasonNode.textContent="Live market assessment unavailable. No prior status is being represented as current.";
