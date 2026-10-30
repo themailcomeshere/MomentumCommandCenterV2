@@ -54,7 +54,7 @@ Open `frontend/index.html` directly in a browser. Use the scanner group selector
 
 ## Provider decision — current state
 
-**No live scanner provider is selected or connected. Thinkorswim is not currently an API/feed integration.** Thinkorswim remains the source of the versioned chart-study behavior and manually inspected chart evidence; the repository contains no verified Thinkorswim live API/session adapter. The current front end only reads local fixtures and user-imported CSV files.
+**Alpaca is selected for the first live scanner integration.** The API now polls its SIP-based top-50 stock gainers/losers endpoint and persists discovery events. Account entitlement and complete-universe coverage remain unverified. Thinkorswim remains the chart-study evidence source, not a live scanner/API integration. Thinkorswim remains the source of the versioned chart-study behavior and manually inspected chart evidence; the repository contains no verified Thinkorswim live API/session adapter. The current front end only reads local fixtures and user-imported CSV files.
 
 Before choosing a feed, compare the actual capabilities needed: real-time 1M/5M OHLCV, scanner/query support, symbol universe and filters, timestamps/session conventions, extended-hours coverage, entitlement/licensing, rate limits, reconnect behavior, and historical access. The exact provider/API choice is **Data not found in sources.** Do not wire the UI to an unverified endpoint or represent a provider as selected.
 
