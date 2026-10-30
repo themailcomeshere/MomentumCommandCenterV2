@@ -24,30 +24,44 @@
 <main>
 
 <section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
- <div class="section-heading"><div><div class="eyebrow">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted">Live Alpaca 1-minute price history plus timestamped 5M permission and 1M execution assessment. REST refreshes every 15 seconds; not tick streaming.</p></div><span id="mainChartSymbol" class="chip">MNSB</span></div>
+ <div class="main-chart-header">
+  <div class="section-heading"><div><div class="eyebrow">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p></div><span id="mainChartSymbol" class="chip">SPY</span></div>
+  <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
+   <article class="panel hero-card"><div class="eyebrow">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
+   <article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">Loading…</strong><small>Latest completed 1M bar</small></article>
+   <article class="panel metric"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small>5M same-time-of-day RVOL</small></article>
+   <article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">Loading…</strong><small>1M close vs EMA9 in ATR units</small></article>
+  </section>
+ </div>
  <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
 </section>
 
 
 <div id="morning-command" class="command-layout" aria-label="Morning command workspace">
 <section id="red-zone" class="panel redzone-panel">
- <div class="section-heading"><div><div class="eyebrow">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2>Red Zone</h2><p class="muted">Up to four ranked tiles. Pin your own symbols or dismiss scanner rows; ranking is not entry permission.</p></div><div class="report-actions"><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><span class="chip">Preview / discovery</span></div></div>
+ <div class="section-heading"><div><div class="eyebrow">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2>Red Zone</h2><p class="muted">Up to four priority stocks. Pin a symbol or add it from the scanner; ranking is not entry permission.</p></div><div class="report-actions"><button id="toggleRedZoneSound" type="button" class="quiet-button" aria-pressed="false">Enable sound alerts</button><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><span class="chip">Preview / discovery</span></div></div>
  <form id="redZoneAddForm" class="redzone-manage-form"><label for="redZoneAddSymbol">Add a symbol</label><input id="redZoneAddSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker to pin in Red Zone"><button type="submit">Pin to Red Zone</button><button id="restoreRedZone" type="button" class="quiet-button">Restore dismissed</button></form>
  <p id="redZoneManageStatus" class="muted" role="status">Scanner rows refresh from the selected scanner group. Pinned and dismissed choices are saved in this browser.</p>
  <div id="redZoneGrid" class="redzone-grid"><article class="redzone-empty">No candidate rows available.</article></div>
  <p class="notice">Tiles below are built from local demo/import or fetched discovery rows; each tile attempts a recent Alpaca 1-minute price line. Missing data remains unavailable.  Rank is the supplied scanner score, not a validated MCC opportunity score. Missing source, freshness, 5M Permission, or 1M event must never be treated as passing.</p>
 </section>
 </div>
-<section id="opportunity-status" class="status-grid">
-<article class="panel hero-card"><div class="eyebrow">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
-<article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">Loading…</strong><small>Latest completed 1M bar</small></article><article class="panel metric"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small>5M same-time-of-day RVOL</small></article><article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">Loading…</strong><small>1M close vs EMA9 in ATR units</small></article>
-</section>
 <section id="decision-layout" class="layout"><article class="panel"><div class="section-heading"><div><div class="eyebrow">DECISION EXPLANATION · LIVE API</div><h2>Why this classification?</h2></div><span id="decisionScore" class="redzone-score score-unknown">Loading live score…</span></div><ul id="reasons" class="reason-list"><li>Waiting for live 1M/5M source bars.</li></ul><p id="decisionSource" class="muted small">Source, feed, timestamps, and evaluation state will appear here.</p><div class="notice">The six V2 score conditions are evaluated from completed 5M OHLCV bars. A 5M permission score is not an entry signal; the 1M execution gate must also confirm. Decision support only — no orders are submitted.</div></article>
-<article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">5M permission: LOADING</strong><p>Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">1M execution: LOADING</strong><p>Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="divider"></div><div class="section-heading"><h3>Historical decision replay</h3><span class="chip">Stored bars · no lookahead</span></div>
+<article class="panel"><div class="section-heading"><div><div class="eyebrow">TIMEFRAME HANDOFF</div><h2>5M authority → 1M execution</h2></div></div><div class="timeframe-row"><span class="tf">5M</span><div><strong id="fiveState">5M permission: LOADING</strong><p>Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row"><span class="tf">1M</span><div><strong id="oneState">1M execution: LOADING</strong><p>Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="handoff-howto">
+ <strong>How to use the handoff</strong>
+ <ul>
+  <li><b>Before considering an entry:</b> check 5M permission first. If it is NO, UNKNOWN, or stale, do not treat a 1M move as an authorized setup.</li>
+  <li><b>When 5M permission is YES:</b> watch 1M for a separate execution confirmation. A high 5M score alone is not an entry signal.</li>
+  <li><b>How often:</b> review when a new completed 5M bar closes, and inspect 1M as each completed minute arrives. The dashboard refreshes every 15 seconds; it is not a tick feed.</li>
+  <li><b>After entry:</b> reassess 1M management on each completed minute and recheck 5M structure on each completed 5M bar. Missing or stale data means WAIT / UNKNOWN.</li>
+  <li><b>Replay:</b> use it after historical bars have been stored to inspect a past decision. It does not predict a future setup or recover a historical broker position.</li>
+ </ul>
+</div>
+<div class="divider"></div><div class="section-heading"><h3>Historical decision replay</h3><span class="chip">Stored bars · no lookahead</span></div>
 <form id="historicalReplayForm" class="replay-controls">
  <label>Symbol <input id="replaySymbol" value="SPY" maxlength="8" required></label>
  <label>Source feed <select id="replayFeed"><option value="iex">IEX</option><option value="sip">SIP</option></select></label>
- <label>As-of UTC <input id="replayAsOfUtc" type="text" placeholder="2026-10-30T14:35:00Z" required></label>
+ <label>As-of (Arizona local time) <input id="replayAsOfLocal" type="datetime-local" required></label>
  <label class="replay-position-toggle"><input id="replayHasPosition" type="checkbox"> Simulate an existing position</label>
  <button id="replayRun" type="submit">Replay V2 decision</button>
 </form>
