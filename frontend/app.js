@@ -130,6 +130,8 @@ async function refreshDecisionExplanation(){
  if(headline)headline.textContent="Requesting current completed 1M and 5M bars…";
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
+  const transportLabel=$("marketTransportLabel");
+  if(transportLabel)transportLabel.textContent=one.sourceTransport==="ALPACA_WEBSOCKET_LATEST_BAR"?"ALPACA 1M WS / 5M REST · 15s UI REFRESH":"ALPACA REST · 15s UI REFRESH";
   const permission=decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
   classification.textContent=ready?"EXECUTION READY":decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||"DATA UNAVAILABLE");
   classification.className="classification "+(ready?"high":decision?.fiveMinutePermission?"boring":"watch");
