@@ -986,3 +986,42 @@ th {
 .chart-unavailable{font-size:11px;color:var(--muted);margin:8px 0}
 .redzone-card{cursor:pointer}
 .redzone-card:focus-within,.redzone-card:hover{border-color:var(--blue)}
+
+
+/* MCC layout refinements — 2026-10-30 */
+.topbar{align-items:flex-start;gap:18px;flex-wrap:wrap}
+.topbar-brand{flex:0 0 auto}
+.topbar-tools{display:flex;align-items:center;gap:10px;margin-left:auto}
+.topbar-readiness{flex:1 1 100%;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0c1527}
+.topbar-readiness-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.topbar-readiness .readiness-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.topbar-readiness .readiness-grid>div{padding:8px;background:transparent}
+.topbar-readiness .readiness-grid strong{font-size:11px}
+.topbar-readiness .readiness-grid span:last-child{font-size:10px}
+.main-chart-section{margin-bottom:14px}
+.main-chart-section .focus-price-chart{min-height:180px}
+.main-chart-section .focus-price-chart svg{height:210px}
+.legend-line{display:block;margin:3px 0}
+.redzone-manage-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
+.redzone-manage-form label{font-size:12px;color:var(--muted)}
+.redzone-manage-form input{min-width:110px;max-width:160px}
+.redzone-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.redzone-actions button{font-size:11px}
+.provider-compare{margin-top:18px}
+.quick-start-footer{display:flex;justify-content:center;padding:10px 0 18px}
+.quick-start-dialog{width:min(760px,calc(100vw - 28px));max-width:760px;max-height:85vh;overflow:auto;border:1px solid var(--line);border-radius:16px;padding:22px;background:#111c2d;color:var(--text)}
+.quick-start-dialog::backdrop{background:rgba(0,0,0,.68)}
+.quick-start-steps{padding-left:22px;color:#c6d3e6}
+.quick-start-steps li{margin:12px 0;line-height:1.5}
+.quick-start-steps strong{color:var(--text)}
+@media(max-width:850px){
+ .topbar-tools{margin-left:0}
+ .topbar-readiness .readiness-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+ .topbar{flex-direction:column}
+ .topbar-tools{width:100%;justify-content:space-between}
+ .topbar-readiness .readiness-grid{grid-template-columns:1fr 1fr}
+ .redzone-manage-form{align-items:stretch}
+ .redzone-manage-form input{flex:1}
+}
