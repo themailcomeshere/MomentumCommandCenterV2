@@ -94,6 +94,7 @@
  <p class="notice">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
 </section>
 <section class="workbench-grid"><article class="panel"><div class="section-heading"><div><div class="eyebrow">SCANNER WORKBENCH</div><h2>Candidate discovery</h2></div><label class="file-button" for="scannerFile">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls"><select id="scannerGroup"><option value="momentum">A · Momentum Hunter</option><option value="breakout">B · Breakout Trigger</option><option value="reclaim">C · Reclaim / Continuation</option><option value="discovery">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
+<div class="scanner-live-toolbar"><button id="refreshMarketMovers" type="button">Refresh Alpaca market movers</button><span id="liveMoversStatus" class="muted">Live discovery requires API credentials and SIP screener entitlement.</span></div>
 <div class="scanner-api-controls">
  <form id="scanAnalyzeForm">
   <label>Symbols <input id="apiScanSymbols" value="SPY,QQQ,TTE,FMS" maxlength="500" aria-label="Comma-separated symbols to scan"></label>
