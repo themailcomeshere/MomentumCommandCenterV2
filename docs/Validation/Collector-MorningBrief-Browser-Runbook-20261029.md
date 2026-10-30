@@ -133,3 +133,29 @@ git rev-parse HEAD
 - A genuine Alpaca historical correction may not occur during a short manual test; deterministic correction behavior is covered by automated store tests.
 - Provider history retention and extended-hours coverage may differ by account plan/feed.
 - The API port can differ from the earlier `https://localhost:53359` example.
+
+
+## 8. MCC dashboard layout / browser interaction retest — 2026-10-30
+
+Pull the latest `feature/opportunity-quality-classification` branch before testing. Record `git rev-parse HEAD`; do not test a cached older build.
+
+- [ ] Morning Brief News Link hover shows the intended destination/tooltip.
+- [ ] ATG, ATL, Change and Source each appear on their own legend line.
+- [ ] Main Chart is the first main-content section after the workspace toolbar and shows the selected symbol.
+- [ ] Selecting a Red Zone card updates the Main Chart and rerenders the opportunity-status and decision-layout sections.
+- [ ] Refresh Red Zone redraws the currently selected scanner group; Refresh Alpaca market movers retrieves persisted discoveries.
+- [ ] Pin a manual symbol, dismiss an automatic candidate, reload, and verify localStorage persistence; restore dismissed candidates.
+- [ ] System Readiness is in the header topbar and remains usable at narrow viewport widths.
+- [ ] Quick Start opens from the header and footer, closes via its button and Escape, and remains scrollable on mobile.
+- [ ] Provider Comparison is below the primary workflow and clearly marked diagnostic-only.
+- [ ] Check `/favicon.svg` in the Network panel and confirm the browser no longer requests a missing favicon resource.
+- [ ] Capture the full BrowserLink `$.noConflict` console stack and script URL. The app source has no `noConflict` or `BrowserLink` reference; do not suppress the error until its injecting script is identified.
+- [ ] Verify no new console errors, failed network requests, or duplicate element IDs.
+
+**Important distinction:** GitHub Actions .NET build/test is not a browser test. Browser UI, console, network and localStorage behavior must be verified in the user's local runtime.
+
+## [Uncertainties]
+
+- BrowserLink error origin is not established. The current source inspection found no direct BrowserLink or `$.noConflict` usage in frontend app/index or API startup.
+- Favicon asset/link are present in source, but the local browser must confirm the 404 is gone.
+- Current Main Chart is a close-price line; demo decision panels do not yet show symbol-specific 5M/1M states.
