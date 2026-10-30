@@ -65,3 +65,22 @@ This is the remaining validation, not a request to repeat the October 28 visual 
 - The screenshot panes show different selected bars/right-edge states; exact same-bar alignment is not established.
 - The installed 1M source file currently saved in GitHub is V14.4.10, while the repository source is V14.4.11. The exact V14.5 source suggested by the screenshot label is not present in the reviewed files.
 - The screenshot evidence is valid for visual state review but insufficient to reconstruct every intermediate state transition or a complete machine-readable replay tape.
+
+
+## 2026-10-29 — Additional RTO capture: distinct 5M/1M status
+
+The user's latest screenshot is separate evidence from the previously reviewed Oct 28 RTO screenshot.
+
+- 5M status strip: `5M STATE: GET OUT`; structure shown as bullish; permission shown NO at the selected cursor state. The diagnostic bubbles show several historical permission/blocker transitions, later green permission/runner events, and a later 5M GET OUT state.
+- 1M status strip: `1M STATE: EXECUTION EXPIRED`; it does not display `1M STATE: GET OUT` or `EOD: GET OUT` in this capture.
+- Therefore, the latest evidence corrects the earlier generalized assumption that the 1M pane had displayed GET OUT/EOD GET OUT for this RTO sequence. The current capture instead documents an expired 1M execution event alongside a 5M GET OUT status.
+- The selected bar timestamps in the panes are not demonstrated to be identical by the screenshot. This is not yet a parity failure or a code defect.
+- User says 1M and 5M OHLCV exports have been committed under `data/validation/RTO`. Exact filenames and file rows were not returned by the attempted path reads: Data not found in sources. Do not guess filenames or assert the exports were analyzed.
+
+### Required replay procedure
+1. Establish exact committed filenames and inspect both files.
+2. Validate columns, symbol, timezone, candle timestamp convention, first/last timestamp, row count, duplicate timestamps, OHLC validity, and missing intervals separately for 1M and 5M.
+3. Convert to a common Arizona-local timeline only after determining whether each timestamp marks candle start or close.
+4. Match each 1M bar to the latest completed 5M bar, never a future/incomplete 5M candle.
+5. Build a row-per-minute state tape with the 5M permission/structure/blocker and 1M execution candidate/expiry/GET OUT/EOD fields sourced from actual chart diagnostics.
+6. Add replay assertions only for transitions present in the matched evidence. Keep 5M authority, 1M entry expiry, and 1M exit state distinct.
