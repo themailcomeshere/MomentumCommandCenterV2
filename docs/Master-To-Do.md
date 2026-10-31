@@ -6,6 +6,7 @@
 
 - [x] Read and reconciled the ChatDisconnect note's explicit remaining-work list against current source and prior To-Do entries.
 - [x] Implemented append-only, versioned Morning Brief report snapshots with generated/recorded UTC timestamps, unique ID, SHA-256 payload hash, and full report JSON.
+- [x] Captured explicit UTC source-bar watermarks from the report's marketLandscape (provider/symbol/timeframe/feed/transport and latest source timestamp).
 - [x] Added `GET /api/morning-brief/history?limit=20`; live `/api/morning-brief` now reports snapshot persistence status, ID, and version.
 - [x] Added unit tests for snapshot round-trip/provenance, append-only behavior, UTC validation, and history limits.
 - [x] Added `scripts/validation/Test-MarketDataRuntime.ps1` to capture RKLX stored bars, before/after stream and collector status, per-symbol bar deltas, provider status, and full live assessments.
@@ -27,7 +28,7 @@
 - [ ] Matched Thinkorswim state replay: obtain same-symbol/date/study-version 1M and 5M state diagnostics. OHLCV exports alone cannot prove Permission, READY, RUNNER, WANING, SWING, GET OUT/EOD, expiry, re-arm, or re-entry.
 - [ ] Controlled collector outage/restart/sleep-wake acceptance. Source already has durable watermarks, overlap polling, bounded backfill chunks, retries, and atomic checkpoint replacement; target-host recovery is not yet proven.
 - [x] Morning Brief response snapshot persistence implemented (see above).
-- [ ] Complete Morning Brief input-manifest/versioning: per-provider/per-symbol source watermarks, raw-input references/retention policy, and later outcome linkage remain open. Snapshot persistence alone does not complete this.
+- [ ] Complete Morning Brief input-manifest/versioning: raw provider response references/retention policy, news/discovery watermarks, full calculation dependency manifest, and later outcome linkage remain open. Market-landscape bar watermarks are now recorded in each snapshot.
 - [ ] Automate Overnight session boundaries only after the eligible session policy is defined. The current calculator requires explicit caller-supplied close/open timestamps and fails closed on missing pairs; it does not guess exchange holidays, early closes, ETH/RTH, or the user's overnight window.
 - [ ] Continue Boring Overnight qualification only with source-backed daily/overnight history, validated session pairs, catalyst status, and authoritative 5M state. Unknown catalyst remains UNKNOWN; no qualification from caller assertions alone.
 
