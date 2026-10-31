@@ -1,0 +1,152 @@
+### 1. Market-data diagnosis — priority findings
+***/api/market-data/bars?symbol=RKLX&timeframe=1m&from=2026-10-30T19:00:00Z&to=2026-10-30T19:35:00Z&providerName=Alpaca***
+{"symbol":"RKLX","timeframe":"1m","provider":"Alpaca","feed":"iex","requestedFromUtc":"2026-10-30T19:00:00+00:00","requestedToUtc":"2026-10-30T19:35:00+00:00","retrievedAtUtc":"2026-10-30T22:51:16.4931926+00:00","barCount":4,"newlyPersistedObservationCount":0,"firstSourceTimestampUtc":"2026-10-30T19:00:00+00:00","latestSourceTimestampUtc":"2026-10-30T19:35:00+00:00","gapCount":3,"sampleGapStartsUtc":["2026-10-30T19:01:00+00:00","2026-10-30T19:09:00+00:00","2026-10-30T19:26:00+00:00"],"sessionNote":"Provider timestamps are preserved in UTC. Historical bars may include extended-hours trades; confirm feed entitlement and requested window. Gaps are not automatically treated as zero activity.","bars":[{"symbol":"RKLX","timestamp":"2026-10-30T19:00:00+00:00","open":9.31,"high":9.31,"low":9.31,"close":9.31,"volume":100,"provider":"Alpaca","feed":"iex","timeframe":"1m","sourceTransport":"REST"},{"symbol":"RKLX","timestamp":"2026-10-30T19:08:00+00:00","open":9.54,"high":9.54,"low":9.54,"close":9.54,"volume":100,"provider":"Alpaca","feed":"iex","timeframe":"1m","sourceTransport":"REST"},{"symbol":"RKLX","timestamp":"2026-10-30T19:25:00+00:00","open":9.81,"high":9.81,"low":9.81,"close":9.81,"volume":112,"provider":"Alpaca","feed":"iex","timeframe":"1m","sourceTransport":"REST"},{"symbol":"RKLX","timestamp":"2026-10-30T19:35:00+00:00","open":9.675,"high":9.705,"low":9.675,"close":9.7,"volume":1300,"provider":"Alpaca","feed":"iex","timeframe":"1m","sourceTransport":"REST"}]}
+
+***/api/market-data/bars?symbol=RKLX&timeframe=5m&from=2026-10-30T19:00:00Z&to=2026-10-30T19:35:00Z&providerName=Alpaca***
+{"symbol":"RKLX","timeframe":"5m","provider":"Alpaca","feed":"iex","requestedFromUtc":"2026-10-30T19:00:00+00:00","requestedToUtc":"2026-10-30T19:35:00+00:00","retrievedAtUtc":"2026-10-30T22:52:03.292209+00:00","barCount":4,"newlyPersistedObservationCount":0,"firstSourceTimestampUtc":"2026-10-30T19:00:00+00:00","latestSourceTimestampUtc":"2026-10-30T19:35:00+00:00","gapCount":2,"sampleGapStartsUtc":["2026-10-30T19:10:00+00:00","2026-10-30T19:30:00+00:00"],"sessionNote":"Provider timestamps are preserved in UTC. Historical bars may include extended-hours trades; confirm feed entitlement and requested window. Gaps are not automatically treated as zero activity.","bars":[{"symbol":"RKLX","timestamp":"2026-10-30T19:00:00+00:00","open":9.31,"high":9.31,"low":9.31,"close":9.31,"volume":100,"provider":"Alpaca","feed":"iex","timeframe":"5m","sourceTransport":"REST"},{"symbol":"RKLX","timestamp":"2026-10-30T19:05:00+00:00","open":9.54,"high":9.54,"low":9.54,"close":9.54,"volume":100,"provider":"Alpaca","feed":"iex","timeframe":"5m","sourceTransport":"REST"},{"symbol":"RKLX","timestamp":"2026-10-30T19:25:00+00:00","open":9.81,"high":9.81,"low":9.81,"close":9.81,"volume":112,"provider":"Alpaca","feed":"iex","timeframe":"5m","sourceTransport":"REST"},{"symbol":"RKLX","timestamp":"2026-10-30T19:35:00+00:00","open":9.675,"high":9.725,"low":9.635,"close":9.67,"volume":4525,"provider":"Alpaca","feed":"iex","timeframe":"5m","sourceTransport":"REST"}]}
+
+***header*** demo-flag and id="streamStatus" overlap each other and they are unreadable - fix that
+
+### 11. Your next deployment
+***/api/market-data/stream/status*** {"enabled":true,"configured":true,"connected":true,"state":"SUBSCRIBED","feed":"iex","symbols":["ASTX","RKLX","SPY","XRPN"],"subscribedSymbols":["ASTX","RKLX","SPY","XRPN"],"maxSymbols":30,"lastMessageUtc":"2026-10-30T22:50:31.972+00:00","lastBarUtc":null,"persistedBars":0,"receivedBars":0,"barsBySymbol":{},"lastError":null,"note":"Minute bars and late updatedBars only; this is not a trade/quote tick stream."}
+
+***/api/market-data/live-assessment?symbol=RKLX&providerName=Alpaca*** {"symbol":"RKLX","provider":"Alpaca","feed":"iex","evaluatedAtUtc":"2026-10-30T22:55:20.9800626+00:00","status":"STALE","evaluationStatus":"STALE_MARKET_DATA","evaluationReason":"STALE_MARKET_DATA: 1m bar age 10521s (limit 120s; source 2026-10-30T19:59:00.0000000+00:00; expected close 2026-10-30T20:00:00.0000000+00:00); 5m bar age 10521s (limit 360s; source 2026-10-30T19:55:00.0000000+00:00; expected close 2026-10-30T20:00:00.0000000+00:00). Feed=iex. Permission and execution are not evaluated.","dataFresh":false,"freshnessDiagnostics":{"oneMinute":{"isFresh":false,"ageSeconds":10520.9800626,"limitSeconds":120,"sourceTimestampUtc":"2026-10-30T19:59:00+00:00","expectedCloseUtc":"2026-10-30T20:00:00+00:00"},"fiveMinute":{"isFresh":false,"ageSeconds":10520.9800626,"limitSeconds":360,"sourceTimestampUtc":"2026-10-30T19:55:00+00:00","expectedCloseUtc":"2026-10-30T20:00:00+00:00"},"staleTimeframes":["1m","5m"]},"oneMinute":{"barCount":122,"sourceTransport":"REST","sourceTimestampUtc":"2026-10-30T19:59:00+00:00","completedAtUtc":"2026-10-30T20:00:00+00:00","ageSeconds":10520.9800626,"freshness":"STALE","close":9.83,"ema9":9.806404710582208780120693062,"ema20":9.779337051737625749333826872,"vwap":9.79658180153531938868934432,"rsi":49.915871598883918549379086902,"macd":-0.036956262217297194074575286,"macdSignal":-0.1023674848281228064062984580,"atr":0.0664321677924931631629178908,"extensionAtr":0.3551786762625784469737102694,"chartBars":[{"timestamp":"2026-10-28T13:30:00+00:00","open":11.33,"high":11.345,"low":11.305,"close":11.305,"volume":300},{"timestamp":"2026-10-28T13:36:00+00:00","open":11.26,"high":11.26,"low":11.26,"close":11.26,"volume":300},{"timestamp":"2026-10-28T13:49:00+00:00","open":10.74,"high":10.74,"low":10.74,"close":10.74,"volume":100},{"timestamp":"2026-10-28T13:51:00+00:00","open":10.83,"high":10.83,"low":10.83,"close":10.83,"volume":100},{"timestamp":"2026-10-28T14:13:00+00:00","open":10.82,"high":10.89,"low":10.82,"close":10.89,"volume":420},{"timestamp":"2026-10-28T14:20:00+00:00","open":10.9,"high":10.9,"low":10.9,"close":10.9,"volume":159},{"timestamp":"2026-10-28T14:39:00+00:00","open":10.86,"high":10.86,"low":10.86,"close":10.86,"volume":100},{"timestamp":"2026-10-28T14:43:00+00:00","open":10.96,"high":10.96,"low":10.96,"close":10.96,"volume":100},{"timestamp":"2026-10-28T14:48:00+00:00","open":10.97,"high":10.97,"low":10.97,"close":10.97,"volume":200},{"timestamp":"2026-10-28T15:17:00+00:00","open":10.96,"high":10.96,"low":10.96,"close":10.96,"volume":200},{"timestamp":"2026-10-28T15:28:00+00:00","open":10.93,"high":10.93,"low":10.93,"close":10.93,"volume":200},{"timestamp":"2026-10-28T15:38:00+00:00","open":10.96,"high":10.96,"low":10.96,"close":10.96,"volume":300},{"timestamp":"2026-10-28T16:02:00+00:00","open":10.93,"high":10.93,"low":10.93,"close":10.93,"volume":100},{"timestamp":"2026-10-28T16:54:00+00:00","open":11,"high":11,"low":11,"close":11,"volume":200},{"timestamp":"2026-10-28T17:51:00+00:00","open":11.12,"high":11.12,"low":11.12,"close":11.12,"volume":300},{"timestamp":"2026-10-28T18:00:00+00:00","open":11.11,"high":11.11,"low":11.11,"close":11.11,"volume":100},{"timestamp":"2026-10-28T18:15:00+00:00","open":10.89,"high":10.89,"low":10.89,"close":10.89,"volume":100},{"timestamp":"2026-10-28T18:34:00+00:00","open":11.07,"high":11.07,"low":11.07,"close":11.07,"volume":200},{"timestamp":"2026-10-28T18:40:00+00:00","open":11.08,"high":11.13,"low":11.08,"close":11.13,"volume":200},{"timestamp":"2026-10-28T18:41:00+00:00","open":11.24,"high":11.24,"low":11.24,"close":11.24,"volume":200},{"timestamp":"2026-10-28T18:42:00+00:00","open":11.255,"high":11.255,"low":11.255,"close":11.255,"volume":100},{"timestamp":"2026-10-28T19:29:00+00:00","open":11.21,"high":11.21,"low":11.21,"close":11.21,"volume":200},{"timestamp":"2026-10-28T19:42:00+00:00","open":11.25,"high":11.25,"low":11.25,"close":11.25,"volume":200},{"timestamp":"2026-10-28T19:45:00+00:00","open":11.295,"high":11.295,"low":11.295,"close":11.295,"volume":300},{"timestamp":"2026-10-28T19:48:00+00:00","open":11.3,"high":11.3,"low":11.3,"close":11.3,"volume":500},{"timestamp":"2026-10-28T19:51:00+00:00","open":11.37,"high":11.37,"low":11.37,"close":11.37,"volume":200},{"timestamp":"2026-10-28T19:53:00+00:00","open":11.45,"high":11.45,"low":11.43,"close":11.43,"volume":700},{"timestamp":"2026-10-28T19:58:00+00:00","open":11.35,"high":11.35,"low":11.34,"close":11.34,"volume":638},{"timestamp":"2026-10-29T13:30:00+00:00","open":11.065,"high":11.065,"low":11.065,"close":11.065,"volume":201},{"timestamp":"2026-10-29T13:32:00+00:00","open":11.22,"high":11.22,"low":11.22,"close":11.22,"volume":100},{"timestamp":"2026-10-29T13:38:00+00:00","open":11.205,"high":11.205,"low":11.205,"close":11.205,"volume":104},{"timestamp":"2026-10-29T13:40:00+00:00","open":11.36,"high":11.36,"low":11.36,"close":11.36,"volume":510},{"timestamp":"2026-10-29T13:45:00+00:00","open":11.285,"high":11.285,"low":11.285,"close":11.285,"volume":647},{"timestamp":"2026-10-29T13:52:00+00:00","open":11.39,"high":11.39,"low":11.39,"close":11.39,"volume":220},{"timestamp":"2026-10-29T13:56:00+00:00","open":11.53,"high":11.53,"low":11.53,"close":11.53,"volume":218},{"timestamp":"2026-10-29T13:57:00+00:00","open":11.6,"high":11.6,"low":11.6,"close":11.6,"volume":100},{"timestamp":"2026-10-29T14:00:00+00:00","open":11.88,"high":11.88,"low":11.88,"close":11.88,"volume":200},{"timestamp":"2026-10-29T14:01:00+00:00","open":11.83,"high":11.83,"low":11.83,"close":11.83,"volume":400},{"timestamp":"2026-10-29T14:08:00+00:00","open":12.04,"high":12.04,"low":12.04,"close":12.04,"volume":100},{"timestamp":"2026-10-29T14:13:00+00:00","open":11.88,"high":11.88,"low":11.88,"close":11.88,"volume":200},{"timestamp":"2026-10-29T14:16:00+00:00","open":11.89,"high":11.89,"low":11.89,"close":11.89,"volume":200},{"timestamp":"2026-10-29T14:28:00+00:00","open":11.9,"high":11.9,"low":11.9,"close":11.9,"volume":200},{"timestamp":"2026-10-29T14:31:00+00:00","open":12,"high":12,"low":12,"close":12,"volume":100},{"timestamp":"2026-10-29T14:38:00+00:00","open":11.84,"high":11.84,"low":11.84,"close":11.84,"volume":200},{"timestamp":"2026-10-29T14:42:00+00:00","open":11.725,"high":11.725,"low":11.725,"close":11.725,"volume":100},{"timestamp":"2026-10-29T14:43:00+00:00","open":11.7,"high":11.71,"low":11.7,"close":11.71,"volume":355},{"timestamp":"2026-10-29T14:55:00+00:00","open":11.805,"high":11.805,"low":11.805,"close":11.805,"volume":400},{"timestamp":"2026-10-29T15:03:00+00:00","open":11.91,"high":11.91,"low":11.91,"close":11.91,"volume":100},{"timestamp":"2026-10-29T15:10:00+00:00","open":12.02,"high":12.02,"low":12.02,"close":12.02,"volume":100},{"timestamp":"2026-10-29T15:22:00+00:00","open":12.11,"high":12.11,"low":12.11,"close":12.11,"volume":100},{"timestamp":"2026-10-29T15:28:00+00:00","open":12.16,"high":12.16,"low":12.16,"close":12.16,"volume":100},{"timestamp":"2026-10-29T15:31:00+00:00","open":12.26,"high":12.26,"low":12.26,"close":12.26,"volume":245},{"timestamp":"2026-10-29T15:38:00+00:00","open":12.145,"high":12.145,"low":12.145,"close":12.145,"volume":300},{"timestamp":"2026-10-29T15:58:00+00:00","open":12.31,"high":12.31,"low":12.31,"close":12.31,"volume":200},{"timestamp":"2026-10-29T16:13:00+00:00","open":12.17,"high":12.17,"low":12.17,"close":12.17,"volume":200},{"timestamp":"2026-10-29T16:22:00+00:00","open":12.24,"high":12.24,"low":12.24,"close":12.24,"volume":200},{"timestamp":"2026-10-29T16:26:00+00:00","open":12.22,"high":12.22,"low":12.22,"close":12.22,"volume":300},{"timestamp":"2026-10-29T17:05:00+00:00","open":12.135,"high":12.135,"low":12.135,"close":12.135,"volume":100},{"timestamp":"2026-10-29T17:11:00+00:00","open":12.15,"high":12.15,"low":12.15,"close":12.15,"volume":288},{"timestamp":"2026-10-29T17:13:00+00:00","open":12.09,"high":12.09,"low":12.085,"close":12.085,"volume":220},{"timestamp":"2026-10-29T17:19:00+00:00","open":12.09,"high":12.09,"low":12.09,"close":12.09,"volume":100},{"timestamp":"2026-10-29T17:25:00+00:00","open":12.08,"high":12.08,"low":12.08,"close":12.08,"volume":281},{"timestamp":"2026-10-29T17:30:00+00:00","open":12.11,"high":12.11,"low":12.11,"close":12.11,"volume":256},{"timestamp":"2026-10-29T17:36:00+00:00","open":12.03,"high":12.03,"low":12.03,"close":12.03,"volume":266},{"timestamp":"2026-10-29T17:43:00+00:00","open":11.955,"high":11.955,"low":11.955,"close":11.955,"volume":320},{"timestamp":"2026-10-29T17:47:00+00:00","open":11.88,"high":11.88,"low":11.875,"close":11.875,"volume":685},{"timestamp":"2026-10-29T17:58:00+00:00","open":11.86,"high":11.86,"low":11.86,"close":11.86,"volume":100},{"timestamp":"2026-10-29T18:01:00+00:00","open":11.82,"high":11.82,"low":11.82,"close":11.82,"volume":200},{"timestamp":"2026-10-29T18:08:00+00:00","open":11.85,"high":11.85,"low":11.85,"close":11.85,"volume":100},{"timestamp":"2026-10-29T18:22:00+00:00","open":11.72,"high":11.72,"low":11.72,"close":11.72,"volume":150},{"timestamp":"2026-10-29T18:34:00+00:00","open":11.57,"high":11.57,"low":11.57,"close":11.57,"volume":100},{"timestamp":"2026-10-29T18:39:00+00:00","open":11.46,"high":11.46,"low":11.46,"close":11.46,"volume":300},{"timestamp":"2026-10-29T19:33:00+00:00","open":11.6,"high":11.6,"low":11.6,"close":11.6,"volume":213},{"timestamp":"2026-10-29T19:48:00+00:00","open":11.41,"high":11.41,"low":11.41,"close":11.41,"volume":800},{"timestamp":"2026-10-29T19:51:00+00:00","open":11.5,"high":11.5,"low":11.5,"close":11.5,"volume":200},{"timestamp":"2026-10-29T19:52:00+00:00","open":11.47,"high":11.47,"low":11.47,"close":11.47,"volume":104},{"timestamp":"2026-10-29T19:57:00+00:00","open":11.57,"high":11.57,"low":11.57,"close":11.57,"volume":100},{"timestamp":"2026-10-29T19:58:00+00:00","open":11.545,"high":11.545,"low":11.54,"close":11.54,"volume":1600},{"timestamp":"2026-10-29T19:59:00+00:00","open":11.54,"high":11.55,"low":11.54,"close":11.55,"volume":515},{"timestamp":"2026-10-30T13:30:00+00:00","open":10.2,"high":10.42,"low":10.2,"close":10.42,"volume":602},{"timestamp":"2026-10-30T13:32:00+00:00","open":10.62,"high":10.66,"low":10.62,"close":10.66,"volume":500},{"timestamp":"2026-10-30T13:47:00+00:00","open":10.56,"high":10.56,"low":10.56,"close":10.56,"volume":200},{"timestamp":"2026-10-30T13:51:00+00:00","open":10.44,"high":10.44,"low":10.44,"close":10.44,"volume":200},{"timestamp":"2026-10-30T14:38:00+00:00","open":10.5,"high":10.5,"low":10.5,"close":10.5,"volume":227},{"timestamp":"2026-10-30T14:52:00+00:00","open":10.45,"high":10.45,"low":10.45,"close":10.45,"volume":300},{"timestamp":"2026-10-30T15:01:00+00:00","open":10.42,"high":10.42,"low":10.42,"close":10.42,"volume":171},{"timestamp":"2026-10-30T15:10:00+00:00","open":10.45,"high":10.45,"low":10.45,"close":10.45,"volume":100},{"timestamp":"2026-10-30T15:16:00+00:00","open":10.35,"high":10.35,"low":10.35,"close":10.35,"volume":200},{"timestamp":"2026-10-30T15:23:00+00:00","open":10.36,"high":10.36,"low":10.36,"close":10.36,"volume":700},{"timestamp":"2026-10-30T16:08:00+00:00","open":10.05,"high":10.05,"low":10.05,"close":10.05,"volume":280},{"timestamp":"2026-10-30T16:11:00+00:00","open":9.99,"high":9.99,"low":9.99,"close":9.99,"volume":100},{"timestamp":"2026-10-30T16:46:00+00:00","open":9.86,"high":9.86,"low":9.855,"close":9.855,"volume":340},{"timestamp":"2026-10-30T17:44:00+00:00","open":9.63,"high":9.64,"low":9.63,"close":9.64,"volume":200},{"timestamp":"2026-10-30T17:46:00+00:00","open":9.64,"high":9.64,"low":9.64,"close":9.64,"volume":180},{"timestamp":"2026-10-30T17:54:00+00:00","open":9.5,"high":9.5,"low":9.5,"close":9.5,"volume":100},{"timestamp":"2026-10-30T18:17:00+00:00","open":9.38,"high":9.38,"low":9.38,"close":9.38,"volume":300},{"timestamp":"2026-10-30T18:21:00+00:00","open":9.32,"high":9.32,"low":9.32,"close":9.32,"volume":100},{"timestamp":"2026-10-30T18:30:00+00:00","open":9.33,"high":9.33,"low":9.28,"close":9.28,"volume":500},{"timestamp":"2026-10-30T18:31:00+00:00","open":9.26,"high":9.26,"low":9.26,"close":9.26,"volume":200},{"timestamp":"2026-10-30T18:54:00+00:00","open":9.23,"high":9.23,"low":9.23,"close":9.23,"volume":205},{"timestamp":"2026-10-30T19:00:00+00:00","open":9.31,"high":9.31,"low":9.31,"close":9.31,"volume":100},{"timestamp":"2026-10-30T19:08:00+00:00","open":9.54,"high":9.54,"low":9.54,"close":9.54,"volume":100},{"timestamp":"2026-10-30T19:25:00+00:00","open":9.81,"high":9.81,"low":9.81,"close":9.81,"volume":112},{"timestamp":"2026-10-30T19:35:00+00:00","open":9.675,"high":9.705,"low":9.675,"close":9.7,"volume":1300},{"timestamp":"2026-10-30T19:36:00+00:00","open":9.7,"high":9.71,"low":9.685,"close":9.71,"volume":1200},{"timestamp":"2026-10-30T19:37:00+00:00","open":9.725,"high":9.725,"low":9.705,"close":9.71,"volume":855},{"timestamp":"2026-10-30T19:38:00+00:00","open":9.675,"high":9.675,"low":9.675,"close":9.675,"volume":100},{"timestamp":"2026-10-30T19:39:00+00:00","open":9.635,"high":9.67,"low":9.635,"close":9.67,"volume":1070},{"timestamp":"2026-10-30T19:40:00+00:00","open":9.685,"high":9.7,"low":9.685,"close":9.7,"volume":1052},{"timestamp":"2026-10-30T19:41:00+00:00","open":9.625,"high":9.625,"low":9.585,"close":9.59,"volume":1065},{"timestamp":"2026-10-30T19:42:00+00:00","open":9.595,"high":9.64,"low":9.595,"close":9.64,"volume":1660},{"timestamp":"2026-10-30T19:43:00+00:00","open":9.615,"high":9.615,"low":9.615,"close":9.615,"volume":350},{"timestamp":"2026-10-30T19:45:00+00:00","open":9.575,"high":9.635,"low":9.57,"close":9.635,"volume":1000},{"timestamp":"2026-10-30T19:46:00+00:00","open":9.675,"high":9.7,"low":9.675,"close":9.7,"volume":1000},{"timestamp":"2026-10-30T19:47:00+00:00","open":9.685,"high":9.7,"low":9.685,"close":9.685,"volume":1000},{"timestamp":"2026-10-30T19:48:00+00:00","open":9.695,"high":9.705,"low":9.685,"close":9.705,"volume":2154},{"timestamp":"2026-10-30T19:49:00+00:00","open":9.725,"high":9.745,"low":9.725,"close":9.745,"volume":1300},{"timestamp":"2026-10-30T19:50:00+00:00","open":9.74,"high":9.83,"low":9.74,"close":9.83,"volume":1884},{"timestamp":"2026-10-30T19:51:00+00:00","open":9.84,"high":9.875,"low":9.84,"close":9.865,"volume":1500},{"timestamp":"2026-10-30T19:52:00+00:00","open":9.855,"high":9.905,"low":9.855,"close":9.905,"volume":3185},{"timestamp":"2026-10-30T19:53:00+00:00","open":9.905,"high":9.905,"low":9.905,"close":9.905,"volume":485},{"timestamp":"2026-10-30T19:59:00+00:00","open":9.83,"high":9.83,"low":9.83,"close":9.83,"volume":221}]},"fiveMinute":{"barCount":441,"sourceTimestampUtc":"2026-10-30T19:55:00+00:00","completedAtUtc":"2026-10-30T20:00:00+00:00","ageSeconds":10520.9800626,"freshness":"STALE","close":9.83,"ema9":9.710889085444113630917776882,"ema20":9.860971822490104459403314172,"vwap":9.791479329530248609056975844,"rsi":43.696538093668199492292976253,"macd":-0.282684790660030420717080242,"macdSignal":-0.3957859847539560320409619550,"atr":0.1341250922070418101372410153,"relativeVolume":0.258056982718355908453993461,"relativeVolumeBaselineSamples":10,"scoreBreakdown":{"score":null,"maxScore":6,"permissionThreshold":5,"criteria":[{"key":"closeAboveVwap","label":"5M close > VWAP","passed":true},{"key":"closeAboveEma9","label":"5M close > EMA 9","passed":true},{"key":"ema9AboveEma20","label":"5M EMA 9 > EMA 20","passed":false},{"key":"ema20AboveSma50","label":"5M EMA 20 > SMA 50","passed":false},{"key":"rsiSupportive","label":"5M RSI >= 50","passed":false},{"key":"rvolSupportive","label":"5M RVOL >= 1.50","passed":false}]}},"decision":null,"methodology":{"indicatorHistory":"EMA9/EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP are calculated from provider OHLCV.","relativeVolume":"5m current volume divided by average volume for the same regular-session 5m clock slot across prior sessions; minimum five prior samples. This is not a vendor-supplied consolidated RVOL field.","freshness":"Age is measured from the expected bar close (bar timestamp + timeframe), not the bar-open timestamp.","limitations":["1m/5m decision bars are sourced through historical REST; the optional WebSocket is not currently subscribed or lacks a fresh 50-bar 1m history.","Provider feed and entitlement determine coverage.","No catalyst, halt, spread, order-book, or Thinkorswim study data is inferred.","A true signal remains unavailable when history, freshness, or same-slot volume baseline is insufficient."]}}
+
+
+### Header
+***In addition to what I said above:*** The width of the header can be 100% - it doesn't have to be "max-width: 1240px;" and the .topbar padding needs to update with it.
+
+
+### Main Chart
+***mainChartSymbol*** This should be bigger and more pronounced
+***opportunity-status*** Make this a 2x2 to the right of the chart itself "focusPriceChart". This should consolidate space and be more efficient.
+
+### Where are the front-end files?
+I can't do a ctrl+shift+f to find the front-end in the solution. I wanted you to add it. Is this not going to be an MVC solution? I want to be able to edit and tinker with the index.
+
+
+***There are still some To-Do items:*** Do them. Update/Create what you need. You have permissions.
+
+***Tell me what you did:*** Share it as a checklist of the To-Do list.
+
+***Update the To-Do List and Hand-Off afterwards. Create/Update the necessary files.***
+
+
+
+
+
+
+
+### The following was your response in https://chatgpt.com/g/g-p-6ad0f6bcb72c81918e3cdd194cda6630-momentum-command-center-v3/c/6ae4cdb5-26c4-83e8-878a-a3563310041c
+MCC V3 — implementation checklist
+The new RKLX data changes the diagnosis materially: the historical REST endpoint is returning a sparse, incomplete set of bars for the requested 35-minute interval, while the live-assessment endpoint has a much larger history but still uses REST as its source. The WebSocket reports connected/subscribed but has received zero bars.
+1. Market-data diagnosis
+Confirmed issue
+ WebSocket is connected but not delivering bars
+- connected: true and state: SUBSCRIBED confirm the socket connection and subscription acknowledgement.
+- receivedBars: 0, persistedBars: 0, lastBarUtc: null, and empty barsBySymbol confirm that no minute bars had arrived by 22:50 UTC.
+- Therefore, the current WebSocket path is not providing live bar updates for these four symbols in this capture. A successful subscription acknowledgement is not proof of market-data delivery.
+Confirmed data-quality issue
+ The RKLX historical query is sparse
+- The 1M response returned only four bars in a 35-minute window, at 19:00, 19:08, 19:25 and 19:35 UTC.
+- The 5M response also returned only four bars.
+- The response itself reports gaps, including 1M gaps at 19:01, 19:09 and 19:26 UTC.
+- The live assessment contains a much larger 1M history, including many bars in the same interval, but its sourceTransport is still REST.
+This means the historical endpoint's returned set is not equivalent to the complete assessment history. The exact reason for that discrepancy—query filtering, persistence selection, aggregation, or provider retrieval—is Data not found in sources. I will not attribute it to IEX entitlement without evidence.
+
+One additional point: the live assessment was captured after the 20:00 UTC regular-session close. Its STALE status and 10,521-second age are expected for a post-close assessment; that does not explain the earlier in-session stale 5M observation.
+
+Important correction on the WebSocket evidence: the status snapshot was taken at 22:50 UTC, well after the 20:00 UTC regular-session close. Zero received bars at that time does not prove the stream failed during market hours. It proves only that no bars had been recorded in that snapshot. A regular-session test is still required before declaring the stream broken.
+2. Front-end location and project structure
+The front end already exists as editable source files:
+- frontend/index.html — dashboard markup and element IDs
+- frontend/styles.css — layout and styling
+- frontend/app.js — browser behavior and API calls
+- frontend/favicon.svg — dashboard icon
+It is currently a static HTML/CSS/JavaScript dashboard served by the ASP.NET Core API—not an MVC application with Razor views and controllers. The files were not listed as Solution Items in Visual Studio, which explains why they were difficult to find. I’m making them visible in Solution Explorer rather than migrating the whole application to MVC without a functional requirement for Razor.
+3. Additional To-Do audit — RTO exports
+I also located and parsed the RTO CSV exports already committed under data/validation/RTO/. This closes the previously open file-location and OHLCV-matching work.
+OHLCV parity verified
+- 1M export: 30 bars, 12:30–12:59 Arizona, October 28.
+- 5M export: 6 bars, 12:30–12:55 Arizona.
+- Both exports have valid OHLC relationships, nonnegative volume, no duplicate timestamps, and no gaps within their respective exported intervals.
+- I aggregated each set of five 1M bars into its corresponding 5M candle. All six 5M candles match exactly on open, high, low, close, and volume.
+This verifies the two supplied OHLCV exports agree over those six intervals. It does not prove Thinkorswim Permission, READY, RUNNER, or GET OUT state parity: these files carry transport OHLCV records, not a complete per-bar study-state tape. I’m keeping that separate rather than claiming more than the exports establish.
+4. Implementation completed
+Build and tests passed
+ GitHub Actions run 768
+Dashboard and layout
+- [x] Expanded header to 100% viewport width.
+- [x] Removed the 1,240px maximum width from .topbar-layout.
+- [x] Updated .topbar padding for the wider header.
+- [x] Fixed the demo indicator and streamStatus overlap. Both labels can now wrap safely.
+- [x] Increased the size and prominence of mainChartSymbol.
+- [x] Moved opportunity-status beside focusPriceChart.
+- [x] Changed Opportunity Status to a 2×2 layout.
+- [x] Preserved responsive behavior for smaller screens.
+- [x] Updated the CSS/JavaScript cache-buster.
+Visual Studio frontend visibility
+Added to solution
+The following files are now visible under the frontend Solution Items folder:
+File	Purpose
+frontend/index.html	HTML structure and dashboard elements
+frontend/styles.css	Styling and responsive layout
+frontend/app.js	Frontend functionality and API requests
+frontend/favicon.svg	Browser icon
+
+You can expand frontend in Solution Explorer and open these files directly.
+
+Architecture clarification: MCC is currently an ASP.NET Core Minimal API with a static HTML/CSS/JavaScript frontend. It is not MVC/Razor. I have made the existing frontend editable and visible without introducing an unnecessary framework migration.
+Additional To-Do work
+- [x] Audited the outstanding checklist rather than simply adding another handoff.
+- [x] Reconciled outdated descriptions of the collector and discovery workers with their actual hosted implementations.
+- [x] Updated the existing Thinkorswim validation procedure reference.
+- [x] Parsed the RTO 1M and 5M exports.
+- [x] Verified all six RTO 5M candles against their corresponding aggregated 1M candles.
+- [x] Updated the RTO validation documentation.
+- [x] Updated the User Manual.
+- [x] Updated the Master To-Do and New Chat Handoff.
+5. Remaining To-Do checklist
+These are genuine outstanding items, not work I am representing as completed.
+Priority	Remaining work	Reason
+P0	Verify WebSocket delivery during regular market hours	The supplied status capture was post-close
+P0	Confirm WebSocket-backed 1M assessments	Requires 50 completed bars and fresh provenance
+P0	Browser acceptance of revised layout	Requires the running dashboard
+P1	Matched Thinkorswim 5M/1M state replay	RTO exports contain OHLCV, not study-state labels
+P1	Collector outage, restart, sleep/wake recovery tests	Requires controlled runtime testing
+P1	Full Morning Report persistence/versioning	Current caching is not immutable report history
+P1	Automated Overnight session-boundary calculation	Exchange calendar and complete historical inputs
+P2	Production scanner/provider entitlement validation	Requires verified provider coverage and licensing
+P2	Schwab read-only integration	Individual API approval and secure configuration pending
+P2	Desktop packaging/startup	Not yet implemented
+
+Order submission remains disabled.
+6. Files updated
+All changes are committed to feature/opportunity-quality-classification.
+- Master To-Do
+- New Chat Handoff
+- User Manual
+- Market Data Evidence
+- RTO Validation
+- Visual Studio Solution
+7. Validation
+GitHub Actions
+Passed
+
+768
+.NET 8 build and test workflow
+
+Commit: 2a067dd7390f7260e32f171e2e2983a82b91f0b9
+View build and test results
+- [x] Build succeeded.
+- [x] Test step succeeded.
+- [x] Frontend JavaScript syntax check passed.
+- [x] No duplicate HTML IDs.
+- [ ] Actual browser acceptance remains outstanding.
+
+[Uncertainties]
+- Alpaca/IEX's reason for missing RKLX bars is not established. Data not found in sources.
+- Regular-session WebSocket delivery has not yet been demonstrated.
+- RTO OHLCV parity is established for six candles, not Thinkorswim state parity.
+- Browser appearance and interaction have not been independently verified in your running instance.
+Next: Pull the branch and open the solution. The frontend should now be directly accessible in Solution Explorer under frontend.
