@@ -32,6 +32,11 @@ public sealed class MarketDataCollectionWorker(
     private DateTimeOffset? _lastCycleStartedUtc;
     private DateTimeOffset? _lastCycleCompletedUtc;
     private readonly ConcurrentQueue<string> _recentErrors = new();
+    private volatile bool _checkpointLoadCompleted;
+    private volatile bool _checkpointFileFound;
+    private int _checkpointLoadedEntryCount;
+    private DateTimeOffset? _checkpointLoadCompletedUtc;
+    private string? _checkpointLoadError;
 
     /// <summary>
     /// PURPOSE: Expose operational state without representing a configured worker as a healthy feed.
@@ -47,6 +52,11 @@ public sealed class MarketDataCollectionWorker(
         initialLookbackMinutes = _lookbackMinutes,
         overlapMinutes = _overlapMinutes,
         checkpointPath = _checkpointPath,
+        checkpointLoadCompleted = _checkpointLoadCompleted,
+        checkpointFileFound = _checkpointFileFound,
+        checkpointLoadedEntryCount = Volatile.Read(ref _checkpointLoadedEntryCount),
+        checkpointLoadCompletedUtc = _checkpointLoadCompletedUtc,
+        checkpointLoadError = _checkpointLoadError,
         watermarks = _watermarks.Select(kvp => new { key = kvp.Key, sourceTimestampUtc = kvp.Value }).ToArray(),
         cycles = Interlocked.Read(ref _cycles),
         newlyPersistedObservations = Interlocked.Read(ref _newObservations),
@@ -69,11 +79,22 @@ public sealed class MarketDataCollectionWorker(
             return;
         }
 
-        try { await LoadCheckpointsAsync(stoppingToken); }
+        try
+        {
+            _checkpointFileFound = File.Exists(_checkpointPath);
+            await LoadCheckpointsAsync(stoppingToken);
+            Volatile.Write(ref _checkpointLoadedEntryCount, _watermarks.Count);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
-            RecordError($"checkpoint-load: {ex.GetType().Name}: {Trim(ex.Message)}");
+            _checkpointLoadError = $"{ex.GetType().Name}: {Trim(ex.Message)}";
+            RecordError($"checkpoint-load: {_checkpointLoadError}");
             logger.LogError(ex, "Collector checkpoint could not be loaded; fresh symbols will use the configured initial lookback.");
+        }
+        finally
+        {
+            _checkpointLoadCompletedUtc = DateTimeOffset.UtcNow;
+            _checkpointLoadCompleted = true;
         }
 
         while (!stoppingToken.IsCancellationRequested)
