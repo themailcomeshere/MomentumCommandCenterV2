@@ -4,7 +4,7 @@
 - The live response adds `snapshotPersistenceStatus`, `snapshotId`, and `snapshotVersion`. A persistence error is logged and returned as `FAILED`; the report remains available.
 - Query `GET /api/morning-brief/history?limit=20` to read the newest immutable snapshots (limit 1–200).
 - Default file: local application data under `MomentumCommandCenterV2/morning-brief-snapshots.jsonl`. Override with server-side `MCC_MORNING_BRIEF_SNAPSHOT_PATH`.
-- Snapshot records include generated/recorded UTC timestamps, report version, SHA-256 payload hash, and the full report. The stored report retains PARTIAL, DATA?, and unknown fields as generated.
+- Snapshot records include generated/recorded UTC timestamps, report version, SHA-256 payload hash, explicit source-bar watermarks from the market landscape (provider/symbol/timeframe/feed/transport and latest UTC source timestamp), and the full report. The stored report retains PARTIAL, DATA?, and unknown fields as generated.
 - This is report-response history, not yet a complete source-watermark or outcome archive. Do not interpret persistence as source validation.
 
 ---
