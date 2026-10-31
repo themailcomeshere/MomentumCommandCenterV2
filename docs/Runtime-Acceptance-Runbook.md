@@ -26,7 +26,8 @@ Use `scripts/validation/Test-MarketDataRuntime.ps1` against the running API. Run
 The script now checks `/api/health` before collecting data and rejects the known local scheme/port mismatch with a direct message. If using HTTPS instead, use `https://localhost:53359` and ensure the ASP.NET development certificate is trusted by Windows/PowerShell.
 
 Replace the example time window with the exact UTC interval being investigated. The script writes:
-- `stored-bars.json`: latest stored RKLX observations for 1M and 5M, filtered locally by provider/feed/timeframe.
+- `provider-refresh.json`: fresh provider responses for 1M and 5M, including `barCount` and `newlyPersistedObservationCount`.
+- `stored-bars.json`: latest stored RKLX observations for 1M and 5M, filtered locally by provider/feed/timeframe, plus exact timestamp/OHLCV/provenance comparison against the fresh provider response. `zeroNewWritesConsistentWithIdempotentDuplicates=true` is set only when the provider returned bars, the API reported zero new writes, and every fresh bar exactly matches a stored row.
 - `runtime-before.json` and `runtime-after.json`: stream, collector, and provider status snapshots.
 - `stream-delta.json`: per-symbol acknowledged state, bar-count delta, and last-bar timestamps.
 - `live-assessments.json`: full live assessment response for each requested symbol.
@@ -49,7 +50,7 @@ The two uploaded repository artifacts are `data/validation/RKLX/MarketData_Store
 
 This proves stored membership for those 13 and 12 rows in that artifact window. It does **not** verify the separate four 1M / four 5M observations previously described at 19:00Z–19:35Z: that later interval is outside the uploaded files' 13:30Z–17:30Z range. The script invocation that failed has not yet queried the live API, so the exact four later observations remain unverified.
 
-The user does not need to manually determine idempotency. Once the exact source bars and matching stored rows are compared on provider, feed, timeframe, source timestamp, and OHLCV/content hash, a zero-new-write result for an already-present identical observation is expected idempotent behavior. The current uploaded files alone do not prove that the separate 19:00Z–19:35Z request returned identical payloads.
+The user does not need to manually determine idempotency. The updated script now re-requests the provider bars for both timeframes, then compares each returned bar with the stored latest row by normalized UTC timestamp, symbol, OHLCV, provider, feed, timeframe, and transport. It marks a zero-new-write result as consistent with idempotent duplicates only when every returned bar has an exact stored match. Empty provider responses or mismatches remain inconclusive/false. The current uploaded files alone do not prove that the separate 19:00Z–19:35Z request returned identical payloads.
 
 ## 2. Browser acceptance
 
