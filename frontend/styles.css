@@ -1295,3 +1295,160 @@ main{margin-top:16px}
  .redzone-panel .redzone-grid{grid-template-columns:1fr}
  .main-chart-section .focus-price-chart{width:100%}
 }
+
+ 
+/* 2026-10-30 follow-up: full-width header, collision-safe status pills, chart-side 2x2 metrics. */
+.topbar{
+ width:100%;
+ padding:14px 24px;
+}
+.topbar-layout{
+ width:100%;
+ max-width:none;
+ margin:0;
+ grid-template-columns:minmax(300px,auto) minmax(0,1fr);
+ gap:20px;
+}
+.topbar-brand{
+ flex-direction:row;
+ align-items:center;
+ justify-content:space-between;
+ flex-wrap:wrap;
+ gap:12px 20px;
+}
+.topbar-tools{
+ min-width:0;
+ justify-content:flex-end;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:8px;
+}
+.topbar-tools .demo-flag{
+ display:inline-flex;
+ align-items:center;
+ gap:7px;
+ min-width:0;
+ max-width:100%;
+ white-space:normal;
+ line-height:1.25;
+}
+.topbar-tools .demo-flag>span:first-child{
+ display:inline-block;
+ flex:0 0 7px;
+ width:7px;
+ height:7px;
+ margin:0;
+ border-radius:50%;
+ background:var(--yellow);
+}
+.topbar-tools .demo-flag>span:last-child{
+ display:block;
+ width:auto;
+ height:auto;
+ margin:0;
+ border-radius:0;
+ background:transparent;
+ line-height:1.25;
+ overflow-wrap:anywhere;
+}
+.topbar-tools #streamStatus{
+ min-width:0;
+ max-width:min(100%,380px);
+ white-space:normal;
+ line-height:1.3;
+ overflow-wrap:anywhere;
+}
+.main-chart-header{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:18px;
+ margin-bottom:12px;
+}
+.main-chart-header>.section-heading{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:18px;
+ width:100%;
+ min-width:0;
+ margin:0;
+}
+.main-chart-header>.section-heading>div{min-width:0}
+.main-chart-header>.section-heading .muted{max-width:620px}
+.focus-symbol-chip{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ flex:0 0 auto;
+ min-width:100px;
+ padding:8px 16px;
+ border:1px solid #45658f;
+ border-radius:12px;
+ background:rgba(80,137,210,.13);
+ color:#d8e9ff;
+ font-size:clamp(22px,2.8vw,34px);
+ font-weight:850;
+ line-height:1;
+ letter-spacing:-.035em;
+ box-shadow:inset 0 0 0 1px rgba(131,184,255,.08);
+}
+.focus-chart-layout{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) minmax(310px,360px);
+ align-items:stretch;
+ gap:14px;
+}
+.focus-chart-layout .focus-price-chart{
+ width:100%;
+ max-width:none;
+ min-width:0;
+ min-height:220px;
+ margin:0;
+ padding:12px;
+}
+.focus-chart-layout .focus-price-chart svg{height:220px}
+#opportunity-status.status-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-rows:repeat(2,minmax(108px,auto));
+ align-content:stretch;
+ gap:8px;
+ min-width:0;
+ margin:0;
+}
+#opportunity-status .panel{
+ min-width:0;
+ min-height:108px;
+ height:100%;
+ padding:11px;
+ border-radius:10px;
+ box-shadow:none;
+}
+#opportunity-status .hero-card{min-height:108px}
+#opportunity-status .eyebrow{font-size:8px;letter-spacing:.09em;margin-bottom:4px}
+#opportunity-status .classification{font-size:clamp(12px,1.1vw,16px);line-height:1.2;margin:5px 0}
+#opportunity-status .hero-card p{font-size:9px;line-height:1.25;margin:4px 0}
+#opportunity-status .chips{gap:3px}
+#opportunity-status .chips .chip{font-size:8px;padding:3px 5px;white-space:normal}
+#opportunity-status .metric{justify-content:center}
+#opportunity-status .metric strong{font-size:clamp(16px,1.6vw,22px);margin:5px 0;overflow-wrap:anywhere}
+#opportunity-status .metric small{font-size:9px;line-height:1.2}
+@media(max-width:1050px){
+ .topbar-layout{grid-template-columns:minmax(0,1fr)}
+ .topbar-brand{align-items:center}
+ .topbar-tools{justify-content:flex-start}
+ .focus-chart-layout{grid-template-columns:minmax(0,1fr)}
+ .focus-chart-layout .focus-price-chart{min-height:190px}
+ #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}
+}
+@media(max-width:560px){
+ .topbar{padding:10px 12px}
+ .topbar-brand{align-items:flex-start;flex-direction:column}
+ .topbar-tools{width:100%;justify-content:flex-start}
+ .topbar-tools #streamStatus{max-width:100%}
+ .main-chart-header>.section-heading{align-items:flex-start;flex-direction:column}
+ .focus-symbol-chip{font-size:25px;min-width:88px}
+ .focus-chart-layout .focus-price-chart svg{height:170px}
+ #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
