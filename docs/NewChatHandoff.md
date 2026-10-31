@@ -1,3 +1,75 @@
+# New Chat Handoff — Monday readiness / independent 5M score — 2026-10-31
+
+## Current operating disposition
+
+- **Red Zone / V2 5M score:** source implementation now computes the six-factor 5M score independently of 1M execution availability. Ready for Monday live observation only after exact-head CI and runtime checks.
+- **1M execution:** separate gate; must not be inferred from 5M score. WebSocket is used only when its subscription/history/freshness/provenance gates pass; REST fallback remains valid.
+- **Boring Overnight:** NOT READY for actionable/automated READY. Manual WATCH/research only until historical session pairs, daily metrics, catalyst coverage, exclusions, session policy, and full GTC_EXT coverage are validated.
+
+## Saturday user-supplied evidence
+
+- Market-data validation command ran against `http://localhost:53360` for RKLX / Alpaca / IEX / 2026-10-30 13:00Z–19:35Z.
+- Output: 25 stored 1M observations, 23 stored 5M; automated idempotency result 1M=True, 5M=True.
+- User artifact folder: `artifacts/runtime-validation/20261031T202332Z`.
+- Checkpoint baseline: `artifacts/collector-checkpoint/20261031T202543Z`.
+- Live checkpoint path: `C:\Users\jampo\AppData\Local\MomentumCommandCenterV2\collector-watermarks.json`.
+- Checkpoint SHA-256: `8E3AFBD5DAD5C3502DB625F0133DE697F9C8615BB35BDA09609A4CF7FAE44500`.
+- Capture reported 3 cycles, 0 last-cycle errors. This does not prove failure handling, restart reload, or sleep/wake.
+- WebSocket: SPY/RKLX/ASTX/XRPN acknowledged before/after, but barCount and newBarsObserved were zero. The run occurred Saturday, so regular-session delivery remains untested.
+- User confirms all MCC application JavaScript errors are gone except Visual Studio Browser Link `$.noConflict is not a function`; disable Browser Link for the debugging session if it persists.
+
+## Source changes made after the previous handoff
+
+### Independent Red Zone 5M score
+
+The old API returned `fiveMinute.scoreBreakdown.score=decision?.Score`, coupling the 5M score to the combined 1M/5M decision. A missing 1M decision therefore hid the 5M authority score.
+
+Changes:
+- `src/MomentumCommandCenterV2.Core/V2SignalEngine.cs`: added canonical `CalculateFiveMinuteScore(BarSnapshot, V2Config?)`; existing engine uses the same function.
+- `src/MomentumCommandCenterV2.API/MarketData/LiveSymbolAssessmentService.cs`: independently calculates current 5M score only when 5M technical history, freshness (<=360s), and same-slot RVOL are available. Emits `score`, `permission`, and `status=CURRENT|UNKNOWN`.
+- `frontend/app.js`: main Decision Explanation and Red Zone cards read `fiveMinute.scoreBreakdown`. 5+ is 5M Permission only. EXECUTION READY still requires `decision.entryAllowed=true`.
+- `tests/MomentumCommandCenterV2.Tests/V2SignalEngineTests.cs`: added 6/6, 5/6, and 4/6 score assertions.
+
+**Important:** exact-head CI and live runtime acceptance are not yet confirmed for these latest changes. Check branch HEAD and GitHub Actions before telling the user this build is verified.
+
+## Monday clock conversion — 2026-11-02
+
+- Phoenix remains UTC−07:00; Eastern returns to UTC−05:00 after the November 1 DST end.
+- Phoenix is 2 hours behind Eastern.
+- NYSE/Nasdaq regular open/close map to 07:30 / 14:00 Arizona.
+- User's 08:30 Arizona start maps to 10:30 Eastern.
+- Project GTC_EXT window 07:00–20:00 Eastern maps to 05:00–18:00 Arizona.
+- Use `America/Phoenix` and `America/New_York`, not hard-coded UTC offsets for date-sensitive calculations.
+
+## Boring Overnight blocker audit
+
+Read:
+- `docs/BoringOvernight.md`
+- `src/MomentumCommandCenterV2.API/BoringOvernight/BoringOvernightEvaluator.cs`
+- `src/MomentumCommandCenterV2.API/BoringOvernight/BoringOvernightHistoryCalculator.cs`
+- `src/MomentumCommandCenterV2.API/BoringOvernight/BoringOvernightCandidateSnapshotStore.cs`
+- Boring Overnight routes in `src/MomentumCommandCenterV2.API/Program.cs`.
+
+Findings:
+- History calculator requires explicit close/open bar timestamps; no automatic exchange-calendar policy.
+- It emits rolling metrics only when every requested pair exists and the required count is met.
+- `/api/boring-overnight/evaluate-with-history` deliberately forces `CatalystStatus=UNKNOWN` until a validated catalyst provider exists.
+- Caller-supplied non-history fields are not independently verified.
+- GTC_EXT full-window target touch/fill research is distinct from regular close-to-next-open return.
+- No current 20-session accepted candidate dataset or catalyst-clear evidence exists in the reviewed sources.
+
+A Monday readiness runbook was created at `docs/Monday-Readiness-2026-11-02.md`; `docs/BoringOvernight.md` and Master To-Do were updated. Do not promote Boring Overnight to READY.
+
+## Immediate next actions
+
+1. Check exact current branch HEAD and CI.
+2. Pull branch and hard-refresh MCC.
+3. After 07:30 Arizona Monday, capture live assessments for SPY, RKLX, ASTX, XRPN. Confirm 5M score current and criteria populated; independently inspect 1M status/entryAllowed.
+4. Run a 5–10 minute WebSocket before/after capture during regular market hours. Acknowledgement alone is not delivery.
+5. Run collector restart/reload and safe isolated failure/recovery tests; sleep/wake remains separate.
+6. Continue Boring Overnight as WATCH/manual research only until every launch gate in the Monday runbook passes.
+7. Update Master To-Do and handoff with exact commit SHA, CI run, runtime timestamps, and artifact paths.
+
 # New Chat Handoff — runtime fixes and collector acceptance — 2026-10-31
 
 ## Current source-control checkpoint
