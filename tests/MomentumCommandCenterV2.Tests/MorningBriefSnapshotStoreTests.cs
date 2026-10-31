@@ -16,7 +16,7 @@ public sealed class MorningBriefSnapshotStoreTests
         {
             var store = new MorningBriefSnapshotStore();
             using var report = JsonDocument.Parse("""
-                {"generatedAtUtc":"2026-10-30T20:00:00Z","status":"PARTIAL","catalysts":{"status":"DATA NOT FOUND IN SOURCES"}}
+                {"generatedAtUtc":"2026-10-30T20:00:00Z","status":"PARTIAL","catalysts":{"status":"DATA NOT FOUND IN SOURCES"},"marketLandscape":[{"symbol":"SPY","observations":[{"provider":"Alpaca","latest":{"timestamp":"2026-10-30T19:59:00Z","timeframe":"5m","feed":"iex","sourceTransport":"REST"}}]}]}
                 """);
 
             var saved = await store.AppendAsync(report.RootElement, "morning-brief-v1", CancellationToken.None);
@@ -30,6 +30,8 @@ public sealed class MorningBriefSnapshotStoreTests
             Assert.Equal(saved.SnapshotId, read[0].SnapshotId);
             Assert.Equal(saved.ContentSha256, read[0].ContentSha256);
             Assert.Equal("PARTIAL", read[0].Report.GetProperty("status").GetString());
+            Assert.Equal(new DateTimeOffset(2026, 10, 30, 19, 59, 0, TimeSpan.Zero),
+                read[0].SourceWatermarksUtc["Alpaca/SPY/5m/iex/REST"]);
             Assert.Equal("DATA NOT FOUND IN SOURCES",
                 read[0].Report.GetProperty("catalysts").GetProperty("status").GetString());
         }
