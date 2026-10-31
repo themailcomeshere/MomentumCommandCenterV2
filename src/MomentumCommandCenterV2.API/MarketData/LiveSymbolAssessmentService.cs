@@ -175,7 +175,7 @@ public sealed class LiveSymbolAssessmentService(
             // 5M Permission is an independent authority score. Do not make its
             // availability depend on 1M freshness/history or the combined decision.
             var fiveMinuteScore = five is not null && fiveFresh && rvol.Value.HasValue
-                ? scoreCriteria.Count(x => x.passed == true)
+                ? V2SignalEngine.CalculateFiveMinuteScore(five, scoringConfig)
                 : (int?)null;
             var fiveMinutePermission = fiveMinuteScore.HasValue
                 ? fiveMinuteScore.Value >= 5
