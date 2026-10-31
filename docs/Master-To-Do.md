@@ -28,7 +28,7 @@
 - [ ] During regular market hours, capture stream status before/after 5–10 minutes and confirm `barsBySymbol`, `receivedBars`, `persistedBars`, and `lastBarUtc` advance for SPY, RKLX, ASTX, and XRPN.
 - [ ] After a symbol has at least 50 completed 1M WebSocket observations and a fresh latest bar, confirm live assessment reports `ALPACA_WEBSOCKET_LATEST_BAR`.
 - [ ] Browser-test the revised header, chart-side 2×2 metrics, Morning Brief modal, replay, Red Zone 1×4 layout, and sound permission in the user's running API-hosted dashboard. Browser execution is not available from this repository-editing session.
-- [ ] Verify the exact latest branch head's .NET Release build/test workflow after these edits; prior green runs do not cover this new head.
+- [x] GitHub Actions run 767 passed the .NET 8 build and test workflow for commit 3192c8f34d11273360bed82367563466a30b08ad (the code, solution, and documentation changes at that head).
 - [ ] Schwab Trader API Individual approval and secure OAuth setup remain pending. Read-only position sync is blocked until approval and user-side configuration.
 - [x] Order submission remains disabled by design.
 
