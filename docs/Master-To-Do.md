@@ -1,3 +1,51 @@
+## 2026-10-31 — ChatDisconnect execution and runtime acceptance checkpoint
+
+**Source reviewed:** `docs/ChatDisconnect.txt`, current `docs/Master-To-Do.md`, current `docs/NewChatHandoff.md`, and the implementation backlog. This section supersedes older status snapshots where they conflict; historical sections remain for evidence.
+
+### Completed in this pass — source and documentation
+
+- [x] Read and reconciled the ChatDisconnect note's explicit remaining-work list against current source and prior To-Do entries.
+- [x] Implemented append-only, versioned Morning Brief report snapshots with generated/recorded UTC timestamps, unique ID, SHA-256 payload hash, and full report JSON.
+- [x] Added `GET /api/morning-brief/history?limit=20`; live `/api/morning-brief` now reports snapshot persistence status, ID, and version.
+- [x] Added unit tests for snapshot round-trip/provenance, append-only behavior, UTC validation, and history limits.
+- [x] Added `scripts/validation/Test-MarketDataRuntime.ps1` to capture RKLX stored bars, before/after stream and collector status, per-symbol bar deltas, provider status, and full live assessments.
+- [x] Added `docs/Runtime-Acceptance-Runbook.md` with repeatable acceptance steps and explicit blockers.
+- [x] Updated the Morning Brief technical guide and implementation backlog to reflect the new snapshot capability.
+
+### P0 — runtime acceptance still required
+
+- [ ] Run the stored-bars capture against the actual running MCC API for RKLX, exact UTC window, Alpaca provider, IEX feed, 1M and 5M. Resolve whether the prior `newlyPersistedObservationCount=0` means existing idempotent observations.
+- [ ] During regular market hours, run the 5-minute stream capture for SPY, RKLX, ASTX, and XRPN. Verify acknowledged subscription, per-symbol bar-count/timestamp advancement, and received/persisted totals.
+- [ ] Confirm eligible live assessments select WebSocket 1M only with subscription acknowledgement, at least 50 completed 1M observations, freshness, and explicit WebSocket provenance. 5M Permission remains REST.
+- [ ] Complete browser acceptance of header, status-chip wrapping, chart-side 2x2 metrics, Morning Brief modal/section, replay, Red Zone responsive layout, and sound permission.
+- [ ] Run Release build/tests and inspect CI for the exact source/documentation head produced by this checkpoint. The prior run #776 validates parent commit `46eec0457bd68324a1421b8f5479a43a7d2052b2`, not the new Morning Brief code.
+
+### P1 — engineering and evidence work
+
+- [ ] Matched Thinkorswim state replay: obtain same-symbol/date/study-version 1M and 5M state diagnostics. OHLCV exports alone cannot prove Permission, READY, RUNNER, WANING, SWING, GET OUT/EOD, expiry, re-arm, or re-entry.
+- [ ] Controlled collector outage/restart/sleep-wake acceptance. Source already has durable watermarks, overlap polling, bounded backfill chunks, retries, and atomic checkpoint replacement; target-host recovery is not yet proven.
+- [x] Morning Brief response snapshot persistence implemented (see above).
+- [ ] Complete Morning Brief input-manifest/versioning: per-provider/per-symbol source watermarks, raw-input references/retention policy, and later outcome linkage remain open. Snapshot persistence alone does not complete this.
+- [ ] Automate Overnight session boundaries only after the eligible session policy is defined. The current calculator requires explicit caller-supplied close/open timestamps and fails closed on missing pairs; it does not guess exchange holidays, early closes, ETH/RTH, or the user's overnight window.
+- [ ] Continue Boring Overnight qualification only with source-backed daily/overnight history, validated session pairs, catalyst status, and authoritative 5M state. Unknown catalyst remains UNKNOWN; no qualification from caller assertions alone.
+
+### P2 — external approvals and product decisions
+
+- [ ] Production scanner/provider validation: confirm account plan, feed entitlement, market coverage, licensing, rate limits, and acceptable discovery universe. Current Alpaca movers are bounded top gainers/losers, not full-market breadth.
+- [ ] Schwab read-only integration: blocked on Individual Developer/API approval, app registration, callback URL, and secure server-side OAuth configuration. Order submission remains disabled.
+- [ ] Desktop packaging/startup: choose target platform, installer/update model, local API lifecycle, data directory/backup, and browser launch behavior before selecting packaging technology.
+
+### Current boundaries
+
+- The existing collector/reconnect implementations are source facts, not proof of target-host recovery.
+- The Morning Brief remains a partial market snapshot; immutable storage preserves what it reported, including DATA?/PARTIAL fields. It does not create missing breadth, catalyst clearance, probability, or Red Zone qualification.
+- The RTO OHLCV parity result remains six candles only. Do not infer installed Thinkorswim study states.
+- Runtime/browser/external tasks remain unchecked until their specific evidence is supplied.
+
+Evidence and procedures: `docs/Runtime-Acceptance-Runbook.md`, `docs/MarketData-ChatTests-20261030.md`, `docs/Validation/Runner-Exit-State-Validation-20261029.md`, and `docs/Thinkorswim-Schwab-Integration-Plan.md`.
+
+---
+
 ## 2026-10-30 — RKLX post-close assessment and persistence follow-up
 
 **Checklist count clarification:** this file currently contains 30 unchecked checkbox rows across active acceptance items and retained historical sections. This is a raw row count, not 30 unique current blockers; some legacy items overlap newer checkpoints. Use the current dated sections at the top for active work and the historical sections for evidence/context.
