@@ -80,6 +80,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{32A2E10D-9
 		docs\API-Swagger-Workflow.md = docs\API-Swagger-Workflow.md
 		docs\BoringOvernight.md = docs\BoringOvernight.md
 		docs\Market-Data-and-Replay-Contract.md = docs\Market-Data-and-Replay-Contract.md
+		docs\MarketData-ChatTests-20261030.md = docs\MarketData-ChatTests-20261030.md
 		docs\Master-To-Do.md = docs\Master-To-Do.md
 		docs\MCC-OHLCV-Export-Workflow.md = docs\MCC-OHLCV-Export-Workflow.md
 		docs\Morning-Report-and-Routine.md = docs\Morning-Report-and-Routine.md
