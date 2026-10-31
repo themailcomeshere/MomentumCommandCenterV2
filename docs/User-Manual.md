@@ -1,3 +1,18 @@
+## Editing the dashboard in Visual Studio
+
+The editable browser frontend is in the repository-root frontend folder. I added these files to the solution as a visible **frontend** Solution Items folder, so expand that folder in Solution Explorer:
+
+- frontend/index.html — page structure, labels, and element IDs.
+- frontend/styles.css — layout, responsive rules, and visual styling.
+- frontend/app.js — browser interactions and API requests.
+- frontend/favicon.svg — browser tab icon.
+
+The API serves this folder as its default/static web root using ASP.NET Core UseDefaultFiles and UseStaticFiles. Run the API project and open its hosted dashboard; do not open index.html with file://, because the page calls same-origin /api endpoints. Save edits and refresh the API-hosted page. If a browser retains an old CSS or JavaScript file, update the version query string on the corresponding link or script element in index.html.
+
+**Architecture:** this is currently a static HTML/CSS/JavaScript frontend hosted by an ASP.NET Core Minimal API project. It is not an MVC/Razor application. The files are now visible and editable in Visual Studio; migrating to MVC is a separate architectural decision and was not required to meet the current editing need.
+
+---
+
 ## Recent workflow updates — 2026-10-30
 
 ### Alpaca WebSocket symbols
@@ -21,7 +36,7 @@ Historical replay now takes **As-of (Arizona local time)**. MCC converts the loc
 The header button opens the report immediately from the latest rendered snapshot. The API and browser each cache the report for 60 seconds. The modal opens immediately from the current snapshot; stale data refreshes in the background. The full-width footer accordion and modal share the same report content.
 
 ### Current evidence limitation
-The 2026-10-30 uploaded SPY/RKLX/ASTX/XRPN captures all show stale data and REST as the 1M source. Those captures were generated after the regular-session close; a separate RKLX 5M stale observation occurred during regular hours and remains under investigation. See [MarketData-ChatTests-20261030.md](MarketData-ChatTests-20261030.md).
+The 2026-10-30 uploaded SPY/RKLX/ASTX/XRPN captures were generated after the regular-session close and show stale REST-backed assessments. The separate in-session RKLX 5M stale result is explained by sparse Alpaca/IEX bars and the 19:25 5M candle still being incomplete at the assessment time; see [MarketData-ChatTests-20261030.md](MarketData-ChatTests-20261030.md). Regular-session WebSocket delivery remains unverified.
 
 ---
 
