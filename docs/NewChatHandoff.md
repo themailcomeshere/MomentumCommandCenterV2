@@ -1,3 +1,33 @@
+## Current continuation checkpoint — RKLX post-close assessment — 2026-10-30
+
+### Source-control checkpoint
+- Repository: `themailcomeshere/MomentumCommandCenterV2`
+- Branch: `feature/opportunity-quality-classification`
+- Latest branch head observed during this review: `2a067dd7390f7260e32f171e2e2983a82b91f0b9`.
+- The latest code/solution checkpoint is `3192c8f34d11273360bed82367563466a30b08ad`; GitHub Actions run 767 passed the .NET 8 build and 152/152 tests. Commits after that code checkpoint were documentation updates.
+- The full-width header, corrected status-chip overlap, enlarged focused symbol, chart-side 2×2 Opportunity Status grid, and Visual Studio frontend Solution Items are already implemented. Do not reimplement them without new evidence.
+
+### Latest RKLX evidence
+- Direct Alpaca/IEX 1M and 5M queries for 19:00–19:35 UTC returned four bars each. The 1M timestamps were 19:00, 19:08, 19:25, 19:35; 5M timestamps were 19:00, 19:05, 19:25, 19:35.
+- The 22:55 UTC assessment was post-close. Its last completed 1M/5M bars ended at 20:00 UTC; both were correctly stale. Permission and execution were not evaluated.
+- The 22:50 UTC stream snapshot was connected/subscribed but had no received or persisted bars. Because this was after the regular-session close, it is not a valid stream-delivery failure test.
+- `lastMessageUtc` includes control/auth/subscription messages; use `lastBarUtc`, `barsBySymbol`, `receivedBars`, and `persistedBars` to evaluate actual bar delivery.
+- `newlyPersistedObservationCount=0` is consistent with deduplication but does not prove persisted-store contents. Verify via `GET /api/market-data/stored-bars`.
+
+### Immediate next actions
+1. Verify the four RKLX 1M and four 5M observations in the stored-bars endpoint using the exact provider/feed/timeframe/window.
+2. During the next regular session, run the 5–10 minute WebSocket before/after test for SPY, RKLX, ASTX, and XRPN.
+3. Confirm the live assessment selects WebSocket 1M only after acknowledged subscription, at least 50 completed bars, freshness, and WebSocket provenance. Keep 5M Permission REST-backed.
+4. Browser acceptance remains separate: revised header, 2×2 chart-side metrics, Morning Brief modal, replay, Red Zone responsive layout, and sound permission.
+5. Schwab Trader API approval/OAuth remains external and pending. No order submission.
+
+### Frontend architecture
+The UI is static HTML/CSS/JavaScript hosted by the ASP.NET Core Minimal API. It is not MVC/Razor. The editable files are visible in Visual Studio under the `frontend` Solution Items folder. MVC migration is not required to edit or maintain `index.html`; consider it only if a concrete server-rendered/controller requirement emerges.
+
+Read the top of `docs/Master-To-Do.md` and the latest section of `docs/MarketData-ChatTests-20261030.md` before continuing.
+
+---
+
 ## Final implementation validation — 2026-10-30
 
 - Branch: `feature/opportunity-quality-classification`
