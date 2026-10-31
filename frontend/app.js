@@ -2,6 +2,8 @@
 /// PURPOSE: Renders the focused symbol from the live assessment API; no synthetic snapshots are used.
 const $=id=>document.getElementById(id);
 const feedbackKey="mcc.dashboardFeedback.v1";
+/// PURPOSE: Track dynamic WebSocket subscription requests before any startup refresh can run.
+const requestedMinuteBarSymbols=new Set();
 function render(){
  const overnight=$("mode")?.value==="overnight";
  $("overnightPanel")?.classList.toggle("hidden",!overnight);
@@ -579,7 +581,6 @@ async function loadProviderStatus() {
 }
 loadProviderStatus();
 
-const requestedMinuteBarSymbols=new Set();
 async function ensureMinuteBarSubscription(symbol){
  const ticker=String(symbol||"").trim().toUpperCase();
  if(!/^[A-Z0-9.-]{1,8}$/.test(ticker)||requestedMinuteBarSymbols.has(ticker))return;
