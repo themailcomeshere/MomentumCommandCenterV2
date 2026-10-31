@@ -372,7 +372,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   drawPriceLine(chartNode,one.chartBars||[],symbol);
  }catch(error){
   statusNode.textContent="DATA UNAVAILABLE";
-  setV2ScoreDisplay(scoreNode,null,"REQUEST FAILED");
+  setV2ScoreDisplay(scoreNode,null,null,"REQUEST FAILED");
   extensionNode.textContent="Extension: DATA? · live request failed";
   freshnessNode.textContent="Freshness: UNKNOWN · "+error.message;
   reasonNode.textContent="Live market assessment unavailable. No prior status is being represented as current.";
