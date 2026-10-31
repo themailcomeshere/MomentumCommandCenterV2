@@ -44,6 +44,7 @@ public sealed class MorningBriefSnapshotStore
             DateTimeOffset.UtcNow,
             reportVersion.Trim(),
             hash,
+            ExtractSourceWatermarksUtc(report),
             report.Clone());
 
         await _gate.WaitAsync(cancellationToken);
@@ -62,6 +63,53 @@ public sealed class MorningBriefSnapshotStore
             _gate.Release();
         }
     }
+
+
+    /// <summary>
+    /// PURPOSE: Capture source-bar watermarks embedded in the generated market-landscape section.
+    /// WHEN CALLED: A report snapshot is created.
+    /// IMPORTANT: Only explicit UTC source timestamps with provider/symbol/timeframe are recorded.
+    /// </summary>
+    private static IReadOnlyDictionary<string, DateTimeOffset> ExtractSourceWatermarksUtc(JsonElement report)
+    {
+        var watermarks = new Dictionary<string, DateTimeOffset>(StringComparer.OrdinalIgnoreCase);
+        if (!report.TryGetProperty("marketLandscape", out var landscape) || landscape.ValueKind != JsonValueKind.Array)
+            return watermarks;
+
+        foreach (var row in landscape.EnumerateArray())
+        {
+            var symbol = ReadString(row, "symbol");
+            if (symbol is null || !row.TryGetProperty("observations", out var observations) ||
+                observations.ValueKind != JsonValueKind.Array)
+                continue;
+
+            foreach (var observation in observations.EnumerateArray())
+            {
+                var provider = ReadString(observation, "provider");
+                if (provider is null || !observation.TryGetProperty("latest", out var latest) ||
+                    latest.ValueKind != JsonValueKind.Object ||
+                    !latest.TryGetProperty("timestamp", out var timestampElement) ||
+                    !timestampElement.TryGetDateTimeOffset(out var timestampUtc) ||
+                    timestampUtc.Offset != TimeSpan.Zero)
+                    continue;
+
+                var timeframe = ReadString(latest, "timeframe");
+                if (timeframe is null) continue;
+                var feed = ReadString(latest, "feed") ?? "UNKNOWN";
+                var transport = ReadString(latest, "sourceTransport") ?? "UNKNOWN";
+                var key = $"{provider}/{symbol.ToUpperInvariant()}/{timeframe}/{feed}/{transport}";
+                if (!watermarks.TryGetValue(key, out var previous) || timestampUtc > previous)
+                    watermarks[key] = timestampUtc;
+            }
+        }
+
+        return watermarks;
+    }
+
+    private static string? ReadString(JsonElement element, string propertyName) =>
+        element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 
     /// <summary>
     /// PURPOSE: Read the newest immutable report snapshots without modifying the JSONL history.
@@ -107,4 +155,5 @@ public sealed record MorningBriefSnapshot(
     DateTimeOffset RecordedAtUtc,
     string ReportVersion,
     string ContentSha256,
+    IReadOnlyDictionary<string, DateTimeOffset> SourceWatermarksUtc,
     JsonElement Report);
