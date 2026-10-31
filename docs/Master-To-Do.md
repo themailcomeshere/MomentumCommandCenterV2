@@ -1,3 +1,14 @@
+## 2026-10-30 — RTO exported OHLCV reconciliation
+
+- [x] Parsed data/validation/RTO/StrategyReports_RTO_102826_1m.csv and the corresponding 5m export.
+- [x] Verified 30 consecutive 1M bars (12:30–12:59 Arizona) and six consecutive 5M bars (12:30–12:55 Arizona), with valid OHLCV, no duplicate timestamps, and no gaps within the exported windows.
+- [x] Aggregated each set of five 1M candles into OHLCV. All six aggregates exactly match the corresponding 5M export across open, high, low, close, and volume.
+- [x] Determined embedded epoch-millisecond timestamps map to 2026-10-28 19:30Z–19:59Z / 12:30–12:59 Arizona and are the candle-start timestamps. StrategyReport Date/Time fields are separate event times and must not be substituted for candle timestamps.
+- [ ] A matched Thinkorswim state tape remains unavailable: these CSVs contain transport OHLCV rows, not per-bar Permission/READY/RUNNER/WANING/SWING/GET OUT labels. Do not infer state transitions from the transport-close rows.
+- Evidence and calculations: docs/Validation/Runner-Exit-State-Validation-20261029.md, section “RTO exported OHLCV reconciliation”.
+
+---
+
 ## 2026-10-30 — RKLX diagnosis, dashboard layout, and Visual Studio frontend visibility
 
 ### Completed in this pass
@@ -1338,7 +1349,7 @@ Continue work without waiting for another confirmation when a task can be safely
 
 ### Remaining RTO validation
 - [NEXT] Locate/confirm the exact 1M and 5M export filenames in `data/validation/RTO`; parse both and report row counts, first/last timestamps, timezone convention, OHLCV validity, duplicate/gap counts.
-- [NEXT] Join bars by explicit Arizona-local candle time after proving whether export timestamps are bar starts or closes. Do not shift timestamps by assumption.
+- [x] Converted embedded epoch-millisecond timestamps to UTC and Arizona. They identify bar-start times. Grouped 1M bars by their 5-minute start buckets; all six 5M OHLCV candles match exactly. StrategyReport Date/Time event timestamps remain a separate clock and are not used as candle timestamps.
 - [NEXT] Build the state tape from matched 5M/1M study event labels and assert only observed transitions. Keep 5M permission and 1M execution/exit state as separate state machines.
 - [OPEN] Matched timestamp parity and runner/exit replay remain unvalidated. No change to ThinkScript trading gates is authorized by this screenshot alone.
 
