@@ -21,7 +21,7 @@
 - [ ] Complete browser acceptance of header, status-chip wrapping, chart-side 2x2 metrics, Morning Brief modal/section, replay, Red Zone responsive layout, and sound permission.
 - [x] GitHub Actions run **792** passed for source commit `61e8483c6cce4cea5e5131e773086db1ff91bd74`: Release build succeeded with 0 warnings/0 errors and **156/156 tests passed**, including immutable Morning Brief snapshot and source-watermark tests.
 - [x] Runtime-validation script commit `fd6fe0b66b9ad9be5fd1ec31fdf26780d2eb4534` passed workflow run **780**; documentation runs **781–785** passed.
-- [ ] Verify the exact latest branch-head workflow after the subsequent README and User Manual updates. These later changes are documentation-only; do not confuse their pending CI with the already green source implementation.
+- [x] Exact branch-head CI: GitHub Actions run **803** passed for `ecd31a28248a3599a18c7a9a4080113c3b1f3e92`; .NET 8 Release build and **156/156 tests** passed. This verified head includes the README, To-Do, Handoff, User Manual, runbook, and snapshot/source-watermark changes. Any subsequent commit requires its own exact-head check.
 
 ### P1 — engineering and evidence work
 
