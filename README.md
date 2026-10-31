@@ -72,7 +72,7 @@ Useful endpoints include:
 
 ## Morning Brief snapshot history
 
-Each newly generated `GET /api/morning-brief` report is persisted as an immutable, versioned JSONL snapshot. The live response includes persistence status and snapshot ID/version. Query `GET /api/morning-brief/history?limit=20` to retrieve prior reports. Configure the server-side path with `MCC_MORNING_BRIEF_SNAPSHOT_PATH`; otherwise the API uses the local application-data directory. Snapshot persistence preserves partial/unknown report fields and does not imply market-data validation. Per-source input watermarks and outcome linkage remain future work.
+Each newly generated `GET /api/morning-brief` report is persisted as an immutable, versioned JSONL snapshot. The live response includes persistence status and snapshot ID/version. Query `GET /api/morning-brief/history?limit=20` to retrieve prior reports. Configure the server-side path with `MCC_MORNING_BRIEF_SNAPSHOT_PATH`; otherwise the API uses the local application-data directory. Snapshot persistence preserves partial/unknown report fields and does not imply market-data validation. Explicit UTC bar watermarks from the market-landscape payload are included; raw input references, news/discovery watermarks, full calculation dependency manifests, and outcome linkage remain future work.
 
 ## Historical replay and its limits
 
