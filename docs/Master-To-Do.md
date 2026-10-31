@@ -1,3 +1,36 @@
+## 2026-10-30 — RKLX diagnosis, dashboard layout, and Visual Studio frontend visibility
+
+### Completed in this pass
+- [x] Analyzed the user's RKLX 1M/5M `/api/market-data/bars` responses against the earlier in-session stale observation. The 1M query returned four bars (19:00, 19:08, 19:25, 19:35 UTC); the 5M query returned four (19:00, 19:05, 19:25, 19:35 UTC).
+- [x] Resolved the 19:26 UTC 5M stale explanation: the 19:25 5M candle had not completed; the last completed candle was 19:05 with expected close 19:10. At 19:26 it was about 16 minutes old, above the 360-second limit. Missing 19:10, 19:15, and 19:20 5M bars explain why there was no newer completed 5M candle. The 19:25 1M candle completed at 19:26 and could be fresh.
+- [x] Confirmed the short-window bars response is consistent with the wider assessment history over their overlapping 19:00–19:35 interval. The assessment uses a three-day 1M window; the direct query is only 35 minutes. The two bar counts are not comparable.
+- [x] Recorded the remaining uncertainty correctly: Alpaca/IEX returned sparse RKLX observations. The supplied evidence does not distinguish no IEX-eligible prints from upstream/provider coverage behavior and does not prove there were no trades on other venues. Missing bars are not zero-volume bars.
+- [x] Corrected stream-status interpretation: the 22:50 UTC snapshot was after the 20:00 UTC regular-session close. Connected/subscribed with zero bars is not proof of an in-session stream failure. Regular-session delivery still needs a timed smoke test.
+- [x] Fixed header status-pill overlap by making the demo indicator dot target only the first span, restoring the text span, and allowing the WebSocket status chip to wrap without colliding.
+- [x] Expanded the header to full viewport width and removed the 1240px cap from its inner layout; updated header padding to match.
+- [x] Increased the focused-symbol label prominence.
+- [x] Moved the four Opportunity Status cards beside the Main Chart itself and changed them to a 2×2 grid, keeping the chart as the primary wide column and retaining responsive stacking.
+- [x] Added `frontend/index.html`, `frontend/styles.css`, `frontend/app.js`, and `frontend/favicon.svg` as Solution Items under a new `frontend` folder in `MomentumCommandCenterV2.sln`. These files are now directly discoverable/editable in Visual Studio Solution Explorer.
+- [x] Updated the User Manual, this To-Do, the handoff, and the market-data evidence note with the current source layout and diagnosis.
+
+### Still open — genuine runtime or external dependencies
+- [ ] During regular market hours, capture stream status before/after 5–10 minutes and confirm `barsBySymbol`, `receivedBars`, `persistedBars`, and `lastBarUtc` advance for SPY, RKLX, ASTX, and XRPN.
+- [ ] After a symbol has at least 50 completed 1M WebSocket observations and a fresh latest bar, confirm live assessment reports `ALPACA_WEBSOCKET_LATEST_BAR`.
+- [ ] Browser-test the revised header, chart-side 2×2 metrics, Morning Brief modal, replay, Red Zone 1×4 layout, and sound permission in the user's running API-hosted dashboard. Browser execution is not available from this repository-editing session.
+- [ ] Verify the exact latest branch head's .NET Release build/test workflow after these edits; prior green runs do not cover this new head.
+- [ ] Schwab Trader API Individual approval and secure OAuth setup remain pending. Read-only position sync is blocked until approval and user-side configuration.
+- [x] Order submission remains disabled by design.
+
+### Frontend architecture decision
+The dashboard remains a static HTML/CSS/JavaScript frontend hosted by the ASP.NET Core API through its physical-file provider. It is not an MVC/Razor application. The immediate usability issue was Solution Explorer visibility, now addressed with a `frontend` Solution Items folder. No MVC migration was made because it would be a larger architectural change without a demonstrated requirement for Razor views or controller-driven page rendering.
+
+### Evidence
+- `docs/MarketData-ChatTests-20261030.md` — original ChatTest and RKLX follow-up evidence.
+- `docs/User-Manual.md` — where to edit the frontend and how the API hosts it.
+- `docs/NewChatHandoff.md` — current continuation instructions.
+
+---
+
 ## Final implementation validation — 2026-10-30
 
 - Branch: `feature/opportunity-quality-classification`
@@ -31,12 +64,12 @@
 
 - [ ] Deploy and verify dynamic subscriptions in a running MCC API during regular market hours.
 - [ ] Verify `barsBySymbol` advances for SPY, RKLX, ASTX, and XRPN and that eligible 1M assessments switch to `ALPACA_WEBSOCKET_LATEST_BAR`.
-- [ ] Diagnose the separate in-session RKLX 5M stale condition with same-time provider bar evidence. Do not lower freshness limits to mask it.
+- [x] Diagnose the in-session RKLX 5M stale condition from same-window Alpaca/IEX bars. The 19:25 5M bar was incomplete at the 19:26 assessment; the last completed bar was 19:05 (expected close 19:10), approximately 16 minutes old. Missing 19:10/19:15/19:20 bars explain the stale result. Do not lower freshness limits.
 - [ ] Verify Morning Brief initial-load latency and modal behavior in browser.
 - [ ] Verify Arizona-local replay form and API HTTP 400 behavior.
 - [ ] Verify Red Zone 1x4 layout and browser sound permissions.
 - [ ] Schwab Trader API Individual remains pending approval; OAuth and read-only position sync are blocked until the user completes app registration and securely configures server-side credentials.
-- [ ] Order submission remains intentionally disabled.
+- [x] Keep order submission intentionally disabled.
 
 ### Evidence document
 
