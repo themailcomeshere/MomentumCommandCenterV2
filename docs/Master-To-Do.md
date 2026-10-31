@@ -64,11 +64,11 @@ Evidence/runbook: `docs/Monday-Readiness-2026-11-02.md`, `docs/BoringOvernight.m
 ### Still open — target-machine acceptance
 
 - [ ] Pull this branch and verify the exact-head CI before running the revised scripts.
-- [ ] Re-run `Test-MarketDataRuntime.ps1` using `http://localhost:53360` (or trusted HTTPS at `https://localhost:53359`) and the exact 2026-10-30 13:00Z–19:35Z window. Preserve all artifacts.
-- [ ] Run the revised script for 13:00Z–19:35Z. It will report provider bar counts, newly persisted counts, exact stored-content matches, missing rows, and mismatches. Verify the four 1M and four 5M observations in the 19:00Z–19:35Z interval; the uploaded 13:30Z–17:30Z files do not cover them.
+- [x] Re-ran `Test-MarketDataRuntime.ps1` using `http://localhost:53360` for 2026-10-30 13:00Z–19:35Z. User supplied output folder `artifacts/runtime-validation/20261031T202332Z`; 25 1M and 23 5M stored observations reported.
+- [x] Revised script reports `1m=True`, `5m=True` for exact provider-to-store comparison over the 13:00Z–19:35Z request. This verifies idempotent matches for all returned provider bars in the window, including the previously queried later interval. Raw JSON files remain on the user machine for individual timestamp audit.
 - [ ] During regular market hours, verify SPY/RKLX/ASTX/XRPN subscription acknowledgement, per-symbol bar count/lastBarUtc advancement, received/persisted totals, and eligible 1M WebSocket source selection.
 - [ ] Run `Capture-CollectorCheckpoint.ps1`, then perform a controlled local failure/recovery, clean API restart/checkpoint reload, and sleep/wake test using section 4 of the runbook. Do not induce a failure against production credentials or disable the workstation network.
-- [ ] Browser-test the frontend after pulling this commit. The source-level JavaScript initialization error is fixed, but browser runtime acceptance has not been performed here.
+- [x] User confirms MCC JavaScript errors are gone after pulling the frontend fix. The remaining `browserLink:33 $.noConflict is not a function` is Visual Studio Browser Link injection, not MCC source. Full layout/score display browser acceptance remains open.
 - [ ] If `browserLink:33 $.noConflict` persists, disable Visual Studio Browser Link for the session or run without Browser Link; it is a Visual Studio development-time injected script, not an MCC application source file.
 
 ### Interpretation of the supplied collector status sample
