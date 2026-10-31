@@ -1106,3 +1106,13 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 - Schwab Trader API Individual approval and OAuth remain blocked by external approval/configuration. Order submission remains disabled.
 - Canonical open items and disposition are at the top of docs/Master-To-Do.md.
 
+
+
+### Additional RTO OHLCV reconciliation — completed 2026-10-30
+- Located and parsed the existing RTO exports in data/validation/RTO.
+- 1M: 30 consecutive valid candles, 12:30–12:59 Arizona. 5M: six consecutive valid candles, 12:30–12:55 Arizona. Neither file has duplicate timestamps, internal gaps, invalid OHLC, or negative volume.
+- Aggregated five 1M candles for each 5M interval. All six 5M OHLCV candles match exactly across open, high, low, close, and summed volume.
+- Embedded epoch-millisecond timestamps convert to UTC and Arizona bar-start times. StrategyReport Date/Time values are separate strategy event timestamps and must not be used as candle keys.
+- This proves only six-window OHLCV aggregation parity. The exports do not contain per-bar Thinkorswim Permission, READY, RUNNER, WANING, SWING, GET OUT, or EOD states, so matched-study state replay remains open.
+- Full evidence: docs/Validation/Runner-Exit-State-Validation-20261029.md, “RTO exported OHLCV reconciliation.”
+
