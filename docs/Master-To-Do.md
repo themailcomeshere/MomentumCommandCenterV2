@@ -1,5 +1,7 @@
 ## 2026-10-30 — RKLX post-close assessment and persistence follow-up
 
+**Checklist count clarification:** this file currently contains 30 unchecked checkbox rows across active acceptance items and retained historical sections. This is a raw row count, not 30 unique current blockers; some legacy items overlap newer checkpoints. Use the current dated sections at the top for active work and the historical sections for evidence/context.
+
 - [x] Reviewed the 22:55:20 UTC RKLX live assessment. Both 1M and 5M were correctly marked stale because their latest completed bars ended at 20:00 UTC, and the assessment occurred after the 20:00 UTC / 1:00 PM Arizona regular-session close. Permission and execution were not evaluated.
 - [x] Reconciled the 22:50:31 UTC WebSocket snapshot with source code. Connected/subscribed and a recent `lastMessageUtc` do not prove bar delivery; `lastMessageUtc` includes control/auth/subscription messages, while `lastBarUtc` and `barsBySymbol` represent actual bar observations. The zero-bar snapshot was post-close and is not an in-session failure test.
 - [x] Recorded that the 122-bar 1M and 441-bar 5M assessment histories cover multi-day lookbacks and must not be compared by total count with the 35-minute REST queries.
