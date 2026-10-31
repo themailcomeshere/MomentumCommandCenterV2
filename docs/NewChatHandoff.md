@@ -52,7 +52,7 @@ These let the restart test directly establish whether the configured checkpoint 
 
 ## New scripts and runbook
 
-- `scripts/validation/Test-MarketDataRuntime.ps1`: now checks API health and validates the known local port/scheme mismatch.
+- `scripts/validation/Test-MarketDataRuntime.ps1`: checks API health and validates the known local port/scheme mismatch. It also re-requests provider 1M/5M bars and compares timestamps, OHLCV, provider, feed, timeframe, and transport against the latest stored rows. The script determines whether `newlyPersistedObservationCount=0` is consistent with idempotent duplicates; the user does not need to calculate this manually.
 - `scripts/validation/Capture-CollectorCheckpoint.ps1`: captures `/api/market-data/collector/status`, copies the configured checkpoint, and records SHA-256, file size, last-write time, watermarks, and checkpoint-load diagnostics.
 - `docs/Runtime-Acceptance-Runbook.md`: section 4 now defines each collector status field and provides precise cycle-failure, restart/reload, and sleep/wake acceptance procedures.
 
@@ -60,7 +60,7 @@ These let the restart test directly establish whether the configured checkpoint 
 
 1. Check the exact latest branch HEAD and GitHub Actions.
 2. Pull the branch in Visual Studio, run MCC, and hard-refresh the browser. Verify the `requestedMinuteBarSymbols` ReferenceError is gone.
-3. Run:
+3. Run the revised market-data script. Its `stored-bars.json` includes the automated idempotency result, and `provider-refresh.json` preserves the fresh provider responses:
    ```powershell
    ./scripts/validation/Test-MarketDataRuntime.ps1 `
      -BaseUri "http://localhost:53360" `
