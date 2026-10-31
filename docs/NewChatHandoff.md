@@ -5,7 +5,10 @@
 - Repository: `themailcomeshere/MomentumCommandCenterV2`
 - Branch: `feature/opportunity-quality-classification`
 - Parent source checkpoint before this pass: `46eec0457bd68324a1421b8f5479a43a7d2052b2`
-- Parent GitHub Actions run **776** passed for that parent commit. It does **not** validate the new Morning Brief snapshot implementation in this pass. Check the workflow for the exact latest branch head before claiming CI success.
+- Parent GitHub Actions run **776** passed for `46eec0457bd68324a1421b8f5479a43a7d2052b2`.
+- Morning Brief snapshot implementation commit `844581de9c134c82bb898bdf4a9d3d3db1ce476e` passed workflow **779**: Release build 0 warnings/0 errors; **156/156 tests passed**.
+- Runtime validation script commit `fd6fe0b66b9ad9be5fd1ec31fdf26780d2eb4534` passed workflow **780**. Documentation workflows **781–785** passed.
+- README and User Manual documentation updates were made after run 785; inspect the exact latest branch-head workflow before claiming the entire current head CI-verified.
 - Read `docs/ChatDisconnect.txt` and reconciled its remaining-work checklist into the top of `docs/Master-To-Do.md`. The Master To-Do remains canonical.
 
 ## Work completed in this pass
