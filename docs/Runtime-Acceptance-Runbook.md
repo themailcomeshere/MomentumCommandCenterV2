@@ -119,7 +119,7 @@ After those choices, use a maintained exchange calendar and test holidays, early
 
 | Work item | Status | Evidence / blocker |
 |---|---|---|
-| Morning Brief immutable snapshots | Implemented; CI verified | Run 779 passed Release build and 156/156 tests for the store/API/tests source commit |
+| Morning Brief immutable snapshots and market-landscape source watermarks | Implemented; CI verified | Run 792 passed Release build and 156/156 tests for source commit `61e8483c6cce4cea5e5131e773086db1ff91bd74` |
 | RKLX stored-bar membership | Awaiting runtime evidence | Run the PowerShell capture against the user's API |
 | Regular-session WebSocket delivery | Awaiting runtime evidence | Run the capture during RTH with stream enabled |
 | WebSocket-backed 1M assessment | Awaiting runtime evidence | Must meet subscription, 50-bar, freshness, and provenance gates |
