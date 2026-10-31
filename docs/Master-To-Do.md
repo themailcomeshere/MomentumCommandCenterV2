@@ -19,7 +19,7 @@
 - [ ] During regular market hours, run the 5-minute stream capture for SPY, RKLX, ASTX, and XRPN. Verify acknowledged subscription, per-symbol bar-count/timestamp advancement, and received/persisted totals.
 - [ ] Confirm eligible live assessments select WebSocket 1M only with subscription acknowledgement, at least 50 completed 1M observations, freshness, and explicit WebSocket provenance. 5M Permission remains REST.
 - [ ] Complete browser acceptance of header, status-chip wrapping, chart-side 2x2 metrics, Morning Brief modal/section, replay, Red Zone responsive layout, and sound permission.
-- [x] GitHub Actions run **779** passed for source commit `844581de9c134c82bb898bdf4a9d3d3db1ce476e`: Release build succeeded with 0 warnings/0 errors and **156/156 tests passed**, including the new Morning Brief persistence tests.
+- [x] GitHub Actions run **792** passed for source commit `61e8483c6cce4cea5e5131e773086db1ff91bd74`: Release build succeeded with 0 warnings/0 errors and **156/156 tests passed**, including immutable Morning Brief snapshot and source-watermark tests.
 - [x] Runtime-validation script commit `fd6fe0b66b9ad9be5fd1ec31fdf26780d2eb4534` passed workflow run **780**; documentation runs **781–785** passed.
 - [ ] Verify the exact latest branch-head workflow after the subsequent README and User Manual updates. These later changes are documentation-only; do not confuse their pending CI with the already green source implementation.
 
