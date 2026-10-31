@@ -67,6 +67,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{02EA681E-C
 		data\validation\XRPN\XRPN_5m_parity_template.csv = data\validation\XRPN\XRPN_5m_parity_template.csv
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "frontend", "frontend", "{6F11D1C3-0B8D-4A6A-9C20-9D1A9C2A7E11}"
+	ProjectSection(SolutionItems) = preProject
+		frontend\index.html = frontend\index.html
+		frontend\styles.css = frontend\styles.css
+		frontend\app.js = frontend\app.js
+		frontend\favicon.svg = frontend\favicon.svg
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{32A2E10D-9B45-4A26-9E97-0DCA9F23D58B}"
 	ProjectSection(SolutionItems) = preProject
 		docs\API-Swagger-Workflow.md = docs\API-Swagger-Workflow.md
