@@ -121,14 +121,17 @@ function sourceFreshness(label,ageSeconds){
 }
 function humanizeSignalState(value){return String(value||"UNKNOWN").replace(/([a-z])([A-Z])/g,"$1 $2").replaceAll("_"," ").toUpperCase();}
 function formatMetric(value,digits=2,suffix=""){return value===null||value===undefined||!Number.isFinite(Number(value))?"UNKNOWN":Number(value).toFixed(digits)+suffix;}
-function setV2ScoreDisplay(node,decision,evaluationStatus){
+function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
  if(!node)return;
- if(!decision||!Number.isFinite(Number(decision.score))){node.className="redzone-score score-unknown";node.textContent="V2 5M score: UNKNOWN · "+(evaluationStatus||"NOT EVALUATED");return;}
- const score=Number(decision.score),entryReady=decision.entryAllowed===true;
+ const rawScore=scoreBreakdown?.score;
+ if(rawScore===null||rawScore===undefined||!Number.isFinite(Number(rawScore))||scoreBreakdown?.status!=="CURRENT"){
+  node.className="redzone-score score-unknown";node.textContent="V2 5M score: UNKNOWN · "+(evaluationStatus||"NOT EVALUATED");return;
+ }
+ const score=Number(rawScore),entryReady=decision?.entryAllowed===true;
  const band=score<=2?"score-low":score<=4?"score-mid":"score-high";
  node.className="redzone-score "+band;
  const marker=score<=2?"✕ ":score>=5?"✓ ":"";
- const suffix=entryReady?" · EXECUTION READY":score>=5?" · 5M PERMISSION; WAIT FOR 1M":score<=2?" · LOW ALIGNMENT":" · PARTIAL ALIGNMENT";
+ const suffix=entryReady?" · EXECUTION READY":score>=5?(decision?" · 5M PERMISSION; CHECK 1M STATE":" · 5M PERMISSION; 1M NOT EVALUATED"):score<=2?" · LOW ALIGNMENT":" · PARTIAL ALIGNMENT";
  node.textContent=marker+"V2 5M score: "+score+"/6"+suffix;
 }
 async function refreshDecisionExplanation(){
@@ -141,7 +144,7 @@ async function refreshDecisionExplanation(){
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   const transportLabel=$("marketTransportLabel");
   if(transportLabel)transportLabel.textContent=one.sourceTransport==="ALPACA_WEBSOCKET_LATEST_BAR"?"ALPACA 1M WS / 5M REST · 15s UI REFRESH":"ALPACA REST · 15s UI REFRESH";
-  const permission=decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
+  const fiveMinutePermission=five.scoreBreakdown?.permission??decision?.fiveMinutePermission,permission=fiveMinutePermission===true?"YES":fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
   classification.textContent=ready?"EXECUTION READY":decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||"DATA UNAVAILABLE");
   classification.className="classification "+(ready?"high":decision?.fiveMinutePermission?"boring":"watch");
   if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
@@ -152,7 +155,7 @@ async function refreshDecisionExplanation(){
   if(freshness)freshness.textContent="1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
   if(fiveState)fiveState.textContent="5M permission: "+permission+(decision?.fiveMinuteStructureBull===true?" · bullish structure":decision?.fiveMinuteStructureBull===false?" · structure not bullish":"");
   if(oneState)oneState.textContent="1M execution: "+execution+(ready?" · entry gate passed":"");
-  setV2ScoreDisplay(scoreNode,decision,data.evaluationStatus);
+  setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   const lines=[decision?.reason?"Decision: "+decision.reason:"Decision unavailable: "+(data.evaluationReason||data.evaluationStatus||"No evaluation details returned.")];
   for(const criterion of (five.scoreBreakdown?.criteria||[])){const mark=criterion.passed===true?"✓":criterion.passed===false?"✕":"?";lines.push(mark+" "+criterion.label+(criterion.passed===null?" — unavailable":""));}
   if(five.relativeVolumeBaselineSamples!==undefined)lines.push("5M same-time RVOL baseline: "+five.relativeVolumeBaselineSamples+" prior-session samples; minimum 5.");
