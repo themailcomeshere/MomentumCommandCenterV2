@@ -1,3 +1,33 @@
+## 2026-10-31 — Runtime validation failure diagnosis and collector recovery instrumentation
+
+### Completed in this pass
+
+- [x] Diagnosed the PowerShell connection reset: the Development profile maps port 53359 to HTTPS and 53360 to HTTP. The attempted `http://localhost:53359` was a protocol/port mismatch.
+- [x] Updated `Test-MarketDataRuntime.ps1` to reject that known mismatch and perform an `/api/health` preflight before collecting artifacts.
+- [x] Fixed the frontend temporal-dead-zone defect: `requestedMinuteBarSymbols` is initialized before startup refresh functions can call `ensureMinuteBarSubscription`.
+- [x] Reviewed the uploaded RKLX stored-bar artifacts. They prove 13 current 1M and 12 current 5M RKLX/Alpaca/IEX observations for 2026-10-30 13:30Z–17:30Z.
+- [x] Distinguished that uploaded window from the separate four 1M/four 5M bars previously described at 19:00Z–19:35Z. The latter are not present in the uploaded files and remain unverified.
+- [x] Added `scripts/validation/Capture-CollectorCheckpoint.ps1` to capture collector status, copy the configured checkpoint, and record its SHA-256 and file metadata.
+- [x] Added explicit API status diagnostics for checkpoint startup loading: `checkpointLoadCompleted`, `checkpointFileFound`, `checkpointLoadedEntryCount`, `checkpointLoadCompletedUtc`, and `checkpointLoadError`.
+- [x] Expanded `docs/Runtime-Acceptance-Runbook.md` with exact collector status semantics, failure acceptance criteria, restart/reload procedure, and sleep/wake evidence requirements.
+
+### Still open — target-machine acceptance
+
+- [ ] Pull this branch and verify the exact-head CI before running the revised scripts.
+- [ ] Re-run `Test-MarketDataRuntime.ps1` using `http://localhost:53360` (or trusted HTTPS at `https://localhost:53359`) and the exact 2026-10-30 13:00Z–19:35Z window. Preserve all artifacts.
+- [ ] Verify the four 1M and four 5M observations in the 19:00Z–19:35Z interval; the uploaded 13:30Z–17:30Z files do not cover them.
+- [ ] During regular market hours, verify SPY/RKLX/ASTX/XRPN subscription acknowledgement, per-symbol bar count/lastBarUtc advancement, received/persisted totals, and eligible 1M WebSocket source selection.
+- [ ] Run `Capture-CollectorCheckpoint.ps1`, then perform a controlled local failure/recovery, clean API restart/checkpoint reload, and sleep/wake test using section 4 of the runbook. Do not induce a failure against production credentials or disable the workstation network.
+- [ ] Browser-test the frontend after pulling this commit. The source-level JavaScript initialization error is fixed, but browser runtime acceptance has not been performed here.
+- [ ] If `browserLink:33 $.noConflict` persists, disable Visual Studio Browser Link for the session or run without Browser Link; it is a Visual Studio development-time injected script, not an MCC application source file.
+
+### Interpretation of the supplied collector status sample
+
+- `cycles=6`, `lastCycleErrors=0`, and `recentErrors=[]` show no recorded errors in that latest cycle / retained queue; no failure was injected, so error surfacing is not yet accepted.
+- `newlyPersistedObservations=0` is cumulative since the API process started, not a per-cycle count.
+- Current configured symbols are SPY, QQQ, IWM, RTO, and AMT. TTE and FMS entries are old checkpoint keys retained after configuration changes; they are not current configured collection targets.
+- The Saturday cycle timestamps with Friday source watermarks do not by themselves indicate a failure. The worker continues polling on weekends; an empty successful response does not advance a source watermark.
+
 ## 2026-10-31 — ChatDisconnect execution and runtime acceptance checkpoint
 
 **Source reviewed:** `docs/ChatDisconnect.txt`, current `docs/Master-To-Do.md`, current `docs/NewChatHandoff.md`, and the implementation backlog. This section supersedes older status snapshots where they conflict; historical sections remain for evidence.
