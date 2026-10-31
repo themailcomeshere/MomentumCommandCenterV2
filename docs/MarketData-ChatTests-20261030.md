@@ -68,3 +68,21 @@ During regular market hours, after deploying the changes:
 ## Interpretation
 
 The uploaded JSONs prove stale assessments at their captured timestamps. They do not prove that WebSocket is broken. The separate RKLX observation demonstrates an in-session 5M coverage issue that remains unresolved. A fresh in-session capture after dynamic subscriptions is required to distinguish provider/feed coverage from an ingestion/assessment issue.
+
+
+## RKLX IEX sparse-bar follow-up — 2026-10-30
+
+User supplied 1M and 5M requests for 19:00–19:35 UTC. Both identify Alpaca/IEX and return four bars. The 1M source timestamps are 19:00, 19:08, 19:25, and 19:35 UTC. The 5M timestamps are 19:00, 19:05, 19:25, and 19:35 UTC; no 5M bars were returned at 19:10, 19:15, or 19:20.
+
+The in-session stale observation around 19:26 UTC is explained by completed-bar timing:
+- The 1M bar timestamped 19:25 completed at 19:26 and could be fresh.
+- The 5M bar timestamped 19:25 was still forming and is correctly excluded.
+- The last completed 5M bar was timestamped 19:05 and completed at 19:10. At 19:26 it was about 16 minutes old, beyond the 360-second limit.
+
+This is a sparse returned IEX data interval, not evidence of a faulty freshness threshold. The wider three-day assessment history and the bounded 19:00–19:35 query are consistent over their overlapping timestamps; they are different request windows.
+
+The 22:50 UTC stream-status snapshot was after the 20:00 UTC regular-session close. It showed a connected/subscribed socket but zero received/persisted bars. That does not prove failure during market hours. Regular-session delivery remains unverified.
+
+Data does not establish whether the missing bars represent no IEX-eligible prints or upstream/provider coverage behavior. Do not infer that no trades occurred on other venues, do not treat missing bars as zero volume, and do not synthesize bars.
+
+Next: run the stream-status before/after test during regular hours; verify per-symbol bar counts and timestamps advance; then confirm the assessment switches to `ALPACA_WEBSOCKET_LATEST_BAR` only after the 50-bar, freshness, and provenance requirements are met.
