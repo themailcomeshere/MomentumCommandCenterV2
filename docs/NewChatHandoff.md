@@ -1,3 +1,81 @@
+# New Chat Handoff — runtime fixes and collector acceptance — 2026-10-31
+
+## Current source-control checkpoint
+
+- Repository: `themailcomeshere/MomentumCommandCenterV2`
+- Branch: `feature/opportunity-quality-classification`
+- This handoff was updated after the JavaScript subscription initialization fix, market-data script port/preflight fix, collector checkpoint-load diagnostics, and collector evidence capture/runbook changes.
+- Verify the current branch HEAD and its GitHub Actions workflow before treating this checkpoint as build-verified. Do not rely on an older green workflow for these newest source changes.
+
+## User-reported failures and source diagnosis
+
+### PowerShell connection reset
+
+The local Development profile in `src/MomentumCommandCenterV2.API/Properties/launchSettings.json` declares:
+- HTTPS: `https://localhost:53359`
+- HTTP: `http://localhost:53360`
+
+The user supplied `http://localhost:53359`, which is the wrong protocol for that port. Use `http://localhost:53360` or `https://localhost:53359`. The validation script now preflights `/api/health` and explicitly rejects this known mismatch.
+
+### JavaScript initialization error
+
+`frontend/app.js` called `refreshFocusedPriceChart()` during startup. That function calls `ensureMinuteBarSubscription()`, which accessed `requestedMinuteBarSymbols` before its later `const` declaration. The declaration has been moved next to the initial module constants, before any startup invocation. The source fix is committed; a real browser reload is still required to verify.
+
+### Visual Studio Browser Link error
+
+`browserLink:33: $.noConflict is not a function` comes from the Visual Studio development-time Browser Link injection, not from the MCC frontend source. If it persists after the MCC JavaScript fix, disable Browser Link for the debugging session or run without Browser Link. Do not alter MCC market-data code to suppress this unrelated tooling error.
+
+## RKLX uploaded evidence
+
+- `data/validation/RKLX/MarketData_StoredBars.txt`: 13 current 1M RKLX/Alpaca/IEX observations, 2026-10-30 13:30Z–17:30Z.
+- `data/validation/RKLX/MarketData_StoredBars_5m.txt`: 12 current 5M RKLX/Alpaca/IEX observations, same window.
+- These rows prove stored membership for that window. They do not cover the distinct 19:00Z–19:35Z interval where four 1M/four 5M observations were previously reported. Re-query that exact interval through the running API before closing the remaining verification.
+- The `supersedesObservationId` fields and latest-version store semantics support version replacement history, but do not alone prove that the later four-bar API response was identical to the stored payload. Compare timestamp, provider, feed, timeframe, OHLCV/content hash before classifying its zero-new-write count as idempotent.
+
+## Collector status interpretation and new diagnostics
+
+The user's sample showed:
+- configured symbols: SPY, QQQ, IWM, RTO, AMT;
+- watermarks also included TTE and FMS, which are retained old keys from prior configuration and are not active current configured symbols;
+- `cycles=6`, `lastCycleErrors=0`, `recentErrors=[]`;
+- `newlyPersistedObservations=0`, a cumulative per-process count;
+- Saturday poll cycles and Friday source watermarks, which are not automatically a failure because the worker polls on weekends and empty successful responses do not advance source timestamps.
+
+The worker now exposes:
+- `checkpointLoadCompleted`
+- `checkpointFileFound`
+- `checkpointLoadedEntryCount`
+- `checkpointLoadCompletedUtc`
+- `checkpointLoadError`
+
+These let the restart test directly establish whether the configured checkpoint was found and how many entries were loaded.
+
+## New scripts and runbook
+
+- `scripts/validation/Test-MarketDataRuntime.ps1`: now checks API health and validates the known local port/scheme mismatch.
+- `scripts/validation/Capture-CollectorCheckpoint.ps1`: captures `/api/market-data/collector/status`, copies the configured checkpoint, and records SHA-256, file size, last-write time, watermarks, and checkpoint-load diagnostics.
+- `docs/Runtime-Acceptance-Runbook.md`: section 4 now defines each collector status field and provides precise cycle-failure, restart/reload, and sleep/wake acceptance procedures.
+
+## Immediate continuation checklist
+
+1. Check the exact latest branch HEAD and GitHub Actions.
+2. Pull the branch in Visual Studio, run MCC, and hard-refresh the browser. Verify the `requestedMinuteBarSymbols` ReferenceError is gone.
+3. Run:
+   ```powershell
+   ./scripts/validation/Test-MarketDataRuntime.ps1 `
+     -BaseUri "http://localhost:53360" `
+     -Symbol "RKLX" `
+     -Provider "Alpaca" `
+     -Feed "iex" `
+     -FromUtc "2026-10-30T13:00:00Z" `
+     -ToUtc "2026-10-30T19:35:00Z" `
+     -WaitSeconds 300
+   ```
+4. Run `./scripts/validation/Capture-CollectorCheckpoint.ps1 -BaseUri "http://localhost:53360"`.
+5. Complete the target-host failure/recovery, restart/checkpoint reload, and sleep/wake tests exactly as documented. Do not induce provider failure in a production account.
+6. During regular market hours, perform the separate 5-minute WebSocket test for SPY, RKLX, ASTX, XRPN.
+7. Update Master To-Do and this handoff with exact runtime artifact paths/timestamps and the exact commit/workflow SHA. Keep all items unchecked until evidence exists.
+
 # Current continuation handoff — ChatDisconnect execution checkpoint — 2026-10-31
 
 ## Repository state
