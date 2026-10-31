@@ -84,3 +84,49 @@ The user's latest screenshot is separate evidence from the previously reviewed O
 4. Match each 1M bar to the latest completed 5M bar, never a future/incomplete 5M candle.
 5. Build a row-per-minute state tape with the 5M permission/structure/blocker and 1M execution candidate/expiry/GET OUT/EOD fields sourced from actual chart diagnostics.
 6. Add replay assertions only for transitions present in the matched evidence. Keep 5M authority, 1M entry expiry, and 1M exit state distinct.
+
+
+## RTO exported OHLCV reconciliation — 2026-10-28 data, parsed 2026-10-30
+
+The two repository exports under data/validation/RTO were parsed directly:
+
+- StrategyReports_RTO_102826_1m.csv
+- StrategyReports_RTO_102826_5m.csv
+
+### Parsed coverage and integrity
+
+| Check | 1M export | 5M export |
+|---|---:|---:|
+| OHLCV bars | 30 | 6 |
+| First embedded bar timestamp | 12:30 Arizona | 12:30 Arizona |
+| Last embedded bar timestamp | 12:59 Arizona | 12:55 Arizona |
+| Duplicate timestamps | 0 | 0 |
+| Missing intervals within export | 0 | 0 |
+| Invalid OHLC relationships | 0 | 0 |
+| Negative volume | 0 | 0 |
+
+The payload timestamps are epoch milliseconds and convert to 2026-10-28 19:30Z–19:59Z for 1M and 19:30Z–19:55Z for 5M. On this date those are 12:30–12:59 Arizona.
+
+### 1M-to-5M aggregation
+
+Each group of five consecutive 1M bars was aggregated using first open, maximum high, minimum low, last close, and summed volume. All six resulting aggregates match the corresponding exported 5M candle exactly across all five OHLCV fields.
+
+| 5M bar start (Arizona) | 1M bars | OHLCV aggregate matches 5M |
+|---|---:|---|
+| 12:30 | 5 | YES |
+| 12:35 | 5 | YES |
+| 12:40 | 5 | YES |
+| 12:45 | 5 | YES |
+| 12:50 | 5 | YES |
+| 12:55 | 5 | YES |
+
+### Limits
+
+- This verifies OHLCV aggregation parity only for these six 5-minute intervals.
+- StrategyReport Date/Time values are separate from the embedded epoch bar timestamps. For example, the 1M report event time is later than the embedded candle start, and the 5M report event time is later still. Do not join state events by the report Date/Time field or infer bar-close conventions from it without a separate contract.
+- The exported rows contain MCC_OHLCV transport payloads and transport-close strategy events. They do not contain the actual per-bar Thinkorswim Permission, reconstructed Permission, READY, RUNNER, WANING, SWING, GET OUT, or EOD state values.
+- Therefore a ThinkScript state tape, same-bar state parity, and runner/exit transition assertions cannot be produced from these two files alone.
+
+### Disposition
+
+The file-location, parsing, timestamp conversion, integrity, and six-window OHLCV aggregation checks are complete. The matched-study-state replay remains open pending authoritative per-bar state labels or a chart export that records those labels on the same bars.
