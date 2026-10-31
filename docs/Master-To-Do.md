@@ -1,3 +1,14 @@
+## 2026-10-30 — RKLX post-close assessment and persistence follow-up
+
+- [x] Reviewed the 22:55:20 UTC RKLX live assessment. Both 1M and 5M were correctly marked stale because their latest completed bars ended at 20:00 UTC, and the assessment occurred after the 20:00 UTC / 1:00 PM Arizona regular-session close. Permission and execution were not evaluated.
+- [x] Reconciled the 22:50:31 UTC WebSocket snapshot with source code. Connected/subscribed and a recent `lastMessageUtc` do not prove bar delivery; `lastMessageUtc` includes control/auth/subscription messages, while `lastBarUtc` and `barsBySymbol` represent actual bar observations. The zero-bar snapshot was post-close and is not an in-session failure test.
+- [x] Recorded that the 122-bar 1M and 441-bar 5M assessment histories cover multi-day lookbacks and must not be compared by total count with the 35-minute REST queries.
+- [ ] Verify RKLX observations in `GET /api/market-data/stored-bars` for matching provider/feed/timeframe/window; determine whether `newlyPersistedObservationCount=0` reflects expected idempotent duplicates.
+- [ ] Next regular session: capture WebSocket status before/after 5–10 minutes and verify per-symbol bar counts/timestamps advance; then verify 1M source switches only when all subscription/history/freshness/provenance gates pass.
+- Evidence: `docs/MarketData-ChatTests-20261030.md`, section “Additional RKLX assessment and stream snapshot”.
+
+---
+
 ## 2026-10-30 — RTO exported OHLCV reconciliation
 
 - [x] Parsed data/validation/RTO/StrategyReports_RTO_102826_1m.csv and the corresponding 5m export.
