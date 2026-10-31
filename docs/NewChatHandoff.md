@@ -8,7 +8,7 @@
 - Parent GitHub Actions run **776** passed for `46eec0457bd68324a1421b8f5479a43a7d2052b2`.
 - Morning Brief snapshot and source-watermark implementation commit `61e8483c6cce4cea5e5131e773086db1ff91bd74` passed workflow **792**: Release build 0 warnings/0 errors; **156/156 tests passed**.
 - Runtime validation script commit `fd6fe0b66b9ad9be5fd1ec31fdf26780d2eb4534` passed workflow **780**. Documentation workflows **781–785** passed.
-- README and User Manual documentation updates were made after run 785; inspect the exact latest branch-head workflow before claiming the entire current head CI-verified.
+- The exact branch head `ecd31a28248a3599a18c7a9a4080113c3b1f3e92` passed GitHub Actions run **803**: .NET 8 Release build and **156/156 tests**. This includes the README, User Manual, runbook, Master To-Do, and source-watermark changes. This handoff update itself creates a newer commit; verify its workflow before treating the post-handoff head as green.
 - Read `docs/ChatDisconnect.txt` and reconciled its remaining-work checklist into the top of `docs/Master-To-Do.md`. The Master To-Do remains canonical.
 
 ## Work completed in this pass
