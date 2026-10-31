@@ -1,64 +1,129 @@
-# Momentum Command Center V2 Prototype
+# Momentum Command Center V3
 
-C#/.NET 8 research and decision-support prototype. **Not an auto-trader.**
+**Repository:** `MomentumCommandCenterV2`  
+**Runtime:** .NET 8 / ASP.NET Core  
+**Purpose:** Market research and trading decision support. **Not an auto-trader.**  
+**Current development branch:** `feature/opportunity-quality-classification`
+
+The repository and C# namespaces retain the V2 name for continuity; the broader project is Momentum Command Center V3.
 
 ## Timezone
-Arizona. This means sometimes the timezone will be MDT and sometimes PST.
 
-## Architecture
+Use `America/Phoenix` for Arizona-local display and input. Arizona does not observe daylight saving time; Phoenix remains UTC−07:00 year-round. Persist and exchange timestamps as UTC/ISO-8601.
 
-5M Direction/Permission → 1M Execution Confirmation → Position Lifecycle → Runner / Weakening / Exit.
+## Decision architecture
 
-Core contains deterministic decision/replay logic; Application contains use-case contracts; Infrastructure contains file/provider adapters; CLI exposes local commands. The repository currently is not an ABP Framework application.
+`5M Direction / Permission → 1M Execution Confirmation → Position Lifecycle → Runner / Weakening / Exit`
 
-## Current prototype rules
+The 5M engine is the directional authority. The 1M engine handles execution timing and short-term confirmation. A valid `EXECUTION READY` event is not a ranking of expected opportunity quality and is not a profitability claim.
 
-5M permission scores six conditions: price > VWAP, price > 9 EMA, 9 EMA > 20 EMA, 20 EMA > 50 SMA, RSI >= 50, RVOL >= 1.5. Five or more = long permission.
+The current V2 5M permission score has six conditions:
 
-Fresh long requires 5M permission plus 1M price/VWAP/EMA alignment, MACD confirmation, RSI >= 50, RVOL >= 1.5, RSI < 78, and no severe ATR extension.
+1. 5M close above VWAP.
+2. 5M close above EMA 9.
+3. EMA 9 above EMA 20.
+4. EMA 20 above SMA 50.
+5. RSI 14 at or above 50.
+6. Same-regular-session-clock-slot 5M relative volume at or above 1.50.
 
-While in a position, V2 can remain RUNNER while trend/momentum are intact, switch to WEAKENING when conditions deteriorate, and issue EXIT on hard deterioration or EOD. EOD is 3:55 PM ET.
+Five or more conditions are required for long permission. 1M entry confirmation has additional alignment, MACD, RSI, RVOL, and ATR-extension gates. See the source engine and [Opportunity Quality and Ranking](docs/Opportunity-Quality-and-Ranking.md); do not infer Thinkorswim parity from the C# implementation alone.
 
-## Opportunity quality
+## Solution structure
 
-A valid `EXECUTION READY` event is not a ranking of expected opportunity quality. See [Opportunity Quality and Ranking](docs/Opportunity-Quality-and-Ranking.md). The current assessor is diagnostic only, with provisional bands; it does not replace eligibility or claim profitability.
+- `src/MomentumCommandCenterV2.Core` — deterministic domain and signal/replay logic.
+- `src/MomentumCommandCenterV2.Application` — application contracts and use cases.
+- `src/MomentumCommandCenterV2.Infrastructure` — provider and persistence adapters.
+- `src/MomentumCommandCenterV2.API` — ASP.NET Core Minimal API, hosted workers, and dashboard host.
+- `src/MomentumCommandCenterV2.Cli` — local command-line workflows.
+- `tests/MomentumCommandCenterV2.Tests` — xUnit tests.
+- `frontend/` — editable HTML, CSS, JavaScript, and favicon. These files are exposed in Visual Studio as a `frontend` Solution Items folder.
 
-## Market data and historical replay
+## Market data and live assessment
 
-See [Market-Data and Historical-Replay Contract](docs/Market-Data-and-Replay-Contract.md).
+The API currently includes:
 
-The current engineering slice adds raw timestamped 1M/5M OHLCV bars, a timezone-aware CSV reader, deterministic replay frames that only attach a 5M bar timestamped at or before the replay point, duplicate/malformed-bar validation, tests, a CLI replay command, and a synthetic sample CSV.
+- Alpaca and Massive historical OHLCV REST adapters.
+- Append-only JSONL raw market-bar observations with provider, feed, timeframe, timestamp, and transport provenance.
+- A configured-symbol REST collection worker with persisted watermarks and overlapping backfill.
+- An optional Alpaca WebSocket minute-bar worker that handles subscription acknowledgements, reconnects, minute bars, and late `updatedBars` corrections.
+- Alpaca SIP-based top-gainers/top-losers discovery ingestion. This is a bounded movers feed, not a complete market-wide scanner.
+- A live symbol assessment that calculates technical indicators and calls the existing V2 signal engine.
 
-Run local CSV replay:
+The live-assessment source policy is hybrid:
+
+- 1M uses persisted WebSocket observations only when subscription is confirmed, sufficient completed-bar history exists (at least 50 bars), the latest bar is fresh, and the latest observation is explicitly tagged WebSocket.
+- Otherwise 1M falls back to historical REST.
+- 5M Permission remains REST-backed.
+
+A connected WebSocket is not proof of fresh market data. Inspect `/api/market-data/stream/status` for acknowledged symbols, per-symbol bar counts, latest bar timestamps, received/persisted totals, and errors. A stream message timestamp is not a bar timestamp. Provider feed entitlement controls coverage; missing bars are not zero-volume bars.
+
+Useful endpoints include:
+
+- `GET /api/providers/status`
+- `GET /api/market-data/bars`
+- `GET /api/market-data/stored-bars`
+- `GET /api/market-data/live-assessment`
+- `GET /api/market-data/stream/status`
+- `POST /api/market-data/stream/subscribe`
+- `GET /api/market-data/replay`
+- `GET /api/scanner/discoveries`
+- `GET /api/morning-brief`
+
+## Historical replay and its limits
+
+The API replay endpoint uses persisted completed 1M/5M bars at or before an explicit as-of timestamp and invokes the current V2 engine/configuration. It prevents future-bar lookahead. Historical V2 configuration versions are not yet archived, and this is not a complete backtest: it does not reproduce installed Thinkorswim study outputs, simulate realistic fills/slippage, or establish historical profitability.
+
+The CLI also supports local CSV replay:
 
 ```bash
 dotnet run --project src/MomentumCommandCenterV2.Cli -- replay samples/market-data/sample-bars.csv
 ```
 
-This is a data foundation, not a full backtest. It does not yet calculate indicators, reproduce ThinkOrSwim study outputs, simulate fills, or connect to live market data. Timestamp open/close semantics and session handling must be agreed with the eventual provider before integration.
+## Dashboard and frontend architecture
 
-## Front-end workbench
+The dashboard is a static HTML/CSS/JavaScript frontend hosted by the ASP.NET Core Minimal API through its physical-file provider. It is **not an MVC/Razor application**.
 
-Open [frontend/index.html](frontend/index.html) directly for the offline demo, or run `dotnet run --project src/MomentumCommandCenterV2.API` from the repository root to serve the dashboard and API together. The ASP.NET Core host serves the existing frontend, reports provider configuration, requests historical 1M/5M bars from configured Alpaca and Massive REST adapters, and exposes a partial API-backed Morning Brief. Direct-file mode remains offline/demo-only. See [API host and provider setup](src/MomentumCommandCenterV2.API/README.md) and [Scanner and Watchlist Workbench](docs/Scanner-and-Watchlist-Workbench.md). The adapters are an initial integration slice, not proof of provider suitability: websocket streaming, scanner/movers, quotes, durable raw-bar storage, reconnect/backfill, news/catalysts, and entitlement/licensing validation remain open. Thinkorswim is still the chart-study reference; do not remove it from the workflow until data, indicator, and decision parity are validated.
+Edit these files directly:
+
+- `frontend/index.html` — page structure and element IDs.
+- `frontend/styles.css` — layout and responsive styling.
+- `frontend/app.js` — browser behavior and API requests.
+- `frontend/favicon.svg` — browser icon.
+
+Open `MomentumCommandCenterV2.sln` in Visual Studio and expand the `frontend` Solution Items folder. Run the API project and use its hosted URL; opening the page with `file://` is offline/demo-only and cannot call same-origin API routes.
+
+## Current product boundaries
+
+The current dashboard, API, scanner, and Morning Brief are an evolving research workbench, not a production trading platform.
+
+Not yet established end-to-end:
+
+- Installed Thinkorswim 5M/1M study parity and matched-bar state-transition validation.
+- Full-universe discovery and entitlement/licensing suitability.
+- Complete-market breadth, verified sector flows, classified catalysts, halt/spread/order-book evidence, or outcome-calibrated opportunity probabilities.
+- Fully automated Boring Overnight calculations and qualification from validated, session-paired persisted history.
+- Versioned historical decision configuration and realistic fill/outcome backtesting.
+- Schwab OAuth and read-only broker-position synchronization.
+- Order placement or autonomous trading. Order submission remains intentionally unimplemented.
+
+Unknown, missing, or stale evidence must remain UNKNOWN / DATA? and must never become READY by assumption.
 
 ## Build and test
 
-Use Visual Studio 2022 and .NET 8 SDK. Open `MomentumCommandCenterV2.sln`, build the solution, and run the xUnit test project.
+Use Visual Studio 2022 and the .NET 8 SDK:
 
-## Validation principles
+```bash
+dotnet build MomentumCommandCenterV2.sln --configuration Release
+dotnet test MomentumCommandCenterV2.sln --configuration Release
+```
 
-- Keep V1 as a control when comparing decisions.
-- Compare signal outputs with source ThinkOrSwim studies and screenshots.
-- Do not optimize thresholds after one trade.
-- Do not infer MFE/MAE from trade-only data.
-- Missing/stale data is UNKNOWN, not READY.
-- Automated order placement and autonomous Schwab submission remain out of scope.
+The latest documented code validation at this checkpoint is GitHub Actions run 767 for commit `3192c8f34d11273360bed82367563466a30b08ad`, with the .NET 8 build and 152/152 tests passing. Subsequent commits in the branch were documentation-only. Browser acceptance and live in-session provider acceptance remain separate requirements.
 
-## Project roadmap and current checklist
+## Project control
 
-- The canonical project checklist is [docs/Master-To-Do.md](docs/Master-To-Do.md). Commit Message should state the To-Do item's Category and explanation. End full Commit Message with the currently remaining To-Do item count.
-- The original README is preserved as [an archived source](docs/archive/README_ORIGINAL.md) after reconciliation.
+- Canonical checklist: [docs/Master-To-Do.md](docs/Master-To-Do.md)
+- Current continuation handoff: [docs/NewChatHandoff.md](docs/NewChatHandoff.md)
+- Market-data runtime evidence: [docs/MarketData-ChatTests-20261030.md](docs/MarketData-ChatTests-20261030.md)
+- User guide: [docs/User-Manual.md](docs/User-Manual.md)
 
-## Current next steps
-
-The current API host includes initial Alpaca and Massive historical REST adapters and local raw-bar persistence. Accounts are not required for offline development; free credentials are optional for live smoke tests, and paid subscriptions are on hold pending proof-of-fit. See [Next Steps and User Inputs](docs/Next-Steps-and-User-Inputs.md), [Master To-Do](docs/Master-To-Do.md), and [Provider Comparison](docs/Provider-Comparison.md).
+GitHub source is authoritative for code and committed documentation. A checked-off implementation task requires source evidence; CI, browser acceptance, provider runtime validation, and external approvals must be tracked separately.
