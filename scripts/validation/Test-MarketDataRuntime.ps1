@@ -77,14 +77,52 @@ if ($health.status -ne "OK") {
     throw "The configured BaseUri did not return API health status OK. Returned status: $($health.status)"
 }
 
-Write-Host "Capturing stored RKLX bars (provider=$Provider, feed=$Feed, window=$fromText to $toText)..."
+Write-Host "Refreshing provider RKLX bars and reconciling against the persisted store (provider=$Provider, feed=$Feed, window=$fromText to $toText)..."
 $stored = @{}
+$providerRefresh = @{}
 foreach ($timeframe in @("1m", "5m")) {
-    $query = "symbol=$encodedSymbol&fromUtc=$([uri]::EscapeDataString($fromText))&toUtc=$([uri]::EscapeDataString($toText))&provider=$([uri]::EscapeDataString($Provider))&timeframe=$timeframe&limit=10000"
-    $response = Get-ApiJson "/api/market-data/stored-bars?$query"
+    $barQuery = "symbol=$encodedSymbol&timeframe=$timeframe&from=$([uri]::EscapeDataString($fromText))&to=$([uri]::EscapeDataString($toText))&providerName=$([uri]::EscapeDataString($Provider))"
+    $fresh = Get-ApiJson "/api/market-data/bars?$barQuery"
+    $providerRefresh[$timeframe] = $fresh
+
+    $storedQuery = "symbol=$encodedSymbol&fromUtc=$([uri]::EscapeDataString($fromText))&toUtc=$([uri]::EscapeDataString($toText))&provider=$([uri]::EscapeDataString($Provider))&timeframe=$timeframe&limit=10000"
+    $response = Get-ApiJson "/api/market-data/stored-bars?$storedQuery"
     $matching = @($response.observations | Where-Object {
         $_.bar.feed -eq $Feed -and $_.bar.timeframe -eq $timeframe
     })
+
+    $storedByTimestamp = @{}
+    foreach ($observation in $matching) {
+        $key = ([DateTimeOffset]::Parse([string]$observation.sourceTimestamp)).UtcDateTime.Ticks
+        $storedByTimestamp[$key] = $observation.bar
+    }
+
+    $exactMatches = 0
+    $missingFromStore = 0
+    $contentMismatches = 0
+    foreach ($bar in @($fresh.bars)) {
+        $key = ([DateTimeOffset]::Parse([string]$bar.timestamp)).UtcDateTime.Ticks
+        if (-not $storedByTimestamp.ContainsKey($key)) {
+            $missingFromStore++
+            continue
+        }
+
+        $storedBar = $storedByTimestamp[$key]
+        $sameContent = $true
+        foreach ($field in @("symbol", "open", "high", "low", "close", "volume", "provider", "feed", "timeframe", "sourceTransport")) {
+            if ([string]$bar.$field -cne [string]$storedBar.$field) {
+                $sameContent = $false
+                break
+            }
+        }
+        if ($sameContent) { $exactMatches++ } else { $contentMismatches++ }
+    }
+
+    $freshCount = @($fresh.bars).Count
+    $newlyPersisted = [long]$fresh.newlyPersistedObservationCount
+    $duplicateResult = ($freshCount -gt 0 -and $newlyPersisted -eq 0 -and
+        $exactMatches -eq $freshCount -and $missingFromStore -eq 0 -and $contentMismatches -eq 0)
+
     $stored[$timeframe] = [pscustomobject]@{
         symbol = $Symbol
         provider = $Provider
@@ -92,6 +130,12 @@ foreach ($timeframe in @("1m", "5m")) {
         timeframe = $timeframe
         fromUtc = $fromText
         toUtc = $toText
+        providerRefreshBarCount = $freshCount
+        newlyPersistedObservationCount = $newlyPersisted
+        exactStoredContentMatches = $exactMatches
+        freshBarsMissingFromStore = $missingFromStore
+        storedContentMismatches = $contentMismatches
+        zeroNewWritesConsistentWithIdempotentDuplicates = $duplicateResult
         responseCount = $response.count
         matchingFeedCount = $matching.Count
         firstSourceTimestampUtc = if ($matching.Count) { ($matching | Sort-Object sourceTimestamp | Select-Object -First 1).sourceTimestamp } else { $null }
@@ -99,6 +143,7 @@ foreach ($timeframe in @("1m", "5m")) {
         observations = $matching
     }
 }
+Save-Json "provider-refresh.json" $providerRefresh | Out-Null
 Save-Json "stored-bars.json" $stored | Out-Null
 
 Write-Host "Capturing stream and collector status before the wait..."
@@ -151,6 +196,7 @@ Save-Json "stream-delta.json" $streamDelta | Out-Null
 Write-Host ""
 Write-Host "Runtime validation artifacts saved to: $OutputDirectory"
 Write-Host "Stored-bar counts for $Symbol ($Provider/$Feed): 1m=$($stored['1m'].matchingFeedCount), 5m=$($stored['5m'].matchingFeedCount)"
+Write-Host "Idempotency comparison: 1m=$($stored['1m'].zeroNewWritesConsistentWithIdempotentDuplicates), 5m=$($stored['5m'].zeroNewWritesConsistentWithIdempotentDuplicates)"
 $streamDelta | Format-Table -AutoSize
 Write-Host "Interpretation:"
 Write-Host "- A subscribed symbol with no new bars is not automatically a failure unless the test window is during regular market hours and the feed should have eligible prints."
