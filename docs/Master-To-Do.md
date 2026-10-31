@@ -1,3 +1,53 @@
+## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
+
+### User-supplied runtime evidence
+
+- [x] Corrected market-data script ran against `http://localhost:53360` for RKLX / Alpaca / IEX / 2026-10-30 13:00Z–19:35Z.
+- [x] Script reported 25 stored 1M and 23 stored 5M observations.
+- [x] Automated provider-to-store comparison returned `1m=True` and `5m=True`; for the provider bars returned in that query, zero new writes is consistent with exact already-stored duplicates.
+- [x] Runtime artifacts saved by user at `artifacts/runtime-validation/20261031T202332Z`.
+- [x] Collector checkpoint baseline copied at `artifacts/collector-checkpoint/20261031T202543Z`; SHA-256 `8E3AFBD5DAD5C3502DB625F0133DE697F9C8615BB35BDA09609A4CF7FAE44500`; 3 cycles and 0 latest-cycle errors.
+- [x] User confirms MCC application JavaScript errors are gone except Visual Studio Browser Link's `$.noConflict is not a function` injection. Keep this separate from MCC source defects.
+- [ ] Regular-session WebSocket acceptance remains open: the supplied capture was Saturday, with acknowledged subscriptions but zero bars before/after for SPY/RKLX/ASTX/XRPN.
+- [ ] Collector controlled-failure/recovery, checkpoint reload after restart, and sleep/wake acceptance remain open. The captured hash is only a baseline.
+
+### Red Zone / V2 5M score — implementation change
+
+- [x] Identified that `fiveMinute.scoreBreakdown.score` was sourced from the combined V2 decision. This made the 5M authority score UNKNOWN whenever the 1M/combined decision was unavailable, even if current 5M evidence existed.
+- [x] Added canonical `V2SignalEngine.CalculateFiveMinuteScore` using the existing six conditions and V2 thresholds; the signal engine now calls this same method.
+- [x] Live assessment now emits independent `fiveMinute.scoreBreakdown.score`, `permission`, and `status`. The score is withheld unless the 5M technical snapshot is present/fresh and same-slot RVOL is available.
+- [x] Main Decision Explanation and Red Zone cards consume the independent score and permission. 5M score >=5 is labeled 5M permission only; EXECUTION READY still requires combined `decision.entryAllowed=true`.
+- [x] Added unit coverage for 6/6, 5/6 (permission), and 4/6 (no permission).
+- [ ] Exact-head Release build/test and Monday browser/API acceptance still required. Do not rely on earlier CI for these commits.
+
+### Boring Overnight — Monday disposition
+
+- [x] Reviewed `docs/BoringOvernight.md`, evaluator, explicit-boundary history calculator, snapshot store, and API routes.
+- [x] Created `docs/Monday-Readiness-2026-11-02.md` and updated `docs/BoringOvernight.md` with the Monday manual-only workflow and launch gates.
+- [ ] Boring Overnight is **NOT READY** for actionable/automated READY qualification. It remains WATCH/manual research only until complete source-backed 20-session history, exact session policy, full GTC_EXT coverage where needed, validated catalyst clearance, exclusions reconciliation, and Thinkorswim state parity are established.
+- [ ] Do not set catalyst CLEAR from caller assertion. The history-backed API path deliberately forces catalyst status UNKNOWN until a validated provider exists.
+
+### Daylight-saving operating times — Monday 2026-11-02
+
+- [x] Recorded Phoenix/Eastern offset change: Phoenix stays UTC−07:00; Eastern returns to UTC−05:00; Phoenix is two hours behind Eastern.
+- [x] Regular-session open/close convert to 07:30 / 14:00 Arizona.
+- [x] User's 08:30 Arizona start maps to 10:30 Eastern.
+- [x] Project GTC_EXT window 07:00–20:00 ET maps to 05:00–18:00 Arizona.
+- [x] Added timezone conversion guidance to the Monday runbook.
+
+### Immediate Monday acceptance
+
+- [ ] Verify CI for exact branch HEAD before relying on independent 5M score change.
+- [ ] After 07:30 Arizona, verify SPY/RKLX/ASTX/XRPN live 5M score status CURRENT, six criteria populated, score 0–6, permission iff score >=5, and recent 5M REST source timestamps.
+- [ ] Verify 1M freshness/history and combined decision separately; only `entryAllowed=true` is EXECUTION READY.
+- [ ] Verify WebSocket per-symbol bars, `lastBarUtc`, received/persisted counters during regular hours; REST fallback is acceptable when WS gates do not pass.
+- [ ] Complete browser acceptance of the new score display and ensure no MCC console errors. Browser Link injection can be disabled in Visual Studio.
+- [ ] Continue Boring Overnight manual-only. Do not force a candidate to READY.
+
+Evidence/runbook: `docs/Monday-Readiness-2026-11-02.md`, `docs/BoringOvernight.md`, and `docs/Runtime-Acceptance-Runbook.md`.
+
+---
+
 ## 2026-10-31 — Runtime validation failure diagnosis and collector recovery instrumentation
 
 ### Completed in this pass
