@@ -172,6 +172,15 @@ public sealed class LiveSymbolAssessmentService(
                 new { key = "rsiSupportive", label = $"5M RSI >= {scoringConfig.MinRsi:0}", passed = five is null ? (bool?)null : five.Rsi >= scoringConfig.MinRsi },
                 new { key = "rvolSupportive", label = $"5M RVOL >= {scoringConfig.MinRvol:0.00}", passed = rvol.Value.HasValue ? rvol.Value.Value >= scoringConfig.MinRvol : (bool?)null }
             };
+            // 5M Permission is an independent authority score. Do not make its
+            // availability depend on 1M freshness/history or the combined decision.
+            var fiveMinuteScore = five is not null && fiveFresh && rvol.Value.HasValue
+                ? scoreCriteria.Count(x => x.passed == true)
+                : (int?)null;
+            var fiveMinutePermission = fiveMinuteScore.HasValue
+                ? fiveMinuteScore.Value >= 5
+                : (bool?)null;
+
 
             var result = new
             {
@@ -227,9 +236,11 @@ public sealed class LiveSymbolAssessmentService(
                     relativeVolumeBaselineSamples = rvol.Samples,
                     scoreBreakdown = new
                     {
-                        score = decision?.Score,
+                        score = fiveMinuteScore,
                         maxScore = 6,
                         permissionThreshold = 5,
+                        permission = fiveMinutePermission,
+                        status = fiveMinuteScore.HasValue ? "CURRENT" : "UNKNOWN",
                         criteria = scoreCriteria
                     }
                 },
