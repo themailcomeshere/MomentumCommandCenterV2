@@ -47,6 +47,25 @@ public sealed class V2SignalEngine
     }
 
     /// <summary>
+    /// PURPOSE: Calculate the independent six-condition 5M authority score.
+    /// WHEN CALLED: Live assessment and decision evaluation need the same V2 score without 1M execution dependencies.
+    /// IMPORTANT: Uses only completed 5M indicator inputs; freshness/history checks remain the caller's responsibility.
+    /// </summary>
+    public static int CalculateFiveMinuteScore(BarSnapshot five, V2Config? config = null)
+    {
+        ArgumentNullException.ThrowIfNull(five);
+        var rules = config ?? new V2Config();
+        var score = 0;
+        if (five.Close > five.Vwap) score++;
+        if (five.Close > five.Ema9) score++;
+        if (five.Ema9 > five.Ema20) score++;
+        if (five.Ema20 > five.Sma50) score++;
+        if (five.Rsi >= rules.MinRsi) score++;
+        if (five.Rvol5m >= rules.MinRvol) score++;
+        return score;
+    }
+
+    /// <summary>
     /// METHOD: Evaluate
     /// PURPOSE: Evaluates the supplied snapshot and returns the deterministic signal decision.
     /// WHEN CALLED: Called by the signal workflow and historical trade/replay analysis.
@@ -80,42 +99,36 @@ public sealed class V2SignalEngine
         // 5M DIRECTION / PERMISSION
         // =========================================================
 
-        var score = 0;
+        var score = CalculateFiveMinuteScore(five, _config);
         var reasons = new List<string>();
 
         if (five.Close > five.Vwap)
         {
-            score++;
             reasons.Add("5M > VWAP");
         }
 
         if (five.Close > five.Ema9)
         {
-            score++;
             reasons.Add("5M > 9 EMA");
         }
 
         if (five.Ema9 > five.Ema20)
         {
-            score++;
             reasons.Add("5M 9 EMA > 20 EMA");
         }
 
         if (five.Ema20 > five.Sma50)
         {
-            score++;
             reasons.Add("5M 20 EMA > 50 SMA");
         }
 
         if (five.Rsi >= _config.MinRsi)
         {
-            score++;
             reasons.Add("5M RSI supportive");
         }
 
         if (five.Rvol5m >= _config.MinRvol)
         {
-            score++;
             reasons.Add("5M RVOL supportive");
         }
 
