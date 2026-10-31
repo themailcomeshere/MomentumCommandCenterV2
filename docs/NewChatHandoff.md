@@ -1075,3 +1075,34 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 
 - [CI VERIFIED] GitHub Actions run **41095950730 / run 618** completed successfully for commit `7c7e20810b70f2a6620fb8f752844a15eed130c3`. This run includes the dashboard code, favicon, user manual, provider comparison note, browser runbook, and master To-Do updates committed through that SHA. The workflow is the repository's .NET build/test workflow; it does not execute browser UI tests.
 - [BROWSER VALIDATION OPEN] Local browser acceptance remains outstanding for the new layout and favicon, and the BrowserLink `$.noConflict` error remains unresolved pending its injected script URL/stack trace.
+
+
+## Handoff update — RKLX, dashboard layout, and frontend discoverability — 2026-10-30
+
+### Current source changes
+- Header is full viewport width; .topbar-layout no longer has the 1240px max-width. Header padding is updated to match the wider layout.
+- Header demo indicator and WebSocket status chip no longer share the old generic span styling that caused overlap; both can wrap safely.
+- Main Chart focused-symbol label is larger and more prominent.
+- Opportunity Status is now a 2×2 metric grid to the right of #focusPriceChart, rather than occupying the Main Chart heading row.
+- The Visual Studio solution now exposes the four frontend assets in a frontend Solution Items folder. Edit frontend/index.html, frontend/styles.css, and frontend/app.js directly.
+
+### Architecture
+- The current UI is a static HTML/CSS/JavaScript frontend served by the ASP.NET Core API from the repository's frontend directory using UseDefaultFiles and UseStaticFiles.
+- It is not MVC/Razor. The solution folder makes the existing source editable and visible without a framework migration. No MVC conversion was performed.
+
+### RKLX 2026-10-30 diagnosis
+- The user-provided Alpaca/IEX 1M and 5M 19:00–19:35 UTC requests each returned four bars.
+- At the approximately 19:26 UTC in-session stale assessment, the 19:25 1M bar had completed; the 19:25 5M bar had not. The last completed 5M bar was 19:05 (expected close 19:10), approximately 16 minutes old. No 5M bars were returned for 19:10, 19:15, or 19:20.
+- This explains the stale 5M result without changing the 360-second threshold. The provider returned sparse IEX observations. Whether the gaps mean no IEX-eligible prints or a provider coverage issue is not established; no inference about trades on other venues is valid.
+- The short-window endpoint and wider assessment are consistent on their overlapping time interval; do not compare their total bar counts as if they covered the same window.
+
+### WebSocket evidence qualification
+- The supplied status snapshot at 22:50 UTC was after the 20:00 UTC regular-session close. It showed connected/subscribed but zero received/persisted bars. This is not an in-session delivery test.
+- Next test must occur during regular hours: capture status before and after 5–10 minutes; verify per-symbol counts/timestamps advance; then verify fresh assessments switch to ALPACA_WEBSOCKET_LATEST_BAR only after the 50-bar, freshness, and provenance checks pass.
+
+### Outstanding acceptance
+- Browser-test full-width header, chip wrapping, symbol label, chart-side 2×2 cards, Morning Brief modal, replay, Red Zone, and sound.
+- Run the .NET Release build/test workflow for the exact current branch head.
+- Schwab Trader API Individual approval and OAuth remain blocked by external approval/configuration. Order submission remains disabled.
+- Canonical open items and disposition are at the top of docs/Master-To-Do.md.
+
