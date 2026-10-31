@@ -18,6 +18,7 @@
 - Added `src/MomentumCommandCenterV2.API/MorningBrief/MorningBriefSnapshotStore.cs`.
 - Newly generated `GET /api/morning-brief` reports are appended to an immutable JSONL store before entering the existing 60-second response cache.
 - Each record includes snapshot ID, generated/recorded UTC timestamps, report version (`morning-brief-v1`), SHA-256 payload hash, and the complete report JSON.
+- Snapshot metadata also captures explicit UTC source-bar watermarks from `marketLandscape`, keyed by provider/symbol/timeframe/feed/transport. Raw input references, news/discovery watermarks, full dependency manifest, and outcome linkage remain open.
 - Live response adds `snapshotPersistenceStatus`, `snapshotId`, and `snapshotVersion`. Storage failures are logged and surfaced as `FAILED` without silently claiming persistence.
 - Added `GET /api/morning-brief/history?limit=20` (limit 1–200), returning newest-first report snapshots.
 - Default path is local application data under `MomentumCommandCenterV2/morning-brief-snapshots.jsonl`; override with server-side `MCC_MORNING_BRIEF_SNAPSHOT_PATH`.
