@@ -86,3 +86,44 @@ The 22:50 UTC stream-status snapshot was after the 20:00 UTC regular-session clo
 Data does not establish whether the missing bars represent no IEX-eligible prints or upstream/provider coverage behavior. Do not infer that no trades occurred on other venues, do not treat missing bars as zero volume, and do not synthesize bars.
 
 Next: run the stream-status before/after test during regular hours; verify per-symbol bar counts and timestamps advance; then confirm the assessment switches to `ALPACA_WEBSOCKET_LATEST_BAR` only after the 50-bar, freshness, and provenance requirements are met.
+
+
+## Additional RKLX assessment and stream snapshot — 2026-10-30, 22:55 UTC
+
+The user supplied a later RKLX live-assessment response and a stream-status snapshot.
+
+### Bounded REST requests
+
+Both requests used Alpaca/IEX and the interval 19:00–19:35 UTC:
+
+- 1M: four observations at 19:00, 19:08, 19:25, and 19:35 UTC; `newlyPersistedObservationCount=0`.
+- 5M: four observations at 19:00, 19:05, 19:25, and 19:35 UTC; `newlyPersistedObservationCount=0`.
+- 1M reported three gaps; 5M reported two. Missing observations are not synthetic zero-volume bars.
+- The zero newly-persisted count is consistent with idempotent deduplication, but this response alone does not prove that the matching observations are present in the persisted store.
+
+### Live assessment at 22:55:20 UTC
+
+- `evaluationStatus=STALE_MARKET_DATA`; `dataFresh=false`.
+- Last completed 1M bar: 19:59 UTC, expected close 20:00 UTC.
+- Last completed 5M bar: 19:55 UTC, expected close 20:00 UTC.
+- Both were approximately 10,521 seconds old against 120-second (1M) and 360-second (5M) limits.
+- The regular session had closed at 20:00 UTC / 1:00 PM Arizona. This is a post-close stale assessment, not evidence of an in-session feed failure.
+- Permission and execution were not evaluated. The returned 5M factor breakdown is diagnostic only and must not be represented as an actionable decision.
+- The assessment's three-day 1M history (122 bars) and 21-day 5M history (441 bars) have different request windows from the 35-minute direct REST queries; their total counts are not directly comparable.
+
+### WebSocket status at 22:50:31 UTC
+
+- Enabled/configured/connected: true; state: SUBSCRIBED; feed: IEX.
+- SPY, RKLX, ASTX, and XRPN were acknowledged.
+- `receivedBars=0`, `persistedBars=0`, `lastBarUtc=null`, and no per-symbol bar counts were present.
+- The snapshot was after the regular-session close. It does not establish whether minute bars were delivered during regular hours.
+- Source inspection of `AlpacaMinuteBarStreamWorker` confirms `lastMessageUtc` is updated for received WebSocket messages, including authentication/subscription messages; it is not interchangeable with `lastBarUtc`.
+
+### Remaining verification
+
+1. Query `GET /api/market-data/stored-bars` for RKLX, Alpaca/IEX, both 1M and 5M, and the same UTC window. Verify whether the four observations already exist and whether the zero newly-persisted count is expected idempotency.
+2. During the next regular session, capture `/api/market-data/stream/status` before and after 5–10 minutes. Verify per-symbol counts and bar timestamps advance for the selected symbols.
+3. Only after at least 50 completed 1M bars, a fresh latest bar, confirmed subscription, and WebSocket provenance are present should the live assessment report `ALPACA_WEBSOCKET_LATEST_BAR`.
+4. Keep 5M REST freshness limits unchanged. If RKLX remains stale while liquid control symbols advance, capture same-window 5M REST and WebSocket evidence before attributing the cause.
+
+No provider-coverage conclusion can be drawn from the supplied IEX gaps alone. Whether missing bars reflect no IEX-eligible prints or provider/entitlement coverage behavior remains unknown.
