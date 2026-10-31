@@ -66,12 +66,12 @@ The API now writes each newly generated report to an append-only JSONL store bef
 
 - Default path: local application data, `MomentumCommandCenterV2/morning-brief-snapshots.jsonl`.
 - Override: `MCC_MORNING_BRIEF_SNAPSHOT_PATH`.
-- Each record contains a unique snapshot ID, generated/recorded UTC timestamps, report version, SHA-256 content hash, and the complete report JSON.
+- Each record contains a unique snapshot ID, generated/recorded UTC timestamps, report version, SHA-256 content hash, explicit source-bar watermarks extracted from the report's marketLandscape (provider/symbol/timeframe/feed/transport plus latest UTC source timestamp), and the complete report JSON.
 - The live response includes `snapshotPersistenceStatus`, `snapshotId`, and `snapshotVersion`.
 - `GET /api/morning-brief/history?limit=20` returns newest-first immutable snapshots.
 - Persistence failure is reported as `snapshotPersistenceStatus=FAILED`; the generated report remains available and the failure is logged.
 
-Version `morning-brief-v1` identifies the report schema generation. This is not yet a full input-watermark archive: per-provider/per-symbol source watermarks, raw response retention policy, and outcome linkage remain future work. A snapshot preserves unknown/partial states and does not imply that the underlying provider data is complete or validated.
+Version `morning-brief-v1` identifies the report schema generation. This is not yet a full input-manifest archive: raw provider response references/retention policy, news/discovery input watermarks, calculation dependency manifests, and later outcome linkage remain future work. A snapshot preserves unknown/partial states and does not imply that the underlying provider data is complete or validated. Source watermarks are recorded only when the report includes an explicit UTC latest bar with provider, symbol, timeframe, feed, and transport.
 
 ## 4. Collector outage, restart, and sleep/wake recovery
 
