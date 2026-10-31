@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Any;
 using MomentumCommandCenterV2.API.MarketData;
+using MomentumCommandCenterV2.API.MorningBrief;
 using MomentumCommandCenterV2.Application.Interfaces;
 using MomentumCommandCenterV2.Application.Services;
 using MomentumCommandCenterV2.Infrastructure.Persistence;
@@ -34,7 +35,7 @@ builder.Services.AddSwaggerGen(options =>
             tag = "Strategy Reports";
         else if (path.StartsWith("/api/boring-overnight/", StringComparison.OrdinalIgnoreCase))
             tag = "Boring Overnight";
-        else if (path == "/api/morning-brief")
+        else if (path == "/api/morning-brief" || path == "/api/morning-brief/history")
             tag = "Morning Report";
         else
             tag = "Other";
@@ -67,6 +68,7 @@ builder.Services.AddSingleton<MomentumCommandCenterV2.API.MarketData.MarketDataC
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>());
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore>();
+builder.Services.AddSingleton<MorningBriefSnapshotStore>();
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -397,7 +399,7 @@ app.MapGet("/api/market-data/bars", async (
 .WithSummary("Retrieve and persist historical 1m/5m bars from one provider")
 .WithDescription("UTC-only example: symbol=TTE, timeframe=1m, from=2026-10-26T13:30:00Z, to=2026-10-26T20:00:00Z, providerName=Alpaca. On 2026-10-26, this is 06:30–13:00 Arizona time (America/Phoenix). Use ISO-8601 UTC timestamps ending in Z for from/to. Returns source timestamps, feed, gaps, raw normalized bars, and newly persisted observation count. Supports up to 31 days per request.");
 
-app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, IMemoryCache cache, CancellationToken cancellationToken) =>
+app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> providers, IMarketBarObservationStore barStore, IScannerDiscoveryEventStore discoveryStore, AlpacaScannerDiscoveryHostedService discoveryWorker, AlpacaNewsClient newsClient, IMemoryCache cache, MorningBriefSnapshotStore snapshotStore, ILogger<MorningBriefSnapshotStore> logger, CancellationToken cancellationToken) =>
 {
     if (cache.TryGetValue("mcc:morning-brief:v1", out object? cachedReport) && cachedReport is not null)
         return Results.Json(cachedReport);
@@ -485,11 +487,49 @@ app.MapGet("/api/morning-brief", async (IEnumerable<IMarketDataProvider> provide
             "Data freshness, feed entitlements, extended-hours coverage, and bar parity must be validated before trading reliance."
         }
     };
-    cache.Set("mcc:morning-brief:v1", report, TimeSpan.FromSeconds(60));
-    return Results.Json(report);
+    var response = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(report))!;
+    try
+    {
+        var snapshot = await snapshotStore.AppendAsync(JsonSerializer.SerializeToElement(report), "morning-brief-v1", cancellationToken);
+        response["snapshotPersistenceStatus"] = JsonSerializer.SerializeToElement("PERSISTED");
+        response["snapshotId"] = JsonSerializer.SerializeToElement(snapshot.SnapshotId);
+        response["snapshotVersion"] = JsonSerializer.SerializeToElement(snapshot.ReportVersion);
+    }
+    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+    {
+        logger.LogError(ex, "Morning Brief was generated but its immutable snapshot could not be persisted.");
+        response["snapshotPersistenceStatus"] = JsonSerializer.SerializeToElement("FAILED");
+        response["snapshotId"] = JsonSerializer.SerializeToElement<string?>(null);
+    }
+    cache.Set("mcc:morning-brief:v1", response, TimeSpan.FromSeconds(60));
+    return Results.Json(response);
 })
 .WithSummary("Get the partial market Morning Brief")
 .WithDescription("No parameters. Example status: PARTIAL — MARKET SNAPSHOT ONLY; missing sector flow, movers, catalysts, and scoring remain DATA? until providers are wired.");
+
+app.MapGet("/api/morning-brief/history", async (
+    int? limit,
+    MorningBriefSnapshotStore store,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var snapshots = await store.GetLatestAsync(limit ?? 20, cancellationToken);
+        return Results.Ok(new
+        {
+            count = snapshots.Count,
+            snapshots,
+            note = "Immutable generated report snapshots, newest first. Report content hashes identify exact payloads. A snapshot preserves the report's DATA?, PARTIAL, and unknown states; it does not imply source validation."
+        });
+    }
+    catch (ArgumentOutOfRangeException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+})
+.WithName("GetMorningBriefHistory")
+.WithSummary("Read immutable versioned Morning Brief snapshots")
+.WithDescription("Optional limit: 1–200 (default 20). Each record includes snapshotId, generatedAtUtc, recordedAtUtc, reportVersion, SHA-256 content hash, and the complete report payload. The store path is configured with MCC_MORNING_BRIEF_SNAPSHOT_PATH or defaults to the local application-data directory.");
 
 app.MapPost("/api/boring-overnight/snapshots", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput input,
