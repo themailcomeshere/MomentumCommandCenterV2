@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Momentum Command Center — Workbench</title><link rel="icon" type="image/svg+xml" href="./favicon.svg"><link rel="stylesheet" href="./styles.css?v=20261030-redzone-4col"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Momentum Command Center — Workbench</title><link rel="icon" type="image/svg+xml" href="./favicon.svg"><link rel="stylesheet" href="./styles.css?v=20261030-main-chart-layout-v2"></head>
 <body>
 <header class="topbar" id="mcc-header">
  <div class="topbar-layout">
@@ -25,7 +25,13 @@
 
 <section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
  <div class="main-chart-header">
-  <div class="section-heading"><div><div class="eyebrow">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p></div><span id="mainChartSymbol" class="chip">SPY</span></div>
+  <div class="section-heading">
+   <div><div class="eyebrow">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p></div>
+   <span id="mainChartSymbol" class="focus-symbol-chip">SPY</span>
+  </div>
+ </div>
+ <div class="focus-chart-layout">
+  <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
   <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
    <article class="panel hero-card"><div class="eyebrow">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
    <article class="panel metric"><div class="eyebrow">LAST PRICE</div><strong id="price">Loading…</strong><small>Latest completed 1M bar</small></article>
@@ -33,7 +39,6 @@
    <article class="panel metric"><div class="eyebrow">ATR EXTENSION</div><strong id="extension">Loading…</strong><small>1M close vs EMA9 in ATR units</small></article>
   </section>
  </div>
- <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
 </section>
 
 
@@ -186,4 +191,4 @@
  </ol>
  <p class="notice">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
 </dialog>
-<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261030-redzone-alert-local-replay"></script></body></html>
+<footer>Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261030-main-chart-layout-v2"></script></body></html>
