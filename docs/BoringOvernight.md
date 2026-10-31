@@ -201,3 +201,43 @@ The server-side decision helper and tests are committed. The actual ThinkScript 
 The user confirmed America/Phoenix. The canonical 1M study now evaluates the chart-visible technical state at the final bar of the 12:30–12:55 Arizona window. It emits red EOD GET OUT for known chart-technical failures; otherwise it emits yellow DATA? — NO HOLD because the ThinkScript source does not contain the external overnight history, catalyst, exclusion and freshness evidence. It intentionally does not emit green HOLD OVERNIGHT until those inputs are authoritatively connected.
 
 The 5M label is now ENTRY CUTOFF ACTIVE/INACTIVE. The existing 3:55 PM Arizona cutoff continues to block intraday entries but is not itself an overnight hold decision. See docs/Architecture/Boring-Overnight-Hold-Decision-Bubble.md for the full contract and docs/Next-Steps-and-User-Inputs.md for installation instructions.
+
+
+## Monday release gate — 2026-11-02
+
+**Disposition: NOT READY for automated or actionable READY qualification.** The evaluator and snapshot/history endpoints are implemented, but a live validated candidate pipeline is not. Monday use is limited to WATCH / manual research.
+
+Reasons:
+- The historical calculator uses explicit caller-supplied regular-session close/open bar timestamps. It does not infer exchange calendars or guarantee a complete 20-session window.
+- The user's GTC_EXT sell window (07:00–20:00 Eastern) is a separate interval from the regular close-to-next-open return. Full eligible-window coverage and target-touch evidence are not established. A touch is not a fill.
+- The history-backed evaluation route deliberately sets catalyst status to UNKNOWN because no validated catalyst provider is connected. It cannot safely return READY on that path.
+- Other fields such as daily average volume, price/SMA, current-day heat, and installed Thinkorswim 5M/1M states require independently validated source data and timestamps.
+- Scanner/Morning Brief preview rows are not a validated overnight universe.
+
+### Monday manual-only procedure
+
+1. Use the candidate list only as a research/watchlist. Do not promote a preview rank or intraday score into Boring Overnight READY.
+2. Verify the hard gates using unrounded, source-backed data: price >$5; 20D average daily volume >=500,000; price >20D SMA; overnight win rate >=60%; 20D mean overnight return >=+0.10%; and strictly 5D mean >20D mean.
+3. Verify the full maintained Schwab exclusion list.
+4. Review current earnings, M&A, corporate actions, regulatory/government decisions, material news, and sector/regime risks. Unknown coverage stays UNKNOWN.
+5. Confirm current 5M Permission/structure and 1M state. GET OUT / SELL / BLOCK prevents a fresh overnight entry.
+6. Preserve source/feed, UTC source timestamps, session boundary timestamps, and gaps. Any missing critical evidence => DATA?; hard-gate failure => BLOCKED; caution/heat => WATCH.
+7. Zero position remains a valid decision. MCC does not submit, cancel, replace, or manage orders.
+
+### Release checklist
+
+- [ ] Approve exact regular close/open and GTC_EXT session semantics, including ETH/RTH, holidays, early closes, and timestamp conventions.
+- [ ] Validate daily history for 20D SMA and average volume.
+- [ ] Validate at least 20 complete regular-close/next-open pairs per symbol.
+- [ ] Validate complete GTC_EXT coverage separately for target-touch research; do not call a touch a fill.
+- [ ] Connect and validate catalyst/news coverage and freshness.
+- [ ] Reconcile all Schwab exclusion sources.
+- [ ] Match C# 5M states to installed Thinkorswim diagnostics.
+- [ ] Integrate a reproducible scanner universe and immutable candidate decisions.
+- [ ] Shadow-test across winners, losers, outliers, catalysts, and no-trade cases before calibration or promotion.
+
+## Daylight-saving conversion — November 2, 2026
+
+From Monday November 2, Phoenix is two hours behind Eastern because Arizona remains UTC-07:00 and Eastern returns to UTC-05:00. The documented 07:00–20:00 ET GTC_EXT window maps to 05:00–18:00 Arizona. Regular-session open maps to 07:30 Arizona and close to 14:00 Arizona. Use timezone identifiers rather than fixed offsets in any future automatic session-boundary implementation.
+
+Evidence and Monday operating instructions: `docs/Monday-Readiness-2026-11-02.md`.
