@@ -85,7 +85,7 @@ public sealed class MarketDataCollectionWorker(
             await LoadCheckpointsAsync(stoppingToken);
             Volatile.Write(ref _checkpointLoadedEntryCount, _watermarks.Count);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _checkpointLoadError = $"{ex.GetType().Name}: {Trim(ex.Message)}";
             RecordError($"checkpoint-load: {_checkpointLoadError}");
