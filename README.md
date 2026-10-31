@@ -122,7 +122,7 @@ dotnet build MomentumCommandCenterV2.sln --configuration Release
 dotnet test MomentumCommandCenterV2.sln --configuration Release
 ```
 
-GitHub Actions run **779** passed for the Morning Brief snapshot implementation commit `844581de9c134c82bb898bdf4a9d3d3db1ce476e`: .NET 8 Release build succeeded with 0 warnings/0 errors and **156/156 tests passed**. Runtime-validation script run **780** and documentation runs **781–785** also passed. Later documentation/user-manual updates still require checking the exact latest branch-head workflow. Browser acceptance and live in-session provider acceptance remain separate requirements.
+GitHub Actions run **792** passed for the Morning Brief snapshot and source-watermark implementation commit `61e8483c6cce4cea5e5131e773086db1ff91bd74`: .NET 8 Release build succeeded with 0 warnings/0 errors and **156/156 tests passed**. The runtime-validation script passed workflow **780**; source-watermark test commit passed workflow **793**. Later documentation updates still require checking the exact latest branch-head workflow. Browser acceptance and live in-session provider acceptance remain separate requirements.
 
 ## Project control
 
