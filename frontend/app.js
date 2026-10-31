@@ -170,7 +170,7 @@ async function refreshDecisionExplanation(){
   if(price)price.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
   if(eligibility)eligibility.textContent="5M permission: UNKNOWN";if(freshness)freshness.textContent="Freshness: UNKNOWN";
   if(fiveState)fiveState.textContent="5M permission: UNKNOWN";if(oneState)oneState.textContent="1M execution: UNKNOWN";
-  setV2ScoreDisplay(scoreNode,null,"REQUEST FAILED");
+  setV2ScoreDisplay(scoreNode,null,null,"REQUEST FAILED");
   if(reasons)reasons.replaceChildren(Object.assign(document.createElement("li"),{textContent:error.message}));
   if(sourceNode)sourceNode.textContent="No live assessment received.";
  }
@@ -363,11 +363,11 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
-  setV2ScoreDisplay(scoreNode,decision,data.evaluationStatus);
+  setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
   reasonNode.textContent=decision?.reason||data.evaluationReason||"Decision not evaluated.";
-  gateNode.textContent="5M Permission: "+(decision?.fiveMinutePermission===true?"YES":decision?.fiveMinutePermission===false?"NO":"UNKNOWN")+
+  gateNode.textContent="5M Permission: "+((five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===true?"YES":(five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===false?"NO":"UNKNOWN")+
    " · 1M execution: "+(decision?.oneMinuteExecution||"UNKNOWN");
   drawPriceLine(chartNode,one.chartBars||[],symbol);
  }catch(error){
