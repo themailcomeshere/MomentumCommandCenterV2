@@ -26,7 +26,7 @@ The current V2 5M permission score has six conditions:
 5. RSI 14 at or above 50.
 6. Same-regular-session-clock-slot 5M relative volume at or above 1.50.
 
-Five or more conditions are required for long permission. 1M entry confirmation has additional alignment, MACD, RSI, RVOL, and ATR-extension gates. See the source engine and [Opportunity Quality and Ranking](docs/Opportunity-Quality-and-Ranking.md); do not infer Thinkorswim parity from the C# implementation alone.
+Five or more conditions are required for long permission. The live API exposes this six-condition 5M score independently of 1M execution availability, but only when the 5M history, freshness, and same-slot RVOL baseline are valid. A score of 5–6 means 5M Permission only; 1M entry confirmation has additional alignment, MACD, RSI, RVOL, and ATR-extension gates, and the combined decision must separately report `entryAllowed=true` before the UI labels EXECUTION READY. See the source engine and [Opportunity Quality and Ranking](docs/Opportunity-Quality-and-Ranking.md); do not infer Thinkorswim parity from the C# implementation alone.
 
 ## Solution structure
 
