@@ -633,15 +633,15 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 - [x] Add preview-only Morning Command Brief and responsive ranked 1–4 Red Zone layout to the static UI; include explicit “overnight collection NOT RUNNING” status and JSON report-preview export.
 - [ ] Select a supported/licensed scanner and market-data provider; document actual APIs, entitlements, timestamp/session conventions, rate limits, and terms. Provider is currently unselected.
 - [x] Write the provider-neutral collection contract in `docs/Overnight-Collection-Contract.md`; it deliberately leaves provider-dependent thresholds unspecified.
-- [ ] Implement a long-running collection service that works independently of the browser tab; handle startup, reconnect, rate limits, outages, and graceful shutdown.
-- [ ] Persist raw discovery events and timestamped market observations with source/event IDs, source and receive times, session/timezone, schema/version, raw fields, and ingestion disposition.
-- [ ] Implement collector health states RUNNING / DEGRADED / STOPPED / UNKNOWN, last-success timestamp, freshness checks, gap/duplicate detection, and no synthetic bars.
+- [x] Implemented the API-hosted MarketDataCollectionWorker and AlpacaMinuteBarStreamWorker. They run independently of the browser, use cancellation on host shutdown, and the REST collector resumes from durable provider/symbol/timeframe watermarks with overlapping backfill chunks. Operational recovery tests remain open below.
+- [PARTIAL] JSONL discovery-event and raw OHLCV observation stores are implemented. Full event provenance/session/schema audit coverage and long-term retention validation remain to be reviewed.
+- [PARTIAL] Collector status exposes configured symbols/providers, per-key watermarks, cycles, last-cycle timestamps, errors, and recent errors. Explicit RUNNING/DEGRADED/STOPPED/UNKNOWN state semantics and end-to-end freshness/gap health validation remain open.
 - [ ] Implement recovery tests for machine sleep/wake, network/provider outage, authentication expiry, replayed/duplicate events, session boundaries, and process restart.
 - [ ] Implement deterministic, versioned Morning Report generation from persisted data; include provenance/freshness per candidate and exportable report snapshots.
-- [ ] Connect the live service to scanner discovery, deduplication, automatic re-ranking, continuation watch, and the Red Zone; show only up to four ranked candidates and never treat rank as permission.
+- [PARTIAL] Alpaca discovery polling, event ingestion/deduplication, scanner UI refresh, candidate re-ranking, and four-slot Red Zone integration exist. Persistent continuation-watch logic and full production-universe coverage remain unverified.
 - [ ] Wire Boring Overnight calculations and hard gates to persisted, validated inputs; unknown catalyst/data remains DATA? / manual review.
 - [ ] Define packaging and startup: browser/local service vs desktop app/installer. Do not claim .exe/background collection exists until built, deployed, and tested.
-- [ ] Keep provider secrets out of frontend, localStorage, repository, and logs.
+- [x] Provider credentials are read server-side from configuration/environment; frontend requests contain no provider secrets, and stream logging does not include credentials. Continue to keep real keys out of committed configuration.
 - [x] Verify the latest branch-head .NET workflow after the UI changes; head `bcb1ef5027859cd4448daa08191df83e0e6eb871`, workflow run 91, conclusion `success` (checked 2026-10-23 UTC).
 - [ ] Run a browser-based end-to-end smoke test of the Morning Command Brief and JSON export; structural checks are not a browser test.
 
@@ -652,10 +652,10 @@ User wants to leave the released/deployed MCC program open overnight so scanner 
 - [x] Document provider candidates and public plan tradeoffs in docs/Provider-Comparison.md. Preliminary evaluation pair: Alpaca Algo Trader Plus vs Massive Stocks Advanced; no provider selected and no account entitlements verified.
 - [x] Implement an initial provider-neutral persistence scaffold: IScannerDiscoveryEventStore, JSONL append-only adapter, batch ingestion validation, idempotency key, receipt timestamp, and tests for restart deduplication/corrupt-log failure.
 - [x] Add a first append-only raw market-bar observation store with source/receive timestamps, OHLCV validation, content-hash idempotency, and append-only correction links. Implemented in API; tests cover restart deduplication and corrections. Session-aware gap classification and corruption/retention policy remain open.
-- [ ] Add API-hosted collector health state and a cancellable long-running streaming/polling worker. A polling-worker scaffold exists but is not wired to a real provider source; Alpaca/Massive historical REST adapters now exist. Live stream binding, recovery/backfill, and operational health remain open.
+- [PARTIAL — HOSTED WORKERS IMPLEMENTED] The API hosts the explicit-symbol REST collector, Alpaca scanner discovery worker, and optional Alpaca minute-bar WebSocket worker. The collector uses persisted watermarks and bounded backfill chunks. Regular-session stream delivery and controlled outage/sleep/restart recovery tests remain open.
 - [x] Verify .NET build/tests for the API host, provider adapters, raw-bar store, and store tests. Latest verified run 151: https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/40012211560. Browser and live-provider tests remain open.
 - [ ] Browser smoke test the Morning Brief and top-right Red Zone layout; user has manually confirmed the current visual look, but latest layout change still needs browser confirmation.
-- [ ] Validate source differences against installed Thinkorswim studies using the exact user procedure in docs/Validation/5M-to-1M-User-Validation-Steps.md (to be created); do not ask user to repeat prior OHLCV tests already confirmed done.
+- [PARTIAL] The user procedure already exists at docs/Validation/5M-to-1M-User-Validation-Steps.md and repository-source comparison is documented. Exact installed-study input/version confirmation and matched-bar Permission/READY/runner state parity remain open; do not repeat prior OHLCV/DST tests.
 - [ ] Resolve provider decision only after entitlement, scanner coverage, session behavior, historical backfill, retention/licensing, and representative-symbol comparison.
 
 
@@ -671,7 +671,7 @@ The earlier workflow success recorded above was for its then-current branch head
 - [x] Update the User Manual, Scanner Workbench, and New Chat Handoff.
 - [ ] Verify .NET build/test workflow against the latest branch head after all changes.
 - [ ] Browser-test the new top-right layout and export interaction.
-- [ ] After provider selection, extend persistence to market bars and implement cancellable collector, health reporting, reconnection/backfill, and restart/sleep recovery.
+- [x] Base persistence, timeframe/feed identity, cancellable API-hosted collection, durable watermarks, overlap, bounded REST backfill, and WebSocket reconnect/resubscription are implemented. Controlled restart/sleep/outage/recovery acceptance remains open in the separate recovery-test item.
 
 
 ### Collector lifecycle scaffold extension (2026-10-23)
@@ -679,7 +679,7 @@ The earlier workflow success recorded above was for its then-current branch head
 - [x] Add ScannerDiscoveryPollingWorker with cancellation, retry-on-next-poll behavior, and RUNNING / DEGRADED / STOPPED / UNKNOWN health snapshots.
 - [x] Add an offline test proving a successful empty poll is recorded as zero observations and cancellation stops the worker.
 - [ ] Add explicit degraded-source/recovery test coverage and sleep/wake/backfill reconciliation after provider semantics are known.
-- [ ] Wire the worker into a real host and implement a provider adapter; no configured source exists, so the worker is not currently running.
+- [x] The explicit-symbol REST collector and optional Alpaca WebSocket worker are registered as ASP.NET Core hosted services; Alpaca and Massive historical REST adapters exist. A configured symbol set and provider credentials are still required at runtime.
 
 
 ## Provider comparison UI / UPC CSV follow-up — 2026-10-23
