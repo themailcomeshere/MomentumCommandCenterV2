@@ -1,3 +1,14 @@
+## Immutable Morning Brief snapshots — 2026-10-31
+
+- Each newly generated `GET /api/morning-brief` report is appended to a JSONL snapshot store before it is cached for 60 seconds.
+- The live response adds `snapshotPersistenceStatus`, `snapshotId`, and `snapshotVersion`. A persistence error is logged and returned as `FAILED`; the report remains available.
+- Query `GET /api/morning-brief/history?limit=20` to read the newest immutable snapshots (limit 1–200).
+- Default file: local application data under `MomentumCommandCenterV2/morning-brief-snapshots.jsonl`. Override with server-side `MCC_MORNING_BRIEF_SNAPSHOT_PATH`.
+- Snapshot records include generated/recorded UTC timestamps, report version, SHA-256 payload hash, and the full report. The stored report retains PARTIAL, DATA?, and unknown fields as generated.
+- This is report-response history, not yet a complete source-watermark or outcome archive. Do not interpret persistence as source validation.
+
+---
+
 ## Recent workflow updates — 2026-10-30
 
 ### Alpaca WebSocket symbols
