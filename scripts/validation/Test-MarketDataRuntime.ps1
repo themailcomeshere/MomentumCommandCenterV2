@@ -26,6 +26,15 @@ if ([string]::IsNullOrWhiteSpace($BaseUri)) {
 }
 
 $BaseUri = $BaseUri.TrimEnd("/")
+
+$baseAddress = [uri]$BaseUri
+if ($baseAddress.Port -eq 53359 -and $baseAddress.Scheme -eq "http") {
+    throw "The MCC Development launch profile maps port 53359 to HTTPS, not HTTP. Use -BaseUri 'https://localhost:53359' or -BaseUri 'http://localhost:53360'."
+}
+if ($baseAddress.Port -eq 53360 -and $baseAddress.Scheme -eq "https") {
+    throw "The MCC Development launch profile maps port 53360 to HTTP, not HTTPS. Use -BaseUri 'http://localhost:53360' or -BaseUri 'https://localhost:53359'."
+}
+
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
     $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
     $OutputDirectory = Join-Path (Get-Location) "artifacts/runtime-validation/$stamp"
@@ -62,6 +71,12 @@ $encodedSymbol = [uri]::EscapeDataString($Symbol)
 $fromText = $FromUtc.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 $toText = $ToUtc.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
+Write-Host "Checking API health at $BaseUri/api/health..."
+$health = Get-ApiJson "/api/health"
+if ($health.status -ne "OK") {
+    throw "The configured BaseUri did not return API health status OK. Returned status: $($health.status)"
+}
+
 Write-Host "Capturing stored RKLX bars (provider=$Provider, feed=$Feed, window=$fromText to $toText)..."
 $stored = @{}
 foreach ($timeframe in @("1m", "5m")) {
@@ -71,6 +86,12 @@ foreach ($timeframe in @("1m", "5m")) {
         $_.bar.feed -eq $Feed -and $_.bar.timeframe -eq $timeframe
     })
     $stored[$timeframe] = [pscustomobject]@{
+        symbol = $Symbol
+        provider = $Provider
+        feed = $Feed
+        timeframe = $timeframe
+        fromUtc = $fromText
+        toUtc = $toText
         responseCount = $response.count
         matchingFeedCount = $matching.Count
         firstSourceTimestampUtc = if ($matching.Count) { ($matching | Sort-Object sourceTimestamp | Select-Object -First 1).sourceTimestamp } else { $null }
