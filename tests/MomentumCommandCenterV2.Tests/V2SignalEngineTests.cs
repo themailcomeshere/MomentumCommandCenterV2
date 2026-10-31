@@ -139,6 +139,21 @@ public sealed class V2SignalEngineTests
     }
 
     [Fact]
+    public void FiveMinuteAuthorityScoreIsIndependentAndUsesSixV2Conditions()
+    {
+        var strong = StrongFive();
+        Assert.Equal(6, V2SignalEngine.CalculateFiveMinuteScore(strong));
+
+        var fiveOfSix = strong with { Rvol5m = 1m };
+        Assert.Equal(5, V2SignalEngine.CalculateFiveMinuteScore(fiveOfSix));
+        Assert.True(V2SignalEngine.CalculateFiveMinuteScore(fiveOfSix) >= 5);
+
+        var fourOfSix = strong with { Rvol5m = 1m, Rsi = 49m };
+        Assert.Equal(4, V2SignalEngine.CalculateFiveMinuteScore(fourOfSix));
+        Assert.False(V2SignalEngine.CalculateFiveMinuteScore(fourOfSix) >= 5);
+    }
+
+    [Fact]
     /// <summary>
     /// METHOD: StrongAlignmentProducesBuy
     /// PURPOSE: Creates deterministic signal-test fixture data.
