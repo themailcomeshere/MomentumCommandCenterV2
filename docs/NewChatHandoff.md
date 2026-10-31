@@ -1,3 +1,75 @@
+# Current continuation handoff — ChatDisconnect execution checkpoint — 2026-10-31
+
+## Repository state
+
+- Repository: `themailcomeshere/MomentumCommandCenterV2`
+- Branch: `feature/opportunity-quality-classification`
+- Parent source checkpoint before this pass: `46eec0457bd68324a1421b8f5479a43a7d2052b2`
+- Parent GitHub Actions run **776** passed for that parent commit. It does **not** validate the new Morning Brief snapshot implementation in this pass. Check the workflow for the exact latest branch head before claiming CI success.
+- Read `docs/ChatDisconnect.txt` and reconciled its remaining-work checklist into the top of `docs/Master-To-Do.md`. The Master To-Do remains canonical.
+
+## Work completed in this pass
+
+### Morning Brief persistence/versioning
+
+- Added `src/MomentumCommandCenterV2.API/MorningBrief/MorningBriefSnapshotStore.cs`.
+- Newly generated `GET /api/morning-brief` reports are appended to an immutable JSONL store before entering the existing 60-second response cache.
+- Each record includes snapshot ID, generated/recorded UTC timestamps, report version (`morning-brief-v1`), SHA-256 payload hash, and the complete report JSON.
+- Live response adds `snapshotPersistenceStatus`, `snapshotId`, and `snapshotVersion`. Storage failures are logged and surfaced as `FAILED` without silently claiming persistence.
+- Added `GET /api/morning-brief/history?limit=20` (limit 1–200), returning newest-first report snapshots.
+- Default path is local application data under `MomentumCommandCenterV2/morning-brief-snapshots.jsonl`; override with server-side `MCC_MORNING_BRIEF_SNAPSHOT_PATH`.
+- Added `MorningBriefSnapshotStoreTests.cs`: round-trip/provenance/hash, append-only preservation, UTC/missing timestamp validation, and limit validation.
+- Remaining: exact-head CI; per-source input watermarks and input manifest; raw provider payload retention policy; outcome linkage. This is report snapshot history, not a complete research evidence archive.
+
+### Runtime acceptance aid
+
+- Added `scripts/validation/Test-MarketDataRuntime.ps1`.
+- It queries stored RKLX 1M/5M bars, filters the returned observations locally by provider/feed, captures stream/collector/provider status before and after a configurable wait, records per-symbol bar-count deltas, and saves full live assessments for SPY/RKLX/ASTX/XRPN.
+- Output files: `stored-bars.json`, `runtime-before.json`, `runtime-after.json`, `stream-delta.json`, and `live-assessments.json`.
+- Added `docs/Runtime-Acceptance-Runbook.md` and updated the Morning Brief technical guide and backlog.
+
+## Exact outstanding checklist
+
+### P0 — user-runtime acceptance
+
+1. Run the PowerShell script against the running API with a same-window RKLX UTC range; confirm whether the four 1M and four 5M observations are already persisted for Alpaca/IEX.
+2. Run it during regular market hours for 300 seconds with stream enabled. Verify SPY/RKLX/ASTX/XRPN subscription acknowledgement and advancing per-symbol bar counts/timestamps.
+3. Confirm live assessment reports the WebSocket source only when the 50-completed-bar, freshness, and provenance gates all pass. 5M remains REST.
+4. Browser-test the revised header, 2x2 chart metrics, Morning Brief modal/section and history, Arizona-local replay, Red Zone responsive layout, and opt-in sound.
+5. Verify Release build/tests on the exact current branch head.
+
+### P1 — blocked by missing evidence or policy
+
+- Thinkorswim state replay requires same-bar 1M/5M diagnostic exports with installed study version/settings and explicit state/reason outputs. RTO OHLCV alone is insufficient.
+- Collector outage/restart/sleep-wake tests require controlled execution on the target host. Existing source has durable watermarks, overlap/backfill, retry, and atomic checkpoint replacement.
+- Automated Overnight boundary generation requires the user's explicit eligible-session policy (RTH/ETH, close/open definition, holiday/early-close treatment). Current history calculator uses explicit timestamps and returns incomplete history when pairs are absent.
+- Complete Morning Brief input-watermark/version lineage remains open after report snapshots.
+
+### P2 — external dependencies / product decisions
+
+- Scanner provider entitlement, coverage, and licensing require account-side verification.
+- Schwab read-only sync requires approved Individual API access, app registration, callback URL, and secure server-side OAuth configuration. No secrets in Git/chat; no order submission.
+- Desktop packaging needs a target platform and install/update/API lifecycle decision before implementation.
+
+## Key architecture and safety constraints
+
+- 5M owns Permission; 1M owns Execution. Do not invert this dependency.
+- Boring Overnight remains a separate pipeline.
+- Missing/stale/conflicting evidence remains UNKNOWN / DATA? / BLOCKED; never synthesize bars or assume catalyst CLEAR.
+- The existing frontend is static HTML/CSS/JS hosted by ASP.NET Core Minimal API and visible under Visual Studio Solution Items; do not migrate to MVC without a concrete requirement.
+- No order submission or autonomous trading.
+
+## Continue here
+
+1. Check GitHub Actions for the exact latest head; run failures must be fixed before claiming verification.
+2. If CI passes, deploy/pull that exact head and run `scripts/validation/Test-MarketDataRuntime.ps1` during the next regular market session.
+3. Capture browser acceptance and Thinkorswim state diagnostics as separate evidence artifacts.
+4. Update this handoff and the canonical Master To-Do with exact SHA, workflow run, runtime timestamps, and artifacts—not estimates.
+
+Read `docs/Runtime-Acceptance-Runbook.md` before running the acceptance steps.
+
+---
+
 ## Current continuation checkpoint — RKLX post-close assessment — 2026-10-30
 
 ### Source-control checkpoint
