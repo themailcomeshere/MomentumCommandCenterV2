@@ -68,6 +68,11 @@ Useful endpoints include:
 - `GET /api/market-data/replay`
 - `GET /api/scanner/discoveries`
 - `GET /api/morning-brief`
+- `GET /api/morning-brief/history`
+
+## Morning Brief snapshot history
+
+Each newly generated `GET /api/morning-brief` report is persisted as an immutable, versioned JSONL snapshot. The live response includes persistence status and snapshot ID/version. Query `GET /api/morning-brief/history?limit=20` to retrieve prior reports. Configure the server-side path with `MCC_MORNING_BRIEF_SNAPSHOT_PATH`; otherwise the API uses the local application-data directory. Snapshot persistence preserves partial/unknown report fields and does not imply market-data validation. Per-source input watermarks and outcome linkage remain future work.
 
 ## Historical replay and its limits
 
@@ -117,13 +122,14 @@ dotnet build MomentumCommandCenterV2.sln --configuration Release
 dotnet test MomentumCommandCenterV2.sln --configuration Release
 ```
 
-The latest documented code validation at this checkpoint is GitHub Actions run 767 for commit `3192c8f34d11273360bed82367563466a30b08ad`, with the .NET 8 build and 152/152 tests passing. Subsequent commits in the branch were documentation-only. Browser acceptance and live in-session provider acceptance remain separate requirements.
+GitHub Actions run 776 passed for parent commit `46eec0457bd68324a1421b8f5479a43a7d2052b2` (.NET 8 build/test workflow). The subsequent Morning Brief snapshot store, API endpoint, tests, and runtime-validation script are newer source changes; verify CI on the exact current branch head before treating them as validated. Browser acceptance and live in-session provider acceptance remain separate requirements.
 
 ## Project control
 
 - Canonical checklist: [docs/Master-To-Do.md](docs/Master-To-Do.md)
 - Current continuation handoff: [docs/NewChatHandoff.md](docs/NewChatHandoff.md)
 - Market-data runtime evidence: [docs/MarketData-ChatTests-20261030.md](docs/MarketData-ChatTests-20261030.md)
+- Runtime acceptance runbook: [docs/Runtime-Acceptance-Runbook.md](docs/Runtime-Acceptance-Runbook.md)
 - User guide: [docs/User-Manual.md](docs/User-Manual.md)
 
 GitHub source is authoritative for code and committed documentation. A checked-off implementation task requires source evidence; CI, browser acceptance, provider runtime validation, and external approvals must be tracked separately.
