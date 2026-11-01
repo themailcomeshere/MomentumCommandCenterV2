@@ -2,7 +2,7 @@
 
 ### Completed source work
 - [x] Added `MarketSessionClock` API service using `UsEquitiesSessionCalendar`; the header clock is not a browser-side guessed calendar. Added regression coverage for observed New Year's Day on the preceding Friday when January 1 falls Saturday.
-- [x] Static markup audit: all 623 opening elements in `frontend/index.html` now have unique IDs (623/623; no duplicates).
+- [x] Static markup audit: all 628 opening elements in `frontend/index.html` now have unique IDs (628/628; no duplicates).
 - [x] Added a live exchange-session countdown to the dashboard header. It changes between **Remaining time in regular market**, **Remaining time in After-Hours**, and **Until Market opens**. The API uses America/New_York and the versioned MCC calendar; it does not guess when the clock API is unavailable.
 - [x] Moved `#workspace-toolbar` into `.topbar-brand`, below the brand/tools area, and tightened the toolbar/header spacing.
 - [x] Added stable, unique `id` attributes to every static element in `frontend/index.html` that previously lacked one (454 IDs assigned; existing IDs preserved).
