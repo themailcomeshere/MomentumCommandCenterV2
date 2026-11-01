@@ -47,10 +47,26 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.Equal(DateTimeOffset.Parse("2026-12-24T17:59:00Z"), boundaries[^1].PreviousCloseBarTimestampUtc);
     }
     [Fact]
-    public void TreatsPriorFridayAsHolidayWhenNextNewYearsDayIsSaturday()
+    public void DoesNotObserveNewYearsDayOnPriorFridayWhenJanuaryFirstIsSaturday()
     {
-        Assert.False(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2027, 12, 31)));
-        Assert.True(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2027, 12, 30)));
+        Assert.True(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2027, 12, 31)));
+        Assert.False(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2028, 1, 1)));
+        Assert.True(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2028, 1, 3)));
+    }
+
+    [Fact]
+    public void TreatsJulyThird2026AsObservedIndependenceDayHoliday()
+    {
+        Assert.False(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2026, 7, 3)));
+    }
+
+    [Fact]
+    public void UsesJulyThird2028EarlyClose()
+    {
+        Assert.Equal(new TimeOnly(13, 0), UsEquitiesSessionCalendar.GetRegularClose(new DateOnly(2028, 7, 3)));
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2028, 7, 5), 5);
+        var julyThirdClose = Assert.Single(boundaries.Where(x => x.PreviousSessionDate == new DateOnly(2028, 7, 3)));
+        Assert.Equal(DateTimeOffset.Parse("2028-07-03T16:59:00Z"), julyThirdClose.PreviousCloseBarTimestampUtc);
     }
 
 }
