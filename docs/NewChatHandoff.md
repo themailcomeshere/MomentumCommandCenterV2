@@ -1505,3 +1505,18 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 
 ### Verification boundary
 - Prototype HTML has unique IDs and every static opening element has an ID. Browser rendering, visual acceptance, API interaction and CI on the new branch head remain to be run after pull.
+
+
+## 2026-11-01 — Official NYSE calendar reconciliation
+
+- Compared the RTO sample (2026-10-02 through 2026-10-30) with the official NYSE 2026 holiday/trading-hours schedule. The interval contains no NYSE holiday or early close; all included sessions are normal 09:30–16:00 Eastern. Expected 1m boundary bar starts are 09:30 ET (13:30Z during EDT) and 15:59 ET (19:59Z during EDT).
+- Official reference: https://www.nyse.com/trade/hours-calendars.
+- Found and corrected a real ruleset defect: the prior MCC calendar treated Friday 2027-12-31 as an observed New Year's Day closure when January 1, 2028 is Saturday. NYSE explicitly states no New Year's Day holiday is observed in 2028. Ruleset bumped from `MCC_US_EQUITIES_CALENDAR_V1` to `MCC_US_EQUITIES_CALENDAR_V2`; previous V1 captures remain historically identifiable.
+- Added tests for 2027-12-31 being a trading session, Jan 1 2028 being a Saturday, Jan 3 2028 being a session, July 3 2026 observed Independence Day closure, and July 3 2028 early close.
+- The 2026 RTO window check is complete. Full exceptional calendar certification across supported years remains open.
+
+## 2026-11-01 — Source-only audit of remaining diagnostics
+
+- Provider Comparison initialization is already implemented: if the date field is empty it uses `phoenixParts(new Date())`, which formats the current date in `America/Phoenix`; an existing selection is preserved. Remaining task is browser verification using a non-Arizona OS timezone and a July test date.
+- PMI sparse-window regression could not be located in the current branch source using the available repository code search or dashboard JS audit. Data not found in sources. Keep this task open; do not invent the PMI calculation or claim it is fixed.
+- The installed study identity/source inventory is complete. Only the aligned matched-bar state/output comparison remains, if it is not already recorded in a separate validation artifact.
