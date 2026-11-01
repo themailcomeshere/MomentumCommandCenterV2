@@ -45,6 +45,7 @@
 - [x] Compare generated session dates and UTC boundaries against the official NYSE calendar for the RTO 2026-10-02–2026-10-30 sample.
 - [x] Certify the published NYSE 2026–2028 holiday and early-close dates with regression fixtures. Refresh the supported calendar horizon when NYSE publishes new years; this is not a live calendar feed.
 - [ ] Compare the two RTO IEX missing opens against an independently entitled SIP or validated alternative provider; do not mix feeds in one return series.
+- [ ] Compare the two RTO IEX missing opens against an independently entitled SIP or validated alternative provider; do not mix feeds in one return series.
 - [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
 - [ ] Keep full 07:00–20:00 ET GTC_EXT window collection/target-touch study separate; the new button does not calculate target reach, fill probability, or Calculated Limit Sell.
 - [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
