@@ -1,6 +1,7 @@
 # Handoff update — 2026-11-01 dashboard and data-quality pass
 
 ## Source-control state
+- Latest documentation-only checkpoint before this handoff refresh: `3ede06d64b0acdb8f106960e20a0ba715d99ae3c`; the consolidated Master To-Do has 29 unchecked operational items (6 Boring Overnight, 6 P0, 9 P1, 4 P2, 4 P3).
 - Latest source implementation commit at this checkpoint: `36c81c8451e0a9befe810e7cd2ee4af8cdd21ccb` (header clock, all static IDs, exact boundary audit, New Year's observed-holiday fix and tests). Documentation updates follow this code commit; exact-head CI for the final docs head is still required.
 - Repository: `themailcomeshere/MomentumCommandCenterV2`
 - Branch: `feature/opportunity-quality-classification`
