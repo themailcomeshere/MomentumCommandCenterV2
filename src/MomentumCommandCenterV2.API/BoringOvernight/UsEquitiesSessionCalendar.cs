@@ -8,7 +8,7 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public static class UsEquitiesSessionCalendar
 {
-    public const string Version = "MCC_US_EQUITIES_CALENDAR_V1";
+    public const string Version = "MCC_US_EQUITIES_CALENDAR_V2";
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     public static IReadOnlyList<OvernightSessionBoundary> BuildRecentBoundaries(
@@ -64,11 +64,10 @@ public static class UsEquitiesSessionCalendar
     {
         var year = date.Year;
         var newYears = new DateOnly(year, 1, 1);
-        // New Year's Day is observed Monday when January 1 is Sunday, and Friday
-        // of the prior year when January 1 is Saturday.
+        // NYSE does not observe New Year's Day on the preceding Friday when
+        // January 1 falls on Saturday. When January 1 falls on Sunday, Monday
+        // January 2 is observed. This differs from the generic fixed-holiday rule.
         if (date == newYears || (newYears.DayOfWeek == DayOfWeek.Sunday && date == newYears.AddDays(1))) return true;
-        var nextNewYears = new DateOnly(year + 1, 1, 1);
-        if (date == ObservedFixedHoliday(nextNewYears)) return true;
         if (date == NthWeekday(year, 1, DayOfWeek.Monday, 3)) return true; // MLK
         if (date == NthWeekday(year, 2, DayOfWeek.Monday, 3)) return true; // Presidents
         if (date == EasterSunday(year).AddDays(-2)) return true; // Good Friday
