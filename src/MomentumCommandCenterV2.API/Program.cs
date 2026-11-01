@@ -721,7 +721,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 })
 .WithName("CaptureBoringOvernightTwentySessionHistory")
 .WithSummary("Fetch, persist, and calculate the latest 20 regular close/open Overnight pairs")
-.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 session boundaries using the MCC_US_EQUITIES_CALENDAR_V1 ruleset, fetches the required history, persists raw observations, and returns win rate, mean, median, 5-pair mean, 20-pair mean, and any missing boundary pairs. The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
+.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 session boundaries using the MCC_US_EQUITIES_CALENDAR_V2 ruleset, fetches the required history, persists raw observations, and returns win rate, mean, median, 5-pair mean, 20-pair mean, and any missing boundary pairs. The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
 .ProducesProblem(422)
 .ProducesProblem(503);
 
