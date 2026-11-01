@@ -241,3 +241,48 @@ Reasons:
 From Monday November 2, Phoenix is two hours behind Eastern because Arizona remains UTC-07:00 and Eastern returns to UTC-05:00. The documented 07:00–20:00 ET GTC_EXT window maps to 05:00–18:00 Arizona. Regular-session open maps to 07:30 Arizona and close to 14:00 Arizona. Use timezone identifiers rather than fixed offsets in any future automatic session-boundary implementation.
 
 Evidence and Monday operating instructions: `docs/Monday-Readiness-2026-11-02.md`.
+
+
+## 2026-10-31 — Qualification semantics and sell-limit policy clarification
+
+### 20-session sample
+
+The rolling window means **20 valid trading-session close/open pairs**, not 20 calendar days. It is an initial research sample size, not a guarantee of statistical significance. Keep both 5-session and 20-session measurements so recent deterioration/improvement is visible beside the broader baseline. Show valid pair count, missing pair count, date range, and feed. Do not fill missing pairs with zero or silently skip them. The current all-pairs-complete rule is intentionally conservative; if we later allow partial windows, that must be a separately versioned and tested policy with an explicit minimum sample.
+
+### Session boundary definitions
+
+Keep these measurements separate:
+
+1. **Overnight edge:** prior regular-session final 1-minute bar close to next valid regular-session first 1-minute bar open. Timestamps are provider bar-start timestamps in UTC. A normal session's final 1-minute bar starts at 15:59 America/New_York and its first bar starts at 09:30 America/New_York; early closes and holidays require an authoritative exchange calendar. Do not use after-hours last trade or premarket first trade as substitutes.
+2. **Sell opportunity:** the complete user-eligible GTC_EXT window, 07:00–20:00 America/New_York. Measure target touch, time-to-touch, adverse excursion, and coverage gaps over that full window. A historical bar high touching the limit is not evidence of an actual fill.
+
+The current history calculator implements only item 1 and requires caller-supplied exact UTC timestamps. It does not generate an exchange calendar. The dashboard's ordinary bar fetch does not construct either measurement automatically.
+
+### Catalyst clearance
+
+CLEAR must mean a defined, timestamped review from a connected and validated event/news source over a documented horizon, covering at minimum earnings, guidance, M&A, corporate actions, regulatory/court/government events, material company news, and relevant sector/regime events. Store source, query coverage, publication timestamps, checked-at time, and matched events. An empty response is not automatically CLEAR unless source health and coverage are verified. Until this exists, UNKNOWN is correct. Do not treat a manual assertion as provider-verified clearance.
+
+### 5M Thinkorswim parity
+
+The **architecture and signal contract are established**: 5M owns structure/permission; 1M owns execution/confirmation; a 1M exit/block prevents a fresh overnight entry. Do not ask the user to re-approve those rules each candidate cycle.
+
+The separate engineering question is whether the exact installed Thinkorswim study/version and its input overrides match the repository's authoritative 5M study and whether the observed chart output matches MCC on identical bars. Record one parity certification against exact study version/hash and matched-bar fixtures; reuse it while that exact version/hash and inputs remain unchanged. A changed study, input override, or signal implementation invalidates certification. Until the one-time certification evidence exists, show NOT VERIFIED rather than implying that the strategy contract itself is unsettled.
+
+### Calculated Limit Sell
+
+The target must be a **candidate limit**, not an execution promise. The calculation should use a source-backed reference close and a pre-decision historical target-return quantile derived from complete eligible GTC_EXT windows. ATR is a volatility/context measure: show ATR, ATR%, and the candidate target's distance in ATR units. Do not invent an ATR multiplier or combine ATR and mean/median returns using arbitrary weights. The historical target distribution chooses the candidate return; ATR contextualizes how extended that target is.
+
+Display:
+- Calculated Limit Sell in dollars;
+- reference regular-session close and timestamp;
+- target return and quantile;
+- ATR value, period/timeframe, source, and parity state;
+- 20-session sample count and full GTC_EXT coverage;
+- historical target-touch rate, time-to-touch, and data-gap count;
+- status PROVISIONAL, DATA?, or NOT VERIFIED.
+
+Do not issue a numeric limit if the reference close, selected target quantile, complete eligible-window sample, or required ATR context is absent. Do not claim a fill probability until target-touch evidence is walk-forward tested; do not claim actual fill probability without broker execution data. The +0.5% value remains a user heuristic comparison only, not the calculated target.
+
+### Dashboard update — 2026-10-31
+
+The Overnight panel now has an explicit Calculated Limit Sell display. It deliberately shows DATA? — NOT CALCULATED until the historical target distribution and ATR context are source-backed and validated. This replaces a silent omission with a visible fail-closed state; it does not claim the calculation pipeline is complete.
