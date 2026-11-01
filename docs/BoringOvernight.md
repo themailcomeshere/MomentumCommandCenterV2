@@ -340,3 +340,10 @@ The Overnight panel now has an explicit Calculated Limit Sell display. It delibe
 - Added calendar tests for 20 consecutive pairs, weekend handling, post-DST UTC conversion, Thanksgiving, Good Friday, and Christmas Eve.
 - **Limitations:** this is an MCC-maintained ruleset, not a live exchange-calendar service. Review it against the official exchange calendar and add fixtures for all exceptional holiday/early-close cases before production qualification. Missing exact boundary bars suppress rolling metrics. It is regular close-to-next-open history only—not the 07:00–20:00 ET GTC_EXT sell-target study, catalyst clearance, or a READY decision.
 - Exact-head Release build, tests, API runtime capture, and browser acceptance are still pending.
+
+
+### Official NYSE calendar reconciliation — 2026-11-01
+
+The 2026-10-02 through 2026-10-30 RTO sample was checked against the official NYSE holiday and trading-hours schedule. No holiday or early close occurs within that window, so the normal 09:30–16:00 ET session boundaries apply. The official NYSE schedule also states that no New Year's Day holiday is observed in 2028 when January 1 falls on Saturday. MCC calendar V2 corrects its former erroneous prior-Friday closure for 2027-12-31 and adds regression coverage for July 3, 2026 (observed Independence Day closure) and July 3, 2028 (1:00 PM early close).
+
+Official source: https://www.nyse.com/trade/hours-calendars.
