@@ -35,7 +35,7 @@
 
 ## 2026-10-31 — Consolidated active To-Do and 20-session capture update
 
-### Boring Overnight — current implementation (the matched-bar Thinkorswim parity replay is tracked once under P1)
+### Boring Overnight — current implementation (GTC_EXT target-touch implementation is tracked once under P1; Thinkorswim parity is tracked once under P1)
 - [x] Add provider-backed `POST /api/boring-overnight/capture-history` to fetch and persist 1-minute bars and calculate the latest 20 regular close/open pairs.
 - [x] Add versioned MCC US-equities session rules with timezone-derived DST, weekday/holiday exclusions, and common early-close handling.
 - [x] Add dashboard action: **Refresh/Capture 20-session close/open calculation**; show metrics, pair-level values/timestamps, missing pairs, provider/feed, bar counts and calendar version.
@@ -46,7 +46,6 @@
 - [x] Certify the published NYSE 2026–2028 holiday and early-close dates with regression fixtures. Refresh the supported calendar horizon when NYSE publishes new years; this is not a live calendar feed.
 - [ ] Compare the two RTO IEX missing opens against an independently entitled SIP or validated alternative provider; do not mix feeds in one return series.
 - [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
-- [ ] Keep full 07:00–20:00 ET GTC_EXT window collection/target-touch study separate; the new button does not calculate target reach, fill probability, or Calculated Limit Sell.
 - [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
 - [x] Record the installed Thinkorswim study sources and diagnostic files; see the three `docs/Validation/Installed-*` files.
 
@@ -83,7 +82,7 @@
 - [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
 - [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
 
-**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 27 individual unchecked work items across the five priority groups (4 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 26 individual unchecked work items across the five priority groups (3 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
 
 
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
