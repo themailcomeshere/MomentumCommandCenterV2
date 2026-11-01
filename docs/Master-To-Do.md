@@ -1,3 +1,32 @@
+## 2026-11-01 — Header clock, markup IDs, RTO boundary audit, and operating guidance
+
+### Completed source work
+- [x] Added a live exchange-session countdown to the dashboard header. It changes between **Remaining time in regular market**, **Remaining time in After-Hours**, and **Until Market opens**. The API uses America/New_York and the versioned MCC calendar; it does not guess when the clock API is unavailable.
+- [x] Moved `#workspace-toolbar` into `.topbar-brand`, below the brand/tools area, and tightened the toolbar/header spacing.
+- [x] Added stable, unique `id` attributes to every static element in `frontend/index.html` that previously lacked one (454 IDs assigned; existing IDs preserved).
+- [x] Extended the 20-session capture response with an exact 40-boundary audit. For each expected close/open timestamp it distinguishes provider-response presence from persisted-store presence and reports the nearest provider timestamp.
+- [x] Added a dashboard table rendering the exact boundary audit. This is the actual exact-timestamp provider/store diagnostic; the older ticker-vs-SPY post-market comparison is now correctly labelled a control test, not a full provider coverage audit.
+- [x] Added clock tests for regular session, after-hours, pre-market, weekend, Thanksgiving, and the post-DST Eastern offset.
+
+### RTO — 2026-11-01 capture result supplied by user
+- [x] Recorded that RTO returned 4,048 1m bars, 0 new writes, 18/20 valid close/open pairs, and 2 missing next-session open bars.
+- [ ] Re-run RTO capture after pulling this commit and inspect `boundaryCoverageAudit` for 2026-10-14 13:30Z and 2026-10-21 13:30Z. The earlier response did not include provider-vs-store exact-boundary diagnostics, so it cannot yet establish whether the missing observations were absent from the provider response or lost in persistence/query.
+- [ ] If provider response is missing both exact bars, compare the configured IEX feed with an entitled SIP feed or another validated provider; do not substitute a nearby minute or mix feeds.
+- [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
+
+### Strategy policy decision
+- [x] Preserve the existing Boring Overnight thresholds for now. Do not retune from one incomplete 18/20 RTO sample. The 20-pair sample is a minimum operational window, not statistical proof; validate on a larger point-in-time, corporate-action-aware, walk-forward dataset with costs and outliers before changing thresholds.
+- [x] Clarified that the architecture and 5M/1M authority contract are already established. The one-time installed Thinkorswim study/hash/input parity certificate is still NOT VERIFIED until exact installed study identity, overrides, and matched-bar output are recorded. It does not need to be repeated while that exact version/hash and inputs remain unchanged.
+
+### Monday 2026-11-02 user runtime acceptance
+- [x] Added a specific 07:30 Arizona / 09:30 Eastern WebSocket acceptance procedure and PowerShell command to `docs/Runtime-Acceptance-Runbook.md`.
+- [ ] User must run the procedure while the local API is running during regular market hours. Subscription acknowledgement alone is not acceptance; per-symbol completed bar counts and timestamps must advance.
+
+### Operating model
+- [x] Documented the current workflow: run the MCC API locally (normally Visual Studio F5) and use its localhost-hosted dashboard in the browser. Desktop installer/packaging is not implemented; no remote hosting or standalone .exe is implied.
+
+---
+
 
 ## 2026-10-31 — Consolidated active To-Do and 20-session capture update
 
