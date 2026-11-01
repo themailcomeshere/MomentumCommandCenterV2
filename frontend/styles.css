@@ -1452,3 +1452,21 @@ main{margin-top:16px}
  .focus-chart-layout .focus-price-chart svg{height:170px}
  #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* 2026-11-01: compact header, exchange-session countdown, and embedded workspace toolbar. */
+.topbar-layout{grid-template-columns:minmax(360px,1fr) minmax(420px,1.15fr);align-items:start;gap:14px}
+.topbar-brand{width:100%;min-width:0;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px}
+.topbar-brand>div:first-child{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.topbar-brand>div:first-child .eyebrow{margin:0}
+.topbar-tools{justify-content:flex-start;margin:0}
+.market-session-clock{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 12px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;background:#0c1527;min-width:0}
+.market-session-clock>span{font-size:11px;color:var(--muted);font-weight:700}
+.market-session-clock>strong{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.market-session-clock>small{grid-column:1/-1;color:var(--muted);font-size:9px;overflow-wrap:anywhere}
+#workspace-toolbar{width:100%;margin:0;padding:7px 9px;gap:10px;align-items:center;box-shadow:none;border-radius:9px;background:rgba(12,21,39,.72)}
+#workspace-toolbar>div{min-width:115px;gap:3px}
+#workspace-toolbar label{font-size:10px}
+#workspace-toolbar select,#workspace-toolbar button{padding:6px 9px;font-size:12px}
+@media(max-width:1050px){.topbar-layout{grid-template-columns:minmax(0,1fr)}.topbar-brand{align-items:stretch}}
+@media(max-width:560px){.topbar-brand>div:first-child{align-items:flex-start;flex-direction:column;gap:2px}.market-session-clock{grid-template-columns:1fr auto}#workspace-toolbar>div{flex:1 1 120px}}
