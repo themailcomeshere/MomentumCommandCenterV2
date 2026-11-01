@@ -1519,3 +1519,11 @@ Continue work without waiting for another confirmation when a task can be safely
 - [ ] Run exact-head Release build/test and browser acceptance after code changes.
 
 Design note: docs/Validation/Boring-Overnight-Requirements-and-Limit-Policy-20261031.md.
+
+
+### Sell-limit calculation engine — 2026-10-31
+
+- Added BoringOvernightSellLimitCalculator. It takes the selected pre-decision historical quantile of per-session maximum favorable price movement during complete eligible sell windows, calculates a candidate limit from the current reference close, and reports historical touch rate plus target distance in ATR units.
+- ATR is context only; no arbitrary ATR multiplier is used. The calculator requires at least 20 complete windows and exact ATR parity status MATCH before returning a numeric candidate. Incomplete windows return DATA?; unverified ATR parity returns NOT VERIFIED.
+- Added unit tests for the nearest-rank quantile, in-sample touch rate, incomplete windows, short history, and ATR parity gate. CI/build has not yet been verified for this commit.
+- This is the calculation engine only. The API does not yet assemble full eligible-window observations from persisted bars, and the dashboard does not yet call this calculator. The dashboard correctly remains DATA? until that integration and its source evidence exist.
