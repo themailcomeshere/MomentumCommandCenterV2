@@ -1501,3 +1501,21 @@ Continue work without waiting for another confirmation when a task can be safely
 
 - [CI VERIFIED] GitHub Actions run **41095950730 / run 618** completed successfully for commit `7c7e20810b70f2a6620fb8f752844a15eed130c3`. This run includes the dashboard code, favicon, user manual, provider comparison note, browser runbook, and master To-Do updates committed through that SHA. The workflow is the repository's .NET build/test workflow; it does not execute browser UI tests.
 - [BROWSER VALIDATION OPEN] Local browser acceptance remains outstanding for the new layout and favicon, and the BrowserLink `$.noConflict` error remains unresolved pending its injected script URL/stack trace.
+
+
+## 2026-10-31 — Boring Overnight functionality and calculated limit
+
+- [x] Clarified that 20 means 20 valid trading-session pairs, not calendar days; preserve 5D vs 20D comparison and explicit sample/gap counts.
+- [x] Separated close-to-next-open Overnight edge from the user's 07:00–20:00 Eastern GTC_EXT sell opportunity.
+- [x] Documented catalyst clearance semantics: validated source health/coverage and timestamped event review; unknown remains UNKNOWN.
+- [x] Clarified 5M/1M contract is established; parity certification is a one-time exact study-hash/input configuration task, invalidated only by source/input changes.
+- [x] Added a visible Calculated Limit Sell panel that fails closed as DATA? until target-distribution and ATR evidence are validated.
+- [ ] Build authoritative exchange-calendar boundaries, including holidays/early closes; auto-pair regular-session first/last 1M bars.
+- [ ] Build full GTC_EXT historical target-touch dataset; do not confuse a touch with an actual fill.
+- [ ] Select target quantile from walk-forward results; no arbitrary ATR multiplier or fixed +0.5% target.
+- [ ] Integrate source-backed reference close, historical target quantile, ATR context/parity, target-touch rate and coverage into Calculated Limit Sell.
+- [ ] Connect validated catalyst source with coverage and health semantics.
+- [ ] Certify exact installed 5M TOS study/hash/input parity once and reuse until changed; do not repeatedly ask the user to re-establish the architecture contract.
+- [ ] Run exact-head Release build/test and browser acceptance after code changes.
+
+Design note: docs/Validation/Boring-Overnight-Requirements-and-Limit-Policy-20261031.md.
