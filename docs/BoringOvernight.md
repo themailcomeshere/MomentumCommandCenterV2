@@ -1,3 +1,38 @@
+## 2026-11-01 — RTO boundary audit and strategy policy
+
+The user supplied an RTO capture for the 20 regular close/open pairs:
+- 4,048 provider bars fetched; 0 newly persisted.
+- 18 of 20 pairs valid; missing next-session opens at 2026-10-14T13:30:00Z and 2026-10-21T13:30:00Z.
+- Rolling win rate and return metrics were correctly withheld because the required sample is incomplete.
+
+This output does **not** establish why those exact observations are missing. A large fetched-bar count does not prove the provider returned the 09:30 Eastern bar on every session. Zero new writes can be consistent with idempotent persistence for returned bars while the expected boundary minute is absent from the provider response. The capture endpoint now returns `boundaryCoverageAudit` with, for each expected close/open timestamp:
+- whether the configured provider response contained the exact bar;
+- whether the persisted store contains the exact bar for the same feed;
+- the nearest provider timestamp and its offset;
+- a status distinguishing provider absence from a provider/store mismatch.
+
+After pulling the updated branch, rerun the capture for RTO. Do not substitute a neighboring minute, use another feed's bar in the same sample, or calculate partial-window metrics under the 20-pair label. If the IEX response itself lacks the exact opening bars, perform a separate entitled SIP/alternate-provider comparison and preserve feed identity. The new exact-boundary audit is distinct from the older ticker-vs-SPY post-market control test, which only proves whether any bars were returned in one shared interval.
+
+### Strategy thresholds: preserve pending evidence
+
+Keep the current provisional gates unchanged:
+- price > $5;
+- 20-session average daily volume >= 500,000;
+- price > 20D SMA;
+- 20-session overnight win rate >= 60%;
+- 20-session mean overnight return >= +0.10%;
+- unrounded 5-session mean strictly > 20-session mean;
+- exclusions and catalyst clearance must be affirmatively verified;
+- current 5M/1M state and freshness gates remain separate.
+
+Reason: MCC currently has a capture/calculation path but does not yet have complete, certified provider boundary coverage across the universe, a complete GTC_EXT outcome dataset, verified catalyst coverage, corporate-action-normalized outcome lineage, or walk-forward calibration. Changing thresholds now would tune against incomplete and potentially biased samples. The 20-pair window is an operational minimum, not proof of a durable edge. Preserve the existing rules until a larger point-in-time dataset can compare candidate alternatives out of sample after realistic costs. Any later change should be versioned and tested, not silently edited.
+
+### Thinkorswim parity status
+
+The 5M authority / 1M execution architecture and study source/version work have been done. The separate one-time certification of the exact study installed in the user's Thinkorswim instance—study identity/hash, input overrides, matching bar feed, and matched-bar state output—has not been evidenced in the current repository records. Mark it NOT VERIFIED until that evidence is captured. Once certified, do not repeat it unless the installed study, inputs, or relevant signal implementation changes.
+
+---
+
 # Boring Overnight Strategy
 
 **Purpose:** Prefer repeatable, controlled overnight returns over the largest possible gap. A zero position is a valid outcome. This is a research framework and checklist, not a guarantee of return or an automatic trade signal.
