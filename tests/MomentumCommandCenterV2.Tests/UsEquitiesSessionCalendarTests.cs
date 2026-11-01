@@ -69,4 +69,39 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.Equal(DateTimeOffset.Parse("2028-07-03T16:59:00Z"), julyThirdClose.PreviousCloseBarTimestampUtc);
     }
 
+
+    [Fact]
+    public void MatchesOfficialNyseHolidayClosuresFor2026Through2028()
+    {
+        var holidays = new[]
+        {
+            new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 19), new DateOnly(2026, 2, 16),
+            new DateOnly(2026, 4, 3), new DateOnly(2026, 5, 25), new DateOnly(2026, 6, 19),
+            new DateOnly(2026, 7, 3), new DateOnly(2026, 9, 7), new DateOnly(2026, 11, 26),
+            new DateOnly(2026, 12, 25),
+            new DateOnly(2027, 1, 1), new DateOnly(2027, 1, 18), new DateOnly(2027, 2, 15),
+            new DateOnly(2027, 3, 26), new DateOnly(2027, 5, 31), new DateOnly(2027, 6, 18),
+            new DateOnly(2027, 7, 5), new DateOnly(2027, 9, 6), new DateOnly(2027, 11, 25),
+            new DateOnly(2027, 12, 24),
+            new DateOnly(2028, 1, 17), new DateOnly(2028, 2, 21), new DateOnly(2028, 4, 14),
+            new DateOnly(2028, 5, 29), new DateOnly(2028, 6, 19), new DateOnly(2028, 7, 4),
+            new DateOnly(2028, 9, 4), new DateOnly(2028, 11, 23), new DateOnly(2028, 12, 25)
+        };
+
+        Assert.All(holidays, date => Assert.False(UsEquitiesSessionCalendar.IsTradingSession(date), date.ToString()));
+    }
+
+    [Fact]
+    public void MatchesOfficialNyseEarlyClosesFor2026Through2028()
+    {
+        var earlyCloses = new[]
+        {
+            new DateOnly(2026, 11, 27), new DateOnly(2026, 12, 24),
+            new DateOnly(2027, 11, 26),
+            new DateOnly(2028, 7, 3), new DateOnly(2028, 11, 24)
+        };
+
+        Assert.All(earlyCloses, date => Assert.Equal(new TimeOnly(13, 0), UsEquitiesSessionCalendar.GetRegularClose(date)));
+    }
+
 }
