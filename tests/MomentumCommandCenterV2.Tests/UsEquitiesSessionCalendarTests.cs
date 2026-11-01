@@ -46,4 +46,11 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.Equal(new DateOnly(2026, 12, 24), boundaries[^1].PreviousSessionDate);
         Assert.Equal(DateTimeOffset.Parse("2026-12-24T17:59:00Z"), boundaries[^1].PreviousCloseBarTimestampUtc);
     }
+    [Fact]
+    public void TreatsPriorFridayAsHolidayWhenNextNewYearsDayIsSaturday()
+    {
+        Assert.False(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2027, 12, 31)));
+        Assert.True(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2027, 12, 30)));
+    }
+
 }
