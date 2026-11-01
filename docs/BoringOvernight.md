@@ -294,3 +294,14 @@ The Overnight panel now has an explicit Calculated Limit Sell display. It delibe
 - ATR is context only; no arbitrary ATR multiplier is used. The calculator requires at least 20 complete windows and exact ATR parity status MATCH before returning a numeric candidate. Incomplete windows return DATA?; unverified ATR parity returns NOT VERIFIED.
 - Added unit tests for the nearest-rank quantile, in-sample touch rate, incomplete windows, short history, and ATR parity gate. CI/build has not yet been verified for this commit.
 - This is the calculation engine only. The API does not yet assemble full eligible-window observations from persisted bars, and the dashboard does not yet call this calculator. The dashboard correctly remains DATA? until that integration and its source evidence exist.
+
+
+## 2026-10-31 — One-click 20-session close/open capture
+
+- Added `POST /api/boring-overnight/capture-history`. The endpoint selects the configured provider, fetches 1-minute bars for the most recent 20 session pairs, appends them to the raw observation store, reads back the latest persisted 1m observations, and calculates the 20 regular-session close/open returns.
+- Added `UsEquitiesSessionCalendar` (`MCC_US_EQUITIES_CALENDAR_V1`) to generate exact UTC timestamps from America/New_York local session dates, including the documented NYSE holiday rules and the implemented common early-close rules (day after Thanksgiving, Christmas Eve, July 3 when it is a trading day). DST is timezone-derived, not hard-coded.
+- Added the Overnight dashboard button **Refresh/Capture 20-session close/open calculation**. It displays valid/required pairs, win rate, 20-pair mean/median, 5-pair mean, missing pairs, feed, fetched/newly persisted bar counts, calendar version, timestamps, and pair-level source evidence.
+- Retrieval is chunked into at-most-30-day provider requests and deduplicated by source timestamp before persistence.
+- Added calendar tests for 20 consecutive pairs, weekend handling, post-DST UTC conversion, Thanksgiving, Good Friday, and Christmas Eve.
+- **Limitations:** this is an MCC-maintained ruleset, not a live exchange-calendar service. Review it against the official exchange calendar and add fixtures for all exceptional holiday/early-close cases before production qualification. Missing exact boundary bars suppress rolling metrics. It is regular close-to-next-open history only—not the 07:00–20:00 ET GTC_EXT sell-target study, catalyst clearance, or a READY decision.
+- Exact-head Release build, tests, API runtime capture, and browser acceptance are still pending.
