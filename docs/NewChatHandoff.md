@@ -1372,3 +1372,15 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 - This proves only six-window OHLCV aggregation parity. The exports do not contain per-bar Thinkorswim Permission, READY, RUNNER, WANING, SWING, GET OUT, or EOD states, so matched-study state replay remains open.
 - Full evidence: docs/Validation/Runner-Exit-State-Validation-20261029.md, “RTO exported OHLCV reconciliation.”
 
+
+
+## 2026-10-31 — Boring Overnight requirements clarification and dashboard change
+
+- The 20-session requirement is 20 valid trading-session close/open pairs, not calendar days; retain 5D vs 20D metrics and report sample/gap counts.
+- Overnight edge (prior RTH close → next RTH open) is distinct from the user's full 07:00–20:00 Eastern GTC_EXT sell window.
+- Catalyst CLEAR requires a validated source with health/coverage and timestamped event review. No such validated source is connected to the history-backed evaluation route; it correctly remains UNKNOWN.
+- The 5M/1M authority contract is established. Remaining parity work is a one-time certification of exact installed 5M study hash/input settings and matched-bar behavior; re-certify only when those change.
+- Dashboard now includes a visible Calculated Limit Sell panel that shows DATA? until source-backed target distribution and ATR context are validated. No numeric limit was fabricated.
+- Target policy: historical pre-decision GTC_EXT target quantile determines candidate return; ATR supplies volatility context and distance-in-ATR display, not an arbitrary multiplier. +0.5% remains a comparison heuristic.
+- See docs/Validation/Boring-Overnight-Requirements-and-Limit-Policy-20261031.md.
+- Current disposition remains NOT READY for actionable qualification; WATCH/manual research only.
