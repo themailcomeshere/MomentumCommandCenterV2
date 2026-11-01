@@ -6,7 +6,7 @@
 - [x] Add versioned MCC US-equities session rules with timezone-derived DST, weekday/holiday exclusions, and common early-close handling.
 - [x] Add dashboard action: **Refresh/Capture 20-session close/open calculation**; show metrics, pair-level values/timestamps, missing pairs, provider/feed, bar counts and calendar version.
 - [x] Add calendar tests for 20 pairs, weekend, DST, Thanksgiving, Good Friday and Christmas Eve.
-- [ ] Run exact-head Release build/tests; resolve any compiler/test failures.
+- [x] Verified source implementation commit `a0bf119c68f688a017e179e28a0bf145727f734f` with GitHub Actions run 864: .NET Release build succeeded with 0 warnings/0 errors; 165/165 tests passed.
 - [ ] Pull the branch, hard-refresh dashboard, click the new capture action for an actual Overnight candidate, and save the JSON/runtime result.
 - [ ] Compare generated session dates and UTC boundaries against the official NYSE calendar for the captured window; expand calendar fixtures for all applicable exceptional dates before relying on automatic qualification.
 - [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
@@ -15,7 +15,7 @@
 - [ ] Certify exact installed 5M Thinkorswim study/hash/input parity once; reuse until the study or inputs change.
 
 ### P0 — current runtime/release acceptance
-- [ ] Verify exact current branch-head Release build and all tests.
+- [x] GitHub Actions run 864 verified source commit `a0bf119c68f688a017e179e28a0bf145727f734f`: Release build 0 warnings/0 errors; 165/165 tests passed. Documentation updates after that source commit require the normal docs-head workflow.
 - [ ] During regular market hours, verify WebSocket bar delivery for SPY, RKLX, ASTX and XRPN using advancing per-symbol bar counts, lastBarUtc, receivedBars and persistedBars—not subscription acknowledgment alone.
 - [ ] Confirm eligible 1M assessments select WebSocket only after subscription acknowledgment, at least 50 completed persisted bars, freshness, correct feed and provenance; 5M Permission remains REST-backed.
 - [ ] Verify independent 5M score status CURRENT, six criteria populated, score 0–6, Permission iff score >=5; verify 1M and combined entryAllowed separately.
