@@ -105,6 +105,11 @@ app.MapGet("/api/health", () => Results.Ok(new
 .WithSummary("Check API liveness")
 .WithDescription("Example response: { \"status\": \"OK\", \"mode\": \"decision-support-only\", \"orderSubmission\": \"NOT IMPLEMENTED\" }.");
 
+app.MapGet("/api/market-session/clock", () =>
+    Results.Ok(MomentumCommandCenterV2.API.MarketData.MarketSessionClock.GetSnapshot(DateTimeOffset.UtcNow)))
+.WithSummary("Get the current US-equities session phase and countdown target")
+.WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and MCC_US_EQUITIES_CALENDAR_V1. The maintained calendar does not model unscheduled exchange closures.");
+
 app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers) =>
     Results.Ok(providers.Select(p => new
     {
@@ -657,6 +662,42 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
 
+        var providerBoundaryBars = fetchedBars.Where(x =>
+            actualFeed is null || string.Equals(x.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var storedBoundaryBars = observations.Where(x =>
+            actualFeed is null || string.Equals(x.Bar.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
+        object BuildBoundaryCoverage(string boundaryType, DateTimeOffset expectedTimestampUtc)
+        {
+            var providerExact = providerBoundaryBars.Any(x => x.Timestamp == expectedTimestampUtc);
+            var storeExact = storedBoundaryBars.Any(x => x.Bar.Timestamp == expectedTimestampUtc);
+            var nearest = providerBoundaryBars
+                .OrderBy(x => Math.Abs((x.Timestamp - expectedTimestampUtc).TotalSeconds))
+                .FirstOrDefault();
+            var nearestOffset = nearest is null
+                ? (double?)null
+                : Math.Round((nearest.Timestamp - expectedTimestampUtc).TotalMinutes, 2);
+            var status = providerExact
+                ? storeExact ? "COVERED" : "PROVIDER_BAR_NOT_FOUND_IN_STORE"
+                : storeExact ? "STORE_ONLY_NO_PROVIDER_REFRESH_BAR" : "PROVIDER_RESPONSE_MISSING_EXACT_BAR";
+            return new
+            {
+                boundaryType,
+                expectedTimestampUtc,
+                providerReturnedExactBar = providerExact,
+                storeHasExactBar = storeExact,
+                nearestProviderBarTimestampUtc = nearest?.Timestamp,
+                nearestProviderBarOffsetMinutes = nearestOffset,
+                providerBarsWithinFiveMinutes = providerBoundaryBars.Count(x =>
+                    Math.Abs((x.Timestamp - expectedTimestampUtc).TotalMinutes) <= 5),
+                status
+            };
+        }
+        var boundaryCoverageAudit = boundaries.SelectMany(boundary => new[]
+        {
+            BuildBoundaryCoverage("PREVIOUS_SESSION_CLOSE", boundary.PreviousCloseBarTimestampUtc),
+            BuildBoundaryCoverage("NEXT_SESSION_OPEN", boundary.NextOpenBarTimestampUtc)
+        }).ToArray();
+
         return Results.Ok(new
         {
             symbol = request.Symbol.Trim().ToUpperInvariant(),
@@ -669,6 +710,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             retrievedAtUtc = DateTimeOffset.UtcNow,
             fetchedBarCount = fetchedBars.Length,
             newlyPersistedObservationCount = persistedCount,
+            boundaryCoverageAudit,
             history,
             note = "Fetched and persisted 1m provider bars, then calculated 20 previous-RTH-close to next-RTH-open pairs using the versioned MCC US-equities calendar. Missing boundary bars suppress all rolling metrics. Verify calendar rules and provider feed coverage; this is not the separate 07:00–20:00 ET GTC_EXT sell-window study and does not qualify a candidate or submit orders."
         });
