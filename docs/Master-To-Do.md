@@ -1,3 +1,54 @@
+
+## 2026-10-31 — Consolidated active To-Do and 20-session capture update
+
+### Boring Overnight — current implementation
+- [x] Add provider-backed `POST /api/boring-overnight/capture-history` to fetch and persist 1-minute bars and calculate the latest 20 regular close/open pairs.
+- [x] Add versioned MCC US-equities session rules with timezone-derived DST, weekday/holiday exclusions, and common early-close handling.
+- [x] Add dashboard action: **Refresh/Capture 20-session close/open calculation**; show metrics, pair-level values/timestamps, missing pairs, provider/feed, bar counts and calendar version.
+- [x] Add calendar tests for 20 pairs, weekend, DST, Thanksgiving, Good Friday and Christmas Eve.
+- [ ] Run exact-head Release build/tests; resolve any compiler/test failures.
+- [ ] Pull the branch, hard-refresh dashboard, click the new capture action for an actual Overnight candidate, and save the JSON/runtime result.
+- [ ] Compare generated session dates and UTC boundaries against the official NYSE calendar for the captured window; expand calendar fixtures for all applicable exceptional dates before relying on automatic qualification.
+- [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
+- [ ] Keep full 07:00–20:00 ET GTC_EXT window collection/target-touch study separate; the new button does not calculate target reach, fill probability, or Calculated Limit Sell.
+- [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
+- [ ] Certify exact installed 5M Thinkorswim study/hash/input parity once; reuse until the study or inputs change.
+
+### P0 — current runtime/release acceptance
+- [ ] Verify exact current branch-head Release build and all tests.
+- [ ] During regular market hours, verify WebSocket bar delivery for SPY, RKLX, ASTX and XRPN using advancing per-symbol bar counts, lastBarUtc, receivedBars and persistedBars—not subscription acknowledgment alone.
+- [ ] Confirm eligible 1M assessments select WebSocket only after subscription acknowledgment, at least 50 completed persisted bars, freshness, correct feed and provenance; 5M Permission remains REST-backed.
+- [ ] Verify independent 5M score status CURRENT, six criteria populated, score 0–6, Permission iff score >=5; verify 1M and combined entryAllowed separately.
+- [ ] Complete browser acceptance of the dashboard: independent 5M score/Red Zone, new Overnight 20-session capture, Calculated Limit Sell DATA? state, Morning Brief modal/history, replay, responsive layout and sound permission.
+- [ ] Run stored-bars evidence review for RKLX exact requested window/provider/feed/timeframes; the automated provider-to-store comparison matched returned bars, but inspect saved raw JSON timestamps/content when needed.
+- [ ] Complete controlled collector outage/recovery, clean API restart/checkpoint reload, and sleep/wake acceptance on the target host. Baseline checkpoint hash alone is not a recovery test.
+
+### P1 — strategy/data correctness
+- [ ] Matched Thinkorswim state replay: same symbol/date/bars/study version and explicit 1M/5M state diagnostics; OHLCV-only exports cannot prove Permission/READY/RUNNER/WANING/SWING/GET OUT, expiry, re-arm or re-entry.
+- [ ] Complete Morning Brief input manifest/version lineage: raw provider response references/retention, news/discovery watermarks, full dependency manifest and outcome linkage.
+- [ ] Build complete GTC_EXT 07:00–20:00 ET historical coverage and classify missing intervals; calculate target touch, time-to-touch and adverse excursion separately from close/open returns.
+- [ ] Empirically select sell-target quantile using pre-decision history and walk-forward validation; no arbitrary ATR multiplier and no promotion of +0.5% heuristic as validated target.
+- [ ] Integrate Calculated Limit Sell with fresh reference close, selected target quantile, ATR context/parity, target-touch evidence and coverage status; actual fill claims require broker fill records.
+- [ ] Connect validated catalyst/news/event source with source health, coverage horizon, timestamps and event classification. Empty/unavailable feed remains UNKNOWN.
+- [ ] Validate daily history for price, SMA20 and 20D average daily volume; validate 20 valid close/open pairs, sample count, gaps, exact feed and corporate-action handling.
+- [ ] Reconcile the complete Schwab exclusion list and keep MCC exclusion state in sync by a supported, auditable process.
+- [ ] Complete Boring Overnight scanner-universe provenance and immutable candidate decision snapshots; never infer READY from preview rankings or caller assertions.
+
+### P2 — providers, integrations and product delivery
+- [ ] Validate production scanner/provider account plan, feed entitlement, full-market coverage, licensing, rate limits, historical backfill, retention and representative-symbol behavior. Current Alpaca mover source is bounded top gainers/losers, not complete-market breadth.
+- [ ] Complete Schwab read-only integration after Individual Developer/API approval, app registration, callback URL and secure server-side OAuth. No credentials in Git/chat; order submission remains disabled.
+- [ ] Decide desktop packaging/startup: target platform, installer/update model, local API lifecycle, data directory/backup and browser launch behavior. Browser-hosted API is current behavior; no .exe claim.
+- [ ] Decide long-term raw-bar/discovery/news retention and backup/restore policy.
+
+### P3 — older validation follow-ups retained as active
+- [ ] Re-run PMI sparse-window case and verify one-bar result is INSUFFICIENT DATA with no fabricated 0% change/range; compare provider/feed/count/timestamps/gaps with a known liquid control symbol.
+- [ ] Verify Provider Comparison date initializes to current Arizona date, preserves user selection, and correctly renders a real July date from a non-Arizona OS timezone.
+- [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
+- [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
+
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; repeated historical rows are not separate tasks.
+
+
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
 
 ### User-supplied runtime evidence
