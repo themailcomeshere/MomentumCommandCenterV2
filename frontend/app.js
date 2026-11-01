@@ -480,7 +480,7 @@ function renderMorningReport(){
   redZoneAssessmentRefreshers.push(()=>updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,reason,gate,chart));
   void updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,reason,gate,chart);
   card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","Focus "+(item.symbol||"candidate")+" price chart");
-  const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}selector.value=item.symbol;render();refreshFocusedPriceChart();}};
+  const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){if(selector.tagName==="SELECT"){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}}selector.value=item.symbol;render();refreshFocusedPriceChart();}};
   focusButton.addEventListener("click",event=>{event.stopPropagation();focus();});
   card.addEventListener("click",focus);card.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();focus();}});
   return card;
