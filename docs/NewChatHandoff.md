@@ -1465,3 +1465,43 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 - ATR is context only; no arbitrary ATR multiplier is used. The calculator requires at least 20 complete windows and exact ATR parity status MATCH before returning a numeric candidate. Incomplete windows return DATA?; unverified ATR parity returns NOT VERIFIED.
 - Added unit tests for the nearest-rank quantile, in-sample touch rate, incomplete windows, short history, and ATR parity gate. CI/build has not yet been verified for this commit.
 - This is the calculation engine only. The API does not yet assemble full eligible-window observations from persisted bars, and the dashboard does not yet call this calculator. The dashboard correctly remains DATA? until that integration and its source evidence exist.
+
+
+## 2026-11-01 — Prototype dashboard and workflow clarification
+
+### Source-control and comparison model
+- Production remains `frontend/index.html` with shared `frontend/styles.css`.
+- New `frontend/prototypeIndex.html` is a separate copy of the production page with prototype-only inline layout CSS and prototype controls. Open `http://localhost:53360/prototypeIndex.html` (or the matching HTTPS host/port) to compare; root `/` remains production.
+- Future UI requests are applied to `prototypeIndex.html` only. Do not copy prototype changes into `index.html` until the user explicitly says to make them official.
+- Prototype shows a fixed left dock with a horizontal focused-symbol text input and vertical workspace toggle. It removes RESEARCH WORKBENCH, places the market clock top-right above System Readiness, and moves the transport/demo indicator into System Readiness.
+- System Readiness remains visible: it communicates current integration limitations. It is not obsolete until those states are replaced by trustworthy operational status.
+- Shared app.js was made compatible with both the production symbol SELECT and prototype symbol INPUT when a Red Zone card is focused. This is a behavior compatibility change; production layout remains unchanged.
+
+### Symbol field behavior
+- Production `#symbol` is initially populated by the selected SPY option in `frontend/index.html`.
+- `frontend/app.js` reads `#symbol.value` when refreshing focused assessment/chart and listens for its `change` event.
+- Selecting a Red Zone card sets the focused symbol to that candidate. It does not clear the field. Reset workspace resets the workspace mode to Intraday Momentum; it does not clear the symbol.
+- Prototype uses a text input initialized to SPY; editing commits on change/blur or Enter.
+
+### Correct scanner → Red Zone → Watchlist flow
+1. `Refresh Alpaca market movers` retrieves persisted Alpaca SIP-based discovery events from `/api/scanner/discoveries`. It does not initiate a full-market scan and the returned mover list is discovery, not qualification.
+2. Selecting the live discovery group renders those discovery rows into the scanner and Red Zone preview (up to four rows).
+3. Clicking `Watch` in a scanner row or Scan & Analyze result adds that ticker to the separate browser-local Watchlist (`localStorage` key `mcc.watchlist`).
+4. `Watch` does **not** pin a ticker to Red Zone. Red Zone pinning is separate: use its Add a symbol / Pin to Red Zone control. The Red Zone tile can be clicked to focus the Main Chart.
+5. A Watchlist entry does not automatically populate Red Zone, create 5M Permission, confirm 1M execution, or authorize an entry. Those remain separate checks.
+
+### Installed Thinkorswim source inventory
+- 5M Command Center: `docs/Validation/Installed-5M-Study.txt`, blob SHA `29e2ccf9c2896f9d4999bae9bcaff72503b19a00`, source header V4.1.7.
+- 5M Authority Diagnostic: `docs/Validation/Installed-5M-Authority-Diagnostic.txt`, blob SHA `f2c57603b332b94283a297d647cf3fc2021fcb00`, source header V2.
+- 1M Command Center: `docs/Validation/Installed-1M-Study.txt`, blob SHA `2553bcb4c4d5352316cbec3a884f7b8c2eafb65f`, source header V14.4.10 (source notes identify saved V14.4.8 BubbleLadder Fix base).
+- Study identity/source documentation is complete. Only a matched-bar output parity replay remains if not already captured in another validation artifact. Do not ask the user to re-identify these studies.
+
+### RTO boundary audit evidence
+- 4,048 provider bars returned; 0 newly persisted; 38/40 exact boundaries covered.
+- 2026-10-14 expected 13:30Z: no exact provider bar; nearest 13:34Z (+4 minutes); store also missing exact timestamp.
+- 2026-10-21 expected 13:30Z: no exact provider bar; nearest 13:31Z (+1 minute); store also missing exact timestamp.
+- Both statuses are `PROVIDER_RESPONSE_MISSING_EXACT_BAR`; store matches provider response. Do not impute neighboring bars or combine IEX and SIP observations.
+- Compare those dates against independently entitled SIP or another validated provider. 60/120-pair windows are research extensions, not a workaround for missing required boundaries.
+
+### Verification boundary
+- Prototype HTML has unique IDs and every static opening element has an ID. Browser rendering, visual acceptance, API interaction and CI on the new branch head remain to be run after pull.
