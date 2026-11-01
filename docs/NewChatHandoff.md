@@ -1,3 +1,48 @@
+# Handoff update — 2026-11-01 dashboard and data-quality pass
+
+## Source-control state
+- Repository: `themailcomeshere/MomentumCommandCenterV2`
+- Branch: `feature/opportunity-quality-classification`
+- Source changes in this pass: exchange-aware market session clock endpoint, header countdown, workspace toolbar relocation, stable IDs on all static dashboard markup, and exact 40-boundary provider-vs-store diagnostics on the 20-session capture response.
+- Added tests for regular-session close, after-hours end, pre-market open, weekend, Thanksgiving, and November 2026 DST behavior.
+- Exact-head CI is pending until GitHub Actions completes for the final documentation commit. Do not assume a green build from a prior SHA applies to this head.
+
+## RTO capture diagnosis
+User supplied RTO/Alpaca/IEX response:
+- 4,048 bars fetched; 0 newly persisted.
+- 18/20 valid close/open pairs.
+- Missing next-session opening bars: 2026-10-14T13:30:00Z and 2026-10-21T13:30:00Z.
+- Metrics withheld correctly; no win rate or return means should be inferred.
+
+The supplied capture predates the new `boundaryCoverageAudit` field. Re-run after pulling. For each expected boundary, the response will report exact provider-response presence, exact store presence, nearest provider timestamp and offset, and a diagnosis status. This isolates source-feed absence from persistence/query mismatch. Do not substitute neighboring timestamps or mix IEX and SIP within one return series.
+
+## Provider coverage audit terminology
+The existing Overnight panel previously titled PROVIDER COVERAGE AUDIT was a selected-ticker-vs-SPY post-market control test over one shared time window. It is not a comprehensive provider coverage audit. It is now labelled accurately. Exact close/open boundary coverage is audited from the 20-session capture result; feed entitlement and IEX-vs-SIP completeness remain external/provider qualification tasks.
+
+## Dashboard header
+- Header now displays a server-backed countdown to regular close, 8:00 PM Eastern after-hours end, or next regular open.
+- Timezone: America/New_York; calendar: MCC_US_EQUITIES_CALENDAR_V1.
+- Workspace toolbar is inside `.topbar-brand`, below title/tools.
+- Static `frontend/index.html` elements lacking IDs were assigned stable unique IDs. Existing IDs were preserved.
+
+## Strategy rules
+Do not change the current provisional Boring Overnight thresholds yet. An incomplete 18/20 RTO sample cannot support tuning. Wait for complete source-backed history, corporate-action handling, broader samples, full GTC_EXT outcome data, catalyst coverage, and walk-forward validation net of costs. The current thresholds remain the baseline pending evidence.
+
+## Thinkorswim study parity
+The 5M/1M authority architecture and source/version development are established. Exact installed 5M study/hash/input parity has not been certified in the current repository evidence. Obtain one matched-bar certification; reuse it until study/hash/inputs or relevant signal logic changes.
+
+## Tomorrow's WebSocket acceptance — Monday 2026-11-02
+- Run the local API with streaming enabled and symbols SPY, RKLX, ASTX, XRPN.
+- Start the capture at 07:30 Arizona (09:30 Eastern); observe at least five minutes.
+- Run the PowerShell command in `docs/Runtime-Acceptance-Runbook.md` using `http://localhost:53360` (or matching HTTPS URL/port).
+- Accept only if each eligible symbol's barCount and lastBarUtc advance during regular hours, and receivedBars/persistedBars increase. Subscription acknowledgement alone is insufficient.
+- Save the full output directory and record branch SHA, API SHA, feed, and exact test window.
+- Verify eligible 1M assessment sourceTransport separately; 5M Permission remains REST.
+
+## Current operating model
+For now, run MCC locally (normally start the API from Visual Studio with F5) and use the localhost browser page served by that API. Desktop packaging/installer, automatic startup, updater, and production hosting remain unimplemented decisions. No standalone .exe is currently delivered.
+
+
 # Handoff update — 20-session capture build validation — 2026-10-31
 
 - Source implementation commit: `a0bf119c68f688a017e179e28a0bf145727f734f`.
