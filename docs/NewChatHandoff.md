@@ -1554,4 +1554,4 @@ The published NYSE 2026–2028 holiday closures and early closes are now represe
 
 ## Canonical checklist count correction
 
-The active checklist now has 29 unchecked operational items: 6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3. The two RTO-specific open items are alternate-feed comparison and confirmation of provider entitlement/coverage.
+The active checklist now has 28 unchecked operational items: 5 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3. The two RTO-specific open items are alternate-feed comparison and confirmation of provider entitlement/coverage.
