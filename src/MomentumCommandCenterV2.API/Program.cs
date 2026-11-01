@@ -108,7 +108,7 @@ app.MapGet("/api/health", () => Results.Ok(new
 app.MapGet("/api/market-session/clock", () =>
     Results.Ok(MomentumCommandCenterV2.API.MarketData.MarketSessionClock.GetSnapshot(DateTimeOffset.UtcNow)))
 .WithSummary("Get the current US-equities session phase and countdown target")
-.WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and MCC_US_EQUITIES_CALENDAR_V1. The maintained calendar does not model unscheduled exchange closures.");
+.WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and MCC_US_EQUITIES_CALENDAR_V2. The maintained calendar does not model unscheduled exchange closures.");
 
 app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers) =>
     Results.Ok(providers.Select(p => new
