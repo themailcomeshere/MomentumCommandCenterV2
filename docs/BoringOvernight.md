@@ -291,7 +291,7 @@ Keep these measurements separate:
 1. **Overnight edge:** prior regular-session final 1-minute bar close to next valid regular-session first 1-minute bar open. Timestamps are provider bar-start timestamps in UTC. A normal session's final 1-minute bar starts at 15:59 America/New_York and its first bar starts at 09:30 America/New_York; early closes and holidays require an authoritative exchange calendar. Do not use after-hours last trade or premarket first trade as substitutes.
 2. **Sell opportunity:** the complete user-eligible GTC_EXT window, 07:00–20:00 America/New_York. Measure target touch, time-to-touch, adverse excursion, and coverage gaps over that full window. A historical bar high touching the limit is not evidence of an actual fill.
 
-The current history calculator implements only item 1 and requires caller-supplied exact UTC timestamps. It does not generate an exchange calendar. The dashboard's ordinary bar fetch does not construct either measurement automatically.
+The current history calculator implements only item 1 and requires caller-supplied exact UTC timestamps. It does not generate an exchange calendar. The dashboard's ordinary bar fetch does not construct either measurement automatically. The original calendar implementation was V1; current ruleset is V2 following the official NYSE New Year's Day 2028 correction.
 
 ### Catalyst clearance
 
