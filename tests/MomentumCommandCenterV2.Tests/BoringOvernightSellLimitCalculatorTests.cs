@@ -15,10 +15,10 @@ public sealed class BoringOvernightSellLimitCalculatorTests
             120m, 2m, DateTimeOffset.Parse("2026-10-30T20:00:00Z"), "MATCH", history, 25);
 
         Assert.Equal("PROVISIONAL", result.Status);
-        Assert.Equal(120.36m, result.CalculatedLimitSell);
-        Assert.Equal(0.3m, result.TargetReturnPct);
-        Assert.Equal(75m, result.HistoricalTouchRatePct);
-        Assert.Equal(0.18m, result.TargetDistanceAtr);
+        Assert.Equal(124.80m, result.CalculatedLimitSell);
+        Assert.Equal(4m, result.TargetReturnPct);
+        Assert.Equal(80m, result.HistoricalTouchRatePct);
+        Assert.Equal(2.4m, result.TargetDistanceAtr);
         Assert.Equal(20, result.ValidSessionCount);
     }
 
