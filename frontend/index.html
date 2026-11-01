@@ -84,6 +84,27 @@
   <button id="overnightRefreshSnapshots" type="button" class="quiet-button">Refresh saved evaluations</button>
  </form>
  <p id="overnightStatus" class="muted" role="status">Ready to request bars.</p>
+ <div class="overnight-history-capture">
+  <button id="overnightCapture20" type="button">Refresh/Capture 20-session close/open calculation</button>
+  <p id="overnightHistoryStatus" class="muted" role="status">No 20-session capture run yet. This fetches 1-minute provider bars, persists them, and calculates the 20 most recent regular close/open pairs.</p>
+  <div class="overnight-results-grid">
+   <article class="overnight-result"><h3>20-session close/open history</h3><dl>
+    <div><dt>Valid / required pairs</dt><dd id="overnightHistoryPairs">DATA?</dd></div>
+    <div><dt>Overnight win rate</dt><dd id="overnightHistoryWinRate">DATA?</dd></div>
+    <div><dt>20-pair mean return</dt><dd id="overnightHistoryMean20">DATA?</dd></div>
+    <div><dt>20-pair median return</dt><dd id="overnightHistoryMedian20">DATA?</dd></div>
+    <div><dt>5-pair mean return</dt><dd id="overnightHistoryMean5">DATA?</dd></div>
+    <div><dt>Missing pairs</dt><dd id="overnightHistoryMissing">DATA?</dd></div>
+   </dl></article>
+   <article class="overnight-result"><h3>Capture provenance</h3><dl>
+    <div><dt>Provider / feed</dt><dd id="overnightHistoryProvider">NOT CAPTURED</dd></div>
+    <div><dt>Fetched / newly stored bars</dt><dd id="overnightHistoryBars">DATA?</dd></div>
+    <div><dt>Calendar ruleset</dt><dd id="overnightHistoryCalendar">NOT CAPTURED</dd></div>
+    <div><dt>Calculated at (UTC)</dt><dd id="overnightHistoryAsOf">NOT CAPTURED</dd></div>
+   </dl></article>
+  </div>
+  <div class="table-wrap"><table><thead><tr><th>Next session</th><th>Previous close</th><th>Next open</th><th>ON return</th><th>Source timestamps (UTC)</th></tr></thead><tbody id="overnightHistoryRows"><tr><td colspan="5">No session pairs captured.</td></tr></tbody></table></div>
+ </div>
  <section class="overnight-coverage-audit" aria-labelledby="overnightCoverageTitle">
   <div class="section-heading"><div><div class="eyebrow">PROVIDER COVERAGE AUDIT</div><h3 id="overnightCoverageTitle">Post-market control test</h3><p class="muted">Fetches the selected ticker and SPY over the identical UTC window. This is a coverage diagnostic, not a trading signal.</p></div></div>
   <form id="overnightCoverageForm" class="overnight-controls">
