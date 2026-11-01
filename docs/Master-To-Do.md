@@ -160,7 +160,7 @@ Evidence/runbook: `docs/Monday-Readiness-2026-11-02.md`, `docs/BoringOvernight.m
 - [ ] Controlled collector outage/restart/sleep-wake acceptance. Source already has durable watermarks, overlap polling, bounded backfill chunks, retries, and atomic checkpoint replacement; target-host recovery is not yet proven.
 - [x] Morning Brief response snapshot persistence implemented (see above).
 - [ ] Complete Morning Brief input-manifest/versioning: raw provider response references/retention policy, news/discovery watermarks, full calculation dependency manifest, and later outcome linkage remain open. Market-landscape bar watermarks are now recorded in each snapshot.
-- [ ] Automate Overnight session boundaries only after the eligible session policy is defined. The current calculator requires explicit caller-supplied close/open timestamps and fails closed on missing pairs; it does not guess exchange holidays, early closes, ETH/RTH, or the user's overnight window.
+- [PARTIAL — CAPTURE ENDPOINT ADDED 2026-10-31] `/api/boring-overnight/capture-history` now generates 20 close/open pairs with the MCC-maintained `MCC_US_EQUITIES_CALENDAR_V1` rules and fetches/persists provider 1m bars. Still validate calendar dates against official NYSE schedules, test all exceptional early closes/holidays, and keep GTC_EXT 07:00–20:00 ET target-window collection separate.
 - [ ] Continue Boring Overnight qualification only with source-backed daily/overnight history, validated session pairs, catalyst status, and authoritative 5M state. Unknown catalyst remains UNKNOWN; no qualification from caller assertions alone.
 
 ### P2 — external approvals and product decisions
