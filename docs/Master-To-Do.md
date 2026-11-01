@@ -12,13 +12,13 @@
 
 ### RTO — 2026-11-01 capture result supplied by user
 - [x] Recorded that RTO returned 4,048 1m bars, 0 new writes, 18/20 valid close/open pairs, and 2 missing next-session open bars.
-- [ ] Re-run RTO capture after pulling this commit and inspect `boundaryCoverageAudit` for 2026-10-14 13:30Z and 2026-10-21 13:30Z. The earlier response did not include provider-vs-store exact-boundary diagnostics, so it cannot yet establish whether the missing observations were absent from the provider response or lost in persistence/query.
-- [ ] If provider response is missing both exact bars, compare the configured IEX feed with an entitled SIP feed or another validated provider; do not substitute a nearby minute or mix feeds.
+- [x] Re-run RTO capture and inspect `boundaryCoverageAudit`: 38/40 boundaries are exact; 2026-10-14 13:30Z is absent from the provider response (nearest 13:34Z), and 2026-10-21 13:30Z is absent (nearest 13:31Z). Store agrees with provider; this is not a persistence loss.
+- [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
 
 ### Strategy policy decision
 - [x] Preserve the existing Boring Overnight thresholds for now. Do not retune from one incomplete 18/20 RTO sample. The 20-pair sample is a minimum operational window, not statistical proof; validate on a larger point-in-time, corporate-action-aware, walk-forward dataset with costs and outliers before changing thresholds.
-- [x] Clarified that the architecture and 5M/1M authority contract are already established. The one-time installed Thinkorswim study/hash/input parity certificate is still NOT VERIFIED until exact installed study identity, overrides, and matched-bar output are recorded. It does not need to be repeated while that exact version/hash and inputs remain unchanged.
+- [x] Recorded the installed 5M Command Center V4.1.7 source, 5M Authority Diagnostic V2 source, and 1M Command Center V14.4.10 source in `docs/Validation/Installed-5M-Study.txt`, `Installed-5M-Authority-Diagnostic.txt`, and `Installed-1M-Study.txt`. Their repository blob SHAs are recorded in the handoff. Do not reopen study identification/source collection.\n- [ ] Retain only matched-bar output parity replay between the documented installed studies and MCC; this is distinct from identifying which studies are installed.
 
 ### Monday 2026-11-02 user runtime acceptance
 - [x] Added a specific 07:30 Arizona / 09:30 Eastern WebSocket acceptance procedure and PowerShell command to `docs/Runtime-Acceptance-Runbook.md`.
@@ -43,7 +43,7 @@
 - [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
 - [ ] Keep full 07:00–20:00 ET GTC_EXT window collection/target-touch study separate; the new button does not calculate target reach, fill probability, or Calculated Limit Sell.
 - [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
-- [ ] Certify exact installed 5M Thinkorswim study/hash/input parity once; reuse until the study or inputs change.
+- [x] Record the installed Thinkorswim study sources and diagnostic files; see the three `docs/Validation/Installed-*` files.\n- [ ] Complete matched-bar output parity replay only; reuse the source inventory until a study or input changes.
 
 ### P0 — current runtime/release acceptance
 - [x] GitHub Actions run 864 verified source commit `a0bf119c68f688a017e179e28a0bf145727f734f`: Release build 0 warnings/0 errors; 165/165 tests passed. Documentation updates after that source commit require the normal docs-head workflow.
