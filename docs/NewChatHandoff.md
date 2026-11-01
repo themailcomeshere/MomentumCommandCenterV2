@@ -1520,3 +1520,8 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 - Provider Comparison initialization is already implemented: if the date field is empty it uses `phoenixParts(new Date())`, which formats the current date in `America/Phoenix`; an existing selection is preserved. Remaining task is browser verification using a non-Arizona OS timezone and a July test date.
 - PMI sparse-window regression could not be located in the current branch source using the available repository code search or dashboard JS audit. Data not found in sources. Keep this task open; do not invent the PMI calculation or claim it is fixed.
 - The installed study identity/source inventory is complete. Only the aligned matched-bar state/output comparison remains, if it is not already recorded in a separate validation artifact.
+
+
+### Official calendar certification horizon
+
+The published NYSE 2026–2028 holiday closures and early closes are now represented in regression fixtures. The ruleset remains MCC-maintained and versioned; extend the supported horizon when NYSE publishes the next calendar. It is not a live exchange-calendar feed.
