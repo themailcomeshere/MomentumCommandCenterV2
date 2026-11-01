@@ -1555,3 +1555,15 @@ The published NYSE 2026–2028 holiday closures and early closes are now represe
 ## Canonical checklist count correction
 
 The active checklist now has 27 unchecked operational items: 4 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3. The two RTO-specific open items are alternate-feed comparison and confirmation of provider entitlement/coverage.
+
+## 2026-11-01 — Additional dependency audit
+
+### Morning Brief lineage already present
+- `MorningBriefSnapshotStore` appends immutable snapshots with report version, generated/recorded timestamps, SHA-256 content hash, report payload, and source watermarks extracted from marketLandscape bar timestamps.
+- Existing tests cover append/read, immutable history, content hash, UTC generation timestamp, and bar source-watermark extraction.
+- Remaining gap is narrower: news/discovery watermarks, exact request windows/dependency manifest, raw provider response references and retention, and outcome linkage. The API does not currently expose a complete raw-response manifest or connect outcomes to each snapshot.
+
+### Schwab exclusions implementation boundary
+- `ExclusionWatchlistStore` persists a local JSON file at API `App_Data/exclusions-watchlist.json`; it supports local Add/Remove and is consulted by Boring Overnight snapshot/evaluate-with-history paths.
+- It is not a Schwab account sync and does not seed the user's canonical exclusion list automatically. Scanner-wide integration and source-list reconciliation remain open.
+- Do not claim the full exclusion list is active merely because the local store endpoint exists.
