@@ -96,6 +96,8 @@
   <p class="notice">On 2026-10-28, 20:00 UTC was 16:00 EDT (regular close); later timestamps are post-market. Sparse IEX bars prove only that the feed returned those observations for that symbol/window. Empty results do not prove no trading or identify entitlement cause.</p>
  </section>
 
+
+ <div class="overnight-results-grid">
  <section class="overnight-result" aria-labelledby="overnightSellLimitTitle">
   <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
   <dl>
@@ -106,7 +108,6 @@
   </dl>
   <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until source-backed historical target-touch data, a fresh reference close, and ATR parity/context are available. A bar high touching a limit is not an actual fill.</p>
  </section>
- <div class="overnight-results-grid">
   <article class="overnight-result"><h3>Requested bar coverage</h3><dl><div><dt>Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div><dt>Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div><dt>First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div><dt>Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div><dt>Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div><dt>Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
   <article class="overnight-result"><h3>What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice">The API's historical Overnight evaluator still requires 20 exact session boundary pairs. Timeframe identity is not stored separately yet, and the dashboard will not infer that missing information or fabricate a READY decision.</p></article>
  </div>
