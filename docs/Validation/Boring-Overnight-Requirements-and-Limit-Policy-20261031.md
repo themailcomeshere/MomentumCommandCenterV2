@@ -60,3 +60,11 @@ The existing +0.5% target remains a user heuristic comparison only. Median close
 - Complete GTC_EXT history, actual fill records, and slippage data are not present in reviewed sources.
 - Exact installed TOS study hash/input parity is not certified in this review.
 - A production catalyst source and its coverage/entitlement are not verified.
+
+
+### Sell-limit calculation engine — 2026-10-31
+
+- Added BoringOvernightSellLimitCalculator. It takes the selected pre-decision historical quantile of per-session maximum favorable price movement during complete eligible sell windows, calculates a candidate limit from the current reference close, and reports historical touch rate plus target distance in ATR units.
+- ATR is context only; no arbitrary ATR multiplier is used. The calculator requires at least 20 complete windows and exact ATR parity status MATCH before returning a numeric candidate. Incomplete windows return DATA?; unverified ATR parity returns NOT VERIFIED.
+- Added unit tests for the nearest-rank quantile, in-sample touch rate, incomplete windows, short history, and ATR parity gate. CI/build has not yet been verified for this commit.
+- This is the calculation engine only. The API does not yet assemble full eligible-window observations from persisted bars, and the dashboard does not yet call this calculator. The dashboard correctly remains DATA? until that integration and its source evidence exist.
