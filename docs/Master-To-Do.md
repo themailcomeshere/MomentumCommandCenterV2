@@ -20,7 +20,8 @@
 
 ### Strategy policy decision
 - [x] Preserve the existing Boring Overnight thresholds for now. Do not retune from one incomplete 18/20 RTO sample. The 20-pair sample is a minimum operational window, not statistical proof; validate on a larger point-in-time, corporate-action-aware, walk-forward dataset with costs and outliers before changing thresholds.
-- [x] Recorded the installed 5M Command Center V4.1.7 source, 5M Authority Diagnostic V2 source, and 1M Command Center V14.4.10 source in `docs/Validation/Installed-5M-Study.txt`, `Installed-5M-Authority-Diagnostic.txt`, and `Installed-1M-Study.txt`. Their repository blob SHAs are recorded in the handoff. Do not reopen study identification/source collection.\n- [ ] Retain only matched-bar output parity replay between the documented installed studies and MCC; this is distinct from identifying which studies are installed.
+- [x] Recorded the installed 5M Command Center V4.1.7 source, 5M Authority Diagnostic V2 source, and 1M Command Center V14.4.10 source in `docs/Validation/Installed-5M-Study.txt`, `Installed-5M-Authority-Diagnostic.txt`, and `Installed-1M-Study.txt`. Their repository blob SHAs are recorded in the handoff. Do not reopen study identification/source collection.
+- [ ] Retain only matched-bar output parity replay between the documented installed studies and MCC; this is distinct from identifying which studies are installed.
 
 ### Monday 2026-11-02 user runtime acceptance
 - [x] Added a specific 07:30 Arizona / 09:30 Eastern WebSocket acceptance procedure and PowerShell command to `docs/Runtime-Acceptance-Runbook.md`.
@@ -43,10 +44,11 @@
 - [x] Pull the branch, hard-refresh dashboard, click the new capture action for RTO, and save the JSON/runtime result; exact-boundary audit evidence is recorded above.
 - [x] Compare generated session dates and UTC boundaries against the official NYSE calendar for the RTO 2026-10-02–2026-10-30 sample.
 - [ ] Complete full exceptional holiday/early-close calendar certification across supported years before relying on automatic qualification.
-- [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
+- [ ] Compare the two RTO IEX missing opens against an independently entitled SIP or validated alternative provider; do not mix feeds in one return series.\n- [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
 - [ ] Keep full 07:00–20:00 ET GTC_EXT window collection/target-touch study separate; the new button does not calculate target reach, fill probability, or Calculated Limit Sell.
 - [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
-- [x] Record the installed Thinkorswim study sources and diagnostic files; see the three `docs/Validation/Installed-*` files.\n- [ ] Complete matched-bar output parity replay only; reuse the source inventory until a study or input changes.
+- [x] Record the installed Thinkorswim study sources and diagnostic files; see the three `docs/Validation/Installed-*` files.
+- [ ] Complete matched-bar output parity replay only; reuse the source inventory until a study or input changes.
 
 ### P0 — current runtime/release acceptance
 - [x] GitHub Actions run 864 verified source commit `a0bf119c68f688a017e179e28a0bf145727f734f`: Release build 0 warnings/0 errors; 165/165 tests passed. Documentation updates after that source commit require the normal docs-head workflow.
@@ -81,7 +83,7 @@
 - [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
 - [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
 
-**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 28 individual unchecked work items across the five priority groups (6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 29 individual unchecked work items across the five priority groups (6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
 
 
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
