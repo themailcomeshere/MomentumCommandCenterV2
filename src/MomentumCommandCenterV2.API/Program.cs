@@ -634,8 +634,17 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             return Results.Problem("Provider returned multiple feeds in one capture. The capture was persisted but no mixed-feed calculation was performed.", statusCode: 422);
         var actualFeed = distinctFeeds.Length == 0 || string.IsNullOrWhiteSpace(distinctFeeds[0]) ? null : distinctFeeds[0];
 
-        var observations = await barStore.GetLatestAsync(
-            request.Symbol, provider.ProviderName, fromUtc, toUtc, 10000, ct, "1m");
+        // Query each close-to-open pair separately so the store's 10,000-row safety limit
+        // cannot truncate the oldest boundaries when extended-hours bars are dense.
+        var observations = new List<MarketBarObservation>();
+        foreach (var boundary in boundaries)
+        {
+            var pairObservations = await barStore.GetLatestAsync(
+                request.Symbol, provider.ProviderName,
+                boundary.PreviousCloseBarTimestampUtc, boundary.NextOpenBarTimestampUtc,
+                10000, ct, "1m");
+            observations.AddRange(pairObservations);
+        }
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
 
