@@ -10,7 +10,7 @@
 - Compare `/` (production) with `/prototypeIndex.html` (prototype). Future UI changes go to prototype only; promotion requires explicit user approval.
 - The calendar ruleset is now `MCC_US_EQUITIES_CALENDAR_V2`. It corrects the false 2027-12-31 New Year's closure and includes published NYSE 2026–2028 holiday/early-close regression fixtures.
 - Exact latest-head CI status is unavailable: GitHub reports no status checks or workflow runs for the latest documentation commit. The .NET SDK is not available in this execution environment, so do not claim this exact head has passed build/tests.
-- The canonical Master To-Do has 29 unchecked operational items: 6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3.
+- The canonical Master To-Do has 27 unchecked operational items: 6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3.
 
 ## Production/prototype promotion contract
 - Production remains `frontend/index.html`; prototype is `frontend/prototypeIndex.html`.
@@ -1554,4 +1554,4 @@ The published NYSE 2026–2028 holiday closures and early closes are now represe
 
 ## Canonical checklist count correction
 
-The active checklist now has 28 unchecked operational items: 5 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3. The two RTO-specific open items are alternate-feed comparison and confirmation of provider entitlement/coverage.
+The active checklist now has 27 unchecked operational items: 5 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3. The two RTO-specific open items are alternate-feed comparison and confirmation of provider entitlement/coverage.
