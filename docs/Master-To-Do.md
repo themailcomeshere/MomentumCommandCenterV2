@@ -61,13 +61,13 @@
 
 ### P1 — strategy/data correctness
 - [ ] Matched Thinkorswim state replay: same symbol/date/bars/study version and explicit 1M/5M state diagnostics; OHLCV-only exports cannot prove Permission/READY/RUNNER/WANING/SWING/GET OUT, expiry, re-arm or re-entry.
-- [ ] Complete Morning Brief input manifest/version lineage: raw provider response references/retention, news/discovery watermarks, full dependency manifest and outcome linkage.
+- [ ] Extend existing `MorningBriefSnapshotStore` lineage: it already appends immutable report-version + SHA-256 snapshots and extracts market-bar source watermarks. Add news/discovery watermarks, per-source request windows/raw-response references and retention, a full dependency manifest, and outcome linkage.
 - [ ] Build complete GTC_EXT 07:00–20:00 ET historical coverage and classify missing intervals; calculate target touch, time-to-touch and adverse excursion separately from close/open returns.
 - [ ] Empirically select sell-target quantile using pre-decision history and walk-forward validation; no arbitrary ATR multiplier and no promotion of +0.5% heuristic as validated target.
 - [ ] Integrate Calculated Limit Sell with fresh reference close, selected target quantile, ATR context/parity, target-touch evidence and coverage status; actual fill claims require broker fill records.
 - [ ] Connect validated catalyst/news/event source with source health, coverage horizon, timestamps and event classification. Empty/unavailable feed remains UNKNOWN.
 - [ ] Validate daily history for price, SMA20 and 20D average daily volume; validate 20 valid close/open pairs, sample count, gaps, exact feed and corporate-action handling.
-- [ ] Reconcile the complete Schwab exclusion list and keep MCC exclusion state in sync by a supported, auditable process.
+- [ ] Seed/reconcile the complete Schwab exclusion list into MCC's local `App_Data/exclusions-watchlist.json` and integrate it consistently across scanner and qualification paths. Current `ExclusionWatchlistStore` is local-only Add/Remove storage with no initial source-list seed or Schwab account sync.
 - [ ] Complete Boring Overnight scanner-universe provenance and immutable candidate decision snapshots; never infer READY from preview rankings or caller assertions.
 
 ### P2 — providers, integrations and product delivery
