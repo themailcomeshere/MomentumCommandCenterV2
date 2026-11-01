@@ -1,3 +1,15 @@
+# Handoff update — 20-session capture build validation — 2026-10-31
+
+- Source implementation commit: `a0bf119c68f688a017e179e28a0bf145727f734f`.
+- GitHub Actions run **864** passed: .NET Release build succeeded with 0 warnings/0 errors; **165/165 tests passed**.
+- This validates compilation and unit tests for the new capture endpoint, calendar rules, and UI code. It does not validate live Alpaca entitlement/coverage, official exchange-calendar parity, or browser operation in the user's local MCC.
+- Dashboard action: **Refresh/Capture 20-session close/open calculation**. API: `POST /api/boring-overnight/capture-history`.
+- Current source limitation: calendar is MCC-maintained `MCC_US_EQUITIES_CALENDAR_V1`, not a live exchange calendar. Check generated boundaries against official NYSE calendar for the actual capture window.
+- Exact session boundary bars are queried pair-by-pair from the persisted store to avoid the store's 10,000-row result cap truncating dense extended-hours history. Feed provenance is inferred from refreshed provider bars or a single unambiguous stored feed; mixed-feed data is rejected.
+- Next user acceptance: pull branch, hard-refresh, enter candidate symbol, click capture, then review the 20 pair rows, exact UTC timestamps, provider/feed and missing pairs. Missing boundary bars mean rolling metrics stay DATA?.
+- This does not collect the GTC_EXT 07:00–20:00 ET sell window, compute Calculated Limit Sell, clear catalysts, or qualify READY.
+
+
 
 
 # Current handoff update — one-click 20-session Overnight history — 2026-10-31
