@@ -347,3 +347,6 @@ The Overnight panel now has an explicit Calculated Limit Sell display. It delibe
 The 2026-10-02 through 2026-10-30 RTO sample was checked against the official NYSE holiday and trading-hours schedule. No holiday or early close occurs within that window, so the normal 09:30–16:00 ET session boundaries apply. The official NYSE schedule also states that no New Year's Day holiday is observed in 2028 when January 1 falls on Saturday. MCC calendar V2 corrects its former erroneous prior-Friday closure for 2027-12-31 and adds regression coverage for July 3, 2026 (observed Independence Day closure) and July 3, 2028 (1:00 PM early close).
 
 Official source: https://www.nyse.com/trade/hours-calendars.
+
+
+The calendar test suite now enumerates NYSE's published 2026–2028 holiday closures and early-close dates, not only the special cases around Thanksgiving and Christmas. Annual horizon refresh remains required.
