@@ -1504,7 +1504,7 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 - Compare those dates against independently entitled SIP or another validated provider. 60/120-pair windows are research extensions, not a workaround for missing required boundaries.
 
 ### Verification boundary
-- Prototype HTML has unique IDs and every static opening element has an ID. Browser rendering, visual acceptance, API interaction and CI on the new branch head remain to be run after pull.
+- Prototype HTML has unique IDs and every static opening element has an ID. The markup has unique IDs; the workspace toggle is synchronized with Reset. Browser rendering, visual acceptance, API interaction and CI on the new branch head remain to be run after pull.
 
 
 ## 2026-11-01 — Official NYSE calendar reconciliation
