@@ -645,6 +645,15 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 10000, ct, "1m");
             observations.AddRange(pairObservations);
         }
+        // If the provider returned no bars on this refresh, retain feed provenance only when
+        // the persisted boundary observations identify exactly one unambiguous feed.
+        var storedFeeds = observations.Select(x => x.Bar.Feed ?? string.Empty)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (actualFeed is null && storedFeeds.Length > 1)
+            return Results.Problem("No provider bars were returned and persisted boundary observations span multiple feeds. Select/refresh a single feed; no mixed-feed calculation was performed.", statusCode: 422);
+        if (actualFeed is null && storedFeeds.Length == 1 && !string.IsNullOrWhiteSpace(storedFeeds[0]))
+            actualFeed = storedFeeds[0];
+
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
 
