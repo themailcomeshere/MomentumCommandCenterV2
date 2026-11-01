@@ -1,3 +1,16 @@
+
+
+# Current handoff update — one-click 20-session Overnight history — 2026-10-31
+
+- Added `UsEquitiesSessionCalendar` with `MCC_US_EQUITIES_CALENDAR_V1`, using America/New_York for DST and explicit US-equities holiday/common early-close rules.
+- Added `POST /api/boring-overnight/capture-history`: fetches 1m bars through configured provider, chunks provider requests, persists raw bars, reads back stored observations, and calculates 20 exact prior-RTH-close to next-RTH-open pairs.
+- Dashboard now has **Refresh/Capture 20-session close/open calculation** for the current Overnight Stock Candidate. It displays 20-pair/valid count, win rate, mean/median, 5-pair mean, missing pairs, feed, fetched/stored counts, calendar version and pair timestamps.
+- Calendar tests added: 20 pairs, weekends, DST transition, Thanksgiving, Good Friday and Christmas Eve. Tests/Release build not yet run on exact branch head.
+- Calendar rules are MCC-maintained, not live exchange calendar. Verify captured dates against official NYSE calendar before treating automatic boundary generation as production-certified.
+- This is only regular close/open history. It does not collect the separate 07:00–20:00 ET GTC_EXT sell window, calculate a sell target, clear catalysts, or qualify READY.
+- Canonical current task list is at the top of `docs/Master-To-Do.md`; historical dated sections remain below for evidence.
+
+
 # New Chat Handoff — Monday readiness / independent 5M score — 2026-10-31
 
 ## Current operating disposition
