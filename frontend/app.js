@@ -984,6 +984,53 @@ async function refreshOvernightSnapshots() {
   status.textContent = "Could not load saved evaluations: "+error.message;
  }
 }
+/// MODULE: One-click 20-session Overnight close/open capture
+/// PURPOSE: Ask the API to retrieve and persist provider 1m bars, generate session boundaries, and calculate 20 close/open pairs.
+$("overnightCapture20")?.addEventListener("click", async () => {
+ const button=$("overnightCapture20"), status=$("overnightHistoryStatus");
+ const symbol=$("overnightSymbol").value.trim().toUpperCase();
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid Overnight candidate symbol first.";return;}
+ const fields=["overnightHistoryPairs","overnightHistoryWinRate","overnightHistoryMean20","overnightHistoryMedian20","overnightHistoryMean5","overnightHistoryMissing","overnightHistoryProvider","overnightHistoryBars","overnightHistoryCalendar","overnightHistoryAsOf"];
+ for(const id of fields){const el=$(id);if(el)el.textContent="REQUEST IN PROGRESS";}
+ const rows=$("overnightHistoryRows"); rows.replaceChildren();
+ button.disabled=true; status.textContent="Fetching Alpaca 1-minute bars and calculating the latest 20 regular-session close/open pairs for "+symbol+"…";
+ try{
+  const data=await overnightFetchJson("/api/boring-overnight/capture-history",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",requiredWindow:20})});
+  const h=data.history||{};
+  const pct=v=>v===null||v===undefined?"DATA?":Number(v).toFixed(3)+"%";
+  $("overnightHistoryPairs").textContent=(h.validPairCount??0)+" / "+(h.requiredWindow??20);
+  $("overnightHistoryWinRate").textContent=pct(h.winRatePct20D);
+  $("overnightHistoryMean20").textContent=pct(h.averageReturnPct20D);
+  $("overnightHistoryMedian20").textContent=pct(h.medianReturnPct);
+  $("overnightHistoryMean5").textContent=pct(h.averageReturnPct5D);
+  $("overnightHistoryMissing").textContent=String(h.missingPairCount??"DATA?");
+  $("overnightHistoryProvider").textContent=(data.provider||"DATA?")+" / "+(data.feed||"FEED UNKNOWN");
+  $("overnightHistoryBars").textContent=(data.fetchedBarCount??0)+" fetched / "+(data.newlyPersistedObservationCount??0)+" newly stored";
+  $("overnightHistoryCalendar").textContent=data.calendarVersion||"NOT REPORTED";
+  $("overnightHistoryAsOf").textContent=h.calculatedAtUtc||data.retrievedAtUtc||"DATA?";
+  const returns=Array.isArray(h.returns)?h.returns:[];
+  for(const item of returns){
+   const tr=document.createElement("tr");
+   const values=[item.nextSessionDate,item.previousClose,item.nextOpen,pct(item.returnPct),item.previousCloseBarTimestampUtc+" → "+item.nextOpenBarTimestampUtc];
+   for(const value of values){const td=document.createElement("td");td.textContent=String(value??"DATA?");tr.append(td);}
+   rows.append(tr);
+  }
+  const missing=Array.isArray(h.missing)?h.missing:[];
+  for(const item of missing){
+   const tr=document.createElement("tr");
+   const values=[item.nextSessionDate,"MISSING",item.reasonCode,"DATA?","Expected "+item.missingTimestampUtc];
+   for(const value of values){const td=document.createElement("td");td.textContent=String(value??"DATA?");tr.append(td);}
+   rows.append(tr);
+  }
+  if(!rows.children.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=5;td.textContent="No close/open pairs were returned.";tr.append(td);rows.append(tr);}
+  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR CAPTURE COMPLETE. ":"HISTORY INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Calendar: "+(data.calendarVersion||"unknown")+".";
+ }catch(error){
+  for(const id of fields){const el=$(id);if(el)el.textContent="DATA?";}
+  const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent="Capture failed: "+error.message;tr.append(td);rows.append(tr);
+  status.textContent="20-session capture failed. No calculated metrics are displayed. "+error.message;
+ }finally{button.disabled=false;}
+});
+
 $("overnightBarsForm")?.addEventListener("submit", async event => {
  event.preventDefault();
  const button = $("overnightFetch"), status = $("overnightStatus");
