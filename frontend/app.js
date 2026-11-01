@@ -2,6 +2,47 @@
 /// PURPOSE: Renders the focused symbol from the live assessment API; no synthetic snapshots are used.
 const $=id=>document.getElementById(id);
 const feedbackKey="mcc.dashboardFeedback.v1";
+
+/// MODULE: Exchange session countdown
+/// PURPOSE: Render the API's calendar-backed next session transition in the header.
+/// SAFETY: If the API/calendar is unavailable, show DATA? rather than a guessed countdown.
+let marketSessionTargetUtc = null;
+let marketSessionRefreshInFlight = false;
+async function refreshMarketSessionClock(){
+ if(marketSessionRefreshInFlight)return;
+ marketSessionRefreshInFlight=true;
+ try{
+  const response=await fetch("/api/market-session/clock",{cache:"no-store",headers:{Accept:"application/json"}});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
+  const target=new Date(data.targetUtc);
+  if(Number.isNaN(target.getTime()))throw new Error("Invalid market-session target timestamp.");
+  marketSessionTargetUtc=target.getTime();
+  const label=$("marketSessionLabel"),detail=$("marketSessionDetail");
+  if(label)label.textContent=data.label||"Until Market opens";
+  if(detail)detail.textContent=(data.exchangeTimeZone||"America/New_York")+" · "+(data.targetEvent||"NEXT SESSION TRANSITION")+" · "+(data.calendarVersion||"CALENDAR UNKNOWN");
+  renderMarketSessionCountdown();
+ }catch(error){
+  marketSessionTargetUtc=null;
+  if($("marketSessionLabel"))$("marketSessionLabel").textContent="Market session clock";
+  if($("marketSessionCountdown"))$("marketSessionCountdown").textContent="DATA?";
+  if($("marketSessionDetail"))$("marketSessionDetail").textContent="Unavailable · "+error.message;
+ }finally{marketSessionRefreshInFlight=false;}
+}
+function renderMarketSessionCountdown(){
+ const node=$("marketSessionCountdown");
+ if(!node||marketSessionTargetUtc===null)return;
+ const remaining=Math.max(0,Math.ceil((marketSessionTargetUtc-Date.now())/1000));
+ const days=Math.floor(remaining/86400),hours=Math.floor((remaining%86400)/3600),minutes=Math.floor((remaining%3600)/60),seconds=remaining%60;
+ const pad=value=>String(value).padStart(2,"0");
+ node.textContent=(days?days+"d ":"")+pad(hours)+"h "+pad(minutes)+"m "+pad(seconds)+"s";
+ if(remaining===0)void refreshMarketSessionClock();
+}
+void refreshMarketSessionClock();
+window.setInterval(renderMarketSessionCountdown,1000);
+window.setInterval(()=>{if(document.visibilityState==="visible")void refreshMarketSessionClock();},60000);
+
+
 /// PURPOSE: Track dynamic WebSocket subscription requests before any startup refresh can run.
 const requestedMinuteBarSymbols=new Set();
 function render(){
@@ -1023,7 +1064,20 @@ $("overnightCapture20")?.addEventListener("click", async () => {
    rows.append(tr);
   }
   if(!rows.children.length){const tr=document.createElement("tr");const td=document.createElement("td");td.colSpan=5;td.textContent="No close/open pairs were returned.";tr.append(td);rows.append(tr);}
-  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR CAPTURE COMPLETE. ":"HISTORY INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Calendar: "+(data.calendarVersion||"unknown")+".";
+  const auditRows=$("overnightBoundaryCoverageRows");if(auditRows){
+   auditRows.replaceChildren();
+   const audit=Array.isArray(data.boundaryCoverageAudit)?data.boundaryCoverageAudit:[];
+   for(const item of audit){
+    const tr=document.createElement("tr");
+    const values=[item.expectedTimestampUtc?.slice(0,10)||"DATA?",item.boundaryType||"UNKNOWN",item.expectedTimestampUtc||"DATA?",item.providerReturnedExactBar===true?"YES":item.providerReturnedExactBar===false?"NO":"DATA?",item.storeHasExactBar===true?"YES":item.storeHasExactBar===false?"NO":"DATA?",item.nearestProviderBarTimestampUtc?(item.nearestProviderBarTimestampUtc+" ("+(item.nearestProviderBarOffsetMinutes??"UNKNOWN")+" min)"):"NO NEARBY PROVIDER BAR",item.status||"UNKNOWN"];
+    for(const value of values){const td=document.createElement("td");td.textContent=String(value);tr.append(td);}auditRows.append(tr);
+   }
+   if(!audit.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=7;td.textContent="Data not found in sources: API response did not include boundaryCoverageAudit.";tr.append(td);auditRows.append(tr);}
+  }
+  const audit=Array.isArray(data.boundaryCoverageAudit)?data.boundaryCoverageAudit:[];
+  const providerExact=audit.filter(x=>x.providerReturnedExactBar===true).length;
+  const storeExact=audit.filter(x=>x.storeHasExactBar===true).length;
+  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR CAPTURE COMPLETE. ":"HISTORY INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Exact boundary audit: provider "+providerExact+"/"+audit.length+", store "+storeExact+"/"+audit.length+". Calendar: "+(data.calendarVersion||"unknown")+".";
  }catch(error){
   for(const id of fields){const el=$(id);if(el)el.textContent="DATA?";}
   const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent="Capture failed: "+error.message;tr.append(td);rows.append(tr);
