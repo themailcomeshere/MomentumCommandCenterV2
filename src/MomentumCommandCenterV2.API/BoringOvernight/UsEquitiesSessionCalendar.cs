@@ -64,8 +64,11 @@ public static class UsEquitiesSessionCalendar
     {
         var year = date.Year;
         var newYears = new DateOnly(year, 1, 1);
-        // NYSE observes New Year's Day on Monday when January 1 is Sunday.
+        // New Year's Day is observed Monday when January 1 is Sunday, and Friday
+        // of the prior year when January 1 is Saturday.
         if (date == newYears || (newYears.DayOfWeek == DayOfWeek.Sunday && date == newYears.AddDays(1))) return true;
+        var nextNewYears = new DateOnly(year + 1, 1, 1);
+        if (date == ObservedFixedHoliday(nextNewYears)) return true;
         if (date == NthWeekday(year, 1, DayOfWeek.Monday, 3)) return true; // MLK
         if (date == NthWeekday(year, 2, DayOfWeek.Monday, 3)) return true; // Presidents
         if (date == EasterSunday(year).AddDays(-2)) return true; // Good Friday
