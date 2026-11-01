@@ -1,12 +1,12 @@
 # Handoff update — 2026-11-01 dashboard and data-quality pass
 
 ## Source-control state
-- Latest source implementation commit at this checkpoint: `8259d3d94262aae3d96db456d61ca87f67ea768c` (header clock, all static IDs, exact boundary audit, New Year's observed-holiday fix and tests). Documentation updates follow this code commit; exact-head CI for the final docs head is still required.
+- Latest source implementation commit at this checkpoint: `36c81c8451e0a9befe810e7cd2ee4af8cdd21ccb` (header clock, all static IDs, exact boundary audit, New Year's observed-holiday fix and tests). Documentation updates follow this code commit; exact-head CI for the final docs head is still required.
 - Repository: `themailcomeshere/MomentumCommandCenterV2`
 - Branch: `feature/opportunity-quality-classification`
 - Source changes in this pass: exchange-aware market session clock endpoint, header countdown, workspace toolbar relocation, stable IDs on all static dashboard markup, and exact 40-boundary provider-vs-store diagnostics on the 20-session capture response.
 - Added tests for regular-session close, after-hours end, pre-market open, weekend, Thanksgiving, November 2026 DST behavior, and New Year's Eve 2027 observed closure.
-- Verified the static dashboard markup has 623 opening elements, 623 unique IDs, zero missing IDs, and zero duplicates.
+- Verified the static dashboard markup has 628 opening elements, 628 unique IDs, zero missing IDs, and zero duplicates.
 - Exact-head CI is pending until GitHub Actions completes for the final documentation commit. Do not assume a green build from a prior SHA applies to this head.
 
 ## RTO capture diagnosis
