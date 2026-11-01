@@ -584,6 +584,80 @@ app.MapGet("/api/boring-overnight/snapshots", async (
 .WithSummary("Read recent persisted Boring Overnight candidate snapshots")
 .WithDescription("Optional query parameters: symbol and limit (1–500). Returned asOfUtc, RecordedAtUtc, and field source timestamps are UTC. A count of zero means no records were found at the store path used by this running API instance. Returns persisted snapshots ordered by as-of time, newest first.");
 
+app.MapPost("/api/boring-overnight/capture-history", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureHistoryRequest request,
+    IEnumerable<IMarketDataProvider> providers,
+    IMarketBarObservationStore barStore,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(request.Symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (request.RequiredWindow != 20)
+        return Results.BadRequest(new { error = "This capture action is defined for exactly 20 Overnight pairs." });
+
+    var provider = providers.FirstOrDefault(p =>
+        string.Equals(p.ProviderName, request.ProviderName, StringComparison.OrdinalIgnoreCase));
+    if (provider is null)
+        return Results.BadRequest(new { error = "Unknown provider. Use Alpaca or Massive." });
+    if (!provider.IsConfigured)
+        return Results.Problem($"Provider {provider.ProviderName} is not configured.", statusCode: 503);
+
+    try
+    {
+        var eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+        var nowEastern = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, eastern);
+        var lastIncludedDate = DateOnly.FromDateTime(nowEastern.DateTime);
+        // The 09:30 bar is not complete until 09:31 ET. Before then, end on the prior session.
+        if (nowEastern.TimeOfDay < new TimeSpan(9, 31, 0))
+            lastIncludedDate = lastIncludedDate.AddDays(-1);
+
+        var boundaries = MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar
+            .BuildRecentBoundaries(lastIncludedDate, request.RequiredWindow);
+        var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
+        var toUtc = boundaries[^1].NextOpenBarTimestampUtc.AddMinutes(1);
+        if (toUtc - fromUtc > TimeSpan.FromDays(31))
+            return Results.Problem("The 20-session calendar window exceeds the provider's 31-day request limit. No partial calculation was returned.", statusCode: 422);
+
+        var fetchedBars = (await provider.GetBarsAsync(
+            request.Symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), fromUtc, toUtc, ct))
+            .OrderBy(x => x.Timestamp).ToArray();
+        var persistedCount = await barStore.AppendAsync(fetchedBars, ct);
+        var actualFeed = fetchedBars.Select(x => x.Feed).Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase).SingleOrDefault();
+        if (fetchedBars.Select(x => x.Feed ?? string.Empty).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+            return Results.Problem("Provider returned multiple feeds in one capture. The capture was persisted but no mixed-feed calculation was performed.", statusCode: 422);
+
+        var observations = await barStore.GetLatestAsync(
+            request.Symbol, provider.ProviderName, fromUtc, toUtc, 10000, ct, "1m");
+        var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
+            request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
+
+        return Results.Ok(new
+        {
+            symbol = request.Symbol.Trim().ToUpperInvariant(),
+            provider = provider.ProviderName,
+            feed = actualFeed,
+            timeframe = "1m",
+            calendarVersion = MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar.Version,
+            requestedFromUtc = fromUtc,
+            requestedToUtc = toUtc,
+            retrievedAtUtc = DateTimeOffset.UtcNow,
+            fetchedBarCount = fetchedBars.Length,
+            newlyPersistedObservationCount = persistedCount,
+            history,
+            note = "Fetched and persisted 1m provider bars, then calculated 20 previous-RTH-close to next-RTH-open pairs using the versioned MCC US-equities calendar. Missing boundary bars suppress all rolling metrics. Verify calendar rules and provider feed coverage; this is not the separate 07:00–20:00 ET GTC_EXT sell-window study and does not qualify a candidate or submit orders."
+        });
+    }
+    catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException or TimeZoneNotFoundException)
+    { return Results.Problem($"{ex.GetType().Name}: {ex.Message}", statusCode: 502); }
+})
+.WithName("CaptureBoringOvernightTwentySessionHistory")
+.WithSummary("Fetch, persist, and calculate the latest 20 regular close/open Overnight pairs")
+.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 session boundaries using the MCC_US_EQUITIES_CALENDAR_V1 ruleset, fetches the required history, persists raw observations, and returns win rate, mean, median, 5-pair mean, 20-pair mean, and any missing boundary pairs. The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
+.ProducesProblem(422)
+.ProducesProblem(503);
+
 app.MapPost("/api/boring-overnight/history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryRequest request,
     IMarketBarObservationStore store,
