@@ -922,6 +922,15 @@ function overnightArizonaTimestamp(value) {
   hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:false
  }).format(date) + " Arizona";
 }
+function resetOvernightSellLimit(reason) {
+ const price=$("overnightSellLimitPrice"), close=$("overnightSellLimitClose"), method=$("overnightSellLimitMethod"), validation=$("overnightSellLimitValidation"), note=$("overnightSellLimitReason");
+ if(price)price.textContent="DATA? — NOT CALCULATED";
+ if(close)close.textContent="DATA?";
+ if(method)method.textContent="Historical eligible-window target distribution + ATR context";
+ if(validation)validation.textContent="NOT VERIFIED";
+ if(note)note.textContent=reason||"No numeric sell limit is issued until source-backed historical target-touch data, a fresh reference close, and ATR parity/context are available. A bar high touching a limit is not an actual fill.";
+}
+resetOvernightSellLimit();
 function initializeOvernightWindow() {
  const from = $("overnightFrom"), to = $("overnightTo");
  if (!from || !to || (from.value && to.value)) return;
@@ -987,6 +996,7 @@ $("overnightBarsForm")?.addEventListener("submit", async event => {
   status.textContent="Require From before To and a maximum 31-day window."; return;
  }
  button.disabled=true;
+ resetOvernightSellLimit("Current request is descriptive OHLCV only. The API has not returned a validated target distribution or an approved sell-limit calculation.");
  // Clear the previous response before starting a new request so failed requests cannot leave stale bars visible.
  $("overnightProvider").textContent="REQUEST IN PROGRESS";
  $("overnightCount").textContent="—";
