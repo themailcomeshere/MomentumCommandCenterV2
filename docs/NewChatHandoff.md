@@ -1,14 +1,39 @@
-# Handoff update — 2026-11-01 dashboard and data-quality pass
+# Handoff update — 2026-11-01 prototype UI, RTO diagnosis, and calendar correction
 
 ## Source-control state
-- Latest documentation-only checkpoint before this handoff refresh: `3ede06d64b0acdb8f106960e20a0ba715d99ae3c`; the consolidated Master To-Do has 29 unchecked operational items (6 Boring Overnight, 6 P0, 9 P1, 4 P2, 4 P3).
-- Latest source implementation commit at this checkpoint: `36c81c8451e0a9befe810e7cd2ee4af8cdd21ccb` (header clock, all static IDs, exact boundary audit, New Year's observed-holiday fix and tests). Documentation updates follow this code commit; exact-head CI for the final docs head is still required.
 - Repository: `themailcomeshere/MomentumCommandCenterV2`
 - Branch: `feature/opportunity-quality-classification`
-- Source changes in this pass: exchange-aware market session clock endpoint, header countdown, workspace toolbar relocation, stable IDs on all static dashboard markup, and exact 40-boundary provider-vs-store diagnostics on the 20-session capture response.
-- Added tests for regular-session close, after-hours end, pre-market open, weekend, Thanksgiving, November 2026 DST behavior, and New Year's Eve 2027 observed closure.
-- Verified the static dashboard markup has 628 opening elements, 628 unique IDs, zero missing IDs, and zero duplicates.
-- Exact-head CI is pending until GitHub Actions completes for the final documentation commit. Do not assume a green build from a prior SHA applies to this head.
+- Current handoff includes a separate `frontend/prototypeIndex.html`; production `frontend/index.html` remains unchanged.
+- UI work in this pass: removed the prototype's RESEARCH WORKBENCH eyebrow; moved the market-session clock above System Readiness at the top-right; moved the transport/demo indicator into System Readiness; added a fixed left dock with horizontal symbol input and vertical Intraday/Boring Overnight toggle; synchronized the toggle with Reset.
+- Shared `frontend/app.js` now supports focusing the symbol from a Red Zone tile whether the production control is a SELECT or the prototype control is an INPUT.
+- Prototype markup audit: 632 opening elements, all with IDs; no duplicate IDs. Production markup and shared stylesheet were not modified.
+- Compare `/` (production) with `/prototypeIndex.html` (prototype). Future UI changes go to prototype only; promotion requires explicit user approval.
+- The calendar ruleset is now `MCC_US_EQUITIES_CALENDAR_V2`. It corrects the false 2027-12-31 New Year's closure and includes published NYSE 2026–2028 holiday/early-close regression fixtures.
+- Exact latest-head CI status is unavailable: GitHub reports no status checks or workflow runs for the latest documentation commit. The .NET SDK is not available in this execution environment, so do not claim this exact head has passed build/tests.
+- The canonical Master To-Do has 29 unchecked operational items: 6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3.
+
+## Production/prototype promotion contract
+- Production remains `frontend/index.html`; prototype is `frontend/prototypeIndex.html`.
+- Prototype-only inline CSS controls the experimental layout. The prototype uses the same API/backend as production.
+- User approval phrase such as "Make it official" is required before moving approved UI changes into production.
+- See `docs/Prototype-Workflow.md`.
+
+## Scanner workflow clarification
+- Refresh Alpaca market movers loads persisted Alpaca SIP-based discovery events. It is not a complete-market scan.
+- Selecting the live discovery group renders candidates into the scanner and Red Zone preview (up to four).
+- `Watch` adds to browser-local `mcc.watchlist`; it does not pin to Red Zone.
+- Pinning to Red Zone is a separate action using Add a symbol / Pin to Red Zone.
+- A Watchlist entry or Red Zone rank does not create 5M Permission, 1M execution confirmation, or entry authorization.
+
+## Symbol control
+- Production `#symbol` starts at SPY from the selected HTML option. Red Zone card focus changes it to the selected ticker. Reset changes workspace mode only; it does not clear the symbol.
+- Prototype `#symbol` is a text input initialized to SPY and supports manual editing.
+
+## Installed Thinkorswim source inventory
+- 5M Command Center V4.1.7: `docs/Validation/Installed-5M-Study.txt`, blob SHA `29e2ccf9c2896f9d4999bae9bcaff72503b19a00`.
+- 5M Authority Diagnostic V2: `docs/Validation/Installed-5M-Authority-Diagnostic.txt`, blob SHA `f2c57603b332b94283a297d647cf3fc2021fcb00`.
+- 1M Command Center V14.4.10: `docs/Validation/Installed-1M-Study.txt`, blob SHA `2553bcb4c4d5352316cbec3a884f7b8c2eafb65f`.
+- Study identity/source inventory is complete. Only a matched-bar output parity replay remains if not already documented elsewhere.
 
 ## RTO capture diagnosis
 User supplied RTO/Alpaca/IEX response:
