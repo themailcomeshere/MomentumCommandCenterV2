@@ -133,3 +133,18 @@ GitHub Actions run **792** passed for the Morning Brief snapshot and source-wate
 - User guide: [docs/User-Manual.md](docs/User-Manual.md)
 
 GitHub source is authoritative for code and committed documentation. A checked-off implementation task requires source evidence; CI, browser acceptance, provider runtime validation, and external approvals must be tracked separately.
+
+
+## Scanner, Red Zone, and Watchlist workflow
+
+1. **Refresh Alpaca market movers** loads persisted Alpaca SIP-based discovery events from the API. It does not itself run a full-market scan; discovery rows are candidates, not qualified opportunities.
+2. With the live discovery group selected, the returned rows populate the scanner and the Red Zone preview (up to four).
+3. **Watch** adds a ticker to the separate browser-local Watchlist. It does not pin the ticker to Red Zone.
+4. To keep a symbol in Red Zone, use **Add a symbol → Pin to Red Zone**. Clicking a Red Zone tile focuses the Main Chart.
+5. Main Chart / Decision Explanation then refresh for the focused symbol. 5M Permission and 1M execution remain separate gates; neither Watch nor Red Zone ranking authorizes an entry.
+
+## Production and prototype dashboard pages
+
+- Production: `/` serves `frontend/index.html`.
+- Prototype: `/prototypeIndex.html` serves `frontend/prototypeIndex.html`.
+- Apply UI experiments to `prototypeIndex.html` only. Promote a design to `index.html` only after explicit user approval.
