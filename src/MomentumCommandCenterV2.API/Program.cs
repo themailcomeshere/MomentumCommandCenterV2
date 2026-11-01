@@ -615,17 +615,24 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             .BuildRecentBoundaries(lastIncludedDate, request.RequiredWindow);
         var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
         var toUtc = boundaries[^1].NextOpenBarTimestampUtc.AddMinutes(1);
-        if (toUtc - fromUtc > TimeSpan.FromDays(31))
-            return Results.Problem("The 20-session calendar window exceeds the provider's 31-day request limit. No partial calculation was returned.", statusCode: 422);
-
-        var fetchedBars = (await provider.GetBarsAsync(
-            request.Symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), fromUtc, toUtc, ct))
+        var fetched = new List<MarketBar>();
+        var cursor = fromUtc;
+        while (cursor < toUtc)
+        {
+            var chunkEnd = cursor.AddDays(30) < toUtc ? cursor.AddDays(30) : toUtc;
+            var chunk = await provider.GetBarsAsync(
+                request.Symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, ct);
+            fetched.AddRange(chunk);
+            cursor = chunkEnd;
+        }
+        var fetchedBars = fetched.GroupBy(x => x.Timestamp).Select(g => g.First())
             .OrderBy(x => x.Timestamp).ToArray();
         var persistedCount = await barStore.AppendAsync(fetchedBars, ct);
-        var actualFeed = fetchedBars.Select(x => x.Feed).Where(x => !string.IsNullOrWhiteSpace(x))
-            .Distinct(StringComparer.OrdinalIgnoreCase).SingleOrDefault();
-        if (fetchedBars.Select(x => x.Feed ?? string.Empty).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+        var distinctFeeds = fetchedBars.Select(x => x.Feed ?? string.Empty)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (distinctFeeds.Length > 1)
             return Results.Problem("Provider returned multiple feeds in one capture. The capture was persisted but no mixed-feed calculation was performed.", statusCode: 422);
+        var actualFeed = distinctFeeds.Length == 0 || string.IsNullOrWhiteSpace(distinctFeeds[0]) ? null : distinctFeeds[0];
 
         var observations = await barStore.GetLatestAsync(
             request.Symbol, provider.ProviderName, fromUtc, toUtc, 10000, ct, "1m");
