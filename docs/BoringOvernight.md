@@ -286,3 +286,11 @@ Do not issue a numeric limit if the reference close, selected target quantile, c
 ### Dashboard update — 2026-10-31
 
 The Overnight panel now has an explicit Calculated Limit Sell display. It deliberately shows DATA? — NOT CALCULATED until the historical target distribution and ATR context are source-backed and validated. This replaces a silent omission with a visible fail-closed state; it does not claim the calculation pipeline is complete.
+
+
+### Sell-limit calculation engine — 2026-10-31
+
+- Added BoringOvernightSellLimitCalculator. It takes the selected pre-decision historical quantile of per-session maximum favorable price movement during complete eligible sell windows, calculates a candidate limit from the current reference close, and reports historical touch rate plus target distance in ATR units.
+- ATR is context only; no arbitrary ATR multiplier is used. The calculator requires at least 20 complete windows and exact ATR parity status MATCH before returning a numeric candidate. Incomplete windows return DATA?; unverified ATR parity returns NOT VERIFIED.
+- Added unit tests for the nearest-rank quantile, in-sample touch rate, incomplete windows, short history, and ATR parity gate. CI/build has not yet been verified for this commit.
+- This is the calculation engine only. The API does not yet assemble full eligible-window observations from persisted bars, and the dashboard does not yet call this calculator. The dashboard correctly remains DATA? until that integration and its source evidence exist.
