@@ -77,7 +77,7 @@
 - [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
 - [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
 
-**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 32 individual unchecked work items across the five priority groups. Repeated historical rows are not separate tasks.
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 29 individual unchecked work items across the five priority groups (6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
 
 
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
