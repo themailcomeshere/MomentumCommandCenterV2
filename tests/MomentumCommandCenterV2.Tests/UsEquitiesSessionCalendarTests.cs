@@ -14,7 +14,7 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.Equal(new DateOnly(2026, 10, 30), boundaries[^1].PreviousSessionDate);
         Assert.Equal(new DateOnly(2026, 11, 2), boundaries[^1].NextSessionDate);
         Assert.Equal(DateTimeOffset.Parse("2026-10-30T19:59:00Z"), boundaries[^1].PreviousCloseBarTimestampUtc);
-        Assert.Equal(DateTimeOffset.Parse("2026-11-02T13:30:00Z"), boundaries[^1].NextOpenBarTimestampUtc);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-02T14:30:00Z"), boundaries[^1].NextOpenBarTimestampUtc);
         Assert.All(boundaries, x => Assert.True(x.PreviousSessionDate < x.NextSessionDate));
     }
 
