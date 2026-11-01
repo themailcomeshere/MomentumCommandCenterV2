@@ -52,6 +52,47 @@ This proves stored membership for those 13 and 12 rows in that artifact window. 
 
 The user does not need to manually determine idempotency. The updated script now re-requests the provider bars for both timeframes, then compares each returned bar with the stored latest row by normalized UTC timestamp, symbol, OHLCV, provider, feed, timeframe, and transport. It marks a zero-new-write result as consistent with idempotent duplicates only when every returned bar has an exact stored match. Empty provider responses or mismatches remain inconclusive/false. The current uploaded files alone do not prove that the separate 19:00Z–19:35Z request returned identical payloads.
 
+## 1A. Monday, November 2, 2026 — regular-session WebSocket acceptance
+
+**Target window:** 07:30–07:40 Arizona = 09:30–09:40 America/New_York = 14:30–14:40 UTC. Phoenix remains UTC-07:00; Eastern is UTC-05:00 after the November 1 DST transition.
+
+### Before the open
+1. Pull the latest `feature/opportunity-quality-classification` branch and record `git rev-parse HEAD`.
+2. Start the MCC API in Visual Studio (F5) or the existing local launch profile. Keep it running throughout the capture.
+3. Confirm `GET http://localhost:53360/api/health` returns `status: OK`.
+4. Confirm `GET http://localhost:53360/api/market-data/stream/status` shows streaming enabled and SPY, RKLX, ASTX, XRPN in the acknowledged/subscribed symbols. If the app uses HTTPS instead, use `https://localhost:53359`; do not mix the scheme and port.
+5. Confirm server-side configuration has `MarketData:Alpaca:StreamEnabled=true`, Alpaca credentials, and the expected initial StreamSymbols. Do not paste credentials into chat or the repository.
+
+### Run at 07:30 Arizona
+
+Open PowerShell in the repository root and run this at or just after 07:30 Arizona on Monday November 2:
+
+```powershell
+./scripts/validation/Test-MarketDataRuntime.ps1 `
+  -BaseUri "http://localhost:53360" `
+  -Symbol "RKLX" `
+  -Provider "Alpaca" `
+  -Feed "iex" `
+  -FromUtc "2026-11-02T14:30:00Z" `
+  -ToUtc "2026-11-02T14:40:00Z" `
+  -WaitSeconds 300
+```
+
+The script refreshes the selected symbol's 1M/5M REST history, captures stream/collector/provider status, waits five minutes, captures status again, and saves live assessments for SPY/RKLX/ASTX/XRPN. It writes a timestamped folder under `artifacts/runtime-validation/`.
+
+### What to inspect
+- `runtime-before.json` and `runtime-after.json`: stream enabled, acknowledged subscriptions, receivedBars and persistedBars.
+- `stream-delta.json`: for each symbol, `acknowledgedBefore/After`, `barCountBefore/After`, `newBarsObserved`, `lastBarBeforeUtc`, `lastBarAfterUtc`, and `advanced`.
+- `live-assessments.json`: `oneMinute.sourceTransport`, 1M source timestamp/freshness and 5M REST-backed score/status.
+- `provider-refresh.json` and `stored-bars.json`: selected RKLX/Alpaca/IEX provider-to-store history comparison.
+
+### Acceptance rules
+- A symbol is a delivery pass only when its subscription is acknowledged **and** its completed-bar count and lastBarUtc advance in the regular-session window. receivedBars/persistedBars should also advance.
+- Zero bars for one symbol can reflect no eligible IEX prints; compare with SPY and other symbols and retain feed provenance. Do not call it a global stream failure without evidence.
+- A subscription acknowledgement with zero bar advancement is NOT a delivery pass.
+- 1M assessment may select WebSocket only after acknowledgement, at least 50 completed persisted WebSocket 1M bars, freshness, correct feed and WebSocket provenance. 5M Permission remains REST-backed.
+- Do not lower freshness/history thresholds. If no bar delivery occurs, save the artifacts and report DATA? / NOT VERIFIED; do not manufacture bars or switch feed silently.
+
 ## 2. Browser acceptance
 
 Run against the user's API-hosted dashboard after pulling the target commit and hard-refreshing. Capture screenshots and browser console output.
