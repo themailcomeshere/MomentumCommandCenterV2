@@ -71,8 +71,11 @@ public static class UsEquitiesSessionCalendar
         if (date == EasterSunday(year).AddDays(-2)) return true; // Good Friday
         if (date == LastWeekday(year, 5, DayOfWeek.Monday)) return true; // Memorial Day
 
-        var juneteenth = new DateOnly(year, 6, 19);
-        if (date == ObservedFixedHoliday(juneteenth)) return true;
+        if (year >= 2022)
+        {
+            var juneteenth = new DateOnly(year, 6, 19);
+            if (date == ObservedFixedHoliday(juneteenth)) return true;
+        }
         var independence = new DateOnly(year, 7, 4);
         if (date == ObservedFixedHoliday(independence)) return true;
         if (date == NthWeekday(year, 9, DayOfWeek.Monday, 1)) return true; // Labor Day
