@@ -1,7 +1,7 @@
 ## 2026-11-01 — Header clock, markup IDs, RTO boundary audit, and operating guidance
 
 ### Completed source work
-- [x] Added `MarketSessionClock` API service using `UsEquitiesSessionCalendar`; the header clock is not a browser-side guessed calendar. Added regression coverage for observed New Year's Day on the preceding Friday when January 1 falls Saturday.
+- [x] Added `MarketSessionClock` API service using `UsEquitiesSessionCalendar`; the header clock is not a browser-side guessed calendar. Corrected the New Year's rule against the official NYSE calendar: January 1, 2028 falls Saturday and NYSE observes no prior-Friday closure; bumped the calendar ruleset to V2.
 - [x] Static markup audit: all 628 opening elements in `frontend/index.html` now have unique IDs (628/628; no duplicates).
 - [x] Added a live exchange-session countdown to the dashboard header. It changes between **Remaining time in regular market**, **Remaining time in After-Hours**, and **Until Market opens**. The API uses America/New_York and the versioned MCC calendar; it does not guess when the clock API is unavailable.
 - [x] Moved `#workspace-toolbar` into `.topbar-brand`, below the brand/tools area, and tightened the toolbar/header spacing.
@@ -9,6 +9,8 @@
 - [x] Extended the 20-session capture response with an exact 40-boundary audit. For each expected close/open timestamp it distinguishes provider-response presence from persisted-store presence and reports the nearest provider timestamp.
 - [x] Added a dashboard table rendering the exact boundary audit. This is the actual exact-timestamp provider/store diagnostic; the older ticker-vs-SPY post-market comparison is now correctly labelled a control test, not a full provider coverage audit.
 - [x] Added clock tests for regular session, after-hours, pre-market, weekend, Thanksgiving, and the post-DST Eastern offset.
+- [x] Compared the RTO 2026-10-02 through 2026-10-30 session dates and UTC boundaries with the official NYSE calendar: no holidays/early closes occur in this sample; normal 09:30–16:00 ET sessions produce the 13:30Z open and 19:59Z final-minute bar starts.
+- [x] Corrected the calendar's incorrect 2027-12-31 closure assumption for Saturday New Year's Day 2028; added July 3, 2026 observed-holiday and July 3, 2028 early-close fixtures. Official reference: https://www.nyse.com/trade/hours-calendars.
 
 ### RTO — 2026-11-01 capture result supplied by user
 - [x] Recorded that RTO returned 4,048 1m bars, 0 new writes, 18/20 valid close/open pairs, and 2 missing next-session open bars.
@@ -38,8 +40,9 @@
 - [x] Add dashboard action: **Refresh/Capture 20-session close/open calculation**; show metrics, pair-level values/timestamps, missing pairs, provider/feed, bar counts and calendar version.
 - [x] Add calendar tests for 20 pairs, weekend, DST, Thanksgiving, Good Friday and Christmas Eve.
 - [x] Verified source implementation commit `a0bf119c68f688a017e179e28a0bf145727f734f` with GitHub Actions run 864: .NET Release build succeeded with 0 warnings/0 errors; 165/165 tests passed.
-- [ ] Pull the branch, hard-refresh dashboard, click the new capture action for an actual Overnight candidate, and save the JSON/runtime result.
-- [ ] Compare generated session dates and UTC boundaries against the official NYSE calendar for the captured window; expand calendar fixtures for all applicable exceptional dates before relying on automatic qualification.
+- [x] Pull the branch, hard-refresh dashboard, click the new capture action for RTO, and save the JSON/runtime result; exact-boundary audit evidence is recorded above.
+- [x] Compare generated session dates and UTC boundaries against the official NYSE calendar for the RTO 2026-10-02–2026-10-30 sample.
+- [ ] Complete full exceptional holiday/early-close calendar certification across supported years before relying on automatic qualification.
 - [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
 - [ ] Keep full 07:00–20:00 ET GTC_EXT window collection/target-touch study separate; the new button does not calculate target reach, fill probability, or Calculated Limit Sell.
 - [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
@@ -73,11 +76,12 @@
 
 ### P3 — older validation follow-ups retained as active
 - [ ] Re-run PMI sparse-window case and verify one-bar result is INSUFFICIENT DATA with no fabricated 0% change/range; compare provider/feed/count/timestamps/gaps with a known liquid control symbol.
-- [ ] Verify Provider Comparison date initializes to current Arizona date, preserves user selection, and correctly renders a real July date from a non-Arizona OS timezone.
+- [x] Source audit confirms Provider Comparison initializes an empty date using `phoenixParts(new Date())` (`America/Phoenix`) and preserves an existing user selection.
+- [ ] Browser-verify a July date on a non-Arizona OS timezone; runtime acceptance remains open.
 - [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
 - [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
 
-**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 29 individual unchecked work items across the five priority groups (6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 28 individual unchecked work items across the five priority groups (6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
 
 
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
