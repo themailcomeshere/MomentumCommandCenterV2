@@ -1525,3 +1525,8 @@ Read `docs/Overnight-Scanner-Review-2026-10-28.md` before continuing the candida
 ### Official calendar certification horizon
 
 The published NYSE 2026–2028 holiday closures and early closes are now represented in regression fixtures. The ruleset remains MCC-maintained and versioned; extend the supported horizon when NYSE publishes the next calendar. It is not a live exchange-calendar feed.
+
+
+## Canonical checklist count correction
+
+The active checklist now has 29 unchecked operational items: 6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3. The two RTO-specific open items are alternate-feed comparison and confirmation of provider entitlement/coverage.
