@@ -11,7 +11,7 @@
 - [x] Added [Live Extension and Feed Diagnostics](Validation/Live-Extension-and-Feed-Diagnostics-20261102.md) with formula, provenance, and acceptance instructions.
 
 ### Runtime acceptance still open
-- [ ] Re-run Release build and the full xUnit suite against the exact current branch head. The user's preceding run built all five projects but reported 172 passed / 4 failed; the source corrections above have not yet been rerun. Do not call the branch green.
+- [x] Verified source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22` with GitHub Actions run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284): Release build passed and 178/178 tests passed. This validates that source commit; check CI again after subsequent source changes.
 - [ ] After a full API stop/rebuild/restart, verify `/api/providers/status` reports `configuredFeed: "sip"`, then verify live assessment reports `configuredFeed: "sip"` and observed 1M/5M feeds of `sip`. If configuredFeed is still IEX, inspect `appsettings.Development.json`, `MarketData__Alpaca__Feed`, Visual Studio launch environment, and the actual running API/output directory. If SIP is configured but the observed feed is IEX, capture the sanitized response; do not merge feed histories.
 - [ ] Compare MCC and Thinkorswim on the same symbol and completed 1M timestamp: close, Daily VWAP, ATR14, and normalized extension. Numerical parity is not yet proven.
 - [ ] Browser-check the prototype dock and five Main Chart metric cards at desktop/mobile widths.
@@ -78,7 +78,7 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 - [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series. November 2 follow-up still reports `feed=iex`; it is not an SIP comparison.
   - Exact local capture procedure: `docs/Runtime-Acceptance-Runbook.md` §1B. The endpoint uses configured feed; verify response `feed=sip` to rule out fallback to stored IEX.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
-- [x] Fixed xUnit2031 in `UsesJulyThird2028EarlyClose` using `Assert.Single(boundaries, predicate)`; keep the test enabled. Full build/test rerun remains pending.
+- [x] Fixed xUnit2031 in `UsesJulyThird2028EarlyClose` using `Assert.Single(boundaries, predicate)`; keep the test enabled. Release build and 178/178 tests passed on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22` (Actions run 41491616284).
 - [x] Updated prototype dock labels: INTRADAY MOMENTUM left of the toggle, BORING OVERNIGHT right of it, and WORKSPACE beneath the toggle. Browser visual acceptance remains pending.
 - [x] Corrected MCC 1M extension source calculation to `Abs(close - Daily VWAP) / SMA(TrueRange, 14)` and centralized the formula for live calculation/fallback; added formula and supplied-extension regression tests. Raw close, Daily VWAP, ATR14, and extension are now exposed in the prototype.
 - [ ] Validate corrected 1M extension against Thinkorswim on matched symbol/time/bar. Confirm Daily VWAP and bar timestamp parity before accepting numeric parity.
