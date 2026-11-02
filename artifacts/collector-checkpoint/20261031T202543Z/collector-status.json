@@ -1,0 +1,93 @@
+﻿{
+    "enabled":  true,
+    "configuredSymbols":  [
+                              "SPY",
+                              "QQQ",
+                              "IWM",
+                              "RTO",
+                              "AMT"
+                          ],
+    "configuredProviders":  [
+                                "Alpaca"
+                            ],
+    "intervals":  [
+                      "1m",
+                      "5m"
+                  ],
+    "intervalSeconds":  60,
+    "initialLookbackMinutes":  20,
+    "overlapMinutes":  5,
+    "checkpointPath":  "C:\\Users\\jampo\\AppData\\Local\\MomentumCommandCenterV2\\collector-watermarks.json",
+    "checkpointLoadCompleted":  true,
+    "checkpointFileFound":  true,
+    "checkpointLoadedEntryCount":  14,
+    "checkpointLoadCompletedUtc":  "2026-10-31T20:23:14.747055+00:00",
+    "checkpointLoadError":  null,
+    "watermarks":  [
+                       {
+                           "key":  "Alpaca/SPY/1m",
+                           "sourceTimestampUtc":  "2026-10-30T20:33:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/SPY/5m",
+                           "sourceTimestampUtc":  "2026-10-30T20:30:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/QQQ/1m",
+                           "sourceTimestampUtc":  "2026-10-30T20:54:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/QQQ/5m",
+                           "sourceTimestampUtc":  "2026-10-30T20:50:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/TTE/1m",
+                           "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/TTE/5m",
+                           "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/FMS/1m",
+                           "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/FMS/5m",
+                           "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/IWM/1m",
+                           "sourceTimestampUtc":  "2026-10-30T20:16:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/IWM/5m",
+                           "sourceTimestampUtc":  "2026-10-30T20:15:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/RTO/1m",
+                           "sourceTimestampUtc":  "2026-10-30T19:59:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/RTO/5m",
+                           "sourceTimestampUtc":  "2026-10-30T19:55:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/AMT/1m",
+                           "sourceTimestampUtc":  "2026-10-30T19:59:00+00:00"
+                       },
+                       {
+                           "key":  "Alpaca/AMT/5m",
+                           "sourceTimestampUtc":  "2026-10-30T19:55:00+00:00"
+                       }
+                   ],
+    "cycles":  3,
+    "newlyPersistedObservations":  0,
+    "lastCycleErrors":  0,
+    "lastCycleStartedUtc":  "2026-10-31T20:25:26.9248534+00:00",
+    "lastCycleCompletedUtc":  "2026-10-31T20:25:27.9646619+00:00",
+    "recentErrors":  [
+
+                     ],
+    "mode":  "durable-watermark historical REST polling with bounded backfill chunks; not websocket/live tick streaming"
+}
