@@ -1,3 +1,52 @@
+## 2026-11-02 — follow-up: test failures, visible extension inputs, dock labels, and SIP configuration
+
+### User's latest local verification
+- Release build succeeded for Core, Application, Infrastructure, API, and Tests.
+- The first full run reported 176 total / 172 passed / 4 failed.
+- Failure 1: `V2SignalEngineTests.SuppliedAtrExtensionIsPreservedAsThinkorswimDailyVwapMetric` asserted hard-exit flags while calling `Evaluate(..., hasPosition: false)`. Corrected the test to evaluate an existing position.
+- Failures 2–4: three TradeAnalyzer tests returned `ENTRY_FILTER_FAILURE`. Root cause: shared `StrongSnapshot` fixture set VWAP = close − 10 while ATR = 1. Under the new absolute close-to-VWAP metric this represented a 10-ATR extension and the engine correctly blocked fresh entry. Corrected the test fixture to VWAP = close − 0.25. Production thresholds and entry logic were not relaxed.
+- Added tests for absolute positive/negative VWAP distance and zero-ATR handling. The test suite has **not yet been rerun** after these fixes.
+
+### Current code changes
+- Centralized the formula in `V2SignalEngine.CalculateAtrExtension(close, dailyVwap, atr)`; both the live calculator and engine fallback call it.
+- Live assessment already calculated and returned `oneMinute.close`, `oneMinute.vwap`, and `oneMinute.atr`; the prototype now displays these explicitly as **1M Close**, **Daily VWAP**, and **ATR14**, alongside 5M RVOL and normalized **ATR Extension**.
+- Red Zone's extension line now displays close, Daily VWAP, ATR14, and extension inputs. The previously reported MCC `11.20 ATR` is the normalized extension value, not raw ATR14.
+- The prototype dock now has **INTRADAY MOMENTUM** to the left of the switch, **BORING OVERNIGHT** to the right, and **WORKSPACE** below the switch.
+- API provider status and live assessment now expose the effective `configuredFeed`; live assessment also exposes observed `oneMinute.feed` and `fiveMinute.feed`.
+- Committed API `appsettings.json` default is now `sip`; adapter test asserts configured SIP is sent and tagged on returned bars, with no IEX fallback.
+- New detail: `docs/Validation/Live-Extension-and-Feed-Diagnostics-20261102.md`.
+
+### Feed diagnosis / user action
+The Alpaca adapter reads `MarketData:Alpaca:Feed` from the effective .NET configuration and sends that exact value as the REST `feed=` query. If the user still sees IEX, stop the old API process completely, pull latest branch, rebuild, restart, and inspect:
+1. `GET /api/providers/status` → Alpaca `configuredFeed` must be `sip`.
+2. `GET /api/market-data/live-assessment?symbol=INO&providerName=Alpaca` → `configuredFeed`, top-level `feed`, `oneMinute.feed`, and `fiveMinute.feed`.
+3. If configuredFeed remains IEX, inspect `appsettings.Development.json`, environment variable `MarketData__Alpaca__Feed`, Visual Studio launch environment, and the actual process/output directory. Environment variables override appsettings. If configuredFeed is SIP but observed bars say IEX, capture sanitized JSON and investigate provenance; do not mix feeds.
+4. If SIP returns an entitlement/provider error, preserve it. Do not fall back to IEX and claim SIP validation.
+
+### Thinkorswim parity — still unresolved
+Compare one identical completed 1M symbol/timestamp and record:
+- close (price units)
+- Daily VWAP (price units)
+- ATR14 (price units; simple average of 14 TrueRange values)
+- `Abs(close - Daily VWAP) / ATR14` (dimensionless ATR extension)
+The earlier `EXT: 24.5 ATR` vs MCC `11.20 ATR` is not explained yet. Feed, bar timestamp, session VWAP, and ATR inputs must be matched before diagnosing the residual. Do not tune warning/hard-exit thresholds to force parity.
+
+### Remaining acceptance
+- Re-run Release build and full tests on exact branch head; do not mark green until confirmed.
+- Verify configured and observed SIP feed after full process restart; verify entitlement and 1m/5m feed separately.
+- Match Thinkorswim and MCC inputs on the same completed bar.
+- Browser-check prototype dock and metric cards at desktop/mobile sizes.
+- RTO remains 38/40 exact on IEX; October 14 13:30Z and October 21 13:30Z open bars remain missing. Repeat with actual SIP bars before calling it an SIP audit.
+- All previous RTO, Boring Overnight, scanner, Red Zone ranking, browser, WebSocket, and Schwab acceptance items remain as recorded below.
+
+### [Uncertainties]
+- Post-fix build/test result is not available.
+- Effective feed source in the user's running process is unknown until `configuredFeed` is read from the new endpoint.
+- SIP entitlement and actual returned SIP bars are unverified.
+- Thinkorswim numeric parity and browser visual acceptance are unverified.
+
+---
+
 ## 2026-11-02 — xUnit, prototype dock, extension parity, and RTO follow-up
 
 ### Source changes
