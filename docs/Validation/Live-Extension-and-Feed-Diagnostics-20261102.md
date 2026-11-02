@@ -26,17 +26,17 @@ The reported MCC value **11.20 ATR** is the normalized ATR Extension displayed b
 
 The Thinkorswim value **EXT: 24.5 ATR** and MCC's **11.20 ATR** are not yet a validated mismatch on a matched observation. Compare the same symbol and completed 1-minute bar timestamp, then compare all four inputs: close, Daily VWAP, ATR14, and the calculated ratio. Do not adjust warning/hard-exit thresholds to force a match.
 
-The prior live UI did not expose Daily VWAP or raw ATR14, so the comparison could not be diagnosed from the displayed values alone. Those fields are now exposed.
+The prior live UI rounded price inputs too aggressively for a low-priced symbol. The prototype now displays close, VWAP, and ATR14 to five decimal places and shows the exact 1M bar timestamp in Arizona time and UTC.
 
 ## 3. Alpaca feed selection and observation provenance
 
 - The adapter reads `MarketData:Alpaca:Feed`, sends that exact value in the REST `feed=` query, and tags each returned bar with that feed.
 - The stream worker and live assessment use the same effective configuration key.
-- The committed API `appsettings.json` default is now `sip`. No IEX fallback is implemented when SIP is explicitly configured; an unavailable feed/entitlement should surface as a provider error.
-- `GET /api/providers/status` now returns `configuredFeed` for Alpaca.
+- The committed API `appsettings.json` sets `sip`. The REST adapter, WebSocket worker, and live-assessment feed-match fallback now also default to SIP when the key is absent; missing configuration no longer silently selects IEX. An explicit higher-precedence IEX override can still select IEX.
+- `GET /api/providers/status` returns the adapter instance's effective `configuredFeed`, `configuredFeedSource` (the highest-precedence configuration provider), and `feedConfigurationSources` (all providers contributing that key and value). This is specifically to diagnose a runtime IEX result when the tracked JSON says SIP.
 - `GET /api/market-data/live-assessment` now returns `configuredFeed`, top-level observed `feed`, and separate `oneMinute.feed` / `fiveMinute.feed` fields.
 
-If the live result still reports IEX after pulling and rebuilding, inspect the returned **configuredFeed** first. A value of IEX means the running API process is receiving an override or loading a different configuration copy. Check `appsettings.Development.json`, environment variable `MarketData__Alpaca__Feed`, Visual Studio launch environment, and the running API process/output directory. Stop the old process fully, rebuild, restart, and re-query. A configured SIP value with an observed IEX value is a provenance discrepancy that must be investigated; do not combine the feeds.
+The user confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `Feed: sip`, `appsettings.Development.json` does not exist, and `launchSettings.json` only sets `ASPNETCORE_ENVIRONMENT=Development`. That launch setting does not itself override the feed. ASP.NET Core Development configuration also loads User Secrets, and environment variables override JSON. Query `/api/providers/status` after rebuilding/restarting: inspect `configuredFeedSource` and every entry in `feedConfigurationSources`. If source is User Secrets, inspect `dotnet user-secrets list --project src/MomentumCommandCenterV2.API` and remove or change only `MarketData:Alpaca:Feed`. If source is EnvironmentVariables, inspect `MarketData__Alpaca__Feed` at process/user/machine scope. If source is `appsettings.json` but the value is IEX, verify the running API content root and output copy; the tracked file currently says SIP. The adapter now reports its own cached feed, so this diagnostic is not merely a reread of configuration. A configured SIP value with an observed IEX value is a provenance discrepancy that must be investigated; do not combine the feeds.
 
 ## 4. Regression fixes included
 
@@ -47,15 +47,15 @@ If the live result still reports IEX after pulling and rebuilding, inspect the r
 
 ## 5. Verification status
 
-The user's November 2 Release build succeeded for all five projects, but the accompanying test run reported 172 passed / 4 failed. The source fixes above address the four reported failure causes. The first CI attempt caught compile errors from decimal `[InlineData]` arguments; those were replaced with ordinary fact assertions. GitHub Actions run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284) passed the Release build and **178/178 tests** on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22`.
+The November 2 earlier source head passed 178/178 in run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284). The latest feed-provenance and Main Chart layout changes are a later source set and are undergoing a separate Release build/test run; do not carry the earlier green status forward to this head.
 
 ## 6. Remaining acceptance
 
-1. Release build and tests are verified on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22` (Actions run 41491616284, 178/178). Recheck after any later source changes.
+1. Verify the latest source head's Release build and tests; the previous 178/178 run predates these changes.
 2. Verify `GET /api/providers/status` returns `configuredFeed: "sip"`.
 3. Verify live assessment returns `configuredFeed: "sip"` and both observed timeframe feeds as `sip`; if not, capture the full sanitized JSON and provider error.
-4. Capture the same completed 1M timestamp in MCC and Thinkorswim and compare close, Daily VWAP, ATR14, and extension.
-5. Browser-check the prototype dock labels and the five Main Chart metrics at desktop and mobile widths.
+4. Use [Thinkorswim / MCC Extension Parity](Thinkorswim-MCC-Extension-Parity-20261102.md) to add ATR14/extension plots in TOS, then compare the exact same completed 1M timestamp and five-decimal inputs.
+5. Browser-check the prototype dock labels, 3-column Main Chart header, chart-side 2x3 metrics, exact source timestamp, and no horizontal overflow at desktop/mobile widths.
 6. Re-run the RTO boundary audit against SIP; the prior 38/40 result was IEX and is not an SIP comparison. The October 14 and October 21 open-boundary gaps remain unresolved.
 
 ## [Uncertainties]
