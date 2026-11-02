@@ -5,7 +5,7 @@
 - The first full run reported 176 total / 172 passed / 4 failed.
 - Failure 1: `V2SignalEngineTests.SuppliedAtrExtensionIsPreservedAsThinkorswimDailyVwapMetric` asserted hard-exit flags while calling `Evaluate(..., hasPosition: false)`. Corrected the test to evaluate an existing position.
 - Failures 2–4: three TradeAnalyzer tests returned `ENTRY_FILTER_FAILURE`. Root cause: shared `StrongSnapshot` fixture set VWAP = close − 10 while ATR = 1. Under the new absolute close-to-VWAP metric this represented a 10-ATR extension and the engine correctly blocked fresh entry. Corrected the test fixture to VWAP = close − 0.25. Production thresholds and entry logic were not relaxed.
-- Added tests for absolute positive/negative VWAP distance and zero-ATR handling. The test suite has **not yet been rerun** after these fixes.
+- Added tests for absolute positive/negative VWAP distance and zero-ATR handling. The first CI attempt caught decimal `[InlineData]` compile errors; replaced them with compile-safe fact assertions. GitHub Actions run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284) passed the Release build and **178/178 tests** on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22`.
 
 ### Current code changes
 - Centralized the formula in `V2SignalEngine.CalculateAtrExtension(close, dailyVwap, atr)`; both the live calculator and engine fallback call it.
@@ -32,7 +32,7 @@ Compare one identical completed 1M symbol/timestamp and record:
 The earlier `EXT: 24.5 ATR` vs MCC `11.20 ATR` is not explained yet. Feed, bar timestamp, session VWAP, and ATR inputs must be matched before diagnosing the residual. Do not tune warning/hard-exit thresholds to force parity.
 
 ### Remaining acceptance
-- Re-run Release build and full tests on exact branch head; do not mark green until confirmed.
+- [VERIFIED] Release build and 178/178 tests passed on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22`, Actions run 41491616284. Recheck CI after any further source change.
 - Verify configured and observed SIP feed after full process restart; verify entitlement and 1m/5m feed separately.
 - Match Thinkorswim and MCC inputs on the same completed bar.
 - Browser-check prototype dock and metric cards at desktop/mobile sizes.
