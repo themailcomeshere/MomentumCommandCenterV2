@@ -28,7 +28,8 @@ public sealed class V2SignalEngineTests
         decimal macd,
         decimal sig,
         decimal atr = 1m,
-        DateTimeOffset? timestamp = null)
+        DateTimeOffset? timestamp = null,
+        decimal? atrExtension = null)
     {
         return new BarSnapshot(
             timestamp ?? DateTimeOffset.Parse("2026-09-08T13:00:00-04:00"),
@@ -45,7 +46,8 @@ public sealed class V2SignalEngineTests
             rsi,
             macd,
             sig,
-            atr);
+            atr,
+            atrExtension ?? (atr > 0m ? Math.Max(0m, (c - e9) / atr) : 0m));
     }
 
     /// <summary>
@@ -136,6 +138,22 @@ public sealed class V2SignalEngineTests
             1,
             atr,
             timestamp);
+    }
+
+    [Fact]
+    public void SuppliedAtrExtensionIsPreservedAsThinkorswimDailyVwapMetric()
+    {
+        var one = Bar(
+            c: 55m, v: 54m, e9: 50m, e20: 49m, s50: 48m,
+            rvol: 2m, rsi: 60m, macd: 2m, sig: 1m,
+            atr: 0.2m, atrExtension: 5m);
+        var five = StrongFive();
+
+        var result = new V2SignalEngine().Evaluate(Snapshot(one, five), false);
+
+        Assert.Equal(5m, result.Evaluation!.AtrExtension);
+        Assert.True(result.ExitWarning);
+        Assert.True(result.HardExit);
     }
 
     [Fact]
