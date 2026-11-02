@@ -193,9 +193,13 @@ async function refreshDecisionExplanation(){
   const oneMinuteTimestamp=$("oneMinuteTimestamp");
   if(oneMinuteTimestamp){
    const sourceTime=one.sourceTimestampUtc?new Date(one.sourceTimestampUtc):null;
-   oneMinuteTimestamp.textContent=sourceTime&&!Number.isNaN(sourceTime.getTime())
-    ?"Bar "+sourceTime.toLocaleString("en-US",{timeZone:"America/Phoenix",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true})+" AZ · "+sourceTime.toISOString().slice(11,19)+"Z"
-    :"Source timestamp unavailable";
+   const completedTime=one.completedAtUtc?new Date(one.completedAtUtc):null;
+   const validTime=value=>value&&!Number.isNaN(value.getTime());
+   const azTime=value=>value.toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
+   oneMinuteTimestamp.textContent=validTime(sourceTime)&&validTime(completedTime)
+    ?"Closed "+azTime(completedTime)+" AZ · bar "+azTime(sourceTime)+"–"+azTime(completedTime)+" AZ · "+completedTime.toISOString().slice(11,19)+"Z"
+    :validTime(sourceTime)?"Bar start "+azTime(sourceTime)+" AZ · completion timestamp unavailable":"Source timestamp unavailable";
+   oneMinuteTimestamp.title="The candle timestamp is its start time. MCC intentionally evaluates the last completed 1-minute bar; the current in-progress minute is excluded.";
   }
   if(dailyVwap)dailyVwap.textContent=one.vwap==null?"DATA?":"$"+Number(one.vwap).toFixed(5);
   if(atr14)atr14.textContent=one.atr==null?"DATA?":"$"+Number(one.atr).toFixed(5);
