@@ -111,24 +111,43 @@ app.MapGet("/api/market-session/clock", () =>
 .WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and MCC_US_EQUITIES_CALENDAR_V2. The maintained calendar does not model unscheduled exchange closures.");
 
 app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers, IConfiguration configuration) =>
-    Results.Ok(providers.Select(p => new
+    Results.Ok(providers.Select(p =>
     {
-        provider = p.ProviderName,
-        configuredFeed = string.Equals(p.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase)
-            ? configuration["MarketData:Alpaca:Feed"] ?? "iex"
-            : null,
-        configured = p.IsConfigured,
-        validated = p.HasSuccessfulDataValidation,
-        status = !p.IsConfigured
-            ? "NOT_CONFIGURED"
-            : p.HasSuccessfulDataValidation
-                ? "VALIDATED_DATA_RETURNED"
-                : "CONFIGURED_NOT_YET_VALIDATED",
-        lastSuccessfulDataValidationUtc = p.LastSuccessfulDataValidationUtc,
-        lastSuccessfulDataValidationBarCount = p.LastSuccessfulDataValidationBarCount,
-        capabilities = p.Capabilities,
-        credentialLocation = "server environment / user secrets; never frontend"
-    })))
+        var alpaca = p as AlpacaMarketDataAdapter;
+        var feedKey = "MarketData:Alpaca:Feed";
+        var feedSources = (configuration as IConfigurationRoot)?.Providers
+            .Select(provider =>
+            {
+                provider.TryGet(feedKey, out var value);
+                return new { source = provider.ToString() ?? provider.GetType().Name, value };
+            })
+            .Where(item => !string.IsNullOrWhiteSpace(item.value))
+            .ToArray() ?? Array.Empty<object>();
+        var effectiveFeedSource = feedSources.LastOrDefault()?.source
+            ?? "SIP safety default (no explicit configuration value)";
+        return new
+        {
+            provider = p.ProviderName,
+            configuredFeed = alpaca?.ConfiguredFeed,
+            configuredFeedSource = string.Equals(p.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase)
+                ? effectiveFeedSource
+                : null,
+            feedConfigurationSources = string.Equals(p.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase)
+                ? feedSources
+                : null,
+            configured = p.IsConfigured,
+            validated = p.HasSuccessfulDataValidation,
+            status = !p.IsConfigured
+                ? "NOT_CONFIGURED"
+                : p.HasSuccessfulDataValidation
+                    ? "VALIDATED_DATA_RETURNED"
+                    : "CONFIGURED_NOT_YET_VALIDATED",
+            lastSuccessfulDataValidationUtc = p.LastSuccessfulDataValidationUtc,
+            lastSuccessfulDataValidationBarCount = p.LastSuccessfulDataValidationBarCount,
+            capabilities = p.Capabilities,
+            credentialLocation = "server environment / user secrets; never frontend"
+        };
+    }))
 .WithSummary("Show configured provider status")
 .WithDescription("Example: Alpaca configured=true, status=VALIDATED_DATA_RETURNED after a non-empty response in this process. This does not prove streaming or complete coverage.");
 
