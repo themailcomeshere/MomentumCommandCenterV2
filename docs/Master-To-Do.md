@@ -7,7 +7,7 @@
 - Close, Daily VWAP, ATR14 now display five decimals; the exact source timestamp is shown in Arizona time and UTC below 1M Close.
 - Reviewed user commit `e7299ddd`: `RTO-SIP-20261101.json` content explicitly says `feed: iex`, 38/40 exact boundary bars, missing Oct 14 and Oct 21 opens, 18/20 overnight pairs. The filename does not establish SIP.
 - Thinkorswim how-to / study: [Thinkorswim-MCC-Extension-Parity-20261102.md](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
-- [ ] Latest head Release build and test verification is pending; earlier 178/178 run predates these new changes.
+- [x] Latest code source head `ee2e929e3bdf15f1457211534dfc9456dc8aa5ae` passed Release build and **179/179 tests** in GitHub Actions run [41504217777](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504217777). The subsequent commits through current docs head are documentation-only; latest-head CI is still running.
 - [ ] After local rebuild/restart, inspect `configuredFeedSource` and `feedConfigurationSources`. If User Secrets is the effective source, inspect `dotnet user-secrets list --project src/MomentumCommandCenterV2.API`; if EnvironmentVariables, inspect `MarketData__Alpaca__Feed`. Do not expose credentials.
 - [ ] Confirm observed 1M and 5M feeds are SIP, then repeat RTO audit.
 - [ ] Compare TOS and MCC using same exact date/time, with five-decimal close/VWAP/ATR14 and same session scope.
@@ -41,7 +41,7 @@ After rebuild/restart, inspect these fields. Environment variables and user secr
 At the user's reported 11:26 bar: close approximately $2.00 in both; MCC previously showed VWAP $1.838, ATR14 $0.013, extension 11.89; TOS showed EXT 22.92. The prior MCC UI rounded inputs too aggressively for a conclusive ratio check. The UI now shows five decimals. MCC VWAP is HLC3 volume-weighted using RTH 1M bars; ATR14 is SMA(TrueRange,14). The new parity note tells the user how to expose ATR14 and extension as ThinkScript plots and inspect the historical candle with the Data Box. No numerical parity conclusion is made yet.
 
 ### Remaining acceptance
-- [ ] Run Release build and all tests on the latest source head.
+- [x] Release build and 179/179 tests passed on source head `ee2e929e3bdf15f1457211534dfc9456dc8aa5ae` (Actions run 41504217777). Confirm the docs-only latest head CI finishes successfully.
 - [ ] Re-query `/api/providers/status`; capture `configuredFeed`, `configuredFeedSource`, and `feedConfigurationSources`.
 - [ ] Verify live assessment `configuredFeed`, top-level `feed`, `oneMinute.feed`, and `fiveMinute.feed` are SIP.
 - [ ] Confirm SIP entitlement / provider delivery; do not infer from config alone.
