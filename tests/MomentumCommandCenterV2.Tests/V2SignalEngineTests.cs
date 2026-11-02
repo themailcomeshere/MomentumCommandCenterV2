@@ -149,11 +149,21 @@ public sealed class V2SignalEngineTests
             atr: 0.2m, atrExtension: 5m);
         var five = StrongFive();
 
-        var result = new V2SignalEngine().Evaluate(Snapshot(one, five), false);
+        var result = new V2SignalEngine().Evaluate(Snapshot(one, five), true);
 
         Assert.Equal(5m, result.Evaluation!.AtrExtension);
         Assert.True(result.ExitWarning);
         Assert.True(result.HardExit);
+    }
+
+    [Theory]
+    [InlineData(55m, 54m, 0.2m, 5m)]
+    [InlineData(53m, 54m, 0.2m, 5m)]
+    [InlineData(55m, 54m, 0m, 0m)]
+    public void CalculateAtrExtension_UsesAbsoluteDailyVwapDistanceAndGuardsZeroAtr(
+        decimal close, decimal dailyVwap, decimal atr, decimal expected)
+    {
+        Assert.Equal(expected, V2SignalEngine.CalculateAtrExtension(close, dailyVwap, atr));
     }
 
     [Fact]
