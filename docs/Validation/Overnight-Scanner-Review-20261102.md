@@ -76,3 +76,36 @@ Before any overnight decision, obtain daily and 5M charts for all three and veri
 - Exclusion-list membership was not checked against the complete maintained list.
 - News research identifies recent material events but does not establish how much is already priced in.
 - The screenshot's Overnight Score formula and its parity with the documented Boringness Score have not been certified.
+
+## 2026-11-02 chart review addendum — 5M evidence
+
+**Timeframe correction:** The supplied chart headers show `1 D 5m` on the focused charts and `5 D 5m` on the comparison charts. These are 5-minute charts, not 1-minute charts. They do not establish the installed 1M study version or 1M execution state. Do not infer 1M state from the lower indicator pane.
+
+### MHK
+- Last displayed price: **$148.60**; Daily VWAP: **$148.59**.
+- 5M state: **WAIT**; 5M Permission: **NO**; 5M structure: **NEUTRAL**; bullish regime: **NOT ESTABLISHED**.
+- RSI: **51**; extension: **0.25 ATR**. Multiple SELL / PREPARE TO SELL bubbles appear; no EOD GET OUT bubble is visible in the supplied chart.
+- Scanner current ON move is **3.13%**, above the preferred sub-3% range; 5D ON is 2.49% versus 20D average ON of 0.31%.
+- **Disposition:** NO BUY / not qualified as a boring overnight hold. The chart does not show a current EOD GET OUT bubble, so do not mislabel this as a confirmed EOD exit. No positive 5M Permission/runner authority is present.
+
+### EVR
+- Last displayed price: **$303.26**; Daily VWAP: **$308.69**.
+- 5M state: **WAIT**; 5M Permission: **NO**; 5M structure: **BEARISH**.
+- RSI: **32.8**; RVOL: **21.95**; extension: **2.98 ATR**.
+- A visible **EOD GET OUT** bubble appears at the right edge.
+- **Disposition:** NO BUY / NO OVERNIGHT HOLD. The 5M chart explicitly shows EOD GET OUT.
+
+### OSW
+- Last displayed price: **$30.02**; Daily VWAP: **$30.37**.
+- 5M state: **WAIT**; 5M Permission: **NO**; 5M structure: **BEARISH**.
+- RSI: **29.5**; RVOL: **16.52**; extension: **3.35 ATR**.
+- A visible **EOD GET OUT** bubble appears at the right edge.
+- **Disposition:** NO BUY / NO OVERNIGHT HOLD. The 5M chart explicitly shows EOD GET OUT.
+
+### Combined decision
+- No new overnight BUY is supported by these three charts.
+- EVR and OSW have explicit 5M EOD GET OUT signals.
+- MHK has no 5M Permission and no established bullish regime; its visible sell/pre-sell markers and 3.13% current ON move do not support a boring overnight hold. The screenshot does not establish an EOD GET OUT state for MHK.
+- No 1M chart/state evidence was supplied; 1M confirmation is **NOT ASSESSED**.
+- **Calculated Limit Sell: DATA? / not calculated.** The repository policy requires at least 20 complete eligible 07:00–20:00 Eastern GTC_EXT windows, walk-forward target-touch evaluation, and exact ATR parity. The +0.5% value remains a heuristic only.
+
