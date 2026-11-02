@@ -1,8 +1,11 @@
 # Active Work Checklist — 2026-11-02
 
 
-- [x] Audited EOD time conversion: 1M V14.5's 15:55 Eastern fires 2–3 hours early versus 3:55 PM Arizona; 5M V4.1.7's 19:55 Eastern standard-time mapping is two hours late in Arizona (correct is 17:55 EST). Both studies require a targeted shared DST mapping and matched-bar validation.
+- [x] Audited EOD time conversion: 1M V14.5.1's 15:55 Eastern fires 2–3 hours early versus 3:55 PM Arizona; 5M V4.1.7's 19:55 Eastern standard-time mapping is two hours late in Arizona (correct is 17:55 EST). Both studies require a targeted shared DST mapping and matched-bar validation.
 - [ ] Correct and compile both ThinkScript studies' EOD clock mapping; test before/at/after 3:55 PM Arizona across DST and standard-time dates. Do not trust cross-study EOD/GET OUT parity until complete.
+
+
+- [x] Confirmed latest full 1M Library source is `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (V14.5.1); V14.4.10 is an isolated aggressive-lane audit-only artifact. V14.5.1 retains both the 5M VWAP proxy gap and the EOD clock mismatch.
 
 ## November 2 follow-up — operator script, scanner import, prototype header, and 1M parity
 
@@ -11,7 +14,7 @@
 - [x] Moved `marketSessionClock` directly beside the title inside the `mcc-static-0010-div` parent in the prototype; made the transport-label text background transparent while retaining the status dot.
 - [ ] Browser-verify the CSV using the user's original committed export, plus desktop/mobile header layout. The current active branch tree did not contain a dedicated Overnight Scanner export CSV at review time; the exact source file/format remains unverified.
 - [ ] Run the corrected PowerShell script locally, then Release restore/build/test. Exact-head CI and browser acceptance are pending for the new commits.
-- [x] Audited Library 1M baseline V14.5 against normal 5M V4.1.7. V14.5's reconstructed 5M raw Permission omits the 5M Daily VWAP condition; the 1M VWAP gate is not equivalent. See `Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`.
+- [x] Audited Library full 1M baseline V14.5.1 against normal 5M V4.1.7. V14.5's reconstructed 5M raw Permission omits the 5M Daily VWAP condition; the 1M VWAP gate is not equivalent. See `Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`.
 - [ ] Create a targeted 1M parity revision only after the 5M Daily VWAP comparison is implemented and compiled; validate on matched completed 5M bars. Keep V14.5 as baseline until then.
 - [x] Reviewed MHK, OSW, and EVR chart screenshots: no candidate meets the combined overnight + current 5M/1M decision requirements. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied.
 - [ ] Do not publish a numeric Calculated Limit Sell until 20 complete eligible GTC_EXT windows, walk-forward target quantile/touch analysis, and ATR parity are available. Current disposition: no new overnight buy/hold; limit sell DATA?/not calculated.
