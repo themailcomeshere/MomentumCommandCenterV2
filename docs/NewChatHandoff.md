@@ -1,3 +1,10 @@
+## 2026-11-02 — after-hours WebSocket status snapshot
+
+- API health returned OK.
+- WebSocket returned enabled=true, connected=true, state=SUBSCRIBED, feed=iex, and acknowledged SPY/RKLX/ASTX/XRPN.
+- The user ran this after 3 PM Arizona. lastBarUtc=null, receivedBars=0, persistedBars=0, barsBySymbol empty.
+- Interpretation: API liveness and subscription acknowledgement passed. Regular-session delivery is NOT VERIFIED; after-hours zero bars do not indicate a failure. Run only Runtime Acceptance Runbook §1A during the next regular session, not the entire runbook.
+
 ## 2026-11-02 — Technical Workflow, Overnight Scanner and Red Zone
 
 **Branch:** `feature/opportunity-quality-classification`
