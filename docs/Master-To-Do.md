@@ -1,3 +1,10 @@
+## 2026-11-02 — after-hours WebSocket snapshot
+
+- [x] API health was OK.
+- [x] WebSocket connected and state was SUBSCRIBED; SPY, RKLX, ASTX, XRPN were acknowledged.
+- [ ] Regular-session delivery remains unverified. User ran the status check after 3 PM Arizona; lastBarUtc was null and received/persisted counts were zero. This is expected after-hours and is not a delivery failure. Run the §1A five-minute before/after test during regular market hours.
+
+---
 ## 2026-11-02 — Technical Workflow, Overnight Scanner, Red Zone
 
 Current operator entry point: [Technical Workflow](Technical-Workflow.md). The [Runtime Acceptance Runbook](Runtime-Acceptance-Runbook.md) remains the detailed runtime acceptance source of truth; do not run every specialized procedure after every commit. Follow the Technical Workflow's standard update/build/restart/API smoke test, then run only feature-specific acceptance tests when relevant.
