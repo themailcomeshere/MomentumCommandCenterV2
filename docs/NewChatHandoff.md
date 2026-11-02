@@ -1,3 +1,25 @@
+## 2026-11-02 — xUnit, prototype dock, extension parity, and RTO follow-up
+
+### Source changes
+- Fixed xUnit2031 in `UsEquitiesSessionCalendarTests.UsesJulyThird2028EarlyClose` with `Assert.Single(boundaries, predicate)`; the test remains enabled.
+- Prototype dock places vertical `BORING OVERNIGHT` to the right of the toggle and `WORKSPACE` beneath it. The accessible toggle label updates to the destination mode.
+- Corrected the Red Zone extension label to describe the installed Thinkorswim metric.
+
+### Extension parity diagnosis and correction
+- Installed Thinkorswim 1M source defines `price = close`, `dailyVWAP = vwap(period = AggregationPeriod.DAY)`, and `extensionATR = AbsValue(price - dailyVWAP) / atr`, where `atr = Average(TrueRange(high, close, low), 14)`.
+- MCC previously calculated `max(0, (close - EMA9) / ATR)` and used Wilder-style recursive ATR. This was not the installed study's formula.
+- Updated `LiveSymbolTechnicalCalculator` to use absolute close-to-session-VWAP distance and a simple 14-bar TrueRange average; updated the V2 fallback to the same VWAP-based definition. Added a regression test for preserving a supplied extension value.
+- Remaining acceptance: compare MCC and TOS on the same symbol, completed 1M timestamp, Daily VWAP and 14-bar ATR. The current MCC session-VWAP implementation still needs matched-value parity verification. Do not claim exact parity before that evidence.
+
+### RTO feed evidence — November 2
+- User's posted outputs report `feed=iex` in both captures. The second output includes per-boundary status labels, but it is still IEX and is not an SIP comparison.
+- 38/40 boundaries are exact. Missing next-session opens remain 2026-10-14 13:30Z (nearest 13:34Z) and 2026-10-21 13:30Z (nearest 13:31Z).
+- 2026-11-02 open at 14:30Z is correct after DST ended.
+- Endpoint uses configured feed and may fall back to stored observations; require response `feed=sip` before interpreting a capture as SIP. Keep histories separate.
+- User reports 171 tests pass with the early-close test commented out. This is not a passing full suite; rerun with the xUnit fix and retain the test.
+
+---
+
 # Handoff update — 2026-11-01 prototype header alignment
 
 - Moved `#system-readiness` inside the same `.topbar-brand` container as the title and topbar tools in `frontend/prototypeIndex.html`; it now occupies the right-side flex area. `#marketSessionClock` remains above the System Readiness heading.
