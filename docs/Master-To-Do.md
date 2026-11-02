@@ -49,6 +49,7 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 - [x] Re-run RTO capture and inspect `boundaryCoverageAudit`: 38/40 boundaries are exact; 2026-10-14 13:30Z is absent from the provider response (nearest 13:34Z), and 2026-10-21 13:30Z is absent (nearest 13:31Z). Store agrees with provider; this is not a persistence loss.
 - [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
+- [ ] Connect source-validated catalyst status, daily SMA20/average volume, reconciled Schwab exclusions, and current authoritative 5M/1M evidence before allowing any Boring Overnight READY evaluation; unknown or stale inputs must fail closed.
 
 ### Strategy policy decision
 - [x] Preserve the existing Boring Overnight thresholds for now. Do not retune from one incomplete 18/20 RTO sample. The 20-pair sample is a minimum operational window, not statistical proof; validate on a larger point-in-time, corporate-action-aware, walk-forward dataset with costs and outliers before changing thresholds.
