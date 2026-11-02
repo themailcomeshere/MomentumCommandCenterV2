@@ -614,9 +614,10 @@ async function loadProviderStatus() {
    setText(prefix + "Recovery", "Historical REST only · collector/restart state loading…");
    const caps = (provider.capabilities || []).join("; ");
    const feedMatch = caps.match(/Configured feed: ([^;]+)/i);
-   if (prefix === "alpaca" && feedMatch) {
+   const configuredFeed = provider.configuredFeed || feedMatch?.[1];
+   if (prefix === "alpaca" && configuredFeed) {
     const feedNode = document.querySelector("#alpacaTitle")?.closest(".provider-card")?.querySelector(".provider-card-heading .chip");
-    if (feedNode) feedNode.textContent = "Configured feed: " + feedMatch[1];
+    if (feedNode) feedNode.textContent = "Configured feed: " + configuredFeed.toUpperCase();
    }
   }
   try {
