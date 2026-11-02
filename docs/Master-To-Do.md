@@ -1,3 +1,23 @@
+## 2026-11-02 — latest user follow-up: script, CSV, prototype, 1M parity, overnight
+
+### Completed source changes
+- [x] Fixed PowerShell refspec interpolation in `scripts/Get-Latest-And-Test.ps1` using `${Branch}` before the colon.
+- [x] Hardened the scanner CSV importer for UTF-8 BOM, comma/semicolon/tab separators, quoted fields, Symbol/Ticker header variants, and the Overnight Score alias.
+- [x] Repositioned the prototype market-session clock immediately beside the title inside the title parent; corrected the transport label's inherited yellow background.
+- [x] Audited Library 1M V14.5 against normal 5M V4.1.7 and documented the missing 5M Daily VWAP condition in the reconstructed 5M raw Permission.
+
+### Remaining validation / strategy disposition
+- [ ] Original Overnight Scanner CSV is not present in the active branch tree reviewed for this update; verify the actual committed export after locating it. The importer fix is broader but does not prove that this particular file now imports.
+- [ ] Run `Get-Latest-And-Test.ps1` locally after pulling the fix; record Release build/test output and exact SHA.
+- [ ] Verify exact-head GitHub Actions and browser acceptance for prototype clock/transport label and scanner CSV import.
+- [ ] Keep V14.5 as current 1M baseline until a targeted parity revision adds the 5M Daily VWAP condition, compiles in TOS, and matches V4.1.7 on exact completed 5M bars. Preserve the separate 1M VWAP execution gate.
+- [x] Reviewed November 2 MHK/OSW/EVR charts: none qualifies for a new overnight BUY/HOLD. EVR and OSW display 1M EOD GET OUT; MHK has 5M Permission NO and 1M execution environment NO, and its current ON move is 3.13%.
+- [ ] Calculated Limit Sell remains DATA?/not calculated until 20 complete GTC_EXT windows, walk-forward target quantile/touch evidence, and ATR parity are available. Do not substitute the +0.5% heuristic.
+
+Related: [Active Work Checklist](Active-Work-Checklist-20261102.md), [1M V14.5 parity audit](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
+
+---
+
 ## 2026-11-02 — after-hours WebSocket snapshot
 
 - [x] API health was OK.
