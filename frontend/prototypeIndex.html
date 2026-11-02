@@ -6,8 +6,10 @@
 .prototype-page .prototype-symbol-control{width:100%;display:grid;gap:6px}
 .prototype-page .prototype-symbol-control label{font-size:9px;letter-spacing:.14em;font-weight:800;color:var(--muted)}
 .prototype-page .prototype-symbol-control input{width:100%;min-width:0;text-align:center;font-size:15px;font-weight:800;letter-spacing:.04em;padding:9px 4px;text-transform:uppercase}
-.prototype-page .prototype-workspace-control{margin:auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:300px}
+.prototype-page .prototype-workspace-control{margin:auto 0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:300px}
 .prototype-page .prototype-workspace-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:850;letter-spacing:.2em;color:var(--muted)}
+.prototype-page .prototype-workspace-copy{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.prototype-page .prototype-workspace-caption{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;font-weight:750;letter-spacing:.18em;color:var(--blue)}
 .prototype-page .prototype-switch-label{position:relative;display:flex;align-items:center;justify-content:center;width:38px;height:76px;cursor:pointer}
 .prototype-page .prototype-switch-label input{position:absolute;opacity:0;width:1px;height:1px}
 .prototype-page .prototype-switch-track{position:relative;width:28px;height:66px;border-radius:999px;border:1px solid #46617f;background:#101d31;transition:background .18s,border-color .18s}
@@ -42,12 +44,11 @@
   <input id="symbol" type="text" value="SPY" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Focused symbol">
  </div>
  <div class="prototype-workspace-control" id="prototype-workspace-control">
-  <span class="prototype-workspace-label" id="prototype-workspace-label">WORKSPACE</span>
   <label class="prototype-switch-label" for="workspaceModeToggle" id="prototype-switch-label">
    <input id="workspaceModeToggle" type="checkbox" aria-label="Switch to Boring Overnight workspace">
    <span class="prototype-switch-track" id="prototype-switch-track"></span>
   </label>
-  <small id="prototype-workspace-state">INTRADAY MOMENTUM</small>
+  <div class="prototype-workspace-copy" id="prototype-workspace-copy"><span class="prototype-workspace-label" id="prototype-workspace-label">BORING OVERNIGHT</span><span class="prototype-workspace-caption" id="prototype-workspace-state">WORKSPACE</span></div>
  </div>
  <select id="mode" class="prototype-mode-source" aria-hidden="true" tabindex="-1">
   <option value="momentum" id="prototype-mode-momentum">Intraday Momentum</option>
@@ -285,4 +286,4 @@
  </ol>
  <p class="notice" id="mcc-static-0452-p">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
 </dialog>
-<footer id="mcc-static-0453-footer">Prototype UI · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261101-prototype-symbol-input-v1" id="mcc-static-0454-script"></script>\n<script id="prototype-ui-bridge">(()=>{const mode=document.getElementById("mode"),toggle=document.getElementById("workspaceModeToggle"),state=document.getElementById("prototype-workspace-state");if(!mode||!toggle)return;const sync=()=>{toggle.checked=mode.value==="overnight";if(state)state.textContent=toggle.checked?"BORING OVERNIGHT":"INTRADAY MOMENTUM";};toggle.addEventListener("change",()=>{mode.value=toggle.checked?"overnight":"momentum";mode.dispatchEvent(new Event("change",{bubbles:true}));sync();});mode.addEventListener("change",sync);document.getElementById("reset")?.addEventListener("click",sync);const symbol=document.getElementById("symbol");symbol?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();symbol.blur();}});sync();})();</script></body></html>
+<footer id="mcc-static-0453-footer">Prototype UI · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261101-prototype-symbol-input-v1" id="mcc-static-0454-script"></script>\n<script id="prototype-ui-bridge">(()=>{const mode=document.getElementById("mode"),toggle=document.getElementById("workspaceModeToggle"),state=document.getElementById("prototype-workspace-state");if(!mode||!toggle)return;const sync=()=>{toggle.checked=mode.value==="overnight";toggle.setAttribute("aria-label",toggle.checked?"Switch to Intraday Momentum workspace":"Switch to Boring Overnight workspace");if(state)state.textContent="WORKSPACE";};toggle.addEventListener("change",()=>{mode.value=toggle.checked?"overnight":"momentum";mode.dispatchEvent(new Event("change",{bubbles:true}));sync();});mode.addEventListener("change",sync);document.getElementById("reset")?.addEventListener("click",sync);const symbol=document.getElementById("symbol");symbol?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();symbol.blur();}});sync();})();</script></body></html>
