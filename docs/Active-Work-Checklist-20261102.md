@@ -58,6 +58,12 @@ The RTO audit checks 40 exact prior-close/next-open 1-minute timestamps across 2
 - Keep Boring Overnight manual-only and Schwab integration read-only.
 
 
+## November 2 after-hours WebSocket result
+
+- [x] API health returned OK.
+- [x] WebSocket reported enabled/connected/SUBSCRIBED with SPY, RKLX, ASTX, XRPN acknowledged.
+- [ ] Delivery acceptance remains open: the user ran this after 3 PM Arizona; `lastBarUtc=null`, `receivedBars=0`, `persistedBars=0`, and `barsBySymbol={}`. This is a connection/subscription pass only, not a regular-session delivery test. Repeat the five-minute before/after test during market hours.
+
 ## New workflow documents (2026-11-02)
 - [x] `docs/Technical-Workflow.md` is the operator's standard get-latest/build/restart/API smoke-test sequence; `docs/Runtime-Acceptance-Runbook.md` remains the detailed acceptance source of truth.
 - [x] `scripts/Get-Latest-And-Test.ps1` safely checks for a clean tree, fetches/switches/pulls the project branch, and runs Release restore/build/tests.
