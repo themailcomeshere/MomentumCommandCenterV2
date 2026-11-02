@@ -32,7 +32,7 @@ try {
         throw "Working tree is not clean. Commit or safely stash your changes before updating; this script will not overwrite them."
     }
 
-    Invoke-Checked -Command "git" -Arguments @("fetch", "origin", "+refs/heads/$Branch:refs/remotes/origin/$Branch")
+    Invoke-Checked -Command "git" -Arguments @("fetch", "origin", "+refs/heads/${Branch}:refs/remotes/origin/${Branch}")
 
     $currentBranch = (git branch --show-current).Trim()
     if ($LASTEXITCODE -ne 0) { throw "Unable to determine current Git branch." }
