@@ -100,8 +100,8 @@ The capture route uses the configured provider/feed; the request body does not a
 ### Procedure
 
 1. Preserve the original IEX response and its exact-boundary audit (18/20 pairs; missing next-session opens 2026-10-14 13:30Z and 2026-10-21 13:30Z).
-2. Temporarily set `MarketData:Alpaca:Feed=sip` in the local API runtime configuration (for example, a local `appsettings.Development.json` override or a process environment variable `MarketData__Alpaca__Feed=sip`). Keep Alpaca credentials local; do not put them in Git or chat.
-3. Restart the API so the provider and stream use the intended feed. Confirm the provider/runtime status reports SIP before capturing.
+2. First confirm Alpaca's account subscription permits recent SIP data. The user's 2026-11-02 attempt returned HTTP 403 (`subscription does not permit querying recent SIP data`), so the audit is currently blocked. Do not retry while that entitlement response remains unchanged.
+3. Once entitlement is confirmed by a successful recent SIP data request, set `MarketData:Alpaca:Feed=sip` in local server-side configuration, restart the API, and confirm provider status and recent bar responses both succeed with observed `feed=sip`. Keep credentials local; do not put them in Git or chat.
 4. Run the same 20-session request:
 
 ```powershell
