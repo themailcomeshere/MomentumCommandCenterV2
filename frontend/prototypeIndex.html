@@ -345,7 +345,55 @@
                 text-align: left
             }
         }
-    </style>
+    
+/* Prototype header mirrors production: brand and readiness are sibling columns. */
+.prototype-page .topbar-layout{
+ display:grid;
+ grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
+ align-items:start;
+ gap:16px;
+ width:100%;
+ min-width:0;
+ flex:1;
+}
+.prototype-page .topbar-brand{
+ display:flex;
+ flex-direction:column;
+ align-items:flex-start;
+ justify-content:center;
+ gap:10px;
+ min-width:0;
+}
+.prototype-page .topbar-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.prototype-page .topbar-readiness{min-width:0;width:100%;max-width:none;align-self:start}
+.prototype-page .market-session-clock{align-self:flex-end;text-align:right;margin:0 0 2px}
+.prototype-page #prototype-transport-readiness .demo-flag{
+ display:flex;
+ align-items:center;
+ justify-content:flex-start;
+ gap:7px;
+ min-width:0;
+ max-width:100%;
+ white-space:normal;
+}
+.prototype-page #prototype-transport-readiness #marketTransportLabel{
+ display:inline;
+ width:auto;
+ height:auto;
+ margin:0;
+ white-space:normal;
+ overflow-wrap:normal;
+ word-break:normal;
+ line-height:1.25;
+}
+@media(max-width:900px){
+ .prototype-page .topbar-layout{grid-template-columns:minmax(0,1fr);width:100%}
+ .prototype-page .topbar-brand{align-items:flex-start}
+ .prototype-page .topbar-tools{width:100%}
+ .prototype-page .topbar-readiness{width:100%;max-width:none}
+ .prototype-page .market-session-clock{align-self:flex-start;text-align:left}
+}
+</style>
 </head>
 <body id="mcc-static-0008-body" class="prototype-page">
     \n<aside class="prototype-dock" id="prototype-dock" aria-label="Workspace and focused symbol">
@@ -377,24 +425,23 @@
             <div class="topbar-brand" id="mcc-static-0010-div">
                 <div id="mcc-static-0011-div"><h1 id="mcc-static-0013-h1">Momentum Command Center</h1></div>
                 <div class="topbar-tools" id="mcc-static-0014-div"><span id="streamStatus" class="chip">WS minute bars: checking…</span><span id="prototype-page-badge" class="chip">PROTOTYPE · NOT PRODUCTION</span><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
-                <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
-                    <div id="marketSessionClock" class="market-session-clock" aria-live="polite">
-                        <span id="marketSessionLabel">Market session</span>
-                        <strong id="marketSessionCountdown">Loading…</strong>
-                        <small id="marketSessionDetail">America/New_York · calendar loading</small>
-                    </div>
-                    <div class="topbar-readiness-heading" id="mcc-static-0029-div"><span class="eyebrow" id="mcc-static-0030-span">SYSTEM READINESS</span><span class="chip" id="mcc-static-0031-span">Decision support</span></div>
-                    <div class="readiness-grid" id="mcc-static-0032-div">
-                        <div id="prototype-transport-readiness" class="readiness-item"><div class="demo-flag" id="prototype-demo-flag"><span id="prototype-transport-dot"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div><strong id="prototype-transport-title">Data transport</strong></div>
-                        <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
-                        <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
-                        <div id="mcc-static-0041-div"><span class="readiness-dot demo" id="mcc-static-0042-span"></span><strong id="mcc-static-0043-strong">Live scanner</strong><span id="mcc-static-0044-span">Top movers · SIP entitlement required</span></div>
-                        <div id="mcc-static-0045-div"><span class="readiness-dot blocked" id="mcc-static-0046-span"></span><strong id="mcc-static-0047-strong">Trade execution</strong><span id="mcc-static-0048-span">Not implemented</span></div>
-                    </div>
-                </section>
+                <div id="marketSessionClock" class="market-session-clock" aria-live="polite">
+                    <span id="marketSessionLabel">Market session</span>
+                    <strong id="marketSessionCountdown">Loading…</strong>
+                    <small id="marketSessionDetail">America/New_York · calendar loading</small>
+                </div>
             </div>
+            <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
+                <div class="topbar-readiness-heading" id="mcc-static-0029-div"><span class="eyebrow" id="mcc-static-0030-span">SYSTEM READINESS</span><span class="chip" id="mcc-static-0031-span">Decision support</span></div>
+                <div class="readiness-grid" id="mcc-static-0032-div">
+                    <div id="prototype-transport-readiness" class="readiness-item"><div class="demo-flag" id="prototype-demo-flag"><span id="prototype-transport-dot"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div><strong id="prototype-transport-title">Data transport</strong></div>
+                    <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
+                    <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
+                    <div id="mcc-static-0041-div"><span class="readiness-dot demo" id="mcc-static-0042-span"></span><strong id="mcc-static-0043-strong">Live scanner</strong><span id="mcc-static-0044-span">Top movers · SIP entitlement required</span></div>
+                    <div id="mcc-static-0045-div"><span class="readiness-dot blocked" id="mcc-static-0046-span"></span><strong id="mcc-static-0047-strong">Trade execution</strong><span id="mcc-static-0048-span">Not implemented</span></div>
+                </div>
+            </section>
         </div>
-
     </header>
     <main id="mcc-static-0049-main">
 
