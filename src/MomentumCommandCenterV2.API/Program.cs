@@ -119,11 +119,11 @@ app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers,
             .Select(provider =>
             {
                 provider.TryGet(feedKey, out var value);
-                return new { source = provider.ToString() ?? provider.GetType().Name, value };
+                return (Source: provider.ToString() ?? provider.GetType().Name, Value: value);
             })
-            .Where(item => !string.IsNullOrWhiteSpace(item.value))
-            .ToArray() ?? Array.Empty<object>();
-        var effectiveFeedSource = feedSources.LastOrDefault()?.source
+            .Where(item => !string.IsNullOrWhiteSpace(item.Value))
+            .ToArray() ?? Array.Empty<(string Source, string? Value)>();
+        var effectiveFeedSource = feedSources.LastOrDefault().Source
             ?? "SIP safety default (no explicit configuration value)";
         return new
         {
@@ -133,7 +133,7 @@ app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers,
                 ? effectiveFeedSource
                 : null,
             feedConfigurationSources = string.Equals(p.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase)
-                ? feedSources
+                ? feedSources.Select(item => new { source = item.Source, value = item.Value }).ToArray()
                 : null,
             configured = p.IsConfigured,
             validated = p.HasSuccessfulDataValidation,
