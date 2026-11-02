@@ -1,9 +1,13 @@
 ## November 2 validation notes
 
-- The July 3, 2028 early-close test remains enabled and now uses the xUnit predicate overload for `Assert.Single`.
-- Prototype dock switch labels are `BORING OVERNIGHT` to the right and `WORKSPACE` beneath, both vertical.
-- The 1M extension calculation has been aligned to the installed Thinkorswim formula: absolute close-to-Daily-VWAP distance divided by a simple 14-bar average of True Range. Exact parity still requires a same-symbol/same-bar comparison.
-- RTO follow-up capture still reports `feed=iex`; no SIP comparison or entitlement is established. Two exact opening bars remain missing.
+- The July 3, 2028 early-close test remains enabled and uses the xUnit predicate overload for `Assert.Single`.
+- The first user Release build succeeded across all five projects, but the test run reported 172/176. The supplied-extension test and three TradeAnalyzer fixture failures have been corrected in source; a post-fix rerun is still required.
+- The prototype dock now has **INTRADAY MOMENTUM** left of the toggle, **BORING OVERNIGHT** right of it, and **WORKSPACE** below it.
+- Prototype Main Chart and Red Zone now expose the 1M close, Daily VWAP, ATR14, and normalized ATR Extension inputs. The `11.20 ATR` display is the normalized extension, not raw ATR14.
+- API feed diagnostics now distinguish configured feed from observed 1M/5M feed. Committed API default is SIP; entitlement and runtime SIP delivery remain unverified.
+- Thinkorswim numeric parity requires a matched symbol and completed 1M timestamp. The earlier `24.5 ATR` vs `11.20 ATR` comparison remains unresolved.
+- RTO follow-up evidence remains IEX, not SIP; 38/40 exact boundaries, with October 14 and October 21 open bars missing. Repeat only after observed SIP feed is confirmed.
+- Detailed record: [Live Extension and Feed Diagnostics](docs/Validation/Live-Extension-and-Feed-Diagnostics-20261102.md).
 
 # Momentum Command Center V3
 
