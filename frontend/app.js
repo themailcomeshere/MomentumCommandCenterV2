@@ -324,10 +324,18 @@ function renderWatchlist(){
  }):[Object.assign(document.createElement("li"),{textContent:"No candidates added yet."})]));
 }
 
-function parseCsvLine(line){
+function detectCsvDelimiter(line){
+ const candidates=[",",";","\\t"],counts={",":0,";":0,"\\t":0};let quoted=false;
+ for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'){if(quoted&&line[i+1]==='"'){i++;}else quoted=!quoted;}else if(!quoted&&Object.prototype.hasOwnProperty.call(counts,char))counts[char]++;}
+ return candidates.reduce((best,item)=>counts[item]>counts[best]?item:best,",");
+}
+function parseCsvLine(line,delimiter=","){
  const fields=[],buffer=[];let quoted=false;
- for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'){if(quoted&&line[i+1]==='"'){buffer.push('"');i++;}else quoted=!quoted;}else if(char===','&&!quoted){fields.push(buffer.join(""));buffer.length=0;}else buffer.push(char);}
+ for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'){if(quoted&&line[i+1]==='"'){buffer.push('"');i++;}else quoted=!quoted;}else if(char===delimiter&&!quoted){fields.push(buffer.join(""));buffer.length=0;}else buffer.push(char);}
  fields.push(buffer.join(""));return fields;
+}
+function normalizeCsvHeader(value){
+ return String(value??"").replace(/^\\uFEFF/,"").trim().replace(/^"(.*)"$/,"$1").trim().toLowerCase().replace(/\\s+/g,"").replace(/[^a-z0-9/]/g,"");
 }
 
 $("scannerGroup").addEventListener("change",renderScanner);
@@ -336,11 +344,14 @@ $("clearWatchlist").addEventListener("click",()=>writeWatchlist([]));
 $("scannerFile").addEventListener("change",event=>{
  const file=event.target.files[0];if(!file)return;
  const reader=new FileReader();reader.onload=()=>{
-  const lines=String(reader.result).split(/\r?\n/).filter(Boolean),headers=lines.shift().split(",").map(value=>value.trim().toLowerCase());
-  const symbolIndex=headers.findIndex(value=>["symbol","ticker"].includes(value));
-  if(symbolIndex<0){$("scannerSource").textContent="Import rejected: Symbol/Ticker column required";return;}
-  const imported=lines.map(line=>{const values=parseCsvLine(line),field=name=>{const i=headers.indexOf(name);return i<0?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score")||"—",status:field("status")||"IMPORTED",extension:field("extension")||field("ext")||"DATA?",freshness:field("freshness")||field("data_as_of")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);
-  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
+  const text=String(reader.result).replace(/^\\uFEFF/,"");
+  const lines=text.split(/\\r?\\n/).filter(line=>line.trim().length);
+  if(lines[0]&&/^sep=./i.test(lines[0]))lines.shift();
+  if(!lines.length){$("scannerSource").textContent="Import rejected: CSV is empty";return;}
+  const delimiter=detectCsvDelimiter(lines[0]),headers=parseCsvLine(lines.shift(),delimiter).map(normalizeCsvHeader);
+  const symbolIndex=headers.findIndex(value=>["symbol","ticker","symbol/ticker","symbolticker","tickersymbol"].includes(value));
+  if(symbolIndex<0){$("scannerSource").textContent="Import rejected: Symbol/Ticker column required. Headers found: "+headers.join(", ");return;}
+  const imported=lines.map(line=>{const values=parseCsvLine(line,delimiter),field=(...names)=>{const i=names.map(name=>headers.indexOf(name)).find(index=>index>=0);return i===undefined?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score","overnightscore")||"—",status:field("status")||"IMPORTED",extension:field("extension","ext")||"DATA?",freshness:field("freshness","data_as_of","dataasof")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
