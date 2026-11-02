@@ -55,9 +55,12 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 ### RTO — 2026-11-01 capture result supplied by user
 - [x] Recorded that RTO returned 4,048 1m bars, 0 new writes, 18/20 valid close/open pairs, and 2 missing next-session open bars.
 - [x] Re-run RTO capture and inspect `boundaryCoverageAudit`: 38/40 boundaries are exact; 2026-10-14 13:30Z is absent from the provider response (nearest 13:34Z), and 2026-10-21 13:30Z is absent (nearest 13:31Z). Store agrees with provider; this is not a persistence loss.
-- [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series.
+- [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series. November 2 follow-up still reports `feed=iex`; it is not an SIP comparison.
   - Exact local capture procedure: `docs/Runtime-Acceptance-Runbook.md` §1B. The endpoint uses configured feed; verify response `feed=sip` to rule out fallback to stored IEX.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
+- [ ] Re-run `UsesJulyThird2028EarlyClose` after the xUnit2031 predicate-overload fix; do not leave the test commented out.
+- [ ] Browser-validate the prototype dock toggle: BORING OVERNIGHT to the right of the switch, WORKSPACE beneath it, both vertical.
+- [ ] Validate corrected 1M extension against Thinkorswim on matched symbol/time/bar. MCC must use `Abs(close - Daily VWAP) / SMA(TrueRange, 14)`, not close-to-EMA9 / Wilder ATR. Confirm Daily VWAP and bar timestamp parity before accepting numeric parity.
 - [ ] Connect source-validated catalyst status, daily SMA20/average volume, reconciled Schwab exclusions, and current authoritative 5M/1M evidence before allowing any Boring Overnight READY evaluation; unknown or stale inputs must fail closed.
 
 ### Strategy policy decision
@@ -87,7 +90,7 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 - [x] Compare generated session dates and UTC boundaries against the official NYSE calendar for the RTO 2026-10-02–2026-10-30 sample.
 - [x] Certify the published NYSE 2026–2028 holiday and early-close dates with regression fixtures. Refresh the supported calendar horizon when NYSE publishes new years; this is not a live calendar feed.
 - [ ] Compare the two RTO IEX missing opens against an independently entitled SIP or validated alternative provider; do not mix feeds in one return series.
-- [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?.
+- [ ] Confirm Alpaca configured feed entitlement and returned 1-minute bar coverage for each expected close/open boundary; any missing boundary keeps all rolling metrics DATA?. November 2 evidence: 38/40 exact; Oct 14 13:30Z and Oct 21 13:30Z still absent.
 - [ ] Connect validated catalyst source, current daily SMA20/average volume, exclusions reconciliation, and current authoritative 5M/1M states before any READY evaluation.
 - [x] Record the installed Thinkorswim study sources and diagnostic files; see the three `docs/Validation/Installed-*` files.
 
