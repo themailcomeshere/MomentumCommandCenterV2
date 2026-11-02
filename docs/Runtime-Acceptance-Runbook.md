@@ -93,6 +93,41 @@ The script refreshes the selected symbol's 1M/5M REST history, captures stream/c
 - 1M assessment may select WebSocket only after acknowledgement, at least 50 completed persisted WebSocket 1M bars, freshness, correct feed and WebSocket provenance. 5M Permission remains REST-backed.
 - Do not lower freshness/history thresholds. If no bar delivery occurs, save the artifacts and report DATA? / NOT VERIFIED; do not manufacture bars or switch feed silently.
 
+## 1B. RTO IEX versus SIP exact-boundary comparison
+
+The capture route uses the configured provider/feed; the request body does not accept a feed override. The current tracked `src/MomentumCommandCenterV2.API/appsettings.json` sets `MarketData:Alpaca:Feed` to `iex`. To perform an independent SIP check, change the local runtime configuration temporarily and restart the API. Do not commit a feed change as a default.
+
+### Procedure
+
+1. Preserve the original IEX response and its exact-boundary audit (18/20 pairs; missing next-session opens 2026-10-14 13:30Z and 2026-10-21 13:30Z).
+2. Temporarily set `MarketData:Alpaca:Feed=sip` in the local API runtime configuration (for example, a local `appsettings.Development.json` override or a process environment variable `MarketData__Alpaca__Feed=sip`). Keep Alpaca credentials local; do not put them in Git or chat.
+3. Restart the API so the provider and stream use the intended feed. Confirm the provider/runtime status reports SIP before capturing.
+4. Run the same 20-session request:
+
+```powershell
+$body = @{ symbol = 'RTO'; providerName = 'Alpaca'; requiredWindow = 20 } | ConvertTo-Json
+$result = Invoke-RestMethod -Method Post -Uri 'http://localhost:53360/api/boring-overnight/capture-history' -ContentType 'application/json' -Body $body
+New-Item -ItemType Directory -Force .\artifacts\runtime-validation | Out-Null
+$result | ConvertTo-Json -Depth 20 | Set-Content .\artifacts\runtime-validation\RTO-SIP-20261101.json -Encoding utf8
+$result.boundaryCoverageAudit | Format-Table boundaryType, expectedTimestampUtc, providerReturnedExactBar, storeHasExactBar, nearestProviderBarTimestampUtc, nearestProviderBarOffsetMinutes, status
+```
+
+5. Verify the returned `feed` is exactly `sip`. If the response reports `iex`, do not treat it as an SIP comparison: the endpoint can reuse a single unambiguous stored feed when the provider returns no bars.
+6. Inspect all 40 expected close/open boundaries and specifically the two missing opens. Record the provider exact-bar flag, store exact-bar flag, nearest provider timestamp and status. Preserve the raw JSON and provider error/status if the request fails.
+7. Compare the IEX and SIP responses by exact UTC timestamp and same-symbol OHLCV, but keep the two feed series separate. Do not fill the IEX history with SIP rows or combine the two feeds into one rolling 20-pair return series.
+8. Restore the local configuration to IEX and restart the API after the comparison.
+
+### Interpretation
+
+- SIP returns the exact bars at both missing timestamps: SIP access is demonstrated for RTO and this historical interval; IEX still has a feed-specific coverage gap. Keep a complete SIP series separate from the IEX series.
+- SIP returns other RTO bars but omits one or both exact timestamps: SIP coverage is also incomplete for those boundaries; retain DATA_GAP.
+- SIP request returns an explicit authorization/plan error: preserve the exact provider status/message as evidence of an entitlement/access problem. Do not infer more than the provider response establishes.
+- SIP returns zero bars or the response feed is not `sip`: comparison is inconclusive. Do not accept the endpoint's possible fallback to stored IEX observations as proof of SIP access.
+- Even a successful SIP historical-bar response does not establish live SIP entitlement for every symbol, complete universe coverage, quote coverage, or Schwab-executable fills. Verify the account plan separately.
+
+**Acceptance evidence:** both raw responses, exact branch/API SHA, local feed configuration, returned feed field, request time, exact boundary audit, and any provider HTTP/status error. No threshold tuning until all 20 pairs are exact and the broader validation requirements are met.
+
+---
 ## 2. Browser acceptance
 
 Run against the user's API-hosted dashboard after pulling the target commit and hard-refreshing. Capture screenshots and browser console output.
