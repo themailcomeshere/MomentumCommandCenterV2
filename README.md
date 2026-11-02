@@ -4,7 +4,7 @@
 - Hardened the prototype scanner CSV importer for UTF-8 BOM, comma/semicolon/tab delimiters, quoted headers, and Symbol/Ticker variants. The actual Overnight Scanner export was not present in the active branch tree during this review, so its exact header format remains unverified.
 - Prototype clock now sits to the right of the title within the title's parent flex row; transport status text no longer inherits the yellow status-dot background.
 - Current Library 1M baseline is V14.5 with normal 5M authority V4.1.7. A source audit found the 1M reconstructed 5M Permission omits the 5M Daily VWAP condition; see [1M V14.5 parity audit](docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md). No uncompiled study replacement is promoted.
-- November 2 overnight chart review: MHK, OSW, and EVR are not BUY/HOLD candidates on the supplied chart evidence. EVR/OSW show EOD GET OUT; MHK has no 5M permission and no 1M execution environment. No numeric Calculated Limit Sell is supported by the currently available GTC_EXT/ATR evidence.
+- November 2 overnight chart review: MHK, OSW, and EVR are not BUY/HOLD candidates on the supplied chart evidence. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied; MHK's current ON move is 3.13%. No numeric Calculated Limit Sell is supported by the currently available GTC_EXT/ATR evidence.
 - These changes require local Release tests, exact-head CI, and browser acceptance before the updated source is considered verified.
 
 ---
