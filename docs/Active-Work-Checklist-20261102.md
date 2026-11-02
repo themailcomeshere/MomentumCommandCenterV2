@@ -18,7 +18,7 @@
 - [ ] Browser acceptance remains pending for the prototype header and original scanner CSV.
 - [x] Audited Library full 1M baseline V14.5.1 against normal 5M V4.1.7. V14.5's reconstructed 5M raw Permission omits the 5M Daily VWAP condition; the 1M VWAP gate is not equivalent. See `Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`.
 - [ ] Create a targeted 1M parity revision only after the 5M Daily VWAP comparison is implemented and compiled; validate on matched completed 5M bars. Keep V14.5 as baseline until then.
-- [x] Reviewed MHK, OSW, and EVR chart screenshots: no candidate meets the combined overnight + current 5M/1M decision requirements. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied.
+- [x] Reviewed MHK, OSW, and EVR chart screenshots: no candidate meets the combined overnight + current 5M/1M decision requirements. The supplied charts are 1D/5m (not 1m): EVR and OSW show visible EOD GET OUT bubbles on their 5m charts, but the generating study/source has not been isolated; their top 5M labels remain WAIT/Permission NO/BEARISH; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied.
 - [ ] Do not publish a numeric Calculated Limit Sell until 20 complete eligible GTC_EXT windows, walk-forward target quantile/touch analysis, and ATR parity are available. Current disposition: no new overnight buy/hold; limit sell DATA?/not calculated.
 
 

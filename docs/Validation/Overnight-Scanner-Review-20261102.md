@@ -92,8 +92,8 @@ Before any overnight decision, obtain daily and 5M charts for all three and veri
 - Last displayed price: **$303.26**; Daily VWAP: **$308.69**.
 - 5M state: **WAIT**; 5M Permission: **NO**; 5M structure: **BEARISH**.
 - RSI: **32.8**; RVOL: **21.95**; extension: **2.98 ATR**.
-- A visible **EOD GET OUT** bubble appears at the right edge.
-- **Disposition:** NO BUY / NO OVERNIGHT HOLD. The 5M chart explicitly shows EOD GET OUT.
+- A visible **EOD GET OUT** bubble appears at the right edge of the 1D/5m chart; its generating study/source has not been isolated. The top 5M status label still reads WAIT / Permission NO / structure BEARISH.
+- **Disposition:** NO BUY / NO OVERNIGHT HOLD. Treat the visible EOD bubble as a warning, but do not attribute it to the 5M authority study without matched study diagnostics.
 
 ### OSW
 - Last displayed price: **$30.02**; Daily VWAP: **$30.37**.
@@ -104,7 +104,7 @@ Before any overnight decision, obtain daily and 5M charts for all three and veri
 
 ### Combined decision
 - No new overnight BUY is supported by these three charts.
-- EVR and OSW have explicit 5M EOD GET OUT signals.
+- EVR and OSW have visible EOD GET OUT bubbles on their 5m charts, but the generating study/source has not been isolated; their top 5M labels remain WAIT / Permission NO / BEARISH.
 - MHK has no 5M Permission and no established bullish regime; its visible sell/pre-sell markers and 3.13% current ON move do not support a boring overnight hold. The screenshot does not establish an EOD GET OUT state for MHK.
 - No 1M chart/state evidence was supplied; 1M confirmation is **NOT ASSESSED**.
 - **Calculated Limit Sell: DATA? / not calculated.** The repository policy requires at least 20 complete eligible 07:00–20:00 Eastern GTC_EXT windows, walk-forward target-touch evaluation, and exact ATR parity. The +0.5% value remains a heuristic only.
