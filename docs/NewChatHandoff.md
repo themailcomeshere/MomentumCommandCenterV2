@@ -1,3 +1,46 @@
+## 2026-11-02 — latest handoff: SIP entitlement, 1M timestamp, TOS parity, Schwab
+
+**Repository:** `themailcomeshere/MomentumCommandCenterV2`  
+**Branch:** `feature/opportunity-quality-classification`  
+**Last previously verified head:** `d0221424ef2994668e60a2f403b67e736500d2ce` (179/179 tests; later commits in this turn still require CI).
+
+### Current facts
+- Alpaca IEX override source is known: tracked appsettings.json had sip; local secrets.json had iex and won by configuration precedence.
+- User set secrets.json to sip; provider status reported configuredFeed=sip, but the INO live assessment returned Alpaca HTTP 403: `subscription does not permit querying recent SIP data`.
+- User restored IEX; provider status returned VALIDATED_DATA_RETURNED and 62 bars. Keep IEX for usable data. SIP is configured only when selected, not entitled/validated.
+- User confirmed the prototype Main Chart layout looks good and fits without horizontal scrolling.
+- Main Chart timestamp display was corrected: API sourceTimestampUtc is the bar start; completedAtUtc is the close. UI now shows close time plus the bar interval. The current in-progress minute remains intentionally excluded. This does not prove provider latency is solved.
+- Current INO comparison: TOS Close 2.06 / VWAP 1.89 / ATR14 0.02; MCC Close 2.05500 / VWAP 1.87031 / ATR14 0.01429. TOS EXT 24.6 was a live/latest label, not a historical per-bar reading. Exact parity remains open.
+- Schwab Trader API — Individual approval is reported complete. App registration, Accounts and Trading Production attachment, app-level Active/Ready status, callback URL, secrets, OAuth and position sync remain open.
+
+### Key docs
+- Active work checklist: `docs/Active-Work-Checklist-20261102.md`.
+- Canonical Master To-Do: `docs/Master-To-Do.md`.
+- SIP and extension diagnostics: `docs/Validation/Live-Extension-and-Feed-Diagnostics-20261102.md`.
+- Main Chart completed-bar timestamp/latency: `docs/Validation/Live-Bar-Timestamp-Latency-20261102.md`.
+- Thinkorswim parity worksheet: `docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`.
+- Schwab integration setup/implementation plan: `docs/Thinkorswim-Schwab-Integration-Plan.md`.
+- Runtime procedures and RTO boundary audit: `docs/Runtime-Acceptance-Runbook.md`.
+
+### What to do next
+1. Run CI for the latest branch head after the frontend timestamp correction and documentation updates.
+2. Pull/rebuild and hard-refresh `prototypeIndex.html`; verify the revised completed-at timestamp on desktop/mobile.
+3. During regular market hours, capture the raw INO live-assessment response. Compute `evaluatedAtUtc - oneMinute.completedAtUtc`; if >=60 seconds on a liquid symbol, investigate provider/source latency. Do not lower freshness thresholds.
+4. Complete exact-date/same-completed-bar TOS comparison with five-decimal Close, VWAP, ATR14 and historical ExtensionATR from the Data Box. Do not use the live AddLabel value.
+5. Keep the RTO SIP audit blocked until recent SIP data is actually authorized and returned. Prior 38/40 evidence is IEX; missing opens are 2026-10-14 13:30Z and 2026-10-21 13:30Z.
+6. Continue Schwab read-only integration after app registration and callback URL are confirmed. Never ask for App Key, App Secret, authorization code or tokens in chat. Do not add order-writing endpoints.
+7. Continue Red Zone opportunity ranking and Boring Overnight source/target validation as listed in the active checklist. Boring Overnight remains WATCH/manual, not actionable READY.
+
+### RTO audit explanation
+The RTO audit is not a strategy-performance score. It checks exact provider/store presence for 40 expected prior-close and next-open 1-minute bars across 20 sessions. It distinguishes a missing provider bar from a persistence failure and reports the nearest returned timestamp. The prior IEX response had 38/40 exact bars; the two missing next-session opens are listed above. The filename `RTO-SIP-20261101.json` does not establish SIP: its payload said `feed=iex`.
+
+### [Uncertainties]
+- Actual one-minute provider latency is not measured; the user has not supplied the timestamped live-assessment JSON for the affected interval.
+- Exact TOS VWAP/ATR14 and historical ExtensionATR values for the same completed candle remain unavailable.
+- Schwab app-level status, attached product and callback URL remain unknown.
+- SIP entitlement may change later; current observed request was denied with HTTP 403.
+
+---
 ## 2026-11-02 — user's live IEX response and final Main Chart layout pass
 
 - User confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `Feed: sip`; `appsettings.Development.json` is absent; launch profile sets only `ASPNETCORE_ENVIRONMENT=Development`.
