@@ -265,6 +265,7 @@ public sealed class LiveSymbolAssessmentService(
                 methodology = new
                 {
                     indicatorHistory = "EMA9/EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP are calculated from provider OHLCV.",
+                    extension = "1m absolute close-to-session-VWAP distance divided by the simple 14-bar average of True Range; intended to match the installed Thinkorswim 1M formula. Session VWAP parity must be confirmed on matched bars.",
                     relativeVolume = "5m current volume divided by average volume for the same regular-session 5m clock slot across prior sessions; minimum five prior samples. This is not a vendor-supplied consolidated RVOL field.",
                     freshness = "Age is measured from the expected bar close (bar timestamp + timeframe), not the bar-open timestamp.",
                     limitations = new[]
