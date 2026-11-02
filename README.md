@@ -4,6 +4,7 @@
 - Operator workflow: [Technical Workflow](docs/Technical-Workflow.md). This is the normal get-latest/build/restart/API smoke-test sequence.
 - Detailed acceptance source of truth: [Runtime Acceptance Runbook](docs/Runtime-Acceptance-Runbook.md). Run specialized tests only when the relevant feature changes or needs certification; do not run the entire runbook after every commit.
 - Update/test script: `scripts/Get-Latest-And-Test.ps1` (clean-tree guard, fetch/switch/pull, Release restore/build/test, exact SHA).
+- Latest source/script head `237fcbfc71f9b03bda64b1e6047d61355c849447` passed Release build and 179/179 tests with 0 warnings/0 errors in [Actions run 41540235754](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41540235754).
 - Overnight process: [Overnight Scanner Quick Start](docs/Overnight-Scanner-Quick-Start.md).
 - November 2 shortlist and catalyst review: [Overnight Scanner Review](docs/Validation/Overnight-Scanner-Review-20261102.md).
 - Red Zone now re-renders immediately after scanner CSV import. Live 1M/5M card assessments refresh every 15 seconds; Alpaca live discoveries refresh every 30 seconds only when that group is selected.
