@@ -1,3 +1,18 @@
+## 2026-11-02 — user's live IEX response and final Main Chart layout pass
+
+- User confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `Feed: sip`; `appsettings.Development.json` is absent; launch profile sets only `ASPNETCORE_ENVIRONMENT=Development`.
+- Local `/api/providers/status` still reported `configuredFeed: iex`, and live assessment also reported IEX. The launch profile shown does not explain that override. Development User Secrets and process/user/machine environment variables have higher precedence than JSON. New provider status now reports `configuredFeedSource` and `feedConfigurationSources`, and `configuredFeed` comes from the actual adapter instance.
+- REST adapter, WebSocket worker, and live assessment now default to SIP when the setting is absent; adapter feed is normalized and exposed. Added a test for missing-feed configuration defaulting to SIP. Explicit higher-precedence IEX configuration can still override.
+- Main Chart prototype markup has been rearranged per user: ticker at left, Main Chart title/description in the middle, Live Opportunity Classification at right. Chart is ~2/3 desktop width; right side is 2x3 metrics (1M Close / Daily VWAP; ATR14 / Relative Volume; ATR Extension / TBD). It stacks at narrower widths. This layout is scoped to `prototypeIndex.html`, not the production page.
+- Close, Daily VWAP, ATR14 now display five decimals; the exact source timestamp is shown in Arizona time and UTC below 1M Close.
+- Reviewed user commit `e7299ddd`: `RTO-SIP-20261101.json` content explicitly says `feed: iex`, 38/40 exact boundary bars, missing Oct 14 and Oct 21 opens, 18/20 overnight pairs. The filename does not establish SIP.
+- Thinkorswim how-to / study: [Thinkorswim-MCC-Extension-Parity-20261102.md](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
+- [ ] Latest head Release build and test verification is pending; earlier 178/178 run predates these new changes.
+- [ ] After local rebuild/restart, inspect `configuredFeedSource` and `feedConfigurationSources`. If User Secrets is the effective source, inspect `dotnet user-secrets list --project src/MomentumCommandCenterV2.API`; if EnvironmentVariables, inspect `MarketData__Alpaca__Feed`. Do not expose credentials.
+- [ ] Confirm observed 1M and 5M feeds are SIP, then repeat RTO audit.
+- [ ] Compare TOS and MCC using same exact date/time, with five-decimal close/VWAP/ATR14 and same session scope.
+- [ ] Browser-check the new Main Chart layout and no horizontal overflow at desktop/mobile sizes.
+
 ## 2026-11-02 — latest user commits, feed source diagnosis, and Main Chart re-layout
 
 ### User commits reviewed
