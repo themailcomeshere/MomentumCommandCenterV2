@@ -340,7 +340,7 @@ $("scannerFile").addEventListener("change",event=>{
   const symbolIndex=headers.findIndex(value=>["symbol","ticker"].includes(value));
   if(symbolIndex<0){$("scannerSource").textContent="Import rejected: Symbol/Ticker column required";return;}
   const imported=lines.map(line=>{const values=parseCsvLine(line),field=name=>{const i=headers.indexOf(name);return i<0?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score")||"—",status:field("status")||"IMPORTED",extension:field("extension")||field("ext")||"DATA?",freshness:field("freshness")||field("data_as_of")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);
-  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows`;renderScanner();
+  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
