@@ -1482,7 +1482,7 @@ main{margin-top:16px}
 
 
 /* 2026-11-02: Main Chart three-column header and chart + 2x3 metric layout. */
-.main-chart-header{
+.prototype-page .main-chart-header{
  display:grid;
  grid-template-columns:auto minmax(0,1.35fr) minmax(260px,1fr);
  align-items:center;
@@ -1490,29 +1490,29 @@ main{margin-top:16px}
  margin-bottom:12px;
  min-width:0;
 }
-.main-chart-header>.focus-symbol-chip{justify-self:start}
-.main-chart-heading{min-width:0}
-.main-chart-heading h2{margin:3px 0 5px}
-.main-chart-heading .muted{max-width:620px;margin:0}
-.main-chart-classification{
+.prototype-page .main-chart-header>.focus-symbol-chip{justify-self:start}
+.prototype-page .main-chart-heading{min-width:0}
+.prototype-page .main-chart-heading h2{margin:3px 0 5px}
+.prototype-page .main-chart-heading .muted{max-width:620px;margin:0}
+.prototype-page .main-chart-classification{
  min-width:0;
  min-height:0;
  height:100%;
  margin:0;
  padding:12px 14px;
 }
-.main-chart-classification .classification{font-size:clamp(15px,1.5vw,22px);margin:5px 0}
-.main-chart-classification p{font-size:10px;line-height:1.3;margin:4px 0}
-.main-chart-classification .chips{gap:4px}
-.main-chart-classification .chip{font-size:9px;padding:3px 6px}
-.focus-chart-layout{
+.prototype-page .main-chart-classification .classification{font-size:clamp(15px,1.5vw,22px);margin:5px 0}
+.prototype-page .main-chart-classification p{font-size:10px;line-height:1.3;margin:4px 0}
+.prototype-page .main-chart-classification .chips{gap:4px}
+.prototype-page .main-chart-classification .chip{font-size:9px;padding:3px 6px}
+.prototype-page .focus-chart-layout{
  display:grid;
  grid-template-columns:minmax(0,2fr) minmax(300px,1fr);
  align-items:stretch;
  gap:14px;
  min-width:0;
 }
-.focus-chart-layout .focus-price-chart{
+.prototype-page .focus-chart-layout .focus-price-chart{
  width:100%;
  max-width:none;
  min-width:0;
@@ -1520,8 +1520,8 @@ main{margin-top:16px}
  margin:0;
  padding:12px;
 }
-.focus-chart-layout .focus-price-chart svg{height:300px}
-#opportunity-status.status-grid{
+.prototype-page .focus-chart-layout .focus-price-chart svg{height:300px}
+.prototype-page #opportunity-status.status-grid{
  display:grid;
  grid-template-columns:repeat(2,minmax(0,1fr));
  grid-template-rows:repeat(3,minmax(96px,1fr));
@@ -1531,7 +1531,7 @@ main{margin-top:16px}
  min-height:0;
  margin:0;
 }
-#opportunity-status .panel{
+.prototype-page #opportunity-status .panel{
  min-width:0;
  min-height:96px;
  height:100%;
@@ -1539,24 +1539,24 @@ main{margin-top:16px}
  border-radius:10px;
  box-shadow:none;
 }
-#opportunity-status .metric{justify-content:center}
-#opportunity-status .metric .eyebrow{font-size:8px;letter-spacing:.08em}
-#opportunity-status .metric strong{font-size:clamp(15px,1.5vw,22px);margin:5px 0;overflow-wrap:anywhere}
-#opportunity-status .metric small{font-size:9px;line-height:1.2}
-#opportunity-status .metric-pending{border-style:dashed;background:rgba(255,255,255,.015)}
+.prototype-page #opportunity-status .metric{justify-content:center}
+.prototype-page #opportunity-status .metric .eyebrow{font-size:8px;letter-spacing:.08em}
+.prototype-page #opportunity-status .metric strong{font-size:clamp(15px,1.5vw,22px);margin:5px 0;overflow-wrap:anywhere}
+.prototype-page #opportunity-status .metric small{font-size:9px;line-height:1.2}
+.prototype-page #opportunity-status .metric-pending{border-style:dashed;background:rgba(255,255,255,.015)}
 @media(max-width:1050px){
- .main-chart-header{grid-template-columns:auto minmax(0,1fr)}
- .main-chart-classification{grid-column:1/-1}
- .focus-chart-layout{grid-template-columns:minmax(0,1fr)}
- .focus-chart-layout .focus-price-chart{min-height:230px}
- .focus-chart-layout .focus-price-chart svg{height:210px}
- #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}
+ .prototype-page .main-chart-header{grid-template-columns:auto minmax(0,1fr)}
+ .prototype-page .main-chart-classification{grid-column:1/-1}
+ .prototype-page .focus-chart-layout{grid-template-columns:minmax(0,1fr)}
+ .prototype-page .focus-chart-layout .focus-price-chart{min-height:230px}
+ .prototype-page .focus-chart-layout .focus-price-chart svg{height:210px}
+ .prototype-page #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none}
 }
 @media(max-width:560px){
- .main-chart-header{grid-template-columns:minmax(0,1fr)}
- .main-chart-classification{grid-column:auto}
- .main-chart-header>.focus-symbol-chip{font-size:25px;min-width:88px}
- .focus-chart-layout .focus-price-chart{min-height:190px}
- .focus-chart-layout .focus-price-chart svg{height:170px}
- #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .prototype-page .main-chart-header{grid-template-columns:minmax(0,1fr)}
+ .prototype-page .main-chart-classification{grid-column:auto}
+ .prototype-page .main-chart-header>.focus-symbol-chip{font-size:25px;min-width:88px}
+ .prototype-page .focus-chart-layout .focus-price-chart{min-height:190px}
+ .prototype-page .focus-chart-layout .focus-price-chart svg{height:170px}
+ .prototype-page #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
