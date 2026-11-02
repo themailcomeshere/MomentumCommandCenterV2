@@ -1,3 +1,54 @@
+## 2026-11-02 — Technical Workflow, Overnight Scanner and Red Zone
+
+**Branch:** `feature/opportunity-quality-classification`
+**Purpose of this handoff:** latest user requests for a repeatable technical update workflow, prototype header repair, Red Zone auto-update, and Overnight Scanner candidate review.
+
+### New canonical workflow
+- Operator entry point: `docs/Technical-Workflow.md`.
+- Detailed runtime acceptance source of truth: `docs/Runtime-Acceptance-Runbook.md`.
+- User should not run every specialized runbook test after every commit. Standard sequence is clean-tree get-latest script → Release restore/build/test → fully stop old API → restart → API health/provider/stream/collector/live assessment smoke checks → browser acceptance. Run specialized market-hours or feature acceptance only when required.
+- New script: `scripts/Get-Latest-And-Test.ps1`. It refuses dirty working trees, fetches and switches/pulls the project branch, then runs Release restore/build/test and prints the SHA.
+
+### Prototype and Red Zone changes
+- Prototype `system-readiness` was incorrectly nested inside `topbar-brand`. It is now a sibling inside `topbar-layout`, matching production's two-column structure.
+- `marketTransportLabel` now overrides inherited anywhere-wrapping and wraps at spaces.
+- CSV import previously updated only the scanner table. It now also calls `renderMorningReport()` immediately, so Red Zone updates as soon as a new CSV is imported.
+- Existing automatic cadence: Red Zone 1M/5M assessment cards refresh every 15 seconds while the page is visible; Alpaca persisted top-gainers/losers discovery refreshes every 30 seconds only when the Alpaca live-discovery group is selected.
+- Important boundary: Thinkorswim Overnight scan is not automatically connected to MCC. Export/import CSV remains manual. Alpaca discovery is a separate SIP-based top-50 gainers/losers feed and current subscription denied recent SIP requests (HTTP 403).
+
+### Overnight Scanner screenshot — 2026-11-02
+- Screenshot reports 248 results, 50 displayed, sorted by Overnight Score.
+- Top visible raw-score rows: MHK 73.42, OSW 70.97, EVR 68.25.
+- Recommended chart-review order: OSW, EVR, MHK. MHK is raw rank #1 but current ON=3.13% and the recent surge makes it the hottest/least boring candidate.
+- Full review: `docs/Validation/Overnight-Scanner-Review-20261102.md`.
+- Operator instructions: `docs/Overnight-Scanner-Quick-Start.md`.
+- Need user Daily and 5M charts for all three; price, 20D average volume, exclusion status and catalyst clearance are not visible in the screenshot.
+
+### Next actions
+1. Pull latest branch and run `.\scripts\Get-Latest-And-Test.ps1`.
+2. Stop the previous API process completely, restart from the latest build, then hard-refresh `http://localhost:53360/prototypeIndex.html`.
+3. Visually confirm header layout, transport label wrapping and no horizontal overflow.
+4. Import a fresh TOS Overnight CSV and verify Red Zone changes immediately. Check that live card assessments refresh after 15 seconds. Do not expect TOS data to update without a new CSV import.
+5. Upload Daily and 5M charts for OSW, EVR, and MHK. Review 1M only if a specific entry/exit timing decision is needed.
+6. On the next regular session, run the dedicated WebSocket delivery acceptance; the November 2 after-hours SUBSCRIBED snapshot is only a connection check.
+7. Continue Red Zone live discovery only after SIP entitlement or a different supported source is available.
+
+### Current files
+- `docs/Technical-Workflow.md`
+- `scripts/Get-Latest-And-Test.ps1`
+- `docs/Overnight-Scanner-Quick-Start.md`
+- `docs/Validation/Overnight-Scanner-Review-20261102.md`
+- `docs/Active-Work-Checklist-20261102.md`
+- `docs/Master-To-Do.md`
+- `docs/Scanner-and-Watchlist-Workbench.md`
+
+### [Uncertainties]
+- Full scan export was not supplied; only the first 50 of 248 results are visible.
+- Price and 20D average volume for the top three are not shown; those gates are unverified.
+- Exact TOS Overnight Score formula and its relationship to the documented Boringness Score have not been certified.
+- Live Alpaca discovery freshness is unverified while recent SIP requests are denied.
+
+---
 ## 2026-11-02 — latest handoff: SIP entitlement, 1M timestamp, TOS parity, Schwab
 
 **Repository:** `themailcomeshere/MomentumCommandCenterV2`  
