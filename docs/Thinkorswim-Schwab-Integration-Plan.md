@@ -1,6 +1,6 @@
 # Thinkorswim / Schwab Integration Plan
 
-**Status:** Design only. No Schwab credentials, account data, or positions are connected.
+**Status:** Individual Trader API access approved by the user (2026-11-02). OAuth app registration, callback URL, app credentials, token exchange, and read-only account/position sync are not yet configured or implemented. No Schwab credentials, account data, or positions are connected.
 
 ## Important distinction
 
@@ -92,3 +92,53 @@ The official product page does not publish a clear monthly API price. Confirm fe
 - Reconcile repeated snapshots and record provenance; never silently treat a missing account response as flat.
 - Position-aware engine input must expand beyond a boolean before production use; test quantity/side/entry-aware management explicitly.
 - Order placement stays out of scope and disabled.
+
+
+## Approval update — 2026-11-02
+
+The user confirmed that **Schwab Trader API — Individual has been approved**. This clears the Individual Developer / product-access prerequisite in the earlier checklist. It does not, by itself, establish that an MCC app has been created, that the app is Active/Ready for Use, or that OAuth/account access has been tested.
+
+Official Schwab guidance distinguishes API product access from app creation and app approval:
+- Individual Trader API product: https://developer.schwab.com/products/trader-api--individual
+- Create an app: https://developer.schwab.com/user-guides/apis-and-apps/create-an-app
+
+### Remaining operator setup
+
+1. In the Schwab Developer Portal, open **Dashboard → Apps → Create App**.
+2. Select the approved **Accounts and Trading Production** product for account/position reads. Do not add order-entry functionality to MCC.
+3. Register the exact callback URL to be used by the local MCC API. The URL sent in the OAuth authorization and token exchange must match the portal registration exactly, including scheme, host, port, path and trailing slash. Do not guess or use a callback that MCC does not yet host.
+4. Complete any app-level approval and wait until the app is **Active / Ready for Use**. Schwab's guide describes app creation and app status separately from Individual Developer/API product access.
+5. Store the App Key and App Secret only in local server-side secret storage. Do not send them in chat, screenshots, GitHub issues, commits, or frontend code. No token file should be committed.
+6. Provide only non-secret setup metadata for implementation: app status, registered callback URL, and confirmation that Accounts and Trading Production is attached. Do not provide the App Key, App Secret, authorization code, access token, or refresh token in chat.
+
+### MCC implementation gate
+
+Once the callback URL and app status are known, implement the local authorization-code flow and read-only endpoints. Use server-side token handling, state/CSRF validation, protected token persistence, refresh/reconnect status, and read-only `GET` account/position calls. Never log token or account identifiers. Position retrieval must distinguish:
+- authenticated account with zero positions;
+- authenticated account with positions;
+- missing/partial position payload;
+- expired/revoked authorization;
+- provider/network failure;
+- stale last-successful snapshot.
+
+The API should expose a sanitized connection/position-sync status, and normalized snapshots must be timestamped and auditable. V2 must receive a position context with quantity/side/entry/source time; a failed sync must never be treated as `hasPosition=false`.
+
+**Hard boundary:** Phase 1 and Phase 2 are read-only. No order preview, create, replace, cancel, or submission endpoint is to be wired into MCC. The API product's broader capabilities do not grant MCC permission to act on them.
+
+### Current disposition
+
+- [x] User reports Individual Trader API approval.
+- [ ] Create the MCC Schwab app and attach Accounts and Trading Production.
+- [ ] Confirm app status is Active / Ready for Use.
+- [ ] Register and confirm the exact local MCC callback URL.
+- [ ] Configure App Key / Secret in local server-side secret storage.
+- [ ] Implement and test OAuth, protected token storage/refresh, and read-only account/position retrieval.
+- [ ] Implement position snapshot provenance and fail-closed position context.
+- [ ] Keep all order-writing functionality out of scope.
+
+## [Uncertainties]
+
+- The exact Schwab Developer Portal app status is not yet known.
+- It is not yet known whether the approved product access includes the required Accounts and Trading Production product on the app.
+- The callback URL and local HTTPS hosting arrangement have not been selected.
+- No Schwab credentials or account response have been supplied or tested.
