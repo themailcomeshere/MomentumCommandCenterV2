@@ -405,21 +405,28 @@
 
         <section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
             <div class="main-chart-header" id="mcc-static-0050-div">
-                <div class="section-heading" id="mcc-static-0051-div">
-                    <div id="mainChartSymbol" class="focus-symbol-chip">SPY</div>
-
-                    <div id="mcc-static-0052-div"><div class="eyebrow" id="mcc-static-0053-div">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted" id="mcc-static-0054-p">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p></div>
+                <div id="mainChartSymbol" class="focus-symbol-chip">SPY</div>
+                <div class="main-chart-heading" id="mcc-static-0051-div">
+                    <div class="eyebrow" id="mcc-static-0053-div">FOCUSED SYMBOL · API-BACKED</div>
+                    <h2 id="mainChartTitle">Main Chart</h2>
+                    <p class="muted" id="mcc-static-0054-p">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p>
                 </div>
+                <article class="panel hero-card main-chart-classification" id="mcc-static-0057-article">
+                    <div class="eyebrow" id="mcc-static-0058-div">LIVE OPPORTUNITY CLASSIFICATION</div>
+                    <div id="classification" class="classification boring">READY — BORING</div>
+                    <p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p>
+                    <div class="chips" id="mcc-static-0059-div"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div>
+                </article>
             </div>
             <div class="focus-chart-layout" id="mcc-static-0055-div">
                 <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted" id="mcc-static-0056-p">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
                 <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
-                    <article class="panel hero-card" id="mcc-static-0057-article"><div class="eyebrow" id="mcc-static-0058-div">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips" id="mcc-static-0059-div"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
                     <article class="panel metric" id="mcc-static-0060-article"><div class="eyebrow" id="mcc-static-0061-div">1M CLOSE</div><strong id="price">Loading…</strong><small id="mcc-static-0062-small">Latest completed 1M bar close</small></article>
                     <article class="panel metric" id="mcc-static-0063-article"><div class="eyebrow" id="mcc-static-0064-div">DAILY VWAP</div><strong id="dailyVwap">Loading…</strong><small id="mcc-static-0065-small">Current regular-session VWAP</small></article>
                     <article class="panel metric" id="mcc-static-0066-article"><div class="eyebrow" id="mcc-static-0067-div">ATR14</div><strong id="atr14">Loading…</strong><small id="mcc-static-0068-small">1M simple average True Range · 14 bars</small></article>
                     <article class="panel metric" id="mcc-static-0069-article"><div class="eyebrow" id="mcc-static-0070-div">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small id="mcc-static-0071-small">5M same-time-of-day RVOL</small></article>
                     <article class="panel metric" id="mcc-static-0072-article"><div class="eyebrow" id="mcc-static-0073-div">ATR EXTENSION</div><strong id="extension">Loading…</strong><small id="mcc-static-0074-small">1M |close − Daily VWAP| / ATR14</small></article>
+                    <article class="panel metric metric-pending" id="mcc-metric-pending"><div class="eyebrow">ADDITIONAL METRIC</div><strong>—</strong><small>TBD · intentionally unassigned</small></article>
                 </section>
             </div>
         </section>
