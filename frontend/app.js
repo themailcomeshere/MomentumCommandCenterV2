@@ -405,7 +405,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
-  extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
+  extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M |close − Daily VWAP| / ATR14)";
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
   const relativeVolume=Number(five.relativeVolume);
   const rvolCriterion=five.scoreBreakdown?.criteria?.find(item=>item.key==="rvolSupportive");
