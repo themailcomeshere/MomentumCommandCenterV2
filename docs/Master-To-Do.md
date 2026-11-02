@@ -1,3 +1,48 @@
+## 2026-11-02 — latest user commits, feed source diagnosis, and Main Chart re-layout
+
+### User commits reviewed
+- [x] Reviewed two commits ahead of the previously verified head: RTO JSON update and a substantial `frontend/prototypeIndex.html` update.
+- [x] Preserved the user's prototype edits and applied the requested Main Chart layout on top.
+- [x] Important evidence correction: file `RTO-SIP-20261101.json` is still `feed: "iex"`, not SIP. It records 3,949 fetched bars, 38/40 exact boundaries, two missing opens (Oct 14 and Oct 21), and 18/20 valid overnight pairs. Its filename does not establish SIP provenance.
+
+### Latest fixes in progress / committed source
+- [x] API provider status now reports the effective feed from the Alpaca adapter and the configuration providers that supplied `MarketData:Alpaca:Feed`. This should reveal whether IEX came from an environment variable, user secrets, JSON provider, or another override.
+- [x] Changed REST adapter, WebSocket worker, and live assessment fallback default from IEX to SIP. Missing configuration no longer silently selects IEX.
+- [x] Added an adapter test proving missing feed configuration defaults to SIP.
+- [x] Main Chart now has three header columns: ticker chip, Main Chart title/description, and Live Opportunity Classification.
+- [x] Chart occupies about two-thirds of the desktop content width. Five existing metrics plus a clearly marked TBD slot are arranged in a 2-column × 3-row grid to the right. Layout collapses responsively rather than forcing horizontal scrolling.
+- [x] Close, Daily VWAP, and ATR14 are now shown at five decimal places; diagnostic text uses the same precision.
+- [x] Added [Thinkorswim / MCC Extension Parity](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md), including a ThinkScript study and exact-bar worksheet.
+
+### Feed acceptance — still requires user's local runtime
+The user supplied `appsettings.json` with `Feed: sip`, but both live endpoints still report `iex`. `launchSettings.json` contains only `ASPNETCORE_ENVIRONMENT=Development`; no explicit feed override is shown there. The cause is not yet proven. The new `/api/providers/status` diagnostics report:
+- `configuredFeed`: feed cached by the actual Alpaca adapter instance
+- `configuredFeedSource`: highest-precedence configuration provider with that key
+- `feedConfigurationSources`: every provider contributing a value for that key, in provider order
+
+After rebuild/restart, inspect these fields. Environment variables and user secrets can override appsettings. If the new source says `appsettings.json` but feed remains IEX, confirm the actual process content root/output directory and that the latest API assembly is running. If it identifies EnvironmentVariables, inspect only the named feed variable `MarketData__Alpaca__Feed` (do not expose credentials).
+
+### Thinkorswim parity status
+At the user's reported 11:26 bar: close approximately $2.00 in both; MCC previously showed VWAP $1.838, ATR14 $0.013, extension 11.89; TOS showed EXT 22.92. The prior MCC UI rounded inputs too aggressively for a conclusive ratio check. The UI now shows five decimals. MCC VWAP is HLC3 volume-weighted using RTH 1M bars; ATR14 is SMA(TrueRange,14). The new parity note tells the user how to expose ATR14 and extension as ThinkScript plots and inspect the historical candle with the Data Box. No numerical parity conclusion is made yet.
+
+### Remaining acceptance
+- [ ] Run Release build and all tests on the latest source head.
+- [ ] Re-query `/api/providers/status`; capture `configuredFeed`, `configuredFeedSource`, and `feedConfigurationSources`.
+- [ ] Verify live assessment `configuredFeed`, top-level `feed`, `oneMinute.feed`, and `fiveMinute.feed` are SIP.
+- [ ] Confirm SIP entitlement / provider delivery; do not infer from config alone.
+- [ ] Compare TOS/MCC close, VWAP, ATR14, and extension on the same date and exact completed 1M timestamp with five-decimal inputs.
+- [ ] Browser-check desktop and mobile Main Chart layout and verify no horizontal overflow.
+- [ ] Re-run RTO boundary audit only after observed SIP is confirmed. The latest committed RTO JSON is IEX, 38/40 exact, with Oct 14 and Oct 21 opening gaps.
+- [ ] Confirm whether the new TBD metric should remain a placeholder or be assigned a defined metric. Do not invent one.
+
+### [Uncertainties]
+- Local API still reports IEX despite the supplied JSON showing SIP; source provenance is pending the new endpoint diagnostics.
+- SIP entitlement and actual SIP delivery are not established.
+- The exact date/timezone of the reported 11:26 comparison and the unrounded inputs are not yet available.
+- Browser rendering has not been observed from the user's machine.
+
+---
+
 ## 2026-11-02 — Extension input visibility, test regressions, dock correction, and SIP feed
 
 ### Completed source work
