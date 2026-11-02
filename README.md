@@ -1,3 +1,14 @@
+## November 2 follow-up — current operator and strategy notes
+
+- Fixed the update script's PowerShell branch refspec interpolation; the branch variable is now braced before the colon.
+- Hardened the prototype scanner CSV importer for UTF-8 BOM, comma/semicolon/tab delimiters, quoted headers, and Symbol/Ticker variants. The actual Overnight Scanner export was not present in the active branch tree during this review, so its exact header format remains unverified.
+- Prototype clock now sits to the right of the title within the title's parent flex row; transport status text no longer inherits the yellow status-dot background.
+- Current Library 1M baseline is V14.5 with normal 5M authority V4.1.7. A source audit found the 1M reconstructed 5M Permission omits the 5M Daily VWAP condition; see [1M V14.5 parity audit](docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md). No uncompiled study replacement is promoted.
+- November 2 overnight chart review: MHK, OSW, and EVR are not BUY/HOLD candidates on the supplied chart evidence. EVR/OSW show EOD GET OUT; MHK has no 5M permission and no 1M execution environment. No numeric Calculated Limit Sell is supported by the currently available GTC_EXT/ATR evidence.
+- These changes require local Release tests, exact-head CI, and browser acceptance before the updated source is considered verified.
+
+---
+
 - November 2 after-hours stream check: API health OK and WebSocket SUBSCRIBED with SPY/RKLX/ASTX/XRPN acknowledged. No bars/counters advanced because the user ran it after 3 PM Arizona; regular-session delivery remains unverified. See `docs/Runtime-Acceptance-Runbook.md` §1A.
 ## November 2, 2026 — Technical workflow and Overnight Scanner
 
