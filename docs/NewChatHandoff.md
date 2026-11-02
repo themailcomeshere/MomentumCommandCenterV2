@@ -1,3 +1,18 @@
+## 2026-11-02 — latest follow-up: script, CSV, prototype, ThinkScript parity, and overnight decision
+
+- Branch: `feature/opportunity-quality-classification`. The November 2 follow-up source changes are committed; current exact-head CI must be checked before treating them as verified.
+- Fixed `scripts/Get-Latest-And-Test.ps1` PowerShell refspec interpolation by using `${Branch}` before the colon.
+- Hardened the scanner CSV importer for UTF-8 BOM, comma/semicolon/tab delimiters, quoted fields, `Symbol`/`Ticker`/`Symbol/Ticker`, and `Overnight Score`. The specific Overnight Scanner export was not found in the active branch tree; its exact import remains unverified.
+- Prototype clock now sits directly to the right of the title inside the title parent; transport-label text no longer inherits the yellow dot background.
+- Current full 1M Library source is `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (V14.5.1). The later V14.4.10 artifact is an isolated aggressive-lane audit-only mode, not the normal full study. V14.5.1 retains a reconstructed 5M Permission gap (missing 5M Daily VWAP) and a fixed 15:55 Eastern EOD cutoff that does not equal 3:55 PM Arizona.
+- The 5M V4.1.7 source uses 18:55 Eastern in daylight time (correct for 3:55 PM Arizona) but 19:55 Eastern in standard time; correct standard-time mapping is 17:55 Eastern. Both studies need a targeted shared DST-aware EOD correction and matched-bar validation. Do not trust 1M READY/EOD labels as standalone authority until compiled and parity-tested.
+- The four supplied screenshots include the Overnight scan and three **1D/5m** charts, not 1M charts. EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure, with no visible EOD GET OUT. No 1M state is established.
+- Overnight disposition: no new BUY/HOLD for MHK, OSW, or EVR. MHK current ON is 3.13% and its 5D mean is elevated relative to its 20D mean. EVR/OSW have explicit 5M EOD GET OUT.
+- Calculated Limit Sell remains DATA?/not calculated: no 20 complete GTC_EXT windows, walk-forward target-touch evidence, and exact ATR parity. Do not use +0.5% as a calculated target.
+- See current source of truth: `docs/Master-To-Do.md`, `docs/Active-Work-Checklist-20261102.md`, `docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`, and `docs/Validation/Overnight-Scanner-Review-20261102.md`.
+
+---
+
 ## 2026-11-02 — after-hours WebSocket status snapshot
 
 - API health returned OK.
