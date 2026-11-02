@@ -4,6 +4,12 @@
 **Branch:** `feature/opportunity-quality-classification`  
 **Purpose:** Turn the outstanding runtime and external-dependency checklist into repeatable evidence collection. This is an acceptance runbook, not a claim that live runtime behavior has passed.
 
+## How to use this runbook
+
+For the normal per-commit/per-release procedure, start with [Technical Workflow](Technical-Workflow.md). It covers the safe get-latest script, Release build/tests, stopping and restarting the API, standard API smoke checks, and browser acceptance.
+
+This runbook remains the detailed acceptance source of truth for specialized runtime tests, expected evidence, failure handling, and market-hours procedures. Do not execute every section after every commit; run the sections relevant to the changed feature or a scheduled certification.
+
 ## 1. Market-data runtime capture
 
 ### Automated capture script
