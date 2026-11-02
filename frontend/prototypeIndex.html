@@ -358,15 +358,16 @@
 }
 .prototype-page .topbar-brand{
  display:flex;
- flex-direction:column;
- align-items:flex-start;
- justify-content:center;
- gap:10px;
+ flex-direction:row;
+ flex-wrap:wrap;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px 16px;
  min-width:0;
 }
-.prototype-page .topbar-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.prototype-page .topbar-tools{display:flex;align-items:center;gap:8px;flex:1 0 100%;flex-wrap:wrap;min-width:0}
 .prototype-page .topbar-readiness{min-width:0;width:100%;max-width:none;align-self:start}
-.prototype-page .market-session-clock{align-self:flex-end;text-align:right;margin:0 0 2px}
+.prototype-page .market-session-clock{align-self:center;text-align:right;margin:0 0 2px auto}
 .prototype-page #prototype-transport-readiness .demo-flag{
  display:flex;
  align-items:center;
@@ -381,6 +382,10 @@
  width:auto;
  height:auto;
  margin:0;
+ padding:0;
+ border-radius:0;
+ color:var(--muted);
+ background:transparent;
  white-space:normal;
  overflow-wrap:normal;
  word-break:normal;
@@ -424,12 +429,12 @@
         <div class="topbar-layout" id="mcc-static-0009-div">
             <div class="topbar-brand" id="mcc-static-0010-div">
                 <div id="mcc-static-0011-div"><h1 id="mcc-static-0013-h1">Momentum Command Center</h1></div>
-                <div class="topbar-tools" id="mcc-static-0014-div"><span id="streamStatus" class="chip">WS minute bars: checking…</span><span id="prototype-page-badge" class="chip">PROTOTYPE · NOT PRODUCTION</span><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
                 <div id="marketSessionClock" class="market-session-clock" aria-live="polite">
                     <span id="marketSessionLabel">Market session</span>
                     <strong id="marketSessionCountdown">Loading…</strong>
                     <small id="marketSessionDetail">America/New_York · calendar loading</small>
                 </div>
+                <div class="topbar-tools" id="mcc-static-0014-div"><span id="streamStatus" class="chip">WS minute bars: checking…</span><span id="prototype-page-badge" class="chip">PROTOTYPE · NOT PRODUCTION</span><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
             </div>
             <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
                 <div class="topbar-readiness-heading" id="mcc-static-0029-div"><span class="eyebrow" id="mcc-static-0030-span">SYSTEM READINESS</span><span class="chip" id="mcc-static-0031-span">Decision support</span></div>
