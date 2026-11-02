@@ -23,7 +23,7 @@
 - [x] Reviewed November 2 MHK/OSW/EVR charts: none qualifies for a new overnight BUY/HOLD. The supplied charts are 1D/5m (not 1m): EVR and OSW show visible EOD GET OUT bubbles on their 5m charts, but the generating study/source has not been isolated; their top 5M labels remain WAIT/Permission NO/BEARISH; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied; MHK's current ON move is 3.13%.
 - [ ] Calculated Limit Sell remains DATA?/not calculated until 20 complete GTC_EXT windows, walk-forward target quantile/touch evidence, and ATR parity are available. Do not substitute the +0.5% heuristic.
 
-Related: [Active Work Checklist](Active-Work-Checklist-20261102.md), [1M V14.5 parity audit](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
+Related: [Active Work Checklist](Active-Work-Checklist-20261102.md), [1M V14.5.1 parity audit](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
 
 ---
 

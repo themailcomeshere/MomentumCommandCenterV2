@@ -3,10 +3,10 @@
 The visible Overnight scan leaders were MHK (73.42), OSW (70.97), and EVR (68.25). The accompanying chart screenshots are 1D/5m charts, not 1M charts.
 
 - **MHK:** 70% ON win rate, 0.31% 20D mean, 0.35% median, 2.49% 5D mean, 3.13% current ON. 5M state WAIT, Permission NO, structure NEUTRAL, bullish regime NOT ESTABLISHED; last displayed $148.60, Daily VWAP $148.59, RSI 51, extension 0.25 ATR. No EOD GET OUT bubble is visible, but this is not an affirmative overnight hold.
-- **OSW:** 70% ON win rate, 0.43% 20D mean, 0.32% median, 2.28% 5D mean, 1.92% current ON. 5M state WAIT, Permission NO, structure BEARISH; last displayed $30.02, Daily VWAP $30.37, RSI 29.5, RVOL 16.52, extension 3.35 ATR. 5M EOD GET OUT is visible.
+- **OSW:** 70% ON win rate, 0.43% 20D mean, 0.32% median, 2.28% 5D mean, 1.92% current ON. 5M state WAIT, Permission NO, structure BEARISH; last displayed $30.02, Daily VWAP $30.37, RSI 29.5, RVOL 16.52, extension 3.35 ATR. a visible EOD GET OUT bubble appears on the 1D/5m chart, but its generating study/source has not been isolated; the top 5M label remains WAIT/Permission NO/BEARISH.
 - **EVR:** 65% ON win rate, 0.46% 20D mean, 0.67% median, 1.90% 5D mean, 2.20% current ON. 5M state WAIT, Permission NO, structure BEARISH; last displayed $303.26, Daily VWAP $308.69, RSI 32.8, RVOL 21.95, extension 2.98 ATR. 5M EOD GET OUT is visible.
 
-**Decision:** no new overnight BUY/HOLD among these three. EVR and OSW have explicit 5M EOD GET OUT; MHK has no 5M Permission and its current ON move exceeds the preferred sub-3% range. The screenshots do not establish any 1M state. The 20D average-volume gate, exclusion-list clearance, and catalyst clearance are not proven by the scan screenshot alone.
+**Decision:** no new overnight BUY/HOLD among these three. EVR and OSW have visible EOD GET OUT bubbles on their 5m charts, but their generating study/source has not been isolated and the top 5M labels remain WAIT/Permission NO/BEARISH; MHK has no 5M Permission and its current ON move exceeds the preferred sub-3% range. The screenshots do not establish any 1M state. The 20D average-volume gate, exclusion-list clearance, and catalyst clearance are not proven by the scan screenshot alone.
 
 **Calculated Limit Sell:** DATA? / not calculated. No 20 complete GTC_EXT windows, walk-forward target-touch analysis, and exact ATR parity are available. The +0.5% value remains a heuristic comparison, not a calculated target. A zero position is valid.
 

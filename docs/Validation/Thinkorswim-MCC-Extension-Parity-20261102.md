@@ -121,8 +121,9 @@ The latest full 1M source in the Library is `Momentum_Command_Center_V3_2_1M_V14
 A source comparison found one material parity gap:
 
 - Normal 5M V4.1.7 `bullishPermissionRaw` requires 5M price above Daily VWAP, 5M price above EMA9, EMA9 >= EMA20, and RSI >= 50.
-- 1M V14.5 reconstructs 5M raw permission from 5M EMA9 > EMA20, 5M close > EMA9, 5M RSI >= 50, and not-bearish-stack. It does **not** include the 5M close-above-Daily-VWAP condition.
-- V14.5's shared `fiveExecutionPermission` separately requires the current 1M price above Daily VWAP. That is an additional 1M execution filter, not a substitute for the missing 5M VWAP condition.
+- 1M V14.5.1 reconstructs 5M raw permission from 5M EMA9 > EMA20, 5M close > EMA9, 5M RSI >= 50, and not-bearish-stack. It does **not** include the 5M close-above-Daily-VWAP condition.
+- V14.5.1's `fiveBullishCore` also requires strict `fiveEMA9 > fiveEMA20`, while V4.1.7's canonical Permission allows `EMA9 >= EMA20`; the proxy therefore rejects the equality case that the 5M authority accepts.
+- V14.5.1's shared `fiveExecutionPermission` separately requires the current 1M price above Daily VWAP. That is an additional 1M execution filter, not a substitute for the missing 5M VWAP condition.
 
 Therefore V14.5.1's reconstructed 5M Permission can disagree with the normal V4.1.7 5M authority on a bar where 1M price and 5M close are on opposite sides of Daily VWAP. This is a targeted parity defect, not a reason to redesign the 1M event/continuation pipeline.
 

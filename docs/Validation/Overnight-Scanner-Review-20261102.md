@@ -99,8 +99,8 @@ Before any overnight decision, obtain daily and 5M charts for all three and veri
 - Last displayed price: **$30.02**; Daily VWAP: **$30.37**.
 - 5M state: **WAIT**; 5M Permission: **NO**; 5M structure: **BEARISH**.
 - RSI: **29.5**; RVOL: **16.52**; extension: **3.35 ATR**.
-- A visible **EOD GET OUT** bubble appears at the right edge.
-- **Disposition:** NO BUY / NO OVERNIGHT HOLD. The 5M chart explicitly shows EOD GET OUT.
+- A visible **EOD GET OUT** bubble appears at the right edge of the 1D/5m chart; its generating study/source has not been isolated. The top 5M status label still reads WAIT / Permission NO / structure BEARISH.
+- **Disposition:** NO BUY / NO OVERNIGHT HOLD. Treat the visible EOD bubble as a warning, but do not attribute it to the 5M authority study without matched study diagnostics.
 
 ### Combined decision
 - No new overnight BUY is supported by these three charts.
