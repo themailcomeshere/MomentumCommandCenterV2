@@ -1,3 +1,20 @@
+## 2026-11-02 — latest runtime evidence and active checklist
+
+Current actionable checklist: [Active Work Checklist — 2026-11-02](Active-Work-Checklist-20261102.md). This is the current operational summary; older dated sections below are retained as historical evidence.
+
+- [x] IEX override diagnosed: local secrets.json overrode appsettings.json.
+- [x] SIP selection confirmed, but Alpaca recent SIP request returned HTTP 403 entitlement denial. IEX restored and returned VALIDATED_DATA_RETURNED with 62 bars.
+- [x] User visually accepted Main Chart layout with no horizontal overflow.
+- [x] Corrected Main Chart timestamp display to show completedAtUtc (bar close) and the bar interval, rather than showing only the bar-open timestamp.
+- [x] Recorded current TOS/MCC INO readings and the distinction between the live EXT label and historical ExtensionATR plot.
+- [x] User reports Schwab Trader API — Individual approval. App creation, product attachment, callback, app-level approval and OAuth remain open.
+- [x] Defined RTO audit: exact 40 close/open boundary timestamps across 20 sessions. Prior 38/40 result is IEX; SIP comparison is blocked by the explicit 403.
+- [ ] Verify latest branch Release build/tests and browser acceptance of the timestamp correction.
+- [ ] Measure actual completed-bar age from live API fields during regular market hours.
+- [ ] Complete matched TOS parity, Red Zone ranking, Boring Overnight source/target validation, WebSocket and collector recovery acceptance.
+- [ ] Continue Schwab read-only integration after app registration and callback configuration.
+
+---
 ## 2026-11-02 — user's live IEX response and final Main Chart layout pass
 
 - User confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `Feed: sip`; `appsettings.Development.json` is absent; launch profile sets only `ASPNETCORE_ENVIRONMENT=Development`.
