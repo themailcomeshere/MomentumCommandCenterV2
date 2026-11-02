@@ -35,7 +35,7 @@ For the historical 11:26 candle, enable Thinkorswim's Data Box and move the cros
 - ATR14 from the `ATR14` plot
 - Extension from `ExtensionATR`
 
-The labels show the latest bar; use the Data Box/crosshair for the historical 11:26 bar.
+The `AddLabel` values show the latest/live bar; they are not historical values. For the historical candle, hover the exact 1-minute bar and read the **ExtensionATR plot** in the Data Box. Do not use the live EXT label as the historical candle's extension.
 
 ## MCC values
 
@@ -86,3 +86,29 @@ Do not adjust V2 thresholds until the inputs match. If close matches but VWAP do
 - The previous displayed MCC prices were rounded to three decimals (close to two), so the reported 11.89 cannot be recomputed from the displayed inputs.
 - Thinkorswim session/extended-hours VWAP settings must be confirmed against MCC's regular-session-only VWAP.
 - Numerical parity has not yet been established.
+
+
+## November 2 follow-up — latest values and completed-bar timing
+
+The user later supplied:
+
+| Input | Thinkorswim | MCC |
+|---|---:|---:|
+| Close | 2.06 | 2.05500 |
+| Daily VWAP | 1.89 | 1.87031 |
+| ATR14 | 0.02 | 0.01429 |
+| Extension | 24.6 ATR (latest/live label, not per-candle) | Not supplied for the same exact timestamp |
+
+The close is consistent at two-decimal display precision: MCC 2.05500 rounds to 2.06. TOS VWAP and ATR14 are only shown to two decimals in the supplied comparison, so the input mismatch cannot yet be quantified precisely. The 24.6 ATR value came from the live/latest label, not the historical bar; it is not a valid historical parity value.
+
+The user also observed an apparent one-minute Main Chart delay. Source review found that the API already returns both bar-start `sourceTimestampUtc` and bar-close `completedAtUtc`, but the UI had displayed the bar-start timestamp under a "Latest completed 1M bar close" label. The UI now displays the expected completed/close time and separately shows the start-to-close interval. See [Live 1-Minute Bar Timestamp and Latency](Live-Bar-Timestamp-Latency-20261102.md).
+
+This display correction does not establish provider latency or TOS parity. The API intentionally excludes the in-progress minute. During regular hours, compare the same completed candle and inspect API `evaluatedAtUtc`, `oneMinute.completedAtUtc`, `oneMinute.ageSeconds`, `oneMinute.feed`, and `oneMinute.sourceTransport`.
+
+## Updated acceptance
+
+- [x] User supplied the latest rounded TOS/MCC values; recorded above.
+- [x] Corrected the UI's displayed timestamp to use the completed-bar close time.
+- [ ] Capture TOS Close, VWAP, ATR14 and historical ExtensionATR to five decimals on the exact same completed candle as MCC.
+- [ ] Confirm matching session scope (MCC currently uses regular-session HLC3 volume-weighted VWAP) and actual bar timestamp.
+- [ ] Do not change extension thresholds or V2 signal rules to force numeric parity.
