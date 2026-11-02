@@ -1,3 +1,43 @@
+## 2026-11-02 — Technical Workflow, Overnight Scanner, Red Zone
+
+Current operator entry point: [Technical Workflow](Technical-Workflow.md). The [Runtime Acceptance Runbook](Runtime-Acceptance-Runbook.md) remains the detailed runtime acceptance source of truth; do not run every specialized procedure after every commit. Follow the Technical Workflow's standard update/build/restart/API smoke test, then run only feature-specific acceptance tests when relevant.
+
+### Completed
+- [x] Added `scripts/Get-Latest-And-Test.ps1`: clean-tree guard, fetch/switch/fast-forward pull, Release restore/build/test, and exact local SHA output.
+- [x] Added `docs/Technical-Workflow.md` with the operator sequence, stop/restart steps, API endpoint order, expected status fields, and when to use the detailed runbook.
+- [x] Fixed prototype header structure so `system-readiness` is a sibling of `topbar-brand`, matching the production header layout.
+- [x] Fixed `marketTransportLabel` word wrapping so it wraps on spaces rather than splitting into one character per line.
+- [x] Fixed scanner CSV import to refresh Red Zone immediately, not just the scanner table.
+- [x] Documented existing automatic Red Zone behavior: live 1M/5M card assessments refresh every 15 seconds; Alpaca persisted discoveries refresh every 30 seconds when the live discovery group is selected.
+- [x] Added Overnight Scanner Quick Start and updated Dashboard Quick Start with the separate overnight workflow.
+- [x] Added November 2 scanner review with the top visible candidates MHK, OSW, EVR and current catalyst research.
+
+### Overnight Scanner — current shortlist
+- [x] Reviewed screenshot: 248 results, first 50 displayed, sorted by Overnight Score.
+- [x] Shortlist for chart review: OSW first, EVR second, MHK third. MHK has the highest raw scanner score but current ON is 3.13% and the recent price run makes it the hottest/least boring of the three.
+- [ ] Review Daily and 5M charts for OSW, EVR, MHK; verify price >$5, 20D average volume >=500K, exclusion status, catalyst risk and current structure.
+- [ ] Preserve complete CSV export if available; current screenshot only shows the first 50 of 248.
+
+### Red Zone — implementation truth and remaining work
+- [x] CSV import immediately re-renders Red Zone from imported candidates.
+- [x] Candidate market assessments refresh every 15 seconds while the page is visible.
+- [x] Alpaca live discovery refreshes every 30 seconds only when the live discovery scanner group is selected.
+- [ ] Automatic Thinkorswim Overnight scan ingestion is not implemented; no verified TOS scanner API integration exists. CSV export/import remains the handoff.
+- [ ] Validate live Alpaca discovery collector freshness/health after recent-SIP entitlement is available. Current endpoint is SIP-based and the user's subscription denied recent SIP requests with HTTP 403.
+- [ ] Complete the separate Boring Overnight qualification engine and versioned opportunity ranking; Red Zone technical assessment does not certify overnight history, liquidity, exclusions or catalysts.
+
+### Current browser acceptance
+- [ ] Pull latest branch and hard-refresh prototype. Verify System Readiness on the right side of the header, transport label word wrapping, and no horizontal overflow.
+- [ ] Verify CSV import updates Red Zone immediately and card values continue refreshing.
+- [ ] Regular-session WebSocket delivery acceptance remains a separate market-hours test; the November 2 after-hours SUBSCRIBED result was not a delivery pass.
+
+### Key new documents
+- [Technical Workflow](Technical-Workflow.md)
+- [Overnight Scanner Quick Start](Overnight-Scanner-Quick-Start.md)
+- [November 2 Overnight Scanner Review](Validation/Overnight-Scanner-Review-20261102.md)
+- [Active Work Checklist](Active-Work-Checklist-20261102.md)
+
+---
 ## 2026-11-02 — latest runtime evidence and active checklist
 
 Current actionable checklist: [Active Work Checklist — 2026-11-02](Active-Work-Checklist-20261102.md). This is the current operational summary; older dated sections below are retained as historical evidence.
