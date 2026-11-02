@@ -1,6 +1,6 @@
 # Runtime Acceptance and Remaining Work Runbook
 
-**Updated:** 2026-10-31 (runtime failure diagnosis and collector recovery procedure)  
+**Updated:** 2026-11-02 (SIP entitlement result, completed-bar timestamp diagnostic, Schwab approval)  
 **Branch:** `feature/opportunity-quality-classification`  
 **Purpose:** Turn the outstanding runtime and external-dependency checklist into repeatable evidence collection. This is an acceptance runbook, not a claim that live runtime behavior has passed.
 
@@ -95,7 +95,7 @@ The script refreshes the selected symbol's 1M/5M REST history, captures stream/c
 
 ## 1B. RTO IEX versus SIP exact-boundary comparison
 
-The capture route uses the configured provider/feed; the request body does not accept a feed override. The current tracked `src/MomentumCommandCenterV2.API/appsettings.json` sets `MarketData:Alpaca:Feed` to `iex`. To perform an independent SIP check, change the local runtime configuration temporarily and restart the API. Do not commit a feed change as a default.
+The capture route uses the configured provider/feed; the request body does not accept a feed override. Tracked `appsettings.json` and the user's local `secrets.json` both now set `MarketData:Alpaca:Feed` to `sip`; the status endpoint confirms `secrets.json` is the effective provider. However, Alpaca returned HTTP 403 with `subscription does not permit querying recent SIP data`. Keep the local runtime on IEX for usable data. Do not repeat the SIP RTO capture until Alpaca enables recent SIP access; a configured feed is not an entitled/validated feed.
 
 ### Procedure
 
@@ -273,3 +273,45 @@ After those choices, use a maintained exchange calendar and test holidays, early
 - The user's currently running API deployment, browser state, Alpaca entitlement, and local collector checkpoint are not accessible from this repository session. The supplied status snapshot is static evidence only; no controlled outage, restart, or sleep/wake test has been run here.
 - No installed Thinkorswim diagnostic state export is present in the supplied RTO OHLCV files.
 - No approved overnight session-boundary policy or desktop distribution target is documented in the current source.
+
+
+## 1C. SIP entitlement result — 2026-11-02
+
+The user stopped the prior API process, restarted the latest build, and queried `/api/providers/status`.
+
+First response (before correcting local `secrets.json`):
+- `configuredFeed=iex`
+- `configuredFeedSource=JsonConfigurationProvider for 'secrets.json' (Optional)`
+- `appsettings.json=sip`, `secrets.json=iex`
+
+This proved the IEX selection came from the higher-precedence local `secrets.json`, not from the tracked appsettings file.
+
+After changing local `secrets.json` to `sip`:
+- `configuredFeed=sip`
+- `configuredFeedSource=JsonConfigurationProvider for 'secrets.json' (Optional)`
+- Both appsettings and secrets providers report `sip`
+- Provider state was `CONFIGURED_NOT_YET_VALIDATED`
+
+The subsequent INO live-assessment request failed with HTTP 502 wrapping Alpaca HTTP 403:
+`subscription does not permit querying recent SIP data`.
+
+When the user restored `secrets.json` to `iex`:
+- `configuredFeed=iex`
+- Provider validation returned to `VALIDATED_DATA_RETURNED`
+- The latest validation returned 62 bars.
+
+### Disposition
+
+- [x] Feed configuration precedence root cause identified: local `secrets.json` overrides tracked `appsettings.json`.
+- [x] Confirmed that both configuration sources can be set to SIP and the adapter selects SIP.
+- [x] Captured explicit provider entitlement denial for recent SIP data.
+- [x] Restored IEX and confirmed successful provider validation/data return.
+- [ ] Obtain an Alpaca subscription that permits recent SIP data, or choose another independently entitled SIP source.
+- [ ] Only after a recent SIP request succeeds, rerun the exact 40-boundary RTO audit and preserve the response's actual `feed` value.
+- [ ] Keep IEX and SIP datasets separate; do not mix or impute missing bars.
+
+**Operational recommendation:** leave the local feed on IEX for now. Do not label SIP as available, do not rename the IEX RTO artifact as SIP, and do not run the SIP audit against a 403 response.
+
+## 5. Schwab Trader API approval
+
+The user reports Schwab Trader API — Individual approval on 2026-11-02. This clears the Individual API approval prerequisite only. App creation, Accounts and Trading Production attachment, app-level Active/Ready status, exact callback URL registration, local secret configuration, OAuth, and read-only account/position retrieval remain open. See `docs/Thinkorswim-Schwab-Integration-Plan.md`. Never request or store App Key, App Secret, authorization code, or tokens in chat/Git.
