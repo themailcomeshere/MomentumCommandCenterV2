@@ -7,7 +7,7 @@
 - Close, Daily VWAP, ATR14 now display five decimals; the exact source timestamp is shown in Arizona time and UTC below 1M Close.
 - Reviewed user commit `e7299ddd`: `RTO-SIP-20261101.json` content explicitly says `feed: iex`, 38/40 exact boundary bars, missing Oct 14 and Oct 21 opens, 18/20 overnight pairs. The filename does not establish SIP.
 - Thinkorswim how-to / study: [Thinkorswim-MCC-Extension-Parity-20261102.md](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
-- [x] Release build and **179/179 tests** passed on code source head `ee2e929e3bdf15f1457211534dfc9456dc8aa5ae` in Actions run [41504217777](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504217777). The subsequent commits through current docs head are documentation-only; latest docs-head CI is still running.
+- [x] Release build and **179/179 tests** passed on code source head `ee2e929e3bdf15f1457211534dfc9456dc8aa5ae` in Actions run [41504217777](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504217777). The docs-updated head `4443506be982d0ff6726992c7b2294d97871bad2` also passed run [41504521572](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504521572), 179/179.
 - [ ] After local rebuild/restart, inspect `configuredFeedSource` and `feedConfigurationSources`. If User Secrets is the effective source, inspect `dotnet user-secrets list --project src/MomentumCommandCenterV2.API`; if EnvironmentVariables, inspect `MarketData__Alpaca__Feed`. Do not expose credentials.
 - [ ] Confirm observed 1M and 5M feeds are SIP, then repeat RTO audit.
 - [ ] Compare TOS and MCC using same exact date/time, with five-decimal close/VWAP/ATR14 and same session scope.
