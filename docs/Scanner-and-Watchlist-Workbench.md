@@ -1,12 +1,16 @@
 # Scanner and Watchlist Workbench
 
-**Status:** Local front-end workbench implemented; live scanner/provider integration remains unimplemented. The dashboard includes a local-only feedback notebook and explicit connection/readiness status.
+**Status (2026-11-02):** Dashboard workbench and CSV import are implemented. Alpaca SIP-based top-gainers/losers discovery has a hosted poller, append-only persistence, and an API endpoint; account entitlement is currently denied for recent SIP requests. Red Zone card assessments refresh automatically, but the TOS Overnight scan is not connected and the Overnight qualification engine is not complete.
 
-## Scanner integration status update (2026-10-22)
+## Current scanner integration status — 2026-11-02
 
-The Application layer now has a provider-neutral discovery DTO at `src/MomentumCommandCenterV2.Application/Models/ScannerDiscoveryEvent.cs` and source boundary at `src/MomentumCommandCenterV2.Application/Interfaces/IScannerDiscoverySource.cs`. These are contracts only: there is no concrete provider adapter, persistence, polling workflow, or live scanner connection yet. A provider must not be presented as integrated until those parts exist and are tested.
+The repository now contains a concrete `AlpacaScannerDiscoverySource`, hosted polling service, append-only JSONL event store, and `GET /api/scanner/discoveries`. The source queries Alpaca's SIP-based top-50 gainers/losers endpoint; the collector health is exposed with persisted discovery events.
 
-The DTO preserves first-seen/observed/source timestamps, source and schema identifiers, raw fields, evaluator version, reason codes, and a presentation disposition. The disposition values (`ActionableQueue`, `WatchPullback`, `FilteredExtended`, `Blocked`, `DataUnknown`) are scanner-list presentation states only; they do not create or replace 5M Permission or 1M EXECUTION READY.
+The user's current Alpaca subscription denied recent SIP data with HTTP 403 (`subscription does not permit querying recent SIP data`). Therefore the collector may be degraded and must not be represented as a fresh/live discovery feed until a successful source poll occurs. The OHLCV IEX feed does not grant SIP access to the separate movers endpoint.
+
+The front end consumes persisted discoveries only when the `Alpaca live discovery` scanner group is selected. It polls that group every 30 seconds. Red Zone card assessments refresh every 15 seconds while the page is visible. The scanner CSV import now immediately re-renders both the scanner table and Red Zone.
+
+The Thinkorswim Overnight scan remains an external candidate source: there is no verified TOS scanner API integration. Export/import of a TOS CSV is still a manual handoff. Red Zone's technical assessment is not the Boring Overnight qualification engine.
 
 ### Extension qualification requirement
 
@@ -18,13 +22,13 @@ The static front end now provides:
 
 - Four documented scanner groups: Momentum Hunter, Breakout Trigger, Reclaim/Continuation, and Market Movers/Discovery.
 - Candidate rows with symbol, score, status, extension input, freshness, and reason; absent extension/freshness fields display as unknown rather than implying a safe state.
-- A system-readiness panel that explicitly shows market data as demo-only, Thinkorswim as not connected, live scanner as not selected, and order execution as not implemented.
+- A system-readiness panel that distinguishes market data, Thinkorswim (not connected), live scanner discovery, and order execution (not implemented).
 - A dashboard feedback notebook with category/priority, browser-local persistence, individual deletion, clear, and JSON export. Feedback is not uploaded automatically.
-- CSV import from a local file with a required `Symbol` or `Ticker` column and optional `Score`, `Status`, and `Reason` columns.
+- CSV import from a local file with a required `Symbol` or `Ticker` column and optional `Score`, `Status`, `Reason`, `Extension`/`Ext`, and `Freshness`/`Data_As_Of` columns; importing immediately refreshes Red Zone.
 - One-click add-to-watchlist controls.
 - Manual ticker entry and removal.
 - Browser-local persistence using `localStorage` under `mcc.watchlist`.
-- Explicit local/demo labels; no broker, scanner, news, or order API is called.
+- Explicit preview/discovery labels; no broker order API is called. Alpaca persisted discovery and market-assessment API calls are used by the dashboard.
 
 ## CSV import shape
 
@@ -34,27 +38,26 @@ XRPN,86,WATCH,Confirm 5M permission and 1M timing
 MNSB,78,DATA?,Need fresh market snapshot
 ```
 
-The import is evidence display only. It does not calculate scanner scores, verify tradability, infer catalysts, or create a trading decision.
+The import is evidence display only. It does not calculate scanner scores, verify tradability, infer catalysts, or create a trading decision. It immediately updates the scanner table and Red Zone candidate rows; each Red Zone card then requests current 1M/5M technical assessment.
 
-## Required production work
+## Remaining production work
 
-1. Define a provider-neutral scanner-event contract with source timestamp, scanner group, raw fields, and freshness.
-2. Add an adapter for the selected scanner/provider; do not hard-code a provider into the front end.
-3. Persist append-only discovery events so first-seen timestamps are not lost.
-4. Correlate discovery events with 5M permission, 1M READY, extension blocks, and outcomes.
-5. Reconcile the complete Schwab exclusion/unavailable list.
-6. Add explicit stale/missing-data handling; missing scanner data is `DATA?`, never `READY`.
-7. Move watchlist persistence behind a validated application/API contract before multi-user or production use.
-8. Keep regular-session discovery separate from Boring Overnight candidates.
+1. Validate recent-SIP entitlement or select an independently entitled scanner source; record collector health and freshness.
+2. Expand discovery beyond top-50 gainers/losers only if a licensed provider and required universe/filter coverage are established.
+3. Correlate discovery events with 5M permission, 1M execution, extension blocks, and outcomes.
+4. Reconcile the complete Schwab exclusion/unavailable list.
+5. Add explicit stale/missing-data handling; missing scanner data is `DATA?`, never `READY`.
+6. Move watchlist persistence behind a validated application/API contract before multi-user or production use.
+7. Build the separate Boring Overnight history, catalyst, liquidity, and decision pipeline; do not treat top-mover discovery as an Overnight scan.
 
 ## Use
 
-Open `frontend/index.html` directly in a browser. Use the scanner group selector for the illustrative local candidates, use **Import CSV** for a local candidate file, and add candidates to the browser-local watchlist. This workbench is not a live scanner and does not place orders.
+Serve the dashboard through the MCC API (`http://localhost:53360/`) so same-origin API calls work. Use the scanner group selector for local illustrative candidates or the Alpaca live discovery group, use **Import CSV** for a Thinkorswim/local candidate export, and add candidates to the browser-local watchlist. The Alpaca source is a limited SIP-based movers feed, not a full-market scanner. This workbench does not place orders.
 
 
 ## Provider decision — current state
 
-**Alpaca is selected for the first live scanner integration.** The API now polls its SIP-based top-50 stock gainers/losers endpoint and persists discovery events. Account entitlement and complete-universe coverage remain unverified. Thinkorswim remains the chart-study evidence source, not a live scanner/API integration. Thinkorswim remains the source of the versioned chart-study behavior and manually inspected chart evidence; the repository contains no verified Thinkorswim live API/session adapter. The current front end only reads local fixtures and user-imported CSV files.
+**Alpaca is the implemented first discovery adapter.** The API polls its SIP-based top-50 stock gainers/losers endpoint and persists discovery events. The user's current subscription returned HTTP 403 for recent SIP data, so fresh collector operation is not validated. Complete-universe coverage is not provided. Thinkorswim remains the chart-study evidence source and external Overnight scan; no verified TOS live scanner/API adapter exists. The front end reads local fixtures, user-imported CSV files, and persisted Alpaca discoveries via the API.
 
 Before choosing a feed, compare the actual capabilities needed: real-time 1M/5M OHLCV, scanner/query support, symbol universe and filters, timestamps/session conventions, extended-hours coverage, entitlement/licensing, rate limits, reconnect behavior, and historical access. The exact provider/API choice is **Data not found in sources.** Do not wire the UI to an unverified endpoint or represent a provider as selected.
 
@@ -79,7 +82,7 @@ MCC remains non-executing. Manual Schwab website entry is the preferred baseline
 
 ## Persistent overnight collection and Morning Report (2026-10-22)
 
-The user's desired operating model is to leave the released/deployed MCC program open overnight so the Morning Report is populated with recent scanner discoveries by 08:30 Arizona time. This is **not supported by the current static browser workbench**. Leaving `frontend/index.html` open does not create scanner traffic, ingest market data, or persist provider observations.
+The API process hosts an Alpaca SIP-based scanner discovery poller and persists its observations independently of the browser tab. However, the current account's recent-SIP entitlement denial can prevent fresh events. Leaving the browser open is not required for server-side polling while the API process is running. The current implementation is limited to Alpaca top-50 gainers/losers; it is not the Thinkorswim Overnight scan or a full-market Overnight qualification system.
 
 The UI now has a preview-only Morning Command Brief, a responsive Red Zone showing up to four locally ranked demo/import candidates, and a JSON export for that preview. The report clearly identifies itself as PREVIEW_ONLY and says the overnight collector is not running. Supplied scores are sorted for UI demonstration only; they are not the validated MCC opportunity ranking. 5M Permission and 1M execution remain UNKNOWN in these tiles.
 
