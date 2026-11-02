@@ -1,7 +1,7 @@
 ## November 2 validation notes
 
 - The July 3, 2028 early-close test remains enabled and uses the xUnit predicate overload for `Assert.Single`.
-- The first user Release build succeeded across all five projects, but the test run reported 172/176. The supplied-extension test and three TradeAnalyzer fixture failures have been corrected in source; a post-fix rerun is still required.
+- The user's first Release test run reported 172/176. The supplied-extension and three TradeAnalyzer fixture failures were corrected; GitHub Actions run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284) then passed the Release build and **178/178 tests** on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22`.
 - The prototype dock now has **INTRADAY MOMENTUM** left of the toggle, **BORING OVERNIGHT** right of it, and **WORKSPACE** below it.
 - Prototype Main Chart and Red Zone now expose the 1M close, Daily VWAP, ATR14, and normalized ATR Extension inputs. The `11.20 ATR` display is the normalized extension, not raw ATR14.
 - API feed diagnostics now distinguish configured feed from observed 1M/5M feed. Committed API default is SIP; entitlement and runtime SIP delivery remain unverified.
