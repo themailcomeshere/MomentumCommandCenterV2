@@ -114,7 +114,7 @@ This display correction does not establish provider latency or TOS parity. The A
 - [ ] Do not change extension thresholds or V2 signal rules to force numeric parity.
 
 
-## 1M V14.5 — reconstructed 5M Permission audit (2026-11-02)
+## 1M V14.5.1 — reconstructed 5M Permission audit (2026-11-02)
 
 The latest full 1M source in the Library is `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (V14.5.1). The later-modified V14.4.10 file is explicitly an isolated aggressive-lane audit-only mode, not the normal full study. Keep the normal 5M authority study at `MCC_V3_2_5M_V4_1_7.txt`. The user's installed 1M study hash has not been independently captured, so the Library baseline is not proof of byte-for-byte installation.
 
@@ -152,3 +152,38 @@ The Library's later full source, `Momentum_Command_Center_V3_2_1M_V14_5_1.ts`, w
 - `eodHour=15` / `eodMinute=55` still feeds Eastern-time `SecondsFromTime` / `SecondsTillTime` directly.
 
 V14.5.1 adds fresh-trigger memory/re-arm reset and execution diagnostics over the V14.5 predecessor, but it does not resolve the identified VWAP or Arizona/Eastern EOD parity issues. It is therefore the correct current full-study baseline to patch, not a reason to revert to V14.5 or install the audit-only V14.4.10 variant.
+
+
+## Recommended 1M operating baseline — exact settings
+
+Use the latest full Library source:
+
+`Momentum_Command_Center_V3_2_1M_V14_5_1.ts` — V14.5.1.
+
+Apply it to a **1-minute primary chart**. Keep `MCC_V3_2_5M_V4_1_7.txt` on a separate **5-minute primary chart** as the structure/permission authority. Do not use the V14.4.10 `Aggressive_Audit_Only` artifact as the normal replacement.
+
+Keep the V14.5.1 defaults for all non-time inputs:
+
+| Input | Value |
+|---|---:|
+| showLabels / showStateBubbles / showDebugLabels | yes / yes / no |
+| rsiLength / rsiBull / rsiStrong / rsiWeak | 14 / 50 / 55 / 45 |
+| fastEMA / slowEMA / fiveMinuteTrendSMA | 9 / 20 / 50 |
+| macdFast / macdSlow / macdLength | 12 / 26 / 9 |
+| rvolLength | 50 |
+| minimumPermissionRSI / minimumSetupRVOL | 50 / 1.00 |
+| permissionFailureBars / majorFailureBars / swingWaningBars | 2 / 2 / 2 |
+| breakoutLength | 10 |
+| executionWindowBars / candidateRearmBars / freshTriggerLookbackBars | 2 / 2 / 3 |
+| continuationLookbackBars / continuationPauseBarsRequired | 4 / 2 |
+| continuationMinimumRSI / continuationCooldownBars | 50 / 3 |
+| minimumExecutionRSI / minimumExecutionRVOL | 50 / 1.00 |
+| requireMomentumAcceleration | yes |
+| extensionWarningATR / extensionDangerATR | 1.50 / 2.00 |
+
+**Temporary EOD input override for the current standard-time period (Arizona, 2026-11-02):**
+- 1M V14.5.1: set `eodHour=17`, `eodMinute=55`. The study's `SecondsFromTime` functions use Eastern time; 17:55 EST equals 3:55 PM Arizona.
+- 5M V4.1.7: set `eodTimeEasternStandard=1755`; retain `eodTimeEasternDaylight=1855` for daylight time.
+- When US daylight time resumes, the 1M override must change to `eodHour=18`, `eodMinute=55`. This is a temporary manual setting, not a substitute for a shared DST-aware code fix.
+
+**Until the 1M parity revision is compiled and validated:** treat the normal 5M V4.1.7 Permission as authoritative. Require its Permission=YES and its own price-above-Daily-VWAP condition before acting on a 1M READY. A 1M READY must never override 5M Permission=NO. Do not change RSI, EMA, RVOL, execution-window, continuation, or extension thresholds to compensate for the two source-level defects.
