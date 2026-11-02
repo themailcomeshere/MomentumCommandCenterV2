@@ -11,7 +11,7 @@
 - [x] Defined RTO audit as exact 40-boundary coverage across 20 valid sessions.
 
 ## Open P0 — runtime acceptance
-- [ ] Run Release build and tests on the latest branch head after the timestamp UI change.
+- [x] Release build and tests passed on branch head `83cd9780daa9f8e94628e8d24f4bc6ab4b03c415`: GitHub Actions run [41514111035](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41514111035), 0 warnings, 0 errors, 179/179 tests.
 - [ ] Hard-refresh prototype and verify timestamp display on desktop and mobile.
 - [ ] During regular market hours, capture live-assessment JSON and calculate evaluatedAtUtc minus oneMinute.completedAtUtc. Investigate if >=60 seconds for a liquid symbol.
 - [ ] Complete WebSocket delivery test for SPY, RKLX, ASTX and XRPN using advancing per-symbol bar counts and timestamps.
