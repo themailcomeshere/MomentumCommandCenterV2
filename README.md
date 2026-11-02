@@ -138,10 +138,13 @@ GitHub source is authoritative for code and committed documentation. A checked-o
 ## Scanner, Red Zone, and Watchlist workflow
 
 1. **Refresh Alpaca market movers** loads persisted Alpaca SIP-based discovery events from the API. It does not itself run a full-market scan; discovery rows are candidates, not qualified opportunities.
-2. With the live discovery group selected, the returned rows populate the scanner and the Red Zone preview (up to four).
+2. With the live discovery group selected, returned rows populate the scanner and the Red Zone preview (up to four). Current live ordering uses absolute daily percentage change; other groups use their supplied score. This is a provisional ordering, not a calibrated excitement/quality rank.
 3. **Watch** adds a ticker to the separate browser-local Watchlist. It does not pin the ticker to Red Zone.
-4. To keep a symbol in Red Zone, use **Add a symbol → Pin to Red Zone**. Clicking a Red Zone tile focuses the Main Chart.
-5. Main Chart / Decision Explanation then refresh for the focused symbol. 5M Permission and 1M execution remain separate gates; neither Watch nor Red Zone ranking authorizes an entry.
+4. To keep a symbol in Red Zone, use **Add a symbol → Pin to Red Zone**. Manual pins are placed before scanner-ranked rows. There is not yet a Manual/Automatic mode toggle.
+5. Each Red Zone tile requests a separate live assessment and displays 5M score/permission, 1M execution state, extension, freshness, decision reason and a 1M sparkline. New arrivals among the four slots can trigger the existing user-toggleable sound alert.
+6. Current ranking does not incorporate RVOL/volume participation, average-volume/liquidity, acceleration or spread quality. A low-volume candidate may therefore be ranked too highly for practical attention; this is a known gap, not a validated result.
+7. Planned Red Zone work is tracked in the top of `docs/Master-To-Do.md`: Manual/Automatic toggle, versioned excitement rank, participation/volume weighting, Decision Explanation, semantic tile border/accent, stable re-ranking and tests.
+8. Main Chart / Decision Explanation refresh for the focused symbol. 5M Permission, 1M EXECUTION READY and Red Zone excitement remain separate. Red Zone is attention prioritization only and never authorizes an entry or order.
 
 ## Production and prototype dashboard pages
 
