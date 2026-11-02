@@ -62,6 +62,16 @@ The user does not need to manually determine idempotency. The updated script now
 
 **Target window:** 07:30–07:40 Arizona = 09:30–09:40 America/New_York = 14:30–14:40 UTC. Phoenix remains UTC-07:00; Eastern is UTC-05:00 after the November 1 DST transition.
 
+### User's November 2 after-hours status snapshot — connection only
+
+At approximately 3:20 PM Arizona, the user supplied:
+- `/api/health`: `status=OK`.
+- Stream status: `enabled=true`, `connected=true`, `state=SUBSCRIBED`, `feed=iex`.
+- `subscribedSymbols` included SPY, RKLX, ASTX, XRPN (plus other symbols).
+- `lastBarUtc=null`, `receivedBars=0`, `persistedBars=0`, and empty `barsBySymbol`.
+
+This confirms API liveness and acknowledged WebSocket subscription. Because the user explicitly ran it after 3 PM Arizona (after the regular session), it does **not** pass or fail regular-session bar delivery. The 5-minute before/after delivery test remains open for the next regular session. Do not ask the user to run the whole runbook; run only this §1A test when market-hours evidence is available.
+
 ### Before the open
 1. Pull the latest `feature/opportunity-quality-classification` branch and record `git rev-parse HEAD`.
 2. Start the MCC API in Visual Studio (F5) or the existing local launch profile. Keep it running throughout the capture.
