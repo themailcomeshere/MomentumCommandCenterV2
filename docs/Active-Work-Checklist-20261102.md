@@ -1,5 +1,18 @@
 # Active Work Checklist — 2026-11-02
 
+## November 2 follow-up — operator script, scanner import, prototype header, and 1M parity
+
+- [x] Fixed PowerShell refspec interpolation in `scripts/Get-Latest-And-Test.ps1`: use `${Branch}` before the colon so PowerShell does not parse `$Branch:` as a scoped variable.
+- [x] Hardened scanner CSV parsing for UTF-8 BOM, comma/semicolon/tab delimiters, quoted fields, `Symbol`, `Ticker`, and `Symbol/Ticker` header variants; map `Overnight Score` to the imported score.
+- [x] Moved `marketSessionClock` directly beside the title inside the `mcc-static-0010-div` parent in the prototype; made the transport-label text background transparent while retaining the status dot.
+- [ ] Browser-verify the CSV using the user's original committed export, plus desktop/mobile header layout. The current active branch tree did not contain a dedicated Overnight Scanner export CSV at review time; the exact source file/format remains unverified.
+- [ ] Run the corrected PowerShell script locally, then Release restore/build/test. Exact-head CI and browser acceptance are pending for the new commits.
+- [x] Audited Library 1M baseline V14.5 against normal 5M V4.1.7. V14.5's reconstructed 5M raw Permission omits the 5M Daily VWAP condition; the 1M VWAP gate is not equivalent. See `Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`.
+- [ ] Create a targeted 1M parity revision only after the 5M Daily VWAP comparison is implemented and compiled; validate on matched completed 5M bars. Keep V14.5 as baseline until then.
+- [x] Reviewed MHK, OSW, and EVR chart screenshots: no candidate meets the combined overnight + current 5M/1M decision requirements. EVR and OSW show 1M EOD GET OUT; MHK has 5M Permission NO and 1M execution environment NO, with current ON 3.13%.
+- [ ] Do not publish a numeric Calculated Limit Sell until 20 complete eligible GTC_EXT windows, walk-forward target quantile/touch analysis, and ATR parity are available. Current disposition: no new overnight buy/hold; limit sell DATA?/not calculated.
+
+
 ## Completed from latest user feedback
 - [x] Identified IEX configuration override: local secrets.json overrode appsettings.json.
 - [x] Confirmed SIP can be selected by configuration, then captured Alpaca HTTP 403: recent SIP data is not permitted by the current subscription.
