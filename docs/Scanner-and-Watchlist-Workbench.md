@@ -4,6 +4,8 @@
 
 ## Current scanner integration status — 2026-11-02
 
+**Document note:** Dated sections below this current-status section preserve earlier implementation snapshots. Where they conflict with this section, the November 2 status above is authoritative.
+
 The repository now contains a concrete `AlpacaScannerDiscoverySource`, hosted polling service, append-only JSONL event store, and `GET /api/scanner/discoveries`. The source queries Alpaca's SIP-based top-50 gainers/losers endpoint; the collector health is exposed with persisted discovery events.
 
 The user's current Alpaca subscription denied recent SIP data with HTTP 403 (`subscription does not permit querying recent SIP data`). Therefore the collector may be degraded and must not be represented as a fresh/live discovery feed until a successful source poll occurs. The OHLCV IEX feed does not grant SIP access to the separate movers endpoint.
@@ -84,17 +86,16 @@ MCC remains non-executing. Manual Schwab website entry is the preferred baseline
 
 The API process hosts an Alpaca SIP-based scanner discovery poller and persists its observations independently of the browser tab. However, the current account's recent-SIP entitlement denial can prevent fresh events. Leaving the browser open is not required for server-side polling while the API process is running. The current implementation is limited to Alpaca top-50 gainers/losers; it is not the Thinkorswim Overnight scan or a full-market Overnight qualification system.
 
-The UI now has a preview-only Morning Command Brief, a responsive Red Zone showing up to four locally ranked demo/import candidates, and a JSON export for that preview. The report clearly identifies itself as PREVIEW_ONLY and says the overnight collector is not running. Supplied scores are sorted for UI demonstration only; they are not the validated MCC opportunity ranking. 5M Permission and 1M execution remain UNKNOWN in these tiles.
+The UI has a preview-oriented Morning Command Brief and a Red Zone showing up to four candidates. Red Zone cards request live 1M/5M assessments, but their imported/discovery score is not a validated MCC opportunity ranking. 5M Permission and 1M execution are separate technical observations and do not establish Boring Overnight eligibility. The hosted Alpaca discovery poller and append-only event store exist, but recent SIP entitlement is denied by the user's current subscription; fresh discovery is therefore not currently verified.
 
-Required architecture before overnight collection can be relied on:
-1. Select and verify a supported provider and its licensing/entitlements.
-2. Implement a long-running provider adapter/collector independent of the browser tab.
-3. Persist raw discovery events and timestamped market observations with provenance and schema/version identifiers.
-4. Implement health/freshness, gap/duplicate detection, reconnect and restart recovery, and machine sleep/wake handling.
-5. Build deterministic Morning Report generation from persisted data and versioned scoring.
-6. Connect ranked discovery, continuation watch, Boring Overnight, and Red Zone to that validated data path.
+Remaining architecture/work:
+1. Restore or replace recent-SIP discovery entitlement and validate source health/freshness.
+2. Persist and expose complete timestamped market observations with provenance and schema/version identifiers for the chosen universe.
+3. Complete health/freshness, gap/duplicate detection, reconnect and restart recovery, and machine sleep/wake acceptance.
+4. Build deterministic Morning Report generation from persisted data and versioned scoring.
+5. Connect ranked discovery, continuation watch, Boring Overnight, and Red Zone to that validated data path.
 
-Until then, status must remain NOT RUNNING / NOT CONNECTED. Never represent a demo/import CSV as live data; do not synthesize missing bars; no provider secrets in browser code or localStorage.
+Never represent a demo/import CSV as live data; do not synthesize missing bars; no provider secrets in browser code or localStorage.
 
 
 ## Morning routine recovery and provider-neutral persistence scaffold (2026-10-23)
@@ -106,6 +107,6 @@ Until then, status must remain NOT RUNNING / NOT CONNECTED. Never represent a de
 - The Red Zone is being positioned in the upper-right command workspace. Current content remains preview/demo until real source data, validation, and service integration exist.
 
 
-## Polling worker scaffold update (2026-10-23)
+## Polling worker scaffold update (2026-10-23) — historical snapshot (superseded by 2026-11-02 current status)
 
 A generic cancellable polling worker and health snapshot now exist in the Application layer. It retries on the next configured poll after a source error and records RUNNING / DEGRADED / STOPPED / UNKNOWN. An offline test covers an empty successful batch and graceful cancellation. No concrete source, host startup wiring, or live collection exists until a provider is selected.
