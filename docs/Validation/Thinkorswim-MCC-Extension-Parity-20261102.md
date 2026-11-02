@@ -112,3 +112,18 @@ This display correction does not establish provider latency or TOS parity. The A
 - [ ] Capture TOS Close, VWAP, ATR14 and historical ExtensionATR to five decimals on the exact same completed candle as MCC.
 - [ ] Confirm matching session scope (MCC currently uses regular-session HLC3 volume-weighted VWAP) and actual bar timestamp.
 - [ ] Do not change extension thresholds or V2 signal rules to force numeric parity.
+
+
+## 1M V14.5 — reconstructed 5M Permission audit (2026-11-02)
+
+The current Library 1M baseline is `MomentumCommandCenterV3_2_1M_V14_5.txt`. Keep the normal 5M authority study at `MCC_V3_2_5M_V4_1_7.txt`. The user's installed 1M study hash has not been independently captured, so the Library baseline is not proof of byte-for-byte installation.
+
+A source comparison found one material parity gap:
+
+- Normal 5M V4.1.7 `bullishPermissionRaw` requires 5M price above Daily VWAP, 5M price above EMA9, EMA9 >= EMA20, and RSI >= 50.
+- 1M V14.5 reconstructs 5M raw permission from 5M EMA9 > EMA20, 5M close > EMA9, 5M RSI >= 50, and not-bearish-stack. It does **not** include the 5M close-above-Daily-VWAP condition.
+- V14.5's shared `fiveExecutionPermission` separately requires the current 1M price above Daily VWAP. That is an additional 1M execution filter, not a substitute for the missing 5M VWAP condition.
+
+Therefore V14.5's reconstructed 5M Permission can disagree with the normal V4.1.7 5M authority on a bar where 1M price and 5M close are on opposite sides of Daily VWAP. This is a targeted parity defect, not a reason to redesign the 1M event/continuation pipeline.
+
+**Disposition:** retain V14.5 as the current baseline for now; do not install an uncompiled replacement or alter thresholds. The next 1M revision should make its reconstructed 5M Permission agree with V4.1.7 on the same completed 5M bar, including the 5M Daily VWAP condition, while retaining the independent 1M VWAP execution gate. Compile in thinkorswim and compare same-symbol/same-timestamp permission/state outputs before promoting the revision. Do not call parity certified until that test passes.
