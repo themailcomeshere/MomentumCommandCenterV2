@@ -177,7 +177,7 @@ function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
 }
 async function refreshDecisionExplanation(){
  const symbol=($("symbol")?.value||"").trim().toUpperCase();
- const classification=$("classification"),headline=$("headline"),price=$("price"),rvol=$("rvol"),extension=$("extension"),eligibility=$("eligibility"),freshness=$("freshness"),reasons=$("reasons"),fiveState=$("fiveState"),oneState=$("oneState"),scoreNode=$("decisionScore"),sourceNode=$("decisionSource");
+ const classification=$("classification"),headline=$("headline"),price=$("price"),dailyVwap=$("dailyVwap"),atr14=$("atr14"),rvol=$("rvol"),extension=$("extension"),eligibility=$("eligibility"),freshness=$("freshness"),reasons=$("reasons"),fiveState=$("fiveState"),oneState=$("oneState"),scoreNode=$("decisionScore"),sourceNode=$("decisionSource");
  if(!symbol||!classification)return;
  classification.textContent="LOADING LIVE ASSESSMENT";classification.className="classification watch";
  if(headline)headline.textContent="Requesting current completed 1M and 5M bars…";
@@ -190,6 +190,8 @@ async function refreshDecisionExplanation(){
   classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch");
   if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(2);
+  if(dailyVwap)dailyVwap.textContent=one.vwap==null?"DATA?":"$"+Number(one.vwap).toFixed(3);
+  if(atr14)atr14.textContent=one.atr==null?"DATA?":"$"+Number(one.atr).toFixed(3);
   if(rvol)rvol.textContent=five.relativeVolume==null?"UNKNOWN":Number(five.relativeVolume).toFixed(2)+"×";
   if(extension)extension.textContent=one.extensionAtr==null?"DATA?":Number(one.extensionAtr).toFixed(2)+" ATR";
   if(eligibility)eligibility.textContent="5M permission: "+permission;
@@ -202,13 +204,14 @@ async function refreshDecisionExplanation(){
   if(five.relativeVolumeBaselineSamples!==undefined)lines.push("5M same-time RVOL baseline: "+five.relativeVolumeBaselineSamples+" prior-session samples; minimum 5.");
   if(one.sourceTimestampUtc)lines.push("1M source bar: "+new Date(one.sourceTimestampUtc).toLocaleString());
   if(five.sourceTimestampUtc)lines.push("5M source bar: "+new Date(five.sourceTimestampUtc).toLocaleString());
+  if(one.close!=null&&one.vwap!=null&&one.atr!=null)lines.push("1M extension inputs: close $"+Number(one.close).toFixed(3)+" · Daily VWAP $"+Number(one.vwap).toFixed(3)+" · ATR14 $"+Number(one.atr).toFixed(3)+" · extension "+formatMetric(one.extensionAtr,2)+" ATR.");
   if(one.ema9!=null&&one.ema20!=null)lines.push("1M EMA9 "+formatMetric(one.ema9)+" · EMA20 "+formatMetric(one.ema20)+" · RSI "+formatMetric(one.rsi,1));
   if(reasons)reasons.replaceChildren(...lines.map(line=>{const li=document.createElement("li");li.textContent=line;return li;}));
-  if(sourceNode)sourceNode.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"feed UNKNOWN")+" · 1M "+(one.sourceTransport||"UNKNOWN")+" · 5M REST · "+(data.evaluationStatus||"UNKNOWN")+" · evaluated "+(data.evaluatedAtUtc?new Date(data.evaluatedAtUtc).toLocaleTimeString():"UNKNOWN");
+  if(sourceNode)sourceNode.textContent="Source "+(data.provider||"UNKNOWN")+" · configured "+(data.configuredFeed||"feed UNKNOWN")+" · observed 1M "+(one.feed||data.feed||"UNKNOWN")+"/5M "+(five.feed||data.feed||"UNKNOWN")+" · 1M "+(one.sourceTransport||"UNKNOWN")+" · 5M REST · "+(data.evaluationStatus||"UNKNOWN")+" · evaluated "+(data.evaluatedAtUtc?new Date(data.evaluatedAtUtc).toLocaleTimeString():"UNKNOWN");
  }catch(error){
   classification.textContent="DATA UNAVAILABLE";classification.className="classification watch";
   if(headline)headline.textContent="Live assessment request failed: "+error.message;
-  if(price)price.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
+  if(price)price.textContent="DATA?";if(dailyVwap)dailyVwap.textContent="DATA?";if(atr14)atr14.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
   if(eligibility)eligibility.textContent="5M permission: UNKNOWN";if(freshness)freshness.textContent="Freshness: UNKNOWN";
   if(fiveState)fiveState.textContent="5M permission: UNKNOWN";if(oneState)oneState.textContent="1M execution: UNKNOWN";
   setV2ScoreDisplay(scoreNode,null,null,"REQUEST FAILED");
@@ -405,7 +408,8 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
-  extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M |close − Daily VWAP| / ATR14)";
+  const money=value=>value!==null&&value!==undefined&&Number.isFinite(Number(value))?"$"+Number(value).toFixed(3):"DATA?";
+  extensionNode.textContent="1M close "+money(one.close)+" · Daily VWAP "+money(one.vwap)+" · ATR14 "+money(one.atr)+" · Extension "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?");
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
   const relativeVolume=Number(five.relativeVolume);
   const rvolCriterion=five.scoreBreakdown?.criteria?.find(item=>item.key==="rvolSupportive");
