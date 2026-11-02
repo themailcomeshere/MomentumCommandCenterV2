@@ -9,10 +9,16 @@
 - [x] Recorded latest INO TOS/MCC readings and the fact that TOS 24.6 ATR was a live label, not a historical per-bar value.
 - [x] Recorded Schwab Trader API — Individual approval; app registration and OAuth remain separate.
 - [x] Defined RTO audit as exact 40-boundary coverage across 20 valid sessions.
+- [x] Fixed prototype header structure: System Readiness is now a sibling of topbar-brand, matching production's two-column header.
+- [x] Overrode anywhere-wrapping for marketTransportLabel so the text wraps at word boundaries rather than character-by-character.
+- [x] Fixed scanner CSV import so it immediately re-renders Red Zone as well as the scanner table.
+- [x] Documented Red Zone refresh cadence: 15-second live 1M/5M card assessment refresh; 30-second Alpaca discovery refresh when its group is selected.
+- [x] Added technical update/build/API verification workflow and `scripts/Get-Latest-And-Test.ps1`.
+- [x] Added Overnight Scanner Quick Start and November 2 candidate/news review.
 
 ## Open P0 — runtime acceptance
 - [x] Release build and tests passed on branch head `83cd9780daa9f8e94628e8d24f4bc6ab4b03c415`: GitHub Actions run [41514111035](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41514111035), 0 warnings, 0 errors, 179/179 tests.
-- [ ] Hard-refresh prototype and verify timestamp display on desktop and mobile.
+- [ ] Hard-refresh prototype and verify the repaired header, transport label wrapping, and timestamp display on desktop and mobile.
 - [ ] During regular market hours, capture live-assessment JSON and calculate evaluatedAtUtc minus oneMinute.completedAtUtc. Investigate if >=60 seconds for a liquid symbol.
 - [ ] Complete WebSocket delivery test for SPY, RKLX, ASTX and XRPN using advancing per-symbol bar counts and timestamps.
 - [ ] Complete controlled collector failure/recovery, restart/checkpoint reload and sleep/wake acceptance.
@@ -20,7 +26,7 @@
 ## Open P1 — strategy and data correctness
 - [ ] Match TOS and MCC on the exact same completed 1M candle; obtain five-decimal Close, VWAP, ATR14 and historical ExtensionATR from the Data Box.
 - [ ] Reconcile VWAP/ATR differences only after timestamp, session scope and feed match. Do not tune thresholds to force parity.
-- [ ] Implement Red Zone Manual/Automatic mode and versioned opportunity-quality ranking with validated participation/liquidity inputs, explanations, stable re-ranking and tests.
+- [ ] Complete Red Zone source automation and versioned opportunity-quality ranking with validated participation/liquidity inputs, explanations, stable re-ranking and tests. CSV import and periodic card assessments are implemented; automatic Thinkorswim scan ingestion is not.
 - [ ] Complete source-backed catalyst, daily SMA20/average volume, exclusion reconciliation and immutable Boring Overnight snapshots. Boring Overnight remains WATCH/manual, not READY.
 - [ ] Complete GTC_EXT history, target-touch/time-to-touch/adverse-excursion analysis, walk-forward target quantile and Calculated Limit Sell integration.
 - [ ] Complete matched TOS 1M/5M state replay; OHLCV alone cannot prove study states.
@@ -34,7 +40,7 @@
 - [ ] Implement OAuth, protected token persistence/refresh and read-only account/position retrieval.
 - [ ] Persist normalized position snapshots with provenance; distinguish flat from missing/stale/failed data.
 - [ ] Keep order-writing endpoints out of Phase 1/2.
-- [ ] Validate scanner provider coverage, licensing, rate limits, backfill and retention.
+- [ ] Validate scanner provider coverage, licensing, rate limits, backfill and retention. Current Alpaca movers source is SIP-based and the user's recent-SIP request returned HTTP 403.
 - [ ] Decide desktop packaging/startup and data retention/backup policy.
 
 ## Open P3 — older validation and UX
@@ -50,6 +56,15 @@ The RTO audit checks 40 exact prior-close/next-open 1-minute timestamps across 2
 - Treat completed-bar timestamp correction as a display fix, not proof that provider latency is resolved.
 - Do not claim numerical TOS parity from rounded inputs or a live EXT label.
 - Keep Boring Overnight manual-only and Schwab integration read-only.
+
+
+## New workflow documents (2026-11-02)
+- [x] `docs/Technical-Workflow.md` is the operator's standard get-latest/build/restart/API smoke-test sequence; `docs/Runtime-Acceptance-Runbook.md` remains the detailed acceptance source of truth.
+- [x] `scripts/Get-Latest-And-Test.ps1` safely checks for a clean tree, fetches/switches/pulls the project branch, and runs Release restore/build/tests.
+- [x] `docs/Overnight-Scanner-Quick-Start.md` documents the TOS scan → hard gates/news → CSV import → Red Zone → chart review process.
+- [x] `docs/Validation/Overnight-Scanner-Review-20261102.md` records the MHK/OSW/EVR shortlist and catalyst review.
+- [ ] User visually verifies the header/transport label fix after pulling the latest branch.
+- [ ] User uploads Daily and 5M charts for OSW, EVR, and MHK for final chart-level review.
 
 ## [Uncertainties]
 - Actual INO bar age is not measured; exact date/time and raw API response for the reported delay were not supplied.
