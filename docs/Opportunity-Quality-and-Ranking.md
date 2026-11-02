@@ -176,3 +176,24 @@ The October 19 XRPN 1M/5M export pair has been checked for internal OHLCV consis
 - [FIX COMMITTED] The first validation-hardening CI run failed during build with CS0136 because a local variable named reasons conflicted with a later declaration in the evaluator. Renamed the early-return variable to invalidReasons in commit 65c83f7918200e413a5b20fb7942392357c7d193.
 - [PENDING — CURRENT HEAD] Re-run build and tests on the exact latest head after this fix. The previous run 40737130070 is a known failure and must not be reported as passing.
 - [NEXT] Verify the new evaluator tests for NaN/infinite values and invalid symbols, and the store tests for invalid OHLCV, once the workflow completes.
+
+
+## 2026-11-01 — Red Zone integration and volume-participation requirement
+
+The Red Zone must consume opportunity-quality evidence, but it must not treat opportunity quality as strategy eligibility or execution authorization.
+
+### Verified current integration boundary
+- The `OpportunityQualityAssessor` is a standalone deterministic domain slice with provisional diagnostic bands. It is not wired into the live market-data assessment, scanner ranking, API, or dashboard.
+- The live assessment currently exposes a 5M same-time-of-day `relativeVolume` value (when its baseline is valid), 5M six-factor score/permission, 1M RSI/MACD/ATR-extension and chart bars, and the combined V2 decision state. It does not currently expose a validated 20-day average daily volume, reliable spread, or a dedicated 1M RVOL baseline in the Red Zone rank contract.
+- The current Red Zone live-discovery ordering uses absolute daily percentage change; it is not the opportunity-quality assessor and does not rank by participation quality.
+
+### Required adapter before live ranking
+- Build a timestamped per-candidate input snapshot from the current live 5M/1M assessment and explicit source-backed volume/liquidity metrics. Preserve feed, timeframe, source timestamp, freshness and calculation/config version per field.
+- Treat 5M same-slot RVOL as the only currently verified relative-volume input in this API contract. Do not relabel it as 1M RVOL or average daily volume.
+- If average daily volume, spread, or a required volume baseline is unavailable, report it as unavailable and lower confidence; do not synthesize a proxy from a short 1M chart window.
+- Rank the entire eligible candidate pool (or an explicitly bounded, disclosed candidate pool), not only the four already displayed cards. Apply concurrency/rate limits and stale-result protection.
+- Show each card's strongest positive factors and its limiting factors, including explicit LOW PARTICIPATION / LOW RVOL when supported. A high 5M score or EXECUTION READY state must not hide low participation.
+- Keep 5M Permission, 1M EXECUTION READY, opportunity quality, and Red Zone rank as separate fields. Hard eligibility failures and stale/missing data cannot be compensated for by a high quality score.
+- Do not select production weights/bands from intuition. Use the assessor's provisional configuration only for diagnostic comparison until historical candidate snapshots and forward outcomes support calibration.
+
+The implementation is intentionally not marked complete by this documentation update. The current frontend behavior and required Manual/Automatic mode, stable ranking, semantic tile accent, explanation, sound deduplication and tests are tracked in the canonical Master To-Do.
