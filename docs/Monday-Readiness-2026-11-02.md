@@ -14,6 +14,8 @@
 
 The Red Zone 5M score was previously coupled to the combined 1M/5M decision object. It is now calculated independently from the six existing V2 5M conditions, using the same canonical score function as the V2 engine. This prevents missing/stale 1M execution data from hiding a valid current 5M score. The score is still withheld when the 5M technical snapshot is absent/stale or the same-clock-slot RVOL baseline is unavailable.
 
+**Scope clarification:** this is readiness of the independent V2 5M score for live observation only. It does not mean the Red Zone automatic excitement rank, Manual/Automatic toggle, low-volume explanation/penalty, or four-stock dynamic prioritization is implemented. Current Red Zone ordering is not volume-aware; see the canonical Red Zone requirements in `docs/Master-To-Do.md` and `docs/Opportunity-Quality-and-Ranking.md`.
+
 ## 1. Daylight-saving conversion
 
 US daylight saving time ends Sunday, November 1, 2026. Phoenix remains UTC−07:00; Eastern becomes UTC−05:00. Phoenix is therefore two hours behind Eastern from Monday, November 2 until the spring change.
