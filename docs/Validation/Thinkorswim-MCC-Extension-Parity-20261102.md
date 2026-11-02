@@ -127,7 +127,7 @@ A source comparison found one material parity gap:
 
 Therefore V14.5.1's reconstructed 5M Permission can disagree with the normal V4.1.7 5M authority on a bar where 1M price and 5M close are on opposite sides of Daily VWAP. This is a targeted parity defect, not a reason to redesign the 1M event/continuation pipeline.
 
-**Disposition:** retain V14.5 as the current baseline for now; do not install an uncompiled replacement or alter thresholds. The next 1M revision should make its reconstructed 5M Permission agree with V4.1.7 on the same completed 5M bar, including the 5M Daily VWAP condition, while retaining the independent 1M VWAP execution gate. Compile in thinkorswim and compare same-symbol/same-timestamp permission/state outputs before promoting the revision. Do not call parity certified until that test passes.
+**Disposition:** retain V14.5.1 as the current full-study baseline for now; do not install an uncompiled replacement or alter thresholds. The next 1M revision should make its reconstructed 5M Permission agree with V4.1.7 on the same completed 5M bar, including the 5M Daily VWAP condition, while retaining the independent 1M VWAP execution gate. Compile in thinkorswim and compare same-symbol/same-timestamp permission/state outputs before promoting the revision. Do not call parity certified until that test passes.
 
 
 ## 1M/5M EOD clock parity audit — 2026-11-02
