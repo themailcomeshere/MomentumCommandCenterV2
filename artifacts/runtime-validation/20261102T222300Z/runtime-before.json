@@ -1,0 +1,182 @@
+﻿{
+    "capturedAtUtc":  "\/Date(1793658183713)\/",
+    "stream":  {
+                   "enabled":  true,
+                   "configured":  true,
+                   "connected":  true,
+                   "state":  "SUBSCRIBED",
+                   "feed":  "iex",
+                   "symbols":  [
+                                   "ASTX",
+                                   "CURLF",
+                                   "INO",
+                                   "MNSB",
+                                   "RKLX",
+                                   "SPY",
+                                   "XRPN"
+                               ],
+                   "subscribedSymbols":  [
+                                             "ASTX",
+                                             "CURLF",
+                                             "INO",
+                                             "MNSB",
+                                             "RKLX",
+                                             "SPY",
+                                             "XRPN"
+                                         ],
+                   "maxSymbols":  30,
+                   "lastMessageUtc":  "2026-11-02T22:06:35.275+00:00",
+                   "lastBarUtc":  null,
+                   "persistedBars":  0,
+                   "receivedBars":  0,
+                   "barsBySymbol":  {
+
+                                    },
+                   "lastError":  null,
+                   "note":  "Minute bars and late updatedBars only; this is not a trade/quote tick stream."
+               },
+    "collector":  {
+                      "enabled":  true,
+                      "configuredSymbols":  [
+                                                "SPY",
+                                                "QQQ",
+                                                "IWM",
+                                                "RTO",
+                                                "AMT"
+                                            ],
+                      "configuredProviders":  [
+                                                  "Alpaca"
+                                              ],
+                      "intervals":  [
+                                        "1m",
+                                        "5m"
+                                    ],
+                      "intervalSeconds":  60,
+                      "initialLookbackMinutes":  20,
+                      "overlapMinutes":  5,
+                      "checkpointPath":  "C:\\Users\\jampo\\AppData\\Local\\MomentumCommandCenterV2\\collector-watermarks.json",
+                      "checkpointLoadCompleted":  true,
+                      "checkpointFileFound":  true,
+                      "checkpointLoadedEntryCount":  14,
+                      "checkpointLoadCompletedUtc":  "2026-11-02T22:06:10.9068845+00:00",
+                      "checkpointLoadError":  null,
+                      "watermarks":  [
+                                         {
+                                             "key":  "Alpaca/SPY/1m",
+                                             "sourceTimestampUtc":  "2026-11-02T21:34:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/SPY/5m",
+                                             "sourceTimestampUtc":  "2026-11-02T21:30:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/QQQ/1m",
+                                             "sourceTimestampUtc":  "2026-11-02T21:37:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/QQQ/5m",
+                                             "sourceTimestampUtc":  "2026-11-02T21:35:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/TTE/1m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/TTE/5m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/FMS/1m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/FMS/5m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/IWM/1m",
+                                             "sourceTimestampUtc":  "2026-11-02T21:21:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/IWM/5m",
+                                             "sourceTimestampUtc":  "2026-11-02T21:20:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/RTO/1m",
+                                             "sourceTimestampUtc":  "2026-11-02T20:59:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/RTO/5m",
+                                             "sourceTimestampUtc":  "2026-11-02T20:55:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/AMT/1m",
+                                             "sourceTimestampUtc":  "2026-11-02T20:59:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/AMT/5m",
+                                             "sourceTimestampUtc":  "2026-11-02T20:55:00+00:00"
+                                         }
+                                     ],
+                      "cycles":  17,
+                      "newlyPersistedObservations":  324,
+                      "lastCycleErrors":  0,
+                      "lastCycleStartedUtc":  "2026-11-02T22:22:56.0926043+00:00",
+                      "lastCycleCompletedUtc":  "2026-11-02T22:22:57.840121+00:00",
+                      "recentErrors":  [
+
+                                       ],
+                      "mode":  "durable-watermark historical REST polling with bounded backfill chunks; not websocket/live tick streaming"
+                  },
+    "providers":  {
+                      "value":  [
+                                    {
+                                        "provider":  "Alpaca",
+                                        "configuredFeed":  "iex",
+                                        "configuredFeedSource":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                        "feedConfigurationSources":  [
+                                                                         {
+                                                                             "source":  "JsonConfigurationProvider for \u0027appsettings.json\u0027 (Optional)",
+                                                                             "value":  "sip"
+                                                                         },
+                                                                         {
+                                                                             "source":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                                                             "value":  "iex"
+                                                                         }
+                                                                     ],
+                                        "configured":  true,
+                                        "validated":  true,
+                                        "status":  "VALIDATED_DATA_RETURNED",
+                                        "lastSuccessfulDataValidationUtc":  "2026-11-02T22:23:02.245+00:00",
+                                        "lastSuccessfulDataValidationBarCount":  2,
+                                        "capabilities":  [
+                                                             "Historical 1m/5m OHLCV bars",
+                                                             "REST with bounded pagination and transient retries",
+                                                             "Configured feed: iex",
+                                                             "Extended-hours bars included only when provider returns them for this feed/entitlement",
+                                                             "Scanner/movers discovery still depends on configured scanner source"
+                                                         ],
+                                        "credentialLocation":  "server environment / user secrets; never frontend"
+                                    },
+                                    {
+                                        "provider":  "Massive",
+                                        "configuredFeed":  null,
+                                        "configuredFeedSource":  null,
+                                        "feedConfigurationSources":  null,
+                                        "configured":  false,
+                                        "validated":  false,
+                                        "status":  "NOT_CONFIGURED",
+                                        "lastSuccessfulDataValidationUtc":  null,
+                                        "lastSuccessfulDataValidationBarCount":  0,
+                                        "capabilities":  [
+                                                             "Historical 1m/5m OHLCV aggregates",
+                                                             "REST only; no websocket yet",
+                                                             "Scanner/movers endpoint not implemented",
+                                                             "Plan/endpoint entitlements must be verified"
+                                                         ],
+                                        "credentialLocation":  "server environment / user secrets; never frontend"
+                                    }
+                                ],
+                      "Count":  2
+                  }
+}

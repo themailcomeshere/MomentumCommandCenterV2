@@ -1,0 +1,107 @@
+﻿{
+    "5m":  {
+               "symbol":  "RKLX",
+               "timeframe":  "5m",
+               "provider":  "Alpaca",
+               "feed":  "iex",
+               "requestedFromUtc":  "2026-11-02T14:30:00+00:00",
+               "requestedToUtc":  "2026-11-02T14:40:00+00:00",
+               "retrievedAtUtc":  "2026-11-02T22:23:02.2465466+00:00",
+               "barCount":  2,
+               "newlyPersistedObservationCount":  0,
+               "firstSourceTimestampUtc":  "2026-11-02T14:30:00+00:00",
+               "latestSourceTimestampUtc":  "2026-11-02T14:35:00+00:00",
+               "gapCount":  0,
+               "sampleGapStartsUtc":  [
+
+                                      ],
+               "sessionNote":  "Provider timestamps are preserved in UTC. Historical bars may include extended-hours trades; confirm feed entitlement and requested window. Gaps are not automatically treated as zero activity.",
+               "bars":  [
+                            {
+                                "symbol":  "RKLX",
+                                "timestamp":  "2026-11-02T14:30:00+00:00",
+                                "open":  9.91,
+                                "high":  9.92,
+                                "low":  9.61,
+                                "close":  9.61,
+                                "volume":  300,
+                                "provider":  "Alpaca",
+                                "feed":  "iex",
+                                "timeframe":  "5m",
+                                "sourceTransport":  "REST"
+                            },
+                            {
+                                "symbol":  "RKLX",
+                                "timestamp":  "2026-11-02T14:35:00+00:00",
+                                "open":  9.59,
+                                "high":  9.59,
+                                "low":  9.59,
+                                "close":  9.59,
+                                "volume":  500,
+                                "provider":  "Alpaca",
+                                "feed":  "iex",
+                                "timeframe":  "5m",
+                                "sourceTransport":  "REST"
+                            }
+                        ]
+           },
+    "1m":  {
+               "symbol":  "RKLX",
+               "timeframe":  "1m",
+               "provider":  "Alpaca",
+               "feed":  "iex",
+               "requestedFromUtc":  "2026-11-02T14:30:00+00:00",
+               "requestedToUtc":  "2026-11-02T14:40:00+00:00",
+               "retrievedAtUtc":  "2026-11-02T22:23:00.6163233+00:00",
+               "barCount":  3,
+               "newlyPersistedObservationCount":  0,
+               "firstSourceTimestampUtc":  "2026-11-02T14:30:00+00:00",
+               "latestSourceTimestampUtc":  "2026-11-02T14:35:00+00:00",
+               "gapCount":  1,
+               "sampleGapStartsUtc":  [
+                                          "2026-11-02T14:31:00+00:00"
+                                      ],
+               "sessionNote":  "Provider timestamps are preserved in UTC. Historical bars may include extended-hours trades; confirm feed entitlement and requested window. Gaps are not automatically treated as zero activity.",
+               "bars":  [
+                            {
+                                "symbol":  "RKLX",
+                                "timestamp":  "2026-11-02T14:30:00+00:00",
+                                "open":  9.91,
+                                "high":  9.92,
+                                "low":  9.91,
+                                "close":  9.92,
+                                "volume":  200,
+                                "provider":  "Alpaca",
+                                "feed":  "iex",
+                                "timeframe":  "1m",
+                                "sourceTransport":  "REST"
+                            },
+                            {
+                                "symbol":  "RKLX",
+                                "timestamp":  "2026-11-02T14:34:00+00:00",
+                                "open":  9.61,
+                                "high":  9.61,
+                                "low":  9.61,
+                                "close":  9.61,
+                                "volume":  100,
+                                "provider":  "Alpaca",
+                                "feed":  "iex",
+                                "timeframe":  "1m",
+                                "sourceTransport":  "REST"
+                            },
+                            {
+                                "symbol":  "RKLX",
+                                "timestamp":  "2026-11-02T14:35:00+00:00",
+                                "open":  9.59,
+                                "high":  9.59,
+                                "low":  9.59,
+                                "close":  9.59,
+                                "volume":  500,
+                                "provider":  "Alpaca",
+                                "feed":  "iex",
+                                "timeframe":  "1m",
+                                "sourceTransport":  "REST"
+                            }
+                        ]
+           }
+}

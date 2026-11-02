@@ -1,0 +1,646 @@
+﻿{
+    "symbol":  "RTO",
+    "provider":  "Alpaca",
+    "feed":  "iex",
+    "timeframe":  "1m",
+    "calendarVersion":  "MCC_US_EQUITIES_CALENDAR_V2",
+    "requestedFromUtc":  "2026-10-05T19:59:00+00:00",
+    "requestedToUtc":  "2026-11-02T14:31:00+00:00",
+    "retrievedAtUtc":  "2026-11-02T22:30:41.8483613+00:00",
+    "fetchedBarCount":  3949,
+    "newlyPersistedObservationCount":  0,
+    "boundaryCoverageAudit":  [
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-05T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-05T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  1,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-06T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-06T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  3,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-06T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-06T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-07T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-07T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-07T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-07T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-08T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-08T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-08T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-08T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-09T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-09T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-09T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-09T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-12T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-12T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  2,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-12T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-12T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-13T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-13T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  4,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-13T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-13T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-14T13:30:00+00:00",
+                                      "providerReturnedExactBar":  false,
+                                      "storeHasExactBar":  false,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-14T13:34:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  4,
+                                      "providerBarsWithinFiveMinutes":  1,
+                                      "status":  "PROVIDER_RESPONSE_MISSING_EXACT_BAR"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-14T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-14T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-15T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-15T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-15T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-15T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-16T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-16T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  3,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-16T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-16T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-19T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-19T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-19T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-19T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-20T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-20T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  2,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-20T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-20T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-21T13:30:00+00:00",
+                                      "providerReturnedExactBar":  false,
+                                      "storeHasExactBar":  false,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-21T13:31:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  1,
+                                      "providerBarsWithinFiveMinutes":  3,
+                                      "status":  "PROVIDER_RESPONSE_MISSING_EXACT_BAR"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-21T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-21T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-22T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-22T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-22T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-22T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  7,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-23T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-23T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-23T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-23T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-26T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-26T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  3,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-26T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-26T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-27T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-27T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-27T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-27T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-28T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-28T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  4,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-28T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-28T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-29T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-29T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  4,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-29T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-29T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-10-30T13:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-30T13:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  4,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-10-30T19:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-10-30T19:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  5,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-11-02T14:30:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-11-02T14:30:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  1,
+                                      "status":  "COVERED"
+                                  }
+                              ],
+    "history":  {
+                    "symbol":  "RTO",
+                    "provider":  "Alpaca",
+                    "feed":  "iex",
+                    "calculatedAtUtc":  "2026-11-02T22:30:41.8399019+00:00",
+                    "requiredWindow":  20,
+                    "requestedPairCount":  20,
+                    "validPairCount":  18,
+                    "missingPairCount":  2,
+                    "allPairsComplete":  false,
+                    "enoughHistory":  false,
+                    "winRatePct":  null,
+                    "averageReturnPct":  null,
+                    "medianReturnPct":  null,
+                    "averageReturnPct20D":  null,
+                    "averageReturnPct5D":  null,
+                    "winRatePct20D":  null,
+                    "returns":  [
+                                    {
+                                        "previousSessionDate":  "2026-10-05",
+                                        "nextSessionDate":  "2026-10-06",
+                                        "previousCloseBarTimestampUtc":  "2026-10-05T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-06T13:30:00+00:00",
+                                        "previousClose":  20.025,
+                                        "nextOpen":  19.93,
+                                        "returnPct":  -0.4744069912609238451935081100,
+                                        "previousCloseObservationId":  "d306f6655c184cc0bb7818f844d10a1a",
+                                        "nextOpenObservationId":  "cc5a6a8844e34158aee5ff5cbeecb33f"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-06",
+                                        "nextSessionDate":  "2026-10-07",
+                                        "previousCloseBarTimestampUtc":  "2026-10-06T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-07T13:30:00+00:00",
+                                        "previousClose":  19.95,
+                                        "nextOpen":  19.93,
+                                        "returnPct":  -0.1002506265664160401002506300,
+                                        "previousCloseObservationId":  "e0da6fd0c36d480f99ddad4ca7aad0bb",
+                                        "nextOpenObservationId":  "c4a89a7f5a304a89b178d30e7325b4bd"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-07",
+                                        "nextSessionDate":  "2026-10-08",
+                                        "previousCloseBarTimestampUtc":  "2026-10-07T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-08T13:30:00+00:00",
+                                        "previousClose":  19.85,
+                                        "nextOpen":  19.99,
+                                        "returnPct":  0.7052896725440806045340050400,
+                                        "previousCloseObservationId":  "a12cb1c97445440f87cb90bbcd73c133",
+                                        "nextOpenObservationId":  "c3f7e14217e1488f8c62e744c22531ab"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-08",
+                                        "nextSessionDate":  "2026-10-09",
+                                        "previousCloseBarTimestampUtc":  "2026-10-08T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-09T13:30:00+00:00",
+                                        "previousClose":  20.25,
+                                        "nextOpen":  20.34,
+                                        "returnPct":  0.4444444444444444444444444400,
+                                        "previousCloseObservationId":  "1d09fc68a2014070af25992b8ee5e9f5",
+                                        "nextOpenObservationId":  "9c6564eeb8c94025825859e0e746b9f8"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-09",
+                                        "nextSessionDate":  "2026-10-12",
+                                        "previousCloseBarTimestampUtc":  "2026-10-09T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-12T13:30:00+00:00",
+                                        "previousClose":  20.24,
+                                        "nextOpen":  20.42,
+                                        "returnPct":  0.8893280632411067193675889300,
+                                        "previousCloseObservationId":  "275157fed48340ce8b73ef0f16e2be44",
+                                        "nextOpenObservationId":  "44cd237eb3384d8993c26f28d939218b"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-12",
+                                        "nextSessionDate":  "2026-10-13",
+                                        "previousCloseBarTimestampUtc":  "2026-10-12T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-13T13:30:00+00:00",
+                                        "previousClose":  20.25,
+                                        "nextOpen":  20.305,
+                                        "returnPct":  0.2716049382716049382716049400,
+                                        "previousCloseObservationId":  "6c673d2f0ccd4d269daf32577451b84b",
+                                        "nextOpenObservationId":  "3ead04b19d6b424d9413439d749d9c98"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-14",
+                                        "nextSessionDate":  "2026-10-15",
+                                        "previousCloseBarTimestampUtc":  "2026-10-14T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-15T13:30:00+00:00",
+                                        "previousClose":  20.24,
+                                        "nextOpen":  20.64,
+                                        "returnPct":  1.9762845849802371541501976300,
+                                        "previousCloseObservationId":  "3ef7dacafe78418bbd6e79112560222e",
+                                        "nextOpenObservationId":  "ac567fb0ccc146eab04adc6ae669d9be"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-15",
+                                        "nextSessionDate":  "2026-10-16",
+                                        "previousCloseBarTimestampUtc":  "2026-10-15T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-16T13:30:00+00:00",
+                                        "previousClose":  20.82,
+                                        "nextOpen":  21.1,
+                                        "returnPct":  1.3448607108549471661863592700,
+                                        "previousCloseObservationId":  "5a784cc7d86640d181bb8399e57dc6cc",
+                                        "nextOpenObservationId":  "6fc1c2be672a44e09de2d789f4469501"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-16",
+                                        "nextSessionDate":  "2026-10-19",
+                                        "previousCloseBarTimestampUtc":  "2026-10-16T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-19T13:30:00+00:00",
+                                        "previousClose":  21.1,
+                                        "nextOpen":  20.83,
+                                        "returnPct":  -1.2796208530805687203791469200,
+                                        "previousCloseObservationId":  "643d876086b249c3a0f23fa73e99db8f",
+                                        "nextOpenObservationId":  "771b8a8a36024bd981f2ff8b4cc5f2fa"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-19",
+                                        "nextSessionDate":  "2026-10-20",
+                                        "previousCloseBarTimestampUtc":  "2026-10-19T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-20T13:30:00+00:00",
+                                        "previousClose":  21.2,
+                                        "nextOpen":  21.335,
+                                        "returnPct":  0.6367924528301886792452830200,
+                                        "previousCloseObservationId":  "11df2dbb8b2e473a98f84c0b2fe84739",
+                                        "nextOpenObservationId":  "e2841a89f1ee463aa522744f3c408fef"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-21",
+                                        "nextSessionDate":  "2026-10-22",
+                                        "previousCloseBarTimestampUtc":  "2026-10-21T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-22T13:30:00+00:00",
+                                        "previousClose":  21.04,
+                                        "nextOpen":  22.36,
+                                        "returnPct":  6.2737642585551330798479087500,
+                                        "previousCloseObservationId":  "b1a6c5ad40a443fb912626ead180d244",
+                                        "nextOpenObservationId":  "7038f5285ef646dd8ad368ef34fb4e15"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-22",
+                                        "nextSessionDate":  "2026-10-23",
+                                        "previousCloseBarTimestampUtc":  "2026-10-22T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-23T13:30:00+00:00",
+                                        "previousClose":  22.88,
+                                        "nextOpen":  22.895,
+                                        "returnPct":  0.0655594405594405594405594400,
+                                        "previousCloseObservationId":  "b08c75b516a94ec88cab331997c9da99",
+                                        "nextOpenObservationId":  "c071dee28cb942799ec6b03542cd2b30"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-23",
+                                        "nextSessionDate":  "2026-10-26",
+                                        "previousCloseBarTimestampUtc":  "2026-10-23T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-26T13:30:00+00:00",
+                                        "previousClose":  22.77,
+                                        "nextOpen":  22.795,
+                                        "returnPct":  0.1097935880544576196750109800,
+                                        "previousCloseObservationId":  "6d1bc5a69dd24d889100f8389420498e",
+                                        "nextOpenObservationId":  "c34cf0648d1d4dbf82505c2845fc5ed1"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-26",
+                                        "nextSessionDate":  "2026-10-27",
+                                        "previousCloseBarTimestampUtc":  "2026-10-26T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-27T13:30:00+00:00",
+                                        "previousClose":  22.6,
+                                        "nextOpen":  23,
+                                        "returnPct":  1.769911504424778761061946900,
+                                        "previousCloseObservationId":  "40f28afad0cb4fd39f2cf8d9dd23d046",
+                                        "nextOpenObservationId":  "b90d3bc28ac74714bd1a06df924aca11"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-27",
+                                        "nextSessionDate":  "2026-10-28",
+                                        "previousCloseBarTimestampUtc":  "2026-10-27T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-28T13:30:00+00:00",
+                                        "previousClose":  22.89,
+                                        "nextOpen":  22.84,
+                                        "returnPct":  -0.2184359982525120139799038900,
+                                        "previousCloseObservationId":  "a37b0cbd74c345929c01cc58d21dc3d2",
+                                        "nextOpenObservationId":  "81b14676858942b88cb993f4e2ac034b"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-28",
+                                        "nextSessionDate":  "2026-10-29",
+                                        "previousCloseBarTimestampUtc":  "2026-10-28T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-29T13:30:00+00:00",
+                                        "previousClose":  22.79,
+                                        "nextOpen":  22.93,
+                                        "returnPct":  0.6143045195261079420798595900,
+                                        "previousCloseObservationId":  "1a6bf44d90154219be2f738700b5da90",
+                                        "nextOpenObservationId":  "c30a1078434a4df5ba36bcb0b7506f61"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-29",
+                                        "nextSessionDate":  "2026-10-30",
+                                        "previousCloseBarTimestampUtc":  "2026-10-29T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-10-30T13:30:00+00:00",
+                                        "previousClose":  23.27,
+                                        "nextOpen":  23.45,
+                                        "returnPct":  0.7735281478298238074774387600,
+                                        "previousCloseObservationId":  "a7ae9981882c4246958250281fc48558",
+                                        "nextOpenObservationId":  "a97caaa323264014bff0f656e0372f10"
+                                    },
+                                    {
+                                        "previousSessionDate":  "2026-10-30",
+                                        "nextSessionDate":  "2026-11-02",
+                                        "previousCloseBarTimestampUtc":  "2026-10-30T19:59:00+00:00",
+                                        "nextOpenBarTimestampUtc":  "2026-11-02T14:30:00+00:00",
+                                        "previousClose":  23.325,
+                                        "nextOpen":  23.74,
+                                        "returnPct":  1.7792068595927116827438370800,
+                                        "previousCloseObservationId":  "0aa6008091624ea1a98b8cb66bfb9889",
+                                        "nextOpenObservationId":  "0eb62b6714104b1c8b98c93b922e3cb8"
+                                    }
+                                ],
+                    "missing":  [
+                                    {
+                                        "nextSessionDate":  "2026-10-14",
+                                        "reasonCode":  "NEXT_SESSION_OPEN_MISSING",
+                                        "missingTimestampUtc":  "2026-10-14T13:30:00+00:00"
+                                    },
+                                    {
+                                        "nextSessionDate":  "2026-10-21",
+                                        "reasonCode":  "NEXT_SESSION_OPEN_MISSING",
+                                        "missingTimestampUtc":  "2026-10-21T13:30:00+00:00"
+                                    }
+                                ],
+                    "provenanceNote":  "INCOMPLETE_HISTORY: no rolling metric is emitted unless every requested pair exists and the required history count is met."
+                },
+    "note":  "Fetched and persisted 1m provider bars, then calculated 20 previous-RTH-close to next-RTH-open pairs using the versioned MCC US-equities calendar. Missing boundary bars suppress all rolling metrics. Verify calendar rules and provider feed coverage; this is not the separate 07:00–20:00 ET GTC_EXT sell-window study and does not qualify a candidate or submit orders."
+}

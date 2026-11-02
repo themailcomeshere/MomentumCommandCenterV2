@@ -1,0 +1,46 @@
+﻿[
+    {
+        "symbol":  "SPY",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  0,
+        "barCountAfter":  0,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  null,
+        "lastBarAfterUtc":  null,
+        "advanced":  false
+    },
+    {
+        "symbol":  "RKLX",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  0,
+        "barCountAfter":  0,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  null,
+        "lastBarAfterUtc":  null,
+        "advanced":  false
+    },
+    {
+        "symbol":  "ASTX",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  0,
+        "barCountAfter":  0,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  null,
+        "lastBarAfterUtc":  null,
+        "advanced":  false
+    },
+    {
+        "symbol":  "XRPN",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  0,
+        "barCountAfter":  0,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  null,
+        "lastBarAfterUtc":  null,
+        "advanced":  false
+    }
+]
