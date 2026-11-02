@@ -1,3 +1,15 @@
+## November 2 follow-up — current feed, timestamp, and broker integration status
+
+- Alpaca IEX override was `secrets.json` taking precedence over `appsettings.json`. Setting secrets.json to SIP selected SIP, but the recent INO request returned HTTP 403: the current subscription does not permit recent SIP data. Restoring IEX returned `VALIDATED_DATA_RETURNED` with 62 bars. Use IEX until SIP access is actually authorized.
+- The prototype Main Chart layout was visually accepted by the user with no horizontal overflow.
+- Corrected the 1M timestamp display: `sourceTimestampUtc` is the bar start and `completedAtUtc` is the completed candle close. The UI now shows the close time and interval; the in-progress minute remains excluded. This display fix does not establish actual provider latency.
+- Latest INO comparison: TOS Close 2.06 / VWAP 1.89 / ATR14 0.02; MCC Close 2.05500 / VWAP 1.87031 / ATR14 0.01429. The TOS 24.6 ATR value was a live/latest label, not a historical bar value. Matched-bar parity remains open.
+- User reports Schwab Trader API — Individual approval. App creation, Accounts and Trading Production attachment, callback URL, app-level Ready status, OAuth and read-only position sync remain to be done. No order-writing integration is in scope.
+- The RTO audit is exact 40-boundary coverage across 20 valid sessions. Prior 38/40 result was IEX, with missing 2026-10-14 13:30Z and 2026-10-21 13:30Z opens. SIP comparison is blocked by the explicit Alpaca 403.
+- Current work tracking: [Active Work Checklist](docs/Active-Work-Checklist-20261102.md), [Master To-Do](docs/Master-To-Do.md), [New Chat Handoff](docs/NewChatHandoff.md).
+- Timestamp diagnosis: [Live 1-Minute Bar Timestamp and Latency](docs/Validation/Live-Bar-Timestamp-Latency-20261102.md). Schwab plan: [Thinkorswim / Schwab Integration Plan](docs/Thinkorswim-Schwab-Integration-Plan.md).
+
+---
 ## November 2 — live IEX diagnosis and Main Chart layout
 
 - User's tracked API appsettings contains `Feed: sip`, but running API still reported IEX. Launch settings only sets Development. New `/api/providers/status` output identifies the effective configuration provider and all sources contributing the feed setting; inspect User Secrets and environment overrides before further guessing.
