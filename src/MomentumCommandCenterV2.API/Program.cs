@@ -147,7 +147,7 @@ app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers,
             capabilities = p.Capabilities,
             credentialLocation = "server environment / user secrets; never frontend"
         };
-    }))
+    })))
 .WithSummary("Show configured provider status")
 .WithDescription("Example: Alpaca configured=true, status=VALIDATED_DATA_RETURNED after a non-empty response in this process. This does not prove streaming or complete coverage.");
 
