@@ -1,3 +1,11 @@
+## 2026-11-02 — current status pointer
+
+This file is a chronological record of prior user inputs and validation work. For the current actionable state, use `docs/Master-To-Do.md` and `docs/Active-Work-Checklist-20261102.md`; the current technical operator sequence is `docs/Technical-Workflow.md`.
+
+The latest follow-up is recorded in `docs/NewChatHandoff.md`: the PowerShell refspec fix, scanner CSV importer hardening, prototype clock/transport-label changes, current full 1M Library baseline V14.5.1, 1M/5M VWAP and EOD clock parity defects, and November 2 overnight chart decision. Do not treat historical October 29 validation steps below as the current branch's full acceptance state.
+
+---
+
 ## 2026-10-29 — SPY post-market control result and dashboard changes
 
 ### User-supplied live result
