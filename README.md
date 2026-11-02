@@ -146,6 +146,10 @@ GitHub source is authoritative for code and committed documentation. A checked-o
 7. Planned Red Zone work is tracked in the top of `docs/Master-To-Do.md`: Manual/Automatic toggle, versioned excitement rank, participation/volume weighting, Decision Explanation, semantic tile border/accent, stable re-ranking and tests.
 8. Main Chart / Decision Explanation refresh for the focused symbol. 5M Permission, 1M EXECUTION READY and Red Zone excitement remain separate. Red Zone is attention prioritization only and never authorizes an entry or order.
 
+## Prototype header layout
+
+The prototype's `#system-readiness` section is nested inside the same `.topbar-brand` flex container as the title and topbar tools, aligned on the right. The market-session clock appears above the readiness heading. Production markup remains separate and is not changed by prototype experiments.
+
 ## Production and prototype dashboard pages
 
 - Production: `/` serves `frontend/index.html`.
