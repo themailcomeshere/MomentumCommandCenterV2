@@ -156,14 +156,12 @@ public sealed class V2SignalEngineTests
         Assert.True(result.HardExit);
     }
 
-    [Theory]
-    [InlineData(55m, 54m, 0.2m, 5m)]
-    [InlineData(53m, 54m, 0.2m, 5m)]
-    [InlineData(55m, 54m, 0m, 0m)]
-    public void CalculateAtrExtension_UsesAbsoluteDailyVwapDistanceAndGuardsZeroAtr(
-        decimal close, decimal dailyVwap, decimal atr, decimal expected)
+    [Fact]
+    public void CalculateAtrExtension_UsesAbsoluteDailyVwapDistanceAndGuardsZeroAtr()
     {
-        Assert.Equal(expected, V2SignalEngine.CalculateAtrExtension(close, dailyVwap, atr));
+        Assert.Equal(5m, V2SignalEngine.CalculateAtrExtension(55m, 54m, 0.2m));
+        Assert.Equal(5m, V2SignalEngine.CalculateAtrExtension(53m, 54m, 0.2m));
+        Assert.Equal(0m, V2SignalEngine.CalculateAtrExtension(55m, 54m, 0m));
     }
 
     [Fact]
