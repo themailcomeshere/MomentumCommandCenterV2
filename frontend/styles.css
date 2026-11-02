@@ -746,6 +746,15 @@ th {
     min-height: 52px;
 }
 
+.redzone-participation {
+    font-size: 11px !important;
+    font-weight: 750;
+    letter-spacing: .01em;
+}
+.redzone-participation.low { color: var(--yellow) !important; }
+.redzone-participation.ok { color: var(--green) !important; }
+.redzone-participation.unknown { color: var(--muted) !important; }
+
 .gate-warning {
     font-size: 11px;
     color: var(--yellow);
