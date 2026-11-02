@@ -1,5 +1,9 @@
 # Active Work Checklist — 2026-11-02
 
+
+- [x] Audited EOD time conversion: 1M V14.5's 15:55 Eastern fires 2–3 hours early versus 3:55 PM Arizona; 5M V4.1.7's 19:55 Eastern standard-time mapping is two hours late in Arizona (correct is 17:55 EST). Both studies require a targeted shared DST mapping and matched-bar validation.
+- [ ] Correct and compile both ThinkScript studies' EOD clock mapping; test before/at/after 3:55 PM Arizona across DST and standard-time dates. Do not trust cross-study EOD/GET OUT parity until complete.
+
 ## November 2 follow-up — operator script, scanner import, prototype header, and 1M parity
 
 - [x] Fixed PowerShell refspec interpolation in `scripts/Get-Latest-And-Test.ps1`: use `${Branch}` before the colon so PowerShell does not parse `$Branch:` as a scoped variable.
