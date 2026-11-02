@@ -345,7 +345,8 @@ public static class LiveSymbolTechnicalCalculator
         var (macd, macdSignal) = Macd(closes);
         var atr = Atr(bars, index, 14);
         var vwap = SessionVwap(bars, index);
-        var extension = atr > 0m ? Math.Max(0m, ((decimal)latest.Close - ema9) / atr) : 0m;
+        // Match installed Thinkorswim 1M study: AbsValue(close - dailyVWAP) / Average(TrueRange, 14).
+        var extension = atr > 0m ? Math.Abs((decimal)latest.Close - vwap) / atr : 0m;
 
         return new BarSnapshot(
             latest.Timestamp,
@@ -476,27 +477,22 @@ public static class LiveSymbolTechnicalCalculator
     private static decimal Atr(IReadOnlyList<MarketBar> bars, int index, int period)
     {
         if (index + 1 < period) return 0m;
-        decimal initialTotal = 0m;
-        decimal atr = 0m;
-        for (var i = 0; i <= index; i++)
+
+        // The installed Thinkorswim study uses Average(TrueRange(...), 14),
+        // a simple moving average rather than Wilder's recursive smoothing.
+        var start = index - period + 1;
+        decimal total = 0m;
+        for (var i = start; i <= index; i++)
         {
             var current = bars[i];
             var previousClose = i > 0 ? (decimal)bars[i - 1].Close : (decimal)current.Close;
             var high = (decimal)current.High;
             var low = (decimal)current.Low;
-            var trueRange = Math.Max(high - low,
+            total += Math.Max(high - low,
                 Math.Max(Math.Abs(high - previousClose), Math.Abs(low - previousClose)));
-            if (i < period)
-            {
-                initialTotal += trueRange;
-                if (i == period - 1) atr = initialTotal / period;
-            }
-            else
-            {
-                atr = (atr * (period - 1) + trueRange) / period;
-            }
         }
-        return atr;
+
+        return total / period;
     }
 
     private static decimal SessionVwap(IReadOnlyList<MarketBar> bars, int index)
