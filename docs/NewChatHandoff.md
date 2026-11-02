@@ -21,6 +21,7 @@
 - The current rank does not include RVOL/volume participation, average-volume/liquidity, acceleration or spread quality. It is therefore not the requested excitement rank and can surface a technically eligible but low-volume symbol without adequately explaining its practical weakness.
 - Required next work is captured in the new Red Zone section at the top of `docs/Master-To-Do.md`: manual/automatic mode, versioned excitement rank, volume/liquidity participation, 5M+1M evidence, per-tile Decision Explanation, restrained semantic border/accent, stable re-ranking, and acceptance tests.
 - Design rule: rank attention, not authorization. Keep 5M Permission, 1M EXECUTION READY, and Red Zone excitement as three distinct concepts. A low-volume EXECUTION READY stock must be explicitly labelled and penalized, not silently promoted as a strong opportunity.
+- Visual recommendation from UI/accessibility review: use a restrained 3–4px left-edge accent (not a full-card color fill), paired with a concise status tag and reason text. Use consistent semantic colors; amber for low participation/extension caution, red only for hard block/confirmed invalidation, neutral for DATA?/unknown. WCAG 2.2 SC 1.4.1 prohibits color as the only status cue.
 
 ## RTO IEX boundary investigation — current disposition
 - User-supplied RTO capture: 4,048 1m bars fetched, 0 new writes, 18/20 valid close/open pairs.
