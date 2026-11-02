@@ -142,7 +142,7 @@ GitHub source is authoritative for code and committed documentation. A checked-o
 3. **Watch** adds a ticker to the separate browser-local Watchlist. It does not pin the ticker to Red Zone.
 4. To keep a symbol in Red Zone, use **Add a symbol → Pin to Red Zone**. Manual pins are placed before scanner-ranked rows. There is not yet a Manual/Automatic mode toggle.
 5. Each Red Zone tile requests a separate live assessment and displays 5M score/permission, 1M execution state, extension, freshness, decision reason and a 1M sparkline. New arrivals among the four slots can trigger the existing user-toggleable sound alert.
-6. Current ranking does not incorporate RVOL/volume participation, average-volume/liquidity, acceleration or spread quality. A low-volume candidate may therefore be ranked too highly for practical attention; this is a known gap, not a validated result.
+6. Red Zone cards now show the available 5M same-time-of-day RVOL and flag values below the existing V2 threshold, including a Decision Explanation caution. This is a diagnostic display only. Current ranking still does not incorporate RVOL, average-volume/liquidity, acceleration or spread quality, so a low-participation candidate may still rank too highly.
 7. Planned Red Zone work is tracked in the top of `docs/Master-To-Do.md`: Manual/Automatic toggle, versioned excitement rank, participation/volume weighting, Decision Explanation, semantic tile border/accent, stable re-ranking and tests.
 8. Main Chart / Decision Explanation refresh for the focused symbol. 5M Permission, 1M EXECUTION READY and Red Zone excitement remain separate. Red Zone is attention prioritization only and never authorizes an entry or order.
 
