@@ -1,3 +1,11 @@
+# Handoff update — 2026-11-01 prototype header alignment
+
+- Moved `#system-readiness` inside the same `.topbar-brand` container as the title and topbar tools in `frontend/prototypeIndex.html`; it now occupies the right-side flex area. `#marketSessionClock` remains above the System Readiness heading.
+- Removed three literal escaped-newline sequences from the readiness markup. Static IDs were preserved.
+- Production `frontend/index.html` was not changed. Browser acceptance at desktop/mobile widths is still required; do not promote until explicitly approved.
+
+---
+
 # Handoff update — 2026-11-01 Red Zone design and RTO provider blockers
 
 ## Repository checkpoint
@@ -35,7 +43,7 @@ The current Boring Overnight implementation is a 20-session regular close/open c
 - For Monday 2026-11-02, complete the documented 07:30 Arizona / 09:30 Eastern runtime acceptance for SPY, RKLX, ASTX and XRPN. Verify per-symbol completed-bar count and lastBarUtc advance; subscription acknowledgement alone is insufficient.
 
 ## Active checklist count
-The Master To-Do currently tracks 34 unchecked operational items: 3 Boring Overnight, 6 P0, 17 P1 (including the 8 Red Zone requirements), 4 P2, and 4 P3. Use its top consolidated checklist; do not count repeated historical entries as additional tasks.
+The Master To-Do currently tracks 35 unchecked operational items: 3 Boring Overnight, 7 P0 (including prototype header browser acceptance), 17 P1 (including the 8 Red Zone requirements), 4 P2, and 4 P3. Use its top consolidated checklist; do not count repeated historical entries as additional tasks.
 
 ---
 
@@ -51,7 +59,7 @@ The Master To-Do currently tracks 34 unchecked operational items: 3 Boring Overn
 - Compare `/` (production) with `/prototypeIndex.html` (prototype). Future UI changes go to prototype only; promotion requires explicit user approval.
 - The calendar ruleset is now `MCC_US_EQUITIES_CALENDAR_V2`. It corrects the false 2027-12-31 New Year's closure and includes published NYSE 2026–2028 holiday/early-close regression fixtures.
 - Exact latest-head CI status is unavailable: GitHub reports no status checks or workflow runs for the latest documentation commit. The .NET SDK is not available in this execution environment, so do not claim this exact head has passed build/tests.
-- The canonical Master To-Do has 26 unchecked operational items: 6 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3.
+- The canonical Master To-Do has 35 unchecked operational items: 3 Boring Overnight, 7 P0, 17 P1, 4 P2, and 4 P3.
 
 ## Production/prototype promotion contract
 - Production remains `frontend/index.html`; prototype is `frontend/prototypeIndex.html`.
