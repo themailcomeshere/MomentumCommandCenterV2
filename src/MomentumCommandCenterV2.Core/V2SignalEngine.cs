@@ -506,6 +506,11 @@ public sealed class V2SignalEngine
     /// PURPOSE: Uses the supplied ATR extension when present, otherwise derives absolute close-to-session-VWAP distance in ATR units.
     /// WHEN CALLED: Called by Evaluate before extension warning and hard-exit gates are applied.
     /// </summary>
+    public static decimal CalculateAtrExtension(decimal close, decimal dailyVwap, decimal atr)
+    {
+        return atr > 0m ? Math.Abs(close - dailyVwap) / atr : 0m;
+    }
+
     private static decimal GetAtrExtension(
         BarSnapshot bar)
     {
@@ -520,7 +525,7 @@ public sealed class V2SignalEngine
         }
 
 // Match the installed Thinkorswim 1M extension reference.
-        return Math.Abs(bar.Close - bar.Vwap) / bar.Atr;
+        return CalculateAtrExtension(bar.Close, bar.Vwap, bar.Atr);
     }
 
     /// <summary>
