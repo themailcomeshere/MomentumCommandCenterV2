@@ -17,7 +17,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
 {
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"];
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"];
-    private readonly string _feed = (configuration["MarketData:Alpaca:Feed"] ?? "iex").Trim().ToLowerInvariant();
+    private readonly string _feed = (configuration["MarketData:Alpaca:Feed"] ?? "sip").Trim().ToLowerInvariant();
     private readonly ConcurrentDictionary<string, byte> _symbols = new(
         (configuration["MarketData:Alpaca:StreamSymbols"] ?? configuration["MarketData:Collector:Symbols"] ?? string.Empty)
             .Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
