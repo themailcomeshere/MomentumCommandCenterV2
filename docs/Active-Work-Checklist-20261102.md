@@ -13,7 +13,9 @@
 - [x] Hardened scanner CSV parsing for UTF-8 BOM, comma/semicolon/tab delimiters, quoted fields, `Symbol`, `Ticker`, and `Symbol/Ticker` header variants; map `Overnight Score` to the imported score.
 - [x] Moved `marketSessionClock` directly beside the title inside the `mcc-static-0010-div` parent in the prototype; made the transport-label text background transparent while retaining the status dot.
 - [ ] Browser-verify the CSV using the user's original committed export, plus desktop/mobile header layout. The current active branch tree did not contain a dedicated Overnight Scanner export CSV at review time; the exact source file/format remains unverified.
-- [ ] Run the corrected PowerShell script locally, then Release restore/build/test. Exact-head CI and browser acceptance are pending for the new commits.
+- [ ] Run the corrected PowerShell script locally and record the Windows Release restore/build/test output.
+- [x] Exact-head GitHub Actions run 41546963701 passed .NET build/test on commit `825276a844a5b3079aa3ea4bd1cb8ccbd90e283b`.
+- [ ] Browser acceptance remains pending for the prototype header and original scanner CSV.
 - [x] Audited Library full 1M baseline V14.5.1 against normal 5M V4.1.7. V14.5's reconstructed 5M raw Permission omits the 5M Daily VWAP condition; the 1M VWAP gate is not equivalent. See `Validation/Thinkorswim-MCC-Extension-Parity-20261102.md`.
 - [ ] Create a targeted 1M parity revision only after the 5M Daily VWAP comparison is implemented and compiled; validate on matched completed 5M bars. Keep V14.5 as baseline until then.
 - [x] Reviewed MHK, OSW, and EVR chart screenshots: no candidate meets the combined overnight + current 5M/1M decision requirements. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied.

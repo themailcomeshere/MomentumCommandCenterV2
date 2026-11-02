@@ -1,6 +1,6 @@
 ## 2026-11-02 — latest follow-up: script, CSV, prototype, ThinkScript parity, and overnight decision
 
-- Branch: `feature/opportunity-quality-classification`. The November 2 follow-up source changes are committed; current exact-head CI must be checked before treating them as verified.
+- Branch: `feature/opportunity-quality-classification`. The November 2 follow-up source changes are committed. GitHub Actions run 41546963701 passed .NET build/test on exact head `825276a844a5b3079aa3ea4bd1cb8ccbd90e283b`; local PowerShell execution and browser acceptance remain open.
 - Fixed `scripts/Get-Latest-And-Test.ps1` PowerShell refspec interpolation by using `${Branch}` before the colon.
 - Hardened the scanner CSV importer for UTF-8 BOM, comma/semicolon/tab delimiters, quoted fields, `Symbol`/`Ticker`/`Symbol/Ticker`, and `Overnight Score`. The specific Overnight Scanner export was not found in the active branch tree; its exact import remains unverified.
 - Prototype clock now sits directly to the right of the title inside the title parent; transport-label text no longer inherits the yellow dot background.

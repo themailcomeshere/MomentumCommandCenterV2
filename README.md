@@ -9,7 +9,7 @@
 - A second 1M/5M parity defect is documented: V14.5.1 uses 15:55 Eastern for a 3:55 PM Arizona cutoff; V4.1.7 uses 19:55 Eastern during standard time, which is also wrong. Correct mapping is 18:55 EDT / 17:55 EST. Both studies need matched-bar DST validation before trusting EOD labels.
 
 - Library source clarification: the latest full 1M study is `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (V14.5.1). The later-modified V14.4.10 artifact is explicitly aggressive-lane audit-only, not the normal full study. V14.5.1 retains the VWAP and EOD clock parity defects documented above.
-- These changes require local Release tests, exact-head CI, and browser acceptance before the updated source is considered verified.
+- GitHub Actions run [41546963701](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41546963701) passed the .NET build/test on exact commit `825276a844a5b3079aa3ea4bd1cb8ccbd90e283b`. Local execution of `Get-Latest-And-Test.ps1` and browser acceptance remain pending.
 
 ---
 
