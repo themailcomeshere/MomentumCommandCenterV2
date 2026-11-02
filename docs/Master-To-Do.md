@@ -11,7 +11,7 @@
 - [ ] Run `Get-Latest-And-Test.ps1` locally after pulling the fix; record Release build/test output and exact SHA.
 - [ ] Verify exact-head GitHub Actions and browser acceptance for prototype clock/transport label and scanner CSV import.
 - [ ] Keep V14.5 as current 1M baseline until a targeted parity revision adds the 5M Daily VWAP condition, compiles in TOS, and matches V4.1.7 on exact completed 5M bars. Preserve the separate 1M VWAP execution gate.
-- [x] Reviewed November 2 MHK/OSW/EVR charts: none qualifies for a new overnight BUY/HOLD. EVR and OSW display 1M EOD GET OUT; MHK has 5M Permission NO and 1M execution environment NO, and its current ON move is 3.13%.
+- [x] Reviewed November 2 MHK/OSW/EVR charts: none qualifies for a new overnight BUY/HOLD. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied; MHK's current ON move is 3.13%.
 - [ ] Calculated Limit Sell remains DATA?/not calculated until 20 complete GTC_EXT windows, walk-forward target quantile/touch evidence, and ATR parity are available. Do not substitute the +0.5% heuristic.
 
 Related: [Active Work Checklist](Active-Work-Checklist-20261102.md), [1M V14.5 parity audit](Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
