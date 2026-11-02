@@ -8,14 +8,17 @@
 
 
 ### Additional 1M/5M EOD parity defect
-- [x] Source audit found V14.5 uses 15:55 Eastern for a 3:55 PM Arizona cutoff; this fires 2–3 hours early. V4.1.7 uses 19:55 Eastern during standard time; this is two hours late in Arizona. Correct mapping is 18:55 EDT / 17:55 EST.
+- [x] Source audit found V14.5.1 uses 15:55 Eastern for a 3:55 PM Arizona cutoff; this fires 2–3 hours early. V4.1.7 uses 19:55 Eastern during standard time; this is two hours late in Arizona. Correct mapping is 18:55 EDT / 17:55 EST.
 - [ ] Correct both studies with the same DST-aware Arizona cutoff and validate exact bars immediately before/at/after the cutoff across both DST regimes. Do not treat screenshot EOD bubbles as proven output from a particular study until matched-bar diagnostics isolate their source.
+
+
+- [x] Clarified the current full 1M Library baseline: `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (V14.5.1). The later V14.4.10 Library artifact is audit-only, not the full execution study. V14.5.1 retains the two source-level parity defects.
 
 ### Remaining validation / strategy disposition
 - [ ] Original Overnight Scanner CSV is not present in the active branch tree reviewed for this update; verify the actual committed export after locating it. The importer fix is broader but does not prove that this particular file now imports.
 - [ ] Run `Get-Latest-And-Test.ps1` locally after pulling the fix; record Release build/test output and exact SHA.
 - [ ] Verify exact-head GitHub Actions and browser acceptance for prototype clock/transport label and scanner CSV import.
-- [ ] Keep V14.5 as current 1M baseline until a targeted parity revision adds the 5M Daily VWAP condition, compiles in TOS, and matches V4.1.7 on exact completed 5M bars. Preserve the separate 1M VWAP execution gate.
+- [ ] Keep V14.5.1 as current full 1M baseline until a targeted parity revision adds the 5M Daily VWAP condition, compiles in TOS, and matches V4.1.7 on exact completed 5M bars. Preserve the separate 1M VWAP execution gate.
 - [x] Reviewed November 2 MHK/OSW/EVR charts: none qualifies for a new overnight BUY/HOLD. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied; MHK's current ON move is 3.13%.
 - [ ] Calculated Limit Sell remains DATA?/not calculated until 20 complete GTC_EXT windows, walk-forward target quantile/touch evidence, and ATR parity are available. Do not substitute the +0.5% heuristic.
 
