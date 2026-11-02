@@ -503,7 +503,7 @@ public sealed class V2SignalEngine
 
     /// <summary>
     /// METHOD: GetAtrExtension
-    /// PURPOSE: Uses the supplied ATR extension when present, otherwise derives non-negative close-to-EMA9 distance in ATR units.
+    /// PURPOSE: Uses the supplied ATR extension when present, otherwise derives absolute close-to-session-VWAP distance in ATR units.
     /// WHEN CALLED: Called by Evaluate before extension warning and hard-exit gates are applied.
     /// </summary>
     private static decimal GetAtrExtension(
@@ -519,9 +519,8 @@ public sealed class V2SignalEngine
             return 0;
         }
 
-        return Math.Max(
-            0,
-            (bar.Close - bar.Ema9) / bar.Atr);
+// Match the installed Thinkorswim 1M extension reference.
+        return Math.Abs(bar.Close - bar.Vwap) / bar.Atr;
     }
 
     /// <summary>
