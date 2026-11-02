@@ -58,9 +58,10 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 - [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series. November 2 follow-up still reports `feed=iex`; it is not an SIP comparison.
   - Exact local capture procedure: `docs/Runtime-Acceptance-Runbook.md` §1B. The endpoint uses configured feed; verify response `feed=sip` to rule out fallback to stored IEX.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
-- [ ] Re-run `UsesJulyThird2028EarlyClose` after the xUnit2031 predicate-overload fix; do not leave the test commented out.
-- [ ] Browser-validate the prototype dock toggle: BORING OVERNIGHT to the right of the switch, WORKSPACE beneath it, both vertical.
-- [ ] Validate corrected 1M extension against Thinkorswim on matched symbol/time/bar. MCC must use `Abs(close - Daily VWAP) / SMA(TrueRange, 14)`, not close-to-EMA9 / Wilder ATR. Confirm Daily VWAP and bar timestamp parity before accepting numeric parity.
+- [x] Fixed xUnit2031 in `UsesJulyThird2028EarlyClose` using `Assert.Single(boundaries, predicate)`; keep the test enabled. Full build/test rerun remains pending.
+- [x] Updated prototype dock labels: BORING OVERNIGHT to the right of the switch and WORKSPACE beneath it, both vertical. Browser visual acceptance remains pending.
+- [x] Corrected MCC 1M extension source calculation to `Abs(close - session VWAP) / SMA(TrueRange, 14)` and updated the V2 fallback; added a regression test for supplied extension values.
+- [ ] Validate corrected 1M extension against Thinkorswim on matched symbol/time/bar. Confirm Daily VWAP and bar timestamp parity before accepting numeric parity.
 - [ ] Connect source-validated catalyst status, daily SMA20/average volume, reconciled Schwab exclusions, and current authoritative 5M/1M evidence before allowing any Boring Overnight READY evaluation; unknown or stale inputs must fail closed.
 
 ### Strategy policy decision
