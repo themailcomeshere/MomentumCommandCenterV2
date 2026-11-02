@@ -1,3 +1,44 @@
+# Handoff update — 2026-11-01 Red Zone design and RTO provider blockers
+
+## Repository checkpoint
+- Repository: `themailcomeshere/MomentumCommandCenterV2`
+- Branch: `feature/opportunity-quality-classification`
+- Production dashboard: `frontend/index.html`; experimental UI: `frontend/prototypeIndex.html`. Keep UI experiments in the prototype until explicit promotion approval.
+- README, Master To-Do, and this handoff were reviewed against the feature branch. The Master To-Do is the canonical active checklist; dated sections below it are historical evidence, not separate duplicate tasks.
+
+## Red Zone — verified current behavior vs. requested target
+- Current code in `frontend/app.js` sorts live-discovery rows by absolute daily percentage change; non-live groups sort by their supplied score. Manually pinned symbols are placed ahead of scanner-ranked rows.
+- There is currently no Manual/Automatic toggle. Sound alerts are toggleable and fire on a newly appearing symbol among the four visible slots.
+- Each tile separately fetches the live assessment and displays the 5M score/permission, 1M execution state, extension, freshness, decision reason and a 1M sparkline.
+- The current rank does not include RVOL/volume participation, average-volume/liquidity, acceleration or spread quality. It is therefore not the requested excitement rank and can surface a technically eligible but low-volume symbol without adequately explaining its practical weakness.
+- Required next work is captured in the new Red Zone section at the top of `docs/Master-To-Do.md`: manual/automatic mode, versioned excitement rank, volume/liquidity participation, 5M+1M evidence, per-tile Decision Explanation, restrained semantic border/accent, stable re-ranking, and acceptance tests.
+- Design rule: rank attention, not authorization. Keep 5M Permission, 1M EXECUTION READY, and Red Zone excitement as three distinct concepts. A low-volume EXECUTION READY stock must be explicitly labelled and penalized, not silently promoted as a strong opportunity.
+
+## RTO IEX boundary investigation — current disposition
+- User-supplied RTO capture: 4,048 1m bars fetched, 0 new writes, 18/20 valid close/open pairs.
+- The exact-boundary audit shows 38/40 boundaries present. The two missing next-session opening bars are 2026-10-14 13:30Z and 2026-10-21 13:30Z (09:30 Eastern); nearest returned provider timestamps are 13:34Z and 13:31Z respectively. Store and provider agree, so the observed issue is absence from the returned IEX response, not a persistence loss.
+- I reviewed the current repository README, capture checklist, and runbook. They document IEX as single-exchange coverage and SIP as consolidated coverage subject to plan access. No SIP capture payload, independent alternative-provider response, entitlement confirmation, Alpaca account-plan response, or credentials are present in the reviewed repository evidence.
+- Therefore the independent SIP/alternative-provider comparison and account entitlement check are **NOT COMPLETED**. Data not found in sources. Do not mark either item done, do not infer that the account lacks SIP access, and do not fill either missing minute with a neighboring bar or another feed.
+- The environment available for this review cannot execute the user's localhost API with their private Alpaca credentials. The README explicitly describes the real-provider smoke test as a manual local operation; credentials must remain on the user's machine and must never be copied into Git/chat.
+- The existing boundary audit is useful: it distinguishes provider-response absence from store mismatch and correctly withholds rolling metrics when fewer than 20 exact pairs exist.
+
+## Boring Overnight — three remaining launch gates
+1. Compare the two exact RTO IEX gaps against SIP or a validated independent provider, using the same symbol, exact UTC boundaries, and separate feed-labelled results.
+2. Confirm the actual Alpaca plan/feed entitlement and returned 1-minute boundary coverage. A configured feed name alone is not proof of account entitlement or complete coverage.
+3. Connect source-validated catalyst status, daily SMA20/average volume, the canonical exclusions source, and current authoritative 5M/1M evidence before any READY evaluation. Missing/unknown evidence remains DATA?/WATCH; no forced READY.
+
+The current Boring Overnight implementation is a 20-session regular close/open capture and deterministic evaluation slice, not a complete autonomous qualification pipeline. It does not establish the full GTC_EXT 07:00–20:00 ET window, catalyst clearance, validated daily metrics, full exclusion reconciliation, or Thinkorswim state parity. Continue manual WATCH/research only.
+
+## Exact-head verification
+- The branch README reports prior workflow 864 passing for the capture implementation commit, but later commits exist. The exact current branch-head CI must be checked before relying on the branch as release-ready.
+- Browser acceptance, local API/feed entitlement, and live market-hours WebSocket delivery are separate from unit-test success.
+- For Monday 2026-11-02, complete the documented 07:30 Arizona / 09:30 Eastern runtime acceptance for SPY, RKLX, ASTX and XRPN. Verify per-symbol completed-bar count and lastBarUtc advance; subscription acknowledgement alone is insufficient.
+
+## Active checklist count
+The Master To-Do currently tracks 34 unchecked operational items: 3 Boring Overnight, 6 P0, 17 P1 (including the 8 Red Zone requirements), 4 P2, and 4 P3. Use its top consolidated checklist; do not count repeated historical entries as additional tasks.
+
+---
+
 # Handoff update — 2026-11-01 prototype UI, RTO diagnosis, and calendar correction
 
 ## Source-control state
