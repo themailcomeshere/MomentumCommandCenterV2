@@ -5,6 +5,8 @@
 - Prototype clock now sits to the right of the title within the title's parent flex row; transport status text no longer inherits the yellow status-dot background.
 - Current Library 1M baseline is V14.5 with normal 5M authority V4.1.7. A source audit found the 1M reconstructed 5M Permission omits the 5M Daily VWAP condition; see [1M V14.5 parity audit](docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md). No uncompiled study replacement is promoted.
 - November 2 overnight chart review: MHK, OSW, and EVR are not BUY/HOLD candidates on the supplied chart evidence. The supplied charts are 1D/5m (not 1m): EVR and OSW show 5M EOD GET OUT; MHK shows 5M WAIT/Permission NO/neutral structure and no visible EOD GET OUT. No 1M chart was supplied; MHK's current ON move is 3.13%. No numeric Calculated Limit Sell is supported by the currently available GTC_EXT/ATR evidence.
+
+- A second 1M/5M parity defect is documented: V14.5 uses 15:55 Eastern for a 3:55 PM Arizona cutoff; V4.1.7 uses 19:55 Eastern during standard time, which is also wrong. Correct mapping is 18:55 EDT / 17:55 EST. Both studies need matched-bar DST validation before trusting EOD labels.
 - These changes require local Release tests, exact-head CI, and browser acceptance before the updated source is considered verified.
 
 ---
