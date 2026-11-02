@@ -60,7 +60,7 @@
 
 **Repository:** `themailcomeshere/MomentumCommandCenterV2`  
 **Branch:** `feature/opportunity-quality-classification`  
-**Latest verified source/docs head:** `83cd9780daa9f8e94628e8d24f4bc6ab4b03c415` (Release build, 0 warnings/0 errors, 179/179 tests; [Actions run 41514111035](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41514111035)). Subsequent documentation-only commits are being included in the follow-up CI run.
+**Latest verified source/script head:** `237fcbfc71f9b03bda64b1e6047d61355c849447` (Release build, 0 warnings/0 errors, 179/179 tests; [Actions run 41540235754](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41540235754)). Subsequent control-document updates are documentation-only and are included in the current branch-head CI run.
 
 ### Current facts
 - Alpaca IEX override source is known: tracked appsettings.json had sip; local secrets.json had iex and won by configuration precedence.
