@@ -59,6 +59,35 @@ public sealed class AlpacaMarketDataAdapterTests
     }
 
     [Fact]
+    public async Task GetBarsAsync_UsesConfiguredSipFeedWithoutIexFallback()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """{"bars":[{"t":"2026-10-22T16:30:00Z","o":10.1,"h":10.5,"l":10.0,"c":10.4,"v":1234}]}""",
+                Encoding.UTF8,
+                "application/json")
+        });
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "sip"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(client, configuration);
+
+        var bars = await adapter.GetBarsAsync("SPY", TimeSpan.FromMinutes(1),
+            DateTimeOffset.Parse("2026-10-22T16:30:00Z"), DateTimeOffset.Parse("2026-10-22T17:00:00Z"),
+            CancellationToken.None);
+
+        Assert.Single(bars);
+        Assert.Equal("sip", bars[0].Feed);
+        Assert.Contains("feed=sip", handler.Request!.RequestUri!.Query, StringComparison.Ordinal);
+        Assert.DoesNotContain("feed=iex", handler.Request.RequestUri.Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetBarsAsync_EmptySuccessfulResponse_DoesNotMarkDataValidated()
     {
         var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
