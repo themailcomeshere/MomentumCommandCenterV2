@@ -95,7 +95,7 @@ The script refreshes the selected symbol's 1M/5M REST history, captures stream/c
 
 ## 1B. RTO IEX versus SIP exact-boundary comparison
 
-The capture route uses the configured provider/feed; the request body does not accept a feed override. Tracked `appsettings.json` and the user's local `secrets.json` both now set `MarketData:Alpaca:Feed` to `sip`; the status endpoint confirms `secrets.json` is the effective provider. However, Alpaca returned HTTP 403 with `subscription does not permit querying recent SIP data`. Keep the local runtime on IEX for usable data. Do not repeat the SIP RTO capture until Alpaca enables recent SIP access; a configured feed is not an entitled/validated feed.
+The capture route uses the configured provider/feed; the request body does not accept a feed override. Tracked `appsettings.json` sets `MarketData:Alpaca:Feed` to `sip`. The user temporarily changed local `secrets.json` to `sip` for diagnosis, then restored it to `iex`; `secrets.json` is the effective provider and currently selects IEX. However, Alpaca returned HTTP 403 with `subscription does not permit querying recent SIP data`. Keep the local runtime on IEX for usable data. Do not repeat the SIP RTO capture until Alpaca enables recent SIP access; a configured feed is not an entitled/validated feed.
 
 ### Procedure
 
