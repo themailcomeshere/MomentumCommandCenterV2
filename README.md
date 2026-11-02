@@ -1,3 +1,4 @@
+- November 2 after-hours stream check: API health OK and WebSocket SUBSCRIBED with SPY/RKLX/ASTX/XRPN acknowledged. No bars/counters advanced because the user ran it after 3 PM Arizona; regular-session delivery remains unverified. See `docs/Runtime-Acceptance-Runbook.md` §1A.
 ## November 2, 2026 — Technical workflow and Overnight Scanner
 
 - Operator workflow: [Technical Workflow](docs/Technical-Workflow.md). This is the normal get-latest/build/restart/API smoke-test sequence.
