@@ -6,10 +6,12 @@
 .prototype-page .prototype-symbol-control{width:100%;display:grid;gap:6px}
 .prototype-page .prototype-symbol-control label{font-size:9px;letter-spacing:.14em;font-weight:800;color:var(--muted)}
 .prototype-page .prototype-symbol-control input{width:100%;min-width:0;text-align:center;font-size:15px;font-weight:800;letter-spacing:.04em;padding:9px 4px;text-transform:uppercase}
-.prototype-page .prototype-workspace-control{margin:auto 0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:300px}
-.prototype-page .prototype-workspace-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:850;letter-spacing:.2em;color:var(--muted)}
-.prototype-page .prototype-workspace-copy{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-.prototype-page .prototype-workspace-caption{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;font-weight:750;letter-spacing:.18em;color:var(--blue)}
+.prototype-page .prototype-workspace-control{margin:auto 0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;justify-items:center;gap:8px;min-height:300px;width:100%}
+.prototype-page .prototype-workspace-label{writing-mode:vertical-rl;font-size:10px;font-weight:850;letter-spacing:.16em;color:var(--muted);white-space:nowrap}
+.prototype-page .prototype-workspace-label-left{transform:rotate(180deg)}
+.prototype-page .prototype-workspace-label-right{transform:none}
+.prototype-page .prototype-workspace-copy{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px}
+.prototype-page .prototype-workspace-caption{font-size:9px;font-weight:800;letter-spacing:.16em;color:var(--blue);text-align:center}
 .prototype-page .prototype-switch-label{position:relative;display:flex;align-items:center;justify-content:center;width:38px;height:76px;cursor:pointer}
 .prototype-page .prototype-switch-label input{position:absolute;opacity:0;width:1px;height:1px}
 .prototype-page .prototype-switch-track{position:relative;width:28px;height:66px;border-radius:999px;border:1px solid #46617f;background:#101d31;transition:background .18s,border-color .18s}
@@ -20,6 +22,10 @@
 .prototype-page #prototype-workspace-state{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;font-weight:800;letter-spacing:.1em;color:var(--blue);text-align:center;min-height:0}
 .prototype-page .prototype-mode-source{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
 .prototype-page .prototype-reset{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;padding:9px 6px}
+.prototype-page #opportunity-status{grid-template-columns:minmax(250px,1.5fr) repeat(5,minmax(100px,1fr))}
+.prototype-page #opportunity-status>.metric{min-width:0}
+@media(max-width:1100px){.prototype-page #opportunity-status{grid-template-columns:repeat(3,minmax(0,1fr))}.prototype-page #opportunity-status>.hero-card{grid-column:1/-1}}
+@media(max-width:650px){.prototype-page #opportunity-status{grid-template-columns:repeat(2,minmax(0,1fr))}.prototype-page #opportunity-status>.hero-card{grid-column:1/-1}}
 .prototype-page .topbar{margin-left:104px;padding:14px 22px;align-items:flex-start}
 .prototype-page .topbar-layout{display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
 .prototype-page .topbar-brand{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -44,11 +50,15 @@
   <input id="symbol" type="text" value="SPY" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Focused symbol">
  </div>
  <div class="prototype-workspace-control" id="prototype-workspace-control">
-  <label class="prototype-switch-label" for="workspaceModeToggle" id="prototype-switch-label">
-   <input id="workspaceModeToggle" type="checkbox" aria-label="Switch to Boring Overnight workspace">
-   <span class="prototype-switch-track" id="prototype-switch-track"></span>
-  </label>
-  <div class="prototype-workspace-copy" id="prototype-workspace-copy"><span class="prototype-workspace-label" id="prototype-workspace-label">BORING OVERNIGHT</span><span class="prototype-workspace-caption" id="prototype-workspace-state">WORKSPACE</span></div>
+  <span class="prototype-workspace-label prototype-workspace-label-left" id="prototype-intraday-label">INTRADAY MOMENTUM</span>
+  <div class="prototype-workspace-copy" id="prototype-workspace-copy">
+   <label class="prototype-switch-label" for="workspaceModeToggle" id="prototype-switch-label">
+    <input id="workspaceModeToggle" type="checkbox" aria-label="Switch to Boring Overnight workspace">
+    <span class="prototype-switch-track" id="prototype-switch-track"></span>
+   </label>
+   <span class="prototype-workspace-caption" id="prototype-workspace-state">WORKSPACE</span>
+  </div>
+  <span class="prototype-workspace-label prototype-workspace-label-right" id="prototype-workspace-label">BORING OVERNIGHT</span>
  </div>
  <select id="mode" class="prototype-mode-source" aria-hidden="true" tabindex="-1">
   <option value="momentum" id="prototype-mode-momentum">Intraday Momentum</option>
@@ -94,9 +104,11 @@
   <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted" id="mcc-static-0056-p">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
   <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
    <article class="panel hero-card" id="mcc-static-0057-article"><div class="eyebrow" id="mcc-static-0058-div">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips" id="mcc-static-0059-div"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
-   <article class="panel metric" id="mcc-static-0060-article"><div class="eyebrow" id="mcc-static-0061-div">LAST PRICE</div><strong id="price">Loading…</strong><small id="mcc-static-0062-small">Latest completed 1M bar</small></article>
-   <article class="panel metric" id="mcc-static-0063-article"><div class="eyebrow" id="mcc-static-0064-div">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small id="mcc-static-0065-small">5M same-time-of-day RVOL</small></article>
-   <article class="panel metric" id="mcc-static-0066-article"><div class="eyebrow" id="mcc-static-0067-div">ATR EXTENSION</div><strong id="extension">Loading…</strong><small id="mcc-static-0068-small">1M |close − Daily VWAP| / ATR14</small></article>
+   <article class="panel metric" id="mcc-static-0060-article"><div class="eyebrow" id="mcc-static-0061-div">1M CLOSE</div><strong id="price">Loading…</strong><small id="mcc-static-0062-small">Latest completed 1M bar close</small></article>
+   <article class="panel metric" id="mcc-static-0063-article"><div class="eyebrow" id="mcc-static-0064-div">DAILY VWAP</div><strong id="dailyVwap">Loading…</strong><small id="mcc-static-0065-small">Current regular-session VWAP</small></article>
+   <article class="panel metric" id="mcc-static-0066-article"><div class="eyebrow" id="mcc-static-0067-div">ATR14</div><strong id="atr14">Loading…</strong><small id="mcc-static-0068-small">1M simple average True Range · 14 bars</small></article>
+   <article class="panel metric" id="mcc-static-0069-article"><div class="eyebrow" id="mcc-static-0070-div">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small id="mcc-static-0071-small">5M same-time-of-day RVOL</small></article>
+   <article class="panel metric" id="mcc-static-0072-article"><div class="eyebrow" id="mcc-static-0073-div">ATR EXTENSION</div><strong id="extension">Loading…</strong><small id="mcc-static-0074-small">1M |close − Daily VWAP| / ATR14</small></article>
   </section>
  </div>
 </section>
