@@ -34,7 +34,7 @@
 
 ## Open P2 — integrations and delivery
 - [x] User reports Schwab Trader API — Individual approval.
-- [ ] Create MCC Schwab app and attach Accounts and Trading Production.
+- [ ] Create MCC Schwab app and attach Accounts and Trading Production. Suggested app name: `Momentum Command Center`; description: `Read-only account and position synchronization for Momentum Command Center. No order placement or trading actions are performed.` Defer submission until the actual HTTPS OAuth callback route/host is implemented; do not guess a callback URL.
 - [ ] Confirm app Active/Ready status and exact callback URL.
 - [ ] Configure app credentials in local server-side secret storage only.
 - [ ] Implement OAuth, protected token persistence/refresh and read-only account/position retrieval.
