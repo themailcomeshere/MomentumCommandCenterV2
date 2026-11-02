@@ -1,3 +1,28 @@
+## 2026-11-01 — Red Zone automatic/manual design and current-state audit
+
+### Current source behavior (verified in `frontend/app.js`)
+- Live discovery rows are currently sorted by absolute daily percentage change, not by a composite opportunity/excitement score.
+- Manually pinned symbols are placed before ranked scanner rows. There is no Manual/Automatic mode toggle.
+- Each displayed card separately requests a live assessment and shows the 5M score/permission, 1M execution state, extension, freshness, decision reason and a 1M price sparkline.
+- Sound alerts are already user-toggleable and fire when a new symbol enters the four visible slots.
+- Current ranking does not include relative volume, absolute liquidity, participation quality, acceleration, or an explicit low-volume penalty. The current Red Zone therefore does **not** yet implement the requested NFL Red Zone-style behavior.
+- The independent 5M score is not EXECUTION READY. Preserve the separate 1M entry gate; Red Zone is prioritization/attention, never an order signal.
+
+### Required Red Zone work — add to active P1
+- [ ] Add a visible **Manual / Automatic** toggle at the top of Red Zone. Manual mode uses the user's ordered pinned symbols; Automatic mode continuously selects the best four eligible candidates from the current live candidate pool. Switching modes must not erase pins or dismissals.
+- [ ] Implement a deterministic, versioned **Excitement / Opportunity Quality** rank separate from the 5M Permission score and the 1M EXECUTION READY decision.
+- [ ] Include participation quality in the rank and explanation: current 1M/5M RVOL or best validated volume proxy, absolute average volume/liquidity, spread/data quality where available, and volume freshness. A high-setup/low-volume symbol may still rank in the top four, but must be visibly identified as LOW PARTICIPATION / LOW VOLUME and penalized appropriately rather than presented as an unqualified top pick.
+- [ ] Include live 5M authority/score, 1M execution state, momentum/price acceleration, extension/risk, and source freshness. Missing/stale required inputs must lower confidence or yield DATA?; never substitute zero or a stale score.
+- [ ] Show a concise **Decision Explanation** on every Red Zone tile: why it is in the top four, strongest supporting evidence, limiting factor(s), and why it outranks/does not outrank a competing candidate. Explicitly call out cases such as EXECUTION READY + very low RVOL.
+- [ ] Apply a restrained semantic visual treatment to the tile border/left accent: green = strong, well-supported opportunity; cyan/blue = developing/monitor; amber = caution such as weak participation or extension; red = hard block/confirmed invalidation; neutral = DATA?/unknown. Always include text/reason labels so color is not the only signal.
+- [ ] Automatic mode must re-rank on new completed market evidence, avoid unnecessary flicker with configurable minimum hold / rank-change hysteresis, and show last-evaluated source timestamps. Sound alerts remain separately toggleable and should alert only on meaningful entry/re-entry to the four slots, not every refresh.
+- [ ] Add unit/API/UI acceptance tests for mode persistence, manual ordering, automatic top-four selection, low-volume explanation/penalty, stale/missing data, stable ordering, border semantics, and sound-alert deduplication. Do not promote to production until prototype browser acceptance.
+
+### Ranking safety
+Do not rank by raw percentage change alone. Do not equate the highest 5M score with the most exciting trade. Do not let an EXECUTION READY label conceal weak volume, wide spread, stale data, extreme extension, or a failed 5M authority gate. The Red Zone should direct attention and explain trade-offs; the user retains the decision.
+
+---
+
 ## 2026-11-01 — Header clock, markup IDs, RTO boundary audit, and operating guidance
 
 ### Completed source work
@@ -82,7 +107,7 @@
 - [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
 - [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
 
-**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 26 individual unchecked work items across the five priority groups (3 Boring Overnight, 6 P0, 9 P1, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 34 individual unchecked work items across the five priority groups (3 Boring Overnight, 6 P0, 17 P1 including 8 Red Zone items, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
 
 
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
