@@ -65,7 +65,7 @@ public sealed class UsEquitiesSessionCalendarTests
     {
         Assert.Equal(new TimeOnly(13, 0), UsEquitiesSessionCalendar.GetRegularClose(new DateOnly(2028, 7, 3)));
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2028, 7, 5), 5);
-        var julyThirdClose = Assert.Single(boundaries.Where(x => x.PreviousSessionDate == new DateOnly(2028, 7, 3)));
+        var julyThirdClose = Assert.Single(boundaries, x => x.PreviousSessionDate == new DateOnly(2028, 7, 3));
         Assert.Equal(DateTimeOffset.Parse("2028-07-03T16:59:00Z"), julyThirdClose.PreviousCloseBarTimestampUtc);
     }
 
