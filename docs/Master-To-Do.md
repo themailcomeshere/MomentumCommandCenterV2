@@ -54,6 +54,7 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 - [x] Recorded that RTO returned 4,048 1m bars, 0 new writes, 18/20 valid close/open pairs, and 2 missing next-session open bars.
 - [x] Re-run RTO capture and inspect `boundaryCoverageAudit`: 38/40 boundaries are exact; 2026-10-14 13:30Z is absent from the provider response (nearest 13:34Z), and 2026-10-21 13:30Z is absent (nearest 13:31Z). Store agrees with provider; this is not a persistence loss.
 - [ ] Compare those two RTO IEX gaps against an independently entitled SIP or validated alternative-provider response. Do not substitute a neighboring minute or mix feeds in one series.
+  - Exact local capture procedure: `docs/Runtime-Acceptance-Runbook.md` §1B. The endpoint uses configured feed; verify response `feed=sip` to rule out fallback to stored IEX.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
 - [ ] Connect source-validated catalyst status, daily SMA20/average volume, reconciled Schwab exclusions, and current authoritative 5M/1M evidence before allowing any Boring Overnight READY evaluation; unknown or stale inputs must fail closed.
 
