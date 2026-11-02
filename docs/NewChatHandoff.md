@@ -4,6 +4,8 @@
 - Fixed xUnit2031 in `UsEquitiesSessionCalendarTests.UsesJulyThird2028EarlyClose` with `Assert.Single(boundaries, predicate)`; the test remains enabled.
 - Prototype dock places vertical `BORING OVERNIGHT` to the right of the toggle and `WORKSPACE` beneath it. The accessible toggle label updates to the destination mode.
 - Corrected the Red Zone extension label to describe the installed Thinkorswim metric.
+- Corrected the prototype Main Chart and Red Zone extension labels to `1M |close − Daily VWAP| / ATR14`; the API methodology now discloses the formula and its remaining session-VWAP parity limitation.
+- Latest source commits include the technical-calculator change (`31b0bf3`) and final prototype label sizing (`92b1412`).
 
 ### Extension parity diagnosis and correction
 - Installed Thinkorswim 1M source defines `price = close`, `dailyVWAP = vwap(period = AggregationPeriod.DAY)`, and `extensionATR = AbsValue(price - dailyVWAP) / atr`, where `atr = Average(TrueRange(high, close, low), 14)`.
