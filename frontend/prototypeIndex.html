@@ -478,7 +478,7 @@
             <section id="red-zone" class="panel redzone-panel">
                 <div class="section-heading" id="mcc-static-0069-div"><div id="mcc-static-0070-div"><div class="eyebrow" id="mcc-static-0071-div">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2 id="mcc-static-0072-h2">Red Zone</h2><p class="muted" id="mcc-static-0073-p">Up to four priority stocks. Pin a symbol or add it from the scanner; ranking is not entry permission.</p></div><div class="report-actions" id="mcc-static-0074-div"><button id="toggleRedZoneSound" type="button" class="quiet-button" aria-pressed="false">Enable sound alerts</button><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><span class="chip" id="mcc-static-0075-span">Preview / discovery</span></div></div>
                 <form id="redZoneAddForm" class="redzone-manage-form"><label for="redZoneAddSymbol" id="mcc-static-0076-label">Add a symbol</label><input id="redZoneAddSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker to pin in Red Zone"><button type="submit" id="mcc-static-0077-button">Pin to Red Zone</button><button id="restoreRedZone" type="button" class="quiet-button">Restore dismissed</button></form>
-                <p id="redZoneManageStatus" class="muted" role="status">Scanner rows refresh from the selected scanner group. Pinned and dismissed choices are saved in this browser.</p>
+                <p id="redZoneManageStatus" class="muted" role="status">Red Zone follows the selected scanner group. CSV import updates it immediately; live 1M/5M card assessments refresh every 15 seconds. Alpaca live discoveries refresh every 30 seconds only when that group is selected. Thinkorswim scans are not automatically connected. Pins and dismissals are saved in this browser.</p>
                 <div id="redZoneGrid" class="redzone-grid"><article class="redzone-empty" id="mcc-static-0078-article">No candidate rows available.</article></div>
                 <p class="notice" id="mcc-static-0079-p">Tiles below are built from local demo/import or fetched discovery rows; each tile attempts a recent Alpaca 1-minute price line. Missing data remains unavailable.  Rank is the supplied scanner score, not a validated MCC opportunity score. Missing source, freshness, 5M Permission, or 1M event must never be treated as passing.</p>
             </section>
@@ -669,11 +669,19 @@
                 <li id="mcc-static-0448-li"><strong id="mcc-static-0449-strong">Use Boring Overnight separately.</strong> Run historical bar and coverage checks; do not treat incomplete history or missing catalyst data as READY.</li>
                 <li id="mcc-static-0450-li"><strong id="mcc-static-0451-strong">Provider comparison is diagnostic.</strong> Run it only when testing Alpaca vs Massive for a chosen date and timeframe, not every morning.</li>
             </ol>
+            <h3>Overnight Scanner workflow</h3>
+            <ol class="quick-start-steps">
+                <li><strong>Run the Thinkorswim Overnight scan.</strong> Sort by Overnight Score and preserve the scan timestamp, result count, and CSV export when available.</li>
+                <li><strong>Apply the Boring Overnight gates.</strong> Check win rate, 5D versus 20D return, median, price, average volume, 20D SMA, exclusions, and catalyst risk. Missing evidence is DATA? / MANUAL REVIEW, not a pass.</li>
+                <li><strong>Import the CSV into Scanner &amp; Watchlist.</strong> A Symbol/Ticker column is required. Importing immediately refreshes Red Zone from those rows.</li>
+                <li><strong>Review Red Zone as a technical monitor.</strong> Candidate 1M/5M assessments refresh every 15 seconds while the page is visible. This does not calculate or validate overnight statistics.</li>
+                <li><strong>Research news and inspect charts.</strong> Verify catalysts and upload Daily/5M charts for the shortlist. Use 1M only for a specific entry/exit review.</li>
+            </ol>
             <p class="notice" id="mcc-static-0452-p">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
         </dialog>
         <footer id="mcc-static-0453-footer">Prototype UI · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261102-completed-bar-time-v4" id="mcc-static-0454-script"></script>\n
+    <script src="./app.js?v=20261102-redzone-auto-header-v5" id="mcc-static-0454-script"></script>\n
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>
