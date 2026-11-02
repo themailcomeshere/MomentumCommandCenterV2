@@ -1,3 +1,10 @@
+## 2026-11-01 — Prototype header placement
+
+- [x] Move `#system-readiness` inside the same `.topbar-brand` container as the product title/tools, on the right side; keep `#marketSessionClock` above the readiness heading. Corrected escaped newline text in the markup. Production `frontend/index.html` remains untouched.
+- [ ] Browser-check the prototype at desktop and mobile widths for right alignment, sensible wrapping, and no overlap/clipping. Do not promote to production without approval.
+
+---
+
 ## 2026-11-01 — Red Zone automatic/manual design and current-state audit
 
 ### Current source behavior (verified in `frontend/app.js`)
@@ -107,7 +114,7 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
 - [ ] Finish remaining browser checks for Morning Brief latency/modal/history, Arizona-local replay and HTTP 400 behavior, Red Zone 1×4 layout, sound permissions, and frontend error-free reload.
 - [ ] If Visual Studio Browser Link `$.noConflict` persists, disable Browser Link for the debugging session; do not change MCC source to mask the injected script.
 
-**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 34 individual unchecked work items across the five priority groups (3 Boring Overnight, 6 P0, 17 P1 including 8 Red Zone items, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
+**Deduplication note:** Older dated sections below retain historical evidence and some repeated unchecked entries. The consolidated checklist above is the current operational list; it contains 35 individual unchecked work items across the five priority groups (3 Boring Overnight, 7 P0 including prototype header browser acceptance, 17 P1 including 8 Red Zone items, 4 P2, and 4 P3). Repeated historical rows are not separate tasks.
 
 
 ## 2026-10-31 — Monday operating readiness, RKLX validation, and independent 5M score
