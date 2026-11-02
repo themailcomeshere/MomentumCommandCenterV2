@@ -1,3 +1,11 @@
+## November 2 follow-up — feed provenance and Main Chart layout
+
+- Reviewed the user's two latest commits. `RTO-SIP-20261101.json` still reports `feed=iex`, 38/40 exact boundary bars, and missing October 14 / October 21 opening bars; the filename is not evidence of SIP.
+- API provider status now exposes the Alpaca adapter's effective feed and the configuration providers supplying the feed setting. REST, WebSocket, and live assessment now default to SIP rather than silently choosing IEX when the setting is absent.
+- Main Chart header now separates ticker, chart title, and Live Opportunity Classification. The chart is approximately two-thirds width; the right side is a 2x3 metric grid (five metrics plus a TBD placeholder). Responsive breakpoints prevent horizontal overflow.
+- Close, Daily VWAP, and ATR14 diagnostics now display five decimal places for low-priced stocks.
+- Thinkorswim parity instructions and study: [Thinkorswim / MCC Extension Parity](docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
+- Runtime feed source, actual SIP delivery, Thinkorswim parity, and browser acceptance remain pending.
 ## November 2 validation notes
 
 - The July 3, 2028 early-close test remains enabled and uses the xUnit predicate overload for `Assert.Single`.
