@@ -40,6 +40,14 @@
 6. On the next regular session, run the dedicated WebSocket delivery acceptance; the November 2 after-hours SUBSCRIBED snapshot is only a connection check.
 7. Continue Red Zone live discovery only after SIP entitlement or a different supported source is available.
 
+### Schwab app form — lower priority, no blocker
+
+- Choose **Accounts and Trading Production** only for Phase 1 read-only account/position access; do not select Market Data Production yet.
+- App name: **Momentum Command Center**.
+- Description: `Read-only account and position synchronization for Momentum Command Center. No order placement or trading actions are performed.`
+- Callback URL: do not submit a guessed value. MCC's OAuth callback route and permanent HTTPS origin are not implemented/selected yet. The current localhost HTTPS launch URL is not a verified callback. See `docs/Thinkorswim-Schwab-Integration-Plan.md`.
+- Schwab app creation is lower priority and not a blocker.
+
 ### Current files
 - `docs/Technical-Workflow.md`
 - `scripts/Get-Latest-And-Test.ps1`
