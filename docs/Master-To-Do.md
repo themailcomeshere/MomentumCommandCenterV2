@@ -22,8 +22,14 @@
 - [ ] Include live 5M authority/score, 1M execution state, momentum/price acceleration, extension/risk, and source freshness. Missing/stale required inputs must lower confidence or yield DATA?; never substitute zero or a stale score.
 - [ ] Show a concise **Decision Explanation** on every Red Zone tile: why it is in the top four, strongest supporting evidence, limiting factor(s), and why it outranks/does not outrank a competing candidate. Explicitly call out cases such as EXECUTION READY + very low RVOL.
 - [ ] Apply a restrained semantic visual treatment to the tile border/left accent: green = strong, well-supported opportunity; cyan/blue = developing/monitor; amber = caution such as weak participation or extension; red = hard block/confirmed invalidation; neutral = DATA?/unknown. Always include text/reason labels so color is not the only signal.
+- [x] Research UI/accessibility direction: prefer a narrow left-edge accent (or restrained border) plus a short status tag, rather than tinting the entire tile. Keep the color mapping consistent; pair every color with text/icon/reason and preserve readable contrast. This is a design recommendation, not yet implemented or browser-tested.
 - [ ] Automatic mode must re-rank on new completed market evidence, avoid unnecessary flicker with configurable minimum hold / rank-change hysteresis, and show last-evaluated source timestamps. Sound alerts remain separately toggleable and should alert only on meaningful entry/re-entry to the four slots, not every refresh.
 - [ ] Add unit/API/UI acceptance tests for mode persistence, manual ordering, automatic top-four selection, low-volume explanation/penalty, stale/missing data, stable ordering, border semantics, and sound-alert deduplication. Do not promote to production until prototype browser acceptance.
+
+### Design references
+- W3C WCAG 2.2, SC 1.4.1: color must not be the only means of communicating status: https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html
+- SAP Fiori semantic-color guidance: define meanings consistently and add a text status indicator: https://www.sap.com/design-system/fiori-design-web/v1-108/foundations/best-practices/ui-elements/how-to-use-semantic-colors
+- VA.gov Design System card guidance: use status tags with accessible colors and never rely on color alone: https://dev-design.va.gov/5462/components/card
 
 ### Ranking safety
 Do not rank by raw percentage change alone. Do not equate the highest 5M score with the most exciting trade. Do not let an EXECUTION READY label conceal weak volume, wide spread, stale data, extreme extension, or a failed 5M authority gate. The Red Zone should direct attention and explain trade-offs; the user retains the decision.
