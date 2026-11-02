@@ -17,7 +17,7 @@
 - [x] Added Overnight Scanner Quick Start and November 2 candidate/news review.
 
 ## Open P0 — runtime acceptance
-- [x] Release build and tests passed on branch head `83cd9780daa9f8e94628e8d24f4bc6ab4b03c415`: GitHub Actions run [41514111035](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41514111035), 0 warnings, 0 errors, 179/179 tests.
+- [x] Latest source head `237fcbfc71f9b03bda64b1e6047d61355c849447` passed Release build and 179/179 tests with 0 warnings/0 errors in [Actions run 41540235754](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41540235754).
 - [ ] Hard-refresh prototype and verify the repaired header, transport label wrapping, and timestamp display on desktop and mobile.
 - [ ] During regular market hours, capture live-assessment JSON and calculate evaluatedAtUtc minus oneMinute.completedAtUtc. Investigate if >=60 seconds for a liquid symbol.
 - [ ] Complete WebSocket delivery test for SPY, RKLX, ASTX and XRPN using advancing per-symbol bar counts and timestamps.
