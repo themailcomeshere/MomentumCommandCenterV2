@@ -47,7 +47,7 @@ The user confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `
 
 ## 5. Verification status
 
-The November 2 earlier source head passed 178/178 in run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284). The latest feed-provenance and Main Chart layout changes are a later source set and are undergoing a separate Release build/test run; do not carry the earlier green status forward to this head.
+The November 2 earlier source head passed 178/178 in run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284). The later feed-provenance, Main Chart layout, timestamp display, and SIP-default changes passed the Release build and **179/179 tests** in Actions run [41504217777](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504217777) on source commit `ee2e929e3bdf15f1457211534dfc9456dc8aa5ae`. Subsequent commits were documentation-only; verify the latest docs head CI separately.
 
 ## 6. Remaining acceptance
 
