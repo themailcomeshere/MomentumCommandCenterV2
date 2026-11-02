@@ -52,7 +52,7 @@ public sealed class LiveSymbolAssessmentService(
             // A 3-day 1m window supplies enough history for the current EMA/SMA/ATR calculations.
             IReadOnlyList<MarketBar> oneMinute = Array.Empty<MarketBar>();
             var oneMinuteFromWebSocket = false;
-            var configuredFeed = configuration["MarketData:Alpaca:Feed"] ?? "iex";
+            var configuredFeed = configuration["MarketData:Alpaca:Feed"] ?? "sip";
             if (string.Equals(provider.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase) &&
                 streamWorker.IsSubscribed &&
                 string.Equals(streamWorker.Feed, configuredFeed, StringComparison.OrdinalIgnoreCase))
