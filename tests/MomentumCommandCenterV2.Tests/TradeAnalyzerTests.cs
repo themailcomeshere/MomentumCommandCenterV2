@@ -89,7 +89,7 @@ public sealed class TradeAnalyzerTests
             close,
             high,
             low,
-            close - 10m,   // VWAP
+            close - 0.25m, // VWAP: close enough to avoid manufacturing a 10-ATR extension
             close - 2m,    // EMA9
             close - 5m,    // EMA20
             close - 10m,   // SMA50
@@ -104,7 +104,7 @@ public sealed class TradeAnalyzerTests
             close,
             high,
             low,
-            close - 10m,   // VWAP
+            close - 0.25m, // VWAP: close enough to avoid manufacturing a 10-ATR extension
             close - 2m,    // EMA9
             close - 5m,    // EMA20
             close - 10m,   // SMA50
