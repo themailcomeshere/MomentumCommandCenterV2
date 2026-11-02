@@ -189,9 +189,9 @@ async function refreshDecisionExplanation(){
   classification.textContent=ready?"EXECUTION READY":decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||"DATA UNAVAILABLE");
   classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch");
   if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
-  if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(2);
-  if(dailyVwap)dailyVwap.textContent=one.vwap==null?"DATA?":"$"+Number(one.vwap).toFixed(3);
-  if(atr14)atr14.textContent=one.atr==null?"DATA?":"$"+Number(one.atr).toFixed(3);
+  if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(5);
+  if(dailyVwap)dailyVwap.textContent=one.vwap==null?"DATA?":"$"+Number(one.vwap).toFixed(5);
+  if(atr14)atr14.textContent=one.atr==null?"DATA?":"$"+Number(one.atr).toFixed(5);
   if(rvol)rvol.textContent=five.relativeVolume==null?"UNKNOWN":Number(five.relativeVolume).toFixed(2)+"×";
   if(extension)extension.textContent=one.extensionAtr==null?"DATA?":Number(one.extensionAtr).toFixed(2)+" ATR";
   if(eligibility)eligibility.textContent="5M permission: "+permission;
@@ -204,7 +204,7 @@ async function refreshDecisionExplanation(){
   if(five.relativeVolumeBaselineSamples!==undefined)lines.push("5M same-time RVOL baseline: "+five.relativeVolumeBaselineSamples+" prior-session samples; minimum 5.");
   if(one.sourceTimestampUtc)lines.push("1M source bar: "+new Date(one.sourceTimestampUtc).toLocaleString());
   if(five.sourceTimestampUtc)lines.push("5M source bar: "+new Date(five.sourceTimestampUtc).toLocaleString());
-  if(one.close!=null&&one.vwap!=null&&one.atr!=null)lines.push("1M extension inputs: close $"+Number(one.close).toFixed(3)+" · Daily VWAP $"+Number(one.vwap).toFixed(3)+" · ATR14 $"+Number(one.atr).toFixed(3)+" · extension "+formatMetric(one.extensionAtr,2)+" ATR.");
+  if(one.close!=null&&one.vwap!=null&&one.atr!=null)lines.push("1M extension inputs: close $"+Number(one.close).toFixed(5)+" · Daily VWAP $"+Number(one.vwap).toFixed(5)+" · ATR14 $"+Number(one.atr).toFixed(5)+" · extension "+formatMetric(one.extensionAtr,2)+" ATR.");
   if(one.ema9!=null&&one.ema20!=null)lines.push("1M EMA9 "+formatMetric(one.ema9)+" · EMA20 "+formatMetric(one.ema20)+" · RSI "+formatMetric(one.rsi,1));
   if(reasons)reasons.replaceChildren(...lines.map(line=>{const li=document.createElement("li");li.textContent=line;return li;}));
   if(sourceNode)sourceNode.textContent="Source "+(data.provider||"UNKNOWN")+" · configured "+(data.configuredFeed||"feed UNKNOWN")+" · observed 1M "+(one.feed||data.feed||"UNKNOWN")+"/5M "+(five.feed||data.feed||"UNKNOWN")+" · 1M "+(one.sourceTransport||"UNKNOWN")+" · 5M REST · "+(data.evaluationStatus||"UNKNOWN")+" · evaluated "+(data.evaluatedAtUtc?new Date(data.evaluatedAtUtc).toLocaleTimeString():"UNKNOWN");
