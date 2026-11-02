@@ -52,7 +52,7 @@ Include the symbol, date, timeframe, and visible study/version where possible. I
 
 ### Thinkorswim CSV import
 
-The Dashboard's Scanner & Watchlist workbench accepts a CSV with a `Symbol` or `Ticker` column. Optional columns are `Score`, `Status`, `Reason`, `Extension`/`Ext`, and `Freshness`/`Data_As_Of`.
+The Dashboard's Scanner & Watchlist workbench accepts a CSV with a `Symbol`, `Ticker`, or `Symbol/Ticker` column. The importer handles UTF-8 BOMs, comma/semicolon/tab delimiters, and quoted headers/fields. Optional columns are `Score` (also `Overnight Score`), `Status`, `Reason`, `Extension`/`Ext`, and `Freshness`/`Data_As_Of`. Keep the original TOS export unchanged. If the import is rejected, the UI reports the normalized headers it detected so the source format can be diagnosed.
 
 Example:
 
