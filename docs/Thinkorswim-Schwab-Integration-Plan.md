@@ -2,6 +2,19 @@
 
 **Status:** Individual Trader API access approved by the user (2026-11-02). OAuth app registration, callback URL, app credentials, token exchange, and read-only account/position sync are not yet configured or implemented. No Schwab credentials, account data, or positions are connected.
 
+## Schwab app creation form — recommendation (2026-11-02)
+
+The user reports the Trader API — Individual request is approved and has opened the Create App form.
+
+- **API Product:** Select **Accounts and Trading Production** for Phase 1 read-only account balances/positions. Do not select **Market Data Production** yet; MCC already has Alpaca for market data, and a second market-data source is not currently required for position synchronization.
+- **App Name:** `Momentum Command Center` (the portal displays this name to the end user).
+- **Description (optional, under 255 characters):** `Read-only account and position synchronization for Momentum Command Center. No order placement or trading actions are performed.`
+- **Callback URL(s):** Do **not** submit a guessed URL yet. The MCC OAuth callback route has not been implemented, and the permanent HTTPS hosting origin has not been selected. Schwab's portal documentation says the callback is where the user returns after authorizing the app; some API product lines enforce HTTPS. Register the exact URL only after the route and host are established. The local development profile currently has `https://localhost:53359`, but that is not yet a verified Schwab callback or production URL.
+
+The app can remain uncreated until the callback is ready. This is lower priority and does not block current MCC work. Never paste App Key, App Secret, authorization codes, or tokens into chat or Git.
+
+Official portal guide: https://developer.schwab.com/user-guides/apis-and-apps/create-an-app
+
 ## Important distinction
 
 Thinkorswim is Schwab's trading platform. MCC should not attempt to scrape the Thinkorswim desktop UI or pretend that the desktop application itself is an API. The supported integration path to investigate is Schwab's **Trader API — Individual**, a separate developer product for an individual's own self-directed Schwab brokerage account.
