@@ -325,7 +325,7 @@ function renderWatchlist(){
 }
 
 function detectCsvDelimiter(line){
- const candidates=[",",";","\\t"],counts={",":0,";":0,"\\t":0};let quoted=false;
+ const candidates=[",",";","\t"],counts={",":0,";":0,"\t":0};let quoted=false;
  for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'){if(quoted&&line[i+1]==='"'){i++;}else quoted=!quoted;}else if(!quoted&&Object.prototype.hasOwnProperty.call(counts,char))counts[char]++;}
  return candidates.reduce((best,item)=>counts[item]>counts[best]?item:best,",");
 }
@@ -335,7 +335,7 @@ function parseCsvLine(line,delimiter=","){
  fields.push(buffer.join(""));return fields;
 }
 function normalizeCsvHeader(value){
- return String(value??"").replace(/^\\uFEFF/,"").trim().replace(/^"(.*)"$/,"$1").trim().toLowerCase().replace(/\\s+/g,"").replace(/[^a-z0-9/]/g,"");
+ return String(value??"").replace(/^\uFEFF/,"").trim().replace(/^"(.*)"$/,"$1").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9/]/g,"");
 }
 
 $("scannerGroup").addEventListener("change",renderScanner);
@@ -344,8 +344,8 @@ $("clearWatchlist").addEventListener("click",()=>writeWatchlist([]));
 $("scannerFile").addEventListener("change",event=>{
  const file=event.target.files[0];if(!file)return;
  const reader=new FileReader();reader.onload=()=>{
-  const text=String(reader.result).replace(/^\\uFEFF/,"");
-  const lines=text.split(/\\r?\\n/).filter(line=>line.trim().length);
+  const text=String(reader.result).replace(/^\uFEFF/,"");
+  const lines=text.split(/\r?\n/).filter(line=>line.trim().length);
   if(lines[0]&&/^sep=./i.test(lines[0]))lines.shift();
   if(!lines.length){$("scannerSource").textContent="Import rejected: CSV is empty";return;}
   const delimiter=detectCsvDelimiter(lines[0]),headers=parseCsvLine(lines.shift(),delimiter).map(normalizeCsvHeader);
@@ -868,7 +868,7 @@ $("downloadParityCsv")?.addEventListener("click", () => {
  const quote = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
  const csv = [headers, ...rows.map(row => headers.map(header => row[header] ?? ""))]
    .map(row => row.map(quote).join(",")).join("\r\n");
- const blob = new Blob(["\\uFEFF", csv], {type:"text/csv;charset=utf-8"});
+ const blob = new Blob(["\uFEFF", csv], {type:"text/csv;charset=utf-8"});
  const url = URL.createObjectURL(blob);
  const link = document.createElement("a"); link.href = url; link.download = "mcc-chart-parity-template.csv";
  document.body.append(link); link.click(); link.remove(); URL.revokeObjectURL(url);
