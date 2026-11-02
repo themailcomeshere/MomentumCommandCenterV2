@@ -47,11 +47,11 @@ If the live result still reports IEX after pulling and rebuilding, inspect the r
 
 ## 5. Verification status
 
-The user's November 2 Release build succeeded for all five projects, but the accompanying test run reported 172 passed / 4 failed. The source fixes above address the four reported failure causes. **The build and test suite have not yet been rerun against these fixes.** Do not mark the branch green until the user or CI confirms the exact current head.
+The user's November 2 Release build succeeded for all five projects, but the accompanying test run reported 172 passed / 4 failed. The source fixes above address the four reported failure causes. The first CI attempt caught compile errors from decimal `[InlineData]` arguments; those were replaced with ordinary fact assertions. GitHub Actions run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284) passed the Release build and **178/178 tests** on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22`.
 
 ## 6. Remaining acceptance
 
-1. Run Release build and tests on the latest branch head.
+1. Release build and tests are verified on source commit `c0412da1a5e4c40f8853bd07d5791277fc3c7f22` (Actions run 41491616284, 178/178). Recheck after any later source changes.
 2. Verify `GET /api/providers/status` returns `configuredFeed: "sip"`.
 3. Verify live assessment returns `configuredFeed: "sip"` and both observed timeframe feeds as `sip`; if not, capture the full sanitized JSON and provider error.
 4. Capture the same completed 1M timestamp in MCC and Thinkorswim and compare close, Daily VWAP, ATR14, and extension.
