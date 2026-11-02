@@ -399,7 +399,7 @@ $("toggleRedZoneSound")?.addEventListener("click",async()=>{
   else{redZoneSoundEnabled=false;if(button){button.textContent="Sound unavailable";button.setAttribute("aria-pressed","false");}}
  }
 });
-async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,reasonNode,gateNode,chartNode){
+async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,participationNode,reasonNode,gateNode,chartNode){
  void ensureMinuteBarSubscription(symbol);
  try{
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
@@ -407,7 +407,17 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   extensionNode.textContent="Extension: "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?")+" (1M close vs EMA9)";
   freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
-  reasonNode.textContent=decision?.reason||data.evaluationReason||"Decision not evaluated.";
+  const relativeVolume=Number(five.relativeVolume);
+  const rvolCriterion=five.scoreBreakdown?.criteria?.find(item=>item.key==="rvolSupportive");
+  const participationKnown=Number.isFinite(relativeVolume)&&typeof rvolCriterion?.passed==="boolean";
+  const lowParticipation=participationKnown&&rvolCriterion.passed===false;
+  const baselineSamples=Number(five.relativeVolumeBaselineSamples);
+  participationNode.textContent=participationKnown
+   ? "5M participation: "+relativeVolume.toFixed(2)+"x same-slot RVOL · "+(lowParticipation?"BELOW V2 THRESHOLD":"V2 THRESHOLD MET")+" · "+(Number.isFinite(baselineSamples)?baselineSamples:"?")+" samples"
+   : "5M participation: DATA? · same-slot RVOL baseline unavailable";
+  participationNode.className="redzone-participation "+(participationKnown?(lowParticipation?"low":"ok"):"unknown");
+  const decisionReason=decision?.reason||data.evaluationReason||"Decision not evaluated.";
+  reasonNode.textContent=lowParticipation?decisionReason+" Low participation: 5M same-time-of-day RVOL is below the existing V2 threshold.":decisionReason;
   gateNode.textContent="5M Permission: "+((five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===true?"YES":(five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===false?"NO":"UNKNOWN")+
    " · 1M execution: "+(decision?.oneMinuteExecution||"UNKNOWN");
   drawPriceLine(chartNode,one.chartBars||[],symbol);
@@ -416,6 +426,8 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   setV2ScoreDisplay(scoreNode,null,null,"REQUEST FAILED");
   extensionNode.textContent="Extension: DATA? · live request failed";
   freshnessNode.textContent="Freshness: UNKNOWN · "+error.message;
+  participationNode.textContent="5M participation: DATA? · live assessment unavailable";
+  participationNode.className="redzone-participation unknown";
   reasonNode.textContent="Live market assessment unavailable. No prior status is being represented as current.";
   gateNode.textContent="5M Permission: UNKNOWN · 1M execution: UNKNOWN";
   chartNode.textContent="Live price unavailable";
@@ -462,6 +474,7 @@ function renderMorningReport(){
   const score=document.createElement("div");score.className="redzone-score score-unknown";score.textContent="V2 5M score: LOADING live assessment…";
   const ext=document.createElement("p");ext.textContent="Extension: loading live 1M bars…";
   const fresh=document.createElement("p");fresh.textContent="Freshness: requesting 1M/5M source timestamps…";
+  const participation=document.createElement("p");participation.className="redzone-participation unknown";participation.textContent="5M participation: loading same-slot RVOL…";
   const reason=document.createElement("p");reason.className="redzone-reason";reason.textContent=item.reason||"No reason supplied.";
   const gate=document.createElement("div");gate.className="gate-warning";gate.textContent="5M Permission: loading · 1M execution: loading";
   const chart=document.createElement("div");chart.className="redzone-sparkline";chart.textContent="Loading 1M price…";
@@ -476,9 +489,9 @@ function renderMorningReport(){
    writeRedZoneState(current);
   });
   actions.append(focusButton,manageButton);
-  card.append(top,symbol,score,ext,fresh,reason,chart,gate,actions);
-  redZoneAssessmentRefreshers.push(()=>updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,reason,gate,chart));
-  void updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,reason,gate,chart);
+  card.append(top,symbol,score,ext,fresh,participation,reason,chart,gate,actions);
+  redZoneAssessmentRefreshers.push(()=>updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,participation,reason,gate,chart));
+  void updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,participation,reason,gate,chart);
   card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","Focus "+(item.symbol||"candidate")+" price chart");
   const focus=()=>{const selector=$("symbol");if(selector&&item.symbol){if(selector.tagName==="SELECT"){let option=[...selector.options].find(o=>o.value===item.symbol);if(!option){option=document.createElement("option");option.value=item.symbol;option.textContent=item.symbol;selector.append(option);}}selector.value=item.symbol;render();refreshFocusedPriceChart();}};
   focusButton.addEventListener("click",event=>{event.stopPropagation();focus();});
