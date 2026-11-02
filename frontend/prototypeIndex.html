@@ -178,31 +178,26 @@
         }
 
         .prototype-page #opportunity-status {
-            grid-template-columns: minmax(250px,1.5fr) repeat(5,minmax(100px,1fr))
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            grid-template-rows: repeat(3,minmax(96px,1fr));
+            min-width: 0
         }
 
-            .prototype-page #opportunity-status > .metric {
-                min-width: 0
-            }
+        .prototype-page #opportunity-status > .metric {
+            min-width: 0
+        }
 
         @media(max-width:1100px) {
             .prototype-page #opportunity-status {
-                grid-template-columns: repeat(3,minmax(0,1fr))
+                grid-template-columns: repeat(2,minmax(0,1fr));
+                grid-template-rows: none
             }
-
-                .prototype-page #opportunity-status > .hero-card {
-                    grid-column: 1/-1
-                }
         }
 
         @media(max-width:650px) {
             .prototype-page #opportunity-status {
                 grid-template-columns: repeat(2,minmax(0,1fr))
             }
-
-                .prototype-page #opportunity-status > .hero-card {
-                    grid-column: 1/-1
-                }
         }
 
         .prototype-page .topbar {
