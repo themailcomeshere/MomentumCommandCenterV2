@@ -1,3 +1,10 @@
+## November 2 validation notes
+
+- The July 3, 2028 early-close test remains enabled and now uses the xUnit predicate overload for `Assert.Single`.
+- Prototype dock switch labels are `BORING OVERNIGHT` to the right and `WORKSPACE` beneath, both vertical.
+- The 1M extension calculation has been aligned to the installed Thinkorswim formula: absolute close-to-Daily-VWAP distance divided by a simple 14-bar average of True Range. Exact parity still requires a same-symbol/same-bar comparison.
+- RTO follow-up capture still reports `feed=iex`; no SIP comparison or entitlement is established. Two exact opening bars remain missing.
+
 # Momentum Command Center V3
 
 **Repository:** `MomentumCommandCenterV2`  
