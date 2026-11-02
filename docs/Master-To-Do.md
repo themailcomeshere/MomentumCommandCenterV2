@@ -6,6 +6,11 @@
 - [x] Repositioned the prototype market-session clock immediately beside the title inside the title parent; corrected the transport label's inherited yellow background.
 - [x] Audited Library 1M V14.5 against normal 5M V4.1.7 and documented the missing 5M Daily VWAP condition in the reconstructed 5M raw Permission.
 
+
+### Additional 1M/5M EOD parity defect
+- [x] Source audit found V14.5 uses 15:55 Eastern for a 3:55 PM Arizona cutoff; this fires 2–3 hours early. V4.1.7 uses 19:55 Eastern during standard time; this is two hours late in Arizona. Correct mapping is 18:55 EDT / 17:55 EST.
+- [ ] Correct both studies with the same DST-aware Arizona cutoff and validate exact bars immediately before/at/after the cutoff across both DST regimes. Do not treat screenshot EOD bubbles as proven output from a particular study until matched-bar diagnostics isolate their source.
+
 ### Remaining validation / strategy disposition
 - [ ] Original Overnight Scanner CSV is not present in the active branch tree reviewed for this update; verify the actual committed export after locating it. The importer fix is broader but does not prove that this particular file now imports.
 - [ ] Run `Get-Latest-And-Test.ps1` locally after pulling the fix; record Release build/test output and exact SHA.
