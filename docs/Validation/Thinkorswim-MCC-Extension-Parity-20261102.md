@@ -116,7 +116,7 @@ This display correction does not establish provider latency or TOS parity. The A
 
 ## 1M V14.5 — reconstructed 5M Permission audit (2026-11-02)
 
-The current Library 1M baseline is `MomentumCommandCenterV3_2_1M_V14_5.txt`. Keep the normal 5M authority study at `MCC_V3_2_5M_V4_1_7.txt`. The user's installed 1M study hash has not been independently captured, so the Library baseline is not proof of byte-for-byte installation.
+The latest full 1M source in the Library is `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (V14.5.1). The later-modified V14.4.10 file is explicitly an isolated aggressive-lane audit-only mode, not the normal full study. Keep the normal 5M authority study at `MCC_V3_2_5M_V4_1_7.txt`. The user's installed 1M study hash has not been independently captured, so the Library baseline is not proof of byte-for-byte installation.
 
 A source comparison found one material parity gap:
 
@@ -124,7 +124,7 @@ A source comparison found one material parity gap:
 - 1M V14.5 reconstructs 5M raw permission from 5M EMA9 > EMA20, 5M close > EMA9, 5M RSI >= 50, and not-bearish-stack. It does **not** include the 5M close-above-Daily-VWAP condition.
 - V14.5's shared `fiveExecutionPermission` separately requires the current 1M price above Daily VWAP. That is an additional 1M execution filter, not a substitute for the missing 5M VWAP condition.
 
-Therefore V14.5's reconstructed 5M Permission can disagree with the normal V4.1.7 5M authority on a bar where 1M price and 5M close are on opposite sides of Daily VWAP. This is a targeted parity defect, not a reason to redesign the 1M event/continuation pipeline.
+Therefore V14.5.1's reconstructed 5M Permission can disagree with the normal V4.1.7 5M authority on a bar where 1M price and 5M close are on opposite sides of Daily VWAP. This is a targeted parity defect, not a reason to redesign the 1M event/continuation pipeline.
 
 **Disposition:** retain V14.5 as the current baseline for now; do not install an uncompiled replacement or alter thresholds. The next 1M revision should make its reconstructed 5M Permission agree with V4.1.7 on the same completed 5M bar, including the 5M Daily VWAP condition, while retaining the independent 1M VWAP execution gate. Compile in thinkorswim and compare same-symbol/same-timestamp permission/state outputs before promoting the revision. Do not call parity certified until that test passes.
 
@@ -133,12 +133,22 @@ Therefore V14.5's reconstructed 5M Permission can disagree with the normal V4.1.
 
 A second source-level mismatch is present and is independent of the missing 5M VWAP gate.
 
-- 1M V14.5 sets `eodHour = 15`, `eodMinute = 55`, then calls `SecondsTillTime(1555)` / `SecondsFromTime(1555)`.
+- 1M V14.5.1 sets `eodHour = 15`, `eodMinute = 55`, then calls `SecondsTillTime(1555)` / `SecondsFromTime(1555)`.
 - The 5M V4.1.7 source explicitly documents that ThinkScript's `SecondsFromTime()` and `SecondsTillTime()` use Eastern time regardless of the chart's displayed timezone.
 - The intended cutoff is 3:55 PM Arizona. That maps to **6:55 PM Eastern during daylight time (18:55)** and **5:55 PM Eastern during standard time (17:55)**.
-- V14.5's fixed 15:55 Eastern therefore fires 2 hours early in standard time and 3 hours early in daylight time relative to 3:55 PM Arizona.
+- V14.5.1's fixed 15:55 Eastern therefore fires 2 hours early in standard time and 3 hours early in daylight time relative to 3:55 PM Arizona.
 - 5M V4.1.7 uses 18:55 for daylight time (correct) but 19:55 for standard time. The standard-time value is one hour later than the correct 17:55 Eastern mapping, so its EOD window is two hours late in Arizona.
 
 This is a source-level clock mismatch, not a confirmed explanation for any individual screenshot bubble. The November 2 screenshots show 5-minute charts only; the exact study that generated each visible bubble has not been isolated by a matched-bar diagnostic.
 
 **Disposition:** both studies need a targeted EOD-time parity correction before EOD/GET OUT behavior is trusted across DST. For the intended 3:55 PM Arizona cutoff, use 18:55 Eastern during US daylight time and 17:55 Eastern during US standard time. Implement the same calendar/DST rule in both studies, compile in thinkorswim, and test bars immediately before/at/after the cutoff on both sides of the DST transition. Do not change unrelated entry, runner, or exit-state thresholds in the same revision.
+
+
+### V14.5.1 confirmation against V14.5 predecessor
+
+The Library's later full source, `Momentum_Command_Center_V3_2_1M_V14_5_1.ts`, was inspected directly. It retains the same material gaps described above:
+- `fiveBullishPermissionRaw` still omits the reconstructed 5M Daily VWAP test.
+- `fiveExecutionPermission` still substitutes the current 1M `priceAboveVWAP` gate for that missing 5M condition.
+- `eodHour=15` / `eodMinute=55` still feeds Eastern-time `SecondsFromTime` / `SecondsTillTime` directly.
+
+V14.5.1 adds fresh-trigger memory/re-arm reset and execution diagnostics over the V14.5 predecessor, but it does not resolve the identified VWAP or Arizona/Eastern EOD parity issues. It is therefore the correct current full-study baseline to patch, not a reason to revert to V14.5 or install the audit-only V14.4.10 variant.
