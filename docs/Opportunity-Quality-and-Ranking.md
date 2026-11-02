@@ -186,6 +186,7 @@ The Red Zone must consume opportunity-quality evidence, but it must not treat op
 - The `OpportunityQualityAssessor` is a standalone deterministic domain slice with provisional diagnostic bands. It is not wired into the live market-data assessment, scanner ranking, API, or dashboard.
 - The live assessment currently exposes a 5M same-time-of-day `relativeVolume` value (when its baseline is valid), 5M six-factor score/permission, 1M RSI/MACD/ATR-extension and chart bars, and the combined V2 decision state. It does not currently expose a validated 20-day average daily volume, reliable spread, or a dedicated 1M RVOL baseline in the Red Zone rank contract.
 - The current Red Zone live-discovery ordering uses absolute daily percentage change; it is not the opportunity-quality assessor and does not rank by participation quality.
+- The Red Zone card now surfaces the available 5M same-time-of-day RVOL, labels it below the existing V2 threshold when applicable, and adds a low-participation explanation. This does not alter the rank or provide 1M RVOL/20D average daily volume.
 
 ### Required adapter before live ranking
 - Build a timestamped per-candidate input snapshot from the current live 5M/1M assessment and explicit source-backed volume/liquidity metrics. Preserve feed, timeframe, source timestamp, freshness and calculation/config version per field.
