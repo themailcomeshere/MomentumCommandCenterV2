@@ -82,9 +82,24 @@ public sealed class AlpacaMarketDataAdapterTests
             CancellationToken.None);
 
         Assert.Single(bars);
+        Assert.Equal("sip", adapter.ConfiguredFeed);
         Assert.Equal("sip", bars[0].Feed);
         Assert.Contains("feed=sip", handler.Request!.RequestUri!.Query, StringComparison.Ordinal);
         Assert.DoesNotContain("feed=iex", handler.Request.RequestUri.Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MissingFeedConfigurationDefaultsToSip()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(new HttpClient(new RecordingHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK))), configuration);
+
+        Assert.Equal("sip", adapter.ConfiguredFeed);
     }
 
     [Fact]
