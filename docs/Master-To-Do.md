@@ -9,7 +9,7 @@ Current actionable checklist: [Active Work Checklist — 2026-11-02](Active-Work
 - [x] Recorded current TOS/MCC INO readings and the distinction between the live EXT label and historical ExtensionATR plot.
 - [x] User reports Schwab Trader API — Individual approval. App creation, product attachment, callback, app-level approval and OAuth remain open.
 - [x] Defined RTO audit: exact 40 close/open boundary timestamps across 20 sessions. Prior 38/40 result is IEX; SIP comparison is blocked by the explicit 403.
-- [ ] Verify latest branch Release build/tests and browser acceptance of the timestamp correction.
+- [x] Release build and 179/179 tests passed on head `83cd9780daa9f8e94628e8d24f4bc6ab4b03c415` in Actions run [41514111035](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41514111035).
 - [ ] Measure actual completed-bar age from live API fields during regular market hours.
 - [ ] Complete matched TOS parity, Red Zone ranking, Boring Overnight source/target validation, WebSocket and collector recovery acceptance.
 - [ ] Continue Schwab read-only integration after app registration and callback configuration.
