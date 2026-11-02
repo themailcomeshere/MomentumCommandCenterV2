@@ -190,6 +190,13 @@ async function refreshDecisionExplanation(){
   classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch");
   if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(5);
+  const oneMinuteTimestamp=$("oneMinuteTimestamp");
+  if(oneMinuteTimestamp){
+   const sourceTime=one.sourceTimestampUtc?new Date(one.sourceTimestampUtc):null;
+   oneMinuteTimestamp.textContent=sourceTime&&!Number.isNaN(sourceTime.getTime())
+    ?"Bar "+sourceTime.toLocaleString("en-US",{timeZone:"America/Phoenix",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true})+" AZ · "+sourceTime.toISOString().slice(11,19)+"Z"
+    :"Source timestamp unavailable";
+  }
   if(dailyVwap)dailyVwap.textContent=one.vwap==null?"DATA?":"$"+Number(one.vwap).toFixed(5);
   if(atr14)atr14.textContent=one.atr==null?"DATA?":"$"+Number(one.atr).toFixed(5);
   if(rvol)rvol.textContent=five.relativeVolume==null?"UNKNOWN":Number(five.relativeVolume).toFixed(2)+"×";
@@ -211,7 +218,7 @@ async function refreshDecisionExplanation(){
  }catch(error){
   classification.textContent="DATA UNAVAILABLE";classification.className="classification watch";
   if(headline)headline.textContent="Live assessment request failed: "+error.message;
-  if(price)price.textContent="DATA?";if(dailyVwap)dailyVwap.textContent="DATA?";if(atr14)atr14.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
+  if(price)price.textContent="DATA?";if($("oneMinuteTimestamp"))$("oneMinuteTimestamp").textContent="Source timestamp unavailable";if(dailyVwap)dailyVwap.textContent="DATA?";if(atr14)atr14.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
   if(eligibility)eligibility.textContent="5M permission: UNKNOWN";if(freshness)freshness.textContent="Freshness: UNKNOWN";
   if(fiveState)fiveState.textContent="5M permission: UNKNOWN";if(oneState)oneState.textContent="1M execution: UNKNOWN";
   setV2ScoreDisplay(scoreNode,null,null,"REQUEST FAILED");
