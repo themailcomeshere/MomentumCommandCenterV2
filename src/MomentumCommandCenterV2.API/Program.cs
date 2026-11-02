@@ -110,10 +110,13 @@ app.MapGet("/api/market-session/clock", () =>
 .WithSummary("Get the current US-equities session phase and countdown target")
 .WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and MCC_US_EQUITIES_CALENDAR_V2. The maintained calendar does not model unscheduled exchange closures.");
 
-app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers) =>
+app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers, IConfiguration configuration) =>
     Results.Ok(providers.Select(p => new
     {
         provider = p.ProviderName,
+        configuredFeed = string.Equals(p.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase)
+            ? configuration["MarketData:Alpaca:Feed"] ?? "iex"
+            : null,
         configured = p.IsConfigured,
         validated = p.HasSuccessfulDataValidation,
         status = !p.IsConfigured
