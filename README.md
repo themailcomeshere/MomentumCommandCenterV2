@@ -1,3 +1,11 @@
+## November 2 — live IEX diagnosis and Main Chart layout
+
+- User's tracked API appsettings contains `Feed: sip`, but running API still reported IEX. Launch settings only sets Development. New `/api/providers/status` output identifies the effective configuration provider and all sources contributing the feed setting; inspect User Secrets and environment overrides before further guessing.
+- REST, WebSocket, and live assessment now default to SIP if no feed setting exists. An explicit IEX override can still win by configuration precedence.
+- Prototype Main Chart layout: ticker / title / Live Opportunity Classification header; chart ~2/3 width with 2x3 metric grid to the right. Exact bar timestamp shown in Arizona time and UTC; close, VWAP, and ATR14 display five decimals.
+- TOS study and comparison steps: [Thinkorswim / MCC Extension Parity](docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md).
+- User's `RTO-SIP-20261101.json` still records `feed=iex`, 38/40 exact boundaries and two missing opens. It is not SIP validation.
+- Latest source CI verification is pending; the earlier 178/178 result predates this change set.
 ## November 2 follow-up — feed provenance and Main Chart layout
 
 - Reviewed the user's two latest commits. `RTO-SIP-20261101.json` still reports `feed=iex`, 38/40 exact boundary bars, and missing October 14 / October 21 opening bars; the filename is not evidence of SIP.
