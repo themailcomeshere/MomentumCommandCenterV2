@@ -6,7 +6,7 @@
     "calendarVersion":  "MCC_US_EQUITIES_CALENDAR_V2",
     "requestedFromUtc":  "2026-10-05T19:59:00+00:00",
     "requestedToUtc":  "2026-11-02T14:31:00+00:00",
-    "retrievedAtUtc":  "2026-11-02T16:34:29.3985635+00:00",
+    "retrievedAtUtc":  "2026-11-02T17:19:34.8582346+00:00",
     "fetchedBarCount":  3949,
     "newlyPersistedObservationCount":  0,
     "boundaryCoverageAudit":  [
@@ -415,7 +415,7 @@
                     "symbol":  "RTO",
                     "provider":  "Alpaca",
                     "feed":  "iex",
-                    "calculatedAtUtc":  "2026-11-02T16:34:29.3895726+00:00",
+                    "calculatedAtUtc":  "2026-11-02T17:19:34.842084+00:00",
                     "requiredWindow":  20,
                     "requestedPairCount":  20,
                     "validPairCount":  18,
