@@ -26,7 +26,7 @@ The reported MCC value **11.20 ATR** is the normalized ATR Extension displayed b
 
 The Thinkorswim value **EXT: 24.5 ATR** and MCC's **11.20 ATR** are not yet a validated mismatch on a matched observation. Compare the same symbol and completed 1-minute bar timestamp, then compare all four inputs: close, Daily VWAP, ATR14, and the calculated ratio. Do not adjust warning/hard-exit thresholds to force a match.
 
-The prior live UI rounded price inputs too aggressively for a low-priced symbol. The prototype now displays close, VWAP, and ATR14 to five decimal places and shows the exact 1M bar timestamp in Arizona time and UTC.
+The prior live UI rounded price inputs too aggressively for a low-priced symbol. The prototype now displays close, VWAP, and ATR14 to five decimal places. A follow-up source audit found the timestamp display had shown the bar-start time under a label describing the completed close. The UI now displays `completedAtUtc` as the close time and separately displays the bar's start-to-close interval. See [Live 1-Minute Bar Timestamp and Latency](Live-Bar-Timestamp-Latency-20261102.md).
 
 ## 3. Alpaca feed selection and observation provenance
 
@@ -36,7 +36,7 @@ The prior live UI rounded price inputs too aggressively for a low-priced symbol.
 - `GET /api/providers/status` returns the adapter instance's effective `configuredFeed`, `configuredFeedSource` (the highest-precedence configuration provider), and `feedConfigurationSources` (all providers contributing that key and value). This is specifically to diagnose a runtime IEX result when the tracked JSON says SIP.
 - `GET /api/market-data/live-assessment` now returns `configuredFeed`, top-level observed `feed`, and separate `oneMinute.feed` / `fiveMinute.feed` fields.
 
-The user confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `Feed: sip`, `appsettings.Development.json` does not exist, and `launchSettings.json` only sets `ASPNETCORE_ENVIRONMENT=Development`. That launch setting does not itself override the feed. ASP.NET Core Development configuration also loads User Secrets, and environment variables override JSON. Query `/api/providers/status` after rebuilding/restarting: inspect `configuredFeedSource` and every entry in `feedConfigurationSources`. If source is User Secrets, inspect `dotnet user-secrets list --project src/MomentumCommandCenterV2.API` and remove or change only `MarketData:Alpaca:Feed`. If source is EnvironmentVariables, inspect `MarketData__Alpaca__Feed` at process/user/machine scope. If source is `appsettings.json` but the value is IEX, verify the running API content root and output copy; the tracked file currently says SIP. The adapter now reports its own cached feed, so this diagnostic is not merely a reread of configuration. A configured SIP value with an observed IEX value is a provenance discrepancy that must be investigated; do not combine the feeds.
+The user's latest status response identified the override precisely: `appsettings.json=sip`, local `secrets.json=iex`, with `secrets.json` as `configuredFeedSource`. The user changed `secrets.json` to `sip`; status then reported configured SIP and both sources set to SIP. The live assessment failed with Alpaca HTTP 403: `subscription does not permit querying recent SIP data`. Restoring `secrets.json=iex` returned `VALIDATED_DATA_RETURNED` and 62 bars. Therefore configuration precedence is resolved; SIP entitlement is the blocker. Keep IEX selected for usable data until the account has recent SIP access. Do not claim SIP validation or merge feeds.
 
 ## 4. Regression fixes included
 
@@ -49,17 +49,23 @@ The user confirmed `src/MomentumCommandCenterV2.API/appsettings.json` contains `
 
 The November 2 earlier source head passed 178/178 in run [41491616284](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41491616284). The later feed-provenance, Main Chart layout, timestamp display, and SIP-default changes passed the Release build and **179/179 tests** in Actions run [41504217777](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504217777) on source commit `ee2e929e3bdf15f1457211534dfc9456dc8aa5ae`. The docs-updated head `4443506be982d0ff6726992c7b2294d97871bad2` also passed Release build and 179/179 tests in run [41504521572](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41504521572).
 
-## 6. Remaining acceptance
+## 6. Updated acceptance
 
-1. Verify the latest source head's Release build and tests; the previous 178/178 run predates these changes.
-2. Verify `GET /api/providers/status` returns `configuredFeed: "sip"`.
-3. Verify live assessment returns `configuredFeed: "sip"` and both observed timeframe feeds as `sip`; if not, capture the full sanitized JSON and provider error.
-4. Use [Thinkorswim / MCC Extension Parity](Thinkorswim-MCC-Extension-Parity-20261102.md) to add ATR14/extension plots in TOS, then compare the exact same completed 1M timestamp and five-decimal inputs.
-5. Browser-check the prototype dock labels, 3-column Main Chart header, chart-side 2x3 metrics, exact source timestamp, and no horizontal overflow at desktop/mobile widths.
-6. Re-run the RTO boundary audit against SIP; the prior 38/40 result was IEX and is not an SIP comparison. The October 14 and October 21 open-boundary gaps remain unresolved.
+- [x] Configuration-precedence root cause identified: local `secrets.json` overrode tracked `appsettings.json`.
+- [x] SIP configuration selected successfully from both JSON providers.
+- [x] Captured explicit recent-SIP entitlement denial (HTTP 403).
+- [x] Restored IEX and confirmed successful validation/data return (62 bars in the supplied provider-status result).
+- [x] User confirmed prototype Main Chart fits without horizontal scrolling.
+- [x] Corrected Main Chart timestamp to show completedAtUtc rather than the bar-start timestamp.
+- [ ] Obtain recent SIP entitlement; then confirm live 1M/5M and historical responses carry `feed=sip`.
+- [ ] Re-run RTO exact 40-boundary audit only after a successful SIP request. Prior evidence is IEX: 38/40 exact, missing Oct 14 and Oct 21 next-session opens.
+- [ ] Capture exact-date/time matched TOS/MCC close, VWAP, ATR14 and historical ExtensionATR to five decimals.
+- [ ] Measure actual completed-bar age from `evaluatedAtUtc - oneMinute.completedAtUtc`; if >=60 seconds for a liquid RTH symbol, investigate provider/source delay.
+- [ ] Complete remaining Red Zone ranking and Boring Overnight validation items in the Master To-Do.
+- [ ] Create Schwab app, confirm callback and Active/Ready status, then implement read-only OAuth/position sync; see `docs/Thinkorswim-Schwab-Integration-Plan.md`.
 
 ## [Uncertainties]
 
 - Numerical parity with Thinkorswim is not established until the same symbol and timestamp are compared using matching feeds and session boundaries.
-- SIP entitlement and actual returned SIP bars are not established by changing configuration alone.
-- The exact runtime configuration source that produced the user's IEX result is not known until the new `configuredFeed` diagnostic is read from the running API.
+- SIP entitlement is explicitly denied for recent SIP requests in the user's current Alpaca subscription; this may change if the account plan or entitlement changes.
+- The user has not yet supplied an API payload with actual `evaluatedAtUtc`, `completedAtUtc`, and `ageSeconds` from the apparent one-minute delay interval.
