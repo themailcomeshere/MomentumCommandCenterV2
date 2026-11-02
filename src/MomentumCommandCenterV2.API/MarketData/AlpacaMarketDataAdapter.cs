@@ -15,11 +15,12 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
     private const int MaxAttempts = 3;
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"];
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"];
-    private readonly string _feed = configuration["MarketData:Alpaca:Feed"] ?? "iex";
+    private readonly string _feed = (configuration["MarketData:Alpaca:Feed"] ?? "sip").Trim().ToLowerInvariant();
     private long _lastSuccessfulValidationUnixMilliseconds;
     private int _lastSuccessfulValidationBarCount;
 
     public string ProviderName => "Alpaca";
+    public string ConfiguredFeed => _feed;
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_key) && !string.IsNullOrWhiteSpace(_secret);
     public DateTimeOffset? LastSuccessfulDataValidationUtc
     {
