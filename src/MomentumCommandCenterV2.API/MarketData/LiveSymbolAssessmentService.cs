@@ -187,6 +187,7 @@ public sealed class LiveSymbolAssessmentService(
                 symbol = normalizedSymbol,
                 provider = provider.ProviderName,
                 feed = oneLatest?.Feed ?? fiveLatest?.Feed,
+                configuredFeed,
                 evaluatedAtUtc = evaluatedAt,
                 status,
                 evaluationStatus,
@@ -206,6 +207,7 @@ public sealed class LiveSymbolAssessmentService(
                     completedAtUtc = oneCloseAt,
                     ageSeconds = oneAgeSeconds,
                     freshness = FreshnessLabel(oneFresh, oneAgeSeconds),
+                    feed = oneLatest?.Feed,
                     close = oneLatest?.Close,
                     ema9 = one?.Ema9,
                     ema20 = one?.Ema20,
@@ -224,6 +226,7 @@ public sealed class LiveSymbolAssessmentService(
                     completedAtUtc = fiveCloseAt,
                     ageSeconds = fiveAgeSeconds,
                     freshness = FreshnessLabel(fiveFresh, fiveAgeSeconds),
+                    feed = fiveLatest?.Feed,
                     close = fiveLatest?.Close,
                     ema9 = five?.Ema9,
                     ema20 = five?.Ema20,
@@ -347,7 +350,7 @@ public static class LiveSymbolTechnicalCalculator
         var atr = Atr(bars, index, 14);
         var vwap = SessionVwap(bars, index);
         // Match installed Thinkorswim 1M study: AbsValue(close - dailyVWAP) / Average(TrueRange, 14).
-        var extension = atr > 0m ? Math.Abs((decimal)latest.Close - vwap) / atr : 0m;
+        var extension = V2SignalEngine.CalculateAtrExtension((decimal)latest.Close, vwap, atr);
 
         return new BarSnapshot(
             latest.Timestamp,
