@@ -1,3 +1,23 @@
+## 2026-11-02 — Extension input visibility, test regressions, dock correction, and SIP feed
+
+### Completed source work
+- [x] Corrected the new supplied-extension regression test to evaluate an existing position (`hasPosition: true`), because hard-exit flags are position-management outputs.
+- [x] Corrected the TradeAnalyzer `StrongSnapshot` test fixture: VWAP is now 0.25 below close rather than 10 below close. The old fixture accidentally represented a 10-ATR extension under the revised VWAP-distance metric and was correctly rejected by the engine. No production entry threshold was relaxed.
+- [x] Centralized `Abs(close - Daily VWAP) / ATR14` in `V2SignalEngine.CalculateAtrExtension`; live technical calculation and fallback now call the same method. Added positive-distance, negative-distance, and zero-ATR tests.
+- [x] Exposed effective `configuredFeed` through `GET /api/providers/status` and live assessment, plus separate observed `oneMinute.feed` and `fiveMinute.feed` values.
+- [x] Changed committed API `appsettings.json` default to `sip`; added an adapter test that proves the configured SIP value is sent and returned without IEX fallback. Provider entitlement is still an external runtime check.
+- [x] Prototype dock now places **INTRADAY MOMENTUM** left of the toggle, **BORING OVERNIGHT** right of it, and **WORKSPACE** directly beneath the toggle.
+- [x] Prototype Main Chart now displays 1M Close, Daily VWAP, ATR14 (price units), 5M RVOL, and normalized ATR Extension. Red Zone prints the four 1M extension inputs. The `11.20 ATR` shown previously was the normalized extension, not raw ATR14.
+- [x] Added [Live Extension and Feed Diagnostics](Validation/Live-Extension-and-Feed-Diagnostics-20261102.md) with formula, provenance, and acceptance instructions.
+
+### Runtime acceptance still open
+- [ ] Re-run Release build and the full xUnit suite against the exact current branch head. The user's preceding run built all five projects but reported 172 passed / 4 failed; the source corrections above have not yet been rerun. Do not call the branch green.
+- [ ] After a full API stop/rebuild/restart, verify `/api/providers/status` reports `configuredFeed: "sip"`, then verify live assessment reports `configuredFeed: "sip"` and observed 1M/5M feeds of `sip`. If configuredFeed is still IEX, inspect `appsettings.Development.json`, `MarketData__Alpaca__Feed`, Visual Studio launch environment, and the actual running API/output directory. If SIP is configured but the observed feed is IEX, capture the sanitized response; do not merge feed histories.
+- [ ] Compare MCC and Thinkorswim on the same symbol and completed 1M timestamp: close, Daily VWAP, ATR14, and normalized extension. Numerical parity is not yet proven.
+- [ ] Browser-check the prototype dock and five Main Chart metric cards at desktop/mobile widths.
+- [ ] Run the RTO boundary audit using observed `feed=sip`. The previous 38/40 evidence was IEX; October 14 13:30Z and October 21 13:30Z exact opens remain missing from that IEX response.
+- [ ] Confirm Alpaca SIP entitlement and actual boundary coverage. Configuration alone is not proof of entitlement or SIP data delivery.
+
 ## 2026-11-01 — Prototype header placement
 
 - [x] Move `#system-readiness` inside the same `.topbar-brand` container as the product title/tools, on the right side; keep `#marketSessionClock` above the readiness heading. Corrected escaped newline text in the markup. Production `frontend/index.html` remains untouched.
@@ -59,8 +79,8 @@ Do not rank by raw percentage change alone. Do not equate the highest 5M score w
   - Exact local capture procedure: `docs/Runtime-Acceptance-Runbook.md` §1B. The endpoint uses configured feed; verify response `feed=sip` to rule out fallback to stored IEX.
 - [ ] Confirm provider plan/feed entitlement and representative-symbol boundary coverage before treating any 20-session sample as qualified.
 - [x] Fixed xUnit2031 in `UsesJulyThird2028EarlyClose` using `Assert.Single(boundaries, predicate)`; keep the test enabled. Full build/test rerun remains pending.
-- [x] Updated prototype dock labels: BORING OVERNIGHT to the right of the switch and WORKSPACE beneath it, both vertical. Browser visual acceptance remains pending.
-- [x] Corrected MCC 1M extension source calculation to `Abs(close - session VWAP) / SMA(TrueRange, 14)` and updated the V2 fallback; added a regression test for supplied extension values.
+- [x] Updated prototype dock labels: INTRADAY MOMENTUM left of the toggle, BORING OVERNIGHT right of it, and WORKSPACE beneath the toggle. Browser visual acceptance remains pending.
+- [x] Corrected MCC 1M extension source calculation to `Abs(close - Daily VWAP) / SMA(TrueRange, 14)` and centralized the formula for live calculation/fallback; added formula and supplied-extension regression tests. Raw close, Daily VWAP, ATR14, and extension are now exposed in the prototype.
 - [ ] Validate corrected 1M extension against Thinkorswim on matched symbol/time/bar. Confirm Daily VWAP and bar timestamp parity before accepting numeric parity.
 - [ ] Connect source-validated catalyst status, daily SMA20/average volume, reconciled Schwab exclusions, and current authoritative 5M/1M evidence before allowing any Boring Overnight READY evaluation; unknown or stale inputs must fail closed.
 
