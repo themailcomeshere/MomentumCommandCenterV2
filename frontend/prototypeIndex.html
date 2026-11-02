@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261101-header-session-clock-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261102-main-chart-layout-v2" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Prototype-only layout. Production index.html and styles.css remain unchanged. */
         .prototype-page .prototype-dock {
@@ -626,7 +626,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Prototype UI · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261102-extension-feed-metrics-v1" id="mcc-static-0454-script"></script>\n
+    <script src="./app.js?v=20261102-main-chart-layout-v2" id="mcc-static-0454-script"></script>\n
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>
