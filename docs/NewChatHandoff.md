@@ -30,6 +30,7 @@
 - Therefore the independent SIP/alternative-provider comparison and account entitlement check are **NOT COMPLETED**. Data not found in sources. Do not mark either item done, do not infer that the account lacks SIP access, and do not fill either missing minute with a neighboring bar or another feed.
 - The environment available for this review cannot execute the user's localhost API with their private Alpaca credentials. The README explicitly describes the real-provider smoke test as a manual local operation; credentials must remain on the user's machine and must never be copied into Git/chat.
 - The existing boundary audit is useful: it distinguishes provider-response absence from store mismatch and correctly withholds rolling metrics when fewer than 20 exact pairs exist.
+- The capture endpoint uses the configured feed, not a request-body feed override. Current tracked config is IEX. The exact local SIP comparison procedure is now documented in `docs/Runtime-Acceptance-Runbook.md` section 1B: temporarily set `MarketData:Alpaca:Feed=sip`, restart, capture the same 20 pairs, verify the response's `feed` is actually `sip`, and compare all exact boundaries. If the provider returns no SIP bars, the endpoint may fall back to a single stored feed; a response reporting `feed=iex` is not SIP evidence.
 
 ## Boring Overnight — three remaining launch gates
 1. Compare the two exact RTO IEX gaps against SIP or a validated independent provider, using the same symbol, exact UTC boundaries, and separate feed-labelled results.
