@@ -1,3 +1,9 @@
+## Operator correction — 2026-11-03
+
+The 248 figure was a result count from a prior scan at a specific time, not a fixed target for this export or future exports. The current file contains 198 rows, and the user confirms all 198 rows imported and rendered. Do not describe the other 50 as missing from today's expected universe. Validate each export against its own row count and preserve the original snapshot.
+
+---
+
 # Overnight Scanner Full-Universe Review — 2026-11-03 (10:52 AM export)
 
 **Source:** `data/ScannerExports/2026-11-03-WatchListScanner_1052am.csv`  
