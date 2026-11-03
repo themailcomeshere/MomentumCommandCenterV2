@@ -1,3 +1,23 @@
+## 2026-11-03 follow-up — corrected Overnight process, 10:52 scanner export, exclusions and runtime evidence
+
+- [x] Reconciled the new master-branch procedure commit `c14380c867887f98331e382b7dc7049ac1b86894`: Overnight spans Day 1 after-hours plus Day 2 premarket; candidate review starts in the final 60 minutes BEFORE the Day 1 regular-session close. The mistaken 20:00 ET process start is withdrawn.
+- [x] Copied the current master source-of-truth procedure, decision data contract, provisional trade-readiness runbook, and Schwab exclusions documentation into `docs/project-control/` on this feature branch. Copied the canonical machine-readable exclusion list into `src/MomentumCommandCenterV2.Infrastructure/Resources/schwab-exclusions.txt`. This is a selective documentation/source sync, not a branch merge.
+- [x] Verified `MarketSessionClock` already derives the final-hour evaluation start from the exchange's actual regular close and the versioned calendar. It moves with early closes. Unit tests explicitly cover Nov 27, 2026 early close; visual browser acceptance remains pending.
+- [x] Parsed `2026-11-03-WatchListScanner_1052am.csv`: 198 data rows, 198 unique symbols, zero duplicates. The reported 248-row scanner output is still 50 rows larger than the file.
+- [x] Applied five historical gates to all 198 rows: 187 pass; 11 fail; 0 unknown. Failures: current ON >=3% (HLF, EVER, XHR, PHG, JAN, AHRT, ALSN); 5D ON <= 20D mean (CTRE, KVUE, POR); Above 20 SMA = 0 (DG).
+- [x] Cross-checked all 198 symbols against the canonical 55-symbol Schwab exclusion list: zero overlaps, including OSW/EVR/MHK.
+- [x] Fixed the feature branch's persisted exclusion JSON: seeded 55 canonical exclusions and preserved TEST, for 56 entries. Seed commit `2368ab989fe79fd991bf739835167eb956ed17f9` passed CI run [41694304187](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41694304187). Local API must be restarted and queried after pull; runtime count 56 is not yet user-confirmed.
+- [x] Inspected uploaded runtime artifacts. RKLX 1M/5M refresh returned one exact bar each and the store contains matching observations with zero missing/mismatched bars; the idempotency flag is false because this capture inserted a new observation, not because a previously persisted duplicate was mishandled.
+- [x] Runtime live assessments show SPY 1M uses ALPACA_WEBSOCKET_LATEST_BAR with 545 bars and a fresh 16:31Z source timestamp. RKLX (68 bars, 16:17Z), ASTX (117 bars, 16:24Z) and XRPN (53 bars, 16:28Z) use REST because their latest timestamps were stale at the 16:32Z assessment; bar count alone does not qualify for WebSocket latest-bar authority.
+- [x] RTO 20-session artifact confirms Alpaca IEX, 3,965 fetched bars, 37/40 exact boundaries. Missing exact next-session opens: Oct 14 (+4m), Oct 21 (+1m), Nov 3 (+1m). Keep the 20-session result incomplete; do not fill from nearest bars or label it SIP.
+- [x] Updated importer success feedback to report actual rendered scanner row count and actual Red Zone card count/symbols. Red Zone subtitle now clarifies imported preview is top four by raw Overnight Score, not a Boring Overnight rank. Code CI passed in run [41693652415](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41693652415).
+- [ ] Browser-verify import feedback, `tbody#scannerRows`, and actual Red Zone `#redZoneGrid`. `#mcc-static-0278-div` is only the static scanner-table wrapper; it is not the Red Zone element and is not expected to be replaced.
+- [ ] Re-export all 248 scanner rows; current 10:52 export still has 198 (50 missing).
+- [ ] Current price >$5, 20D average daily volume >=500K, catalysts, Daily charts, 5M Permission/structure, and 1M execution evidence are not in this CSV. No Boring Overnight READY/BUY decision is supported yet.
+- [ ] Thinkorswim cutoff test remains inconclusive: no bars were available at Arizona 15:54/15:55/15:56 for the supplied RTO/SPY chart views. Bubbles/arrows on other after-hours bars do not establish the exact cutoff bar or correct source study.
+- [ ] After pulling the exclusion seed, restart API and verify `GET /api/watchlists/exclusions` returns 56 entries (55 canonical + TEST).
+
+
 ## 2026-11-03 follow-up — CSV metrics and exclusion comparison
 
 - Canonical 55-symbol exclusion-list comparison across all 195 CSV tickers: **zero overlaps**. This is not proof of live Schwab tradability.
