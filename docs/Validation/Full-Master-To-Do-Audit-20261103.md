@@ -163,3 +163,11 @@ Detailed scanner report: [Overnight Scanner Full-Universe Review](Validation/Ove
 - [x] Extended the CSV importer to preserve ON win %, 20D average ON %, median ON %, 5D ON %, ON momentum, current ON %, and above-20-SMA in `overnightMetrics`; the existing reason column now displays a compact summary. Commit `649361834984292eab66fa577e960237d6ff1e7e`.
 - [x] Executed the importer-equivalent parsing logic against the actual CSV: header row 3, comma delimiter, 195 rows, 195 unique symbols, zero duplicates.
 - [ ] Browser upload/Red Zone rendering remains pending. Importer code commit `649361834984292eab66fa577e960237d6ff1e7e` passed build and 182/182 tests in Actions run 41679681456.
+
+
+## Latest code verification — 2026-11-03
+
+- [x] Exact-head code commit `7583f5233c7dbd5d937fd7504218dd0235dc4677` passed Release build and 182/182 tests in Actions run [41680258800](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41680258800).
+- [x] Updated `docs/Overnight-Scanner-Quick-Start.md` for final-hour evaluation and preservation of all seven Overnight metrics during CSV import.
+- [x] Updated `docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md` to document V14.5.2 candidate source and TOS validation gates.
+- [ ] Browser import/clock acceptance and Thinkorswim compile/parity remain open.
