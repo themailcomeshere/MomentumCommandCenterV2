@@ -147,3 +147,10 @@ The RTO audit checks 40 exact prior-close/next-open 1-minute timestamps across 2
 - Exact unrounded TOS values and historical ExtensionATR for the same MCC candle are unavailable.
 - Schwab app status, attached products, callback URL and credentials are not confirmed.
 - Current Alpaca subscription denied recent SIP requests; future entitlement changes may alter this.
+
+## 2026-11-03 — V14.5.1 Library source found and V14.5.2 rebased
+
+- [x] Project Library search found and full-file read `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` (1,260 lines, V14.5.1). The uploaded `CurrentStudy_CouldBeWrong.txt` is V14.5 (1,424 lines), not the same file; substantial differences exist in execution-window, reconstructed 5M, state and bubble logic.
+- [x] Replaced the initial V14.5.2 draft with a V14.5.2 derived from the actual V14.5.1 Library source: `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,298 lines). The uploaded V14.5 file remains unchanged.
+- [x] V14.5.2 adds 5M V4.1.7 Permission parity (5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= floor) while retaining the separate 1M VWAP execution gate; it also adds DST-aware 3:55 PM Arizona EOD mapping.
+- [ ] TOS compile and matched-bar parity remain mandatory; .NET CI does not compile ThinkScript.
