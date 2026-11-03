@@ -9,8 +9,8 @@
 # 2026-11-03 — latest project handoff (authoritative follow-up)
 
 **Active branch:** `feature/opportunity-quality-classification`  
-**Latest code commit:** `7583f5233c7dbd5d937fd7504218dd0235dc4677`  
-**Exact-head CI:** [41680258800](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41680258800) — Release build passed; 182/182 tests passed. ThinkScript and browser behavior are not covered by this CI run.
+**Latest validated source commit:** `d877cf90949ca5e480e45b5c242808ad8a770da5`  
+**CI:** [41680840299](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41680840299) — Release build passed; 182/182 tests passed. A later header-provenance-only commit `600415fce8b3d7d390e7cf7eebdf4053bfc508ff` was awaiting its own CI run. ThinkScript and browser behavior are not covered by .NET CI.
 
 ## Overnight process — corrected
 
@@ -35,7 +35,7 @@ Quick Start and parity references were also updated: `docs/Overnight-Scanner-Qui
 
 ## 1M ThinkScript source
 
-- Project Library search found the full `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` source (1,260 lines, V14.5.1). The uploaded `CurrentStudy_CouldBeWrong.txt` is V14.5 (1,424 lines), not the same source; substantial differences exist in execution-window, reconstructed 5M, state and bubble logic.
+- Project Library search found the full `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` source (1,260 lines, V14.5.1). The uploaded `CurrentStudy_CouldBeWrong.txt` is V14.5 (1,424 lines), not the same source; substantial differences exist in execution-window, reconstructed 5M, state and bubble logic. V14.5.2 is now derived from the actual Library V14.5.1 baseline.
 - Rebased `docs/Charts/1M/MainStudy_V14.5.2.txt` on the actual V14.5.1 Library source (1,298 lines); preserved the upload unchanged.
 - V14.5.2 matches 5M V4.1.7 Permission: 5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= minimum. The separate 1M VWAP execution gate remains intact.
 - V14.5.2 maps Arizona 3:55 PM to 18:55 EDT / 17:55 EST using the same US DST calendar logic as the 5M study.
