@@ -51,8 +51,9 @@ function renderMarketSessionCountdown(){
  if(remaining===0)void refreshMarketSessionClock();
  const formatCountdown=target=>{const seconds=Math.max(0,Math.ceil((target-Date.now())/1000));const d=Math.floor(seconds/86400),h=Math.floor((seconds%86400)/3600),m=Math.floor((seconds%3600)/60),s=seconds%60;return (d?d+"d ":"")+pad(h)+"h "+pad(m)+"m "+pad(s)+"s";};
  const evaluationLabel=$("overnightEvaluationLabel"),evaluationCountdown=$("overnightEvaluationCountdown"),buyCountdown=$("overnightBuyCountdown");
- if(evaluationLabel)evaluationLabel.textContent=overnightEvaluationOpen?"Overnight candidate evaluation · OPEN":"Overnight candidate evaluation begins in";
- if(evaluationCountdown)evaluationCountdown.textContent=overnightEvaluationTargetUtc===null?"DATA?":(overnightEvaluationOpen?"OPEN":formatCountdown(overnightEvaluationTargetUtc));
+ const now=Date.now(),evaluationWindowOpen=overnightEvaluationTargetUtc!==null&&overnightBuyDeadlineUtc!==null&&now>=overnightEvaluationTargetUtc&&now<overnightBuyDeadlineUtc;
+ if(evaluationLabel)evaluationLabel.textContent=evaluationWindowOpen?"Overnight candidate evaluation · OPEN":"Overnight candidate evaluation begins in";
+ if(evaluationCountdown)evaluationCountdown.textContent=overnightEvaluationTargetUtc===null?"DATA?":(evaluationWindowOpen?"OPEN":formatCountdown(overnightEvaluationTargetUtc));
  if(buyCountdown)buyCountdown.textContent=overnightBuyDeadlineUtc===null?"DATA?":formatCountdown(overnightBuyDeadlineUtc);
 }
 void refreshMarketSessionClock();
