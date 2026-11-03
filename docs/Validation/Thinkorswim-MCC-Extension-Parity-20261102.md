@@ -188,3 +188,17 @@ Keep the V14.5.1 defaults for all non-time inputs:
 - When US daylight time resumes, the 1M override must change to `eodHour=18`, `eodMinute=55`. This is a temporary manual setting, not a substitute for a shared DST-aware code fix.
 
 **Until the 1M parity revision is compiled and validated:** treat the normal 5M V4.1.7 Permission as authoritative. Require its Permission=YES and its own price-above-Daily-VWAP condition before acting on a 1M READY. A 1M READY must never override 5M Permission=NO. Do not change RSI, EMA, RVOL, execution-window, continuation, or extension thresholds to compensate for the two source-level defects.
+
+
+## 2026-11-03 — V14.5.2 candidate source created
+
+The user uploaded `docs/Charts/1M/CurrentStudy_CouldBeWrong.txt`. It is 1,424 lines and identifies itself as V14.5. It is a full-looking event-armed execution study, but the filename and user caveat mean it is not proof of the exact installed study or the V14.5.1 Library source. The uploaded source is preserved unchanged.
+
+A separate proposed revision now exists at `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,456 lines). It makes two targeted corrections only:
+
+1. **Reconstructed 5M Permission parity:** match normal 5M V4.1.7 exactly on the permission conditions: 5M close above Daily VWAP, 5M close above EMA9, EMA9 >= EMA20, and 5M RSI >= the configured minimum. The independent 1M price-above-Daily-VWAP execution gate remains intact.
+2. **Arizona EOD mapping:** replace the fixed 15:55 Eastern call with date-aware selection of 18:55 Eastern during US daylight time and 17:55 Eastern during standard time, corresponding to 3:55 PM Arizona. The DST calendar calculation mirrors the 5M V4.1.7 source.
+
+The 5M V4.1.7 reference is `docs/Charts/5M/MainStudy.txt`, where `bullishPermissionRaw` is defined as `price > dailyVWAP`, `price > ema9`, `ema9 >= ema20`, and `rsi >= minimumPermissionRSI`.
+
+**Disposition:** V14.5.2 is a candidate source, not TOS-certified. The GitHub .NET build/test run does not compile ThinkScript. Before installation, compile V14.5.2 and V4.1.7 in Thinkorswim and compare matched completed 5M bars. Test Arizona 15:54 / 15:55 / 15:56 on dates in both DST regimes, record the selected Eastern cutoff, and confirm the 1M execution gate remains independent. Do not overwrite the currently installed study until that acceptance passes.
