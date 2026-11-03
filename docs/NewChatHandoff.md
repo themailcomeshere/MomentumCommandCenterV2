@@ -1,3 +1,64 @@
+## 2026-11-03 — full Master To-Do audit, EOD source correction, shortlist and prototype overflow
+
+**Branch:** `feature/opportunity-quality-classification`  
+**Latest code head before documentation updates:** `89b9fe73408cee06f0ddfedc1486b7038d335a2a`  
+**Exact-head CI:** [Actions run 41575143773](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41575143773) — restore, Release build and tests all succeeded.  
+**Full audit:** [Full Master To-Do Audit — 2026-11-03](Validation/Full-Master-To-Do-Audit-20261103.md).
+
+### Confirmed user runtime results
+- User ran `Get-Latest-And-Test.ps1` at `0917a90...`: Release build passed, 179 tests passed, 0 failed, 0 skipped.
+- User imported the committed `data/ScannerExports/2026-11-02-OvernightWatchListScanner.csv`: 50 rows imported; Red Zone updated; MHK, OSW, EVR and EHC populated.
+- User accepted title/clock/transport-label positioning and visual polish.
+- User has not yet pulled the latest prototype overflow fix.
+
+### Prototype horizontal overflow fix
+- Actual source: `frontend/prototypeIndex.html`, not production `frontend/index.html`.
+- Root cause: prototype topbar had `margin-left:104px` without reducing its width.
+- Fixed desktop width to `calc(100% - 104px)`; mobile width to `calc(100% - 78px)`.
+- Commit: `3aac28cf638228fd0901251e59969d08af248e17`.
+- User must pull and hard-refresh; confirm scrollbar gone at desktop and mobile.
+
+### 1M/5M EOD correction — source identity caveat
+- Repository 5M `docs/Charts/5M/MainStudy.txt` is normal V4.1.7. It uses the shared DST calendar logic and now has `eodTimeEasternStandard=1755`, `eodTimeEasternDaylight=1855`.
+- Repository 1M `docs/Charts/1M/MainStudy.txt` identifies itself as V14.4.11 (time-gated Boring Overnight decision), not the full 1M V14.5.1 Library baseline. Its standard-time constant was also changed to 1755, but **do not install V14.4.11 as the full V14.5.1 replacement**.
+- The full `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` source was not found in repo tree or Project file search. User must export/upload the full V14.5.1 source before it can be patched.
+- Correct 3:55 PM Arizona mapping: 18:55 EDT in US daylight time; 17:55 EST in US standard time.
+- CI does not compile ThinkScript. TOS compile and matched-bar diagnostics remain mandatory.
+- Test 1M at Arizona 15:54/15:55/15:56; 5M at bar-open stamps 15:50/15:55/16:00, recording interval boundaries, DST flag, selected ET cutoff, and EOD state. Repeat in both DST and standard-time dates. Disable studies one at a time to identify screenshot bubble sources.
+
+### Overnight shortlist disposition
+- OSW: Nov 2 close $30.22; external 20D avg volume ~806,703; 5M WAIT / Permission NO / BEARISH; screenshot close $30.02, VWAP $30.37, RSI 29.5, RVOL 16.52, extension 3.35 ATR; Oct 28 earnings catalyst; WATCH/REJECT for boring overnight.
+- EVR: Nov 2 close $303.26; external 20D avg volume ~641,313; 5M WAIT / Permission NO / BEARISH; screenshot close $303.26, VWAP $308.69, RSI 32.8, RVOL 21.95, extension 2.98 ATR; Oct 28 earnings catalyst; WATCH/REJECT.
+- MHK: Nov 3 reported price $150.01; external 20D avg volume ~1,336,567; 5M WAIT / Permission NO / NEUTRAL; screenshot close $148.60, VWAP $148.59, RSI 51, extension 0.25 ATR; Oct 29 earnings/weak demand outlook and new buyback; current ON 3.13%, 5D mean 2.49% vs 20D 0.31%; WATCH only.
+- Price and 20D average volume gates cross-check as PASS for all three; external statistics are not MCC provider data.
+- Exclusion status: Data not found in sources. No current Daily/5M/1M chart set was supplied for Nov 3. No candidate qualifies for BUY/HOLD; zero position is valid.
+- Full CSV remains missing: committed export has 50 rows while screenshot reported 248. User should export the full 248-row list and commit/upload it to test full parser/import.
+
+### Red Zone / Boring Overnight implementation truth
+- Existing code includes Boring Overnight hard-gate evaluator, explicit close/open history calculator, history evaluation that nulls caller-entered history when incomplete, candidate snapshots, local exclusion CRUD, and quantile sell-limit calculator requiring >=20 complete windows and ATR parity MATCH.
+- Existing `OpportunityQualityAssessor` is a diagnostic classifier, not a versioned automatic top-four ranker.
+- Still missing for actionable Boring Overnight READY: daily price/SMA20/20D volume provider, complete exclusion reconciliation, validated catalyst classification/coverage, current authoritative 5M + 1M source evidence, immutable full-universe candidate snapshots and full GTC_EXT outcomes.
+- Calculated Limit Sell remains DATA?/not calculated; do not use +0.5% heuristic as target.
+- Alpaca news client returns unclassified headlines; no catalyst CLEAR should be asserted from caller input.
+
+### TOS scan automation impediment
+Public Schwab Trader API documentation describes a separate developer product for market data/account/trading, but no public endpoint for retrieving custom Thinkorswim saved-scan results/custom columns or a TOS scanner webhook was found. Do not scrape the TOS desktop. Recommended route: local watched-folder CSV adapter (hash/idempotency, archive/reject folders, provenance, parse diagnostics, audit status) with manual upload fallback. This adapter is not yet implemented. Official references: https://developer.schwab.com/products/trader-api--individual and https://developer.schwab.com/user-guides.
+
+### Alpaca collector status
+- `AlpacaScannerDiscoverySource` calls movers endpoint `v1beta1/screener/stocks/movers?top=50`, so it is bounded top gainers/losers, not full-market breadth or TOS scan.
+- Polling worker interval is 30–3600 seconds; events persist provider-neutrally.
+- User identified local `secrets.json` as feed override. SIP was selected but recent SIP request returned HTTP 403 entitlement denial; IEX was restored and returned validated data (62 bars).
+- SIP cannot be validated until Alpaca grants entitlement. Regular-session discovery freshness and WebSocket delivery/recovery still require runtime captures.
+
+### What user should do next
+1. Pull latest branch and hard-refresh prototype; confirm horizontal scrollbar is gone.
+2. Export/upload the full 1M V14.5.1 ThinkScript source (no credentials).
+3. Export/commit the complete 248-row TOS Overnight CSV.
+4. Compile 5M V4.1.7 and full 1M V14.5.1 in TOS; run the DST/standard before-at-after diagnostic matrix and provide output.
+5. During regular market hours, capture discovery/provider and WebSocket status before/after 5–10 minutes for SPY/RKLX/ASTX/XRPN.
+6. Provide current Daily/5M/1M charts for OSW/EVR/MHK if they remain under consideration.
+7. Keep Boring Overnight manual-only until source-backed catalyst, exclusion, daily liquidity and 20-session history gates pass.
+
 ## 2026-11-03 — Scanner CSV import retry
 
 The synced export is now present at `data/ScannerExports/2026-11-02-OvernightWatchListScanner.csv`. It contains two metadata preamble lines (`Watchlist Scanner`, `Results`) followed by the actual comma-delimited header on line 3. The importer previously assumed line 1 was the header, which caused the reported missing Symbol/Ticker error.
