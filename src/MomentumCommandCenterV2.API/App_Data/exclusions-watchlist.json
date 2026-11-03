@@ -1,5 +1,280 @@
 [
   {
+    "Symbol": "AMHpG",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "ANL",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "ATHpA",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "AXIAY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "BACpQ",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "BHRpB",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "BRNX",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "BUSEP",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "BZUN",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "CAPMF",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "DAO",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "DBGI",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "DKI",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "FITBpI",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "FMX",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "FNMAS",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "FOCL",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "FSUGY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "GGAL",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "HELP",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "HENKY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "KCDMY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "KEYpI",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "KOF",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "KREFpA",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "METCZ",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "MFApC",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "MTBpJ",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "MTBpK",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "NAMI",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "NEEpT",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "NEEpW",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "OAKpA",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "PCLA",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "PPERY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "PPRUY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "PSApN",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "PSNYW",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "RFpF",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "SHTDY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "SMMYY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "SPCB",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "SSM",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "STFS",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "STTpG",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "SWVL",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "TJGC",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "TRTXpC",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "TRYIY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "TYOYY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "VCRE",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "WBKCY",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "WYHG",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "YDES",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
+    "Symbol": "YJ",
+    "Reason": "Schwab exclusion list — user-provided source of truth dated 2026-10-25",
+    "UpdatedAtUtc": "2026-11-03T18:22:00+00:00"
+  },
+  {
     "Symbol": "TEST",
     "Reason": "it is a test",
     "UpdatedAtUtc": "2026-10-27T16:36:01.4257973+00:00"
