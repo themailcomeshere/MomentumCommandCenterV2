@@ -53,7 +53,7 @@ A subscription acknowledgement is not delivery. Do not lower the 50-completed-ba
 - Browser console error on startup: `Cannot access 'redZoneAssessmentRefreshers' before initialization`. Root cause was a temporal-dead-zone ordering bug: restored/imported scanner rendering called `renderMorningReport()` before the later `let redZoneAssessmentRefreshers=[]` declaration executed.
 - Fixed in `frontend/app.js` by moving Red Zone state declarations immediately after `scannerData` initialization, before restored-import and startup refresh paths. Current declaration line 111; first startup render call line 148. Commit: `4906d4c1119bedec6ec83f67cd21ff19d2c409fa`.
 - Next: pull latest, hard-refresh, confirm no console exception, confirm Red Zone top-four cards. CI/browser acceptance for this newest fix still needs checking.
-- User supplied only a directory listing for `artifacts/runtime-validation/20261103T190356Z`, not the JSON contents. Request ZIP or the six files. Inspect `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json` first; corroborate with provider-refresh and stored-bars. No source provenance conclusions until those values are inspected.
+- User uploaded `20261103T190356Z.zip`; its six expected JSON files are present. File inventory is confirmed, but JSON contents remain unanalyzed. Inspect `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json` first; corroborate with provider-refresh and stored-bars. No source provenance conclusions until those values are inspected.
 
 ## Latest repository checkpoint — 2026-11-03
 
