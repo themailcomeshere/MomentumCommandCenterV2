@@ -1,3 +1,12 @@
+## Latest operator report — November 3, 2026, 3:20 PM Arizona
+
+- API health passed: status OK, decision-support-only, order submission not implemented.
+- Exclusions passed: 56 entries; among OSW/EVR/MHK/TEST only TEST returned. This matches canonical 55 plus TEST.
+- Browser console error on startup: `Cannot access 'redZoneAssessmentRefreshers' before initialization`. Root cause was a temporal-dead-zone ordering bug: restored/imported scanner rendering called `renderMorningReport()` before the later `let redZoneAssessmentRefreshers=[]` declaration executed.
+- Fixed in `frontend/app.js` by moving Red Zone state declarations immediately after `scannerData` initialization, before restored-import and startup refresh paths. Current declaration line 111; first startup render call line 148. Commit: `4906d4c1119bedec6ec83f67cd21ff19d2c409fa`.
+- Next: pull latest, hard-refresh, confirm no console exception, confirm Red Zone top-four cards. CI/browser acceptance for this newest fix still needs checking.
+- User supplied only a directory listing for `artifacts/runtime-validation/20261103T190356Z`, not the JSON contents. Request ZIP or the six files. Inspect `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json` first; corroborate with provider-refresh and stored-bars. No source provenance conclusions until those values are inspected.
+
 ## Latest repository checkpoint — 2026-11-03
 
 - Feature branch head: `d94d27a6a63876206b8bbc66dffa8214d13cd5db`.
