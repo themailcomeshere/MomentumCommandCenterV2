@@ -374,7 +374,28 @@ $("scannerFile").addEventListener("change",event=>{
    if(candidateSymbolIndex>=0){headerIndex=i;delimiter=candidateDelimiter;headers=candidateHeaders;symbolIndex=candidateSymbolIndex;break;}
   }
   if(headerIndex<0){const detected=lines.slice(0,10).map(line=>parseCsvLine(line,detectCsvDelimiter(line)).map(normalizeCsvHeader).join(", ")).filter(Boolean).join(" | ");$("scannerSource").textContent="Import rejected: Symbol/Ticker header row not found in first 25 lines. Detected rows: "+detected;return;}
-  const imported=lines.slice(headerIndex+1).map(line=>{const values=parseCsvLine(line,delimiter),field=(...names)=>{const i=names.map(name=>headers.indexOf(name)).find(index=>index>=0);return i===undefined?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score","overnightscore")||"—",status:field("status")||"IMPORTED",extension:field("extension","ext")||"DATA?",freshness:field("freshness","data_as_of","dataasof")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);
+  const imported=lines.slice(headerIndex+1).map(line=>{
+   const values=parseCsvLine(line,delimiter),field=(...names)=>{const i=names.map(name=>headers.indexOf(name)).find(index=>index>=0);return i===undefined?"":(values[i]||"").trim();};
+   const overnightMetrics={
+    onWin:field("onwin")||"DATA?",
+    avgOn:field("avgon")||"DATA?",
+    medianOn:field("medianon")||"DATA?",
+    fiveDayOn:field("5don")||"DATA?",
+    onMomentum:field("onmomentum")||"DATA?",
+    currentOn:field("currenton")||"DATA?",
+    above20Sma:field("above20sma")||"DATA?"
+   };
+   const metricSummary="ON win "+overnightMetrics.onWin+" · 20D avg "+overnightMetrics.avgOn+" · median "+overnightMetrics.medianOn+" · 5D "+overnightMetrics.fiveDayOn+" · momentum "+overnightMetrics.onMomentum+" · current ON "+overnightMetrics.currentOn+" · above 20 SMA "+overnightMetrics.above20Sma;
+   return {
+    symbol:(values[symbolIndex]||"").trim().toUpperCase(),
+    score:field("score","overnightscore")||"—",
+    status:field("status")||"IMPORTED",
+    extension:field("extension","ext")||"DATA?",
+    freshness:field("freshness","data_as_of","dataasof")||"UNKNOWN",
+    reason:field("reason")||metricSummary,
+    overnightMetrics
+   };
+  }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
  };reader.readAsText(file);
