@@ -186,3 +186,10 @@ Detailed scanner report: [Overnight Scanner Full-Universe Review](Validation/Ove
 - [x] Added explicit V14.5.1 source provenance and scope comments to the V14.5.2 header in commit `600415fce8b3d7d390e7cf7eebdf4053bfc508ff`; exact-head CI [41681045730](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41681045730) passed.
 - [ ] TOS compile and matched-bar validation remain mandatory before installing V14.5.2.
 
+## 2026-11-03 — production and prototype clock UI verified
+
+- [x] Added evaluation-start and buy-deadline countdown rows to both `frontend/index.html` (production) and `frontend/prototypeIndex.html`, with matching styles in `frontend/styles.css`.
+- [x] Countdown switches to `OPEN` at the exact evaluation-window start using client epoch time; API also reports `overnightEvaluationOpen`.
+- [x] Exact-head CI for production markup commit `95c95a5217ce9b3fc168e7f3e94532fd43e82923` passed in run 41681383369; CSS commit `61d08a86e969186a6d4e9468714c0f7120531699` passed in [run 41681395871](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41681395871).
+- [ ] Browser visual acceptance remains pending.
+
