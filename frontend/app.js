@@ -590,7 +590,12 @@ function renderMorningReport(){
  const state=readRedZoneState();
  const bySymbol=new Map(sourceRows.filter(x=>x&&x.symbol).map(x=>[String(x.symbol).toUpperCase(),x]));
  const pinnedRows=state.pinned.map(symbol=>bySymbol.get(symbol)||({symbol,score:"DATA?",status:"MANUAL — REVIEW",extension:"DATA?",freshness:"UNKNOWN",reason:"Manually pinned candidate. Source data, 5M Permission, and 1M execution are not established."}));
- const sortedRows=sourceRows.slice().sort((a,b)=>{
+ const importedMetric=value=>{const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const n=Number(raw.replace("%","").trim());return Number.isFinite(n)?n:null;};
+ const rankedSourceRows=group==="imported"?sourceRows.filter(item=>{
+  const m=item.overnightMetrics||{},onWin=importedMetric(m.onWin),avgOn=importedMetric(m.avgOn),fiveDay=importedMetric(m.fiveDayOn),currentOn=importedMetric(m.currentOn),above20=importedMetric(m.above20Sma);
+  return onWin!==null&&onWin>=60&&avgOn!==null&&avgOn>=0.10&&fiveDay!==null&&fiveDay>avgOn&&currentOn!==null&&currentOn<3&&above20===1;
+ }):sourceRows;
+ const sortedRows=rankedSourceRows.slice().sort((a,b)=>{
   const sa=Number(a.score),sb=Number(b.score);
   if(Number.isFinite(sa)!==Number.isFinite(sb))return Number.isFinite(sb)-Number.isFinite(sa);
   const av=Number.isFinite(sa)?(group==="live"?Math.abs(sa):sa):-Infinity;
@@ -610,7 +615,7 @@ function renderMorningReport(){
  previousRedZoneSymbols=currentSymbols;suppressNextRedZoneAlert=false;
  $("morningTopCount").textContent=String(ranked.length);
  const importedCount=group==="imported"?sourceRows.length:0;
- $("reportSubtitle").textContent=(group==="imported"?"Imported scanner preview · "+importedCount+" rows · top four by Overnight Score only · not Boring Overnight qualification":"Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp");
+ $("reportSubtitle").textContent=(group==="imported"?"Imported scanner preview · top four by Overnight Score among historical-gate passes · price, 20D volume, catalyst and chart gates still DATA?":"Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp");
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
   const card=document.createElement("article");card.className="redzone-card";
   const top=document.createElement("div");top.className="redzone-card-top";
