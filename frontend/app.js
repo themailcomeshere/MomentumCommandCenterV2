@@ -88,9 +88,6 @@ $("closeQuickStart")?.addEventListener("click",()=>quickStartDialog?.close());
 
 
 const scannerData={
-/// MODULE STATE: Declare Red Zone state before startup refreshes or restored imports can render it.
-let redZoneAssessmentRefreshers=[];
-let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
  momentum:[
   {symbol:"XRPN",score:86,status:"WATCH",reason:"Participation and setup require chart confirmation."},
   {symbol:"MNSB",score:78,status:"WATCH",reason:"Developing momentum; no active execution event in this demo."},
@@ -109,6 +106,10 @@ let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=nu
   {symbol:"XRPN",score:68,status:"WATCH",reason:"Discovery only; catalyst and tradability are unverified."}
  ]
 };
+
+/// MODULE STATE: Declare Red Zone state before startup refreshes or restored imports can render it.
+let redZoneAssessmentRefreshers=[];
+let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
 
 let restoredScannerImport=null;
 try{
