@@ -81,7 +81,7 @@ public static class MarketSessionClock
             throw new InvalidOperationException("Could not find the next supported US-equities trading session.");
 
         var regularClose = UsEquitiesSessionCalendar.GetRegularClose(nextSession);
-        var evaluationStart = regularClose - OvernightEvaluationLead;
+        var evaluationStart = regularClose.AddMinutes(-OvernightEvaluationLead.TotalMinutes);
         var evaluationOpen = nextSession == today &&
             localTime >= evaluationStart &&
             localTime < regularClose;
