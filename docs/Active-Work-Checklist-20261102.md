@@ -1,3 +1,26 @@
+## 2026-11-03 — Overnight timing / scanner / 1M source follow-up
+
+- [x] Overnight start corrected: final 60 minutes before regular close; includes Buy Day after-hours + Sell Day premarket.
+- [x] API clock calculates final-hour evaluation start and regular-close buy deadline with early-close handling.
+- [x] Prototype header includes evaluation and buy countdowns; production layout unchanged.
+- [x] Clock tests pass in run 41679267305 (182/182).
+- [x] Created separate 1M V14.5.2 candidate with 5M V4.1.7 Permission parity and DST-aware 3:55 PM Arizona EOD.
+- [ ] TOS compile and matched-bar EOD/Permission parity for V14.5.2.
+- [x] Parsed November 3 scanner export: 195 unique rows; 107 pass available numeric gates, 81 incomplete, 7 fail.
+- [ ] Obtain actual 248-row export; 53 rows missing from current file.
+- [ ] Browser-test 195-row import and Red Zone update.
+- [x] Canonical 55-symbol exclusion source located; OSW/EVR/MHK absent from canonical list.
+- [ ] Verify live Schwab tradability and actual feature runtime exclusion file; do not assume local list is seeded.
+- [ ] Obtain current price, 20D volume, catalyst and Daily/5M/1M chart evidence for the full-universe shortlist.
+- [ ] Review market-hours JSON artifacts and RKLX idempotency; preserve branch SHA and exact test window.
+- [ ] Resolve three missing exact RTO next-session opens (Oct 14, Oct 21, Nov 3) from source/feed evidence; no nearest-bar imputation.
+- [ ] Selectively reconcile master and feature; branch is diverged and must not be wholesale merged.
+
+Detailed scanner report: [Overnight Scanner Full-Universe Review](Validation/Overnight-Scanner-Full-Universe-20261103.md).
+
+
+---
+
 ## 2026-11-03 — Scanner CSV import retry
 
 The synced export is now present at `data/ScannerExports/2026-11-02-OvernightWatchListScanner.csv`. It contains two metadata preamble lines (`Watchlist Scanner`, `Results`) followed by the actual comma-delimited header on line 3. The importer previously assumed line 1 was the header, which caused the reported missing Symbol/Ticker error.
