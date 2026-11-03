@@ -21,7 +21,7 @@
 - The fixed 248-row target is withdrawn. Row counts vary by scan snapshot; validate complete import of the current file, not a stale count.
 - 0 READY is expected because current price, 20D average volume, catalyst clearance, and current chart gates are not evidenced by the CSV.
 - The qualification panel now has a visible Unknown historical metrics summary. Browser confirmation is still required.
-- Red Zone currently reports 0/4 cards despite the historical panel reporting 187 PASS. This is an open defect/acceptance discrepancy. After pulling, select Imported CSV, confirm the import persisted, check that the Red Zone filter selects the top four among historical passes, and verify manual pins/dismissals are not hiding them.
+- Red Zone previously reported 0/4 despite 187 historical PASS. The import-selection ordering defect is fixed in `9777b774de414c4af39ad7ee82b18990b7924972`. Re-running the current committed CSV through the importer-equivalent parser yields 187 eligible rows and expected top four by Overnight Score: **LXU 68.60, OSW 67.48, MHK 66.79, PUK 65.13**. Browser confirmation remains open; manual pins/dismissals can change the visible four.
 
 ## Exclusion-list interpretation
 - Feature runtime list seed is 55 canonical exclusions plus preserved TEST = 56.
