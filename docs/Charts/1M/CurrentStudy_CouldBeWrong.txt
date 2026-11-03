@@ -1,0 +1,1423 @@
+#
+# ============================================================
+# Momentum Command
+# Center V3.2
+# 1M Command Center
+# — Extended Hours
+# V14.5 — Event-armed execution opportunity
+# Fresh-trigger memory + candidate re-arm + finite execution window
+#
+# PURPOSE
+#   1M = EXECUTION / CONFIRMATION / TIMING /
+# SHORT-TERM EXIT
+#
+#   5M = STRUCTURE / PERMISSION / RUNNER / SWING
+# ZONE
+#
+# IMPORTANT
+# ARCHITECTURE
+#   The 1M chart is allowed to reference 5M
+# secondary data.
+#   The 5M chart must never attempt to reference
+# 1M data.
+#
+#   EXECUTION READY is intentionally a
+# short-lived window.
+#   It is NOT a persistent bullish state.
+#
+# TOS SECONDARY-AGGREGATION SAFETY
+#   This script uses 5M secondary data for the
+# reconstructed
+#   5M layer. It does not mix 5M and DAILY
+# secondary periods
+#   inside the same variable. The 1M layer uses the chart's
+#   Daily VWAP independently for
+# execution/extension checks.
+#
+# ============================================================
+#
+# ============================================================
+# INPUTS
+#
+# ============================================================
+input showLabels = yes;
+input showStateBubbles = yes;
+input showDebugLabels = no;
+input rsiLength = 14;
+input rsiBull = 50;
+input rsiStrong = 55;
+input rsiWeak = 45;
+input fastEMA = 9;
+input slowEMA = 20;
+input fiveMinuteTrendSMA = 50;
+input macdFast = 12;
+input macdSlow = 26;
+input macdLength = 9;
+input rvolLength = 50;
+input minimumPermissionRSI = 50;
+input minimumSetupRVOL = 1.00;
+input permissionFailureBars = 2;
+input majorFailureBars = 2;
+input swingWaningBars = 2;
+input breakoutLength = 10;
+# Number of 1M bars
+# for the execution window.
+# 2 = trigger bar +
+# one additional 1M bar.
+input executionWindowBars = 2;
+input candidateRearmBars = 2;
+# Number of 1M bars a fresh trigger remains eligible while the
+# execution candidate environment catches up.
+# 3 = trigger bar + two additional 1M bars.
+input freshTriggerLookbackBars = 3;
+# Continuation
+# execution: allows a fresh 1M re-entry after a
+# short
+# pullback/rotation inside an intact 5M runner.
+input continuationLookbackBars = 4;
+input continuationPauseBarsRequired = 2;
+input continuationMinimumRSI = 50;
+input continuationCooldownBars = 3;
+input minimumExecutionRSI = 50;
+input minimumExecutionRVOL = 1.00;
+input requireMomentumAcceleration = yes;
+input extensionWarningATR = 1.50;
+input extensionDangerATR = 2.00;
+input eodHour = 15;
+input eodMinute = 55;
+#
+# ============================================================
+# SESSION
+#
+# ============================================================
+def beforeEOD =
+SecondsTillTime(eodHour * 100 + eodMinute) > 0;
+def afterEOD =
+SecondsFromTime(eodHour * 100 + eodMinute) >= 0;
+def regularSession =
+GetTime() >= RegularTradingStart(GetYYYYMMDD()) and
+GetTime() < RegularTradingEnd(GetYYYYMMDD());
+def extendedSession =
+!regularSession;
+def eodExitWindow =
+afterEOD;
+#
+# ============================================================
+# 1M PRICE / INDICATORS
+#
+# ============================================================
+def price = close;
+def ema9 = ExpAverage(price, fastEMA);
+def ema20 = ExpAverage(price, slowEMA);
+def ema9Rising = ema9 > ema9[1];
+def ema20Rising = ema20 > ema20[1];
+def ema9Falling = ema9 < ema9[1];
+def ema20Falling = ema20 < ema20[1];
+def dailyVWAP =
+vwap(period = AggregationPeriod.DAY);
+def priceAboveVWAP = price > dailyVWAP;
+def priceBelowVWAP = price < dailyVWAP;
+def rsi =
+RSI(
+price = price,
+length = rsiLength
+);
+def rsiRising = rsi > rsi[1];
+def rsiFalling = rsi < rsi[1];
+def rsiRecovering =
+rsi > rsi[1] and
+rsi[1] <= rsi[2];
+def rsiWeakening =
+rsi < rsi[1] and
+rsi[1] <= rsi[2];
+def macdValue =
+ExpAverage(price, macdFast) -
+ExpAverage(price, macdSlow);
+def macdSignal =
+ExpAverage(macdValue, macdLength);
+def macdHist =
+macdValue - macdSignal;
+def macdBullish =
+macdValue > macdSignal;
+def macdBearish =
+macdValue < macdSignal;
+def macdRising =
+macdHist > macdHist[1];
+def macdFalling =
+macdHist < macdHist[1];
+def macdRecovering =
+macdHist > macdHist[1] and
+macdHist[1] <= macdHist[2];
+def averageVolume =
+Average(volume, rvolLength);
+def rvol =
+if averageVolume > 0
+then volume / averageVolume
+else 0;
+def rvolHealthy =
+rvol >= 1.00;
+def rvolStrong =
+rvol >= 1.50;
+def atr =
+Average(
+TrueRange(
+high,
+close,
+low
+),
+14
+);
+def extensionATR =
+if atr > 0
+then AbsValue(price - dailyVWAP) / atr
+else 0;
+def extensionWarning =
+extensionATR >= extensionWarningATR;
+def extensionDanger =
+extensionATR >= extensionDangerATR;
+def bullishExtensionDanger =
+price > dailyVWAP and
+extensionDanger;
+#
+# ============================================================
+# 5M SECONDARY DATA
+#
+# 1M primary -> 5M secondary is valid in thinkScript.
+#
+# ============================================================
+def fiveClose =
+close(period = AggregationPeriod.FIVE_MIN);
+def fiveHigh =
+high(period = AggregationPeriod.FIVE_MIN);
+def fiveLow =
+low(period = AggregationPeriod.FIVE_MIN);
+def fiveOpen =
+open(period = AggregationPeriod.FIVE_MIN);
+def fiveVolume =
+volume(period = AggregationPeriod.FIVE_MIN);
+def fiveEMA9 =
+ExpAverage(fiveClose, fastEMA);
+def fiveEMA20 =
+ExpAverage(fiveClose, slowEMA);
+def fiveEMA9Rising =
+fiveEMA9 > fiveEMA9[1];
+def fiveSMA50 =
+Average(fiveClose, fiveMinuteTrendSMA);
+# The reconstructed 5M layer uses 5M price/EMA structure.
+# Daily VWAP is handled separately by the 1M execution layer
+# to avoid mixing two different secondary aggregations in one variable.
+def fiveBullishEMAStack =
+fiveClose > fiveEMA9 and
+fiveEMA9 > fiveEMA20 and
+fiveEMA20 > fiveSMA50;
+def fiveBullishCore =
+fiveEMA9 > fiveEMA20 and
+fiveClose > fiveEMA9;
+def fiveBearishStack =
+fiveClose < fiveEMA9 and
+fiveEMA9 < fiveEMA20 and
+fiveEMA20 < fiveSMA50;
+def fiveBearishCore =
+fiveEMA9 < fiveEMA20 and
+fiveClose < fiveEMA9;
+#
+# ============================================================
+# 5M RSI / MACD / RVOL
+#
+# ============================================================
+def fiveRSI =
+RSI(
+price = fiveClose,
+length = rsiLength
+);
+def fiveRSIRising =
+fiveRSI > fiveRSI[1];
+def fiveRSIFalling =
+fiveRSI < fiveRSI[1];
+def fiveRSIWeakening =
+fiveRSI < fiveRSI[1] and
+fiveRSI[1] <= fiveRSI[2];
+def fiveRSIRecovering =
+fiveRSI > fiveRSI[1] and
+fiveRSI[1] <= fiveRSI[2];
+def fiveMACDValue =
+ExpAverage(fiveClose, macdFast) -
+ExpAverage(fiveClose, macdSlow);
+def fiveMACDSignal =
+ExpAverage(fiveMACDValue, macdLength);
+def fiveMACDHist =
+fiveMACDValue - fiveMACDSignal;
+def fiveMACDBullish =
+fiveMACDValue > fiveMACDSignal;
+def fiveMACDBearish =
+fiveMACDValue < fiveMACDSignal;
+def fiveMACDRising =
+fiveMACDHist > fiveMACDHist[1];
+def fiveMACDFalling =
+fiveMACDHist < fiveMACDHist[1];
+def fiveMACDWeakening =
+fiveMACDHist < fiveMACDHist[1] and
+fiveMACDHist[1] < fiveMACDHist[2];
+def fiveMACDRecovering =
+fiveMACDHist > fiveMACDHist[1] and
+fiveMACDHist[1] <= fiveMACDHist[2];
+def fiveAverageVolume =
+Average(fiveVolume, rvolLength);
+def fiveRVOL =
+if fiveAverageVolume > 0
+then fiveVolume / fiveAverageVolume
+else 0;
+def fiveRVOLHealthy =
+fiveRVOL >= 1.00;
+def fiveRVOLStrong =
+fiveRVOL >= 1.50;
+#
+# ============================================================
+# 5M SETUP / BREAKOUT / RECLAIM / RETEST
+#
+# ============================================================
+def fivePriorHigh =
+Highest(fiveHigh[1], breakoutLength);
+def fivePriorLow =
+Lowest(fiveLow[1], breakoutLength);
+def fiveBreakout =
+fiveClose > fivePriorHigh;
+def fiveEMA9Reclaim =
+fiveClose > fiveEMA9 and
+fiveClose[1] <= fiveEMA9[1];
+def fiveRetestEMA9 =
+fiveLow <= fiveEMA9 and
+fiveClose > fiveEMA9 and
+fiveClose > fiveOpen;
+# For the 5M reconstruction, current 1M price relative to
+# Daily VWAP is used only as an execution-layer context filter.
+# The actual 5M chart remains the authoritative VWAP source.
+def fiveSetupCandidate =
+(
+fiveBreakout or
+fiveEMA9Reclaim or
+fiveRetestEMA9
+)
+and fiveBullishCore
+and fiveRSI >= minimumPermissionRSI
+and fiveRVOL >= minimumSetupRVOL;
+#
+# ============================================================
+# 5M PERMISSION
+#
+# The 1M execution layer requires both reconstructed 5M 
+# structure and current 1M price to remain above Daily VWAP.
+#
+# ============================================================
+def fiveBullishPermissionRaw =
+fiveBullishCore and
+fiveRSI >= minimumPermissionRSI and
+!fiveBearishStack;
+def fiveStructuralDamage =
+(
+fiveClose < fiveEMA9 and
+fiveEMA9 < fiveEMA20
+)
+or
+(
+fiveClose < fiveEMA20 and
+fiveEMA9 < fiveEMA20 and
+!fiveEMA9Rising
+);
+def fiveStructuralDamagePersistent =
+Sum(
+if fiveStructuralDamage then 1 else 0,
+permissionFailureBars
+) >= permissionFailureBars;
+def fiveMajorFailureRaw =
+fiveClose < fiveEMA9 and
+fiveEMA9 < fiveEMA20 and
+fiveEMA20 < fiveSMA50;
+def fiveMajorFailurePersistent =
+Sum(
+if fiveMajorFailureRaw then 1 else 0,
+majorFailureBars
+) >= majorFailureBars;
+def fivePermissionState =
+CompoundValue(
+1,
+if eodExitWindow then
+0
+else if fiveMajorFailurePersistent then
+0
+else if fiveStructuralDamagePersistent then
+0
+else if fiveBullishPermissionRaw then
+1
+else
+fivePermissionState[1],
+0
+);
+def fivePermission =
+fivePermissionState == 1;
+#
+# ============================================================
+# 5M RUNNER / WANING / SWING ZONE
+#
+# ============================================================
+def fiveRunnerStructure =
+fivePermission and
+fiveBullishEMAStack and
+priceAboveVWAP;
+def fiveRunnerStrength =
+fiveRunnerStructure and
+(
+fiveRSI >= rsiStrong or
+fiveMACDBullish
+);
+def fiveRunnerRising =
+fiveRunnerStrength and
+(
+fiveRSIRising or
+fiveMACDRising or
+fiveRVOLStrong
+);
+def fiveRunnerWaningRaw =
+fiveRunnerStructure and
+(
+fiveRSIWeakening or
+fiveMACDWeakening
+);
+def fiveRunnerWaningPersistent =
+Sum(
+if fiveRunnerWaningRaw then 1 else 0,
+swingWaningBars
+) >= swingWaningBars;
+def fiveSwingStructureIntact =
+fivePermission and
+fiveClose > fiveEMA20 and
+fiveEMA20 >= fiveSMA50 and
+priceAboveVWAP;
+def fiveSwingMomentumWeakening =
+(
+fiveRSIWeakening and
+fiveMACDWeakening
+)
+or
+(
+fiveRSI < rsiStrong and
+fiveMACDFalling
+);
+def fiveSwingZoneRaw =
+fiveSwingStructureIntact and
+fiveRunnerWaningPersistent and
+fiveSwingMomentumWeakening and
+!fiveMajorFailurePersistent;
+def fiveSwingBuyEnvironment =
+fiveSwingZoneRaw and
+(
+fiveRSIRecovering or
+fiveMACDRecovering
+);
+#
+# ============================================================
+# 5M FAILURE STATES
+#
+# ============================================================
+def fivePrepareToSell =
+(
+fiveClose < fiveEMA20 and
+!fiveBullishCore
+)
+or
+fiveMajorFailurePersistent;
+def fiveConfirmedWeakness =
+fiveClose < fiveEMA9 and
+fiveEMA9 < fiveEMA20 and
+(
+fiveRSI < rsiWeak or
+fiveMACDBearish
+);
+def fiveBreakdown =
+fiveMajorFailurePersistent and
+fiveConfirmedWeakness and
+fiveClose < fiveSMA50;
+#
+# ============================================================
+# 5M STATE CODES
+#
+# ============================================================
+def FIVE_WAIT = 0;
+def FIVE_PREPARE_BUY = 1;
+def FIVE_BUY = 2;
+def FIVE_RUNNER_RISING = 3;
+def FIVE_RUNNER = 4;
+def FIVE_RUNNER_WANING = 5;
+def FIVE_SWING_ZONE = 6;
+def FIVE_PREPARE_SELL = 7;
+def FIVE_SELL_REBOUND = 8;
+def FIVE_SELL_CONFIRMED = 9;
+def FIVE_SELL_BREAKDOWN = 10;
+def FIVE_EOD_GET_OUT = 11;
+def fiveRawState =
+if eodExitWindow then
+FIVE_EOD_GET_OUT
+else if fiveBreakdown then
+FIVE_SELL_BREAKDOWN
+else if fiveConfirmedWeakness then
+FIVE_SELL_CONFIRMED
+else if fivePrepareToSell then
+FIVE_PREPARE_SELL
+else if fiveSwingZoneRaw then
+FIVE_SWING_ZONE
+else if fiveRunnerWaningPersistent then
+FIVE_RUNNER_WANING
+else if fiveRunnerRising then
+FIVE_RUNNER_RISING
+else if fiveRunnerStructure then
+FIVE_RUNNER
+else if fiveSetupCandidate then
+FIVE_BUY
+else if fivePermission then
+FIVE_PREPARE_BUY
+else
+FIVE_WAIT;
+def fiveState =
+fiveRawState;
+#
+# ============================================================
+# FRESH 1M TRIGGERS
+#
+# ============================================================
+def priorOneMHigh =
+Highest(high[1], breakoutLength);
+def oneMBreakout =
+price > priorOneMHigh;
+def oneMVWAPReclaim =
+price > dailyVWAP and
+price[1] <= dailyVWAP[1];
+def oneMEMA9Reclaim =
+price > ema9 and
+price[1] <= ema9[1];
+def oneMEMA9Retest =
+low <= ema9 and
+price > ema9 and
+price > open;
+def oneMVWAPRetest =
+low <= dailyVWAP and
+price > dailyVWAP and
+price > open;
+def freshTrigger =
+oneMBreakout or
+oneMVWAPReclaim or
+oneMEMA9Reclaim or
+oneMEMA9Retest or
+oneMVWAPRetest;
+#
+# ============================================================
+# 1M MOMENTUM
+#
+# ============================================================
+def momentumBullish =
+price > ema9 and
+ema9 > ema20 and
+rsi >= minimumExecutionRSI and
+macdBullish;
+def momentumAccelerating =
+(
+rsiRising and
+macdRising
+)
+or
+(
+rsiRising and
+rvolHealthy
+)
+or
+(
+macdRising and
+rvolHealthy
+);
+def qualityBullishCandle =
+price > open and
+(
+if high > low
+then (price - low) / (high - low) >= 0.60
+else no
+);
+#
+# ============================================================
+# EXECUTION GATE
+#
+# ============================================================
+def fiveMinuteHealthy =
+fivePermission and
+!fiveMajorFailurePersistent and
+!fiveConfirmedWeakness;
+# Canonical 5M execution gate. Every 1M execution path uses this
+# same gate so the candidate, READY logic, and diagnostics cannot
+# disagree about whether the 5M layer currently permits execution.
+def fiveExecutionPermission =
+fivePermission and
+priceAboveVWAP and
+!fiveMajorFailurePersistent and
+!fiveConfirmedWeakness;
+def notFiveSwingSell =
+!fiveSwingZoneRaw;
+def executionVolume =
+rvol >= minimumExecutionRVOL;
+def executionStructure =
+fiveExecutionPermission and
+!bullishExtensionDanger;
+#
+# ============================================================
+# PREPARE TO BUY
+#
+# ============================================================
+def prepareToBuyEnvironment =
+fiveExecutionPermission and
+!fiveSwingZoneRaw and
+priceAboveVWAP and
+price > ema20 and
+ema20Rising and
+rsi >= rsiBull;
+def prepareToBuyInvalidated =
+eodExitWindow
+or fiveMajorFailurePersistent
+or fiveConfirmedWeakness
+or fiveSwingZoneRaw
+or price < dailyVWAP
+or price < ema20
+or rsi < rsiWeak;
+rec prepareToBuyState =
+if eodExitWindow then
+0
+else if prepareToBuyInvalidated then
+0
+else if prepareToBuyEnvironment then
+1
+else
+prepareToBuyState[1];
+def prepareToBuy =
+prepareToBuyState == 1;
+def newPrepareToBuy =
+prepareToBuy and
+!prepareToBuy[1];
+#
+# ============================================================
+# EXECUTION CANDIDATE ENVIRONMENT
+#
+# Candidate creation is intentionally broader than final READY.
+# It identifies an actionable 1M opportunity inside valid 5M
+# permission without requiring final candle/RVOL/acceleration
+# confirmation at the candidate stage.
+#
+# ============================================================
+def executionCandidateEnvironment =
+fiveExecutionPermission and
+!fiveSwingZoneRaw and
+priceAboveVWAP and
+price > ema20 and
+ema20Rising;
+def executionCandidateMomentum =
+rsi >= minimumExecutionRSI and
+macdBullish and
+(
+price > ema9 or
+price > price[1] or
+rsiRising or
+macdRising or
+rvolHealthy
+);
+def executionCandidate =
+executionCandidateEnvironment and
+executionCandidateMomentum;
+#
+# ============================================================
+# CONTINUATION: PAUSE / ROTATION DETECTION
+#
+# ============================================================
+def continuationPauseEvidence =
+price <= price[1]
+or high <= high[1]
+or !rsiRising
+or !macdRising;
+def continuationPauseCount =
+Sum(
+if continuationPauseEvidence then 1 else 0,
+continuationLookbackBars
+);
+def continuationPauseDetected =
+continuationPauseCount >= continuationPauseBarsRequired;
+#
+# ============================================================
+# CONTINUATION: BULLISH RESUMPTION
+#
+# ============================================================
+def continuationResume =
+price > ema9 and
+ema9Rising and
+price > high[1] and
+rsi >= continuationMinimumRSI and
+macdBullish and
+(
+rsiRising or
+macdRising or
+rvolHealthy
+);
+def continuationBaseEnvironment =
+fiveRunnerStructure and
+fiveExecutionPermission and
+!fiveSwingZoneRaw;
+#
+# ============================================================
+# CONTINUATION: ARMED STATE
+#
+# ============================================================
+rec continuationArmed =
+if eodExitWindow then
+0
+else if !continuationBaseEnvironment then
+0
+else if continuationResume then
+0
+else if continuationPauseDetected then
+1
+else
+continuationArmed[1];
+def continuationExecutionEventRaw =
+continuationBaseEnvironment and
+continuationArmed[1] and
+continuationResume and
+executionVolume and
+qualityBullishCandle and
+!bullishExtensionDanger;
+#
+# ============================================================
+# CONTINUATION RE-ARM / COOLDOWN
+#
+# ============================================================
+rec continuationCooldownAge =
+if continuationExecutionEventRaw then
+0
+else if continuationCooldownAge[1] >= 0 then
+continuationCooldownAge[1] + 1
+else
+continuationCooldownBars;
+def continuationCooldownReady =
+continuationCooldownAge[1] >= continuationCooldownBars;
+def continuationExecutionEventQualified =
+continuationExecutionEventRaw and
+continuationCooldownReady;
+#
+# ============================================================
+# CANDIDATE PAUSE / RE-ARM
+#
+# A pause means the candidate condition has cleared while the
+# broader 5M execution environment remains intact. This is not
+# a bearish reset. It allows a later reclaim/resumption to create
+# a new execution opportunity without demanding full trend failure.
+#
+# ============================================================
+def candidatePauseRaw =
+!executionCandidate and
+fiveExecutionPermission and
+priceAboveVWAP and
+price > ema20;
+rec candidatePauseCount =
+if candidatePauseRaw then
+candidatePauseCount[1] + 1
+else
+0;
+rec candidateEverActive =
+if executionCandidate then
+1
+else
+candidateEverActive[1];
+def candidateRearmReady =
+!candidateEverActive[1] or
+candidatePauseCount >= candidateRearmBars;
+# Event-time re-arm gate. The current candidate bar resets
+# candidatePauseCount to zero, so the event must evaluate the
+# completed pause history on the prior bar. This allows exactly
+# candidateRearmBars completed pause bars before re-entry.
+def candidateRearmReadyForEvent =
+!candidateEverActive[1] or
+candidatePauseCount[1] >= candidateRearmBars;
+#
+# ============================================================
+# FRESH / IN-TREND CANDIDATES
+#
+# ============================================================
+# A fresh trigger is an event, not merely a persistent condition.
+# We retain that event for a short, bounded period so the trigger
+# is not lost just because the candidate environment confirms one
+# or two 1M bars later.
+def freshTriggerEvent =
+freshTrigger and
+!freshTrigger[1];
+rec freshTriggerAge =
+if freshTriggerEvent then
+0
+else if freshTriggerAge[1] >= 0 and
+freshTriggerAge[1] < freshTriggerLookbackBars then
+freshTriggerAge[1] + 1
+else
+-1;
+def freshTriggerArmed =
+freshTriggerAge >= 0 and
+freshTriggerAge < freshTriggerLookbackBars;
+def freshExecutionCandidate =
+executionCandidate and
+freshTriggerArmed;
+def inTrendExecutionCandidate =
+executionCandidate and
+!freshTriggerArmed;
+# The fresh event is generated when the execution candidate and
+# the remembered fresh-trigger condition are both valid. This can
+# happen on the trigger bar OR on a later bar while the trigger is
+# still armed.
+def freshExecutionEventReady =
+freshExecutionCandidate and
+candidateRearmReadyForEvent;
+def freshExecutionEvent =
+freshExecutionEventReady and
+!freshExecutionEventReady[1];
+def inTrendExecutionEvent =
+inTrendExecutionCandidate and
+!inTrendExecutionCandidate[1] and
+candidateRearmReadyForEvent and
+!freshExecutionEventReady;
+def continuationExecutionEvent =
+continuationExecutionEventQualified and
+!continuationExecutionEventQualified[1];
+def executionCandidateEvent =
+freshExecutionEvent
+or inTrendExecutionEvent
+or continuationExecutionEvent;
+def continuationCandidate =
+continuationExecutionEventRaw;
+#
+# ============================================================
+# ACTIVE EXECUTION OPPORTUNITY
+#
+# ============================================================
+def executionOpportunity =
+executionCandidateEvent;
+#
+# ============================================================
+# EXECUTION AGE / FINITE WINDOW
+#
+# Bar 0 = trigger.
+# Bar 1 = still actionable.
+# Bar 2 = expired.
+#
+# ============================================================
+def newExecutionTrigger =
+executionOpportunity and
+!executionOpportunity[1];
+rec executionAge =
+if newExecutionTrigger then
+0
+else if executionAge[1] >= 0 and
+executionAge[1] < executionWindowBars then
+executionAge[1] + 1
+else
+-1;
+def executionWindowActive =
+executionAge >= 0 and
+executionAge < executionWindowBars;
+#
+# ============================================================
+# EXECUTION READY — CANONICAL 5M GATE
+#
+# ============================================================
+def executionReady =
+executionWindowActive and
+fiveExecutionPermission and
+!bullishExtensionDanger;
+def executionInvalidated =
+!fiveExecutionPermission
+or price < ema20
+or price < dailyVWAP
+or rsi < rsiWeak
+or macdBearish
+or bullishExtensionDanger;
+def finalExecutionReady =
+executionReady and
+!executionInvalidated;
+def executionIsContinuation =
+continuationExecutionEventQualified and
+!freshExecutionCandidate;
+def executionIsInTrend =
+inTrendExecutionCandidate and
+!freshExecutionCandidate and
+!continuationExecutionEventQualified;
+def executionSignalType =
+if !finalExecutionReady then 0
+else if executionIsContinuation then 2
+else if executionIsInTrend then 3
+else 1;
+#
+# ============================================================
+# V14.5 PIPELINE DIAGNOSTICS
+#
+# ============================================================
+# Each diagnostic is an explicit one-bar transition so the chart
+# can show where the buying pipeline actually stopped.
+def prepareToBuyEvent =
+prepareToBuy and
+!prepareToBuy[1];
+def freshCandidateEvent =
+freshExecutionEvent;
+def inTrendCandidateEvent =
+inTrendExecutionEvent;
+def continuationCandidateEvent =
+continuationExecutionEventRaw and
+!continuationExecutionEventRaw[1];
+def readyEvent =
+finalExecutionReady and
+!finalExecutionReady[1];
+#
+# ============================================================
+# EXECUTION STATE
+#
+# ============================================================
+def WAIT = 0;
+def PREPARE = 1;
+def EXECUTION_READY = 2;
+def EXECUTION_EXPIRED = 3;
+def SWING_RECLAIM = 4;
+def PREPARE_SELL = 5;
+def SELL = 6;
+def EOD_GET_OUT = 7;
+def executionExpired =
+executionAge >= executionWindowBars and
+executionAge < executionWindowBars + 1;
+#
+# ============================================================
+# SWING RECLAIM
+#
+# ============================================================
+def swingReclaimTrigger =
+fiveSwingZoneRaw and
+(
+oneMEMA9Reclaim or
+oneMVWAPReclaim
+) and
+momentumBullish and
+executionVolume and
+!bullishExtensionDanger;
+def swingReclaimConfirmed =
+swingReclaimTrigger and
+(
+rsiRecovering or
+macdRecovering or
+momentumAccelerating
+);
+#
+# ============================================================
+# 1M SELL / MANAGEMENT
+#
+# ============================================================
+def prepareToSell =
+(
+price < ema20 and
+rsi < rsiBull
+)
+or
+(
+price < dailyVWAP and
+macdBearish
+);
+def sellConfirmed =
+price < dailyVWAP and
+price < ema9 and
+ema9 < ema20 and
+rsi < rsiWeak and
+macdBearish;
+#
+# ============================================================
+# FINAL 1M STATE
+#
+# ============================================================
+def finalState =
+if eodExitWindow then
+EOD_GET_OUT
+else if sellConfirmed then
+SELL
+else if prepareToSell then
+PREPARE_SELL
+else if swingReclaimConfirmed then
+SWING_RECLAIM
+else if finalExecutionReady then
+EXECUTION_READY
+else if executionExpired then
+EXECUTION_EXPIRED
+else if prepareToBuy then
+PREPARE
+else
+WAIT;
+#
+# ============================================================
+# STATE LABEL
+#
+# ============================================================
+AddLabel(
+showLabels,
+"1M STATE: " +
+(
+if finalState == WAIT then "WAIT"
+else if finalState == PREPARE then "PREPARE"
+else if finalState == EXECUTION_READY then "EXECUTION READY"
+else if finalState == EXECUTION_EXPIRED then "EXECUTION EXPIRED"
+else if finalState == SWING_RECLAIM then "SWING RECLAIM"
+else if finalState == PREPARE_SELL then "PREPARE TO SELL"
+else if finalState == SELL then "SELL"
+else "GET OUT"
+),
+if finalState == WAIT then Color.GRAY
+else if finalState == PREPARE then Color.YELLOW
+else if finalState == EXECUTION_READY then Color.GREEN
+else if finalState == EXECUTION_EXPIRED then Color.YELLOW
+else if finalState == SWING_RECLAIM then Color.ORANGE
+else if finalState == PREPARE_SELL then Color.YELLOW
+else Color.RED
+);
+#
+# ============================================================
+# 5M CONTEXT LABELS
+#
+# ============================================================
+AddLabel(
+showLabels,
+"5M STATE: " +
+(
+if fiveState == FIVE_WAIT then "WAIT"
+else if fiveState == FIVE_PREPARE_BUY then "PREPARE TO BUY"
+else if fiveState == FIVE_BUY then "BUY"
+else if fiveState == FIVE_RUNNER_RISING then "RUNNER RISING"
+else if fiveState == FIVE_RUNNER then "RUNNER"
+else if fiveState == FIVE_RUNNER_WANING then "RUNNER WANING"
+else if fiveState == FIVE_SWING_ZONE then "SWING ZONE"
+else if fiveState == FIVE_PREPARE_SELL then "PREPARE TO SELL"
+else if fiveState == FIVE_SELL_REBOUND then "SELL - REBOUND POSSIBLE"
+else if fiveState == FIVE_SELL_CONFIRMED then "SELL - CONFIRMED WEAKNESS"
+else if fiveState == FIVE_SELL_BREAKDOWN then "SELL - BREAKDOWN"
+else "GET OUT"
+),
+if fiveState == FIVE_WAIT then Color.GRAY
+else if fiveState == FIVE_PREPARE_BUY then Color.YELLOW
+else if fiveState == FIVE_BUY then Color.GREEN
+else if fiveState == FIVE_RUNNER_RISING then Color.GREEN
+else if fiveState == FIVE_RUNNER then Color.GREEN
+else if fiveState == FIVE_RUNNER_WANING then Color.YELLOW
+else if fiveState == FIVE_SWING_ZONE then Color.ORANGE
+else if fiveState == FIVE_PREPARE_SELL then Color.YELLOW
+else if fiveState == FIVE_SELL_REBOUND then Color.YELLOW
+else Color.RED
+);
+AddLabel(
+showLabels,
+"5M PERMISSION: " +
+(if fivePermission and priceAboveVWAP then "YES" else "NO"),
+if fivePermission and priceAboveVWAP then Color.GREEN else Color.RED
+);
+AddLabel(
+showLabels,
+"5M STRUCTURE: " +
+(
+if fiveBullishEMAStack and priceAboveVWAP then "BULLISH"
+else if fiveBearishStack then "BEARISH"
+else "TRANSITIONING"
+),
+if fiveBullishEMAStack and priceAboveVWAP then Color.GREEN
+else if fiveBearishStack then Color.RED
+else Color.YELLOW
+);
+#
+# ============================================================
+# EXECUTION / INDICATOR LABELS
+#
+# ============================================================
+AddLabel(
+showLabels,
+"RVOL: " + Round(rvol, 2),
+if rvol >= 2 then Color.GREEN
+else if rvol >= 1.5 then Color.GREEN
+else if rvol >= 1 then Color.YELLOW
+else Color.GRAY
+);
+AddLabel(
+showLabels,
+"RSI: " + Round(rsi, 1),
+if rsi >= rsiStrong then Color.GREEN
+else if rsi >= rsiBull then Color.YELLOW
+else Color.RED
+);
+AddLabel(
+showLabels,
+"EXT: " + Round(extensionATR, 2) + " ATR",
+if extensionDanger then Color.RED
+else if extensionWarning then Color.YELLOW
+else Color.GREEN
+);
+AddLabel(
+showLabels and executionWindowActive,
+"EXEC AGE: " + executionAge,
+if finalExecutionReady then Color.GREEN else Color.YELLOW
+);
+AddLabel(
+showLabels and continuationCandidate,
+"CONTINUATION CANDIDATE",
+Color.GREEN
+);
+AddLabel(
+showLabels and eodExitWindow,
+"EOD: GET OUT",
+Color.RED
+);
+#
+# ============================================================
+# STATE BUBBLES — CLEANED
+#
+# Only meaningful decision points receive bubbles.
+# RUNNER/RUNNER RISING are context labels, not bubble spam.
+#
+# ============================================================
+# Diagnostic bubbles are vertically separated so multiple
+# pipeline stages on the same 1M bar do not stack.
+# EOD exit state transition bubble 
+AddChartBubble(showStateBubbles and finalState == EOD_GET_OUT and finalState[1] != EOD_GET_OUT, high + atr * 1.25, "EOD GET OUT", Color.RED, yes);
+AddChartBubble(
+showStateBubbles and prepareToBuyEvent,
+high + atr * 1.0,
+"PREPARE\nTO BUY",
+Color.YELLOW,
+yes
+);
+AddChartBubble(
+showStateBubbles and
+fiveState == FIVE_PREPARE_BUY and
+fiveState[1] != FIVE_PREPARE_BUY,
+high + atr * 2.0,
+"5M PREPARE\nTO BUY",
+Color.YELLOW,
+yes
+);
+AddChartBubble(
+showStateBubbles and
+fiveState == FIVE_BUY and
+fiveState[1] != FIVE_BUY,
+high + atr * 3.0,
+"5M BUY",
+Color.GREEN,
+yes
+);
+AddChartBubble(
+showStateBubbles and freshCandidateEvent,
+high + atr * 4.0,
+"FRESH\nCANDIDATE",
+Color.CYAN,
+yes
+);
+AddChartBubble(
+showStateBubbles and inTrendCandidateEvent,
+high + atr * 5.0,
+"IN-TREND\nCANDIDATE",
+Color.CYAN,
+yes
+);
+AddChartBubble(
+showStateBubbles and continuationCandidateEvent,
+high + atr * 6.0,
+"CONTINUATION\nCANDIDATE",
+Color.CYAN,
+yes
+);
+# READY is an event, not a persistent condition.
+# Plot only the transition into READY so a multi-bar execution
+# window cannot create repeated READY bubbles.
+AddChartBubble(
+showStateBubbles and
+readyEvent,
+high + atr * 0.75,
+"EXECUTION\nREADY",
+Color.GREEN,
+yes
+);
+# If a candidate is visible but READY is false, identify that directly.
+AddChartBubble(
+showStateBubbles and
+(
+freshCandidateEvent or
+inTrendCandidateEvent or
+continuationCandidateEvent
+) and
+!finalExecutionReady,
+high + atr * 0.75,
+"CANDIDATE\nBLOCKED",
+Color.RED,
+yes
+);
+AddChartBubble(
+showStateBubbles and
+executionExpired and
+!executionExpired[1],
+high,
+"EXECUTION\nEXPIRED",
+Color.YELLOW,
+yes
+);
+AddChartBubble(
+showStateBubbles and
+swingReclaimConfirmed and
+!swingReclaimConfirmed[1],
+low,
+"SWING\nRECLAIM",
+Color.ORANGE,
+no
+);
+AddChartBubble(
+showStateBubbles and
+finalState == PREPARE_SELL and
+finalState[1] != PREPARE_SELL,
+high,
+"PREPARE\nTO SELL",
+Color.YELLOW,
+yes
+);
+AddChartBubble(
+showStateBubbles and
+finalState == SELL and
+finalState[1] != SELL,
+high,
+"SELL",
+Color.RED,
+yes
+);
+#
+# ============================================================
+# DEBUG LABELS
+#
+# ============================================================
+AddLabel(
+showDebugLabels,
+"5M BullCore=" + fiveBullishCore +
+" Stack=" + fiveBullishEMAStack +
+" Permission=" + fivePermission,
+Color.WHITE
+);
+AddLabel(
+showDebugLabels,
+"5M State=" + fiveState +
+" Buy=" + (fiveState == FIVE_BUY) +
+" Prep=" + (fiveState == FIVE_PREPARE_BUY) +
+" Runner=" + fiveRunnerStructure +
+" VWAP=" + priceAboveVWAP,
+Color.WHITE
+);
+AddLabel(
+showDebugLabels,
+"5M Setup=" + fiveSetupCandidate +
+" Waning=" + fiveRunnerWaningPersistent +
+" Swing=" + fiveSwingZoneRaw,
+Color.WHITE
+);
+AddLabel(
+showDebugLabels,
+"5M StructDamage=" + fiveStructuralDamagePersistent +
+" MajorFailure=" + fiveMajorFailurePersistent,
+Color.WHITE
+);
+AddLabel(
+showDebugLabels,
+"PIPELINE P=" + prepareToBuy +
+" 5MX=" + fiveExecutionPermission +
+" F=" + freshExecutionCandidate +
+" I=" + inTrendExecutionCandidate +
+" C=" + continuationExecutionEventRaw +
+" E=" + executionCandidateEvent +
+" O=" + executionOpportunity +
+" R=" + finalExecutionReady +
+" 5M=" + fivePermission +
+" VWAP=" + priceAboveVWAP +
+" EXT=" + bullishExtensionDanger,
+Color.WHITE
+);
+AddLabel(
+showDebugLabels,
+"FreshExec=" + freshExecutionCandidate +
+" FreshEvent=" + freshExecutionEvent +
+" ContExec=" + continuationCandidate +
+" ContEvent=" + continuationExecutionEvent +
+" InTrend=" + inTrendExecutionCandidate +
+" InTrendEvent=" + inTrendExecutionEvent +
+" Event=" + executionCandidateEvent +
+" Opportunity=" + executionOpportunity +
+" Cooldown=" + continuationCooldownAge +
+" Ready=" + finalExecutionReady +
+" ReadyEvent=" + readyEvent +
+" Age=" + executionAge,
+Color.WHITE
+);
+#
+# ============================================================
+# MAIN PLOTS
+#
+# ============================================================
+plot VWAPLine =
+dailyVWAP;
+VWAPLine.SetDefaultColor(Color.YELLOW);
+VWAPLine.SetLineWeight(2);
+plot EMA9Line =
+ema9;
+EMA9Line.SetDefaultColor(Color.CYAN);
+EMA9Line.SetLineWeight(1);
+plot EMA20Line =
+ema20;
+EMA20Line.SetDefaultColor(Color.WHITE);
+EMA20Line.SetLineWeight(1);
+#
+# ============================================================
+# EXECUTION SIGNAL PLOTS
+#
+# ============================================================
+plot ExecutionReadySignal =
+if readyEvent
+then low
+else Double.NaN;
+ExecutionReadySignal.SetPaintingStrategy(
+PaintingStrategy.ARROW_UP
+);
+ExecutionReadySignal.SetDefaultColor(Color.GREEN);
+ExecutionReadySignal.SetLineWeight(3);
+plot SwingReclaimSignal =
+if swingReclaimConfirmed
+then low
+else Double.NaN;
+SwingReclaimSignal.SetPaintingStrategy(
+PaintingStrategy.ARROW_UP
+);
+SwingReclaimSignal.SetDefaultColor(Color.ORANGE);
+SwingReclaimSignal.SetLineWeight(2);
+plot PrepareSellSignal =
+if finalState == PREPARE_SELL
+then high
+else Double.NaN;
+PrepareSellSignal.SetPaintingStrategy(
+PaintingStrategy.ARROW_DOWN
+);
+PrepareSellSignal.SetDefaultColor(Color.YELLOW);
+PrepareSellSignal.SetLineWeight(2);
+plot SellSignal =
+if finalState == SELL
+then high
+else Double.NaN;
+SellSignal.SetPaintingStrategy(
+PaintingStrategy.ARROW_DOWN
+);
+SellSignal.SetDefaultColor(Color.RED);
+SellSignal.SetLineWeight(3);
+plot EODGetOutSignal =
+if eodExitWindow
+then high
+else Double.NaN;
+EODGetOutSignal.SetPaintingStrategy(
+PaintingStrategy.ARROW_DOWN
+);
+EODGetOutSignal.SetDefaultColor(Color.ORANGE);
+EODGetOutSignal.SetLineWeight(4);
+#
+# ============================================================
+# HIDDEN DATA PLOTS
+#
+# ============================================================
+plot ExecutionStateCode =
+finalState;
+ExecutionStateCode.SetHiding(yes);
+plot ExecutionReadyCode =
+if finalExecutionReady then 1 else 0;
+ExecutionReadyCode.SetHiding(yes);
+plot ExecutionTypeCode =
+executionSignalType;
+ExecutionTypeCode.SetHiding(yes);
+plot ExecutionAgeValue =
+executionAge;
+ExecutionAgeValue.SetHiding(yes);
+plot FiveMinuteStateCode =
+fiveState;
+FiveMinuteStateCode.SetHiding(yes);
+plot FiveMinutePermissionCode =
+if fivePermission and priceAboveVWAP then 1 else 0;
+FiveMinutePermissionCode.SetHiding(yes);
+plot FiveMinuteExecutionPermissionCode =
+if fiveExecutionPermission then 1 else 0;
+FiveMinuteExecutionPermissionCode.SetHiding(yes);
+plot FiveMinuteSwingZoneCode =
+if fiveSwingZoneRaw then 1 else 0;
+FiveMinuteSwingZoneCode.SetHiding(yes);
+plot FiveMinuteRunnerWaningCode =
+if fiveRunnerWaningPersistent then 1 else 0;
+FiveMinuteRunnerWaningCode.SetHiding(yes);
+plot ContinuationCandidateCode =
+if continuationCandidate then 1 else 0;
+ContinuationCandidateCode.SetHiding(yes);
+plot ContinuationExecutionEventCode =
+if continuationExecutionEvent then 1 else 0;
+ContinuationExecutionEventCode.SetHiding(yes);
+plot FreshExecutionEventCode =
+if freshExecutionEvent then 1 else 0;
+FreshExecutionEventCode.SetHiding(yes);
+plot InTrendExecutionCandidateCode =
+if inTrendExecutionCandidate then 1 else 0;
+InTrendExecutionCandidateCode.SetHiding(yes);
+plot InTrendExecutionEventCode =
+if inTrendExecutionEvent then 1 else 0;
+InTrendExecutionEventCode.SetHiding(yes);
+plot ExecutionCandidateEventCode =
+if executionCandidateEvent then 1 else 0;
+ExecutionCandidateEventCode.SetHiding(yes);
+plot ExecutionOpportunityCode =
+if executionOpportunity then 1 else 0;
+ExecutionOpportunityCode.SetHiding(yes);
+plot PrepareToBuyEventCode =
+if prepareToBuyEvent then 1 else 0;
+PrepareToBuyEventCode.SetHiding(yes);
+plot FreshCandidateEventCode =
+if freshCandidateEvent then 1 else 0;
+FreshCandidateEventCode.SetHiding(yes);
+plot InTrendCandidateEventCode =
+if inTrendCandidateEvent then 1 else 0;
+InTrendCandidateEventCode.SetHiding(yes);
+plot ContinuationCandidateEventCode =
+if continuationCandidateEvent then 1 else 0;
+ContinuationCandidateEventCode.SetHiding(yes);
+plot ReadyEventCode =
+if readyEvent then 1 else 0;
+ReadyEventCode.SetHiding(yes);
+plot ExtensionATRValue =
+extensionATR;
+ExtensionATRValue.SetHiding(yes);
+plot RVOLValue =
+rvol;
+RVOLValue.SetHiding(yes);
+plot RSIValue =
+rsi;
+RSIValue.SetHiding(yes);
+plot FiveMinuteRSIValue =
+fiveRSI;
+FiveMinuteRSIValue.SetHiding(yes);
+plot DailyVWAPValue =
+dailyVWAP;
+DailyVWAPValue.SetHiding(yes);
+plot EMA9Value =
+ema9;
+EMA9Value.SetHiding(yes);
+plot EMA20Value =
+ema20;
+EMA20Value.SetHiding(yes);
+plot FiveMinuteEMA9Value =
+fiveEMA9;
+FiveMinuteEMA9Value.SetHiding(yes);
+plot FiveMinuteEMA20Value =
+fiveEMA20;
+FiveMinuteEMA20Value.SetHiding(yes);
+plot FiveMinuteSMA50Value =
+fiveSMA50;
+FiveMinuteSMA50Value.SetHiding(yes);
