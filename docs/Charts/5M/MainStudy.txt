@@ -129,7 +129,7 @@ input aggressiveMarginOver100 = 3.00;
 def eodHourArizona = 15;
 def eodMinuteArizona = 55;
 input eodTimeEasternDaylight = 1855;
-input eodTimeEasternStandard = 1955;
+input eodTimeEasternStandard = 1755;
 # ============================================================
 # SESSION / TIMEZONE
 #
@@ -140,7 +140,7 @@ input eodTimeEasternStandard = 1955;
 # Arizona remains UTC-7 year-round. Eastern is UTC-4 during US
 # daylight time and UTC-5 during standard time. Therefore an
 # Arizona 3:55 PM EOD corresponds to 6:55 PM Eastern during
-# daylight time and 7:55 PM Eastern during standard time.
+# daylight time and 5:55 PM Eastern during standard time.
 #
 # The DST dates are calculated from the US rules:
 #   - starts on the second Sunday in March
