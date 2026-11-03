@@ -1,3 +1,34 @@
+# November 3 follow-up — user evidence and second dependency pass
+
+**Branch:** `feature/opportunity-quality-classification`  
+**Code head:** `9777b774de414c4af39ad7ee82b18990b7924972` (Actions run 41702560827 was in progress when checked).
+
+## New user evidence reconciled
+- [x] Current CSV import: 198 rows imported and 198 scanner rows rendered (user confirmation).
+- [x] Historical gate summary: 187 PASS / 11 FAIL / 0 UNKNOWN.
+- [x] Exclusion matches: 0; final READY: 0.
+- [x] Fixed-count 248 expectation withdrawn; it was a prior scan snapshot, not a fixed requirement.
+- [x] Exclusion list interpretation corrected: 56 entries = canonical 55 plus TEST. OSW/EVR/MHK are not in the canonical source list.
+- [x] RKLX refresh/store: 1M=40, 5M=31, idempotency True/True.
+- [x] Stream wait: SPY advanced 5 bars; RKLX/ASTX/XRPN did not. No-advance symbols are not delivery passes, but may reflect no eligible IEX prints; assessment provenance and freshness must be inspected.
+- [x] Clarified 50-bar threshold as minimum completed WebSocket 1M history for source selection, not 50 new bars per five-minute test. 5M remains REST-backed.
+- [x] Added visible Unknown historical metrics summary, sticky table headers, and bounded exclusions scrolling.
+- [x] Corrected import selection order: append/select Imported CSV before rendering scanner and Red Zone.
+- [ ] Browser acceptance still required for Red Zone top four, Unknown count, sticky header and exclusions scroll viewport.
+- [ ] Review exact runtime JSON fields `oneMinute.sourceTransport`, `sourceTimestampUtc`, `completedAtUtc`, freshness, and per-symbol WebSocket history.
+- [ ] Exact RTO EOD cutoff validation remains open; the noon screenshot is not cutoff evidence.
+- [ ] Historical RTO 20-session audit remains 37/40 exact on IEX, with three missing next-session opens; keep separate from live stream acceptance.
+
+## Second-pass dependency update
+The new evidence unblocks interpretation and documentation, but it does not unblock the external/runtime-dependent work:
+- Browser rendering can now be re-tested against a known current CSV and explicit expected counts.
+- API exclusion count can be checked against the seeded 56-entry set after restart; OSW/EVR/MHK should not be expected to match.
+- WebSocket source selection can be evaluated from full assessment JSON without lowering thresholds.
+- The RTO screenshot confirms current chart state only; it does not replace exact matched-bar TOS study validation.
+- Historical RTO missing bars, SIP entitlement, Thinkorswim compilation, catalyst source coverage, daily liquidity source, Schwab OAuth, and full GTC_EXT outcomes remain blocked by their original evidence/dependency requirements.
+
+---
+
 # Full Master To-Do Audit — 2026-11-03
 
 Branch: `feature/opportunity-quality-classification`  
