@@ -1,3 +1,21 @@
+# 2026-11-03 — User runtime follow-up and UI acceptance corrections
+
+- [x] User confirms the qualification import rendered **198 scanner rows**, **187 historical PASS**, **11 historical FAIL**, **0 unknown historical metrics**, **0 exclusion matches**, and **0 final READY**. This is the current observed import result; do not require 248 rows. The 248 figure was a different prior scan snapshot and is not a fixed expected row count.
+- [x] Corrected interpretation of the exclusion query: the persisted store count of 56 is consistent with the seeded 55 canonical exclusions plus the preserved TEST entry. OSW, EVR, and MHK are not present in the canonical 55-symbol list, so their absence is not evidence that the store failed to load. Live Schwab tradability remains a separate question.
+- [x] User's November 3 RKLX runtime test: API health passed; 1M/5M refresh/store counts were 40/31; refresh-to-store idempotency comparisons were True/True. This establishes exact persistence matches for the returned provider bars in that invocation, not WebSocket delivery.
+- [x] User's five-minute regular-session stream snapshot: SPY advanced 5 bars; RKLX, ASTX, XRPN did not advance. Acknowledged subscriptions are not delivery passes. A symbol with no eligible IEX prints is not automatically a failure; inspect each assessment's sourceTransport, sourceTimestampUtc, completedAtUtc, and freshness before deciding whether WebSocket is the selected 1M source.
+- [x] Clarify the 50-bar rule: it is the minimum completed persisted WebSocket 1M history required for WebSocket source selection, not a requirement to receive 50 new bars during a five-minute test. 5M Permission remains REST-backed.
+- [x] UI source changes: sticky table headers added to bounded table wrappers; exclusions list given a bounded 460px scroll viewport; Unknown historical metrics added to the qualification summary. Browser verification and exact-head CI remain pending.
+- [ ] Investigate Red Zone import discrepancy: user sees 0/4 cards after importing 198 rows, while qualification reports 187 historical passes. The Red Zone source filter is intended to use the same five historical gates and select the top four by Overnight Score. Do not close this until browser acceptance confirms the top four appear; preserve any manual pins/dismissals and verify the selected scanner group is Imported CSV.
+- [ ] After pulling the latest feature branch and restarting the API, verify `GET /api/watchlists/exclusions` returns 56 entries and that the expected canonical symbols/reasons are present. Do not expect OSW/EVR/MHK to match unless the operator separately adds them.
+- [ ] Browser-verify the new Unknown metric summary, sticky qualification table header, and exclusions list scroll viewport.
+- [ ] Inspect the full runtime artifact folder `artifacts/runtime-validation/20261103T190356Z`: record assessment `oneMinute.sourceTransport`, `sourceTimestampUtc`, `completedAtUtc`, freshness, and per-symbol stream deltas. Do not infer transport provenance from the symbol subscription table alone.
+- [ ] RTO chart screenshot dated 2026-11-03 12:00 PM Arizona is daytime evidence, not the 3:55 PM Arizona EOD cutoff test. It shows 5M Permission NO / neutral 5M structure, 1M WAIT, and repeated PREPARE TO SELL labels; no visible EOD GET OUT event is established. Keep the exact cutoff test open until bars immediately before/at/after 3:55 PM Arizona are captured from the correct study.
+- [ ] Keep the historical 20-session RTO boundary audit separate from the live WebSocket test. Existing IEX artifact has 37/40 exact boundaries; three next-session opens remain missing. No nearest-bar imputation and no SIP label.
+- [ ] User asks what prior Steps 5–7 meant: see the clarified operator sequence in the handoff and Runtime Acceptance Runbook. These are separate validations, not a request to repeat the scanner export or chase a fixed 248-row count.
+
+---
+
 ## 2026-11-03 follow-up — corrected Overnight process, 10:52 scanner export, exclusions and runtime evidence
 
 - [x] Reconciled the new master-branch procedure commit `c14380c867887f98331e382b7dc7049ac1b86894`: Overnight spans Day 1 after-hours plus Day 2 premarket; candidate review starts in the final 60 minutes BEFORE the Day 1 regular-session close. The mistaken 20:00 ET process start is withdrawn.
@@ -16,7 +34,7 @@
 - [ ] Browser-verify the qualification panel shows 198 imported / 187 historical pass / 11 fail / 0 unknown / 0 excluded after the latest exclusion seed is active; current price and 20D volume must remain DATA?.
 
 - [ ] Browser-verify import feedback, `tbody#scannerRows`, and actual Red Zone `#redZoneGrid`. `#mcc-static-0278-div` is only the static scanner-table wrapper; it is not the Red Zone element and is not expected to be replaced.
-- [ ] Re-export all 248 scanner rows; current 10:52 export still has 198 (50 missing).
+- [x] Superseded by operator correction 2026-11-03: do not require a fixed 248-row count; the current accepted import has 198 rows and all imported rows render in the scanner table.
 - [ ] Current price >$5, 20D average daily volume >=500K, catalysts, Daily charts, 5M Permission/structure, and 1M execution evidence are not in this CSV. No Boring Overnight READY/BUY decision is supported yet.
 - [ ] Thinkorswim cutoff test remains inconclusive: no bars were available at Arizona 15:54/15:55/15:56 for the supplied RTO/SPY chart views. Bubbles/arrows on other after-hours bars do not establish the exact cutoff bar or correct source study.
 - [ ] After pulling the exclusion seed, restart API and verify `GET /api/watchlists/exclusions` returns 56 entries (55 canonical + TEST).
@@ -65,7 +83,7 @@
 - [x] Located canonical 55-symbol Schwab exclusion source on `master`; OSW, EVR and MHK are not in that canonical list.
 - [ ] Live Schwab tradability and feature runtime `App_Data/exclusions-watchlist.json` remain unverified; the feature branch local store is not seeded from the canonical 55-list provider.
 - [ ] Browser-import/Red Zone acceptance for the 195-row file is pending. The importer source supports the preamble/header and maps Overnight Score, but browser behavior was not run here.
-- [ ] Obtain the actual 248-row export; 53 ticker rows are absent from the uploaded file.
+- [x] Superseded by operator correction 2026-11-03: 248 was a prior snapshot count, not a current acceptance target.
 - [ ] Current Daily/5M/1M charts, catalyst clearance, price and 20D volume for the full universe remain outstanding.
 - [ ] Compile V14.5.2 and normal 5M V4.1.7 in Thinkorswim; run matched-bar EOD and Permission parity diagnostics. Do not install V14.5.2 as authoritative until TOS compile and chart validation pass.
 - [ ] Runtime test on 2026-11-03: SPY advanced 5 bars and XRPN 1; RKLX and ASTX did not advance. RKLX idempotency comparison reported false for both timeframes. Preserve raw JSON artifacts with exact SHA/window and inspect source transport/timestamps before sign-off.
