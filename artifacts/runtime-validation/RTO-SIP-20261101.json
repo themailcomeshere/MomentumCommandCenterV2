@@ -4,32 +4,12 @@
     "feed":  "iex",
     "timeframe":  "1m",
     "calendarVersion":  "MCC_US_EQUITIES_CALENDAR_V2",
-    "requestedFromUtc":  "2026-10-05T19:59:00+00:00",
-    "requestedToUtc":  "2026-11-02T14:31:00+00:00",
-    "retrievedAtUtc":  "2026-11-02T22:30:41.8483613+00:00",
-    "fetchedBarCount":  3949,
+    "requestedFromUtc":  "2026-10-06T19:59:00+00:00",
+    "requestedToUtc":  "2026-11-03T14:31:00+00:00",
+    "retrievedAtUtc":  "2026-11-03T16:42:41.8326028+00:00",
+    "fetchedBarCount":  3965,
     "newlyPersistedObservationCount":  0,
     "boundaryCoverageAudit":  [
-                                  {
-                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
-                                      "expectedTimestampUtc":  "2026-10-05T19:59:00+00:00",
-                                      "providerReturnedExactBar":  true,
-                                      "storeHasExactBar":  true,
-                                      "nearestProviderBarTimestampUtc":  "2026-10-05T19:59:00+00:00",
-                                      "nearestProviderBarOffsetMinutes":  0,
-                                      "providerBarsWithinFiveMinutes":  1,
-                                      "status":  "COVERED"
-                                  },
-                                  {
-                                      "boundaryType":  "NEXT_SESSION_OPEN",
-                                      "expectedTimestampUtc":  "2026-10-06T13:30:00+00:00",
-                                      "providerReturnedExactBar":  true,
-                                      "storeHasExactBar":  true,
-                                      "nearestProviderBarTimestampUtc":  "2026-10-06T13:30:00+00:00",
-                                      "nearestProviderBarOffsetMinutes":  0,
-                                      "providerBarsWithinFiveMinutes":  3,
-                                      "status":  "COVERED"
-                                  },
                                   {
                                       "boundaryType":  "PREVIOUS_SESSION_CLOSE",
                                       "expectedTimestampUtc":  "2026-10-06T19:59:00+00:00",
@@ -37,7 +17,7 @@
                                       "storeHasExactBar":  true,
                                       "nearestProviderBarTimestampUtc":  "2026-10-06T19:59:00+00:00",
                                       "nearestProviderBarOffsetMinutes":  0,
-                                      "providerBarsWithinFiveMinutes":  6,
+                                      "providerBarsWithinFiveMinutes":  1,
                                       "status":  "COVERED"
                                   },
                                   {
@@ -407,19 +387,39 @@
                                       "storeHasExactBar":  true,
                                       "nearestProviderBarTimestampUtc":  "2026-11-02T14:30:00+00:00",
                                       "nearestProviderBarOffsetMinutes":  0,
-                                      "providerBarsWithinFiveMinutes":  1,
+                                      "providerBarsWithinFiveMinutes":  5,
                                       "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "PREVIOUS_SESSION_CLOSE",
+                                      "expectedTimestampUtc":  "2026-11-02T20:59:00+00:00",
+                                      "providerReturnedExactBar":  true,
+                                      "storeHasExactBar":  true,
+                                      "nearestProviderBarTimestampUtc":  "2026-11-02T20:59:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  0,
+                                      "providerBarsWithinFiveMinutes":  6,
+                                      "status":  "COVERED"
+                                  },
+                                  {
+                                      "boundaryType":  "NEXT_SESSION_OPEN",
+                                      "expectedTimestampUtc":  "2026-11-03T14:30:00+00:00",
+                                      "providerReturnedExactBar":  false,
+                                      "storeHasExactBar":  false,
+                                      "nearestProviderBarTimestampUtc":  "2026-11-03T14:31:00+00:00",
+                                      "nearestProviderBarOffsetMinutes":  1,
+                                      "providerBarsWithinFiveMinutes":  1,
+                                      "status":  "PROVIDER_RESPONSE_MISSING_EXACT_BAR"
                                   }
                               ],
     "history":  {
                     "symbol":  "RTO",
                     "provider":  "Alpaca",
                     "feed":  "iex",
-                    "calculatedAtUtc":  "2026-11-02T22:30:41.8399019+00:00",
+                    "calculatedAtUtc":  "2026-11-03T16:42:41.8223698+00:00",
                     "requiredWindow":  20,
                     "requestedPairCount":  20,
-                    "validPairCount":  18,
-                    "missingPairCount":  2,
+                    "validPairCount":  17,
+                    "missingPairCount":  3,
                     "allPairsComplete":  false,
                     "enoughHistory":  false,
                     "winRatePct":  null,
@@ -429,17 +429,6 @@
                     "averageReturnPct5D":  null,
                     "winRatePct20D":  null,
                     "returns":  [
-                                    {
-                                        "previousSessionDate":  "2026-10-05",
-                                        "nextSessionDate":  "2026-10-06",
-                                        "previousCloseBarTimestampUtc":  "2026-10-05T19:59:00+00:00",
-                                        "nextOpenBarTimestampUtc":  "2026-10-06T13:30:00+00:00",
-                                        "previousClose":  20.025,
-                                        "nextOpen":  19.93,
-                                        "returnPct":  -0.4744069912609238451935081100,
-                                        "previousCloseObservationId":  "d306f6655c184cc0bb7818f844d10a1a",
-                                        "nextOpenObservationId":  "cc5a6a8844e34158aee5ff5cbeecb33f"
-                                    },
                                     {
                                         "previousSessionDate":  "2026-10-06",
                                         "nextSessionDate":  "2026-10-07",
@@ -638,6 +627,11 @@
                                         "nextSessionDate":  "2026-10-21",
                                         "reasonCode":  "NEXT_SESSION_OPEN_MISSING",
                                         "missingTimestampUtc":  "2026-10-21T13:30:00+00:00"
+                                    },
+                                    {
+                                        "nextSessionDate":  "2026-11-03",
+                                        "reasonCode":  "NEXT_SESSION_OPEN_MISSING",
+                                        "missingTimestampUtc":  "2026-11-03T14:30:00+00:00"
                                     }
                                 ],
                     "provenanceNote":  "INCOMPLETE_HISTORY: no rolling metric is emitted unless every requested pair exists and the required history count is met."

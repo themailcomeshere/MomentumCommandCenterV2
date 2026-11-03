@@ -1,0 +1,86 @@
+﻿{
+    "5m":  {
+               "symbol":  "RKLX",
+               "provider":  "Alpaca",
+               "feed":  "iex",
+               "timeframe":  "5m",
+               "fromUtc":  "2026-11-03T14:30:00Z",
+               "toUtc":  "2026-11-03T14:40:00Z",
+               "providerRefreshBarCount":  1,
+               "newlyPersistedObservationCount":  1,
+               "exactStoredContentMatches":  1,
+               "freshBarsMissingFromStore":  0,
+               "storedContentMismatches":  0,
+               "zeroNewWritesConsistentWithIdempotentDuplicates":  false,
+               "responseCount":  1,
+               "matchingFeedCount":  1,
+               "firstSourceTimestampUtc":  "2026-11-03T14:30:00+00:00",
+               "latestSourceTimestampUtc":  "2026-11-03T14:30:00+00:00",
+               "observations":  [
+                                    {
+                                        "observationId":  "d1037c4ae4b64c25937e31fad577adb9",
+                                        "receivedAt":  "2026-11-03T16:27:20.0811209+00:00",
+                                        "provider":  "Alpaca",
+                                        "symbol":  "RKLX",
+                                        "sourceTimestamp":  "2026-11-03T14:30:00+00:00",
+                                        "bar":  {
+                                                    "symbol":  "RKLX",
+                                                    "timestamp":  "2026-11-03T14:30:00+00:00",
+                                                    "open":  9.14,
+                                                    "high":  9.32,
+                                                    "low":  9.14,
+                                                    "close":  9.32,
+                                                    "volume":  700,
+                                                    "provider":  "Alpaca",
+                                                    "feed":  "iex",
+                                                    "timeframe":  "5m",
+                                                    "sourceTransport":  "REST"
+                                                },
+                                        "contentHash":  "A871F2888301C5544F519E07DC88B32DA9E74A5BDA55B67E407B24681DE911EA",
+                                        "supersedesObservationId":  null
+                                    }
+                                ]
+           },
+    "1m":  {
+               "symbol":  "RKLX",
+               "provider":  "Alpaca",
+               "feed":  "iex",
+               "timeframe":  "1m",
+               "fromUtc":  "2026-11-03T14:30:00Z",
+               "toUtc":  "2026-11-03T14:40:00Z",
+               "providerRefreshBarCount":  1,
+               "newlyPersistedObservationCount":  1,
+               "exactStoredContentMatches":  1,
+               "freshBarsMissingFromStore":  0,
+               "storedContentMismatches":  0,
+               "zeroNewWritesConsistentWithIdempotentDuplicates":  false,
+               "responseCount":  1,
+               "matchingFeedCount":  1,
+               "firstSourceTimestampUtc":  "2026-11-03T14:30:00+00:00",
+               "latestSourceTimestampUtc":  "2026-11-03T14:30:00+00:00",
+               "observations":  [
+                                    {
+                                        "observationId":  "409141a3ebc343e2b9a9563098f321ba",
+                                        "receivedAt":  "2026-11-03T16:27:16.0461207+00:00",
+                                        "provider":  "Alpaca",
+                                        "symbol":  "RKLX",
+                                        "sourceTimestamp":  "2026-11-03T14:30:00+00:00",
+                                        "bar":  {
+                                                    "symbol":  "RKLX",
+                                                    "timestamp":  "2026-11-03T14:30:00+00:00",
+                                                    "open":  9.14,
+                                                    "high":  9.32,
+                                                    "low":  9.14,
+                                                    "close":  9.32,
+                                                    "volume":  700,
+                                                    "provider":  "Alpaca",
+                                                    "feed":  "iex",
+                                                    "timeframe":  "1m",
+                                                    "sourceTransport":  "REST"
+                                                },
+                                        "contentHash":  "1DCEB670E98F139BD7A64BAC39BC6D9436144AE35DFD8CE0277A5DC553FD5278",
+                                        "supersedesObservationId":  null
+                                    }
+                                ]
+           }
+}

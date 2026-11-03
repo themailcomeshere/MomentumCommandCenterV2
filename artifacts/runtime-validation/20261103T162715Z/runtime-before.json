@@ -1,0 +1,221 @@
+﻿{
+    "capturedAtUtc":  "\/Date(1793723242078)\/",
+    "stream":  {
+                   "enabled":  true,
+                   "configured":  true,
+                   "connected":  true,
+                   "state":  "SUBSCRIBED",
+                   "feed":  "iex",
+                   "symbols":  [
+                                   "ASTX",
+                                   "EVR",
+                                   "MHK",
+                                   "OSW",
+                                   "R",
+                                   "RKLX",
+                                   "RTO",
+                                   "SPY",
+                                   "XRPN"
+                               ],
+                   "subscribedSymbols":  [
+                                             "ASTX",
+                                             "EVR",
+                                             "MHK",
+                                             "OSW",
+                                             "R",
+                                             "RKLX",
+                                             "RTO",
+                                             "SPY",
+                                             "XRPN"
+                                         ],
+                   "maxSymbols":  30,
+                   "lastMessageUtc":  "2026-11-03T16:26:59.802+00:00",
+                   "lastBarUtc":  "2026-11-03T16:26:00+00:00",
+                   "persistedBars":  45,
+                   "receivedBars":  45,
+                   "barsBySymbol":  {
+                                        "SPY":  {
+                                                    "barCount":  15,
+                                                    "lastBarUtc":  "2026-11-03T16:26:00+00:00"
+                                                },
+                                        "MHK":  {
+                                                    "barCount":  13,
+                                                    "lastBarUtc":  "2026-11-03T16:26:00+00:00"
+                                                },
+                                        "ASTX":  {
+                                                     "barCount":  2,
+                                                     "lastBarUtc":  "2026-11-03T16:24:00+00:00"
+                                                 },
+                                        "XRPN":  {
+                                                     "barCount":  1,
+                                                     "lastBarUtc":  "2026-11-03T16:20:00+00:00"
+                                                 },
+                                        "RKLX":  {
+                                                     "barCount":  2,
+                                                     "lastBarUtc":  "2026-11-03T16:17:00+00:00"
+                                                 },
+                                        "RTO":  {
+                                                    "barCount":  3,
+                                                    "lastBarUtc":  "2026-11-03T16:22:00+00:00"
+                                                },
+                                        "R":  {
+                                                  "barCount":  1,
+                                                  "lastBarUtc":  "2026-11-03T16:21:00+00:00"
+                                              },
+                                        "EVR":  {
+                                                    "barCount":  5,
+                                                    "lastBarUtc":  "2026-11-03T16:24:00+00:00"
+                                                },
+                                        "OSW":  {
+                                                    "barCount":  3,
+                                                    "lastBarUtc":  "2026-11-03T16:26:00+00:00"
+                                                }
+                                    },
+                   "lastError":  null,
+                   "note":  "Minute bars and late updatedBars only; this is not a trade/quote tick stream."
+               },
+    "collector":  {
+                      "enabled":  true,
+                      "configuredSymbols":  [
+                                                "SPY",
+                                                "QQQ",
+                                                "IWM",
+                                                "RTO",
+                                                "AMT"
+                                            ],
+                      "configuredProviders":  [
+                                                  "Alpaca"
+                                              ],
+                      "intervals":  [
+                                        "1m",
+                                        "5m"
+                                    ],
+                      "intervalSeconds":  60,
+                      "initialLookbackMinutes":  20,
+                      "overlapMinutes":  5,
+                      "checkpointPath":  "C:\\Users\\jampo\\AppData\\Local\\MomentumCommandCenterV2\\collector-watermarks.json",
+                      "checkpointLoadCompleted":  true,
+                      "checkpointFileFound":  true,
+                      "checkpointLoadedEntryCount":  14,
+                      "checkpointLoadCompletedUtc":  "2026-11-03T16:12:47.7506802+00:00",
+                      "checkpointLoadError":  null,
+                      "watermarks":  [
+                                         {
+                                             "key":  "Alpaca/SPY/1m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/SPY/5m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/QQQ/1m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/QQQ/5m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/TTE/1m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/TTE/5m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/FMS/1m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/FMS/5m",
+                                             "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/IWM/1m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/IWM/5m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/RTO/1m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:22:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/RTO/5m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:20:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/AMT/1m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         },
+                                         {
+                                             "key":  "Alpaca/AMT/5m",
+                                             "sourceTimestampUtc":  "2026-11-03T16:25:00+00:00"
+                                         }
+                                     ],
+                      "cycles":  14,
+                      "newlyPersistedObservations":  689,
+                      "lastCycleErrors":  0,
+                      "lastCycleStartedUtc":  "2026-11-03T16:26:23.9364285+00:00",
+                      "lastCycleCompletedUtc":  "2026-11-03T16:26:25.40069+00:00",
+                      "recentErrors":  [
+
+                                       ],
+                      "mode":  "durable-watermark historical REST polling with bounded backfill chunks; not websocket/live tick streaming"
+                  },
+    "providers":  {
+                      "value":  [
+                                    {
+                                        "provider":  "Alpaca",
+                                        "configuredFeed":  "iex",
+                                        "configuredFeedSource":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                        "feedConfigurationSources":  [
+                                                                         {
+                                                                             "source":  "JsonConfigurationProvider for \u0027appsettings.json\u0027 (Optional)",
+                                                                             "value":  "sip"
+                                                                         },
+                                                                         {
+                                                                             "source":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                                                             "value":  "iex"
+                                                                         }
+                                                                     ],
+                                        "configured":  true,
+                                        "validated":  true,
+                                        "status":  "VALIDATED_DATA_RETURNED",
+                                        "lastSuccessfulDataValidationUtc":  "2026-11-03T16:27:20.423+00:00",
+                                        "lastSuccessfulDataValidationBarCount":  1269,
+                                        "capabilities":  [
+                                                             "Historical 1m/5m OHLCV bars",
+                                                             "REST with bounded pagination and transient retries",
+                                                             "Configured feed: iex",
+                                                             "Extended-hours bars included only when provider returns them for this feed/entitlement",
+                                                             "Scanner/movers discovery still depends on configured scanner source"
+                                                         ],
+                                        "credentialLocation":  "server environment / user secrets; never frontend"
+                                    },
+                                    {
+                                        "provider":  "Massive",
+                                        "configuredFeed":  null,
+                                        "configuredFeedSource":  null,
+                                        "feedConfigurationSources":  null,
+                                        "configured":  false,
+                                        "validated":  false,
+                                        "status":  "NOT_CONFIGURED",
+                                        "lastSuccessfulDataValidationUtc":  null,
+                                        "lastSuccessfulDataValidationBarCount":  0,
+                                        "capabilities":  [
+                                                             "Historical 1m/5m OHLCV aggregates",
+                                                             "REST only; no websocket yet",
+                                                             "Scanner/movers endpoint not implemented",
+                                                             "Plan/endpoint entitlements must be verified"
+                                                         ],
+                                        "credentialLocation":  "server environment / user secrets; never frontend"
+                                    }
+                                ],
+                      "Count":  2
+                  }
+}

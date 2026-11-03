@@ -1,0 +1,92 @@
+﻿{
+    "capturedAtUtc":  "2026-11-03T16:44:19.5069178+00:00",
+    "baseUri":  "http://localhost:53360",
+    "configuredSymbols":  [
+                              "SPY",
+                              "QQQ",
+                              "IWM",
+                              "RTO",
+                              "AMT"
+                          ],
+    "configuredProviders":  [
+                                "Alpaca"
+                            ],
+    "intervalSeconds":  60,
+    "overlapMinutes":  5,
+    "cycles":  31,
+    "lastCycleErrors":  0,
+    "lastCycleStartedUtc":  "2026-11-03T16:43:56.4192664+00:00",
+    "lastCycleCompletedUtc":  "2026-11-03T16:43:57.7002624+00:00",
+    "recentErrors":  [
+
+                     ],
+    "checkpointPath":  "C:\\Users\\jampo\\AppData\\Local\\MomentumCommandCenterV2\\collector-watermarks.json",
+    "checkpointLoadCompleted":  true,
+    "checkpointFileFoundByWorker":  true,
+    "checkpointLoadedEntryCount":  14,
+    "checkpointLoadCompletedUtc":  "2026-11-03T16:12:47.7506802+00:00",
+    "checkpointLoadError":  null,
+    "checkpointFileStatus":  "COPIED",
+    "checkpointCopy":  "C:\\Users\\jampo\\source\\repos\\MomentumCommandCenterV2\\artifacts\\collector-checkpoint\\20261103T164419Z\\collector-watermarks.json",
+    "checkpointLengthBytes":  617,
+    "checkpointLastWriteTimeUtc":  "2026-11-03T16:43:57.1269660Z",
+    "checkpointSha256":  "750CFB887FC5756982CAA88778AEDFB6A1BB33E531D4B2DAA523D09286FC0EA7",
+    "watermarksFromApi":  [
+                              {
+                                  "key":  "Alpaca/SPY/1m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:42:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/SPY/5m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:40:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/QQQ/1m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:42:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/QQQ/5m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:40:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/TTE/1m",
+                                  "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/TTE/5m",
+                                  "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/FMS/1m",
+                                  "sourceTimestampUtc":  "2026-10-29T19:59:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/FMS/5m",
+                                  "sourceTimestampUtc":  "2026-10-29T19:55:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/IWM/1m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:42:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/IWM/5m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:40:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/RTO/1m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:38:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/RTO/5m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:35:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/AMT/1m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:41:00+00:00"
+                              },
+                              {
+                                  "key":  "Alpaca/AMT/5m",
+                                  "sourceTimestampUtc":  "2026-11-03T16:40:00+00:00"
+                              }
+                          ]
+}
