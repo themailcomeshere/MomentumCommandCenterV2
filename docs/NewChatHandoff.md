@@ -9,8 +9,8 @@
 # 2026-11-03 — latest project handoff (authoritative follow-up)
 
 **Active branch:** `feature/opportunity-quality-classification`  
-**Latest source commit in this follow-up:** `7c265a8777eab3e9f0e2093e89674f98a8f7b75c`  
-**CI:** [41679267305](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679267305) — Release build passed; 182/182 tests passed. ThinkScript and browser behavior are not covered by this CI run.
+**Latest code commit in this follow-up:** `649361834984292eab66fa577e960237d6ff1e7e`  
+**Code CI:** [41679681456](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679681456) — Release build passed; 182/182 tests passed. ThinkScript and browser behavior are not covered by this CI run. Latest documentation-only head: `9f9477c3b9a1cb2de8bc3415c6f34aa27de04938` (its CI run was still in progress at the time of this update).
 
 ## Overnight process — corrected
 
