@@ -220,3 +220,15 @@ Measure false-positive READY rate, missed qualified candidates, ON win rate, mea
 - The proposed close-to-open ON interval and positive-return consistency definition are candidates to confirm, not established final rules.
 - Component point maps and several thresholds are not present in the source material; no mapping is invented here.
 - Data provider entitlements and news-source availability/licensing have not been verified. The current user-provided exclusion list is captured; whether every symbol remains currently Schwab-unavailable has not been independently checked.
+
+## 2026-11-03 operator clarification — Overnight session includes both sides of the close
+
+The Overnight strategy interval includes **Day 1 after-hours (Buy Day) and Day 2 premarket (Sell Day)**. The scanner must qualify candidates before Day 1's regular-session close; after-hours must not be excluded from the Overnight strategy's historical return definition. Preserve separate raw session bars so net endpoint return, full-window high/low excursion and executable order/fill analysis are not conflated.
+
+The proposed actionable review window begins in the **final 60 minutes of the regular session**, not after after-hours. Schedule using America/Phoenix local time and the actual exchange calendar: normally 1:00 PM Arizona during Eastern Standard Time and noon Arizona during Eastern Daylight Time; adjust for early closes. Historical metrics may be precomputed earlier; final-hour processing refreshes current-day qualification and produces the manual-review shortlist.
+
+A previous 2026-11-03 note incorrectly proposed 20:00 ET as the Overnight process start and excluded after-hours. That proposal is withdrawn. The precise historical return endpoint and sell/measurement boundary still require confirmation against the established strategy data; do not silently redefine them.
+
+## [Uncertainties]
+- The exact sell-side endpoint used in the existing historical Overnight gain calculation must be verified against the source implementation/data. Close-to-next-open is a possible net-return endpoint, not proof of the complete path or executable result.
+- Broker buy-order qualifier/eligibility remains a separate execution check; the scanner should deliver candidates early enough for the intended manual pre-close entry.
