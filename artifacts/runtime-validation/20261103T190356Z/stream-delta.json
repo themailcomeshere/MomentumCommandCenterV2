@@ -1,0 +1,46 @@
+﻿[
+    {
+        "symbol":  "SPY",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  13,
+        "barCountAfter":  18,
+        "newBarsObserved":  5,
+        "lastBarBeforeUtc":  "2026-11-03T19:03:00+00:00",
+        "lastBarAfterUtc":  "2026-11-03T19:08:00+00:00",
+        "advanced":  true
+    },
+    {
+        "symbol":  "RKLX",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  0,
+        "barCountAfter":  0,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  null,
+        "lastBarAfterUtc":  null,
+        "advanced":  false
+    },
+    {
+        "symbol":  "ASTX",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  2,
+        "barCountAfter":  2,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  "2026-11-03T19:00:00+00:00",
+        "lastBarAfterUtc":  "2026-11-03T19:00:00+00:00",
+        "advanced":  false
+    },
+    {
+        "symbol":  "XRPN",
+        "acknowledgedBefore":  true,
+        "acknowledgedAfter":  true,
+        "barCountBefore":  1,
+        "barCountAfter":  1,
+        "newBarsObserved":  0,
+        "lastBarBeforeUtc":  "2026-11-03T18:59:00+00:00",
+        "lastBarAfterUtc":  "2026-11-03T18:59:00+00:00",
+        "advanced":  false
+    }
+]
