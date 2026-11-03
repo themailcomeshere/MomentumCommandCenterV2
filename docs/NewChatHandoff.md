@@ -1,3 +1,89 @@
+# 2026-11-03 — latest project handoff (authoritative follow-up)
+
+**Active branch:** `feature/opportunity-quality-classification`  
+**Latest source commit in this follow-up:** `7c265a8777eab3e9f0e2093e89674f98a8f7b75c`  
+**CI:** [41679267305](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679267305) — Release build passed; 182/182 tests passed. ThinkScript and browser behavior are not covered by this CI run.
+
+## Overnight process — corrected
+
+The newer November 3 project-control documents on `master` supersede the erroneous 20:00 ET start note:
+- Overnight includes Day 1 after-hours and Day 2 premarket.
+- Review/qualify candidates in the final 60 minutes before the Day 1 regular-session close.
+- Evaluation start = actual regular close minus 60 minutes.
+- Buy deadline = actual regular-session close.
+- Normally noon Arizona during EDT and 1:00 PM Arizona during EST; adapt to early closes using the exchange calendar.
+- Do not wait until after-hours ends. Historical after-hours and next-day premarket are both part of the Overnight interval.
+- Exact historical sell-side endpoint and broker buy qualifier/eligibility still need source-backed confirmation.
+
+## Market-session clock implementation
+
+- `MarketSessionClockSnapshot` now returns `overnightEvaluationStartUtc`, `overnightBuyDeadlineUtc`, and `overnightEvaluationOpen`.
+- The prototype header displays a countdown until evaluation starts (or OPEN during the window) and a countdown to the buy deadline.
+- Uses `UsEquitiesSessionCalendar` and America/New_York; early-close days use the actual scheduled close.
+- Production `frontend/index.html` layout was not changed.
+- 182 tests passed in exact-head CI run 41679267305. Browser acceptance remains open.
+
+## 1M ThinkScript source
+
+- User-uploaded `docs/Charts/1M/CurrentStudy_CouldBeWrong.txt` is 1,424 lines and identifies itself as V14.5, not V14.5.1. It is a full-looking execution study but not independently proven byte-identical to the installed TOS study.
+- Created `docs/Charts/1M/MainStudy_V14.5.2.txt` from that source; preserved original.
+- V14.5.2 corrects the reconstructed 5M Permission condition to match normal 5M V4.1.7: 5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= minimum. The former 1M source omitted the Daily VWAP condition and used a stricter EMA9 > EMA20 comparison.
+- V14.5.2 also maps Arizona 3:55 PM to 18:55 EDT / 17:55 EST using the same US DST calendar logic as the 5M study.
+- Do not replace the installed study until TOS compile succeeds and matched-bar outputs are checked in both DST regimes. GitHub CI cannot compile ThinkScript.
+
+## November 3 scanner export
+
+Detailed review: [Overnight Scanner Full-Universe Review](Validation/Overnight-Scanner-Full-Universe-20261103.md).
+
+- CSV has two metadata lines, header on line 3, 195 unique ticker rows, zero duplicates.
+- The scanner reportedly displayed 248; 53 rows are not present in this export.
+- Five available historical-metric gates: 107 pass, 81 incomplete, 7 fail.
+- Top historical-score triage: MHK, PUK, AON, DANOY, GEHC, WWW, VSXY, TRN, NAC, LAMR, VRTX, XPOF, FCPT, SWX, OPCH.
+- These are not approved Boring Overnight candidates. Current price, 20D average volume, current exclusions, catalyst clearance and current chart states are still required.
+- OSW, EVR and MHK are not on the canonical 55-symbol Schwab exclusion source found on master. Live broker eligibility and the feature branch's local App_Data exclusion file remain unknown.
+
+## Runtime evidence supplied by user
+
+### Market-data delivery
+- API health check passed.
+- SPY advanced 15 to 20 stored 1M bars (+5); XRPN advanced 1 to 2 (+1); RKLX stayed at 2; ASTX stayed at 2.
+- RKLX idempotency comparisons were false for both 1M and 5M. Do not assume failure solely from a symbol not printing; inspect source transport, source timestamp, expected eligible prints and raw artifacts.
+- Require WebSocket provenance, >=50 completed bars and freshness before expecting `ALPACA_WEBSOCKET_LATEST_BAR`; 5M permission remains REST-backed.
+- Raw JSON artifacts were saved locally under `artifacts/runtime-validation/20261103T162715Z`; they are not committed/available in this review. Preserve them with branch SHA and exact test window.
+
+### RTO 20-session history
+- The supplied table contains 40 expected boundaries.
+- Missing exact next-session opens: 2026-10-14 13:30Z (nearest +4m), 2026-10-21 13:30Z (nearest +1m), 2026-11-03 14:30Z (nearest +1m).
+- Other displayed boundaries are exact. Do not impute adjacent bars.
+- The pasted table does not expose actual feed metadata; inspect saved JSON before calling it SIP.
+
+## Branch / merge
+
+- GitHub compare: `master...feature/opportunity-quality-classification` reports status `diverged`, 1,194 commits ahead, 160 behind, 300 changed files.
+- PR #7 was closed as incorrectly based on master and explicitly warns against wholesale merging.
+- Master contains newer November 3 Overnight docs and the canonical 55-symbol exclusion provider; feature contains current project work and new commits.
+- **Do not merge yet.** Reconcile master-only commits and branch-only code deliberately, identify the merge base/conflicts, then create a reviewed PR. No merge was performed.
+
+## Immediate operator actions
+
+1. Pull feature branch after exact-head CI; run `.\scripts\Get-Latest-And-Test.ps1` and hard-refresh `/prototypeIndex.html`. Verify both countdowns and the regular-session clock.
+2. In TOS, add V14.5.2 as a separate study; do not overwrite V14.5.1 or V14.5. Compile first. Check 1M and 5M outputs at 15:54 / 15:55 / 15:56 Arizona on standard- and daylight-time dates; include the exact 5M completed-bar intervals and Permission components.
+3. Export the full 248-row scanner result and verify 248 data rows after preamble/header. Then browser-import the 195-row file and the corrected full export.
+4. Provide current Daily/5M/1M charts for the top filtered candidates and a current runtime exclusion-list response/file.
+5. Inspect the local runtime JSON artifacts for sourceTransport/sourceTimestampUtc, per-symbol stream freshness and RKLX idempotency. Preserve branch SHA and exact window.
+6. Inspect RTO JSON feed metadata and classify the three missing opens. Never replace them with nearest-minute bars.
+7. Continue selective master/feature reconciliation; do not merge wholesale.
+
+## [Uncertainties]
+
+- Installed TOS study identity is not proven byte-for-byte; V14.5.2 is a proposed source revision pending TOS compile/parity.
+- The CSV export count mismatch (195 versus 248) is unexplained.
+- Live broker tradability, local runtime exclusions and catalyst clearance remain unverified.
+- Runtime JSON artifacts are local and were not available in the repository review.
+- The exact historical Overnight sell-side endpoint and Schwab buy qualifier remain unresolved.
+
+---
+
 ## 2026-11-03 — full Master To-Do audit, EOD source correction, shortlist and prototype overflow
 
 **Branch:** `feature/opportunity-quality-classification`  
