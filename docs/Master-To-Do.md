@@ -1,3 +1,10 @@
+## 2026-11-03 — latest verified code checkpoint
+
+- [x] Latest code head `7583f5233c7dbd5d937fd7504218dd0235dc4677` passed exact-head Release build and 182/182 tests in [Actions run 41680258800](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41680258800).
+- [x] Overnight Quick Start updated with final-hour evaluation timing, after-hours + next-day premarket definition, and full CSV metric import behavior.
+- [x] Thinkorswim/MCC parity audit updated with the separate V14.5.2 candidate source and required TOS validation.
+- [ ] Browser import/Red Zone and market-clock visual acceptance remain user-side tasks.
+
 
 
 ## 2026-11-03 follow-up — scanner importer and full-universe exclusion cross-check
