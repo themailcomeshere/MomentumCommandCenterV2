@@ -1,3 +1,18 @@
+## 2026-11-03 — current user acceptance corrections
+
+- [x] Current CSV result is 198 rows imported and rendered; historical 187 PASS / 11 FAIL / 0 UNKNOWN; 0 exclusion matches; 0 READY. Row count is specific to this export; do not require 248.
+- [x] Exclusion store's 56 entries are canonical 55 plus TEST. OSW/EVR/MHK are not in the canonical exclusion source.
+- [x] RKLX refresh/store 1M=40 / 5M=31 and idempotency True/True.
+- [x] SPY advanced 5 stream bars; RKLX/ASTX/XRPN did not. Review sourceTransport, timestamps and freshness; a no-advance symbol is not automatically a global stream failure.
+- [x] Clarified 50-bar WebSocket source-selection minimum; not 50 new bars in a five-minute test. 5M Permission remains REST.
+- [x] UI code updated: Unknown historical metric count, sticky table headers, bounded exclusions scrolling, and imported scanner group selection ordering.
+- [ ] Browser verify Red Zone top four and UI changes.
+- [ ] Inspect saved runtime JSON assessment provenance.
+- [ ] Complete exact 3:55 PM Arizona RTO EOD matched-bar test; noon screenshot is not cutoff evidence.
+- [ ] Keep 20-session RTO boundary coverage separate from WebSocket delivery; current IEX result is 37/40 exact.
+
+---
+
 ## 2026-11-03 follow-up — corrected Overnight process, 10:52 scanner export, exclusions and runtime evidence
 
 - [x] Reconciled the new master-branch procedure commit `c14380c867887f98331e382b7dc7049ac1b86894`: Overnight spans Day 1 after-hours plus Day 2 premarket; candidate review starts in the final 60 minutes BEFORE the Day 1 regular-session close. The mistaken 20:00 ET process start is withdrawn.
