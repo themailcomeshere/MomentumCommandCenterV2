@@ -348,10 +348,18 @@ $("scannerFile").addEventListener("change",event=>{
   const lines=text.split(/\r?\n/).filter(line=>line.trim().length);
   if(lines[0]&&/^sep=./i.test(lines[0]))lines.shift();
   if(!lines.length){$("scannerSource").textContent="Import rejected: CSV is empty";return;}
-  const delimiter=detectCsvDelimiter(lines[0]),headers=parseCsvLine(lines.shift(),delimiter).map(normalizeCsvHeader);
-  const symbolIndex=headers.findIndex(value=>["symbol","ticker","symbol/ticker","symbolticker","tickersymbol"].includes(value));
-  if(symbolIndex<0){$("scannerSource").textContent="Import rejected: Symbol/Ticker column required. Headers found: "+headers.join(", ");return;}
-  const imported=lines.map(line=>{const values=parseCsvLine(line,delimiter),field=(...names)=>{const i=names.map(name=>headers.indexOf(name)).find(index=>index>=0);return i===undefined?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score","overnightscore")||"—",status:field("status")||"IMPORTED",extension:field("extension","ext")||"DATA?",freshness:field("freshness","data_as_of","dataasof")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
+  const symbolHeaders=["symbol","ticker","symbol/ticker","symbolticker","tickersymbol"];
+  let headerIndex=-1,delimiter=",",headers=[],symbolIndex=-1;
+  for(let i=0;i<Math.min(lines.length,25);i++){
+   const candidateDelimiter=detectCsvDelimiter(lines[i]);
+   const candidateHeaders=parseCsvLine(lines[i],candidateDelimiter).map(normalizeCsvHeader);
+   const candidateSymbolIndex=candidateHeaders.findIndex(value=>symbolHeaders.includes(value));
+   if(candidateSymbolIndex>=0){headerIndex=i;delimiter=candidateDelimiter;headers=candidateHeaders;symbolIndex=candidateSymbolIndex;break;}
+  }
+  if(headerIndex<0){const detected=lines.slice(0,10).map(line=>parseCsvLine(line,detectCsvDelimiter(line)).map(normalizeCsvHeader).join(", ")).filter(Boolean).join(" | ");$("scannerSource").textContent="Import rejected: Symbol/Ticker header row not found in first 25 lines. Detected rows: "+detected;return;}
+  const imported=lines.slice(headerIndex+1).map(line=>{const values=parseCsvLine(line,delimiter),field=(...names)=>{const i=names.map(name=>headers.indexOf(name)).find(index=>index>=0);return i===undefined?"":(values[i]||"").trim();};return {symbol:(values[symbolIndex]||"").trim().toUpperCase(),score:field("score","overnightscore")||"—",status:field("status")||"IMPORTED",extension:field("extension","ext")||"DATA?",freshness:field("freshness","data_as_of","dataasof")||"UNKNOWN",reason:field("reason")||"Imported local evidence."};}).filter(item=>item.symbol);
+  if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
+  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
