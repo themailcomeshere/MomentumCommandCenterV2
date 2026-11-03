@@ -614,7 +614,6 @@ function renderMorningReport(){
  }
  previousRedZoneSymbols=currentSymbols;suppressNextRedZoneAlert=false;
  $("morningTopCount").textContent=String(ranked.length);
- const importedCount=group==="imported"?sourceRows.length:0;
  $("reportSubtitle").textContent=(group==="imported"?"Imported scanner preview · top four by Overnight Score among historical-gate passes · price, 20D volume, catalyst and chart gates still DATA?":"Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp");
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
   const card=document.createElement("article");card.className="redzone-card";
