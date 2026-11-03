@@ -35,10 +35,10 @@ Quick Start and parity references were also updated: `docs/Overnight-Scanner-Qui
 
 ## 1M ThinkScript source
 
-- User-uploaded `docs/Charts/1M/CurrentStudy_CouldBeWrong.txt` is 1,424 lines and identifies itself as V14.5, not V14.5.1. It is a full-looking execution study but not independently proven byte-identical to the installed TOS study.
-- Created `docs/Charts/1M/MainStudy_V14.5.2.txt` from that source; preserved original.
-- V14.5.2 corrects the reconstructed 5M Permission condition to match normal 5M V4.1.7: 5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= minimum. The former 1M source omitted the Daily VWAP condition and used a stricter EMA9 > EMA20 comparison.
-- V14.5.2 also maps Arizona 3:55 PM to 18:55 EDT / 17:55 EST using the same US DST calendar logic as the 5M study.
+- Project Library search found the full `Momentum_Command_Center_V3_2_1M_V14_5_1.ts` source (1,260 lines, V14.5.1). The uploaded `CurrentStudy_CouldBeWrong.txt` is V14.5 (1,424 lines), not the same source; substantial differences exist in execution-window, reconstructed 5M, state and bubble logic.
+- Rebased `docs/Charts/1M/MainStudy_V14.5.2.txt` on the actual V14.5.1 Library source (1,298 lines); preserved the upload unchanged.
+- V14.5.2 matches 5M V4.1.7 Permission: 5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= minimum. The separate 1M VWAP execution gate remains intact.
+- V14.5.2 maps Arizona 3:55 PM to 18:55 EDT / 17:55 EST using the same US DST calendar logic as the 5M study.
 - Do not replace the installed study until TOS compile succeeds and matched-bar outputs are checked in both DST regimes. GitHub CI cannot compile ThinkScript.
 
 ## November 3 scanner export
@@ -73,6 +73,10 @@ Detailed review: [Overnight Scanner Full-Universe Review](Validation/Overnight-S
 - PR #7 was closed as incorrectly based on master and explicitly warns against wholesale merging.
 - Master contains newer November 3 Overnight docs and the canonical 55-symbol exclusion provider; feature contains current project work and new commits.
 - **Do not merge yet.** Reconcile master-only commits and branch-only code deliberately, identify the merge base/conflicts, then create a reviewed PR. No merge was performed.
+
+## Source identity correction
+
+The actual V14.5.1 Library file was found and read in full. V14.5.2 is now rebased on that file, not the user's V14.5 upload. See `docs/Validation/Thinkorswim-MCC-Extension-Parity-20261102.md` for the exact source distinction and corrections.
 
 ## Immediate operator actions
 
