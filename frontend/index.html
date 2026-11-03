@@ -161,7 +161,28 @@
  </form>
  <p class="notice" id="mcc-static-0277-p">Fetches Alpaca 1M and 5M bars for each supplied symbol. Enter times in Arizona local time; MCC converts them to UTC. Summaries are not Thinkorswim states or a Boring Overnight qualification.</p>
 </div><div class="table-wrap" id="mcc-static-0278-div"><table id="mcc-static-0279-table"><thead id="mcc-static-0280-thead"><tr id="mcc-static-0281-tr"><th id="mcc-static-0282-th">Symbol</th><th id="mcc-static-0283-th">Score</th><th id="mcc-static-0284-th">Status</th><th id="mcc-static-0285-th">Extension</th><th id="mcc-static-0286-th">Freshness</th><th id="mcc-static-0287-th">Reason</th><th id="mcc-static-0288-th"></th></tr></thead><tbody id="scannerRows"></tbody></table></div><p class="notice" id="mcc-static-0289-p">Local workbench only. Imported rows are evidence for review, not live scanner results or trading instructions. Extension/freshness fields are not calculated unless supplied in your CSV.</p></article><article class="panel" id="mcc-static-0290-article"><div class="section-heading" id="mcc-static-0291-div"><div id="mcc-static-0292-div"><div class="eyebrow" id="mcc-static-0293-div">WATCHLIST</div><h2 id="mcc-static-0294-h2">Working candidates</h2></div><button id="clearWatchlist" class="quiet-button">Clear</button></div><form id="watchlistForm" class="watchlist-form"><input id="watchSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker"><button type="submit" id="mcc-static-0295-button">Add</button></form><ul id="watchlistRows" class="watchlist"></ul><p class="notice" id="mcc-static-0296-p">Watchlist is stored only in this browser using local storage. It does not submit orders or connect to a broker.</p></article></section>
-
+<section id="overnight-qualification" class="panel overnight-qualification-panel">
+ <div class="section-heading">
+  <div><div class="eyebrow">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
+   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV; missing current price, 20D volume, catalyst and chart evidence remain DATA?.</p>
+  </div>
+ </div>
+ <div class="overnight-qualification-summary">
+  <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
+  <div><span>Historical pass</span><strong id="overnightQualPass">DATA?</strong></div>
+  <div><span>Historical fail</span><strong id="overnightQualFail">DATA?</strong></div>
+  <div><span>Excluded</span><strong id="overnightQualExcluded">DATA?</strong></div>
+  <div><span>Final READY</span><strong id="overnightQualReady">0</strong></div>
+ </div>
+ <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
+ <div class="table-wrap overnight-qualification-table">
+  <table>
+   <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON</th><th>5D ON</th><th>Current ON</th><th>Above 20 SMA</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Decision</th></tr></thead>
+   <tbody id="overnightQualificationRows"><tr><td colspan="11">No imported Overnight Scanner data.</td></tr></tbody>
+  </table>
+ </div>
+ <p class="notice">A historical pass is not READY. Price must be &gt; $5, 20D average daily volume must be &gt;= 500,000, catalyst risk must be cleared, and current Daily / 5M authority / 1M execution evidence must be reviewed. This panel will not substitute missing values with zero.</p>
+</section>
 <section id="data-integrations" class="integration-grid">
  <article class="panel" id="mcc-static-0297-article">
   <div class="section-heading" id="mcc-static-0298-div"><div id="mcc-static-0299-div"><div class="eyebrow" id="mcc-static-0300-div">EXCLUSIONS · API-BACKED</div><h2 id="mcc-static-0301-h2">MCC exclusion watchlist</h2></div><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button></div>
