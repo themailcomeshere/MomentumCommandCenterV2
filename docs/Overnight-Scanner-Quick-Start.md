@@ -1,16 +1,18 @@
-## 2026-11-03 — Scanner CSV import retry
+## 2026-11-03 — current scan export and process timing
 
-The synced export is now present at `data/ScannerExports/2026-11-02-OvernightWatchListScanner.csv`. It contains two metadata preamble lines (`Watchlist Scanner`, `Results`) followed by the actual comma-delimited header on line 3. The importer previously assumed line 1 was the header, which caused the reported missing Symbol/Ticker error.
+The November 3 export `data/ScannerExports/2026-11-03-WatchListScanner_901am.csv` contains two metadata preamble lines, the header on line 3, and **195 unique ticker rows**. The user-reported scan count was 248; 53 rows are not present in this file. Preserve the original export and verify the full result count on the next export.
 
-`frontend/app.js` now searches the first 25 nonblank rows for a normalized Symbol/Ticker header, then imports the data rows after it. The uploaded file was parsed against the same delimiter/header rules: comma delimiter, header row 3, **50 nonblank ticker rows**, first three MHK/OSW/EVR with Overnight Scores 73.42/70.97/68.25. Browser interaction has not yet been exercised, so final UI acceptance remains pending. Do not re-upload or edit the CSV to remove its preamble.
+The importer now preserves ON win %, 20D average ON %, median ON %, 5D ON %, ON momentum, current ON %, and above-20-SMA in each imported candidate's `overnightMetrics` object. It also displays a compact metric summary in the existing reason column. Code commit: `649361834984292eab66fa577e960237d6ff1e7e`; Actions run 41679681456 passed the Release build and 182/182 tests. Browser upload/Red Zone acceptance remains pending.
 
-Current importer fix commit: `b05c63713452cbbbb5632a87c639f655ad027e73`. GitHub Actions run 41549757022 is still running at the time this note was added.
+**Corrected Overnight timing:** The strategy includes Day 1 after-hours and Day 2 premarket. Do not wait until 20:00 ET. Begin actionable candidate review in the final 60 minutes before the regular-session close. Evaluation starts at actual close minus 60 minutes; the buy deadline shown by the prototype clock is the regular-session close. This normally appears as noon Arizona during EDT and 1:00 PM Arizona during EST, with early closes handled by the exchange calendar. Broker order qualifier/eligibility remains a separate confirmation.
 
 # Overnight Scanner — Quick Start
 
 **Purpose:** Turn the Thinkorswim Overnight scan into a consistent shortlist, evidence review, and MCC Red Zone workflow. This is a candidate-research workflow, not an automatic trade authorization.
 
 ## 1. Run and preserve the scan
+
+Run the actionable final review during the final 60 minutes of the regular session. The exact start and close are calendar-derived; do not hardcode an Arizona time or wait for after-hours to end.
 
 1. Open the Thinkorswim Overnight scan using the approved scan filters and current study/column version.
 2. Sort `Overnight Score` descending.
@@ -60,7 +62,7 @@ Include the symbol, date, timeframe, and visible study/version where possible. I
 
 ### Thinkorswim CSV import
 
-The Dashboard's Scanner & Watchlist workbench accepts a CSV with a `Symbol`, `Ticker`, or `Symbol/Ticker` column. The importer handles UTF-8 BOMs, comma/semicolon/tab delimiters, and quoted headers/fields. Optional columns are `Score` (also `Overnight Score`), `Status`, `Reason`, `Extension`/`Ext`, and `Freshness`/`Data_As_Of`. Keep the original TOS export unchanged. If the import is rejected, the UI reports the normalized headers it detected so the source format can be diagnosed.
+The Dashboard's Scanner & Watchlist workbench accepts a CSV with a `Symbol`, `Ticker`, or `Symbol/Ticker` column. The importer handles UTF-8 BOMs, comma/semicolon/tab delimiters, and quoted headers/fields. It maps `Overnight Score` to Score and preserves `ON WIN %`, `AVG ON %`, `Median ON %`, `5D ON %`, `ON Momentum`, `Current ON %`, and `Above 20 SMA` as structured `overnightMetrics` on each candidate. The existing reason column displays a compact summary of those values. Optional generic columns remain `Status`, `Reason`, `Extension`/`Ext`, and `Freshness`/`Data_As_Of`. Keep the original TOS export unchanged. If the import is rejected, the UI reports the normalized headers it detected so the source format can be diagnosed.
 
 Example:
 
@@ -120,7 +122,7 @@ Related documents:
 
 ## [Uncertainties]
 
-- The complete 248-symbol scan export was not supplied; this review is based on the visible first 50 rows in the screenshot.
+- The November 3 uploaded export contains 195 rows, not the reported 248. The missing 53 rows are not available in this file.
 - The exact Thinkorswim scan formulas/column implementation behind `Overnight Score` were not supplied in this upload.
-- Price and 20-day average volume for the shortlist were not visible in the screenshot; those hard gates remain unverified.
+- Price and 20-day average volume are not columns in the November 3 CSV; those hard gates remain unverified for the 195-row universe.
 - Catalyst clearance requires current per-symbol review and cannot be inferred from the scan columns.
