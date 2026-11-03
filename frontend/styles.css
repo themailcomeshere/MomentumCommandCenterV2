@@ -1562,3 +1562,17 @@ main{margin-top:16px}
  .prototype-page .focus-chart-layout .focus-price-chart svg{height:170px}
  .prototype-page #opportunity-status.status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Boring Overnight qualification preview: missing downstream evidence stays explicit. */
+.overnight-qualification-panel{margin-top:14px;min-width:0}
+.overnight-qualification-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0}
+.overnight-qualification-summary>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(12,21,39,.55)}
+.overnight-qualification-summary span{font-size:10px;color:var(--muted)}
+.overnight-qualification-summary strong{font-size:20px;font-variant-numeric:tabular-nums}
+.overnight-qualification-table{max-height:460px;overflow:auto}
+.overnight-qualification-table table{min-width:1050px}
+.overnight-qualification-table th,.overnight-qualification-table td{white-space:nowrap;font-variant-numeric:tabular-nums}
+.overnight-qualification-table .qualification-blocked td:nth-child(7),.overnight-qualification-table .qualification-blocked td:last-child{color:var(--danger)}
+.overnight-qualification-table .qualification-pending td:last-child{color:var(--warning)}
+@media(max-width:760px){.overnight-qualification-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.overnight-qualification-summary>div:last-child{grid-column:1/-1}}
