@@ -38,7 +38,7 @@ public sealed class MarketSessionClockTests
     [Fact]
     public void EarlyCloseMovesEvaluationAndBuyDeadlineWithExchangeClose()
     {
-        var result = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-11-27T16:30:00Z"));
+        var result = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-11-27T17:15:00Z"));
         Assert.Equal(DateTimeOffset.Parse("2026-11-27T17:00:00Z"), result.OvernightEvaluationStartUtc);
         Assert.Equal(DateTimeOffset.Parse("2026-11-27T18:00:00Z"), result.OvernightBuyDeadlineUtc);
         Assert.True(result.OvernightEvaluationOpen);
