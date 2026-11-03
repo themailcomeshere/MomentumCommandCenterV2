@@ -3,6 +3,12 @@
 # 1M Command Center — Extended Hours
 # V14.5.2 — V14.5.1 Library baseline + 5M Permission parity + Arizona DST EOD
 #
+# SOURCE BASELINE
+#   Project Library: Momentum_Command_Center_V3_2_1M_V14_5_1.ts
+#   Preserve V14.5.1 trigger, re-arm, continuation, execution, and exit logic.
+#   Targeted changes: exact 5M V4.1.7 Permission inputs and DST-aware 3:55 PM Arizona EOD.
+#   The separate 1M Daily VWAP execution gate remains unchanged.
+#
 # PURPOSE
 #   1M = EXECUTION / CONFIRMATION / TIMING / SHORT-TERM EXIT
 #
