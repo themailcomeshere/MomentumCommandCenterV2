@@ -26,7 +26,7 @@
 
 - [x] Overnight start corrected: final 60 minutes before regular close; includes Buy Day after-hours + Sell Day premarket.
 - [x] API clock calculates final-hour evaluation start and regular-close buy deadline with early-close handling.
-- [x] Prototype header includes evaluation and buy countdowns; production layout unchanged.
+- [x] Production and prototype headers include evaluation and buy countdowns.
 - [x] Clock tests pass in run 41679267305 (182/182).
 - [x] Created separate 1M V14.5.2 candidate with 5M V4.1.7 Permission parity and DST-aware 3:55 PM Arizona EOD.
 - [ ] TOS compile and matched-bar EOD/Permission parity for V14.5.2.
