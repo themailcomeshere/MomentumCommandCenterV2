@@ -1,3 +1,18 @@
+## 2026-11-03 follow-up — runtime fix, CI and Overnight process progress
+
+- [x] Uploaded runtime-validation archive received: `20261103T190356Z.zip` contains the six expected JSON artifacts. Receipt/file inventory confirmed; JSON contents are **not yet analyzed**, so no WebSocket provenance conclusion is recorded.
+- [x] Fixed startup temporal-dead-zone error in `frontend/app.js` by moving Red Zone state declarations before restored-import/startup rendering. Commit `4906d4c1119bedec6ec83f67cd21ff19d2c409fa`; exact commit Actions run [41730308073](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41730308073) completed successfully (restore, build and tests).
+- [x] Documentation update commit `7b9a944f6141eb45a6b809e2da00c17fc584678e` exact-head Actions run [41730346398](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41730346398) completed successfully.
+- [ ] Browser acceptance still required: pull latest, hard-refresh prototype, confirm no console exception, restored Imported CSV, and expected four Red Zone cards. CI is not browser acceptance.
+- [x] Corrected Overnight strategy definition retained: Day 1 after-hours + Day 2 premarket; actionable candidate review starts in the final 60 minutes BEFORE Day 1 regular-session close; buy deadline is actual regular close; use America/Phoenix display and actual exchange calendar/early close.
+- [x] Added [Overnight Process Operational Checklist](Validation/Overnight-Process-Operational-Checklist-20261103.md) with pre-window, final-hour, overnight monitoring, data-evidence and readiness gates.
+- [x] Current CSV acceptance evidence remains 198 imported/rendered; 187 historical PASS, 11 FAIL, 0 UNKNOWN, 0 exclusions, 0 READY. This is not complete trade readiness.
+- [ ] Runtime JSON analysis remains open. Do not lower the 50-completed-WebSocket-bar/freshness/provenance rules; inspect each symbol's sourceTransport, sourceTimestampUtc, completedAtUtc, age and per-symbol deltas.
+- [ ] Daily price/SMA20/20D average-volume source, validated catalyst clearance, matched 5M/1M evidence, broker GTC_EXT eligibility and actual fill/outcome evidence remain open. No automated order submission.
+- [ ] RTO EOD Thinkorswim cutoff acceptance and the 20-session exact-boundary audit remain separate validation tracks.
+
+---
+
 ## 2026-11-03 3:20 PM Arizona — post-restart acceptance and startup exception
 
 - [x] API health returned service `MomentumCommandCenterV2.API`, status `OK`, mode `decision-support-only`, and `orderSubmission=NOT IMPLEMENTED`.
