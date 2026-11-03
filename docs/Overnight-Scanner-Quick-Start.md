@@ -16,7 +16,7 @@ Run the actionable final review during the final 60 minutes of the regular sessi
 
 1. Open the Thinkorswim Overnight scan using the approved scan filters and current study/column version.
 2. Sort `Overnight Score` descending.
-3. Record the scan date/time and session context. Preserve the full result count and visible result count. If the screen says `Showing 50 of 248`, the screenshot documents the first 50 sorted rows, not all 248.
+3. Record the scan date/time and session context. Preserve the result count displayed for that specific scan and the number of rows actually exported. Counts vary by scan snapshot; never carry yesterday's count forward as today's expected row count.
 4. Export the results to CSV if available. Keep the original export unchanged; do not strip columns or overwrite the source file.
 5. Review the highest-ranked names as candidates. Do not assume the top score is a READY overnight position.
 
@@ -126,7 +126,7 @@ Related documents:
 
 ## [Uncertainties]
 
-- The November 3 10:52 AM export contains 198 rows, not the reported 248. The missing 50 rows are not available in this file.
+- The November 3 10:52 AM export contains 198 rows. This is the current file's row count, not a fixed expected count; the user confirmed all 198 rows imported and rendered.
 - The exact Thinkorswim scan formulas/column implementation behind `Overnight Score` were not supplied in this upload.
-- Price and 20-day average volume are not columns in the November 3 CSV; those hard gates remain unverified for the 195-row universe.
+- Price and 20-day average volume are not columns in the November 3 CSV; those hard gates remain unverified for the 198-row imported universe.
 - Catalyst clearance requires current per-symbol review and cannot be inferred from the scan columns.
