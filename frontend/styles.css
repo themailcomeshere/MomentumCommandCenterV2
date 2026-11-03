@@ -416,6 +416,22 @@ footer {
     overflow-x: auto;
 }
 
+/* Keep table column labels visible while scrolling long workbench results. */
+.table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #0c1527;
+}
+
+/* Match the qualification table's bounded viewport for the API-backed exclusion list. */
+.exclusions-list-wrap {
+    max-height: 460px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    min-width: 0;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -1566,7 +1582,7 @@ main{margin-top:16px}
 
 /* Boring Overnight qualification preview: missing downstream evidence stays explicit. */
 .overnight-qualification-panel{margin-top:14px;min-width:0}
-.overnight-qualification-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0}
+.overnight-qualification-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0}
 .overnight-qualification-summary>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:rgba(12,21,39,.55)}
 .overnight-qualification-summary span{font-size:10px;color:var(--muted)}
 .overnight-qualification-summary strong{font-size:20px;font-variant-numeric:tabular-nums}
