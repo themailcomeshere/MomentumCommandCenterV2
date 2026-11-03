@@ -26,7 +26,7 @@ The newer November 3 project-control documents on `master` supersede the erroneo
 ## Market-session clock implementation
 
 - `MarketSessionClockSnapshot` now returns `overnightEvaluationStartUtc`, `overnightBuyDeadlineUtc`, and `overnightEvaluationOpen`.
-- The prototype header displays a countdown until evaluation starts (or OPEN during the window) and a countdown to the buy deadline.
+- Both the production dashboard and prototype header display a countdown until evaluation starts (or OPEN during the window) and a countdown to the buy deadline.
 - Uses `UsEquitiesSessionCalendar` and America/New_York; early-close days use the actual scheduled close.
 - Production `frontend/index.html` layout was not changed.
 - 182 tests passed in exact-head CI run 41679267305. Browser acceptance remains open.
