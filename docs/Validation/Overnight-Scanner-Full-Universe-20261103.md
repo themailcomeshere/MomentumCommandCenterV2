@@ -146,3 +146,8 @@ The panel:
 
 Code commit `daf8564d751f27bca40b1c42e745ec62593f70be` passed [CI 41695106655](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695106655). CSS commit `23d9dafeb6f61f3c2895a0292e1084ccbc9aba5b` passed [CI 41695141848](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695141848). Browser behavior has not yet been verified; the expected counts for this file are 198 imported, 187 history PASS, 11 history FAIL, 0 history unknown, 0 exclusion matches, and 0 READY (assuming the exclusion API returns the seeded list).
 
+
+
+## 9. Imported CSV persistence
+
+The imported scanner rows are now stored in browser localStorage under `mcc.scannerImport.v1`, including filename and import timestamp. Reloading the dashboard restores the last import, selects `Imported local CSV`, and redraws the scanner table, Red Zone preview and qualification panel. This is browser-local persistence, not server-side storage or cross-device synchronization. Commit `ae89734ab62c702e4d16a6ba34761de99f56a0f8`; exact-head CI was pending when this report update was made. Browser reload acceptance remains pending.
