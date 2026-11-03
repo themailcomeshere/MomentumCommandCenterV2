@@ -336,7 +336,7 @@ async function renderOvernightQualification(){
  if(!rows.length){
   body.replaceChildren(Object.assign(document.createElement("tr"),{innerHTML:"<td colspan=\"11\">Import the Overnight Scanner CSV from Scanner Workbench → Candidate discovery.</td>"}));
   setText("overnightQualificationStatus","No imported scanner rows. This panel does not run a new Thinkorswim scan.");
-  setText("overnightQualPass","DATA?");setText("overnightQualFail","DATA?");setText("overnightQualExcluded","DATA?");setText("overnightQualReady","0");
+  setText("overnightQualPass","DATA?");setText("overnightQualFail","DATA?");setText("overnightQualUnknown","DATA?");setText("overnightQualExcluded","DATA?");setText("overnightQualReady","0");
   return;
  }
  setText("overnightQualificationStatus","Checking MCC's local exclusion list…");
@@ -371,7 +371,7 @@ async function renderOvernightQualification(){
   tr.className=item.decision.startsWith("BLOCKED")?"qualification-blocked":"qualification-pending";
   return tr;
  }));
- setText("overnightQualPass",passed);setText("overnightQualFail",failed);setText("overnightQualExcluded",exclusionError?"DATA?":excluded);setText("overnightQualReady","0");
+ setText("overnightQualPass",passed);setText("overnightQualFail",failed);setText("overnightQualUnknown",unknown);setText("overnightQualExcluded",exclusionError?"DATA?":excluded);setText("overnightQualReady","0");
  setText("overnightQualificationStatus",`Imported ${rows.length} rows · historical gates: ${passed} PASS / ${failed} FAIL / ${unknown} DATA? · exclusions: ${exclusionError?"DATA? ("+exclusionError+")":exclusionCount+" loaded, "+excluded+" matches"} · current price, 20D average volume, catalyst and chart gates remain DATA?; no READY decisions are possible from this CSV.`);
 }
 
