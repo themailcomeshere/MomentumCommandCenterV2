@@ -366,3 +366,29 @@ Official source: https://www.nyse.com/trade/hours-calendars.
 
 
 The calendar test suite now enumerates NYSE's published 2026–2028 holiday closures and early-close dates, not only the special cases around Thanksgiving and Christmas. Annual horizon refresh remains required.
+
+
+## 2026-11-03 — CORRECTION: Overnight includes Day 1 after-hours and Day 2 premarket
+
+The prior recommendation to begin the Overnight process after the after-hours session (20:00 ET) was incorrect and is withdrawn.
+
+**Strategy definition:** the measured Overnight period includes both:
+
+1. Day 1 (Buy Day) after-hours trading; and
+2. Day 2 (Sell Day) premarket trading.
+
+The historical Overnight calculation and candidate-selection logic must preserve the full interval. A process that waits until after Day 1 after-hours has ended discards a material portion of the movement that the strategy is intended to capture.
+
+**Operator timing:** begin the actionable candidate review during the final 60 minutes of Day 1 regular trading, so qualification and manual order entry can occur before the regular-session close. Use the actual exchange session calendar and render the time in `America/Phoenix`:
+
+- During Eastern Standard Time: 1:00 PM Arizona start; regular close is 2:00 PM Arizona.
+- During Eastern Daylight Time: noon Arizona start; regular close is 1:00 PM Arizona.
+- Adjust automatically for exchange holidays and early-close sessions. Do not hardcode one Arizona clock time year-round.
+
+Precompute historical Overnight Edge/Boringness statistics before the final hour. During the final hour, refresh current-day price/volume, current Overnight move, news/event risk, 5M structure/permission, data freshness, and other live qualification inputs. Produce the actionable shortlist for human review; this is not authorization for automatic order submission.
+
+Keep Day 1 after-hours bars and Day 2 premarket bars separately observable in source data. Distinguish endpoint return from the full-window high/low/path and from executable fill outcomes. Do not infer that a close-to-next-open endpoint alone describes the entire Overnight path.
+
+**Implementation status:** this is an operator/specification correction. It does not establish that the runtime scheduler, scanner, or historical metric calculation has been changed. The exact historical return endpoint and bar-inclusion rules must still be verified against the source implementation and data. Broker order/session eligibility is a separate check.
+
+The previous 20:00 ET process-start recommendation is superseded and must not be used.
