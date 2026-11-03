@@ -125,3 +125,24 @@ The code change passed CI in [run 41693652415](https://github.com/themailcomeshe
 - Canonical exclusion membership is verified; live Schwab tradability is not.
 - The new importer status message is code- and CI-verified, not yet browser-verified.
 - Historical Overnight Score is not the Boringness Score or a validated top-four opportunity rank.
+
+
+## 8. MCC qualification panel added after the browser report
+
+The production dashboard and prototype now contain a dedicated **Boring Overnight → Candidate qualification** panel directly below the Scanner Workbench.
+
+Operator path:
+1. Open MCC.
+2. Scroll to **Scanner Workbench → Candidate discovery**.
+3. Click **Import CSV** and select the 10:52 AM export.
+4. Scroll below the Scanner Workbench to **Boring Overnight → Candidate qualification**.
+5. Review the five historical gates, exclusion membership, and remaining DATA? gates for each symbol.
+
+The panel:
+- Evaluates ON win >=60%, 20D mean ON >=0.10%, 5D mean strictly > 20D mean, current ON <3%, and above 20 SMA.
+- Reads the MCC local exclusion endpoint and identifies exclusion matches.
+- Displays all imported rows and explicitly marks price, 20D average volume, catalyst, and chart evidence as DATA? because these values are not in this CSV.
+- Never emits READY from historical scanner data alone. It currently displays zero READY.
+
+Code commit `daf8564d751f27bca40b1c42e745ec62593f70be` passed [CI 41695106655](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695106655). CSS commit `23d9dafeb6f61f3c2895a0292e1084ccbc9aba5b` passed [CI 41695141848](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695141848). Browser behavior has not yet been verified; the expected counts for this file are 198 imported, 187 history PASS, 11 history FAIL, 0 history unknown, 0 exclusion matches, and 0 READY (assuming the exclusion API returns the seeded list).
+
