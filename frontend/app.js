@@ -88,6 +88,9 @@ $("closeQuickStart")?.addEventListener("click",()=>quickStartDialog?.close());
 
 
 const scannerData={
+/// MODULE STATE: Declare Red Zone state before startup refreshes or restored imports can render it.
+let redZoneAssessmentRefreshers=[];
+let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
  momentum:[
   {symbol:"XRPN",score:86,status:"WATCH",reason:"Participation and setup require chart confirmation."},
   {symbol:"MNSB",score:78,status:"WATCH",reason:"Developing momentum; no active execution event in this demo."},
@@ -516,8 +519,7 @@ function readRedZoneState(){
  }catch{return {pinned:[],dismissed:[]};}
 }
 function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
-let redZoneAssessmentRefreshers=[];
-let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
+
 function playRedZoneAlert(){
  if(!redZoneSoundEnabled)return;
  const AudioContextType=window.AudioContext||window.webkitAudioContext;
