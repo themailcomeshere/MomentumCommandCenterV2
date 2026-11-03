@@ -319,6 +319,56 @@ function renderScanner(){
  }));
 }
 
+/// MODULE: Boring Overnight qualification preview
+/// PURPOSE: Apply only the historical gates present in the imported scanner CSV and expose every missing downstream gate.
+async function renderOvernightQualification(){
+ const body=$("overnightQualificationRows");
+ if(!body)return;
+ const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ const setText=(id,value)=>{const node=$(id);if(node)node.textContent=String(value);};
+ setText("overnightQualImported",rows.length);
+ if(!rows.length){
+  body.replaceChildren(Object.assign(document.createElement("tr"),{innerHTML:"<td colspan=\"11\">Import the Overnight Scanner CSV from Scanner Workbench → Candidate discovery.</td>"}));
+  setText("overnightQualificationStatus","No imported scanner rows. This panel does not run a new Thinkorswim scan.");
+  setText("overnightQualPass","DATA?");setText("overnightQualFail","DATA?");setText("overnightQualExcluded","DATA?");setText("overnightQualReady","0");
+  return;
+ }
+ setText("overnightQualificationStatus","Checking MCC's local exclusion list…");
+ let exclusionSet=null,exclusionCount="DATA?",exclusionError=null;
+ try{
+  const response=await fetch("/api/watchlists/exclusions",{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const payload=await response.json(),entries=Array.isArray(payload)?payload:(Array.isArray(payload.symbols)?payload.symbols:null);
+  if(!entries)throw new Error("Unexpected exclusion response shape");
+  const normalize=value=>String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  exclusionSet=new Set(entries.map(x=>normalize(x.symbol??x.Symbol)).filter(Boolean));
+  exclusionCount=entries.length;
+ }catch(error){exclusionError=error.message;}
+ const metric=(value)=>{const n=Number(String(value??"").replace("%","").trim());return Number.isFinite(n)?n:null;};
+ let passed=0,failed=0,unknown=0,excluded=0;
+ const evaluated=rows.map(item=>{
+  const m=item.overnightMetrics||{};
+  const onWin=metric(m.onWin),avgOn=metric(m.avgOn),fiveDay=metric(m.fiveDayOn),currentOn=metric(m.currentOn),above20=metric(m.above20Sma);
+  const checks=[onWin!==null&&onWin>=60,avgOn!==null&&avgOn>=0.10,fiveDay!==null&&avgOn!==null&&fiveDay>avgOn,currentOn!==null&&currentOn<3,above20!==null&&above20===1];
+  const history=checks.every(Boolean)?"PASS":checks.some(x=>x===false)?"FAIL":"DATA?";
+  if(history==="PASS")passed++;else if(history==="FAIL")failed++;else unknown++;
+  const normalized=String(item.symbol||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  const isExcluded=exclusionSet?exclusionSet.has(normalized):null;
+  if(isExcluded)excluded++;
+  const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":history==="FAIL"?"BLOCKED · HISTORICAL GATE":history==="DATA?"?"DATA? · HISTORY INPUT":"DATA? · PRICE / 20D VOL / CATALYST / CHART";
+  return {...item,onWin,avgOn,fiveDay,currentOn,above20,history,isExcluded,decision};
+ }).sort((a,b)=>(metric(b.score)??-Infinity)-(metric(a.score)??-Infinity)||String(a.symbol).localeCompare(String(b.symbol)));
+ const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined?"DATA?":String(value);return td;};
+ body.replaceChildren(...evaluated.map(item=>{
+  const tr=document.createElement("tr");
+  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.fiveDay),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell("DATA?"),cell("DATA?"),cell(item.decision));
+  tr.className=item.decision.startsWith("BLOCKED")?"qualification-blocked":"qualification-pending";
+  return tr;
+ }));
+ setText("overnightQualPass",passed);setText("overnightQualFail",failed);setText("overnightQualExcluded",exclusionError?"DATA?":excluded);setText("overnightQualReady","0");
+ setText("overnightQualificationStatus",`Imported ${rows.length} rows · historical gates: ${passed} PASS / ${failed} FAIL / ${unknown} DATA? · exclusions: ${exclusionError?"DATA? ("+exclusionError+")":exclusionCount+" loaded, "+excluded+" matches"} · current price, 20D average volume, catalyst and chart gates remain DATA?; no READY decisions are possible from this CSV.`);
+}
+
 function readWatchlist(){
  try{return JSON.parse(localStorage.getItem("mcc.watchlist")||"[]").filter(item=>typeof item.symbol==="string");}
  catch{return []}
@@ -403,6 +453,7 @@ $("scannerFile").addEventListener("change",event=>{
   const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
   const redZoneSymbols=[...($("redZoneGrid")?.querySelectorAll(".redzone-card h3")??[])].map(node=>node.textContent).filter(Boolean);
   $("scannerSource").textContent=`Imported ${imported.length} local rows · scanner table rendered ${renderedRows} · Red Zone rendered ${redZoneCards}/4: ${redZoneSymbols.join(", ")||"none"}`;
+  void renderOvernightQualification();
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
