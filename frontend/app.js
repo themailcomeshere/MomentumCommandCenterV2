@@ -344,7 +344,7 @@ async function renderOvernightQualification(){
   exclusionSet=new Set(entries.map(x=>normalize(x.symbol??x.Symbol)).filter(Boolean));
   exclusionCount=entries.length;
  }catch(error){exclusionError=error.message;}
- const metric=(value)=>{const n=Number(String(value??"").replace("%","").trim());return Number.isFinite(n)?n:null;};
+ const metric=(value)=>{const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const n=Number(raw.replace("%","").trim());return Number.isFinite(n)?n:null;};
  let passed=0,failed=0,unknown=0,excluded=0;
  const evaluated=rows.map(item=>{
   const m=item.overnightMetrics||{};
@@ -355,7 +355,7 @@ async function renderOvernightQualification(){
   const normalized=String(item.symbol||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
   const isExcluded=exclusionSet?exclusionSet.has(normalized):null;
   if(isExcluded)excluded++;
-  const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":history==="FAIL"?"BLOCKED · HISTORICAL GATE":history==="DATA?"?"DATA? · HISTORY INPUT":"DATA? · PRICE / 20D VOL / CATALYST / CHART";
+  const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":exclusionError?"DATA? · EXCLUSION LIST":history==="FAIL"?"BLOCKED · HISTORICAL GATE":history==="DATA?"?"DATA? · HISTORY INPUT":"DATA? · PRICE / 20D VOL / CATALYST / CHART";
   return {...item,onWin,avgOn,fiveDay,currentOn,above20,history,isExcluded,decision};
  }).sort((a,b)=>(metric(b.score)??-Infinity)-(metric(a.score)??-Infinity)||String(a.symbol).localeCompare(String(b.symbol)));
  const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined?"DATA?":String(value);return td;};
