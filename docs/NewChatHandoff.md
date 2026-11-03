@@ -1,3 +1,65 @@
+# 2026-11-03 — Current operator handoff (supersedes older next-step lists)
+
+## Current branch and repository state
+- Repository: `themailcomeshere/MomentumCommandCenterV2`
+- Working branch: `feature/opportunity-quality-classification`
+- Do not merge `master` wholesale. The branches are materially divergent; selectively port specific docs/source only after compare and tests.
+- Feature branch now includes UI changes for sticky table headers, a bounded exclusions list viewport, and an Unknown historical metrics summary. These source commits have not yet received exact-head CI/browser acceptance in this handoff.
+
+## Latest scanner / qualification result
+- User reports 198 imported rows and 198 scanner rows rendered.
+- Historical metrics: 187 PASS, 11 FAIL, 0 UNKNOWN.
+- Exclusion matches: 0; final READY: 0.
+- The fixed 248-row target is withdrawn. Row counts vary by scan snapshot; validate complete import of the current file, not a stale count.
+- 0 READY is expected because current price, 20D average volume, catalyst clearance, and current chart gates are not evidenced by the CSV.
+- The qualification panel now has a visible Unknown historical metrics summary. Browser confirmation is still required.
+- Red Zone currently reports 0/4 cards despite the historical panel reporting 187 PASS. This is an open defect/acceptance discrepancy. After pulling, select Imported CSV, confirm the import persisted, check that the Red Zone filter selects the top four among historical passes, and verify manual pins/dismissals are not hiding them.
+
+## Exclusion-list interpretation
+- Feature runtime list seed is 55 canonical exclusions plus preserved TEST = 56.
+- OSW, EVR, and MHK are not in the canonical 55-symbol source. Their absence from the API result is expected; it does not prove the API is reading an old file.
+- After API restart, query `GET /api/watchlists/exclusions`, verify count 56, and inspect several canonical symbols plus TEST. Do not add OSW/EVR/MHK without an explicit operator decision.
+
+## November 3 runtime result
+User ran the runtime test against localhost:53360:
+- RKLX Alpaca/IEX stored bars: 1M=40, 5M=31.
+- Provider refresh/store idempotency: 1M=True, 5M=True. This confirms exact match of the returned provider bars to stored observations for that request.
+- Stream snapshot over five minutes: SPY advanced 5 bars; RKLX, ASTX and XRPN did not advance.
+- All four were acknowledged before and after. Acknowledgement alone is not a delivery pass.
+- Do not call the three no-advance symbols failures without checking whether IEX had eligible prints and examining each symbol's assessment provenance/freshness.
+
+The 50-completed-bar threshold is a source-selection requirement for choosing WebSocket as the latest 1M assessment source. It is not a demand for 50 new bars during a five-minute capture. Require all of:
+1. At least 50 completed persisted 1M WebSocket observations.
+2. A fresh latest completed bar.
+3. `oneMinute.sourceTransport` identifies WebSocket.
+4. `oneMinute.sourceTimestampUtc` / `completedAtUtc` match the expected current bar and age.
+5. 5M Permission remains REST-backed.
+
+Inspect JSON files in `artifacts/runtime-validation/20261103T190356Z`. If the folder is not present locally, the artifact evidence is not available to this chat; do not fabricate its JSON fields.
+
+## RTO screenshot review — November 3, 12:00 PM Arizona
+- Uploaded chart shows RTO 5M and 1M views, not a 3:55 PM cutoff capture.
+- 5M labels: PREPARE TO SELL; Permission NO; structure NEUTRAL; bullish regime established; RVOL 0.28; RSI 50.1; extension 0.58 ATR; runner momentum neutral.
+- 1M labels: WAIT; reconstructed 5M Permission NO; 5M structure TRANSITIONING; RVOL 1.49; RSI 51.8; NX 1.31 ATR.
+- Repeated PREPARE TO SELL bubbles are not equivalent to SELL or EOD GET OUT. No visible EOD GET OUT event is established in this screenshot.
+- This chart does not prove the 3:55 PM Arizona EOD behavior. Capture the exact bars immediately before, at, and after the cutoff from the correct installed study before closing that validation.
+
+## Clarification of prior Steps 5–7
+These are three separate checks; none asks you to re-export a fixed number of scanner rows.
+
+5. **Live WebSocket provenance:** During regular hours, capture before/after stream status and full live-assessment JSON. Compare per-symbol bar-count deltas, latest completed timestamp, transport source, and freshness. SPY advanced; the other three did not in the supplied test. Save the result; do not lower freshness or history thresholds.
+6. **RTO 20-session boundary audit:** This is a historical close/open data-coverage test, separate from WebSocket delivery. The latest reviewed IEX artifact had 37/40 exact boundaries, with three next-session opens missing. Keep missing bars explicit; do not substitute nearest bars.
+7. **Thinkorswim RTO study validation:** Use the uploaded same-day 1M/5M screenshot for context, but it is a noon screenshot. It cannot validate the EOD cutoff. Capture matched completed bars around 3:55 PM Arizona and identify the exact study generating any EOD bubble.
+
+## Immediate operator sequence
+1. Pull latest branch and run `.scripts\Get-Latest-And-Test.ps1`.
+2. Stop the old API process, restart the newly built API, and hard-refresh `http://localhost:53360/prototypeIndex.html`.
+3. Import the current scanner CSV once. Confirm 198/198 scanner rows, 187/11/0 historical counts, 0 exclusions, and 0 READY. Confirm the Unknown summary is visible.
+4. Confirm Red Zone now shows the top four historical-pass candidates. If it still shows 0/4, capture the selected scanner-group value, import-status text, and browser console; this is an open code/runtime defect.
+5. Refresh exclusions. Confirm 56 entries and TEST plus canonical symbols. OSW/EVR/MHK are not expected to match the canonical list.
+6. On the next regular-session test, save the complete runtime-validation artifact folder and inspect the four live-assessment JSON objects for transport/timestamp/freshness.
+7. Treat the RTO EOD study test and the 20-session RTO history audit as separate work. Do not rerun the 20-session capture merely to test WebSocket delivery.
+
 ## 2026-11-03 follow-up — corrected Overnight process, 10:52 scanner export, exclusions and runtime evidence
 
 - [x] Reconciled the new master-branch procedure commit `c14380c867887f98331e382b7dc7049ac1b86894`: Overnight spans Day 1 after-hours plus Day 2 premarket; candidate review starts in the final 60 minutes BEFORE the Day 1 regular-session close. The mistaken 20:00 ET process start is withdrawn.
