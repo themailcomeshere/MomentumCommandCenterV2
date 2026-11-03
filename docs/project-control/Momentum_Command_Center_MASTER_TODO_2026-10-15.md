@@ -353,3 +353,10 @@ Goal: get the safest useful MCC workflow into manual use this week; do not call 
 - [NEXT / NOT YET IMPLEMENTED] Audit scanner schedules, data windows, ThinkScript session filters, reports and current-move calculations; validate exact bars before/at/after 20:00 ET in both DST regimes, including holidays/early closes and missing data.
 - [BROKER CONFLICT TO RESOLVE] Previously recorded 3:00–5:00 PM Arizona EXT buy window conflicts with waiting until 20:00 ET. Previously reported GTC_EXT sell eligibility also ends at 20:00 ET. Verify actual buy qualifier and next activation/execution session before changing order instructions. No automatic order placement.
 - Full specification and acceptance tests: `docs/project-control/Trading_System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md`, section dated 2026-11-03. Runtime/code implementation remains outstanding.
+
+## 2026-11-03 — CORRECTION: Boring Overnight begins before the close
+
+- Withdraw the preceding 20:00 ET process-start change; it was based on a misunderstanding. The Overnight strategy includes Day 1 after-hours AND Day 2 premarket. Candidate selection must occur before the Day 1 regular-session close.
+- Proposed workflow: begin actionable review in the final 60 minutes of the regular session, scheduled in America/Phoenix local time (normally 1:00 PM AZ during Eastern Standard Time; noon AZ during Eastern Daylight Time; adjust for early closes). Precompute historical metrics earlier and refresh current-day qualification in this final-hour window.
+- Detailed correction and validation requirements are in `docs/project-control/Trading_System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md`; contract clarification is in `docs/project-control/Boring_Overnight_Column_Data_Contract_v1.md`.
+- Runtime implementation, exact historical return endpoint verification, and broker buy-order eligibility remain outstanding. Do not treat this documentation correction as code completion.
