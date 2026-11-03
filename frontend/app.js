@@ -107,6 +107,12 @@ const scannerData={
  ]
 };
 
+let restoredScannerImport=null;
+try{
+ const saved=JSON.parse(localStorage.getItem("mcc.scannerImport.v1")||"null");
+ if(saved&&Array.isArray(saved.rows)&&saved.rows.every(row=>row&&typeof row.symbol==="string"))restoredScannerImport=saved;
+}catch{restoredScannerImport=null;}
+
 async function refreshLiveMovers(selectLive=true,quiet=false){
  const button=$("refreshMarketMovers"),status=$("liveMoversStatus");
  if(button&&button.disabled&&!quiet)return;
@@ -448,15 +454,27 @@ $("scannerFile").addEventListener("change",event=>{
    };
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
-  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);renderScanner();renderMorningReport();
+  scannerData.imported=imported;
+  let persistenceNote="";
+  try{localStorage.setItem("mcc.scannerImport.v1",JSON.stringify({filename:file.name,importedAtUtc:new Date().toISOString(),rows:imported}));}
+  catch(error){persistenceNote=" · browser storage unavailable: "+error.message;}
+  $("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);renderScanner();renderMorningReport();
   const renderedRows=$("scannerRows")?.querySelectorAll("tr").length??0;
   const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
   const redZoneSymbols=[...($("redZoneGrid")?.querySelectorAll(".redzone-card h3")??[])].map(node=>node.textContent).filter(Boolean);
-  $("scannerSource").textContent=`Imported ${imported.length} local rows · scanner table rendered ${renderedRows} · Red Zone rendered ${redZoneCards}/4: ${redZoneSymbols.join(", ")||"none"}`;
+  $("scannerSource").textContent=`Imported ${imported.length} local rows · scanner table rendered ${renderedRows} · Red Zone rendered ${redZoneCards}/4: ${redZoneSymbols.join(", ")||"none"}${persistenceNote}`;
   void renderOvernightQualification();
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
+if(restoredScannerImport?.rows?.length){
+ scannerData.imported=restoredScannerImport.rows;
+ const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");
+ option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);
+ $("scannerGroup").value="imported";renderScanner();renderMorningReport();void renderOvernightQualification();
+ const stamp=restoredScannerImport.importedAtUtc?new Date(restoredScannerImport.importedAtUtc).toLocaleString():"previous session";
+ $("scannerSource").textContent=`Restored ${restoredScannerImport.rows.length} local rows from ${restoredScannerImport.filename||"CSV"} · imported ${stamp}`;
+}
 
 
 // Feedback notes stay in browser local storage; no network calls are made.
