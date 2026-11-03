@@ -1,3 +1,13 @@
+## 2026-11-03 3:20 PM Arizona — post-restart acceptance and startup exception
+
+- [x] API health returned service `MomentumCommandCenterV2.API`, status `OK`, mode `decision-support-only`, and `orderSubmission=NOT IMPLEMENTED`.
+- [x] Exclusions endpoint returned 56 entries. Filtering OSW/EVR/MHK/TEST returned TEST only; this matches the feature-branch canonical 55 plus TEST.
+- [x] User browser console exposed a startup temporal-dead-zone error: `Cannot access 'redZoneAssessmentRefreshers' before initialization` in `renderMorningReport`, triggered by a startup/import render before the `let` declaration.
+- [x] Fixed `frontend/app.js`: moved `redZoneAssessmentRefreshers` and related Red Zone state declarations to immediately after `scannerData` initialization and before restored-import/startup refresh code. Declaration is now at line 111; first startup render call is at line 148.
+- [ ] Pull this fix, hard-refresh and verify no console exception; confirm Red Zone renders four cards. Do not count CI alone as browser acceptance.
+- [ ] Inspect actual runtime JSON files from `artifacts/runtime-validation/20261103T190356Z`. User provided the directory listing only; file contents are not yet available in this conversation. Request the folder as a ZIP or the six JSON files. Required first: `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json`; use `provider-refresh.json` and `stored-bars.json` to corroborate.
+- [ ] From live-assessments, record per-symbol `oneMinute.sourceTransport`, `sourceTimestampUtc`, `completedAtUtc`, freshness and completed WebSocket bar count. Do not infer from subscription acknowledgements.
+
 # 2026-11-03 — User runtime follow-up and UI acceptance corrections
 
 - [x] User confirms the qualification import rendered **198 scanner rows**, **187 historical PASS**, **11 historical FAIL**, **0 unknown historical metrics**, **0 exclusion matches**, and **0 final READY**. This is the current observed import result; do not require 248 rows. The 248 figure was a different prior scan snapshot and is not a fixed expected row count.
