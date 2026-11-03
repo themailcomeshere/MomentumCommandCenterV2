@@ -1,3 +1,11 @@
+## Latest repository checkpoint — 2026-11-03
+
+- Feature branch head: `d94d27a6a63876206b8bbc66dffa8214d13cd5db`.
+- Exact-head GitHub Actions run [41702900843](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41702900843) passed.
+- The UI source changes and Imported CSV selection-order fix are included. Browser acceptance is still open.
+- User's local API query returned 56 exclusions. The committed feature-branch `src/MomentumCommandCenterV2.API/App_Data/exclusions-watchlist.json` also contains 56 entries (55 canonical + TEST). Among OSW/EVR/MHK/TEST, only TEST is present, which matches the canonical source. This is consistent with the API reading the seeded file; no evidence currently supports the stale-file theory.
+- The 198-row current import is not expected to match the prior 248-result screenshot. The requirement is complete import/render of the current export, not a fixed row count.
+
 # 2026-11-03 — Current operator handoff (supersedes older next-step lists)
 
 ## Current branch and repository state
