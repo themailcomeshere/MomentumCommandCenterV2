@@ -1,3 +1,11 @@
+## 2026-11-03 follow-up — CSV metrics and exclusion comparison
+
+- Canonical 55-symbol exclusion-list comparison across all 195 CSV tickers: **zero overlaps**. This is not proof of live Schwab tradability.
+- Importer commit `649361834984292eab66fa577e960237d6ff1e7e` now preserves all seven Overnight metrics on each imported candidate and shows a compact metric summary in the reason cell.
+- Importer-equivalent parsing against the uploaded CSV returned header row 3, 195 rows, 195 unique symbols and zero duplicates. Browser acceptance remains pending.
+
+---
+
 # 2026-11-03 — latest project handoff (authoritative follow-up)
 
 **Active branch:** `feature/opportunity-quality-classification`  
