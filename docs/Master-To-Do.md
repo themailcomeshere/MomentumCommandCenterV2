@@ -20,7 +20,7 @@
 - [x] User browser console exposed a startup temporal-dead-zone error: `Cannot access 'redZoneAssessmentRefreshers' before initialization` in `renderMorningReport`, triggered by a startup/import render before the `let` declaration.
 - [x] Fixed `frontend/app.js`: moved `redZoneAssessmentRefreshers` and related Red Zone state declarations to immediately after `scannerData` initialization and before restored-import/startup refresh code. Declaration is now at line 111; first startup render call is at line 148.
 - [ ] Pull this fix, hard-refresh and verify no console exception; confirm Red Zone renders four cards. Do not count CI alone as browser acceptance.
-- [ ] Inspect actual runtime JSON files from `artifacts/runtime-validation/20261103T190356Z`. User provided the directory listing only; file contents are not yet available in this conversation. Request the folder as a ZIP or the six JSON files. Required first: `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json`; use `provider-refresh.json` and `stored-bars.json` to corroborate.
+- [ ] Inspect actual runtime JSON files from `artifacts/runtime-validation/20261103T190356Z`. The ZIP is now uploaded and its six-file inventory is confirmed; JSON contents still need analysis. Do not request another upload. Required first: `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json`; use `provider-refresh.json` and `stored-bars.json` to corroborate.
 - [ ] From live-assessments, record per-symbol `oneMinute.sourceTransport`, `sourceTimestampUtc`, `completedAtUtc`, freshness and completed WebSocket bar count. Do not infer from subscription acknowledgements.
 
 # 2026-11-03 — User runtime follow-up and UI acceptance corrections
