@@ -1,3 +1,51 @@
+## Latest handoff — November 3, 2026 (runtime fix and Overnight process)
+
+**Branch:** `feature/opportunity-quality-classification`
+
+### Completed and verified
+- Startup error `Cannot access 'redZoneAssessmentRefreshers' before initialization` fixed by moving Red Zone state declarations before restored-import/startup rendering. Commit: `4906d4c1119bedec6ec83f67cd21ff19d2c409fa`.
+- Exact-head CI for that code commit passed: [Actions 41730308073](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41730308073).
+- Documentation exact-head CI passed: [Actions 41730346398](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41730346398).
+- Runtime archive `20261103T190356Z.zip` is now uploaded and contains `live-assessments.json`, `stream-delta.json`, `runtime-before.json`, `runtime-after.json`, `provider-refresh.json`, and `stored-bars.json`. File inventory is confirmed, but JSON content analysis has not yet been performed.
+- Added `docs/Validation/Overnight-Process-Operational-Checklist-20261103.md`.
+
+### Overnight process — controlling schedule
+- Strategy interval: Day 1 after-hours plus Day 2 premarket.
+- Start actionable review in the final 60 minutes before Day 1 regular-session close. Do not wait until 7:55 PM ET or until after-hours ends.
+- Calculate evaluation start from actual exchange close minus 60 minutes; render in America/Phoenix. Normal Arizona display: noon during EDT, 1:00 PM during EST; adjust for early closes.
+- Buy deadline is actual Day 1 regular-session close.
+- Precompute historical metrics earlier; use final hour to refresh current-day qualification and produce a manual-review shortlist.
+- No automated order submission.
+
+### Latest CSV / Red Zone acceptance
+- Current imported file: 198 rows; 187 historical PASS, 11 FAIL, 0 UNKNOWN, 0 exclusion matches, 0 final READY.
+- Expected top-four Red Zone preview by Overnight Score among historical-gate passes: LXU 68.60, OSW 67.48, MHK 66.79, PUK 65.13 (manual pins/dismissals may alter the display).
+- Browser acceptance after the TDZ fix is still pending. Confirm no console exception, restored Imported CSV, and actual four cards; do not treat CI as browser proof.
+- 0 READY is correct until price, 20D volume, catalyst and current chart gates are source-backed.
+
+### Runtime archive — next analysis
+Use the uploaded archive already attached to this conversation; do not ask for another copy. Inspect:
+1. `live-assessments.json`: per-symbol `oneMinute.sourceTransport`, `sourceTimestampUtc`, `completedAtUtc`, age/freshness and completed WS bar count.
+2. `stream-delta.json`: received/persisted deltas per symbol.
+3. `runtime-before.json` / `runtime-after.json`: connection/subscription state.
+4. `provider-refresh.json` and `stored-bars.json`: REST response vs persisted OHLCV corroboration.
+A subscription acknowledgement is not delivery. Do not lower the 50-completed-bar minimum or freshness threshold. 5M Permission remains REST-backed. JSON content has not yet been analyzed; no transport conclusion is currently justified.
+
+### Remaining blockers
+- Browser acceptance for the imported Red Zone cards and startup fix.
+- Daily price/SMA20/20D average-volume source integration.
+- Validated catalyst evidence; UNKNOWN is not CLEAR.
+- Matched 5M authority / 1M execution evidence and Thinkorswim compile/parity.
+- Complete source-backed GTC_EXT-eligible sell windows, actual Schwab order eligibility and actual fill/outcome history. Historical high touch is not fill probability.
+- RTO 3:55 PM Arizona EOD test and 20-session RTO exact-boundary audit remain separate.
+
+### Operator's next actions
+1. Pull latest feature branch and run `.`\`scripts\Get-Latest-And-Test.ps1`.
+2. Restart API, hard-refresh `http://localhost:53360/prototypeIndex.html`, and verify the console, restored import, 198 scanner rows and four Red Zone cards.
+3. Do not re-upload the runtime ZIP; its contents are awaiting analysis.
+4. Continue the next regular-session runtime test only if the archive analysis identifies a specific gap.
+5. Keep Boring Overnight at WATCH/manual research until all hard gates have source-backed evidence.
+
 ## Latest operator report — November 3, 2026, 3:20 PM Arizona
 
 - API health passed: status OK, decision-support-only, order submission not implemented.
