@@ -458,7 +458,7 @@ $("scannerFile").addEventListener("change",event=>{
   let persistenceNote="";
   try{localStorage.setItem("mcc.scannerImport.v1",JSON.stringify({filename:file.name,importedAtUtc:new Date().toISOString(),rows:imported}));}
   catch(error){persistenceNote=" · browser storage unavailable: "+error.message;}
-  $("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);renderScanner();renderMorningReport();
+  const groupSelect=$("scannerGroup");const option=groupSelect.querySelector('option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)groupSelect.append(option);groupSelect.value="imported";renderScanner();renderMorningReport();
   const renderedRows=$("scannerRows")?.querySelectorAll("tr").length??0;
   const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
   const redZoneSymbols=[...($("redZoneGrid")?.querySelectorAll(".redzone-card h3")??[])].map(node=>node.textContent).filter(Boolean);
