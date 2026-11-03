@@ -26,7 +26,7 @@
 | Above 20 SMA | 22 |
 | Overnight Score | 17 |
 
-The UI importer finds the Symbol header within the first 25 nonblank rows, handles the UTF-8 BOM and the two-line preamble, and maps `Overnight Score` to the imported score. Source inspection shows it imports the symbol, score and optional status/extension/freshness/reason fields; it does **not** retain the other Overnight columns as structured candidate metrics. The parser logic is source-compatible with this file, but browser upload/Red Zone rendering of all 195 rows has not been verified in this pass.
+The UI importer finds the Symbol header within the first 25 nonblank rows, handles the UTF-8 BOM and the two-line preamble, and maps `Overnight Score` to the imported score. Commit `649361834984292eab66fa577e960237d6ff1e7e` extends the importer to preserve all seven Overnight metric fields in each imported candidate's `overnightMetrics` object and puts a compact metric summary in the existing reason column. Source-level parser execution against this CSV found header row 3, comma delimiter, 195 imported rows, 195 unique symbols, and zero duplicates. Browser upload/Red Zone rendering remains unverified.
 
 ## 2. Historical-metric triage across all 195 rows
 
@@ -72,7 +72,7 @@ These are scanner-metric research candidates, **not READY/Boring Overnight appro
 
 ## 3. OSW / EVR / MHK exclusion assessment
 
-The current user-provided canonical Schwab exclusion list has 55 symbols. **OSW, EVR and MHK are not present** in that list. This only means they are not on the supplied canonical list; it does not prove current broker tradability.
+The current user-provided canonical Schwab exclusion list has 55 symbols. A symbol-by-symbol comparison against all 195 scanner rows found **zero overlaps**: none of the 195 symbols is on the canonical 55-list. OSW, EVR and MHK are therefore also absent. This only means they are not on the supplied canonical list; it does not prove current broker tradability.
 
 The feature branch still uses a separate local `App_Data/exclusions-watchlist.json` store. The store returns an empty list when the file is absent and is not seeded from the 55-symbol canonical source. The local runtime file is not available in this repository review. Therefore live exclusion status remains unverified.
 
