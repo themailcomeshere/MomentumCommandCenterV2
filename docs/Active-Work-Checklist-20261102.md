@@ -1,3 +1,11 @@
+## 2026-11-03 — latest verified checkpoint
+
+- [x] Latest code head `7583f5233c7dbd5d937fd7504218dd0235dc4677` passed Release build and 182/182 tests in Actions run 41680258800.
+- [x] Updated Overnight Quick Start and Thinkorswim/MCC parity validation notes.
+- [ ] Browser acceptance and TOS compile/parity remain open.
+
+---
+
 ## 2026-11-03 follow-up — CSV metrics / exclusions
 
 - [x] Compared all 195 scanner symbols to the canonical 55-symbol exclusion list: zero overlaps (list membership only; live tradability unknown).
