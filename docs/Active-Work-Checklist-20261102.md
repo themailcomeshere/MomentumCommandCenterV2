@@ -1,3 +1,10 @@
+## 2026-11-03 — V14.5.1 Library baseline checkpoint
+
+- [x] Found the actual 1M V14.5.1 source in the Project Library; the uploaded V14.5 source is materially different and is not a replacement for it.
+- [x] Rebased `docs/Charts/1M/MainStudy_V14.5.2.txt` on the V14.5.1 Library source. The rebase commit `d877cf90949ca5e480e45b5c242808ad8a770da5` passed Release build and 182/182 tests in [Actions run 41680840299](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41680840299).
+- [x] Added explicit V14.5.1 source provenance and scope comments to the V14.5.2 header in commit `600415fce8b3d7d390e7cf7eebdf4053bfc508ff`; this latest header-only commit's CI was still pending at the time of this update.
+- [ ] TOS compile and matched-bar validation remain mandatory before installing V14.5.2.
+
 ## 2026-11-03 — latest verified checkpoint
 
 - [x] Latest code head `7583f5233c7dbd5d937fd7504218dd0235dc4677` passed Release build and 182/182 tests in Actions run 41680258800.
