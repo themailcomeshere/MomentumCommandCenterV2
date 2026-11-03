@@ -5,7 +5,7 @@
 - [x] Compared all 195 scanner symbols against the canonical 55-symbol Schwab exclusion source on master: **zero overlaps**. This is a list-membership result, not live broker-tradability proof.
 - [x] Extended the CSV importer to preserve ON win %, 20D average ON %, median ON %, 5D ON %, ON momentum, current ON %, and above-20-SMA in `overnightMetrics`; the existing reason column now displays a compact summary. Commit `649361834984292eab66fa577e960237d6ff1e7e`.
 - [x] Executed the importer-equivalent parsing logic against the actual CSV: header row 3, comma delimiter, 195 rows, 195 unique symbols, zero duplicates.
-- [ ] Browser upload/Red Zone rendering remains pending. Exact-head CI is still running for the importer change at the time of this audit update.
+- [ ] Browser upload/Red Zone rendering remains pending. Importer code commit `649361834984292eab66fa577e960237d6ff1e7e` passed build and 182/182 tests in [Actions run 41679681456](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679681456).
 ## 2026-11-03 — latest Overnight timing, scanner export, 1M source and market clock
 
 **This dated update supersedes stale status statements below where they conflict.** Detailed 195-row findings: [Overnight Scanner Full-Universe Review — 2026-11-03](Validation/Overnight-Scanner-Full-Universe-20261103.md).
