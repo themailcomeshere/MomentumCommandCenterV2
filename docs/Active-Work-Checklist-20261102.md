@@ -1,3 +1,12 @@
+## 2026-11-03 follow-up — CSV metrics / exclusions
+
+- [x] Compared all 195 scanner symbols to the canonical 55-symbol exclusion list: zero overlaps (list membership only; live tradability unknown).
+- [x] CSV importer now retains all seven Overnight metric columns in candidate data and summarizes them in the reason cell (commit `649361834984292eab66fa577e960237d6ff1e7e`).
+- [x] Importer-equivalent parse: header row 3, 195 rows, 195 unique, 0 duplicates.
+- [ ] Browser import and Red Zone visual acceptance.
+
+---
+
 ## 2026-11-03 — Overnight timing / scanner / 1M source follow-up
 
 - [x] Overnight start corrected: final 60 minutes before regular close; includes Buy Day after-hours + Sell Day premarket.
