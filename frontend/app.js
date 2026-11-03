@@ -398,7 +398,11 @@ $("scannerFile").addEventListener("change",event=>{
    };
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
-  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);$("scannerSource").textContent=`Imported ${imported.length} local rows · Red Zone updated`;renderScanner();renderMorningReport();
+  scannerData.imported=imported;$("scannerGroup").value="imported";const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);renderScanner();renderMorningReport();
+  const renderedRows=$("scannerRows")?.querySelectorAll("tr").length??0;
+  const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
+  const redZoneSymbols=[...($("redZoneGrid")?.querySelectorAll(".redzone-card h3")??[])].map(node=>node.textContent).filter(Boolean);
+  $("scannerSource").textContent=`Imported ${imported.length} local rows · scanner table rendered ${renderedRows} · Red Zone rendered ${redZoneCards}/4: ${redZoneSymbols.join(", ")||"none"}`;
  };reader.readAsText(file);
 });
 renderScanner();renderWatchlist();
@@ -536,7 +540,8 @@ function renderMorningReport(){
  }
  previousRedZoneSymbols=currentSymbols;suppressNextRedZoneAlert=false;
  $("morningTopCount").textContent=String(ranked.length);
- $("reportSubtitle").textContent="Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp";
+ const importedCount=group==="imported"?sourceRows.length:0;
+ $("reportSubtitle").textContent=(group==="imported"?"Imported scanner preview · "+importedCount+" rows · top four by Overnight Score only · not Boring Overnight qualification":"Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp");
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
   const card=document.createElement("article");card.className="redzone-card";
   const top=document.createElement("div");top.className="redzone-card-top";
