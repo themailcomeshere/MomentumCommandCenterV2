@@ -1,3 +1,9 @@
+## Latest branch-head verification — 2026-11-03
+
+The latest feature-branch head is `d94d27a6a63876206b8bbc66dffa8214d13cd5db`; exact-head GitHub Actions run [41702900843](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41702900843) passed. This is a source/CI result only. Browser verification of Red Zone top-four rendering, sticky headers, Unknown metric summary, and exclusions scrolling remains open.
+
+The local exclusion API returned 56 entries in the user's test. The feature-branch persisted file contains 55 canonical exclusions plus TEST; OSW, EVR and MHK are not in the canonical list. The user's symbol-filter result is consistent with the seeded list.
+
 # November 3, 2026 — current feature-branch acceptance update
 
 - Latest feature-branch source commit at this update: `9777b774de414c4af39ad7ee82b18990b7924972`. Exact-head GitHub Actions run 41702560827 is running; do not call this commit CI-verified until it completes.
