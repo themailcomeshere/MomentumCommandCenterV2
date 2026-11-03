@@ -344,3 +344,12 @@ Goal: get the safest useful MCC workflow into manual use this week; do not call 
 - [BLOCKED — BORING OVERNIGHT] The available files do not cover the full 07:00–20:00 Eastern GTC_EXT window; `eligible-window-high-excursions.csv` is placeholder data. Actual fills/fees are also not found in the audited sources.
 - [CI] Feature-branch run `40380221253` passed for commit `cbbb601b`; later documentation commits triggered new runs. Verify exact branch-head CI before promoting either code or docs.
 - [INTEGRATION] Feature branch is divergent from master. Reconcile deliberately; do not merge wholesale.
+
+
+## 2026-11-03 — Boring Overnight timing correction
+
+- [OPERATOR DIRECTION / DOCUMENTED] Actionable Boring Overnight candidate evaluation begins after U.S. equity after-hours ends: 20:00 America/New_York, not at the 16:00 regular-session close. Keep 16:00–20:00 ET after-hours data separate; do not blend it into the actionable Overnight move/return.
+- Use named-zone conversion (20:00 ET = 5:00 PM Arizona during EDT; 6:00 PM Arizona during EST). Do not hardcode Arizona offsets.
+- [NEXT / NOT YET IMPLEMENTED] Audit scanner schedules, data windows, ThinkScript session filters, reports and current-move calculations; validate exact bars before/at/after 20:00 ET in both DST regimes, including holidays/early closes and missing data.
+- [BROKER CONFLICT TO RESOLVE] Previously recorded 3:00–5:00 PM Arizona EXT buy window conflicts with waiting until 20:00 ET. Previously reported GTC_EXT sell eligibility also ends at 20:00 ET. Verify actual buy qualifier and next activation/execution session before changing order instructions. No automatic order placement.
+- Full specification and acceptance tests: `docs/project-control/Trading_System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md`, section dated 2026-11-03. Runtime/code implementation remains outstanding.
