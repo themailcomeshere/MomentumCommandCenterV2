@@ -1,3 +1,18 @@
+# November 3, 2026 — current feature-branch acceptance update
+
+- Latest feature-branch source commit at this update: `9777b774de414c4af39ad7ee82b18990b7924972`. Exact-head GitHub Actions run 41702560827 is running; do not call this commit CI-verified until it completes.
+- Scanner CSV import acceptance is based on the current export, not a fixed result count: user reports 198 imported and 198 scanner rows rendered; historical gates 187 PASS / 11 FAIL / 0 UNKNOWN; 0 exclusion matches; 0 final READY.
+- Red Zone reported 0/4 despite historical PASS rows. The import code had selected the Imported CSV option before inserting it into the select element; this is now corrected so the option is inserted before setting the selected value. Browser verification remains required.
+- Qualification panel now exposes Unknown historical metrics as a separate summary metric. Sticky table headers are enabled in table wrappers. The API-backed exclusions list has a bounded 460px scroll viewport.
+- Runtime test result: RKLX stored bars 1M=40 / 5M=31; idempotency True/True. Stream test: SPY advanced 5 bars; RKLX/ASTX/XRPN did not. See `docs/Runtime-Acceptance-Runbook.md` §1C; do not confuse subscription acknowledgement with delivery.
+- The persisted exclusion list count 56 is expected from 55 canonical exclusions plus TEST. OSW/EVR/MHK are not in the canonical source list.
+- The 2026-11-03 12:00 PM Arizona RTO screenshot is daytime 1M/5M evidence, not the 3:55 PM EOD cutoff test. It shows 5M Permission NO / neutral structure and 1M WAIT; repeated PREPARE TO SELL labels are not GET OUT.
+- The prior 248-row count is withdrawn as an acceptance target. Validate that every row in the current export is imported and rendered.
+
+See `docs/NewChatHandoff.md` for the exact operator sequence and `docs/Master-To-Do.md` for current open items.
+
+---
+
 ## 2026-11-03 — Scanner CSV import retry
 
 The synced export is now present at `data/ScannerExports/2026-11-02-OvernightWatchListScanner.csv`. It contains two metadata preamble lines (`Watchlist Scanner`, `Results`) followed by the actual comma-delimited header on line 3. The importer previously assumed line 1 was the header, which caused the reported missing Symbol/Ticker error.
