@@ -1,7 +1,8 @@
 # Full Master To-Do Audit — 2026-11-03
 
 Branch: `feature/opportunity-quality-classification`  
-Audit head: `89b9fe73408cee06f0ddfedc1486b7038d335a2a`
+Original audit head: `89b9fe73408cee06f0ddfedc1486b7038d335a2a`  
+Follow-up audit: 170 unchecked boxes re-read and reconciled through `cbd27d4a5083446dd183a28fe72a62ff52b7ecb2`.
 
 This audit reconciles all 138 unchecked Master-To-Do entries by workstream. Repeated/historical entries are not independently re-run or blindly marked complete. A source implementation, unit test, runtime test, browser acceptance, and Thinkorswim acceptance are separate evidence levels.
 
@@ -209,7 +210,7 @@ Detailed scanner report: [Overnight Scanner Full-Universe Review](Validation/Ove
 - [x] Inspected uploaded runtime artifacts. RKLX 1M/5M refresh returned one exact bar each and the store contains matching observations with zero missing/mismatched bars; the idempotency flag is false because this capture inserted a new observation, not because a previously persisted duplicate was mishandled.
 - [x] Runtime live assessments show SPY 1M uses ALPACA_WEBSOCKET_LATEST_BAR with 545 bars and a fresh 16:31Z source timestamp. RKLX (68 bars, 16:17Z), ASTX (117 bars, 16:24Z) and XRPN (53 bars, 16:28Z) use REST because their latest timestamps were stale at the 16:32Z assessment; bar count alone does not qualify for WebSocket latest-bar authority.
 - [x] RTO 20-session artifact confirms Alpaca IEX, 3,965 fetched bars, 37/40 exact boundaries. Missing exact next-session opens: Oct 14 (+4m), Oct 21 (+1m), Nov 3 (+1m). Keep the 20-session result incomplete; do not fill from nearest bars or label it SIP.
-- [x] Updated importer success feedback to report actual rendered scanner row count and actual Red Zone card count/symbols. Red Zone subtitle now clarifies imported preview is top four by raw Overnight Score, not a Boring Overnight rank. Code CI passed in run [41693652415](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41693652415).
+- [x] Updated importer success feedback to report actual rendered scanner row count and actual Red Zone card count/symbols. Red Zone subtitle now clarifies imported preview is top four by Overnight Score among the five historical-gate passes; not a final Boring Overnight rank. Code CI passed in run [41693652415](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41693652415).
 - [x] Added an explicit Boring Overnight Qualification panel to production and prototype dashboards. It applies the five historical CSV gates to all imported rows, queries MCC's local exclusion API, and leaves current price, 20D average volume, catalyst and chart gates as DATA?; READY remains zero until those gates are implemented and evidenced. JS commit `daf8564d751f27bca40b1c42e745ec62593f70be` passed CI [41695106655](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695106655); styles commit `23d9dafeb6f61f3c2895a0292e1084ccbc9aba5b` passed [41695141848](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695141848).
 - [x] Imported scanner CSV is now persisted in browser localStorage (`mcc.scannerImport.v1`) with filename and import timestamp, restored on page reload, and re-renders scanner rows, Red Zone preview and qualification panel. Commit `ae89734ab62c702e4d16a6ba34761de99f56a0f8`; CI run 41695693825 was pending at this documentation snapshot.
 - [ ] Browser-verify the qualification panel shows 198 imported / 187 historical pass / 11 fail / 0 unknown / 0 excluded after the latest exclusion seed is active; current price and 20D volume must remain DATA?.
@@ -224,3 +225,14 @@ Detailed scanner report: [Overnight Scanner Full-Universe Review](Validation/Ove
 ### Second-pass disposition of the remaining checklist
 
 The current Master-To-Do contains 170 unchecked boxes (many are repeated or historical checkboxes, not 170 distinct active deliverables). I re-read the full checklist and grouped repeated/historical entries into the current workstreams rather than treating each repeated checkbox as a separate deliverable. This follow-up unblocked and completed: source-of-truth Overnight document sync, canonical exclusion seed, new export parsing/metric-gate review, importer feedback instrumentation, RKLX persisted-content diagnosis, RTO feed/boundary diagnosis, and the WebSocket freshness interpretation. The remaining boxes are not all newly actionable code tasks: several require the user's local browser/TOS/API session, provider entitlements, missing source data, or external product/broker decisions. The next pass should not mark these as done until their evidence is captured.
+
+
+## 2026-11-03 second-pass completion — qualification UI and import persistence
+
+- [x] Built the Candidate Qualification panel in production and prototype. It evaluates only the five historical metrics actually supplied by the imported scanner CSV and reads the local exclusion endpoint. All unavailable downstream gates remain DATA?; no READY state can be produced by this panel.
+- [x] Missing/blank/loading numeric metrics are explicitly parsed as unknown, not numeric zero.
+- [x] Imported CSV is persisted locally and restored after reload.
+- [x] Imported Red Zone preview excludes candidates failing the five historical gates; it shows at most four highest Overnight Scores among historical-pass candidates, still not final Boringness rank.
+- [x] Quick Start now gives the exact MCC location and import workflow.
+- [ ] Browser-verify production/prototype after pull. Expected 198 rows, 187 history PASS, 11 history FAIL, 0 unknown, 0 exclusions, 0 READY; top four absent manual pin/dismissal overrides: LXU, OSW, MHK, PUK.
+- [ ] Price >$5, 20D average daily volume >=500K, catalyst, Daily/5M/1M evidence and validated Boringness rank remain unimplemented/unavailable; do not mark candidate READY.
