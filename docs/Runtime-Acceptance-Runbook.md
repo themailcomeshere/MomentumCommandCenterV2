@@ -331,3 +331,51 @@ When the user restored `secrets.json` to `iex`:
 ## 5. Schwab Trader API approval
 
 The user reports Schwab Trader API — Individual approval on 2026-11-02. This clears the Individual API approval prerequisite only. App creation, Accounts and Trading Production attachment, app-level Active/Ready status, exact callback URL registration, local secret configuration, OAuth, and read-only account/position retrieval remain open. See `docs/Thinkorswim-Schwab-Integration-Plan.md`. Never request or store App Key, App Secret, authorization code, or tokens in chat/Git.
+
+
+## 1C. November 3, 2026 — interpretation of runtime validation result
+
+The operator supplied the following result from `Test-MarketDataRuntime.ps1`:
+- RKLX / Alpaca / IEX stored bars: 1M=40, 5M=31.
+- Idempotency comparison: 1M=True, 5M=True.
+- Stream subscriptions acknowledged before and after for SPY, RKLX, ASTX and XRPN.
+- Over the five-minute wait, SPY advanced 5 bars; RKLX, ASTX and XRPN advanced 0.
+
+### What this does and does not prove
+- The refresh/store idempotency result is a pass for the returned bars in that invocation: the provider bars matched persisted observations. It is not a WebSocket delivery result.
+- SPY's advancing stream count demonstrates delivery for SPY in that interval.
+- The other three symbols are **not delivery passes** because their counts did not advance. They are also not automatically global stream failures: IEX may have had no eligible prints for an individual symbol.
+- Subscription acknowledgement is connection state only.
+- The 50 completed WebSocket-bar threshold is a minimum history requirement for selecting a WebSocket-backed 1M assessment. It does not mean 50 new bars must arrive during the five-minute test.
+- 5M Permission remains REST-backed. Do not require a WebSocket 5M source.
+- Do not lower freshness/history thresholds to make a source-selection label appear.
+
+### Required artifact review
+Inspect the saved `live-assessments.json` for each symbol and record:
+- `oneMinute.sourceTransport`
+- `oneMinute.sourceTimestampUtc`
+- `oneMinute.completedAtUtc`
+- source age / freshness fields
+- completed persisted WebSocket 1M observation count
+- the corresponding before/after stream `barsBySymbol`, `receivedBars`, and `persistedBars` deltas.
+
+A symbol may have more than 50 historical bars and still select REST if the latest WebSocket bar is stale or the latest selected observation lacks WebSocket provenance. The actual JSON values were not pasted into the chat; **Data not found in sources.** Do not infer them from the summary table.
+
+## 1D. Scanner import and Red Zone acceptance — November 3 correction
+
+- The accepted current import in the user's latest test is 198 rows; 198 scanner rows rendered.
+- Historical qualification reported 187 PASS, 11 FAIL, 0 UNKNOWN, 0 exclusion matches, and 0 READY.
+- Do not require a 248-row export. That number referred to a prior scan snapshot, not a fixed row-count acceptance criterion.
+- The exclusion store's 56 entries are expected to represent the canonical 55 plus TEST. OSW, EVR and MHK are not in the canonical list, so their absence is not proof of a stale API store.
+- The import feedback reported Red Zone 0/4 despite 187 historical passes. This remains an explicit unresolved browser acceptance discrepancy. Verify Imported CSV is selected, the persisted import is restored, and the Red Zone top-four historical filter returns candidates. Capture browser console/status if it still returns none.
+- The qualification panel now displays Unknown historical metrics separately. Browser verify the visible count is 0.
+
+## 1E. Separate RTO validation tracks
+
+Do not conflate these tests:
+
+1. **Same-day chart/study review:** the November 3 RTO screenshot is timestamped 12:00 PM Arizona. It shows 5M Permission NO / NEUTRAL structure and 1M WAIT; repeated PREPARE TO SELL bubbles do not establish SELL or EOD GET OUT. It is not a 3:55 PM Arizona cutoff test.
+2. **EOD cutoff validation:** obtain exact matched bars immediately before, at and after 3:55 PM Arizona from the correct installed 1M/5M studies. The noon screenshot cannot close this item.
+3. **20-session RTO boundary audit:** historical prior-close / next-open coverage. The reviewed IEX result is 37/40 exact; three next-session opens remain missing. Keep the missing observations explicit and do not impute nearest bars.
+4. **Live WebSocket delivery:** separate five-minute regular-session before/after stream test. No-advance symbols require source/feed/eligible-print investigation; they do not change the historical RTO audit result.
+
