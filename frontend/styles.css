@@ -1473,6 +1473,8 @@ main{margin-top:16px}
 .market-session-clock>span{font-size:11px;color:var(--muted);font-weight:700}
 .market-session-clock>strong{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .market-session-clock>small{grid-column:1/-1;color:var(--muted);font-size:9px;overflow-wrap:anywhere}
+ .market-session-overnight{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;margin-top:5px;color:var(--muted);font-size:10px}
+ .market-session-overnight strong{color:var(--text);font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
 #workspace-toolbar{width:100%;margin:0;padding:7px 9px;gap:10px;align-items:center;box-shadow:none;border-radius:9px;background:rgba(12,21,39,.72)}
 #workspace-toolbar>div{min-width:115px;gap:3px}
 #workspace-toolbar label{font-size:10px}
