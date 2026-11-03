@@ -1,115 +1,127 @@
-# Overnight Scanner Full-Universe Review — 2026-11-03
+# Overnight Scanner Full-Universe Review — 2026-11-03 (10:52 AM export)
 
-**Source:** `data/ScannerExports/2026-11-03-WatchListScanner_901am.csv`  
-**Source blob:** `962af9e1cfef24b93362c5d4d00f8de62abc50df`  
-**Branch at review:** `feature/opportunity-quality-classification`  
-**Method:** Parse the original CSV with its two metadata preamble rows and header on line 3. No rows were dropped or deduplicated.
+**Source:** `data/ScannerExports/2026-11-03-WatchListScanner_1052am.csv`  
+**Source blob:** `2026-11-03-WatchListScanner_1052am.csv` on `feature/opportunity-quality-classification`  
+**Method:** Parsed the original UTF-8 CSV including BOM, two metadata rows, and header row 4. All 198 nonblank symbol rows were retained; no duplicate symbols were found.
 
 ## 1. Export integrity
 
-- 2 metadata lines: `Watchlist Scanner`, `Results`.
-- Header row: `Symbol,Description,ON WIN %,AVG ON %,Median ON %,5D ON %,ON Momentum,Current ON %,Above 20 SMA,Overnight Score`.
-- **195 data rows, 195 unique symbols, 0 duplicate symbols.**
-- The user-reported scanner result count was 248. The uploaded file contains 195, so it is not a complete 248-row export. The missing 53 rows are not in this file; do not infer which symbols are missing.
-- The export contains no current price or 20-day average volume fields.
+- Metadata: `Watchlist Scanner`, blank row, `Results`.
+- Header: row 4.
+- Fields: Symbol, Description, ON WIN %, AVG ON %, Median ON %, 5D ON %, ON Momentum, Current ON %, Above 20 SMA, Overnight Score.
+- **198 data rows, 198 unique symbols, 0 duplicates.**
+- The reported scanner result count is 248. This file contains 198 ticker rows: **50 rows are still missing**. Do not infer their identities.
+- No current price or 20-day average daily volume fields are present.
 
-### Loading values by column
+The previous 9:01 AM export had 195 unique symbols. The 10:52 AM export adds three rows net; it is still not the complete 248-result export.
 
-| Field | `loading` cells |
-|---|---:|
-| ON WIN % | 22 |
-| AVG ON % | 25 |
-| Median ON % | 18 |
-| 5D ON % | 14 |
-| ON Momentum | 17 |
-| Current ON % | 15 |
-| Above 20 SMA | 22 |
-| Overnight Score | 17 |
+## 2. Historical-metric gates
 
-The UI importer finds the Symbol header within the first 25 nonblank rows, handles the UTF-8 BOM and the two-line preamble, and maps `Overnight Score` to the imported score. Commit `649361834984292eab66fa577e960237d6ff1e7e` extends the importer to preserve all seven Overnight metric fields in each imported candidate's `overnightMetrics` object and puts a compact metric summary in the existing reason column. Source-level parser execution against this CSV found header row 3, comma delimiter, 195 imported rows, 195 unique symbols, and zero duplicates. Browser upload/Red Zone rendering remains unverified.
-
-## 2. Historical-metric triage across all 195 rows
-
-Applied only the available historical scanner checks:
+Applied the five available checks:
 
 1. ON win rate >= 60%.
-2. 20D average ON return >= +0.10% (the `AVG ON %` field).
-3. 5D ON return strictly greater than `AVG ON %`.
+2. 20-session average ON return >= +0.10%.
+3. 5D ON return strictly greater than 20-session average ON return.
 4. Current ON move < 3%.
 5. Above 20 SMA = 1.
 
-| Result | Rows | Meaning |
-|---|---:|---|
-| Pass all five available gates | **107** | All five fields present and all five conditions pass |
-| Incomplete, no known gate failure | **81** | At least one of the five required fields is `loading` |
-| Known gate failure | **7** | At least one available field definitively fails |
+| Result | Rows |
+|---|---:|
+| Pass all five available checks | **187** |
+| Known failures | **11** |
+| Incomplete / unknown | **0** |
 
 Known failures:
-- Current ON move >=3%: EVER (10.80%), XHR (3.72%), PHG (5.15%), JAN (3.09%), AHRT (3.12%), ALSN (3.90%).
-- 5D ON does not exceed 20D average: CTRE (0.20% versus 0.20%).
+- Current ON move >=3%: HLF (7.00%), EVER (10.80%), XHR (3.72%), PHG (5.15%), JAN (3.09%), AHRT (3.12%), ALSN (3.90%).
+- 5D ON return <= 20D average: CTRE, KVUE, POR.
+- Above 20 SMA = 0: DG.
 
-### Highest Overnight Score among the 107 numeric-pass rows
+No other row failed these five checks. These are historical scanner gates only; they do not establish current price/volume eligibility, catalyst clearance, chart structure, or an actionable order.
 
-These are scanner-metric research candidates, **not READY/Boring Overnight approvals**. The scanner's Overnight Score is not the separately specified Boringness Score.
+## 3. Highest Overnight Score among historical-gate passes
 
-| Symbol | Overnight Score | ON Win % | 20D Avg ON % | 5D ON % | Current ON % |
-|---|---:|---:|---:|---:|---:|
-| MHK | 66.79 | 65 | 0.22 | 2.17 | -1.24 |
-| PUK | 65.13 | 75 | 0.12 | 1.43 | 1.64 |
-| AON | 62.90 | 70 | 0.44 | 1.37 | 0.08 |
-| DANOY | 62.50 | 60 | 0.58 | 1.73 | 0.27 |
-| GEHC | 61.79 | 60 | 0.53 | 1.96 | -0.16 |
-| WWW | 61.58 | 75 | 0.43 | 0.97 | 0.14 |
-| VSXY | 61.05 | 70 | 0.56 | 1.08 | 2.32 |
-| TRN | 59.83 | 60 | 0.37 | 1.64 | 0.36 |
-| NAC | 55.50 | 75 | 0.26 | 0.45 | 0.20 |
-| LAMR | 55.18 | 75 | 0.31 | 0.43 | -0.29 |
-| VRTX | 55.17 | 70 | 0.44 | 0.66 | 0.96 |
-| XPOF | 54.88 | 60 | 0.47 | 1.25 | 1.26 |
-| FCPT | 54.87 | 75 | 0.36 | 0.48 | 0.86 |
-| SWX | 54.79 | 75 | 0.29 | 0.51 | 0.13 |
-| OPCH | 54.70 | 80 | 0.15 | 0.39 | -0.03 |
+These are the top 15 by the export's Overnight Score after applying the five historical gates. This score is **not** the separately specified Boringness Score and is not a final opportunity rank.
 
-## 3. OSW / EVR / MHK exclusion assessment
+| Rank | Symbol | Overnight Score |
+|---:|---|---:|
+| 1 | LXU | 68.60 |
+| 2 | OSW | 67.48 |
+| 3 | MHK | 66.79 |
+| 4 | PUK | 65.13 |
+| 5 | EHC | 64.13 |
+| 6 | EVR | 63.07 |
+| 7 | AON | 62.90 |
+| 8 | DANOY | 62.50 |
+| 9 | JMKE | 62.09 |
+| 10 | GEHC | 61.79 |
+| 11 | WWW | 61.58 |
+| 12 | VSXY | 61.05 |
+| 13 | FNGD | 60.73 |
+| 14 | TRN | 59.83 |
+| 15 | MAR | 59.15 |
 
-The current user-provided canonical Schwab exclusion list has 55 symbols. A symbol-by-symbol comparison against all 195 scanner rows found **zero overlaps**: none of the 195 symbols is on the canonical 55-list. OSW, EVR and MHK are therefore also absent. This only means they are not on the supplied canonical list; it does not prove current broker tradability.
+MHK, PUK, AON, DANOY and GEHC are present and pass the five historical checks. OSW and EVR also pass these five checks. **None is approved** until the remaining gates are supplied and reviewed.
 
-The feature branch still uses a separate local `App_Data/exclusions-watchlist.json` store. The store returns an empty list when the file is absent and is not seeded from the 55-symbol canonical source. The local runtime file is not available in this repository review. Therefore live exclusion status remains unverified.
+## 4. Exclusion cross-check and local store correction
 
-| Symbol | Canonical 55-list match | Scanner row status | Prior chart evidence |
-|---|---|---|---|
-| OSW | No | Current ON % = loading | Nov 2 5M WAIT / Permission NO / BEARISH; no Nov 3 chart supplied |
-| EVR | No | ON Win % = loading | Nov 2 5M WAIT / Permission NO / BEARISH; no Nov 3 chart supplied |
-| MHK | No | Numeric gates pass; current ON = -1.24% | Nov 2 5M WAIT / Permission NO / NEUTRAL; no Nov 3 chart supplied |
+The canonical Schwab exclusion source on `master` contains 55 symbols. Exact-normalized comparison against all 198 scanner symbols found **zero overlaps**. OSW, EVR and MHK are not on the canonical list. This is not a live Schwab tradability guarantee.
 
-Previous public-source checks found OSW, EVR and MHK above $5 and their reported 20D average volumes above 500K. Those checks were secondary-source cross-checks from the prior review, not values in this CSV or current MCC authoritative data. All three had recent earnings catalysts in the previous review. No new Nov 3 Daily/5M/1M chart evidence or validated catalyst-clear source is present here.
+The user supplied the local API response with only `TEST`. The feature branch's persisted JSON file also contained only `TEST`, confirming that the runtime store had not been seeded from the canonical list.
 
-## 4. Qualification decision
+Corrective action on the feature branch:
+- Seeded all 55 canonical symbols into `src/MomentumCommandCenterV2.API/App_Data/exclusions-watchlist.json`.
+- Preserved the existing `TEST` entry.
+- The tracked file now contains 56 entries.
+- Copied the master canonical text list and source-of-truth documentation into `docs/project-control` and `src/MomentumCommandCenterV2.Infrastructure/Resources`.
 
-**No symbol is approved as a Boring Overnight BUY/HOLD from this export alone.**
+**Runtime acceptance still required:** after pulling/restarting the API, `GET /api/watchlists/exclusions` should report 56 entries, including all 55 canonical symbols plus TEST. This has not yet been observed on the user's local process. The local Add/Remove API is not a live Schwab account sync.
 
-The 107 numeric-pass rows are only the first filter. The next gates are still missing for the full universe:
-- current price >$5;
-- authoritative 20D average volume >=500K;
-- current canonical exclusion list wired into this branch/runtime;
-- validated catalyst/event status and source freshness;
-- current Daily trend and current 5M permission/structure;
-- current 1M execution/timing where relevant;
-- complete source provenance and immutable point-in-time candidate snapshots.
+## 5. Qualification disposition
 
-Do not convert `loading` to zero, pass, or fail. Missing data remains DATA?/WATCH.
+**No final Boring Overnight candidate can yet be approved from this CSV.**
 
-## 5. Next data and UI acceptance
+Missing gates for all 198 rows:
+- Current price > $5.
+- 20D average daily volume >= 500,000.
+- Validated catalyst/event classification and current source timestamps.
+- Current Daily trend and price structure.
+- Current 5M authority/Permission and structure.
+- 1M execution/timing evidence, after 5M authority is established.
+- Point-in-time source provenance and immutable candidate decision snapshot.
 
-1. Re-export the scanner with all 248 results and verify the resulting file has 248 ticker rows after the two metadata lines and header. Preserve the original preamble.
-2. Upload current Daily, 5M and 1M charts for the highest-ranked candidates after price/volume/exclusion filtering. MHK, PUK, AON, DANOY and GEHC are the first scanner-metric review tier; this is not a final buy list.
-3. Test browser import with the 195-row file first, verify the displayed imported count is 195 and Red Zone updates; then repeat with the true 248-row export.
-4. Do not claim the importer has retained all Overnight metric columns; its current UI mapping only retains symbol, score and optional generic status fields.
+The next step is not another TOS scan. It is MCC qualification after the export is imported: apply price, volume, exclusions, catalysts and chart evidence to the 187 historical-pass rows. The import table is the candidate data surface; Red Zone currently previews only four rows by raw Overnight Score, not by the validated Boring Overnight ranker.
+
+## 6. Importer / Red Zone diagnosis and correction
+
+The user's browser reported `Imported 195 local rows · Red Zone updated`, but the Red Zone did not visibly change.
+
+Source inspection clarified the DOM roles:
+- `#mcc-static-0278-div` is the static wrapper around the scanner results table.
+- Dynamic scanner table rows are inserted into `tbody#scannerRows`; the wrapper itself is not replaced and should not be expected to mutate.
+- Actual Red Zone cards are rendered into `#redZoneGrid`; the card count is also shown by `#morningTopCount`.
+
+The importer already calls both `renderScanner()` and `renderMorningReport()`. Its success message previously claimed Red Zone updated without checking the rendered DOM. Corrected `frontend/app.js` so the success message reports:
+- imported row count;
+- actual scanner table row count;
+- actual Red Zone card count and symbols.
+
+The Red Zone subtitle now explicitly says an imported preview is the **top four by Overnight Score only**, not Boring Overnight qualification. This avoids representing the preview as an approved rank.
+
+The code change passed CI in [run 41693652415](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41693652415). The browser acceptance remains pending; the user must verify the new on-screen counts and visible cards. If the message reports zero Red Zone cards or fewer table rows than imported, capture the exact status text and the contents of `#redZoneGrid` / `#scannerRows`.
+
+## 7. Next steps
+
+1. Obtain an export with 248 ticker rows. Current file has 198, so 50 remain absent.
+2. Pull the feature branch and restart the API; verify exclusion endpoint count = 56 and confirm OSW/EVR/MHK are not excluded.
+3. Import the 198-row file again. Read the new success text: expected scanner rows = 198 and Red Zone cards = 4 (unless manual pins/dismissals change that).
+4. Apply price and 20D average-volume gates to the historical-pass rows.
+5. Verify catalyst evidence and source timestamps.
+6. Review current Daily and 5M charts; use 1M only for execution timing after 5M authority is established.
 
 ## [Uncertainties]
 
-- Why the TOS export has 195 rows when the scanner displayed 248 is unknown.
-- Current price/20D volume for the remaining 195-symbol universe is not in the CSV.
-- Current live Schwab exclusion state and the feature branch's local App_Data file are unavailable.
-- Current Nov 3 chart states and validated catalyst coverage are unavailable.
-- The 55-symbol canonical exclusion list is a user-maintained list, not a live broker-tradability feed.
+- The source file has 198 rows versus the reported 248. The 50 missing symbols are not present in the export.
+- Price and 20D average volume are not in the file.
+- Canonical exclusion membership is verified; live Schwab tradability is not.
+- The new importer status message is code- and CI-verified, not yet browser-verified.
+- Historical Overnight Score is not the Boringness Score or a validated top-four opportunity rank.
