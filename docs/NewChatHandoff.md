@@ -33,8 +33,9 @@
 # 2026-11-03 — latest project handoff (authoritative follow-up)
 
 **Active branch:** `feature/opportunity-quality-classification`  
-**Latest validated code commit:** `61d08a86e969186a6d4e9468714c0f7120531699`  
-**Exact-head CI:** [41681395871](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41681395871) — Release build passed; 182/182 tests passed. Production and prototype clock markup/styles are included. ThinkScript and browser behavior are not covered by .NET CI.
+**Latest feature branch head:** `bf47ad61adc537325fc96f60f39947351497c016`  
+**Latest validated code commit:** `9302295611277ce417ca6056308b5300c1667930`  
+**Exact-head CI:** [41695981736](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41695981736) — Release build and 182/182 tests passed. This includes the qualification panel, local import persistence, and historical-gate filtering of imported Red Zone candidates. Browser visual/interaction acceptance and Thinkorswim compilation remain separate and are not covered by .NET CI.
 
 ## Overnight process — corrected
 
