@@ -1,3 +1,26 @@
+## 2026-11-03 — consolidated audit / current status
+
+**Current authoritative reconciliation:** [Full Master To-Do Audit — 2026-11-03](Validation/Full-Master-To-Do-Audit-20261103.md). This pass reviewed all 138 unchecked entries and performed a second dependency pass. Older unchecked entries below are retained as historical chronology; use the consolidated audit to determine current status and avoid treating repeated historical checkboxes as separate open work.
+
+- [x] User ran `Get-Latest-And-Test.ps1` at `0917a90...`: Release build succeeded; 179/179 tests passed, 0 failed, 0 skipped.
+- [x] User confirmed the committed 50-row scanner CSV imported successfully and Red Zone updated; MHK, OSW, EVR and EHC populated.
+- [x] User accepted prototype clock/transport/header positioning.
+- [x] Fixed prototype topbar horizontal overflow for desktop 104px dock and mobile 78px dock (commit `3aac28cf638228fd0901251e59969d08af248e17`). Browser confirmation after latest pull remains open.
+- [x] Corrected EOD standard-time constant to 17:55 Eastern in repository 5M V4.1.7 and repository 1M V14.4.11 chart-study copies; daylight remains 18:55 Eastern.
+- [ ] Full 1M V14.5.1 Library source was not found in repository/Project files. `docs/Charts/1M/MainStudy.txt` is V14.4.11 and must not be installed as a replacement. Export/upload the full V14.5.1 file before patching the actual full study.
+- [ ] Compile both actual studies in Thinkorswim and validate exact before/at/after bars across DST and standard time. Repository/CI cannot compile ThinkScript.
+- [x] Shortlist cross-check: OSW, EVR and MHK are all above $5 and have public 20D average-volume statistics above 500K. All three have recent earnings catalysts; none has 5M Permission YES in the supplied Nov 2 screenshots.
+- [ ] Exclusion status for OSW/EVR/MHK: Data not found in sources. Obtain complete exclusion list/runtime state and current Daily/5M/1M charts before re-review.
+- [ ] Full 248-row Overnight Scanner CSV is not committed. Current CSV contains 50 rows. Obtain full export for import/parse validation.
+- [ ] Automatic TOS saved-scan API/webhook is not documented by public Schwab developer materials. Watched-folder CSV ingestion is the feasible automation bridge; not implemented yet.
+- [ ] Alpaca SIP recent-data requests were denied with HTTP 403. IEX is the usable fallback; regular-session discovery/stream freshness and recovery acceptance remain open.
+- [ ] Boring Overnight hard-gate/history/snapshot/quantile components exist, but end-to-end READY remains blocked by daily liquidity source, complete exclusions, catalyst classification, matched TOS states and full GTC_EXT outcomes. Existing OpportunityQualityAssessor is not the versioned Red Zone top-four ranker.
+- [ ] Calculated Limit Sell remains DATA?/not calculated; no validated 20-window GTC_EXT walk-forward target or ATR parity.
+- [ ] Exact-head CI passed on `89b9fe73408cee06f0ddfedc1486b7038d335a2a`, Actions run [41575143773](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41575143773).
+- [ ] See audit document for the full workstream-by-workstream second-pass disposition and operator steps.
+
+---
+
 ## 2026-11-03 — Scanner CSV import retry
 
 The synced export is now present at `data/ScannerExports/2026-11-02-OvernightWatchListScanner.csv`. It contains two metadata preamble lines (`Watchlist Scanner`, `Results`) followed by the actual comma-delimited header on line 3. The importer previously assumed line 1 was the header, which caused the reported missing Symbol/Ticker error.
