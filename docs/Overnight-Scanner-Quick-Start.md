@@ -1,8 +1,8 @@
 ## 2026-11-03 — current scan export and process timing
 
-The November 3 export `data/ScannerExports/2026-11-03-WatchListScanner_901am.csv` contains two metadata preamble lines, the header on line 3, and **195 unique ticker rows**. The user-reported scan count was 248; 53 rows are not present in this file. Preserve the original export and verify the full result count on the next export.
+The November 3 10:52 AM export `data/ScannerExports/2026-11-03-WatchListScanner_1052am.csv` contains the `Watchlist Scanner` / `Results` preamble, a blank row, the header on row 4, and **198 unique ticker rows**. The user-reported scan count was 248; 50 rows are not present in this file. Preserve the original export and verify the full result count on the next export.
 
-The importer now preserves ON win %, 20D average ON %, median ON %, 5D ON %, ON momentum, current ON %, and above-20-SMA in each imported candidate's `overnightMetrics` object. It also displays a compact metric summary in the existing reason column. Code commit: `649361834984292eab66fa577e960237d6ff1e7e`; Actions run 41679681456 passed the Release build and 182/182 tests. Browser upload/Red Zone acceptance remains pending.
+The importer preserves all seven Overnight metrics in each candidate. Imported rows are saved in browser localStorage and restored after dashboard reload. The new Boring Overnight Qualification panel evaluates the five available historical gates and reads the local MCC exclusion API. On the 10:52 file: 187 pass, 11 fail, 0 unknown; none is READY because price, 20D average volume, catalyst and current chart evidence remain DATA?. The Red Zone preview shows up to four highest Overnight Scores among historical-gate passes only. This is not the final Boringness rank or trade approval. Code/CI passed; browser acceptance remains pending.
 
 **Corrected Overnight timing:** The strategy includes Day 1 after-hours and Day 2 premarket. Do not wait until 20:00 ET. Begin actionable candidate review in the final 60 minutes before the regular-session close. Evaluation starts at actual close minus 60 minutes; the buy deadline shown by the prototype clock is the regular-session close. This normally appears as noon Arizona during EDT and 1:00 PM Arizona during EST, with early closes handled by the exchange calendar. Broker order qualifier/eligibility remains a separate confirmation.
 
@@ -62,6 +62,10 @@ Include the symbol, date, timeframe, and visible study/version where possible. I
 
 ### Thinkorswim CSV import
 
+**Exact location in MCC:** open the local MCC Dashboard and scroll to **Scanner Workbench → Candidate discovery**. Click **Import CSV**. This is not a new Thinkorswim scan and does not require editing TOS filters.
+
+After import, scroll below the Scanner Workbench to **BORING OVERNIGHT · QUALIFICATION → Candidate qualification**. This table shows every imported symbol, the five historical gates, Schwab exclusion result, and the still-missing current price / 20D average volume fields. It is the place to review the candidate qualification pipeline; the Red Zone above is only a four-card preview.
+
 The Dashboard's Scanner & Watchlist workbench accepts a CSV with a `Symbol`, `Ticker`, or `Symbol/Ticker` column. The importer handles UTF-8 BOMs, comma/semicolon/tab delimiters, and quoted headers/fields. It maps `Overnight Score` to Score and preserves `ON WIN %`, `AVG ON %`, `Median ON %`, `5D ON %`, `ON Momentum`, `Current ON %`, and `Above 20 SMA` as structured `overnightMetrics` on each candidate. The existing reason column displays a compact summary of those values. Optional generic columns remain `Status`, `Reason`, `Extension`/`Ext`, and `Freshness`/`Data_As_Of`. Keep the original TOS export unchanged. If the import is rejected, the UI reports the normalized headers it detected so the source format can be diagnosed.
 
 Example:
@@ -73,7 +77,7 @@ EVR,68.25,WATCH,Record Q3; verify event and structure,2026-11-02
 MHK,73.42,WATCH,Current ON move above preferred range,2026-11-02
 ```
 
-Importing the CSV now immediately refreshes both the scanner table and Red Zone. Red Zone displays up to four priority candidates, and each card requests current MCC market assessment data. Pin a candidate to retain it; dismiss a candidate to remove it from the current Red Zone view. These choices are browser-local.
+Importing the CSV refreshes the scanner table, Red Zone, and the Boring Overnight Qualification panel. The import is persisted in this browser and restored on reload. The dynamic scanner rows live in `tbody#scannerRows`; `#mcc-static-0278-div` is only the surrounding static table wrapper. The actual Red Zone cards live in `#redZoneGrid`. The import status now reports actual rendered row/card counts and symbols. Red Zone shows up to four highest Overnight Scores among the five historical-gate passes; price, liquidity, catalyst and chart gates remain separate DATA? requirements. Pin a candidate to retain it; dismiss a candidate to remove it from the current Red Zone view. These choices are browser-local.
 
 ### What updates automatically
 
@@ -122,7 +126,7 @@ Related documents:
 
 ## [Uncertainties]
 
-- The November 3 uploaded export contains 195 rows, not the reported 248. The missing 53 rows are not available in this file.
+- The November 3 10:52 AM export contains 198 rows, not the reported 248. The missing 50 rows are not available in this file.
 - The exact Thinkorswim scan formulas/column implementation behind `Overnight Score` were not supplied in this upload.
 - Price and 20-day average volume are not columns in the November 3 CSV; those hard gates remain unverified for the 195-row universe.
 - Catalyst clearance requires current per-symbol review and cannot be inferred from the scan columns.
