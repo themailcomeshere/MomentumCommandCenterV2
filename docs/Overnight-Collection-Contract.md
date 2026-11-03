@@ -86,3 +86,16 @@ Ranking is not trade permission. Empty queue and zero position are valid outputs
 - Historical Morning Routine steps/metrics: **Data not found in sources.** Current manual is a proposal based on documented requirements, not a verified transcript of the earlier routine.
 
 Until these decisions are resolved and the collector is implemented/tested, production status remains **NOT CONNECTED / NOT RUNNING**.
+
+
+## 2026-11-03 — Operator clarification: collect both sides of the close
+
+The Overnight strategy's measured period includes **Day 1 after-hours (Buy Day) plus Day 2 premarket (Sell Day)**. Collection and historical calculations must not omit Day 1 after-hours. Preserve the two extended-hours segments with their original timestamps, source/feed identity, and missing-interval accounting.
+
+The actionable operator review should begin in the final 60 minutes of Day 1 regular trading, before the regular-session close. Schedule relative to the actual exchange close and display in `America/Phoenix`: 1:00 PM Arizona during Eastern Standard Time and noon Arizona during Eastern Daylight Time for a normal full session. Exchange early closes and holidays must come from the session calendar; do not hardcode a year-round local start time.
+
+Historical metrics should be precomputed before this final-hour review. The final-hour refresh is for current-day qualification and manual review, not a reason to delay buying until after after-hours. Do not automatically submit orders.
+
+Retain separate measures for (a) the chosen start/end reference-price return, (b) full-window path/high/low, and (c) executable/fill outcomes. The exact historical Overnight endpoint and whether each boundary bar is included remain subject to source-code and data verification; do not silently redefine the metric from this operator clarification alone.
+
+The earlier proposal to start the process at 20:00 ET is withdrawn. Runtime scheduling and historical calculation changes are not implied by this documentation entry.
