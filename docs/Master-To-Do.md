@@ -1,3 +1,10 @@
+## 2026-11-03 — production and prototype clock UI verified
+
+- [x] Added evaluation-start and buy-deadline countdown rows to both `frontend/index.html` (production) and `frontend/prototypeIndex.html`, with matching styles in `frontend/styles.css`.
+- [x] Countdown switches to `OPEN` at the exact evaluation-window start using client epoch time; API also reports `overnightEvaluationOpen`.
+- [x] Exact-head CI for production markup commit `95c95a5217ce9b3fc168e7f3e94532fd43e82923` passed in run 41681383369; CSS commit `61d08a86e969186a6d4e9468714c0f7120531699` passed in [run 41681395871](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41681395871).
+- [ ] Browser visual acceptance remains pending.
+
 ## 2026-11-03 — V14.5.1 Library baseline checkpoint
 
 - [x] Found the actual 1M V14.5.1 source in the Project Library; the uploaded V14.5 source is materially different and is not a replacement for it.
