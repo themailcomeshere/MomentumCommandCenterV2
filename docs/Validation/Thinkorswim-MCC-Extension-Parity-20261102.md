@@ -190,15 +190,15 @@ Keep the V14.5.1 defaults for all non-time inputs:
 **Until the 1M parity revision is compiled and validated:** treat the normal 5M V4.1.7 Permission as authoritative. Require its Permission=YES and its own price-above-Daily-VWAP condition before acting on a 1M READY. A 1M READY must never override 5M Permission=NO. Do not change RSI, EMA, RVOL, execution-window, continuation, or extension thresholds to compensate for the two source-level defects.
 
 
-## 2026-11-03 — V14.5.2 candidate source created
+## 2026-11-03 — actual V14.5.1 Library source found; V14.5.2 rebased
 
-The user uploaded `docs/Charts/1M/CurrentStudy_CouldBeWrong.txt`. It is 1,424 lines and identifies itself as V14.5. It is a full-looking event-armed execution study, but the filename and user caveat mean it is not proof of the exact installed study or the V14.5.1 Library source. The uploaded source is preserved unchanged.
+Project Library search and full-file read located `Momentum_Command_Center_V3_2_1M_V14_5_1.ts`, a 1,260-line source explicitly labelled V14.5.1. This is the correct normal 1M baseline identified in prior project records. The user's uploaded `CurrentStudy_CouldBeWrong.txt` is 1,424 lines and identifies itself as V14.5; line-by-line comparison confirms it is not the V14.5.1 Library file. Its differences extend beyond the header into the execution-window, reconstructed 5M, state and bubble sections. Do not treat the upload as a byte-identical copy of the V14.5.1 Library source.
 
-A separate proposed revision now exists at `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,456 lines). It makes two targeted corrections only:
+The earlier V14.5.2 draft was initially created from the uploaded V14.5 file. It has now been replaced with a new **V14.5.2 derived from the actual V14.5.1 Library source** at `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,298 lines). The original uploaded file remains unchanged.
 
-1. **Reconstructed 5M Permission parity:** match normal 5M V4.1.7 exactly on the permission conditions: 5M close above Daily VWAP, 5M close above EMA9, EMA9 >= EMA20, and 5M RSI >= the configured minimum. The independent 1M price-above-Daily-VWAP execution gate remains intact.
-2. **Arizona EOD mapping:** replace the fixed 15:55 Eastern call with date-aware selection of 18:55 Eastern during US daylight time and 17:55 Eastern during standard time, corresponding to 3:55 PM Arizona. The DST calendar calculation mirrors the 5M V4.1.7 source.
+The rebased V14.5.2 makes two targeted corrections:
 
-The 5M V4.1.7 reference is `docs/Charts/5M/MainStudy.txt`, where `bullishPermissionRaw` is defined as `price > dailyVWAP`, `price > ema9`, `ema9 >= ema20`, and `rsi >= minimumPermissionRSI`.
+1. **Reconstructed 5M Permission parity:** normal 5M V4.1.7 requires 5M close above Daily VWAP, 5M close above EMA9, EMA9 >= EMA20, and 5M RSI >= the configured minimum. V14.5.2 now uses those same conditions. The independent 1M price-above-Daily-VWAP execution gate remains intact. A hidden diagnostic plot and debug labels expose the reconstructed 5M VWAP condition separately.
+2. **Arizona EOD mapping:** replace fixed 15:55 Eastern with date-aware 18:55 Eastern during US daylight time and 17:55 Eastern during standard time, corresponding to 3:55 PM Arizona. The DST calculation mirrors the 5M V4.1.7 source and exposes the selected Eastern cutoff/DST state in debug labels.
 
-**Disposition:** V14.5.2 is a candidate source, not TOS-certified. The GitHub .NET build/test run does not compile ThinkScript. Before installation, compile V14.5.2 and V4.1.7 in Thinkorswim and compare matched completed 5M bars. Test Arizona 15:54 / 15:55 / 15:56 on dates in both DST regimes, record the selected Eastern cutoff, and confirm the 1M execution gate remains independent. Do not overwrite the currently installed study until that acceptance passes.
+**Disposition:** V14.5.2 is now based on the right source, but is still a candidate, not TOS-certified. GitHub CI does not compile ThinkScript. Compile V14.5.2 and V4.1.7 in Thinkorswim; compare matched completed 5M bars and 1M states. Test Arizona 15:54 / 15:55 / 15:56 in both DST regimes, record the selected Eastern cutoff and exact 5M interval, and confirm the 1M execution VWAP gate remains independent. Do not replace the installed study until this acceptance passes.
