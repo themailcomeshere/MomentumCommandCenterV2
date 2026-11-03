@@ -109,3 +109,49 @@ The existing `OpportunityQualityAssessor` is a diagnostic classifier, not a vers
 - Public market statistics are secondary-source cross-checks, not MCC authoritative feed data.
 - Current exclusion status for OSW/EVR/MHK is unknown.
 - No supported public TOS saved-scan API/webhook was found; a private Schwab arrangement could change this.
+
+
+## 2026-11-03 follow-up — new evidence and second dependency pass
+
+## 2026-11-03 — latest Overnight timing, scanner export, 1M source and market clock
+
+**This dated update supersedes stale status statements below where they conflict.** Detailed 195-row findings: [Overnight Scanner Full-Universe Review — 2026-11-03](Validation/Overnight-Scanner-Full-Universe-20261103.md).
+
+- [x] Located and reviewed the newer November 3 Overnight procedure documents on `master`. The 20:00 ET start proposal is withdrawn. Overnight includes Buy Day after-hours plus Sell Day premarket; candidate review begins in the final 60 minutes of regular trading.
+- [x] Defined schedule in exchange-local terms: evaluation starts at regular close minus 60 minutes; buy deadline is the regular close. America/Phoenix display therefore normally shows noon during EDT and 1:00 PM during EST. The schedule follows the calendar's early-close time.
+- [x] Implemented API clock fields for Overnight evaluation start, buy deadline, and whether the evaluation window is open. Added two countdown rows to the prototype header only; production layout is unchanged.
+- [x] Added DST/standard-time, early-close, premarket, weekend and after-hours tests. Exact-head CI run [41679069855](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679069855) passed all 182 tests. The first test attempt failed because its early-close fixture was 30 minutes before the evaluation window; the fixture was corrected, not the production logic.
+- [x] User uploaded `CurrentStudy_CouldBeWrong.txt` (1,424 lines, V14.5 header). Created a separate candidate `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,456 lines) with exact 5M V4.1.7 Permission inputs, including Daily VWAP, and DST-aware 3:55 PM Arizona EOD mapping (18:55 EDT / 17:55 EST). Original upload preserved unchanged.
+- [x] Exact-head CI on source commit `7c265a8777eab3e9f0e2093e89674f98a8f7b75c`, run [41679267305](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679267305), passed build and 182/182 tests. CI does not compile ThinkScript.
+- [x] Parsed the uploaded November 3 scanner CSV: 195 unique ticker rows, no duplicates, metadata preamble intact.
+- [x] Full-universe historical-metric pass: 107 rows pass all five available numeric gates; 81 are incomplete due to `loading`; 7 have known gate failures. The file has 195 rows, not the reported 248. No current price or 20D volume columns exist.
+- [x] Located canonical 55-symbol Schwab exclusion source on `master`; OSW, EVR and MHK are not in that canonical list.
+- [ ] Live Schwab tradability and feature runtime `App_Data/exclusions-watchlist.json` remain unverified; the feature branch local store is not seeded from the canonical 55-list provider.
+- [ ] Browser-import/Red Zone acceptance for the 195-row file is pending. The importer source supports the preamble/header and maps Overnight Score, but browser behavior was not run here.
+- [ ] Obtain the actual 248-row export; 53 ticker rows are absent from the uploaded file.
+- [ ] Current Daily/5M/1M charts, catalyst clearance, price and 20D volume for the full universe remain outstanding.
+- [ ] Compile V14.5.2 and normal 5M V4.1.7 in Thinkorswim; run matched-bar EOD and Permission parity diagnostics. Do not install V14.5.2 as authoritative until TOS compile and chart validation pass.
+- [ ] Runtime test on 2026-11-03: SPY advanced 5 bars and XRPN 1; RKLX and ASTX did not advance. RKLX idempotency comparison reported false for both timeframes. Preserve raw JSON artifacts with exact SHA/window and inspect source transport/timestamps before sign-off.
+- [ ] RTO 20-session output shows three missing exact next-session opens: Oct 14 (+4 min), Oct 21 (+1 min), Nov 3 (+1 min). All displayed previous-session close boundaries were exact. Feed provenance for this new capture is not included in the pasted table; do not label it SIP without inspecting the JSON.
+- [ ] Merge remains HOLD. Branch compare reports 1,194 commits ahead / 160 behind and 300 changed files; PR #7 was explicitly closed as incorrectly based on master. Master has the newer Overnight docs and canonical exclusion provider; reconcile selectively before creating a merge PR. Do not wholesale merge or force-update either branch.
+
+## 2026-11-03 — Overnight timing / scanner / 1M source follow-up
+
+- [x] Overnight start corrected: final 60 minutes before regular close; includes Buy Day after-hours + Sell Day premarket.
+- [x] API clock calculates final-hour evaluation start and regular-close buy deadline with early-close handling.
+- [x] Prototype header includes evaluation and buy countdowns; production layout unchanged.
+- [x] Clock tests pass in run 41679267305 (182/182).
+- [x] Created separate 1M V14.5.2 candidate with 5M V4.1.7 Permission parity and DST-aware 3:55 PM Arizona EOD.
+- [ ] TOS compile and matched-bar EOD/Permission parity for V14.5.2.
+- [x] Parsed November 3 scanner export: 195 unique rows; 107 pass available numeric gates, 81 incomplete, 7 fail.
+- [ ] Obtain actual 248-row export; 53 rows missing from current file.
+- [ ] Browser-test 195-row import and Red Zone update.
+- [x] Canonical 55-symbol exclusion source located; OSW/EVR/MHK absent from canonical list.
+- [ ] Verify live Schwab tradability and actual feature runtime exclusion file; do not assume local list is seeded.
+- [ ] Obtain current price, 20D volume, catalyst and Daily/5M/1M chart evidence for the full-universe shortlist.
+- [ ] Review market-hours JSON artifacts and RKLX idempotency; preserve branch SHA and exact test window.
+- [ ] Resolve three missing exact RTO next-session opens (Oct 14, Oct 21, Nov 3) from source/feed evidence; no nearest-bar imputation.
+- [ ] Selectively reconcile master and feature; branch is diverged and must not be wholesale merged.
+
+Detailed scanner report: [Overnight Scanner Full-Universe Review](Validation/Overnight-Scanner-Full-Universe-20261103.md).
+
