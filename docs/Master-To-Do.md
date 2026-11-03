@@ -1865,3 +1865,15 @@ Design note: docs/Validation/Boring-Overnight-Requirements-and-Limit-Policy-2026
 - ATR is context only; no arbitrary ATR multiplier is used. The calculator requires at least 20 complete windows and exact ATR parity status MATCH before returning a numeric candidate. Incomplete windows return DATA?; unverified ATR parity returns NOT VERIFIED.
 - Added unit tests for the nearest-rank quantile, in-sample touch rate, incomplete windows, short history, and ATR parity gate. CI/build has not yet been verified for this commit.
 - This is the calculation engine only. The API does not yet assemble full eligible-window observations from persisted bars, and the dashboard does not yet call this calculator. The dashboard correctly remains DATA? until that integration and its source evidence exist.
+
+
+## 2026-11-03 — CORRECTION: Boring Overnight review begins before the close
+
+- [x] Correct the strategy definition: Overnight includes Day 1 (Buy Day) after-hours **and** Day 2 (Sell Day) premarket. The earlier 20:00 ET process-start recommendation is withdrawn; waiting until after after-hours would miss part of the measured opportunity.
+- [x] Specify operator timing: begin actionable review during the final 60 minutes of Day 1 regular trading, before the close. Display in `America/Phoenix`: 1:00 PM Arizona during Eastern Standard Time; noon Arizona during Eastern Daylight Time. Derive from the actual exchange close and account for holidays/early closes.
+- [x] Separate precomputed historical Overnight statistics from the final-hour refresh of current price/volume, current Overnight move, news/event risk, 5M structure/permission, and data freshness.
+- [ ] Verify the exact historical Overnight return endpoint and boundary-bar inclusion against the actual source implementation and raw data. Preserve after-hours and premarket observations separately; distinguish endpoint return, full-window path/high/low, and executable fills.
+- [ ] Implement/verify the runtime schedule using the exchange calendar and `America/Phoenix`; documentation alone does not change runtime behavior.
+- [ ] Verify broker buy-order session eligibility separately. No automatic order submission is authorized by this workflow.
+
+**Status note:** this is a strategy/operator timing correction, not a claim that the scanner, historical calculations, scheduler, or broker integration has been implemented. The earlier 20:00 ET recommendation must not be followed.
