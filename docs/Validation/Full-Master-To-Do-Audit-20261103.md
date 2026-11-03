@@ -119,7 +119,7 @@ The existing `OpportunityQualityAssessor` is a diagnostic classifier, not a vers
 
 - [x] Located and reviewed the newer November 3 Overnight procedure documents on `master`. The 20:00 ET start proposal is withdrawn. Overnight includes Buy Day after-hours plus Sell Day premarket; candidate review begins in the final 60 minutes of regular trading.
 - [x] Defined schedule in exchange-local terms: evaluation starts at regular close minus 60 minutes; buy deadline is the regular close. America/Phoenix display therefore normally shows noon during EDT and 1:00 PM during EST. The schedule follows the calendar's early-close time.
-- [x] Implemented API clock fields for Overnight evaluation start, buy deadline, and whether the evaluation window is open. Added two countdown rows to the prototype header only; production layout is unchanged.
+- [x] Implemented API clock fields for Overnight evaluation start, buy deadline, and whether the evaluation window is open. Added two countdown rows to both the production dashboard and prototype header.
 - [x] Added DST/standard-time, early-close, premarket, weekend and after-hours tests. Exact-head CI run [41679069855](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679069855) passed all 182 tests. The first test attempt failed because its early-close fixture was 30 minutes before the evaluation window; the fixture was corrected, not the production logic.
 - [x] User uploaded `CurrentStudy_CouldBeWrong.txt` (1,424 lines, V14.5 header). Created a separate candidate `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,456 lines) with exact 5M V4.1.7 Permission inputs, including Daily VWAP, and DST-aware 3:55 PM Arizona EOD mapping (18:55 EDT / 17:55 EST). Original upload preserved unchanged.
 - [x] Exact-head CI on source commit `7c265a8777eab3e9f0e2093e89674f98a8f7b75c`, run [41679267305](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41679267305), passed build and 182/182 tests. CI does not compile ThinkScript.
@@ -139,7 +139,7 @@ The existing `OpportunityQualityAssessor` is a diagnostic classifier, not a vers
 
 - [x] Overnight start corrected: final 60 minutes before regular close; includes Buy Day after-hours + Sell Day premarket.
 - [x] API clock calculates final-hour evaluation start and regular-close buy deadline with early-close handling.
-- [x] Prototype header includes evaluation and buy countdowns; production layout unchanged.
+- [x] Production and prototype headers include evaluation and buy countdowns.
 - [x] Clock tests pass in run 41679267305 (182/182).
 - [x] Created separate 1M V14.5.2 candidate with 5M V4.1.7 Permission parity and DST-aware 3:55 PM Arizona EOD.
 - [ ] TOS compile and matched-bar EOD/Permission parity for V14.5.2.
