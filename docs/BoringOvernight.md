@@ -1,3 +1,9 @@
+## 2026-11-03 — corrected Overnight procedure and current qualification
+
+The Overnight process starts in the final 60 minutes of the regular session, before the buy-day close. The measured Overnight interval includes both Day 1 after-hours and Day 2 premarket. The 10:52 export contains 198 symbols (not the reported 248); 187 pass the five available historical gates, but current price, 20D average volume, catalyst clearance and chart evidence are still missing. The local exclusion store has been seeded with the canonical 55 symbols plus TEST. See [full-universe report](Validation/Overnight-Scanner-Full-Universe-20261103.md) and [canonical process specification](project-control/Trading_System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md).
+
+---
+
 ## 2026-11-02 — top-three scanner chart decision
 
 The visible Overnight scan leaders were MHK (73.42), OSW (70.97), and EVR (68.25). The accompanying chart screenshots are 1D/5m charts, not 1M charts.
