@@ -37,7 +37,7 @@
 - [x] Superseded by operator correction 2026-11-03: do not require a fixed 248-row count; the current accepted import has 198 rows and all imported rows render in the scanner table.
 - [ ] Current price >$5, 20D average daily volume >=500K, catalysts, Daily charts, 5M Permission/structure, and 1M execution evidence are not in this CSV. No Boring Overnight READY/BUY decision is supported yet.
 - [ ] Thinkorswim cutoff test remains inconclusive: no bars were available at Arizona 15:54/15:55/15:56 for the supplied RTO/SPY chart views. Bubbles/arrows on other after-hours bars do not establish the exact cutoff bar or correct source study.
-- [ ] After pulling the exclusion seed, restart API and verify `GET /api/watchlists/exclusions` returns 56 entries (55 canonical + TEST).
+- [x] User runtime query returned 56 entries; OSW/EVR/MHK/TEST filter returned TEST only. This matches the current feature-branch JSON (55 canonical + TEST); OSW/EVR/MHK are not in the canonical source list.
 
 ## 2026-11-03 — production and prototype clock UI verified
 
