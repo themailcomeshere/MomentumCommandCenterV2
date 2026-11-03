@@ -7,6 +7,9 @@ const feedbackKey="mcc.dashboardFeedback.v1";
 /// PURPOSE: Render the API's calendar-backed next session transition in the header.
 /// SAFETY: If the API/calendar is unavailable, show DATA? rather than a guessed countdown.
 let marketSessionTargetUtc = null;
+let overnightEvaluationTargetUtc = null;
+let overnightBuyDeadlineUtc = null;
+let overnightEvaluationOpen = false;
 let marketSessionRefreshInFlight = false;
 async function refreshMarketSessionClock(){
  if(marketSessionRefreshInFlight)return;
@@ -18,6 +21,12 @@ async function refreshMarketSessionClock(){
   const target=new Date(data.targetUtc);
   if(Number.isNaN(target.getTime()))throw new Error("Invalid market-session target timestamp.");
   marketSessionTargetUtc=target.getTime();
+  const evaluationTarget=new Date(data.overnightEvaluationStartUtc);
+  const buyDeadline=new Date(data.overnightBuyDeadlineUtc);
+  if(Number.isNaN(evaluationTarget.getTime())||Number.isNaN(buyDeadline.getTime()))throw new Error("Invalid Overnight process schedule.");
+  overnightEvaluationTargetUtc=evaluationTarget.getTime();
+  overnightBuyDeadlineUtc=buyDeadline.getTime();
+  overnightEvaluationOpen=data.overnightEvaluationOpen===true;
   const label=$("marketSessionLabel"),detail=$("marketSessionDetail");
   if(label)label.textContent=data.label||"Until Market opens";
   if(detail)detail.textContent=(data.exchangeTimeZone||"America/New_York")+" · "+(data.targetEvent||"NEXT SESSION TRANSITION")+" · "+(data.calendarVersion||"CALENDAR UNKNOWN");
@@ -26,6 +35,9 @@ async function refreshMarketSessionClock(){
   marketSessionTargetUtc=null;
   if($("marketSessionLabel"))$("marketSessionLabel").textContent="Market session clock";
   if($("marketSessionCountdown"))$("marketSessionCountdown").textContent="DATA?";
+  overnightEvaluationTargetUtc=null;overnightBuyDeadlineUtc=null;overnightEvaluationOpen=false;
+  if($("overnightEvaluationCountdown"))$("overnightEvaluationCountdown").textContent="DATA?";
+  if($("overnightBuyCountdown"))$("overnightBuyCountdown").textContent="DATA?";
   if($("marketSessionDetail"))$("marketSessionDetail").textContent="Unavailable · "+error.message;
  }finally{marketSessionRefreshInFlight=false;}
 }
@@ -37,6 +49,11 @@ function renderMarketSessionCountdown(){
  const pad=value=>String(value).padStart(2,"0");
  node.textContent=(days?days+"d ":"")+pad(hours)+"h "+pad(minutes)+"m "+pad(seconds)+"s";
  if(remaining===0)void refreshMarketSessionClock();
+ const formatCountdown=target=>{const seconds=Math.max(0,Math.ceil((target-Date.now())/1000));const d=Math.floor(seconds/86400),h=Math.floor((seconds%86400)/3600),m=Math.floor((seconds%3600)/60),s=seconds%60;return (d?d+"d ":"")+pad(h)+"h "+pad(m)+"m "+pad(s)+"s";};
+ const evaluationLabel=$("overnightEvaluationLabel"),evaluationCountdown=$("overnightEvaluationCountdown"),buyCountdown=$("overnightBuyCountdown");
+ if(evaluationLabel)evaluationLabel.textContent=overnightEvaluationOpen?"Overnight candidate evaluation · OPEN":"Overnight candidate evaluation begins in";
+ if(evaluationCountdown)evaluationCountdown.textContent=overnightEvaluationTargetUtc===null?"DATA?":(overnightEvaluationOpen?"OPEN":formatCountdown(overnightEvaluationTargetUtc));
+ if(buyCountdown)buyCountdown.textContent=overnightBuyDeadlineUtc===null?"DATA?":formatCountdown(overnightBuyDeadlineUtc);
 }
 void refreshMarketSessionClock();
 window.setInterval(renderMarketSessionCountdown,1000);
