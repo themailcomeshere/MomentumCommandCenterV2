@@ -23,6 +23,40 @@ public sealed class BoringOvernightSellLimitCalculatorTests
     }
 
     [Fact]
+    public void CompleteWindowsWithNonPositiveUpsideAreValidButDoNotProduceSellTarget()
+    {
+        var history = Enumerable.Range(0, 20).Select(i => new BoringOvernightSellWindowObservation(
+            new DateOnly(2026, 9, 1).AddDays(i), 100m, 99m, true, 0)).ToArray();
+
+        var result = BoringOvernightSellLimitCalculator.Calculate(
+            100m, 1m, DateTimeOffset.Parse("2026-10-30T20:00:00Z"), "MATCH", history, 25);
+
+        Assert.Equal("NO_POSITIVE_TARGET", result.Status);
+        Assert.Null(result.CalculatedLimitSell);
+        Assert.Equal(-1m, result.TargetReturnPct);
+        Assert.Equal(100m, result.HistoricalTouchRatePct);
+        Assert.Equal(20, result.ValidSessionCount);
+        Assert.Equal(0, result.IncompleteSessionCount);
+    }
+
+    [Fact]
+    public void CompleteFlatWindowsAreNotMisreportedAsMissingData()
+    {
+        var history = Enumerable.Range(0, 20).Select(i => new BoringOvernightSellWindowObservation(
+            new DateOnly(2026, 9, 1).AddDays(i), 100m, 100m, true, 0)).ToArray();
+
+        var result = BoringOvernightSellLimitCalculator.Calculate(
+            100m, 1m, DateTimeOffset.Parse("2026-10-30T20:00:00Z"), "MATCH", history, 50);
+
+        Assert.Equal("NO_POSITIVE_TARGET", result.Status);
+        Assert.Null(result.CalculatedLimitSell);
+        Assert.Equal(0m, result.TargetReturnPct);
+        Assert.Equal(100m, result.HistoricalTouchRatePct);
+        Assert.Equal(20, result.ValidSessionCount);
+        Assert.Equal(0, result.IncompleteSessionCount);
+    }
+
+    [Fact]
     public void IncompleteEligibleWindowWithholdsNumericLimit()
     {
         var history = Enumerable.Range(0, 20).Select(i => new BoringOvernightSellWindowObservation(
