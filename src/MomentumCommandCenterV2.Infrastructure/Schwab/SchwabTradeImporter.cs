@@ -31,8 +31,8 @@ namespace MomentumCommandCenterV2.Infrastructure.Schwab;
 /// Imports Schwab Order History CSV exports and converts filled BUY/SELL
 /// orders into the V2 application trade model.
 ///
-/// The current Schwab export supplied for this project does not contain
-/// quantity, so each filled order is treated as one unit.
+/// Filled-order quantity is required. The importer never invents a one-unit
+/// quantity when the broker export omits it.
 /// </summary>
 public sealed class SchwabTradeImporter : ITradeImporter
 {
@@ -42,6 +42,7 @@ public sealed class SchwabTradeImporter : ITradeImporter
     private const string PriceHeader = "Price";
     private const string TimingHeader = "Timing";
     private const string FillPriceHeader = "Fill Price";
+    private const string QuantityHeader = "Quantity";
     private const string TimestampHeader = "Time and Date(ET)";
 
     private static readonly string[] RequiredHeaders =
@@ -52,6 +53,7 @@ public sealed class SchwabTradeImporter : ITradeImporter
         PriceHeader,
         TimingHeader,
         FillPriceHeader,
+        QuantityHeader,
         TimestampHeader
     };
 
@@ -299,8 +301,13 @@ public sealed class SchwabTradeImporter : ITradeImporter
         var timestamp =
             ParseEasternTimestamp(timestampText);
 
-        // The current Schwab export does not contain quantity.
-        const int quantity = 1;
+        var quantityText = GetRequired(row, QuantityHeader).Trim();
+        if (!int.TryParse(quantityText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var quantity) || quantity <= 0)
+        {
+            throw new FormatException(
+                $"Invalid or missing Schwab fill quantity '{quantityText}' on CSV row {sourceRowNumber}. " +
+                "Export the filled-order Quantity field; MCC will not assume one share.");
+        }
 
         return new SchwabOrder(
             symbol,
