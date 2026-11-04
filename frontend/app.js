@@ -210,14 +210,18 @@ function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
  const suffix=entryReady?" · EXECUTION READY":score>=5?(decision?" · 5M PERMISSION; CHECK 1M STATE":" · 5M PERMISSION; 1M NOT EVALUATED"):score<=2?" · LOW ALIGNMENT":" · PARTIAL ALIGNMENT";
  node.textContent=marker+"V2 5M score: "+score+"/6"+suffix;
 }
+let decisionRefreshSequence=0;
 async function refreshDecisionExplanation(){
+ const requestId=++decisionRefreshSequence;
  const symbol=($("symbol")?.value||"").trim().toUpperCase();
  const classification=$("classification"),headline=$("headline"),price=$("price"),dailyVwap=$("dailyVwap"),atr14=$("atr14"),rvol=$("rvol"),extension=$("extension"),eligibility=$("eligibility"),freshness=$("freshness"),reasons=$("reasons"),fiveState=$("fiveState"),oneState=$("oneState"),scoreNode=$("decisionScore"),sourceNode=$("decisionSource");
  if(!symbol||!classification)return;
- classification.textContent="LOADING LIVE ASSESSMENT";classification.className="classification watch";
- if(headline)headline.textContent="Requesting current completed 1M and 5M bars…";
+ classification.textContent="UPDATING TO "+symbol;classification.className="classification watch";
+ if(headline)headline.textContent="Updating to "+symbol+"… requesting current completed 1M and 5M bars.";
  try{
-  const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
+  const data=await fetchLiveAssessment(symbol);
+  if(requestId!==decisionRefreshSequence)return;
+  const one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   const transportLabel=$("marketTransportLabel");
   if(transportLabel)transportLabel.textContent=one.sourceTransport==="ALPACA_WEBSOCKET_LATEST_BAR"?"ALPACA 1M WS / 5M REST · 15s UI REFRESH":"ALPACA REST · 15s UI REFRESH";
   const fiveMinutePermission=five.scoreBreakdown?.permission??decision?.fiveMinutePermission,permission=fiveMinutePermission===true?"YES":fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
@@ -399,8 +403,10 @@ async function renderOvernightQualification(){
  const evaluated=rows.map(item=>{
   const m=item.overnightMetrics||{};
   const onWin=metric(m.onWin),avgOn=metric(m.avgOn),fiveDay=metric(m.fiveDayOn),currentOn=metric(m.currentOn),above20=metric(m.above20Sma);
-  const checks=[onWin!==null&&onWin>=60,avgOn!==null&&avgOn>=0.10,fiveDay!==null&&avgOn!==null&&fiveDay>avgOn,currentOn!==null&&currentOn<3,above20!==null&&above20===1];
-  const history=checks.every(Boolean)?"PASS":checks.some(x=>x===false)?"FAIL":"DATA?";
+  const checks=[onWin>=60,avgOn>=0.10,fiveDay>avgOn,currentOn<3,above20===1];
+  const requiredMetrics=[onWin,avgOn,fiveDay,currentOn,above20];
+  // Missing custom-expression output is UNKNOWN, never a failed historical gate.
+  const history=requiredMetrics.some(value=>value===null)?"DATA?":checks.every(Boolean)?"PASS":"FAIL";
   if(history==="PASS")passed++;else if(history==="FAIL")failed++;else unknown++;
   const normalized=String(item.symbol||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
   const isExcluded=exclusionSet?exclusionSet.has(normalized):null;
@@ -1389,8 +1395,53 @@ $("overnightCapture20")?.addEventListener("click", async () => {
   const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent="Capture failed: "+error.message;tr.append(td);rows.append(tr);
   status.textContent="20-session capture failed. No calculated metrics are displayed. "+error.message;
  }finally{clearInterval(captureProgressTimer);button.disabled=false;}
+
 });
 
+/// MODULE: GTC_EXT sell-window history capture
+/// PURPOSE: Fetch/persist exact extended-hours 1m observations only when the effective Alpaca feed is SIP.
+/// SAFETY: IEX is diagnostic only; no target is calculated from incomplete or partial-exchange coverage.
+$("overnightCaptureSellWindow")?.addEventListener("click", async () => {
+ const button=$("overnightCaptureSellWindow"),status=$("overnightSellWindowStatus");
+ const symbol=($("overnightSymbol")?.value||"").trim().toUpperCase();
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid Overnight candidate symbol first.";return;}
+ button.disabled=true;
+ status.textContent="Checking the effective Alpaca feed before requesting GTC_EXT history…";
+ const started=Date.now();
+ const timer=setInterval(()=>{const elapsed=Math.floor((Date.now()-started)/1000);status.textContent="GTC_EXT capture running for "+symbol+" · "+elapsed+"s elapsed · fetching bounded 7-day 1-minute history chunks and auditing exact timestamps.";},10000);
+ try{
+  const statusResponse=await fetch("/api/providers/status",{cache:"no-store",headers:{Accept:"application/json"}});
+  const providers=await statusResponse.json();
+  if(!statusResponse.ok)throw new Error(providers.detail||providers.title||("Provider status HTTP "+statusResponse.status));
+  const alpaca=Array.isArray(providers)?providers.find(x=>String(x.provider||"").toLowerCase()==="alpaca"):null;
+  if(!alpaca)throw new Error("Alpaca provider status was not returned; capture was not started.");
+  const effectiveFeed=String(alpaca.configuredFeed||"").trim().toLowerCase();
+  if(effectiveFeed!=="sip"){
+   status.textContent="NOT RUN — effective Alpaca feed is "+(effectiveFeed.toUpperCase()||"UNKNOWN")+". GTC_EXT qualification research requires SIP. No provider history request was made and no bars were persisted. Resolve SIP entitlement/configuration, restart MCC, and verify /api/providers/status before retrying.";
+   return;
+  }
+  status.textContent="SIP confirmed as the effective configured feed. Fetching 20 exact GTC_EXT sell windows for "+symbol+"…";
+  const response=await fetch("/api/boring-overnight/capture-sell-window-history",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",feed:"sip"})});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.detail||data.title||data.error||("HTTP "+response.status));
+  const windows=Array.isArray(data.windows)?data.windows:[];
+  const missing=windows.reduce((sum,item)=>sum+(Number(item.missingIntervalCount)||0)+(item.referenceClose===null?1:0),0);
+  const complete=data.completeWindowCount??0,required=data.requiredWindow??20;
+  const samples=windows.flatMap(item=>(item.missingIntervalSampleUtc||[]).map(ts=>item.sellSessionDate+": "+ts)).slice(0,5);
+  const qualification=data.qualificationUsable===true&&data.allWindowsComplete===true;
+  status.textContent="Capture finished for "+symbol+" · "+complete+"/"+required+" complete windows · "+missing+" missing minute/reference observations · "+(data.fetchedBarCount??0)+" fetched / "+(data.newlyPersistedBarCount??0)+" newly stored · feed coverage "+(data.feedCoverage||"UNKNOWN")+" · qualification "+(qualification?"USABLE":"NOT USABLE")+". "+(samples.length?"Missing examples: "+samples.join(" | "):"No missing-minute samples were reported.")+" "+(data.note||"");
+  const reason=$("overnightSellLimitReason");
+  if(reason)reason.textContent=qualification
+   ?"GTC_EXT SIP coverage is complete. The numeric target remains NOT CALCULATED until ATR parity is MATCH and walk-forward target-touch/adverse-excursion validation is complete. Coverage is not proof of executable quotes or fills."
+   :"Sell target remains DATA? — NOT CALCULATED. Complete 20/20 exact SIP windows and ATR parity are required; missing intervals are not imputed.";
+ }catch(error){
+  status.textContent="GTC_EXT capture failed or was blocked: "+error.message+" No sell target was calculated.";
+ }finally{
+  clearInterval(timer);
+  button.disabled=false;
+ }
+});
+ 
 $("overnightBarsForm")?.addEventListener("submit", async event => {
  event.preventDefault();
  const button = $("overnightFetch"), status = $("overnightStatus");
