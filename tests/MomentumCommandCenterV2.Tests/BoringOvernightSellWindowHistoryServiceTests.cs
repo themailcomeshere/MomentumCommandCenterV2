@@ -1,6 +1,7 @@
 using MomentumCommandCenterV2.API.BoringOvernight;
 using MomentumCommandCenterV2.API.MarketData;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace MomentumCommandCenterV2.Tests;
 
@@ -134,6 +135,29 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         Assert.Equal(distinctSourceTimestamps, store.Bars.Count);
         Assert.True(result.AllWindowsComplete);
         Assert.True(result.QualificationUsable);
+    }
+
+    [Fact]
+    public async Task CaptureFailsFastWhenRequestedAlpacaFeedDiffersFromEffectiveConfiguration()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["MarketData:Alpaca:ApiKey"] = "test-key",
+                ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+                ["MarketData:Alpaca:Feed"] = "iex"
+            })
+            .Build();
+        var provider = new AlpacaMarketDataAdapter(new HttpClient(), configuration);
+        var store = new InMemoryStore(new List<MarketBar>());
+        var service = new BoringOvernightSellWindowHistoryService(store);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CaptureHistoryAsync(
+            provider, "RTO", "sip", DateTimeOffset.UtcNow, CancellationToken.None));
+
+        Assert.Contains("does not match the running Alpaca configuration 'iex'", exception.Message);
+        Assert.Contains("/api/providers/status", exception.Message);
+        Assert.Empty(store.Bars);
     }
 
     [Fact]
