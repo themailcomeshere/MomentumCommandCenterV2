@@ -20,15 +20,15 @@
    </div>
    <section id="workspace-toolbar" class="toolbar panel"><div id="mcc-static-0017-div"><label for="mode" id="mcc-static-0018-label">Workspace</label><select id="mode"><option value="momentum" id="mcc-static-0019-option">Intraday Momentum</option><option value="overnight" id="mcc-static-0020-option">Boring Overnight</option></select></div><div id="mcc-static-0021-div"><label for="symbol" id="mcc-static-0022-label">Symbol</label><select id="symbol"><option selected id="mcc-static-0023-option">SPY</option><option id="mcc-static-0024-option">RKLX</option><option id="mcc-static-0025-option">ASTX</option><option id="mcc-static-0026-option">XRPN</option><option id="mcc-static-0027-option">MNSB</option><option id="mcc-static-0028-option">DEMO</option></select></div><button id="reset">Reset workspace</button></section>
   </div>
-  <section class="topbar-readiness" id="system-readiness" aria-label="System readiness">
-   <div class="topbar-readiness-heading" id="mcc-static-0029-div"><span class="eyebrow" id="mcc-static-0030-span">SYSTEM READINESS</span><span class="chip" id="mcc-static-0031-span">Decision support</span></div>
+  <details class="topbar-readiness" id="system-readiness" aria-label="System readiness">
+   <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support · expand</span></summary>
    <div class="readiness-grid" id="mcc-static-0032-div">
     <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
     <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
     <div id="mcc-static-0041-div"><span class="readiness-dot demo" id="mcc-static-0042-span"></span><strong id="mcc-static-0043-strong">Live scanner</strong><span id="mcc-static-0044-span">Top movers · SIP entitlement required</span></div>
     <div id="mcc-static-0045-div"><span class="readiness-dot blocked" id="mcc-static-0046-span"></span><strong id="mcc-static-0047-strong">Trade execution</strong><span id="mcc-static-0048-span">Not implemented</span></div>
    </div>
-  </section>
+  </details>
  </div>
  
 </header>
@@ -96,7 +96,7 @@
  </form>
  <p id="overnightStatus" class="muted" role="status">Ready to request bars.</p>
  <div class="overnight-history-capture" id="mcc-static-0136-div">
-  <button id="overnightCapture20" type="button">Refresh/Capture 20-session close/open calculation</button>
+  <button id="overnightCapture20" type="button">Fetch / retry 20-session close/open history</button>
   <p id="overnightHistoryStatus" class="muted" role="status">No 20-session capture run yet. This fetches 1-minute provider bars, persists them, and calculates the 20 most recent regular close/open pairs.</p>
   <div class="overnight-results-grid" id="mcc-static-0137-div">
    <article class="overnight-result" id="mcc-static-0138-article"><h3 id="mcc-static-0139-h3">20-session close/open history</h3><dl id="mcc-static-0140-dl">
@@ -136,13 +136,15 @@
             <div class="overnight-results-grid" id="mcc-static-0207-div">
  <section class="overnight-result" aria-labelledby="overnightSellLimitTitle" id="mcc-static-0208-section">
   <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
+  <button id="overnightCaptureSellWindow" type="button" class="quiet-button">Fetch 20-session GTC_EXT sell-window history</button>
+  <p id="overnightSellWindowStatus" class="muted" role="status">Not captured. This fetches the exact 07:00–19:59 ET one-minute bars for each of the latest 20 completed sell sessions plus each prior regular-session close. SIP is required for qualification; IEX is diagnostic only.</p>
   <dl id="mcc-static-0209-dl">
    <div id="mcc-static-0210-div"><dt id="mcc-static-0211-dt">Calculated limit</dt><dd id="overnightSellLimitPrice">DATA? — NOT CALCULATED</dd></div>
    <div id="mcc-static-0212-div"><dt id="mcc-static-0213-dt">Reference close</dt><dd id="overnightSellLimitClose">DATA?</dd></div>
    <div id="mcc-static-0214-div"><dt id="mcc-static-0215-dt">Target basis</dt><dd id="overnightSellLimitMethod">Historical eligible-window target distribution + ATR context</dd></div>
    <div id="mcc-static-0216-div"><dt id="mcc-static-0217-dt">Validation</dt><dd id="overnightSellLimitValidation">NOT VERIFIED</dd></div>
   </dl>
-  <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until source-backed historical target-touch data, a fresh reference close, and ATR parity/context are available. A bar high touching a limit is not an actual fill.</p>
+  <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until 20/20 exact GTC_EXT windows are complete on SIP, ATR parity is MATCH, and walk-forward target validation is complete. A bar high touching a limit is not an actual fill.</p>
  </section>
   <article class="overnight-result" id="mcc-static-0218-article"><h3 id="mcc-static-0219-h3">Requested bar coverage</h3><dl id="mcc-static-0220-dl"><div id="mcc-static-0221-div"><dt id="mcc-static-0222-dt">Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div id="mcc-static-0223-div"><dt id="mcc-static-0224-dt">Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div id="mcc-static-0225-div"><dt id="mcc-static-0226-dt">First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div id="mcc-static-0227-div"><dt id="mcc-static-0228-dt">Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div id="mcc-static-0229-div"><dt id="mcc-static-0230-dt">Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div id="mcc-static-0231-div"><dt id="mcc-static-0232-dt">Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
   <article class="overnight-result" id="mcc-static-0233-article"><h3 id="mcc-static-0234-h3">What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice" id="mcc-static-0235-p">The new capture button requests and persists Alpaca 1-minute bars, generates 20 close/open boundaries with the MCC US-equities calendar ruleset, and displays every valid or missing pair. This is a history calculation only; it does not calculate the separate GTC_EXT sell-window target or qualify a candidate.</p></article>
@@ -169,6 +171,7 @@
    <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. Live Daily and catalyst evidence is fetched only for the four highest-scored imported candidates; other rows remain DATA?.</p>
   </div>
   <button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for top 4</button>
+  <p class="muted small">Use after importing the scanner CSV and narrowing the review list. Fetches adjusted Daily metrics and the preceding 24 hours of ticker news for only the four highest-scored imported rows. It is not an entry/exit trigger; UNKNOWN or material-review catalyst results still require manual review.</p>
  </div>
  <div class="overnight-qualification-summary">
   <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
@@ -177,6 +180,7 @@
   <div><span>Excluded</span><strong id="overnightQualExcluded">DATA?</strong></div>
   <div><span>Final READY</span><strong id="overnightQualReady">0</strong></div>
  </div>
+ <p class="muted small">Unknown / incomplete history means one or more required custom-expression metrics are unavailable. These rows are DATA? — not historical FAIL candidates. Inspect their History cells and source CSV values separately.</p>
  <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
  <div class="table-wrap overnight-qualification-table">
   <table>
