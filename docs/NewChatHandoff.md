@@ -25,6 +25,8 @@
 4. Run the existing 20-session capture/evaluate-with-history flow for RTO and EVR. Confirm the new snapshot contains the Daily inputs only when all 20 expected sessions exist, and that catalyst is UNKNOWN unless the provisional rules detect an explicit risk phrase.
 5. Compare Daily values against an independent chart/provider on the same adjustment basis. Report any provider 401/403 errors verbatim with credentials removed.
 
+- `BoringOvernightSellLimitCalculator` now treats complete flat/negative GTC_EXT outcomes as valid evidence; a non-positive target quantile returns `NO_POSITIVE_TARGET` with no numeric limit or misleading touch rate. Regression tests cover both adverse and flat samples. Exact-head CI is pending.
+
 ## Remaining engineering
 - Browser-verify the new top-four Daily/catalyst refresh in both qualification panels. Exact-head CI for the new UI integration must pass first.
 - Browser-verify the expanded saved-snapshot table in production and prototype.
