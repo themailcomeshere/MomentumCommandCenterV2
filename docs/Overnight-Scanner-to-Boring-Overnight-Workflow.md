@@ -86,3 +86,12 @@ After close, preserve after-hours and next-day premarket as distinct sessions. T
 ## [Uncertainties]
 
 The exact CSV row count, symbols and score distribution vary by export. Always use the current file's data-row count and source timestamp; do not assume a historical example's count or top-four list applies.
+
+
+## 2026-11-04 — button-driven history capture and recovery
+
+- After importing the CSV and narrowing candidates, use **Fetch Daily + catalyst for top 4** once for a bounded refresh of the four highest-scored imported rows. It fetches adjusted Daily bars and 24-hour ticker news; it is not a live entry/exit trigger and cannot clear catalyst risk.
+- For a candidate with missing close/open pairs, use **Fetch / retry 20-session close/open history**. MCC re-fetches exact 1-minute provider bars, persists only returned observations, and audits all 40 expected close/open timestamps. EVR's eight missing 09:30 ET opens can only be populated if the provider returns those exact timestamps. Nearest bars are not substituted.
+- For GTC_EXT sell-window research, use **Fetch 20-session GTC_EXT sell-window history** in the Calculated Limit Sell panel only when the effective Alpaca feed is SIP. The button preflights `/api/providers/status`; with IEX it stops without making a provider request. Each session requires all 780 exact one-minute starts from 07:00–19:59 ET plus the exact previous regular-session close.
+- A numeric Calculated Limit Sell remains withheld until 20/20 exact SIP windows are complete, ATR parity is MATCH, and walk-forward target-touch/adverse-excursion validation is complete. Coverage and historical bar highs do not prove executable quotes or fills.
+- Missing custom-expression metrics are `DATA?`, not historical FAIL. Review their source fields separately; do not discard them as failed stocks.
