@@ -894,6 +894,27 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 .ProducesProblem(422)
 .ProducesProblem(503);
 
+app.MapGet("/api/boring-overnight/sell-window-history", async (
+    string symbol,
+    string provider,
+    string feed,
+    DateTimeOffset asOfUtc,
+    IMarketBarObservationStore store,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var result = await new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellWindowHistoryService(store)
+            .GetHistoryAsync(symbol, provider, feed, asOfUtc, ct);
+        return Results.Ok(result);
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (InvalidOperationException ex) { return Results.Problem(ex.Message, statusCode: 502); }
+})
+.WithName("GetBoringOvernightSellWindowHistory")
+.WithSummary("Audit exact 07:00–20:00 ET GTC_EXT coverage from persisted 1-minute bars")
+.WithDescription("Requires symbol, provider, feed and an ISO-8601 UTC asOfUtc. Returns the latest 20 completed sell sessions, each requiring the exact prior regular-session close bar and all 780 1-minute bar-start timestamps from 07:00 through 19:59 ET. This endpoint reads persisted bars only; it does not fetch data, impute gaps, infer executable quotes, or claim fills.");
+
 app.MapPost("/api/boring-overnight/history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryRequest request,
     IMarketBarObservationStore store,
