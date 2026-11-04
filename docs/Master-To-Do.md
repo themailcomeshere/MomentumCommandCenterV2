@@ -1,3 +1,30 @@
+## 2026-11-03 5:01 PM Arizona — Red Zone recovery and Overnight capture follow-up
+
+**Execution source:** This file is the active execution checklist. The companion `docs/Validation/Full-Master-To-Do-Audit-20261103.md` is the reconciliation/dependency audit; it is not a second competing execution list.
+
+### Completed in this pass
+- [x] Diagnosed Red Zone persistence: `mcc.redZoneState.v1` stored dismissed symbols globally; imported rows were filtered against that stale dismissal list before the top four were selected.
+- [x] Added **Dismiss/Clear all Red Zone Candidates**. It dismisses all symbols in the currently selected scanner group and removes those group symbols from manual pins.
+- [x] Renamed the recovery action to **Restore dismissed / repopulate**; it clears the dismissal list and immediately re-renders eligible candidates.
+- [x] New CSV imports clear prior dismissals for symbols present in the newly imported file, so a fresh import is not permanently blanked by an earlier manual dismissal. Import feedback reports how many old dismissals were reset.
+- [x] Separated saved input-snapshot status from the bar-fetch status. `GET /api/boring-overnight/snapshots` returning 0 snapshots no longer overwrites the completed `/api/market-data/bars` result.
+- [x] Added elapsed-time progress updates during 20-session capture.
+- [x] Optimized 20-session persisted-history retrieval: use one range query when fewer than 10,000 observations are returned; preserve exact per-pair fallback when the store limit is reached. This avoids 20 full JSONL scans in the normal bounded case without weakening coverage.
+- [ ] Pull, build/test and browser-verify both production and prototype UI. CI and browser acceptance are separate.
+- [ ] Verify clear-all empties Red Zone; Restore dismissed repopulates up to four; re-importing the 198-row CSV resets matching old dismissals and repopulates candidates.
+- [ ] Verify bar-fetch status remains visible after snapshot refresh; snapshot status appears separately.
+- [ ] Time the 20-session capture after the one-scan optimization; record duration, response, exact boundary coverage and store size. No performance claim until measured.
+- [ ] Resolve the three missing exact next-session-open bars using source/feed evidence. Current result remains 17/20 pairs and 37/40 exact provider/store boundaries; no nearest-bar substitution.
+- [ ] Keep rolling metrics DATA? until all 20 exact close/open pairs are present. 3,965 fetched / 0 newly stored is consistent with an idempotent refresh and does not repair missing provider timestamps.
+
+### Current Overnight blockers
+- [ ] Missing exact open bars: identify whether IEX had no eligible trade in the exact 09:30 ET minute, the provider response omitted the bar, or the calendar/bar-start convention is wrong. Use the returned per-boundary expected timestamp, nearest timestamp and offset; do not silently shift the definition.
+- [ ] Decide and document whether the strategy's executable next-open price means the official 09:30 ET opening print or the first observed eligible bar after 09:30. These are different measurements; do not change the calculator without an explicit policy decision.
+- [ ] Daily price/SMA20/20D average-volume provider and validated catalyst classification remain unimplemented; no READY decision.
+- [ ] GTC_EXT 07:00–20:00 ET outcome study, walk-forward target quantile and actual fill/exit evidence remain unimplemented; do not use +0.5% as a validated sell target.
+
+---
+
 ## 2026-11-03 follow-up — runtime fix, CI and Overnight process progress
 
 - [x] Uploaded runtime-validation archive received: `20261103T190356Z.zip` contains the six expected JSON artifacts. Receipt/file inventory confirmed; JSON contents are **not yet analyzed**, so no WebSocket provenance conclusion is recorded.
