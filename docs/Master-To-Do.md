@@ -2068,3 +2068,43 @@ Design note: docs/Validation/Boring-Overnight-Requirements-and-Limit-Policy-2026
 - [x] Replaced the initial V14.5.2 draft with a V14.5.2 derived from the actual V14.5.1 Library source: `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,298 lines). The uploaded V14.5 file remains unchanged.
 - [x] V14.5.2 adds 5M V4.1.7 Permission parity (5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= floor) while retaining the separate 1M VWAP execution gate; it also adds DST-aware 3:55 PM Arizona EOD mapping.
 - [ ] TOS compile and matched-bar parity remain mandatory; .NET CI does not compile ThinkScript.
+
+
+## 2026-11-04 — operator measurements and next engineering sequence
+
+### User-verified acceptance
+- [x] Dashboard page load: 732 ms total; DOMContentLoaded: 638 ms. Pending localhost WebSocket is persistent and is not treated as a completed page-load request.
+- [x] Morning Brief is deferred until modal open; observed modal request duration 6.49 s.
+- [x] Fetch & Analyze bars: RTO 105 ms then 91 ms; EVR 102 ms. Timing alone does not establish cache/provider freshness.
+- [x] 20-session capture: RTO 9.12 s; EVR 6.22 s. Preserve exact-boundary validation.
+- [x] RTO capture appended a record labelled INPUT SNAPSHOT — NOT A DECISION.
+- [x] EVR eight NEXT_SESSION_OPEN boundaries absent from provider response and store; nearest bars 1–7 minutes later. No imputation or timestamp shift.
+
+### Snapshot evidence clarification
+The compact table does not prove that all historical metrics were populated only when all 20 pairs were valid. Improve snapshot contract/UI to show expected/valid pair counts, historical-metrics status and per-field presence/status. Keep incomplete metrics null and current price, Daily liquidity, catalyst, 5M permission/structure and 1M state UNKNOWN unless source-backed.
+
+### Daily market-data and liquidity — next implementation priority
+- [ ] Inspect provider capabilities/configuration and add a separate Daily-bar contract; do not reuse 1m/5m assumptions.
+- [ ] Implement source-backed Daily bars with provider/feed, retrievedAtUtc, source timestamps, adjustment mode, session date and completeness metadata.
+- [ ] Calculate last eligible price, 20 completed regular-session SMA, and 20-session average regular-session volume from completed Daily bars only. Exclude current incomplete session; document corporate-action adjustment semantics. Ambiguous coverage/adjustment means DATA?.
+- [ ] Test exactly 20 sessions, fewer than 20, duplicate/missing dates, current partial day, stale data, adjustment metadata and price/volume threshold boundaries.
+- [ ] Expose Daily inputs/provenance in evaluator/snapshot. Do not promote READY until all other gates pass.
+
+### Next work sequence
+1. Daily market data, SMA20 and average volume.
+2. Catalyst evidence/classification with CLEAR_WITH_SOURCE / RISK_PRESENT / UNKNOWN / STALE and source/publication/observed timestamps.
+3. Snapshot completeness visibility and bars cache/freshness observability.
+4. Official opening-print source/feed parity; IEX 09:30 minute-bar Open remains a proxy only.
+5. Opportunity Quality current-data integration and Red Zone qualification.
+6. GTC_EXT sell-window dataset, walk-forward target validation, actual fill/exit/P&L linkage.
+
+### Operator inputs needed
+- No further EVR missing-row export is needed.
+- After Daily endpoint implementation, run local RTO and EVR smoke tests and provide response bodies plus provider/feed status. Include adjustment metadata if returned.
+- For bars freshness diagnosis, provide one Fetch & Analyze response body per symbol and response headers if available. Do not repeatedly rerun without a defined cache-bypass test.
+- Local build/browser acceptance remains operator-side; report exact output after pulling the branch.
+
+[Uncertainties]
+- The 91–105 ms timings do not establish cache, persisted-store, or fresh-provider origin. Data not found in sources.
+- The pasted snapshot summary does not expose complete historical metrics or explicit 20/20 completeness. Data not found in sources.
+- Daily adjustment behavior, entitlement and provider coverage remain unverified.
