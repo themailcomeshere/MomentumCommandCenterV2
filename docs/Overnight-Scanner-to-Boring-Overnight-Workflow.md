@@ -39,6 +39,24 @@ For each candidate worth deeper review:
 3. The successful capture appends an immutable evaluator-input snapshot. Inspect the saved-snapshot table and verify that historical metrics are null if any required pair is missing, and that current price, Daily liquidity, catalyst, and chart inputs remain UNKNOWN unless independently supplied.
 4. Use the manual **Fetch Daily + catalyst for top 4** action only as a bounded refresh of the four highest-scored imported candidates. Daily qualification fields require complete, fresh SIP data. IEX Daily observations are diagnostic only. Catalyst phrase triage is provisional: no articles is UNKNOWN, and only an explicit risk phrase blocks; other categories require manual review. This action does not create READY.
 5. Compare Daily close/SMA20/20D average volume against an independent source using the same adjustment basis. Review returned catalyst headlines, publication timestamps and source URLs against primary filings/news.
+6. Save each article's human assessment separately from the automated triage. The local API now accepts append-only labels:
+   ```powershell
+   $review = @{
+       symbol = "EVER"
+       articleId = "<article id from catalyst response>"
+       headline = "<exact source headline>"
+       url = "<exact article URL>"
+       publishedAtUtc = "<source publication timestamp>"
+       source = "Alpaca News"
+       label = "MATERIAL_EVENT" # MATERIAL_RISK, MATERIAL_EVENT, NON_MATERIAL, IRRELEVANT, DUPLICATE, UNCERTAIN
+       ruleSetVersion = "MCC-CATALYST-TRIAGE-1.0"
+       notes = "Why this article has this label, based on the article/filing."
+   } | ConvertTo-Json
+
+   Invoke-RestMethod -Method Post -Uri "$api/api/market-data/catalyst-reviews" -ContentType "application/json" -Body $review
+   Invoke-RestMethod "$api/api/market-data/catalyst-reviews?symbol=EVER&limit=100"
+   ```
+   These labels are an audit dataset only. They do not clear a catalyst or change the candidate's eligibility.
 
 ## 5. Extended-hours sell-window research
 
