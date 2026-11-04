@@ -12,7 +12,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
 {
     private const int RequiredWindow = 20;
     private const int MinutesPerEligibleWindow = 13 * 60;
-    private const int QueryLimitPerSession = 1500;
+    private const int QueryLimitPerSession = 10000; // Store limit; fetch all coexisting feeds before filtering to the requested feed.
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     public static DateOnly GetLatestCompletedSellSessionDate(DateTimeOffset asOfUtc)
