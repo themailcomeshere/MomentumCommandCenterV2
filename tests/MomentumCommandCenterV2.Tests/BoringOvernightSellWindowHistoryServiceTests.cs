@@ -241,13 +241,14 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
 
         public Task<IReadOnlyList<MarketBarObservation>> GetLatestAsync(
             string symbol, string? provider, DateTimeOffset fromUtc, DateTimeOffset toUtc,
-            int limit, CancellationToken cancellationToken, string? timeframe = null)
+            int limit, CancellationToken cancellationToken, string? timeframe = null, string? feed = null)
         {
             IReadOnlyList<MarketBarObservation> result = Bars
                 .Where(bar => bar.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
                 .Where(bar => provider is null || bar.Provider.Equals(provider, StringComparison.OrdinalIgnoreCase))
                 .Where(bar => bar.Timestamp >= fromUtc && bar.Timestamp <= toUtc)
                 .Where(bar => timeframe is null || bar.Timeframe.Equals(timeframe, StringComparison.OrdinalIgnoreCase))
+                .Where(bar => feed is null || string.Equals(bar.Feed, feed, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(bar => bar.Timestamp)
                 .Take(limit)
                 .Select((bar, index) => new MarketBarObservation(
