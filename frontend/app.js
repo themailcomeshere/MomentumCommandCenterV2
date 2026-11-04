@@ -412,7 +412,7 @@ async function renderOvernightQualification(){
   const averageVolume=dailyUsable&&Number.isFinite(Number(daily.averageDailyVolume20))?Number(daily.averageDailyVolume20):null;
   const dailyGate=price!==null&&averageVolume!==null?(price<=5||averageVolume<500000?"FAIL":"PASS"):"DATA?";
   const catalystStatus=catalyst?.status||"UNKNOWN";
-  const catalystLabel=live.catalystError?"ERROR":!catalyst?(live.dailyError||live.daily?"NOT LOADED":"NOT FETCHED"):catalystStatus+(catalyst.coverageComplete===false?" · COVERAGE INCOMPLETE":"");
+  const catalystLabel=live.catalystError?"ERROR · "+live.catalystError:!catalyst?(live.dailyError||live.daily?"NOT LOADED":"NOT FETCHED"):catalystStatus+(catalyst.coverageComplete===false?" · COVERAGE INCOMPLETE":"");
   const catalystRisk=catalystStatus==="RISK_PRESENT";
   const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":exclusionError?"DATA? · EXCLUSION LIST":history==="FAIL"?"BLOCKED · HISTORICAL GATE":dailyGate==="FAIL"?"BLOCKED · DAILY PRICE / LIQUIDITY":catalystRisk?"BLOCKED · CATALYST RISK":daily?.qualificationUsable!==true?"DATA? · DAILY SIP / 20 SESSIONS":dailyGate!=="PASS"?"DATA? · DAILY METRICS":!catalyst||catalyst.coverageComplete!==true||catalystStatus!=="CLEAR_WITH_SOURCE"?"MANUAL REVIEW · CATALYST": "MANUAL REVIEW · 5M / 1M";
   return {...item,onWin,avgOn,fiveDay,currentOn,above20,history,isExcluded,decision,daily,price,averageVolume,dailyGate,catalystLabel,live};
@@ -510,6 +510,7 @@ $("scannerFile").addEventListener("change",event=>{
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;
+  overnightLiveEvidence.clear();
   const importedSymbols=new Set(imported.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
   const redZoneState=readRedZoneState();
   const previouslyDismissed=redZoneState.dismissed.length;
