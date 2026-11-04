@@ -1,3 +1,26 @@
+## 2026-11-04 — first-pass / second-pass reconciliation and Red Zone mode work
+
+- [x] Diagnosed the GTC_EXT HTTP 422: the runtime feed is IEX from local `secrets.json`, overriding tracked `appsettings.json` SIP. The preflight correctly rejects requested SIP before fetching. Keep IEX as diagnostic until a recent SIP request succeeds; prior SIP access returned 403. Do not change configuration and assume entitlement.
+- [x] Reconciled current GTC_EXT runtime results: RTO and EVR each have 0/20 complete IEX windows, with hundreds of missing exact extended-hours minutes per session. These data are not qualification-usable. Calculator connection and target validation remain blocked.
+- [x] Reconciled EVR's 8 exact 09:30 ET bar gaps (Oct 12, 14, 15, 22, 26, 30 and Nov 3, 4; Nov 3/4 timestamps are 14:30Z after DST). Provider returned only later bars 1–7 minutes after the required timestamp. Do not impute.
+- [x] Added persistent Red Zone Manual / Automatic mode in production and prototype. Manual mode shows ordered pins; Automatic mode shows the top supplied scanner-score preview after imported historical gates. Pins and dismissals persist across mode changes.
+- [x] Added live Opportunity Quality diagnostic/reason-code explanation to Red Zone card reasoning. It remains provisional and does not alter V2 Permission/entry eligibility or order state.
+- [x] Added `docs/Overnight-Scanner-to-Boring-Overnight-Workflow.md` with the operator sequence, source-quality rules, and the distinction between scanner score, current technical evidence, historical Overnight qualification and actual fills.
+- [ ] Opportunity Quality still needs a versioned full-pool ranker, candidate-pool evidence strategy, calibrated thresholds, rank stability/hysteresis, and unit/API/UI acceptance. Current Automatic mode is explicitly a scanner-score preview, not that ranker.
+- [ ] Re-run exact-head CI and local Release tests for the Red Zone mode/UI changes; browser acceptance remains operator-side.
+- [ ] Obtain the current scanner export file in this conversation before symbol-by-symbol market/news analysis. Data not found in sources for the newly mentioned export; current conversation file inventory contains only the older project screenshots.
+- [ ] Switch effective Alpaca feed to SIP only after provider entitlement is confirmed. Current `secrets.json` IEX override is the effective runtime configuration; changing it without entitlement will produce provider authorization failure.
+- [ ] Browser acceptance still required for the Manual / Automatic toggle, ordered pins, dismissal persistence, top-four preview and diagnostic explanation in both production and prototype.
+- [ ] All remaining source-dependent items remain open: official auction-print parity, human-labelled catalyst validation, 20/20 GTC_EXT SIP observations, walk-forward target validation, Schwab fills/fees/P&L, Thinkorswim matched-state replay, WebSocket delivery/recovery, and operator browser/performance checks.
+
+**First pass:** Re-read all 223 unchecked checklist boxes in this document. They span repeated historical checkpoints as well as current work. Consolidated them into the active workstreams below; duplicate historical entries are not independent deliverables. Implemented the Red Zone mode and diagnostic explanation where source and runtime contracts permit. Updated the Overnight operator workflow and reconciled the newly supplied feed/history evidence.
+
+**Second pass:** Re-tested dependencies after the first pass. The mode/diagnostic UI work does not unblock SIP entitlement, missing provider bars, official auction trades, human catalyst labels, broker execution records, Thinkorswim state tapes, or browser/runtime evidence. It does make the Opportunity Quality diagnostic visible in Red Zone and provides a manual mode that can be used while automatic ranking remains provisional. The new export is not present in the available file sources, so its ticker-specific analysis remains blocked pending attachment.
+
+**Checklist reconciliation rule:** Keep a task open if it needs user-side browser/runtime evidence, external entitlement/data, Thinkorswim compilation/state tape, human labels, or broker fills. Historical duplicate checkboxes should be reconciled against the latest implementation evidence rather than blindly marked complete.
+
+---
+
 ## 2026-11-04 — qualification UI and sell-target data-quality follow-up
 
 - [x] Production and prototype Overnight qualification panels now support manual Daily + catalyst refresh for the four highest-scored imported candidates. Daily price/20D average volume are accepted only when the API reports complete, fresh SIP qualification data. IEX/incomplete/stale data remains DATA?; `RISK_PRESENT` blocks; all other catalyst states remain manual review. The UI does not query all imported rows and cannot emit READY. Release build, frontend JavaScript syntax check and 199/199 tests passed on code head `fcbb55d8e12268cfcb3d8592d9b7daf1aafa1f76` (Actions run [41884154586](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41884154586)); browser acceptance remains pending.
