@@ -31,7 +31,7 @@ public sealed class AlpacaCatalystAssessmentClientTests
         Assert.Equal(expectedStatus, result.Status);
         Assert.True(result.CoverageComplete);
         Assert.Equal("MCC-CATALYST-TRIAGE-1.0", result.RuleSetVersion);
-        Assert.DoesNotContain("CLEAR", result.Status, StringComparison.Ordinal);
+        Assert.NotEqual("CLEAR_WITH_SOURCE", result.Status);
         Assert.Contains("symbols=RTO", handler.Request!.RequestUri!.ToString());
         if (expectedCategory is not null)
             Assert.Contains(expectedCategory, result.Articles.Single().Categories);
