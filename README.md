@@ -254,3 +254,8 @@ The prototype's `#system-readiness` section is nested inside the same `.topbar-b
 - Production: `/` serves `frontend/index.html`.
 - Prototype: `/prototypeIndex.html` serves `frontend/prototypeIndex.html`.
 - Apply UI experiments to `prototypeIndex.html` only. Promote a design to `index.html` only after explicit user approval.
+
+
+## 2026-11-04 — MCC-native workflow updates
+
+The production and prototype dashboards now provide button-driven 20-session regular close/open retry and SIP-gated 20-session GTC_EXT sell-window capture. The latter checks the effective Alpaca feed and does not request qualification history when IEX is configured. Missing custom-expression metrics are classified DATA?, not FAIL. System Readiness is collapsible, and Decision Explanation shows the symbol being refreshed. See [Technical Workflow](docs/Technical-Workflow.md), [Overnight Scanner to Boring Overnight Workflow](docs/Overnight-Scanner-to-Boring-Overnight-Workflow.md), and [Master To-Do](docs/Master-To-Do.md) for operating instructions and remaining validation gates.
