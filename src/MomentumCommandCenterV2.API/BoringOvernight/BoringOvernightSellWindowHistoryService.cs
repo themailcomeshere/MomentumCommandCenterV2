@@ -42,6 +42,8 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             throw new ProviderNotConfiguredException($"Provider {provider.ProviderName} is not configured.");
         if (string.IsNullOrWhiteSpace(feed))
             throw new ArgumentException("Feed is required to keep GTC_EXT evidence source-isolated.", nameof(feed));
+        if (asOfUtc == default || asOfUtc.Offset != TimeSpan.Zero || asOfUtc > DateTimeOffset.UtcNow)
+            throw new ArgumentException("asOfUtc must be a non-default UTC timestamp no later than now.", nameof(asOfUtc));
 
         var latestSession = GetLatestCompletedSellSessionDate(asOfUtc);
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(latestSession, RequiredWindow);
@@ -58,16 +60,18 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             cursor = chunkEnd;
         }
 
-        var normalized = fetched.GroupBy(x => x.Timestamp).Select(group => group.First())
-            .OrderBy(x => x.Timestamp).ToArray();
-        var wrongSource = normalized.FirstOrDefault(x =>
+        var wrongSource = fetched.FirstOrDefault(x =>
+            !string.Equals(x.Symbol, symbol.Trim(), StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(x.Provider, provider.ProviderName, StringComparison.OrdinalIgnoreCase) ||
             !string.Equals(x.Feed, feed.Trim(), StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(x.Timeframe, "1m", StringComparison.OrdinalIgnoreCase));
+            !string.Equals(x.Timeframe, "1m", StringComparison.OrdinalIgnoreCase) ||
+            x.Timestamp < fromUtc || x.Timestamp > toUtc);
         if (wrongSource is not null)
             throw new InvalidOperationException(
-                $"Provider returned a bar outside the requested source contract (provider={wrongSource.Provider}, feed={wrongSource.Feed ?? "UNKNOWN"}, timeframe={wrongSource.Timeframe}). Requested provider={provider.ProviderName}, feed={feed}, timeframe=1m. No bars were persisted.");
+                $"Provider returned a bar outside the requested source contract (symbol={wrongSource.Symbol}, provider={wrongSource.Provider}, feed={wrongSource.Feed ?? "UNKNOWN"}, timeframe={wrongSource.Timeframe}, timestamp={wrongSource.Timestamp:O}). Requested symbol={symbol}, provider={provider.ProviderName}, feed={feed}, timeframe=1m. No bars were persisted.");
 
+        var normalized = fetched.GroupBy(x => x.Timestamp).Select(group => group.First())
+            .OrderBy(x => x.Timestamp).ToArray();
         var persisted = normalized.Length == 0 ? 0 : await store.AppendAsync(normalized, cancellationToken);
         var audit = await GetHistoryAsync(symbol, provider.ProviderName, feed, asOfUtc, cancellationToken);
         return audit with
