@@ -15,7 +15,7 @@ public interface IMarketBarObservationStore
     /// <summary>
     /// PURPOSE: Query the latest known version of each stored provider/symbol/timestamp bar.
     /// WHEN CALLED: Historical calculations, parity checks, and audit endpoints read persisted observations.
-    /// IMPORTANT: Returned bars are raw source observations, not session-paired Overnight returns.
+    /// IMPORTANT: Returned bars are raw source observations, not session-paired Overnight returns. Optional timeframe and feed filters are applied before the result limit.
     /// </summary>
     Task<IReadOnlyList<MarketBarObservation>> GetLatestAsync(
         string symbol,
