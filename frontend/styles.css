@@ -760,6 +760,8 @@ th {
 
 .redzone-reason {
     min-height: 52px;
+    border-left: 2px solid var(--line);
+    padding-left: 9px;
 }
 
 .redzone-participation {
