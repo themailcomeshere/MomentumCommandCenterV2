@@ -33,8 +33,7 @@ public static class BoringOvernightSellLimitCalculator
         var selected = history.OrderBy(x => x.SessionDate).TakeLast(requiredWindow).ToArray();
         if (selected.Select(x => x.SessionDate).Distinct().Count() != selected.Length)
             return Missing("Duplicate eligible-window session dates were supplied.", selected.Length);
-        if (selected.Any(x => !x.CoverageComplete || x.ReferenceClose <= 0 || x.HighestEligiblePrice <= 0 ||
-                              x.HighestEligiblePrice < x.ReferenceClose || x.MissingIntervalCount != 0))
+        if (selected.Any(x => !x.CoverageComplete || x.ReferenceClose <= 0 || x.HighestEligiblePrice <= 0 || x.MissingIntervalCount != 0))
             return Missing("At least one historical eligible sell window is incomplete or invalid; numeric limit withheld.", selected.Length,
                 selected.Count(x => !x.CoverageComplete || x.MissingIntervalCount != 0));
 
@@ -45,9 +44,16 @@ public static class BoringOvernightSellLimitCalculator
         // Nearest-rank percentile: rank = ceil(p * n). No interpolation or hidden rounding.
         var rank = (int)Math.Ceiling(targetQuantilePct / 100m * favorableReturns.Length);
         var targetReturnPct = favorableReturns[Math.Clamp(rank - 1, 0, favorableReturns.Length - 1)];
-        var limit = decimal.Round(currentReferenceClose * (1m + targetReturnPct / 100m), 2, MidpointRounding.AwayFromZero);
         var touchCount = favorableReturns.Count(x => x >= targetReturnPct);
         var touchRate = touchCount * 100m / favorableReturns.Length;
+        if (targetReturnPct <= 0m)
+        {
+            return new("NO_POSITIVE_TARGET", null, targetReturnPct, touchRate, null,
+                selected.Length, selected.Length, 0,
+                "The complete eligible-window sample is valid, but the selected maximum-favorable-return quantile is zero or negative. No positive-upside sell target is issued. This is an observed adverse/flat outcome, not missing data.");
+        }
+
+        var limit = decimal.Round(currentReferenceClose * (1m + targetReturnPct / 100m), 2, MidpointRounding.AwayFromZero);
         var atrDistance = (limit - currentReferenceClose) / currentAtr;
 
         return new("PROVISIONAL", limit, targetReturnPct, touchRate, atrDistance,
