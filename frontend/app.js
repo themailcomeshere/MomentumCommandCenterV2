@@ -1289,6 +1289,7 @@ $("overnightBarsForm")?.addEventListener("submit", async event => {
   status.textContent="Require From before To and a maximum 31-day window."; return;
  }
  button.disabled=true;
+ const barsRequestStartedAt=performance.now();
  resetOvernightSellLimit("Current request is descriptive OHLCV only. The API has not returned a validated target distribution or an approved sell-limit calculation.");
  // Clear the previous response before starting a new request so failed requests cannot leave stale bars visible.
  $("overnightProvider").textContent="REQUEST IN PROGRESS";
@@ -1318,7 +1319,7 @@ $("overnightBarsForm")?.addEventListener("submit", async event => {
   $("overnightInterpretation").textContent=bars.length
    ? "Retrieved "+bars.length+" "+$("overnightTimeframe").value+" bars; "+extended+" have Arizona timestamps at or after 1:00 PM. Newly persisted observations: "+(data.newlyPersistedObservationCount??"UNKNOWN")+". Returned bars are source evidence only; inspect session coverage and feed before evaluating."
    : "The API returned zero bars for this symbol and time window. This is not proof of zero trading; verify provider status, symbol entitlement, feed and requested timestamps.";
-  status.textContent="Bar request complete · "+symbol+" · "+$("overnightTimeframe").value+" · Arizona "+$("overnightFrom").value+" → "+$("overnightTo").value+" · UTC "+fromUtc+" → "+toUtc+".";
+  status.textContent="Bar request complete · "+symbol+" · "+$("overnightTimeframe").value+" · "+(data.barCount??0)+" bars · "+((performance.now()-barsRequestStartedAt)/1000).toFixed(1)+"s · Arizona "+$("overnightFrom").value+" → "+$("overnightTo").value+" · UTC "+fromUtc+" → "+toUtc+".";
   await refreshOvernightSnapshots();
  } catch(error) {
   $("overnightProvider").textContent="REQUEST FAILED · NO NEW DATA";
