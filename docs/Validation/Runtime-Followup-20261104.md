@@ -79,3 +79,14 @@ This is a safety improvement, not completion of Schwab integration. The operator
 ## Catalyst human-label collection layer
 
 Added `CatalystHumanReviewStore` and `POST/GET /api/market-data/catalyst-reviews`. The append-only JSONL store validates symbol, source URL, headline and a fixed human label taxonomy (`MATERIAL_RISK`, `MATERIAL_EVENT`, `NON_MATERIAL`, `IRRELEVANT`, `DUPLICATE`, `UNCERTAIN`). It does not write to the automated assessment, does not infer CLEAR, and does not train a classifier. The local API currently has no reviewer identity/authentication or review UI. The next operator step is to inspect actual returned article bodies/filings and submit human labels; classifier evaluation still needs adjudicated, time-separated examples.
+
+
+## 2026-11-04 UI handoff update — PowerShell replaced for routine captures
+
+The production and prototype dashboards now include a user-facing GTC_EXT capture button. It preflights `GET /api/providers/status` and invokes `POST /api/boring-overnight/capture-sell-window-history` only when the effective Alpaca feed is SIP. The user no longer needs to run that capture endpoint manually in PowerShell for normal operation. Current runtime feed is IEX, so the button should report that capture was not started; this is intentional fail-fast behavior.
+
+The existing 20-session close/open capture button is now explicitly described as the retry action for missing exact timestamps, including EVR's eight opens. It can only persist exact bars actually returned by the provider.
+
+The front-end qualification logic now returns DATA? whenever one or more required historical custom-expression values are missing. It does not count missing values as historical failures. Confirm the November 4 443-row import in the browser: 200 complete rows and 243 unavailable rows should be visible as complete/unknown respectively; 32 complete rows are historical fails according to the November 4 scanner review.
+
+The calculated-limit engine remains a library component, not a completed live API/UI workflow. GTC_EXT capture is now exposed in the dashboard, but the engine must not be connected to a numeric target until all 20 SIP windows are complete, ATR parity is MATCH, and walk-forward target validation is complete.
