@@ -121,6 +121,37 @@ public sealed class JsonlMarketBarObservationStoreTests
     }
 
     [Fact]
+    public async Task QueryCanFilterFeedBeforeApplyingResultLimit()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var store = new JsonlMarketBarObservationStore();
+            var sip = CreateBar() with { Timeframe = "1m", Feed = "sip" };
+            var iex = sip with { Feed = "iex", High = 12.0, Close = 11.0 };
+            Assert.Equal(1, await store.AppendAsync(new[] { sip, iex }, CancellationToken.None));
+
+            var allFeeds = await store.GetLatestAsync(
+                "TEST", "TestProvider", sip.Timestamp, sip.Timestamp, 10, CancellationToken.None, "1m");
+            var sipOnly = await store.GetLatestAsync(
+                "TEST", "TestProvider", sip.Timestamp, sip.Timestamp, 10, CancellationToken.None, "1m", "sip");
+
+            Assert.Equal(2, allFeeds.Count);
+            Assert.Single(sipOnly);
+            Assert.Equal("sip", sipOnly[0].Bar.Feed);
+            Assert.Equal(10.5, sipOnly[0].Bar.Close);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task SameProviderSymbolAndTimestampRemainDistinctAcrossTimeframes()
     {
         var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
