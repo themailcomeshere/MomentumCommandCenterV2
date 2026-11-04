@@ -815,7 +815,11 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
                 request.Symbol, DateTimeOffset.UtcNow, "Alpaca 1m bar capture (09:30 ET bar-open proxy)",
                 provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
-                captureSourceTimestamps, captureInputs),
+                captureSourceTimestamps, captureInputs,
+                new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
+                    history.RequiredWindow, history.RequestedPairCount, history.ValidPairCount,
+                    history.MissingPairCount, history.AllPairsComplete, history.EnoughHistory,
+                    history.AllPairsComplete && history.EnoughHistory ? "COMPLETE" : "INCOMPLETE")),
             ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
 
@@ -1013,7 +1017,11 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
 
         var snapshotInput = new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
             request.Symbol, request.AsOfUtc, request.Source, request.Provider, request.Feed,
-            request.CalculationVersion, sourceTimestamps, effectiveRequest);
+            request.CalculationVersion, sourceTimestamps, effectiveRequest,
+            new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
+                history.RequiredWindow, history.RequestedPairCount, history.ValidPairCount,
+                history.MissingPairCount, history.AllPairsComplete, history.EnoughHistory,
+                history.AllPairsComplete && history.EnoughHistory ? "COMPLETE" : "INCOMPLETE"));
         var snapshot = await snapshotStore.AppendAsync(snapshotInput, ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
         return Results.Created($"/api/boring-overnight/snapshots?symbol={snapshot.Symbol}&limit=1", new
