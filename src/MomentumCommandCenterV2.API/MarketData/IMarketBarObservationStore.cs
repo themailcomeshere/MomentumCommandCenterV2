@@ -24,7 +24,8 @@ public interface IMarketBarObservationStore
         DateTimeOffset toUtc,
         int limit,
         CancellationToken cancellationToken,
-        string? timeframe = null);
+        string? timeframe = null,
+        string? feed = null);
 }
 
 /// <summary>
