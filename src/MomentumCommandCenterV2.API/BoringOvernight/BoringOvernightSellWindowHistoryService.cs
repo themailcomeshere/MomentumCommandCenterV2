@@ -15,6 +15,69 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
     private const int QueryLimitPerSession = 1500;
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
+    public static DateOnly GetLatestCompletedSellSessionDate(DateTimeOffset asOfUtc)
+    {
+        if (asOfUtc == default || asOfUtc.Offset != TimeSpan.Zero)
+            throw new ArgumentException("asOfUtc must be a non-default UTC timestamp.", nameof(asOfUtc));
+        var easternNow = TimeZoneInfo.ConvertTime(asOfUtc, Eastern);
+        var latest = DateOnly.FromDateTime(easternNow.Date);
+        if (!UsEquitiesSessionCalendar.IsTradingSession(latest) ||
+            TimeOnly.FromDateTime(easternNow.DateTime) < new TimeOnly(20, 0))
+        {
+            do { latest = latest.AddDays(-1); }
+            while (!UsEquitiesSessionCalendar.IsTradingSession(latest));
+        }
+        return latest;
+    }
+
+    public async Task<BoringOvernightSellWindowHistoryResult> CaptureHistoryAsync(
+        IMarketDataProvider provider,
+        string symbol,
+        string feed,
+        DateTimeOffset asOfUtc,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+        if (!provider.IsConfigured)
+            throw new ProviderNotConfiguredException($"Provider {provider.ProviderName} is not configured.");
+        if (string.IsNullOrWhiteSpace(feed))
+            throw new ArgumentException("Feed is required to keep GTC_EXT evidence source-isolated.", nameof(feed));
+
+        var latestSession = GetLatestCompletedSellSessionDate(asOfUtc);
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(latestSession, RequiredWindow);
+        var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
+        var toUtc = ToUtc(boundaries[^1].NextSessionDate, new TimeOnly(20, 0));
+        var fetched = new List<MarketBar>();
+        var cursor = fromUtc;
+        while (cursor < toUtc)
+        {
+            var chunkEnd = cursor.AddDays(7) < toUtc ? cursor.AddDays(7) : toUtc;
+            var chunk = await provider.GetBarsAsync(
+                symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, cancellationToken);
+            fetched.AddRange(chunk);
+            cursor = chunkEnd;
+        }
+
+        var normalized = fetched.GroupBy(x => x.Timestamp).Select(group => group.First())
+            .OrderBy(x => x.Timestamp).ToArray();
+        var wrongSource = normalized.FirstOrDefault(x =>
+            !string.Equals(x.Provider, provider.ProviderName, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(x.Feed, feed.Trim(), StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(x.Timeframe, "1m", StringComparison.OrdinalIgnoreCase));
+        if (wrongSource is not null)
+            throw new InvalidOperationException(
+                $"Provider returned a bar outside the requested source contract (provider={wrongSource.Provider}, feed={wrongSource.Feed ?? "UNKNOWN"}, timeframe={wrongSource.Timeframe}). Requested provider={provider.ProviderName}, feed={feed}, timeframe=1m. No bars were persisted.");
+
+        var persisted = normalized.Length == 0 ? 0 : await store.AppendAsync(normalized, cancellationToken);
+        var audit = await GetHistoryAsync(symbol, provider.ProviderName, feed, asOfUtc, cancellationToken);
+        return audit with
+        {
+            CapturePerformed = true,
+            FetchedBarCount = normalized.Length,
+            NewlyPersistedBarCount = persisted
+        };
+    }
+
     public async Task<BoringOvernightSellWindowHistoryResult> GetHistoryAsync(
         string symbol,
         string provider,
@@ -34,14 +97,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         if (asOfUtc > DateTimeOffset.UtcNow)
             throw new ArgumentException("asOfUtc cannot be in the future.", nameof(asOfUtc));
 
-        var easternNow = TimeZoneInfo.ConvertTime(asOfUtc, Eastern);
-        var latestSellSession = DateOnly.FromDateTime(easternNow.Date);
-        if (!UsEquitiesSessionCalendar.IsTradingSession(latestSellSession) ||
-            TimeOnly.FromDateTime(easternNow.DateTime) < new TimeOnly(20, 0))
-        {
-            do { latestSellSession = latestSellSession.AddDays(-1); }
-            while (!UsEquitiesSessionCalendar.IsTradingSession(latestSellSession));
-        }
+        var latestSellSession = GetLatestCompletedSellSessionDate(asOfUtc);
 
         // Each boundary's NextSessionDate is the sell-window date; PreviousCloseBarTimestampUtc
         // is the exact reference-close bar timestamp (15:59 or 12:59 ET).
@@ -155,4 +211,7 @@ public sealed record BoringOvernightSellWindowHistoryResult(
     bool QualificationUsable,
     IReadOnlyList<BoringOvernightSellWindowAudit> Windows,
     IReadOnlyList<BoringOvernightSellWindowObservation> CalculatorObservations,
-    string Note);
+    string Note,
+    bool CapturePerformed = false,
+    int FetchedBarCount = 0,
+    int NewlyPersistedBarCount = 0);
