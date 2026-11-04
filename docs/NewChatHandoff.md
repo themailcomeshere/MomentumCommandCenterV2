@@ -2355,3 +2355,8 @@ No additional EVR boundary export is required. Official opening-print parity rem
 - Cache/provider provenance for the 91–105 ms requests is not established.
 - Snapshot table does not expose complete historical metrics or a 20/20 count.
 - Daily provider entitlement, adjustment semantics and symbol coverage remain to be verified.
+
+
+## 2026-11-04 handoff — MCC-native recovery controls
+
+Latest feature-branch UI work adds a collapsed System Readiness disclosure, symbol-specific Decision Explanation loading state, explicit entry/exit handoff guidance, fail-closed handling for missing custom-expression metrics, an exact 20-session close/open retry description, and a SIP-preflighted GTC_EXT capture button. Current runtime feed is IEX; GTC_EXT capture must not run until effective SIP entitlement is confirmed. EVR's eight exact opens remain unverified/missing; retry the 20-session close/open capture only after deployment and inspect the exact-boundary audit. Calculated Limit Sell remains DATA? until 20/20 complete SIP windows, ATR parity MATCH, and walk-forward validation. Run exact-head CI/local Release tests and browser acceptance.
