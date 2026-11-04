@@ -8,7 +8,7 @@
 - [x] Catalyst triage statuses are `RISK_PRESENT`, `MATERIAL_EVENT_REVIEW`, `UNCLASSIFIED_NEWS_REVIEW`, or `UNKNOWN`. No-news is UNKNOWN. It never emits `CLEAR_WITH_SOURCE`; no article-level human validation or historical classifier validation is claimed.
 - [x] `POST /api/boring-overnight/evaluate-with-history` now fetches Daily and catalyst evidence, overwrites caller-supplied price/SMA20/average-volume/catalyst values, and persists source timestamps. Only explicit `RISK_PRESENT` maps to evaluator `RISK`; every other catalyst state remains UNKNOWN. Missing/incomplete Daily data remains null. Existing 5M/1M inputs are not automatically sourced by this change.
 - [x] Daily API implementation through commit `62320098083cfc4aeb353397059e83ffc27aaf47` passed Release build and **188/188 tests**, 0 warnings/0 errors, Actions run [41875185646](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875185646).
-- [ ] Exact-head CI for the subsequent evaluate-with-history integration commit `ae646383963239f0494fe3aae3825e6d7374aa35` is pending; do not mark it verified until that run completes.
+- [x] Daily + catalyst snapshot integration, exact-session calendar checks, and SIP-only qualification gating passed Release build and **188/188 tests**, 0 warnings/0 errors, on code commit `b677d1ce75096438f04019e16dc8ad37a79c5209`, Actions run [41875774384](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875774384). Documentation-only commits follow this code head; exact latest documentation-head workflow is separate.
 
 ### Operator validation required
 - [ ] Pull latest feature branch using `scripts/Get-Latest-And-Test.ps1`, restart the API, and confirm exact-head local Release build/tests.
