@@ -1195,6 +1195,8 @@ async function refreshOvernightSnapshots() {
    const request = snapshot.evaluationRequest || snapshot.EvaluationRequest || {};
    const history = snapshot.historicalCompleteness || snapshot.HistoricalCompleteness || {};
    const sourceTimestamps = snapshot.fieldSourceTimestampsUtc || snapshot.FieldSourceTimestampsUtc || {};
+   const dailyEvidence = snapshot.dailyEvidence || snapshot.DailyEvidence || {};
+   const catalystEvidence = snapshot.catalystEvidence || snapshot.CatalystEvidence || {};
    const validPairs = history.validPairCount ?? history.ValidPairCount;
    const requestedPairs = history.requestedPairCount ?? history.RequestedPairCount;
    const missingPairs = history.missingPairCount ?? history.MissingPairCount;
@@ -1207,11 +1209,23 @@ async function refreshOvernightSnapshots() {
     "price="+fmt(request.price ?? request.Price),
     "SMA20="+fmt(request.sma20 ?? request.Sma20),
     "avgVol20="+fmt(request.averageDailyVolume20 ?? request.AverageDailyVolume20),
+    "feedCoverage="+(dailyEvidence.feedCoverage || dailyEvidence.FeedCoverage || "UNKNOWN"),
+    "qualUsable="+(dailyEvidence.qualificationUsable ?? dailyEvidence.QualificationUsable ?? "UNKNOWN"),
+    "adjustment="+(dailyEvidence.adjustment || dailyEvidence.Adjustment || "UNKNOWN"),
     "bar="+(sourceTimestamps.price || sourceTimestamps.Price || "UNKNOWN")
    ].join(" · ");
+   const catalystArticles = catalystEvidence.articles || catalystEvidence.Articles || [];
+   const catalystHeadlines = catalystArticles.slice(0,2).map(item => item.headline || item.Headline || "").filter(Boolean);
+   const catalystLabel = [
+    "catalyst="+(request.catalystStatus || request.CatalystStatus || "UNKNOWN"),
+    "news="+(catalystEvidence.articleCount ?? catalystEvidence.ArticleCount ?? "UNKNOWN"),
+    "coverage="+(catalystEvidence.coverageComplete ?? catalystEvidence.CoverageComplete ?? "UNKNOWN"),
+    "rules="+(catalystEvidence.ruleSetVersion || catalystEvidence.RuleSetVersion || "UNKNOWN"),
+    catalystHeadlines.length ? "headlines="+catalystHeadlines.join(" | ").slice(0,180) : null
+   ].filter(Boolean).join(" · ");
    const gateInputs = [
     "dataFresh="+(request.dataFresh ?? request.DataFresh ?? "UNKNOWN"),
-    "catalyst="+(request.catalystStatus || request.CatalystStatus || "UNKNOWN"),
+    catalystLabel,
     "5M permission="+(request.fiveMinutePermission ?? request.FiveMinutePermission ?? "UNKNOWN"),
     "5M structure="+(request.fiveMinuteStructure || request.FiveMinuteStructure || "UNKNOWN"),
     "1M state="+(request.oneMinuteState || request.OneMinuteState || "UNKNOWN")
