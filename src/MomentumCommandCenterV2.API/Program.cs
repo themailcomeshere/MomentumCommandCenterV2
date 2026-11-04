@@ -61,6 +61,11 @@ builder.Services.AddHttpClient<AlpacaNewsClient>(client =>
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
     client.Timeout = TimeSpan.FromSeconds(15);
 });
+builder.Services.AddHttpClient<AlpacaDailyMarketDataClient>(client =>
+{
+    client.BaseAddress = new Uri("https://data.alpaca.markets/");
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
 builder.Services.AddSingleton<IScannerDiscoverySource>(sp => sp.GetRequiredService<AlpacaScannerDiscoverySource>());
 builder.Services.AddSingleton<AlpacaScannerDiscoveryHostedService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaScannerDiscoveryHostedService>());
@@ -104,6 +109,32 @@ app.MapGet("/api/health", () => Results.Ok(new
 }))
 .WithSummary("Check API liveness")
 .WithDescription("Example response: { \"status\": \"OK\", \"mode\": \"decision-support-only\", \"orderSubmission\": \"NOT IMPLEMENTED\" }.");
+
+app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var metrics = await dailyClient.GetMetricsAsync(symbol, DateTimeOffset.UtcNow, ct);
+        return Results.Ok(metrics);
+    }
+    catch (ProviderNotConfiguredException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Daily market-data provider not configured", detail: ex.Message);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily market-data provider request failed", detail: ex.Message);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily market-data response invalid", detail: ex.Message);
+    }
+})
+.WithName("GetDailyMarketMetrics")
+.WithSummary("Get adjusted Daily close, SMA20 and 20-session average volume")
+.WithDescription("Uses Alpaca 1Day bars with adjustment=all. SMA20 and average daily volume use the latest 20 completed regular sessions; the current session is excluded until 16:00 America/New_York. Fewer than 20 completed sessions returns null metrics. Feed entitlement, source coverage and adjustment parity require runtime validation.");
 
 app.MapGet("/api/market-session/clock", () =>
     Results.Ok(MomentumCommandCenterV2.API.MarketData.MarketSessionClock.GetSnapshot(DateTimeOffset.UtcNow)))
