@@ -408,8 +408,8 @@ async function renderOvernightQualification(){
   const live=overnightLiveEvidence.get(String(item.symbol||"").toUpperCase())||{};
   const daily=live.daily||null,catalyst=live.catalyst||null;
   const dailyUsable=daily?.qualificationUsable===true;
-  const price=dailyUsable&&Number.isFinite(Number(daily.price))?Number(daily.price):null;
-  const averageVolume=dailyUsable&&Number.isFinite(Number(daily.averageDailyVolume20))?Number(daily.averageDailyVolume20):null;
+  const price=dailyUsable&&daily.price!==null&&daily.price!==undefined&&Number.isFinite(Number(daily.price))?Number(daily.price):null;
+  const averageVolume=dailyUsable&&daily.averageDailyVolume20!==null&&daily.averageDailyVolume20!==undefined&&Number.isFinite(Number(daily.averageDailyVolume20))?Number(daily.averageDailyVolume20):null;
   const dailyGate=price!==null&&averageVolume!==null?(price<=5||averageVolume<500000?"FAIL":"PASS"):"DATA?";
   const catalystStatus=catalyst?.status||"UNKNOWN";
   const catalystLabel=live.catalystError?"ERROR · "+live.catalystError:!catalyst?(live.dailyError||live.daily?"NOT LOADED":"NOT FETCHED"):catalystStatus+(catalyst.coverageComplete===false?" · COVERAGE INCOMPLETE":"");
@@ -420,7 +420,7 @@ async function renderOvernightQualification(){
  const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined?"DATA?":String(value);return td;};
  body.replaceChildren(...evaluated.map(item=>{
   const tr=document.createElement("tr");
-  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.fiveDay),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell(item.price===null?(item.daily?.feedCoverage==="IEX_PARTIAL"?"DATA? · IEX PARTIAL":item.live.dailyError?"ERROR":null):fmt(item.price)),cell(item.averageVolume===null?null:fmt(item.averageVolume)),cell(item.catalystLabel),cell(item.decision));
+  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.fiveDay),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell(item.price===null?(item.daily?.feedCoverage==="IEX_PARTIAL"?"DATA? · IEX PARTIAL":item.live.dailyError?"ERROR · "+item.live.dailyError:null):fmt(item.price)),cell(item.averageVolume===null?(item.live.dailyError?"ERROR · "+item.live.dailyError:null):fmt(item.averageVolume)),cell(item.catalystLabel),cell(item.decision));
   tr.className=item.decision.startsWith("BLOCKED")?"qualification-blocked":"qualification-pending";
   return tr;
  }));
