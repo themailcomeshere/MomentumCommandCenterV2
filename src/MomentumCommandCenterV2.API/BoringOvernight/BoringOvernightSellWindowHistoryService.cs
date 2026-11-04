@@ -219,3 +219,8 @@ public sealed record BoringOvernightSellWindowHistoryResult(
     bool CapturePerformed = false,
     int FetchedBarCount = 0,
     int NewlyPersistedBarCount = 0);
+
+public sealed record BoringOvernightSellWindowCaptureRequest(
+    string Symbol,
+    string ProviderName,
+    string Feed);
