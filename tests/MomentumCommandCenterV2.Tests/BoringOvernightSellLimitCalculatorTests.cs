@@ -51,7 +51,7 @@ public sealed class BoringOvernightSellLimitCalculatorTests
         Assert.Equal("NO_POSITIVE_TARGET", result.Status);
         Assert.Null(result.CalculatedLimitSell);
         Assert.Equal(0m, result.TargetReturnPct);
-        Assert.Equal(100m, result.HistoricalTouchRatePct);
+        Assert.Null(result.HistoricalTouchRatePct);
         Assert.Equal(20, result.ValidSessionCount);
         Assert.Equal(0, result.IncompleteSessionCount);
     }
