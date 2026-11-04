@@ -1,3 +1,41 @@
+## November 3, 2026 — latest operator acceptance and follow-up
+
+**Branch:** `feature/opportunity-quality-classification`  
+**Active checklist:** `docs/Master-To-Do.md`
+
+### User-confirmed results
+- Red Zone clear-all, restore/repopulate and re-import flow all passed browser testing.
+- 20-session capture now takes approximately 7–24 seconds, versus approximately 2.4 minutes before the one-range-scan store optimization.
+- RTO 1m Fetch & Analyze (13:00–19:12 Arizona) took approximately 28 seconds. Completion feedback now includes returned bar count and elapsed seconds for repeatable measurements.
+- Full page load is approximately 45 seconds; latest change defers Morning Brief loading until its modal is opened and deduplicates concurrent live-assessment requests by symbol.
+- User selected the official 09:30 ET opening print as the intended Overnight return definition.
+
+### Snapshot behavior
+- Previously, `GET /api/boring-overnight/snapshots` only read records; the UI had no routine action that created one. `POST /api/boring-overnight/snapshots` and `POST /api/boring-overnight/evaluate-with-history` were available, but the 20-session capture did not persist a snapshot.
+- Latest change: every successful 20-session capture now appends a snapshot containing history-derived evaluator inputs. It also records UNKNOWN current price, Daily liquidity, catalyst and chart inputs; incomplete 20-session history leaves historical fields null. The UI refreshes the saved-snapshot list after capture.
+- Snapshot is an append-only evidence record, not a final trading decision. It does not make a candidate READY.
+- The next browser test must confirm one new snapshot appears after capture and that incomplete history/current gates remain UNKNOWN.
+
+### Strategy-definition caveat
+The user chose the official 09:30 ET opening print. Existing history calculation currently uses the Open of the exact 09:30 ET one-minute bar. That is not independently verified as the official opening-auction print. UI/API provenance now labels it a one-minute bar-open proxy. Need validated trade/auction-print evidence or an explicit provider guarantee before describing the computed return as official-opening-print performance. Never shift to 09:31 or nearest bar without approval.
+
+### UI and performance changes
+- Morning Brief no longer fetches 14 benchmark/sector histories and news during initial dashboard startup; it loads when its modal is opened.
+- Concurrent chart/decision calls for the same symbol share one in-flight live-assessment request.
+- 40-row Provider response vs persisted store audit is collapsed by default and height-bounded when expanded.
+- Ticker-vs-SPY is an optional collapsed troubleshooting control, not a routine qualification gate.
+
+### EVR evidence
+User reported EVR history 12/20, provider exact 32/40, store exact 32/40. Eight boundaries are missing. Diagnose EVR from its own audit rows and nearest timestamp offsets; do not infer same causes as RTO.
+
+### Operator next steps
+1. Pull latest branch, run `.scripts\Get-Latest-And-Test.ps1`, then hard-refresh.
+2. Confirm page startup and Morning Brief behavior; capture a Network HAR with timing if page still takes ~45s.
+3. Fetch RTO 1m bars again; note the new elapsed seconds and bar count. If still slow, capture HAR plus API console logs.
+4. Run 20-session capture once and verify saved snapshot list increments by one; confirm snapshot says UNKNOWN for missing current gates.
+5. Open the collapsed exact-boundary audit only when needed; inspect EVR's eight missing timestamps and nearest offsets.
+6. Do not call 09:30 one-minute bar-open return an official auction-print return until feed/source parity is proven.
+
 ## Latest handoff — November 3, 2026 (Red Zone recovery and Overnight capture)
 
 **Active branch:** `feature/opportunity-quality-classification`  
