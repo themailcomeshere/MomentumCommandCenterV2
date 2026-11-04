@@ -1,3 +1,40 @@
+## Latest handoff — November 3, 2026 (Red Zone recovery and Overnight capture)
+
+**Active branch:** `feature/opportunity-quality-classification`  
+**Active execution checklist:** `docs/Master-To-Do.md`  
+**Full dependency audit:** `docs/Validation/Full-Master-To-Do-Audit-20261103.md`
+
+### Latest changes
+- Red Zone dismissals were global in browser storage. A fresh CSV import did not reset them, so the imported scanner could render all 198 rows while Red Zone rendered 0/4.
+- Added **Dismiss/Clear all Red Zone Candidates** to dismiss every symbol in the selected scanner group and remove that group's manual pins.
+- **Restore dismissed / repopulate** clears the dismissal list and renders eligible candidates again.
+- A fresh CSV import now clears stale dismissals for symbols present in that imported file. The import feedback reports the number reset.
+- Saved evaluator-input snapshot status is now separate from market-bar fetch status. The former can report 0 snapshots without overwriting the latter's OHLCV result.
+- 20-session capture now displays elapsed progress.
+- History retrieval now attempts one bounded-range JSONL scan; if the result reaches the 10,000-row cap it falls back to exact per-pair reads, preserving older boundary coverage.
+
+### User's current 20-session result
+- 17 / 20 valid close/open pairs.
+- 37 / 40 exact provider boundaries and 37 / 40 exact stored boundaries.
+- Alpaca / IEX.
+- 3,965 bars fetched / 0 newly stored.
+- Calendar: `MCC_US_EQUITIES_CALENDAR_V2`.
+- Rolling metrics remain DATA? because the three exact missing bars invalidate the complete 20-pair window. Zero newly stored is expected when the returned observations already exist; do not interpret it as no data fetched.
+
+### Still required
+1. Pull latest feature branch and run `.scripts\Get-Latest-And-Test.ps1`.
+2. Browser-test clear-all, restore/repopulate, re-import dismissal reset, 198 scanner rows and up to four Red Zone cards.
+3. Verify the OHLCV fetch result remains visible after the saved-input snapshot request.
+4. Time the optimized 20-session capture; compare response and store size. No performance assertion until measured.
+5. Inspect the exact three missing next-open timestamps and nearest-bar offsets. Do not use nearest-bar imputation.
+6. Decide whether the strategy measures official 09:30 ET open or first observed eligible bar after 09:30; do not silently change the metric.
+7. Continue the remaining qualification gates: Daily price/SMA20/20D volume, validated catalyst clearance, current 5M/1M evidence, GTC_EXT outcomes and target validation.
+
+### Important distinction
+`GET /api/boring-overnight/snapshots` reads persisted evaluator input snapshots. It does not read market bars and does not return the evaluator decision. `POST /api/boring-overnight/capture-history` calculates the 20 regular-session close/open history; `GET /api/market-data/bars` fetches the selected symbol/timeframe OHLCV bars.
+
+---
+
 ## Latest handoff — November 3, 2026 (runtime fix and Overnight process)
 
 **Branch:** `feature/opportunity-quality-classification`
