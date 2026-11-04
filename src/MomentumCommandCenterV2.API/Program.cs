@@ -894,6 +894,39 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 .ProducesProblem(422)
 .ProducesProblem(503);
 
+app.MapPost("/api/boring-overnight/capture-sell-window-history", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellWindowCaptureRequest request,
+    IEnumerable<IMarketDataProvider> providers,
+    IMarketBarObservationStore store,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(request.Symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (string.IsNullOrWhiteSpace(request.ProviderName))
+        return Results.BadRequest(new { error = "providerName is required." });
+    if (string.IsNullOrWhiteSpace(request.Feed))
+        return Results.BadRequest(new { error = "feed is required; specify sip or iex explicitly." });
+
+    var provider = providers.FirstOrDefault(p =>
+        string.Equals(p.ProviderName, request.ProviderName, StringComparison.OrdinalIgnoreCase));
+    if (provider is null)
+        return Results.BadRequest(new { error = "Unknown provider. Use a configured market-data provider." });
+
+    try
+    {
+        var result = await new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellWindowHistoryService(store)
+            .CaptureHistoryAsync(provider, request.Symbol, request.Feed, DateTimeOffset.UtcNow, ct);
+        return Results.Ok(result);
+    }
+    catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (HttpRequestException ex) { return Results.Problem(ex.Message, statusCode: 502); }
+    catch (InvalidOperationException ex) { return Results.Problem(ex.Message, statusCode: 422); }
+})
+.WithName("CaptureBoringOvernightSellWindowHistory")
+.WithSummary("Fetch and audit 20 complete 07:00–20:00 ET GTC_EXT sell windows")
+.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"feed\": \"sip\" }. Fetches 1-minute bars from the exact prior regular-session close through the latest completed 20:00 ET sell window, persists raw observations, and returns exact 780-minute coverage per session. IEX is diagnostic partial-exchange data and cannot qualify consolidated target research; SIP is required. Missing intervals are not imputed and no fill probability is claimed.");
+
 app.MapGet("/api/boring-overnight/sell-window-history", async (
     string symbol,
     string provider,
