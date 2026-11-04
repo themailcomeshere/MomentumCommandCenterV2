@@ -2,8 +2,9 @@
 
 **Working branch:** `feature/opportunity-quality-classification`  
 **Latest validated code head:** `15d642ae986686a0c0a44fe48f27c04718fc6a19`  
-**Current branch head:** `9d76b11ed5a20016b889f63e77a7a54b22f42ba6` (exact-head CI pending)  
-**Last validated code head:** `a88eb316b9c266e16efac3d027178d457817c328` (Release build, JS syntax check, 197/197 tests passed; Actions run [41881994385](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41881994385))  
+**Current branch head:** `ec500a161abcf94d92d0ce36646bf43916d5e8af` (exact-head CI pending)  
+**Last validated code head:** `f1804cc2171b96e70309fccd9053c704d0b7711c` (Release build, JS syntax check, 198/198 tests, 0 warnings/0 errors; Actions run [41882407536](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41882407536))  
+**Unvalidated changes after that head:** store-level feed filtering, source-isolated 7-day GTC_EXT audit reads, and one store regression test. Exact-head CI is required.  
 **Canonical execution checklist:** `docs/Master-To-Do.md`
 
 ## Latest implementation
