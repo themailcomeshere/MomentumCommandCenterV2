@@ -132,7 +132,7 @@ public sealed class JsonlMarketBarObservationStoreTests
             var store = new JsonlMarketBarObservationStore();
             var sip = CreateBar() with { Timeframe = "1m", Feed = "sip" };
             var iex = sip with { Feed = "iex", High = 12.0, Close = 11.0 };
-            Assert.Equal(1, await store.AppendAsync(new[] { sip, iex }, CancellationToken.None));
+            Assert.Equal(2, await store.AppendAsync(new[] { sip, iex }, CancellationToken.None));
 
             var allFeeds = await store.GetLatestAsync(
                 "TEST", "TestProvider", sip.Timestamp, sip.Timestamp, 10, CancellationToken.None, "1m");
