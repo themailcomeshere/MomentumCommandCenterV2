@@ -21,6 +21,8 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         Assert.True(result.AllWindowsComplete);
         Assert.Equal(20, result.Windows.Count);
         Assert.Equal(20, result.CompleteWindowCount);
+        Assert.Equal("CONSOLIDATED_SIP", result.FeedCoverage);
+        Assert.True(result.QualificationUsable);
         Assert.All(result.Windows, window =>
         {
             Assert.Equal(780, window.ExpectedIntervalCount);
@@ -56,6 +58,24 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         Assert.Equal(1, incomplete.MissingIntervalCount);
         Assert.Contains(missingTimestamp, incomplete.MissingIntervalSampleUtc);
         Assert.False(result.CalculatorObservations.Single(x => x.SessionDate == lastWindow.NextSessionDate).CoverageComplete);
+    }
+
+    [Fact]
+    public async Task CompleteIexTimestampsRemainDiagnosticAndCannotQualifyConsolidatedResearch()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
+            new DateOnly(2026, 10, 30), 20);
+        var bars = BuildBars(boundaries, "iex");
+        var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
+
+        var result = await service.GetHistoryAsync(
+            "RTO", "Alpaca", "iex",
+            DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
+
+        Assert.True(result.AllWindowsComplete);
+        Assert.Equal(20, result.CompleteWindowCount);
+        Assert.Equal("PARTIAL_FEED", result.FeedCoverage);
+        Assert.False(result.QualificationUsable);
     }
 
     [Fact]
@@ -97,13 +117,13 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         });
     }
 
-    private static List<MarketBar> BuildBars(IReadOnlyList<OvernightSessionBoundary> boundaries)
+    private static List<MarketBar> BuildBars(IReadOnlyList<OvernightSessionBoundary> boundaries, string feed = "sip")
     {
         var bars = new List<MarketBar>(boundaries.Count * 781);
         foreach (var boundary in boundaries)
         {
             bars.Add(new MarketBar("RTO", boundary.PreviousRegularCloseUtc,
-                100, 100.2, 99.8, 100, 1000, "Alpaca", "sip", "1m"));
+                100, 100.2, 99.8, 100, 1000, "Alpaca", feed, "1m"));
             var start = ToUtc(boundary.NextSessionDate, new TimeOnly(7, 0));
             for (var minute = 0; minute < 780; minute++)
             {
