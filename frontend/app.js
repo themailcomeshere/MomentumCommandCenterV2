@@ -1218,7 +1218,8 @@ $("overnightCapture20")?.addEventListener("click", async () => {
  const fields=["overnightHistoryPairs","overnightHistoryWinRate","overnightHistoryMean20","overnightHistoryMedian20","overnightHistoryMean5","overnightHistoryMissing","overnightHistoryProvider","overnightHistoryBars","overnightHistoryCalendar","overnightHistoryAsOf"];
  for(const id of fields){const el=$(id);if(el)el.textContent="REQUEST IN PROGRESS";}
  const rows=$("overnightHistoryRows"); rows.replaceChildren();
- button.disabled=true; status.textContent="Fetching Alpaca 1-minute bars and calculating the latest 20 regular-session close/open pairs for "+symbol+"…";
+ button.disabled=true; const captureStartedAt=Date.now(); status.textContent="Fetching Alpaca 1-minute bars and calculating the latest 20 regular-session close/open pairs for "+symbol+"…";
+ const captureProgressTimer=setInterval(()=>{const elapsed=Math.floor((Date.now()-captureStartedAt)/1000),minutes=Math.floor(elapsed/60),seconds=elapsed%60;status.textContent="Still working · Alpaca 1-minute history capture for "+symbol+" · "+minutes+"m "+String(seconds).padStart(2,"0")+"s elapsed · waiting for provider fetch, persistence and exact-boundary calculation.";},10000);
  try{
   const data=await overnightFetchJson("/api/boring-overnight/capture-history",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",requiredWindow:20})});
   const h=data.history||{};
@@ -1266,7 +1267,7 @@ $("overnightCapture20")?.addEventListener("click", async () => {
   for(const id of fields){const el=$(id);if(el)el.textContent="DATA?";}
   const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent="Capture failed: "+error.message;tr.append(td);rows.append(tr);
   status.textContent="20-session capture failed. No calculated metrics are displayed. "+error.message;
- }finally{button.disabled=false;}
+ }finally{clearInterval(captureProgressTimer);button.disabled=false;}
 });
 
 $("overnightBarsForm")?.addEventListener("submit", async event => {
