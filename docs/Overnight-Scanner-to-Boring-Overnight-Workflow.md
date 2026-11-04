@@ -41,6 +41,7 @@ For each candidate worth deeper review:
 5. Compare Daily close/SMA20/20D average volume against an independent source using the same adjustment basis. Review returned catalyst headlines, publication timestamps and source URLs against primary filings/news.
 6. Save each article's human assessment separately from the automated triage. The local API now accepts append-only labels:
    ```powershell
+   $api = "http://localhost:53360"
    $review = @{
        symbol = "EVER"
        articleId = "<article id from catalyst response>"
