@@ -1269,7 +1269,8 @@ $("overnightCapture20")?.addEventListener("click", async () => {
   const audit=Array.isArray(data.boundaryCoverageAudit)?data.boundaryCoverageAudit:[];
   const providerExact=audit.filter(x=>x.providerReturnedExactBar===true).length;
   const storeExact=audit.filter(x=>x.storeHasExactBar===true).length;
-  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR CAPTURE COMPLETE. ":"HISTORY INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Exact boundary audit: provider "+providerExact+"/"+audit.length+", store "+storeExact+"/"+audit.length+". Calendar: "+(data.calendarVersion||"unknown")+".";
+  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR CAPTURE COMPLETE. ":"HISTORY INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Exact boundary audit: provider "+providerExact+"/"+audit.length+", store "+storeExact+"/"+audit.length+". Calendar: "+(data.calendarVersion||"unknown")+". Input snapshot "+(data.snapshot?.snapshotId||"NOT RETURNED")+" saved; evaluator "+(data.evaluation?.status||"UNKNOWN")+". Current price, Daily liquidity, catalyst and chart gates remain UNKNOWN until supplied."; 
+  await refreshOvernightSnapshots();
  }catch(error){
   for(const id of fields){const el=$(id);if(el)el.textContent="DATA?";}
   const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.textContent="Capture failed: "+error.message;tr.append(td);rows.append(tr);
