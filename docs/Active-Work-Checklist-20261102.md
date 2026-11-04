@@ -206,3 +206,15 @@ The RTO audit checks 40 exact prior-close/next-open 1-minute timestamps across 2
 - [x] Replaced the initial V14.5.2 draft with a V14.5.2 derived from the actual V14.5.1 Library source: `docs/Charts/1M/MainStudy_V14.5.2.txt` (1,298 lines). The uploaded V14.5 file remains unchanged.
 - [x] V14.5.2 adds 5M V4.1.7 Permission parity (5M close > Daily VWAP, 5M close > EMA9, EMA9 >= EMA20, RSI >= floor) while retaining the separate 1M VWAP execution gate; it also adds DST-aware 3:55 PM Arizona EOD mapping.
 - [ ] TOS compile and matched-bar parity remain mandatory; .NET CI does not compile ThinkScript.
+
+
+## 2026-11-04 — standalone UI controls (latest feature-branch update)
+
+- [x] System Readiness collapsed disclosure applied to production and prototype; browser visual check pending.
+- [x] Decision Explanation displays the requested symbol during refresh and discards stale prior-symbol responses; browser check pending.
+- [x] Missing required scanner custom-expression metrics now classify as DATA? rather than FAIL; exact November 4 import acceptance must confirm 243 unavailable rows remain unknown and 32 complete rows remain historical FAIL.
+- [x] Existing close/open capture action renamed and documented as a retry/recovery operation for exact missing timestamps; EVR's eight exact opens remain dependent on provider return.
+- [x] Added SIP-preflighted GTC_EXT capture action to Calculated Limit Sell in production and prototype; it will not fetch when the effective feed is IEX.
+- [ ] Browser acceptance of the latest feature branch, including the 443-row import, 200 complete / 243 unknown split, Red Zone cards, collapsed readiness and new GTC_EXT button.
+- [ ] Effective runtime feed remains IEX; SIP entitlement/configuration must be resolved before any qualification-grade GTC_EXT capture.
+- [ ] Calculated Limit Sell remains unconnected to the capture output until complete SIP coverage, ATR parity MATCH and walk-forward validation are present.
