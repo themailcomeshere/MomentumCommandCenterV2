@@ -1,6 +1,6 @@
-## Latest branch-head verification — 2026-11-03
+## Latest branch-head verification — 2026-11-04
 
-The latest feature-branch head is `d94d27a6a63876206b8bbc66dffa8214d13cd5db`; exact-head GitHub Actions run [41702900843](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41702900843) passed. This is a source/CI result only. Browser verification of Red Zone top-four rendering, sticky headers, Unknown metric summary, and exclusions scrolling remains open.
+The latest feature-branch head for the standalone UI changes is `3c27c787f7ffcb434be9893ca73ba58b8cad00fe`; exact-head GitHub Actions run [41916672903](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41916672903) passed. The workflow runs `node --check frontend/app.js`, .NET 8 restore, Release build, and the full .NET test suite. This is a source/CI result only; local browser acceptance remains open. System Readiness is collapsed by default, symbol refresh state is explicit, missing custom-expression metrics fail closed to DATA?, and GTC_EXT capture is exposed behind an effective-SIP preflight.
 
 The local exclusion API returned 56 entries in the user's test. The feature-branch persisted file contains 55 canonical exclusions plus TEST; OSW, EVR and MHK are not in the canonical list. The user's symbol-filter result is consistent with the seeded list.
 
