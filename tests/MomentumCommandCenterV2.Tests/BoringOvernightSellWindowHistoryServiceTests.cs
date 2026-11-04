@@ -61,6 +61,24 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     }
 
     [Fact]
+    public async Task RequestedFeedCoverageRemainsCompleteWhenOtherFeedsShareTheStore()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
+            new DateOnly(2026, 10, 30), 20);
+        var bars = BuildBars(boundaries, "sip");
+        bars.AddRange(BuildBars(boundaries, "iex"));
+        var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
+
+        var result = await service.GetHistoryAsync(
+            "RTO", "Alpaca", "sip",
+            DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
+
+        Assert.True(result.AllWindowsComplete);
+        Assert.True(result.QualificationUsable);
+        Assert.Equal(20, result.CompleteWindowCount);
+    }
+
+    [Fact]
     public async Task CompleteIexTimestampsRemainDiagnosticAndCannotQualifyConsolidatedResearch()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
