@@ -96,6 +96,43 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     }
 
     [Fact]
+    public async Task CaptureFetchesPersistsAndReturnsTwentyWindowAudit()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
+            new DateOnly(2026, 10, 30), 20);
+        var providerBars = BuildBars(boundaries);
+        var store = new InMemoryStore(new List<MarketBar>());
+        var provider = new InMemoryProvider(providerBars, "Alpaca");
+        var service = new BoringOvernightSellWindowHistoryService(store);
+
+        var result = await service.CaptureHistoryAsync(
+            provider, "RTO", "sip",
+            DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
+
+        Assert.True(result.CapturePerformed);
+        Assert.Equal(providerBars.Count, result.FetchedBarCount);
+        Assert.Equal(providerBars.Count, result.NewlyPersistedBarCount);
+        Assert.Equal(providerBars.Count, store.Bars.Count);
+        Assert.True(result.AllWindowsComplete);
+        Assert.True(result.QualificationUsable);
+    }
+
+    [Fact]
+    public async Task CaptureRejectsWrongFeedBeforePersistingAnyBars()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
+            new DateOnly(2026, 10, 30), 20);
+        var provider = new InMemoryProvider(BuildBars(boundaries, "iex"), "Alpaca");
+        var store = new InMemoryStore(new List<MarketBar>());
+        var service = new BoringOvernightSellWindowHistoryService(store);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CaptureHistoryAsync(
+            provider, "RTO", "sip",
+            DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None));
+        Assert.Empty(store.Bars);
+    }
+
+    [Fact]
     public async Task FeedIsolationPreventsIexAndSipBarsFromBeingCombined()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
@@ -142,16 +179,52 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         return new DateTimeOffset(local, eastern.GetUtcOffset(local)).ToUniversalTime();
     }
 
-    private sealed class InMemoryStore(IReadOnlyList<MarketBar> bars) : IMarketBarObservationStore
+    private sealed class InMemoryProvider(IReadOnlyList<MarketBar> bars, string providerName) : IMarketDataProvider
     {
-        public Task<int> AppendAsync(IReadOnlyCollection<MarketBar> observations, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
+        public string ProviderName => providerName;
+        public bool IsConfigured => true;
+        public bool HasSuccessfulDataValidation => false;
+        public DateTimeOffset? LastSuccessfulDataValidationUtc => null;
+        public int LastSuccessfulDataValidationBarCount => 0;
+        public IReadOnlyList<string> Capabilities => new[] { "Test 1m bars" };
+
+        public Task<IReadOnlyList<MarketBar>> GetBarsAsync(
+            string symbol, TimeSpan timeframe, DateTimeOffset from, DateTimeOffset to,
+            CancellationToken cancellationToken)
+        {
+            IReadOnlyList<MarketBar> result = bars
+                .Where(bar => bar.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
+                .Where(bar => bar.Timestamp >= from && bar.Timestamp <= to)
+                .Where(bar => timeframe == TimeSpan.FromMinutes(1) && bar.Timeframe == "1m")
+                .ToArray();
+            return Task.FromResult(result);
+        }
+    }
+
+    private sealed class InMemoryStore(List<MarketBar> bars) : IMarketBarObservationStore
+    {
+        public List<MarketBar> Bars { get; } = bars;
+
+        public Task<int> AppendAsync(IReadOnlyCollection<MarketBar> observations, CancellationToken cancellationToken)
+        {
+            var added = 0;
+            foreach (var observation in observations)
+            {
+                if (Bars.Any(existing => existing.Symbol == observation.Symbol &&
+                    existing.Provider == observation.Provider && existing.Feed == observation.Feed &&
+                    existing.Timeframe == observation.Timeframe && existing.Timestamp == observation.Timestamp))
+                    continue;
+                Bars.Add(observation);
+                added++;
+            }
+            return Task.FromResult(added);
+        }
 
         public Task<IReadOnlyList<MarketBarObservation>> GetLatestAsync(
             string symbol, string? provider, DateTimeOffset fromUtc, DateTimeOffset toUtc,
             int limit, CancellationToken cancellationToken, string? timeframe = null)
         {
-            IReadOnlyList<MarketBarObservation> result = bars
+            IReadOnlyList<MarketBarObservation> result = Bars
                 .Where(bar => bar.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
                 .Where(bar => provider is null || bar.Provider.Equals(provider, StringComparison.OrdinalIgnoreCase))
                 .Where(bar => bar.Timestamp >= fromUtc && bar.Timestamp <= toUtc)
