@@ -2,7 +2,7 @@
 
 **Working branch:** `feature/opportunity-quality-classification`  
 **Latest validated code head:** `15d642ae986686a0c0a44fe48f27c04718fc6a19`  
-**Current implementation under CI:** top-four qualification UI integration (exact head pending)  
+**Current implementation under CI:** top-four qualification UI, sell-target correction, and provider-backed GTC_EXT capture (exact head pending)  
 **Canonical execution checklist:** `docs/Master-To-Do.md`
 
 ## Latest implementation
@@ -24,6 +24,8 @@
 3. Paste the full JSON responses (do not include API keys/secrets). For Daily, we need provider/feed, latest completed session, close, SMA20, average volume and completeness. For catalysts, we need article headlines, publication times, URLs, coverage completeness and provisional categories.
 4. Run the existing 20-session capture/evaluate-with-history flow for RTO and EVR. Confirm the new snapshot contains the Daily inputs only when all 20 expected sessions exist, and that catalyst is UNKNOWN unless the provisional rules detect an explicit risk phrase.
 5. Compare Daily values against an independent chart/provider on the same adjustment basis. Report any provider 401/403 errors verbatim with credentials removed.
+6. In the Boring Overnight qualification panel, click **Fetch Daily + catalyst for top 4**. Confirm it queried the four highest-scored imported symbols, only shows qualification Daily values for complete/fresh SIP data, and never displays READY. Other imported symbols should remain DATA?.
+7. Ensure the configured Alpaca feed is SIP with entitlement, then POST `{ "symbol": "RTO", "providerName": "Alpaca", "feed": "sip" }` to `/api/boring-overnight/capture-sell-window-history`; repeat for EVR. Save the JSON. Inspect `fetchedBarCount`, `newlyPersistedBarCount`, `completeWindowCount`, `allWindowsComplete`, `qualificationUsable`, each window's `missingIntervalCount`, and reference-close provenance. IEX is diagnostic only and cannot qualify consolidated target research.
 
 - `BoringOvernightSellLimitCalculator` now treats complete flat/negative GTC_EXT outcomes as valid evidence; a non-positive target quantile returns `NO_POSITIVE_TARGET` with no numeric limit or misleading touch rate. Regression tests cover both adverse and flat samples. Exact-head CI is pending.
 
@@ -32,7 +34,7 @@
 - Browser-verify the expanded saved-snapshot table in production and prototype.
 - Resolve EVR's eight missing exact next-session opens without nearest-bar substitution.
 - Establish official 09:30 ET auction-print parity; 09:30 one-minute bar Open is still only a proxy.
-- Complete GTC_EXT 07:00–20:00 ET outcome windows, walk-forward target validation, and actual fills/exits/fees/realized P&L.
+- Complete runtime GTC_EXT validation for RTO/EVR using the new capture endpoint; the source implementation exists but no 20/20 SIP extended-hours result has been observed. Then connect complete observations to the sell-limit calculator, run walk-forward target validation, and link actual fills/exits/fees/realized P&L.
 - Integrate current-data Opportunity Quality and Red Zone ranking; calibrate only from historical outcomes.
 - Validate catalyst rules with human-labelled articles and authoritative-source coverage before any CLEAR_WITH_SOURCE status is introduced.
 
