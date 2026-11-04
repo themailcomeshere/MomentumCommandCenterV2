@@ -182,6 +182,33 @@ public sealed class LiveSymbolAssessmentService(
                 : (bool?)null;
 
 
+            OpportunityQualitySnapshot? opportunitySnapshot = null;
+            OpportunityQualityAssessment opportunityAssessment;
+            if (decision is null || one is null || oneCloseAt is null || fiveCloseAt is null)
+            {
+                opportunityAssessment = new OpportunityQualityAssessment(
+                    normalizedSymbol,
+                    OpportunityClassification.DataUnknown,
+                    new[] { OpportunityReason.DataMissing },
+                    evaluatedAt);
+            }
+            else
+            {
+                opportunitySnapshot = OpportunityQualitySnapshotAdapter.Create(
+                    normalizedSymbol,
+                    evaluatedAt,
+                    oneCloseAt.Value,
+                    fiveCloseAt.Value,
+                    decision.LongPermission,
+                    decision.EntryAllowed,
+                    rvol.Value,
+                    decision.Evaluation?.OneMinuteMomentumPositive == true,
+                    one.AtrExtension,
+                    one.Atr,
+                    oneMinute);
+                opportunityAssessment = new OpportunityQualityAssessor().Evaluate(opportunitySnapshot.Input);
+            }
+
             var result = new
             {
                 symbol = normalizedSymbol,
@@ -246,6 +273,20 @@ public sealed class LiveSymbolAssessmentService(
                         status = fiveMinuteScore.HasValue ? "CURRENT" : "UNKNOWN",
                         criteria = scoreCriteria
                     }
+                },
+                opportunityQuality = new
+                {
+                    status = opportunityAssessment.Classification == OpportunityClassification.DataUnknown
+                        ? "DATA?"
+                        : "DIAGNOSTIC_ONLY",
+                    classification = opportunityAssessment.Classification.ToString(),
+                    displayLabel = opportunityAssessment.DisplayLabel,
+                    reasons = opportunityAssessment.Reasons.Select(reason => reason.ToString()).ToArray(),
+                    metrics = opportunitySnapshot?.Metrics,
+                    evaluatedAtUtc = opportunityAssessment.EvaluatedAt,
+                    thresholds = "OpportunityQualityConfig.DiagnosticDefaults (provisional; not calibrated)",
+                    executionEventBasis = "Current V2 decision LongPermission / EntryAllowed snapshot; not independently verified Thinkorswim finite READY parity.",
+                    note = "Separate diagnostic ranking only. It cannot create or override V2 entry eligibility, execution state, HOLD, EXIT, or order actions. The 30-bar range and prior-high proximity are explicit research proxies, not calibrated predictors."
                 },
                 decision = decision is null ? null : new
                 {
