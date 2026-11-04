@@ -40,6 +40,17 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         ArgumentNullException.ThrowIfNull(provider);
         if (!provider.IsConfigured)
             throw new ProviderNotConfiguredException($"Provider {provider.ProviderName} is not configured.");
+        // Fail before making a multi-week provider request when the requested feed differs
+        // from the provider's effective configuration. This is especially important for
+        // SIP-only GTC_EXT qualification: silently fetching IEX cannot satisfy that contract.
+        if (provider is AlpacaMarketDataAdapter alpaca &&
+            !string.Equals(alpaca.ConfiguredFeed, feed?.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Requested feed '{feed}' does not match the running Alpaca configuration '{alpaca.ConfiguredFeed}'. " +
+                "No provider request was made and no observations were persisted. Check /api/providers/status and the effective " +
+                "MarketData:Alpaca:Feed setting (including environment-variable overrides), restart the API, then retry.");
+        }
         if (string.IsNullOrWhiteSpace(feed))
             throw new ArgumentException("Feed is required to keep GTC_EXT evidence source-isolated.", nameof(feed));
         if (asOfUtc == default || asOfUtc.Offset != TimeSpan.Zero || asOfUtc > DateTimeOffset.UtcNow)
