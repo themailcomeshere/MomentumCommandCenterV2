@@ -705,7 +705,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             .ApplyHistory(captureInputs, history) with { Excluded = excluded, CatalystStatus = "UNKNOWN" };
         var snapshot = await snapshotStore.AppendAsync(
             new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
-                request.Symbol, DateTimeOffset.UtcNow, "Alpaca 20-session history capture",
+                request.Symbol, DateTimeOffset.UtcNow, "Alpaca 1m bar capture (09:30 ET bar-open proxy)",
                 provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
                 new Dictionary<string, DateTimeOffset> { ["overnightHistoryCalculatedAtUtc"] = history.CalculatedAtUtc },
                 captureInputs),
@@ -764,7 +764,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             history,
             snapshot,
             evaluation,
-            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact pairs exist. Current price, Daily liquidity, catalyst and chart inputs remain UNKNOWN; this capture does not qualify a candidate or submit orders."
+            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact 09:30 ET one-minute bar pairs exist. The bar open is not independently verified as the official opening-auction print. Current price, Daily liquidity, catalyst and chart inputs remain UNKNOWN; this capture does not qualify a candidate or submit orders."
         });
     }
     catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
