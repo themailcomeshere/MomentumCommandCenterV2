@@ -87,15 +87,24 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         var latestTimestamp = latest?.TimestampUtc;
         var fresh = latest is not null && latestExpected == completedBySession.Keys.Max() &&
             latestTimestamp <= nowUtc && nowUtc - latestTimestamp <= TimeSpan.FromDays(5);
-        var sma20 = complete ? expectedDates.Average(date => completedBySession[date].Close) : (double?)null;
-        var averageVolume20 = complete ? expectedDates.Average(date => (double)completedBySession[date].Volume) : (double?)null;
+        var observedSma20 = complete ? expectedDates.Average(date => completedBySession[date].Close) : (double?)null;
+        var observedAverageVolume20 = complete ? expectedDates.Average(date => (double)completedBySession[date].Volume) : (double?)null;
+        var consolidatedFeed = _feed.Equals("sip", StringComparison.OrdinalIgnoreCase);
+        var qualificationUsable = complete && fresh && consolidatedFeed;
 
+        // IEX is a partial-exchange feed. Its price/volume bars must not be passed into
+        // the Boring Overnight price/SMA/market-wide liquidity gates as consolidated values.
         return new DailyMarketMetrics(
             symbol.ToUpperInvariant(), "Alpaca", _feed, "all (split/dividend adjusted)",
-            nowUtc, latestTimestamp, latest?.Close, sma20, averageVolume20,
+            nowUtc, latestTimestamp, consolidatedFeed ? latest?.Close : null,
+            consolidatedFeed ? observedSma20 : null,
+            consolidatedFeed ? observedAverageVolume20 : null,
+            latest?.Close, observedSma20, observedAverageVolume20,
             present.Length, completedBySession.Count, fresh,
             complete ? "COMPLETE_20_EXPECTED_SESSIONS" : "INCOMPLETE_EXPECTED_SESSIONS",
-            $"Metrics use the exact latest 20 expected sessions from {UsEquitiesSessionCalendar.Version}. Missing expected sessions are not backfilled with older sessions. Current session is included only after its scheduled regular close (including early closes). adjustment=all requests split/dividend-adjusted bars. Feed entitlement, source coverage and adjustment parity still require runtime validation.");
+            consolidatedFeed ? "CONSOLIDATED_SIP" : "IEX_PARTIAL",
+            qualificationUsable,
+            $"Metrics use the exact latest 20 expected sessions from {UsEquitiesSessionCalendar.Version}. Missing expected sessions are not backfilled with older sessions. Current session is included only after its scheduled regular close (including early closes). adjustment=all requests split/dividend-adjusted bars. IEX is partial-exchange coverage and is diagnostic only; qualification fields are null unless feed=sip. SIP feed entitlement, source coverage and adjustment parity still require runtime validation.");
     }
 
     private sealed record DailyBar(DateTimeOffset TimestampUtc, double Open, double High, double Low, double Close, long Volume);
@@ -111,8 +120,13 @@ public sealed record DailyMarketMetrics(
     double? Price,
     double? Sma20,
     double? AverageDailyVolume20,
+    double? ObservedClose,
+    double? ObservedSma20,
+    double? ObservedAverageDailyVolume20,
     int ValidSessionCount,
     int AvailableCompletedSessionCount,
     bool DataFresh,
     string Completeness,
+    string FeedCoverage,
+    bool QualificationUsable,
     string Note);
