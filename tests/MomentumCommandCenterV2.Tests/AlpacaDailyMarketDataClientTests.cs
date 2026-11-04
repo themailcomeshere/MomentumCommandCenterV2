@@ -35,7 +35,7 @@ public sealed class AlpacaDailyMarketDataClientTests
         {
             ["MarketData:Alpaca:ApiKey"] = "key",
             ["MarketData:Alpaca:ApiSecret"] = "secret",
-            ["MarketData:Alpaca:Feed"] = "iex"
+            ["MarketData:Alpaca:Feed"] = "sip"
         }).Build();
         var client = new AlpacaDailyMarketDataClient(http, config);
 
@@ -49,6 +49,8 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Equal("all (split/dividend adjusted)", result.Adjustment);
         Assert.True(result.DataFresh);
         Assert.Equal("COMPLETE_20_EXPECTED_SESSIONS", result.Completeness);
+        Assert.Equal("CONSOLIDATED_SIP", result.FeedCoverage);
+        Assert.True(result.QualificationUsable);
         Assert.Contains("timeframe=1Day", handler.Request!.RequestUri!.ToString());
         Assert.Contains("adjustment=all", handler.Request.RequestUri.ToString());
         Assert.Contains("feed=iex", handler.Request.RequestUri.ToString());
@@ -66,7 +68,8 @@ public sealed class AlpacaDailyMarketDataClientTests
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["MarketData:Alpaca:ApiKey"] = "key",
-            ["MarketData:Alpaca:ApiSecret"] = "secret"
+            ["MarketData:Alpaca:ApiSecret"] = "secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
         }).Build();
         var client = new AlpacaDailyMarketDataClient(http, config);
 
@@ -76,6 +79,12 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Null(result.Sma20);
         Assert.Null(result.AverageDailyVolume20);
         Assert.True(result.DataFresh);
+        Assert.Null(result.Price);
+        Assert.Null(result.Sma20);
+        Assert.Null(result.AverageDailyVolume20);
+        Assert.Equal(10.5d, result.ObservedClose);
+        Assert.Equal("IEX_PARTIAL", result.FeedCoverage);
+        Assert.False(result.QualificationUsable);
         Assert.Equal("INCOMPLETE_EXPECTED_SESSIONS", result.Completeness);
     }
 
