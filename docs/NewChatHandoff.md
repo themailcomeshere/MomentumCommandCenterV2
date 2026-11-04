@@ -1,7 +1,8 @@
 # New Chat Handoff — November 4, 2026
 
 **Working branch:** `feature/opportunity-quality-classification`  
-**Current source head at handoff update:** `ae646383963239f0494fe3aae3825e6d7374aa35`  
+**Current branch head:** `173ed62689c2375f118156ca29cd0da4a8bf44ab`  
+**Latest validated code head:** `b677d1ce75096438f04019e16dc8ad37a79c5209`  
 **Canonical execution checklist:** `docs/Master-To-Do.md`
 
 ## Latest implementation
@@ -36,7 +37,7 @@
 - Alpaca Daily feed entitlement and corporate-action adjustment parity have not been runtime-verified.
 - The 20-session exchange calendar is MCC-maintained; unexpected exchange closures are not automatically covered.
 - Phrase triage is provisional and has not been measured against a labelled catalyst dataset.
-- Exact-head CI for the latest snapshot integration commit is pending.
+- The validated code head passed CI; documentation-only commits followed.
 
 ---
 
