@@ -880,6 +880,8 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
     IMarketBarObservationStore barStore,
     MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore snapshotStore,
+    AlpacaDailyMarketDataClient dailyClient,
+    AlpacaCatalystAssessmentClient catalystClient,
     CancellationToken ct) =>
 {
     if (!IsValidSymbol(request.Symbol))
@@ -912,13 +914,57 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
             .ApplyHistory(request.EvaluationRequest, history);
         var exclusions = await exclusionStore.GetAsync(ct);
         var excluded = exclusions.Any(x => x.Symbol.Equals(request.Symbol, StringComparison.OrdinalIgnoreCase));
-        // No connected, validated catalyst provider exists yet. Never trust a caller-supplied CLEAR here.
-        effectiveRequest = effectiveRequest with { Excluded = excluded, CatalystStatus = "UNKNOWN" };
+
+        DailyMarketMetrics? dailyMetrics = null;
+        string? dailyError = null;
+        try
+        {
+            dailyMetrics = await dailyClient.GetMetricsAsync(request.Symbol, DateTimeOffset.UtcNow, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            dailyError = $"{ex.GetType().Name}: {ex.Message}";
+        }
+
+        CatalystAssessment? catalystAssessment = null;
+        string? catalystError = null;
+        try
+        {
+            catalystAssessment = await catalystClient.AssessAsync(request.Symbol, DateTimeOffset.UtcNow, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            catalystError = $"{ex.GetType().Name}: {ex.Message}";
+        }
+
+        // Daily metrics are sourced from completed Daily bars only; never retain caller values
+        // when the source is unavailable or its exact 20-session window is incomplete.
+        // News triage can identify risk, but it cannot certify CLEAR_WITH_SOURCE.
+        effectiveRequest = effectiveRequest with
+        {
+            Excluded = excluded,
+            Price = dailyMetrics?.Price,
+            Sma20 = dailyMetrics?.Sma20,
+            AverageDailyVolume20 = dailyMetrics?.AverageDailyVolume20,
+            DataFresh = dailyMetrics is not null && !dailyMetrics.DataFresh ? false : effectiveRequest.DataFresh,
+            CatalystStatus = catalystAssessment?.Status == "RISK_PRESENT" ? "RISK" : "UNKNOWN"
+        };
+
+        var sourceTimestamps = request.FieldSourceTimestampsUtc is null
+            ? new Dictionary<string, DateTimeOffset>()
+            : new Dictionary<string, DateTimeOffset>(request.FieldSourceTimestampsUtc);
+        if (dailyMetrics?.LatestCompletedSessionTimestampUtc is { } dailyTimestamp)
+        {
+            sourceTimestamps["price"] = dailyTimestamp;
+            sourceTimestamps["sma20"] = dailyTimestamp;
+            sourceTimestamps["averageDailyVolume20"] = dailyTimestamp;
+        }
+        if (catalystAssessment is not null)
+            sourceTimestamps["catalystAssessmentRetrievedAt"] = catalystAssessment.RetrievedAtUtc;
 
         var snapshotInput = new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
             request.Symbol, request.AsOfUtc, request.Source, request.Provider, request.Feed,
-            request.CalculationVersion, request.FieldSourceTimestampsUtc ?? new Dictionary<string, DateTimeOffset>(),
-            effectiveRequest);
+            request.CalculationVersion, sourceTimestamps, effectiveRequest);
         var snapshot = await snapshotStore.AppendAsync(snapshotInput, ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
         return Results.Created($"/api/boring-overnight/snapshots?symbol={snapshot.Symbol}&limit=1", new
@@ -926,7 +972,11 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
             snapshot,
             evaluation,
             history,
-            note = "Historical evaluator fields are overwritten from persisted bars only when all requested pairs exist and required history is complete. Incomplete history forces those fields to null and therefore DATA?. Caller-provided non-history fields, source labels and timestamps are not independently verified; catalyst status and Thinkorswim state remain externally supplied. No orders are submitted."
+            dailyMetrics,
+            dailyError,
+            catalystAssessment,
+            catalystError,
+            note = "Historical fields come from persisted bars only when all exact pairs exist. Price/SMA20/average daily volume are overwritten from the Daily provider result; missing/incomplete Daily data remains null. Catalyst RISK_PRESENT blocks; all other news statuses remain UNKNOWN and cannot produce CLEAR. Field source timestamps are retained. No orders are submitted."
         });
     }
     catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
@@ -934,7 +984,7 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
 })
 .WithName("EvaluateBoringOvernightWithHistory")
 .WithSummary("Calculate persisted-bar Overnight history, evaluate hard gates, and persist the result")
-.WithDescription("All date-time values in the body must be ISO-8601 UTC timestamps ending in Z. Arizona conversion example for 2026-10-26: 2026-10-26T13:30:00Z = 06:30 Arizona; 2026-10-26T19:59:00Z = 12:59 Arizona. The sample boundary timestamps are illustrative only and must be replaced with exact timestamps returned by stored-bars. This endpoint calculates from persisted OHLCV, overwrites historical evaluator fields with calculated values (or null if incomplete), resolves the local exclusion list, forces catalystStatus=UNKNOWN until a validated catalyst provider is connected, and appends an auditable snapshot. Other non-history fields remain caller-supplied.");
+.WithDescription("All date-time values in the body must be ISO-8601 UTC timestamps ending in Z. Arizona conversion example for 2026-10-26: 2026-10-26T13:30:00Z = 06:30 Arizona; 2026-10-26T19:59:00Z = 12:59 Arizona. The sample boundary timestamps are illustrative only and must be replaced with exact timestamps returned by stored-bars. This endpoint calculates from persisted OHLCV, overwrites historical evaluator fields with calculated values (or null if incomplete), resolves the local exclusion list, fetches Daily price/SMA20/20-session average volume and ticker-scoped Alpaca catalyst triage, overwrites caller-supplied Daily/catalyst values, and appends an auditable snapshot. Catalyst triage never returns CLEAR_WITH_SOURCE; material/unclassified news remains UNKNOWN. Other non-history fields remain caller-supplied.");
 
 app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest request, MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore, CancellationToken ct) =>
 {
