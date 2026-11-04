@@ -130,3 +130,11 @@ Related documents:
 - The exact Thinkorswim scan formulas/column implementation behind `Overnight Score` were not supplied in this upload.
 - Price and 20-day average volume are not columns in the November 3 CSV; those hard gates remain unverified for the 198-row imported universe.
 - Catalyst clearance requires current per-symbol review and cannot be inferred from the scan columns.
+
+## 2026-11-04 — after-import data actions
+
+1. The qualification summary's **Unknown / incomplete history** count includes rows with missing required custom-expression outputs. These are DATA?, not failed stocks. A historical FAIL requires all required metrics to be present and at least one gate to fail.
+2. After reviewing the imported score order, use **Fetch Daily + catalyst for top 4** to retrieve adjusted Daily metrics and the preceding 24 hours of ticker news for the four highest-scored imported rows only. This is not the same as a manual chart-review shortlist and does not provide 1M/5M refresh or catalyst clearance.
+3. For missing exact close/open timestamps, use **Fetch / retry 20-session close/open history**. Inspect the exact-boundary audit; no neighboring minute is substituted.
+4. Use **Fetch 20-session GTC_EXT sell-window history** only after the provider status confirms effective SIP. IEX stops at preflight and is diagnostic only.
+5. Do not expect a numeric Calculated Limit Sell until complete SIP windows, ATR parity MATCH and walk-forward validation are available.
