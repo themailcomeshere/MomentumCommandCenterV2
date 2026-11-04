@@ -187,3 +187,19 @@ Do not label a release fully runtime-accepted solely because it compiles or beca
 - Exact user-local `secrets.json` path is environment-dependent; the API's `configuredFeedSource` is the authoritative diagnostic.
 - SIP access may change if Alpaca entitlement changes.
 - A market-hours delivery test cannot be completed after-hours.
+
+## MCC-native data recovery and daily controls (2026-11-04)
+
+The dashboard now owns the routine data actions. Use PowerShell only for developer maintenance (get latest/build/test/API process diagnostics), not for the ordinary candidate review.
+
+1. **Import the Thinkorswim Overnight Scanner CSV.** Compare imported/rendered rows with the file's data-row count. The export's custom-expression-limit rows are unavailable evidence, not failed candidates. The qualification panel labels rows with any missing required historical metric as `DATA?`; only fully populated rows can be PASS or FAIL.
+2. **Fetch Daily + catalyst for top 4.** Click after the CSV is imported and you have reviewed the score-ranked shortlist. It fetches adjusted Daily metrics and the preceding 24 hours of ticker news for only the four highest-scored imported rows. Daily qualification fields require complete, fresh SIP coverage. IEX or incomplete Daily data remains DATA?. Catalyst triage is provisional; no-news is UNKNOWN and material/unclassified results require manual review. This action does not run before every entry, does not monitor an open position, and cannot produce READY.
+3. **Fetch / retry 20-session close/open history.** Run for a serious Overnight candidate when its regular-session history is missing or needs refreshing. MCC re-fetches provider 1-minute bars for the exact 20 close/open pairs, persists returned observations, and displays the provider/store exact-boundary audit. For EVR, this is the retry action for the eight missing exact 09:30 ET opens. It succeeds only if the provider returns those exact bars; a bar one to seven minutes later is not a substitute.
+4. **Fetch 20-session GTC_EXT sell-window history.** Use from the Calculated Limit Sell panel only after `/api/providers/status` reports effective Alpaca feed SIP. The button preflights the effective feed and does not issue a fetch when it is IEX or unknown. With SIP, it fetches/persists 20 sell windows in bounded 7-day chunks and audits the exact 780 1-minute intervals from 07:00 through 19:59 ET plus each exact prior regular-session close. IEX is partial-exchange diagnostic only. Missing intervals remain missing.
+5. **Calculated Limit Sell.** The capture button is evidence acquisition, not the calculation itself. A numeric target remains withheld until all 20 windows are exact and complete on SIP, ATR parity is MATCH, and walk-forward target-touch/adverse-excursion validation is complete. A bar high is not an executable quote or a fill.
+6. **Entry vs. exit.** The 5M → 1M handoff is automatically refreshed; do not click it before every entry. Before entry, check 5M permission and then 1M execution confirmation on completed bars. After entry, exit management is a separate position-lifecycle evaluation. MCC currently lacks broker-synchronized open-position state, so the live handoff cannot yet issue a position-specific EXIT decision. Do not reuse a fresh-entry decision as an exit rule.
+7. **System Readiness.** Expand the collapsed disclosure in the dashboard header only when you need the provider/integration readiness details.
+
+[Uncertainties]
+
+The local runtime's effective feed may differ from tracked configuration because local secrets/environment settings take precedence. Always trust the current `/api/providers/status` response, not the tracked appsettings value or a requested feed label.
