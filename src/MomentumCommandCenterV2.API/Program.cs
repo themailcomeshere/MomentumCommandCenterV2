@@ -679,6 +679,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
     IMarketBarObservationStore barStore,
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore snapshotStore,
     MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
+    AlpacaDailyMarketDataClient dailyClient,
+    AlpacaCatalystAssessmentClient catalystClient,
     CancellationToken ct) =>
 {
     if (!IsValidSymbol(request.Symbol))
@@ -755,8 +757,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
 
         // Persist an auditable input snapshot on every explicit 20-session capture.
-        // Only historical fields are populated from the calculated bars; current price,
-        // Daily liquidity, catalyst and chart gates remain UNKNOWN until independently supplied.
+        // History comes from exact persisted 1m pairs; Daily and catalyst evidence are
+        // independently fetched and fail closed. IEX Daily fields remain diagnostic only.
         var exclusions = await exclusionStore.GetAsync(ct);
         var excluded = exclusions.Any(x => x.Symbol.Equals(request.Symbol, StringComparison.OrdinalIgnoreCase));
         var captureInputs = new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest(
@@ -765,12 +767,55 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             null, null, null, null, null, null, null);
         captureInputs = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService
             .ApplyHistory(captureInputs, history) with { Excluded = excluded, CatalystStatus = "UNKNOWN" };
+
+        DailyMarketMetrics? dailyMetrics = null;
+        string? dailyError = null;
+        try
+        {
+            dailyMetrics = await dailyClient.GetMetricsAsync(request.Symbol, DateTimeOffset.UtcNow, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            dailyError = $"{ex.GetType().Name}: {ex.Message}";
+        }
+
+        CatalystAssessment? catalystAssessment = null;
+        string? catalystError = null;
+        try
+        {
+            catalystAssessment = await catalystClient.AssessAsync(request.Symbol, DateTimeOffset.UtcNow, ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            catalystError = $"{ex.GetType().Name}: {ex.Message}";
+        }
+
+        captureInputs = captureInputs with
+        {
+            Price = dailyMetrics?.Price,
+            Sma20 = dailyMetrics?.Sma20,
+            AverageDailyVolume20 = dailyMetrics?.AverageDailyVolume20,
+            DataFresh = dailyMetrics is not null && !dailyMetrics.DataFresh ? false : captureInputs.DataFresh,
+            CatalystStatus = catalystAssessment?.Status == "RISK_PRESENT" ? "RISK" : "UNKNOWN"
+        };
+        var captureSourceTimestamps = new Dictionary<string, DateTimeOffset>
+        {
+            ["overnightHistoryCalculatedAtUtc"] = history.CalculatedAtUtc
+        };
+        if (dailyMetrics?.LatestCompletedSessionTimestampUtc is { } dailyTimestamp)
+        {
+            captureSourceTimestamps["price"] = dailyTimestamp;
+            captureSourceTimestamps["sma20"] = dailyTimestamp;
+            captureSourceTimestamps["averageDailyVolume20"] = dailyTimestamp;
+        }
+        if (catalystAssessment is not null)
+            captureSourceTimestamps["catalystAssessmentRetrievedAt"] = catalystAssessment.RetrievedAtUtc;
+
         var snapshot = await snapshotStore.AppendAsync(
             new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
                 request.Symbol, DateTimeOffset.UtcNow, "Alpaca 1m bar capture (09:30 ET bar-open proxy)",
                 provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
-                new Dictionary<string, DateTimeOffset> { ["overnightHistoryCalculatedAtUtc"] = history.CalculatedAtUtc },
-                captureInputs),
+                captureSourceTimestamps, captureInputs),
             ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
 
@@ -824,9 +869,13 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             newlyPersistedObservationCount = persistedCount,
             boundaryCoverageAudit,
             history,
+            dailyMetrics,
+            dailyError,
+            catalystAssessment,
+            catalystError,
             snapshot,
             evaluation,
-            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact 09:30 ET one-minute bar pairs exist. The bar open is not independently verified as the official opening-auction print. Current price, Daily liquidity, catalyst and chart inputs remain UNKNOWN; this capture does not qualify a candidate or submit orders."
+            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact 09:30 ET one-minute bar pairs exist. Daily qualification fields require complete 20-session SIP data; IEX values are diagnostic only. Catalyst risk phrases map to RISK; all other news statuses remain UNKNOWN and cannot clear a candidate. The 09:30 one-minute bar Open is not independently verified as the official opening-auction print. No candidate is qualified and no order is submitted."
         });
     }
     catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
