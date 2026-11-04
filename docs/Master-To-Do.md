@@ -1,3 +1,10 @@
+## 2026-11-04 — qualification UI and sell-target data-quality follow-up
+
+- [x] Production and prototype Overnight qualification panels now support manual Daily + catalyst refresh for the four highest-scored imported candidates. Daily price/20D average volume are accepted only when the API reports complete, fresh SIP qualification data. IEX/incomplete/stale data remains DATA?; `RISK_PRESENT` blocks; all other catalyst states remain manual review. The UI does not query all imported rows and cannot emit READY. Exact-head CI and browser acceptance are pending.
+- [x] Corrected `BoringOvernightSellLimitCalculator`: complete sessions with a maximum eligible price below or equal to the reference close are valid adverse/flat observations, not missing data. When the selected quantile is non-positive, result is `NO_POSITIVE_TARGET`, with no numeric sell limit and no target-touch rate.
+- [x] Added regression tests for 20 complete adverse windows and 20 complete flat windows. Exact-head CI is pending.
+- [ ] Next GTC_EXT engineering dependency: assemble source/feed-isolated 07:00–20:00 ET minute coverage from persisted 1m observations, with expected interval count, missing intervals, source timestamps and previous-session close provenance. Do not feed synthetic or incomplete windows into the sell-limit calculator.
+
 ## 2026-11-04 — Daily data and catalyst source integration
 
 ### Implemented on `feature/opportunity-quality-classification`
