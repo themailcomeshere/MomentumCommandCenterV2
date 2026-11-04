@@ -819,7 +819,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
                     history.RequiredWindow, history.RequestedPairCount, history.ValidPairCount,
                     history.MissingPairCount, history.AllPairsComplete, history.EnoughHistory,
-                    history.AllPairsComplete && history.EnoughHistory ? "COMPLETE" : "INCOMPLETE")),
+                    history.AllPairsComplete && history.EnoughHistory ? "COMPLETE" : "INCOMPLETE"),
+                ToDailyEvidence(dailyMetrics),
+                ToCatalystEvidence(catalystAssessment)),
             ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
 
@@ -1021,7 +1023,9 @@ app.MapPost("/api/boring-overnight/evaluate-with-history", async (
             new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
                 history.RequiredWindow, history.RequestedPairCount, history.ValidPairCount,
                 history.MissingPairCount, history.AllPairsComplete, history.EnoughHistory,
-                history.AllPairsComplete && history.EnoughHistory ? "COMPLETE" : "INCOMPLETE"));
+                history.AllPairsComplete && history.EnoughHistory ? "COMPLETE" : "INCOMPLETE"),
+            ToDailyEvidence(dailyMetrics),
+            ToCatalystEvidence(catalystAssessment));
         var snapshot = await snapshotStore.AppendAsync(snapshotInput, ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
         return Results.Created($"/api/boring-overnight/snapshots?symbol={snapshot.Symbol}&limit=1", new
@@ -1243,6 +1247,22 @@ app.MapDelete("/api/watchlists/exclusions/{symbol}", async (string symbol, Momen
 })
 .WithSummary("Remove a symbol from MCC's exclusion watchlist")
 .WithDescription("Example: DELETE /api/watchlists/exclusions/TTE. This only edits MCC's local list; it does not remove anything from Thinkorswim.");
+
+static MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightDailyEvidence? ToDailyEvidence(DailyMarketMetrics? metrics) =>
+    metrics is null ? null : new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightDailyEvidence(
+        metrics.Provider, metrics.Feed, metrics.Adjustment, metrics.RetrievedAtUtc,
+        metrics.LatestCompletedSessionTimestampUtc, metrics.DataFresh, metrics.Completeness,
+        metrics.FeedCoverage, metrics.QualificationUsable, metrics.ObservedClose,
+        metrics.ObservedSma20, metrics.ObservedAverageDailyVolume20);
+
+static MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCatalystEvidence? ToCatalystEvidence(CatalystAssessment? assessment) =>
+    assessment is null ? null : new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCatalystEvidence(
+        assessment.Provider, assessment.Status, assessment.WindowStartUtc, assessment.WindowEndUtc,
+        assessment.RetrievedAtUtc, assessment.CoverageComplete, assessment.PagesRead,
+        assessment.ArticleCount, assessment.RuleSetVersion,
+        assessment.Articles.Select(article => new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCatalystArticleEvidence(
+            article.Article.Id, article.Article.Headline, article.Article.PublishedAtUtc,
+            article.Article.Url, article.Severity, article.Categories, article.Reason)).ToArray());
 
 app.Run();
 
