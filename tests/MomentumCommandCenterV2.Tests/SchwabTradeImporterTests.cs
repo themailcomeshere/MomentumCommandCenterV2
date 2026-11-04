@@ -20,8 +20,8 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Buy,30.30,LIMIT,30.17,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
-            NBIL,Filled,Sell,30.50,LIMIT,30.42,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
+            NBIL,Filled,Buy,30.30,LIMIT,30.17,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.42,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -48,8 +48,8 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Buy,30.30,LIMIT,30.17,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
-            NBIL,Filled,Sell,30.50,LIMIT,30.42,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
+            NBIL,Filled,Buy,30.30,LIMIT,30.17,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.42,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -79,7 +79,7 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            SST,Filled,Buy,5.10,LIMIT,5.10,Yes,3:08 PM 09/08/2026,3:08 PM 09/08/2026
+            SST,Filled,Buy,5.10,LIMIT,5.10,1,Yes,3:08 PM 09/08/2026,3:08 PM 09/08/2026
             SST,Open,Sell,5.11,LIMIT,-,No,3:09 PM 09/08/2026,3:09 PM 09/08/2026
             SST,Canceled,Sell,6.00,LIMIT,-,No,3:10 PM 09/08/2026,3:10 PM 09/08/2026
             """;
@@ -111,8 +111,8 @@ public sealed class SchwabTradeImporterTests
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
             NBIL,Canceled,Buy,30.30,LIMIT,-,No,9:30 AM 09/08/2026,9:30 AM 09/08/2026
             NBIL,Open,Buy,30.20,LIMIT,-,No,9:31 AM 09/08/2026,9:31 AM 09/08/2026
-            NBIL,Filled,Buy,30.30,LIMIT,30.17,Yes,9:32 AM 09/08/2026,9:32 AM 09/08/2026
-            NBIL,Filled,Sell,30.50,LIMIT,30.42,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
+            NBIL,Filled,Buy,30.30,LIMIT,30.17,1,Yes,9:32 AM 09/08/2026,9:32 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.42,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -134,10 +134,10 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Buy,30.00,LIMIT,30.00,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
-            NBIL,Filled,Sell,30.50,LIMIT,30.50,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
-            NBIL,Filled,Buy,31.00,LIMIT,31.00,Yes,10:01 AM 09/08/2026,10:01 AM 09/08/2026
-            NBIL,Filled,Sell,31.75,LIMIT,31.75,Yes,10:05 AM 09/08/2026,10:05 AM 09/08/2026
+            NBIL,Filled,Buy,30.00,LIMIT,30.00,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.50,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
+            NBIL,Filled,Buy,31.00,LIMIT,31.00,1,Yes,10:01 AM 09/08/2026,10:01 AM 09/08/2026
+            NBIL,Filled,Sell,31.75,LIMIT,31.75,1,Yes,10:05 AM 09/08/2026,10:05 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -165,10 +165,10 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Buy,30.00,LIMIT,30.00,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
-            SST,Filled,Buy,5.10,LIMIT,5.10,Yes,9:32 AM 09/08/2026,9:32 AM 09/08/2026
-            NBIL,Filled,Sell,30.50,LIMIT,30.50,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
-            SST,Filled,Sell,5.25,LIMIT,5.25,Yes,9:36 AM 09/08/2026,9:36 AM 09/08/2026
+            NBIL,Filled,Buy,30.00,LIMIT,30.00,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            SST,Filled,Buy,5.10,LIMIT,5.10,1,Yes,9:32 AM 09/08/2026,9:32 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.50,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
+            SST,Filled,Sell,5.25,LIMIT,5.25,1,Yes,9:36 AM 09/08/2026,9:36 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -203,7 +203,7 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Sell,30.50,LIMIT,30.50,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.50,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -233,10 +233,10 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            SST,Filled,Buy,5.10,LIMIT,5.10,Yes,10:05 AM 09/08/2026,10:05 AM 09/08/2026
-            SST,Filled,Sell,5.20,LIMIT,5.20,Yes,10:10 AM 09/08/2026,10:10 AM 09/08/2026
-            NBIL,Filled,Buy,30.00,LIMIT,30.00,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
-            NBIL,Filled,Sell,30.50,LIMIT,30.50,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
+            SST,Filled,Buy,5.10,LIMIT,5.10,1,Yes,10:05 AM 09/08/2026,10:05 AM 09/08/2026
+            SST,Filled,Sell,5.20,LIMIT,5.20,1,Yes,10:10 AM 09/08/2026,10:10 AM 09/08/2026
+            NBIL,Filled,Buy,30.00,LIMIT,30.00,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.50,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -314,7 +314,7 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Buy,30.30,LIMIT,NOT_A_PRICE,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Buy,30.30,LIMIT,NOT_A_PRICE,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
@@ -401,7 +401,7 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            NBIL,Filled,Buy,30.30,LIMIT,30.17,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Buy,30.30,LIMIT,30.17,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
             """;
 
         var exception = Assert.Throws<FormatException>(() => new SchwabTradeImporter().Import(csv));
