@@ -20,9 +20,10 @@ public sealed class BoringOvernightCandidateSnapshotStoreTests
                 ["price"] = asOf.AddMinutes(-1),
                 ["overnightWinRatePct"] = asOf.AddDays(-1)
             };
+            var audit = new BoringOvernightHistoryAudit(20, 20, 17, 3, false, false, "INCOMPLETE");
             var input = new BoringOvernightCandidateSnapshotInput(
                 "RTO", asOf, "test-fixture", "fixture-provider", "fixture-feed", "test-v1", fieldTimes,
-                Request("RTO"));
+                Request("RTO"), audit);
 
             var saved = await store.AppendAsync(input, CancellationToken.None);
             var read = await store.GetLatestAsync("rto", 10, CancellationToken.None);
@@ -36,6 +37,10 @@ public sealed class BoringOvernightCandidateSnapshotStoreTests
             Assert.Equal(saved.SnapshotId, read[0].SnapshotId);
             Assert.Equal(fieldTimes["price"], read[0].FieldSourceTimestampsUtc["price"]);
             Assert.Equal(0.4, read[0].EvaluationRequest.CurrentOvernightPct);
+            Assert.Equal(20, read[0].HistoricalCompleteness!.RequestedPairCount);
+            Assert.Equal(17, read[0].HistoricalCompleteness.ValidPairCount);
+            Assert.Equal(3, read[0].HistoricalCompleteness.MissingPairCount);
+            Assert.Equal("INCOMPLETE", read[0].HistoricalCompleteness.Status);
         }
         finally
         {
