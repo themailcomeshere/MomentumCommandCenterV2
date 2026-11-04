@@ -1,3 +1,17 @@
+## Updated operator guidance — November 3, 2026
+
+- [x] Red Zone bulk clear, restore and fresh CSV re-import passed user browser acceptance.
+- [x] 20-session capture duration improved to approximately 7–24 seconds in user testing.
+- [ ] After latest pull, verify every 20-session capture appends one input snapshot; saved-snapshot table refreshes automatically.
+- [ ] Confirm snapshot historical metrics are null when any exact pair is missing; price, Daily liquidity, catalyst and chart inputs remain UNKNOWN until sourced.
+- [ ] Record Fetch & Analyze elapsed time and returned bar count; current observed RTO 1m request took approximately 28 seconds.
+- [ ] Compare page-load Network timing after Morning Brief is deferred to modal-open; current observed page load approximately 45 seconds.
+- [ ] Official 09:30 ET opening print is the selected strategy definition. Current 09:30 one-minute bar Open is only a proxy until official auction-print parity is validated.
+- Use the Provider response vs persisted store table only when investigating missing exact boundaries or provider/store mismatch. Provider exact means returned in this fetch; Store exact means already persisted. The nearest timestamp is diagnostic only, never a substitute.
+- Ticker-vs-SPY is optional troubleshooting for sparse/empty provider coverage. It is not required for routine candidate review or qualification.
+
+---
+
 ## Red Zone recovery and import handling (added 2026-11-03)
 
 - [ ] After pulling the latest branch, import the current scanner CSV.
