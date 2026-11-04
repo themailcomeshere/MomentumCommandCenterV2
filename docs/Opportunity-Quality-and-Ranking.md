@@ -198,3 +198,20 @@ The Red Zone must consume opportunity-quality evidence, but it must not treat op
 - Do not select production weights/bands from intuition. Use the assessor's provisional configuration only for diagnostic comparison until historical candidate snapshots and forward outcomes support calibration.
 
 The implementation is intentionally not marked complete by this documentation update. The current frontend behavior and required Manual/Automatic mode, stable ranking, semantic tile accent, explanation, sound deduplication and tests are tracked in the canonical Master To-Do.
+
+
+## 2026-11-04 — live assessment diagnostic adapter
+
+The live `GET /api/market-data/live-assessment?symbol=...` response now includes an `opportunityQuality` object.
+
+- It invokes the existing pure `OpportunityQualityAssessor` against the current V2 decision snapshot; it does not alter the decision or create an execution event.
+- The current V2 `LongPermission` and `EntryAllowed` values are supplied as separate eligibility/event inputs. This is V2 snapshot state, not independently verified Thinkorswim finite READY parity.
+- Participation uses the existing 5M same-time-of-day RVOL and its baseline sample count. It is not represented as 1M RVOL.
+- Momentum uses the current V2 evaluation's 1M momentum-positive field.
+- ATR extension uses the existing 1M snapshot.
+- Recent range is now measured as the high-low range of the last 30 completed 1M bars divided by the current 1M ATR.
+- Resistance proximity is a transparent proxy: the nearest prior high above the latest close across the preceding 30 completed 1M bars, divided by current 1M ATR. If no such high exists, it remains null.
+- The range and resistance lookbacks are explicit but not calibrated. The assessor's `DiagnosticDefaults` remain provisional. No probability-of-profit claim is made.
+- The assessment uses expected bar-completion timestamps for freshness, not bar-open timestamps. If the V2 decision or required source bars are unavailable, the result is DATA? rather than a synthetic classification.
+
+A dedicated adapter and unit tests cover the 30-bar calculations and insufficient-history behavior. This is the first live-data wiring step, **not** completion of automatic Red Zone ranking. The remaining work is to rank the full candidate pool with concurrency/stale-result controls, show per-candidate explanations and rank stability, preserve manual pins, and complete UI/API acceptance. Historical calibration remains blocked on a time-separated labelled candidate/outcome dataset.
