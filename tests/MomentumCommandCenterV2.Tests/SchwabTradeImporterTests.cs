@@ -338,8 +338,8 @@ public sealed class SchwabTradeImporterTests
     {
         const string csv = """
             Symbol,Status,Action,Price,Timing,Fill Price,Quantity,Fill Price is Average,Time and Date(ET),Last Activity Date(ET)
-            "NBIL","Filled","Buy","30.30","LIMIT","30.17","Yes","9:31 AM 09/08/2026","9:31 AM 09/08/2026"
-            "NBIL","Filled","Sell","30.50","LIMIT","30.42","Yes","9:35 AM 09/08/2026","9:35 AM 09/08/2026"
+            NBIL,Filled,Buy,30.30,LIMIT,30.17,1,Yes,9:31 AM 09/08/2026,9:31 AM 09/08/2026
+            NBIL,Filled,Sell,30.50,LIMIT,30.42,1,Yes,9:35 AM 09/08/2026,9:35 AM 09/08/2026
             """;
 
         var importer = new SchwabTradeImporter();
