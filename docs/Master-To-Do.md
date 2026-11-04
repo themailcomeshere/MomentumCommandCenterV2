@@ -1,3 +1,42 @@
+## 2026-11-03 7:43 PM Arizona — operator acceptance and performance follow-up
+
+### Verified by user
+- [x] Red Zone: clear-all, restore/repopulate and CSV re-import all succeeded in browser.
+- [x] 20-session capture improved from approximately 2.4 minutes to approximately 7–24 seconds after the bounded one-scan store lookup.
+- [x] User selected the official 09:30 ET opening print as the intended strategy definition. Do not substitute 09:31 or nearest later bars.
+- [ ] The current calculator uses the Open of the exact 09:30 ET one-minute bar. This is an opening-minute bar-open proxy, not independently verified as the official opening-auction print. Provider trade-condition/auction-print parity is a blocking definition/data task before calling this metric the official opening print.
+- [ ] Full page load approximately 45 seconds; investigate using browser Network timing/HAR after latest deferral changes.
+- [ ] Fetch & Analyze bars approximately 28 seconds for RTO 1m 13:00–19:12 Arizona; add instrumentation and inspect API/provider timing before changing provider retry/pagination behavior.
+
+### Changes in this pass
+- [x] Deferred the multi-symbol Morning Brief fetch until the user opens its modal. The endpoint currently performs sequential provider history requests across 14 benchmark/sector symbols plus news; it must not be on the critical dashboard startup path.
+- [x] Deduplicated concurrent browser live-assessment requests by symbol so the initial chart and decision panel share the same in-flight API response.
+- [x] Collapsed the 40-row exact-boundary audit behind “Show exact boundary coverage audit (40 rows)” in production and prototype; opened table is height-bounded and scrollable.
+- [x] Made ticker-vs-SPY a collapsed optional diagnostic rather than a routine step.
+- [x] Added bar count and elapsed seconds to Fetch & Analyze completion feedback.
+- [x] A successful 20-session capture now automatically appends an immutable Boring Overnight evaluator-input snapshot and refreshes the saved-snapshot list. Historical inputs are sourced from the capture; current price, Daily liquidity, catalyst and chart gates remain UNKNOWN. Incomplete history keeps historical metrics null. No READY result is fabricated.
+- [x] Snapshot provenance explicitly labels the 09:30 ET one-minute bar Open as a proxy pending independent official auction-print verification.
+
+### How to use the diagnostic panels
+- The “Provider response vs persisted store” audit is not a daily workflow. Open it only when history reports missing pairs or provider/store mismatch. Provider exact = exact timestamp present in the just-fetched response; Store exact = exact timestamp already present in MCC's append-only bar store; nearest provider bar and offset help diagnose gaps. Never replace the required timestamp with nearest bar automatically.
+- Ticker-vs-SPY is optional troubleshooting only. Use the same UTC window after a symbol has unexpectedly sparse/empty coverage; compare the symbol and SPY. It does not prove entitlement or qualify a ticker.
+- Saved Overnight snapshots are append-only audit inputs, not decisions. Run 20-session capture to create a history-backed snapshot; the snapshot table then shows the record and evaluator status. A capture can save an incomplete snapshot, but missing inputs remain UNKNOWN/DATA?.
+
+### Remaining work
+- [ ] Pull latest feature branch, run local Release build/tests and confirm exact-head CI.
+- [ ] Browser verify page load after Morning Brief deferral; compare Network document/DOMContentLoaded/load and largest request durations. Target and baseline not yet established.
+- [ ] Browser verify 1m RTO fetch elapsed time now includes bar count and seconds; use HAR and API logs if still >10 seconds.
+- [ ] Verify 20-session capture automatically creates one snapshot and GET lists it; confirm missing history/current gates remain UNKNOWN.
+- [ ] Resolve official opening-print data source. Current 09:30 1m bar Open is not sufficient proof of the official auction print.
+- [ ] EVR history is 12/20 and provider/store exact coverage 32/40. Diagnose its eight missing boundaries independently; do not reuse RTO assumptions.
+- [ ] Implement Daily close/SMA20/20D average volume from a validated Daily data source; adapter currently supports only 1m/5m.
+- [ ] Connect validated catalyst/news classification; headlines are unclassified and no validated catalyst provider is wired.
+- [ ] Continue GTC_EXT 07:00–20:00 ET outcome study, walk-forward target validation, and actual fills/exits/realized P&L.
+- [ ] Keep Ticket-vs-SPY diagnostic optional; it is not a strategy gate.
+- [ ] Keep 09:30 official opening-print parity as a blocking evidence requirement; do not label one-minute bar-open returns as official-print returns.
+
+---
+
 ## 2026-11-03 5:01 PM Arizona — Red Zone recovery and Overnight capture follow-up
 
 **Execution source:** This file is the active execution checklist. The companion `docs/Validation/Full-Master-To-Do-Audit-20261103.md` is the reconciliation/dependency audit; it is not a second competing execution list.
