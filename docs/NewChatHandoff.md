@@ -2,7 +2,7 @@
 
 **Working branch:** `feature/opportunity-quality-classification`  
 **Latest validated code head:** `15d642ae986686a0c0a44fe48f27c04718fc6a19`  
-**Last validated application/test head:** `8c4e1d5099f2f3ef540434ec1568b0875183dc73` (exact branch HEAD; Release build, frontend JavaScript syntax check, 199/199 tests, 0 warnings/0 errors; Actions run [41883785154](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41883785154)).  
+**Last validated application/test head:** `a6d97e62965f7ae766e577a14dfb4e2caf32238f` (exact branch HEAD; Release build, frontend JavaScript syntax check, 199/199 tests, 0 warnings/0 errors; Actions run [41883980550](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41883785154)).  
 **Changes included in that validation:** feed-filtered market-bar store queries, 7-day source-isolated GTC_EXT reads, exact GTC_EXT capture/audit, top-four Daily/catalyst UI, and non-positive sell-target handling. CI logs the exact checked-out SHA; the validated run checked out the exact branch HEAD.  
 **Canonical execution checklist:** `docs/Master-To-Do.md`
 
