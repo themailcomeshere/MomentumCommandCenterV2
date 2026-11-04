@@ -48,7 +48,7 @@ public static class BoringOvernightSellLimitCalculator
         var touchRate = touchCount * 100m / favorableReturns.Length;
         if (targetReturnPct <= 0m)
         {
-            return new("NO_POSITIVE_TARGET", null, targetReturnPct, touchRate, null,
+            return new("NO_POSITIVE_TARGET", null, targetReturnPct, null, null,
                 selected.Length, selected.Length, 0,
                 "The complete eligible-window sample is valid, but the selected maximum-favorable-return quantile is zero or negative. No positive-upside sell target is issued. This is an observed adverse/flat outcome, not missing data.");
         }
