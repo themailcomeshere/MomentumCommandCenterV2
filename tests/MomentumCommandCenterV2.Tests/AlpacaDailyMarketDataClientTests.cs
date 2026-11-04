@@ -12,7 +12,7 @@ public sealed class AlpacaDailyMarketDataClientTests
     {
         var now = new DateTimeOffset(2026, 11, 4, 15, 0, 0, TimeSpan.Zero);
         var bars = Enumerable.Range(1, 20).Select(i =>
-            $$"""{"t":"{{new DateTimeOffset(2026, 10, 1, 13, 30, 0, TimeSpan.Zero).AddDays(i - 1):O}}","o":10,"h":12,"l":9,"c":{{100 + i}},"v":{{1000 + i}}}""").ToList();
+            $$"""{"t":"{{new DateTimeOffset(2026, 10, 15, 13, 30, 0, TimeSpan.Zero).AddDays(i - 1):O}}","o":10,"h":12,"l":9,"c":{{100 + i}},"v":{{1000 + i}}}""").ToList();
         bars.Add("""{"t":"2026-11-04T14:30:00Z","o":10,"h":12,"l":9,"c":999,"v":999999}""");
         var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
         {
@@ -33,7 +33,7 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Equal(20, result.AvailableCompletedSessionCount);
         Assert.Equal(120, result.Price);
         Assert.Equal(110.5, result.Sma20);
-        Assert.Equal(1019.5, result.AverageDailyVolume20);
+        Assert.Equal(1010.5, result.AverageDailyVolume20);
         Assert.Equal("all (split/dividend adjusted)", result.Adjustment);
         Assert.True(result.DataFresh);
         Assert.Contains("timeframe=1Day", handler.Request!.RequestUri!.ToString());
