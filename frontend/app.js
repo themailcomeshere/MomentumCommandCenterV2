@@ -574,8 +574,12 @@ renderFeedback();
 function readRedZoneState(){
  try{
   const value=JSON.parse(localStorage.getItem("mcc.redZoneState.v1")||"{}");
-  return {pinned:Array.isArray(value.pinned)?value.pinned.filter(x=>typeof x==="string"):[],dismissed:Array.isArray(value.dismissed)?value.dismissed.filter(x=>typeof x==="string"):[]};
- }catch{return {pinned:[],dismissed:[]};}
+  return {
+   pinned:Array.isArray(value.pinned)?value.pinned.filter(x=>typeof x==="string"):[],
+   dismissed:Array.isArray(value.dismissed)?value.dismissed.filter(x=>typeof x==="string"):[],
+   mode:value.mode==="manual"?"manual":"automatic"
+  };
+ }catch{return {pinned:[],dismissed:[],mode:"automatic"};}
 }
 function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
 
@@ -624,7 +628,18 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
    : "5M participation: DATA? · same-slot RVOL baseline unavailable";
   participationNode.className="redzone-participation "+(participationKnown?(lowParticipation?"low":"ok"):"unknown");
   const decisionReason=decision?.reason||data.evaluationReason||"Decision not evaluated.";
-  reasonNode.textContent=lowParticipation?decisionReason+" Low participation: 5M same-time-of-day RVOL is below the existing V2 threshold.":decisionReason;
+  const quality=data.opportunityQuality||{};
+  const qualityMetrics=quality.metrics||{};
+  const qualitySummary=quality.status==="DATA?"
+   ?"Opportunity quality: DATA? · required live inputs missing or stale."
+   :"Opportunity quality (diagnostic): "+String(quality.displayLabel||quality.classification||"UNKNOWN")+
+    " · RVOL "+formatMetric(qualityMetrics.relativeVolume,2,"x")+
+    " · range "+formatMetric(qualityMetrics.recentRangeInAtr,2," ATR")+
+    " · extension "+formatMetric(qualityMetrics.atrExtension,2," ATR")+
+    " · "+(Array.isArray(quality.reasons)?quality.reasons.join(", "):"No reason codes");
+  reasonNode.textContent=(lowParticipation?decisionReason+" Low participation: 5M same-time-of-day RVOL is below the existing V2 threshold.":decisionReason)+
+   " "+qualitySummary+
+   " Provisional diagnostic only; does not override V2 Permission/entry state.";
   gateNode.textContent="5M Permission: "+((five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===true?"YES":(five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===false?"NO":"UNKNOWN")+
    " · 1M execution: "+(decision?.oneMinuteExecution||"UNKNOWN");
   drawPriceLine(chartNode,one.chartBars||[],symbol);
@@ -665,9 +680,18 @@ function renderMorningReport(){
  });
  const dismissed=new Set(state.dismissed);
  const pinnedSet=new Set(state.pinned);
- const ranked=[...pinnedRows,...sortedRows.filter(item=>!dismissed.has(String(item.symbol||"").toUpperCase())&&!pinnedSet.has(String(item.symbol||"").toUpperCase()))]
+ const automaticRows=sortedRows.filter(item=>!dismissed.has(String(item.symbol||"").toUpperCase()));
+ const ranked=(state.mode==="manual"
+  ? pinnedRows
+  : automaticRows)
   .filter((item,index,all)=>all.findIndex(x=>String(x.symbol||"").toUpperCase()===String(item.symbol||"").toUpperCase())===index)
   .slice(0,4);
+ const modeButton=$("toggleRedZoneMode");
+ if(modeButton){
+  modeButton.textContent=state.mode==="manual"?"Mode: Manual":"Mode: Automatic";
+  modeButton.setAttribute("aria-pressed",String(state.mode==="manual"));
+  modeButton.title=state.mode==="manual"?"Showing pinned symbols in saved order.":"Showing top scanner-score preview; this is not a calibrated Opportunity Quality ranking.";
+ }
  const currentSymbols=new Set(ranked.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
  if(previousRedZoneSymbols&&!suppressNextRedZoneAlert&&redZoneSoundEnabled){
   const added=[...currentSymbols].filter(symbol=>!previousRedZoneSymbols.has(symbol));
@@ -675,7 +699,9 @@ function renderMorningReport(){
  }
  previousRedZoneSymbols=currentSymbols;suppressNextRedZoneAlert=false;
  $("morningTopCount").textContent=String(ranked.length);
- $("reportSubtitle").textContent=(group==="imported"?"Imported scanner preview · top four by Overnight Score among historical-gate passes · price, 20D volume, catalyst and chart gates still DATA?":"Preview generated "+new Date().toLocaleString()+" · local browser clock · not a market-data timestamp");
+ $("reportSubtitle").textContent=state.mode==="manual"
+  ?"Manual mode · pinned symbols in your saved order · pins and dismissals are preserved when switching modes."
+  :(group==="imported"?"Automatic preview · top four by supplied Overnight Score among historical-gate passes · NOT a calibrated live Opportunity Quality rank · current price, 20D volume, catalyst and chart gates remain separate.":"Automatic preview · sorted by supplied scanner score · NOT a calibrated live Opportunity Quality rank.");
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
   const card=document.createElement("article");card.className="redzone-card";
   const top=document.createElement("div");top.className="redzone-card-top";
@@ -692,11 +718,11 @@ function renderMorningReport(){
   const chart=document.createElement("div");chart.className="redzone-sparkline";chart.textContent="Loading 1M price…";
   const actions=document.createElement("div");actions.className="redzone-actions";
   const focusButton=document.createElement("button");focusButton.type="button";focusButton.className="quiet-button";focusButton.textContent="Open in Main Chart";
-  const manageButton=document.createElement("button");manageButton.type="button";manageButton.className="quiet-button";manageButton.textContent=pinnedSet.has(String(item.symbol||"").toUpperCase())?"Remove pin":"Dismiss";
+  const manageButton=document.createElement("button");manageButton.type="button";manageButton.className="quiet-button";manageButton.textContent=state.mode==="manual"?"Remove pin":"Dismiss";
   manageButton.addEventListener("click",event=>{
    event.stopPropagation();
    const current=readRedZoneState(),ticker=String(item.symbol||"").toUpperCase();
-   if(current.pinned.includes(ticker))current.pinned=current.pinned.filter(x=>x!==ticker);
+   if(current.mode==="manual")current.pinned=current.pinned.filter(x=>x!==ticker);
    else current.dismissed=[...new Set([...current.dismissed,ticker])];
    writeRedZoneState(current);
   });
@@ -711,6 +737,16 @@ function renderMorningReport(){
   return card;
  }):[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:"No candidate rows available. Import a CSV or select a demo scanner group."})]));
 }
+$("toggleRedZoneMode")?.addEventListener("click",()=>{
+ const state=readRedZoneState();
+ state.mode=state.mode==="manual"?"automatic":"manual";
+ suppressNextRedZoneAlert=true;
+ writeRedZoneState(state);
+ const status=$("redZoneManageStatus");
+ if(status)status.textContent=state.mode==="manual"
+  ?"Manual mode enabled. Red Zone now shows only your pinned symbols in saved order. Add a ticker with Pin to Red Zone."
+  :"Automatic mode enabled. Red Zone shows the top four supplied scanner-score candidates after historical gates; live Opportunity Quality is diagnostic and not yet the ranker.";
+});
 $("scannerGroup")?.addEventListener("change",()=>{suppressNextRedZoneAlert=true;renderMorningReport();});
 $("redZoneAddForm")?.addEventListener("submit",event=>{
  event.preventDefault();
