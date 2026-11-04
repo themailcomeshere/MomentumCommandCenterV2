@@ -42,6 +42,7 @@ builder.Services.AddSwaggerGen(options =>
         return new[] { tag };
     });
 });
+builder.Services.AddSingleton<CatalystHumanReviewStore>();
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 builder.Services.AddSingleton<LiveSymbolAssessmentService>();
 builder.Services.AddSingleton<AlpacaMinuteBarStreamWorker>();
@@ -1125,6 +1126,47 @@ app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API
         body.Example = OpenApiAnyFactory.CreateFromJson("""{"symbol":"SPY","dataFresh":true,"price":600,"sma20":590,"averageDailyVolume20":1000000,"overnightWinRatePct":75,"averageOvernightPct20":0.35,"averageOvernightPct5":0.55,"medianOvernightPct20":0.3,"currentOvernightPct":0.25,"excluded":false,"catalystStatus":"CLEAR","fiveMinutePermission":true,"fiveMinuteStructure":"BULLISH","oneMinuteState":"EXECUTION READY","extensionAtr":0.8,"currentVolumeVsAverage":1.2,"dailyRangePct":1.8,"atrPct":1.5}""");
     return operation;
 });
+
+app.MapPost("/api/market-data/catalyst-reviews", async (
+    CatalystHumanReviewInput input,
+    CatalystHumanReviewStore reviewStore,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var record = await reviewStore.AppendAsync(input, ct);
+        return Results.Created($"/api/market-data/catalyst-reviews?symbol={Uri.EscapeDataString(record.Symbol)}", record);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+app.MapGet("/api/market-data/catalyst-reviews", async (
+    string? symbol,
+    int? limit,
+    CatalystHumanReviewStore reviewStore,
+    CancellationToken ct) =>
+{
+    if (!string.IsNullOrWhiteSpace(symbol) && !IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var records = await reviewStore.GetLatestAsync(symbol, limit ?? 100, ct);
+        return Results.Ok(new
+        {
+            count = records.Count,
+            records,
+            note = "Human labels are append-only research data. They do not alter the automated catalyst assessment or emit CLEAR_WITH_SOURCE."
+        });
+    }
+    catch (ArgumentOutOfRangeException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
 
 app.MapGet("/api/market-data/stored-bars", async (
     string symbol,
