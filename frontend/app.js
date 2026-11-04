@@ -177,12 +177,19 @@ function drawPriceLine(container,bars,label){
  const meta=document.createElement("div");meta.className="chart-meta";meta.textContent=bars.length+" × 1m bars · "+new Date(bars[0].timestamp).toLocaleTimeString()+"–"+new Date(bars[bars.length-1].timestamp).toLocaleTimeString()+" · latest $"+values[values.length-1].toFixed(2);
  container.append(svg,meta);
 }
+const liveAssessmentInFlight=new Map();
 async function fetchLiveAssessment(symbol){
- const params=new URLSearchParams({symbol,providerName:"Alpaca"});
- const response=await fetch("/api/market-data/live-assessment?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
- const body=await response.json().catch(()=>({}));
- if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
- return body;
+ const ticker=String(symbol||"").trim().toUpperCase();
+ if(liveAssessmentInFlight.has(ticker))return liveAssessmentInFlight.get(ticker);
+ const request=(async()=>{
+  const params=new URLSearchParams({symbol:ticker,providerName:"Alpaca"});
+  const response=await fetch("/api/market-data/live-assessment?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
+  return body;
+ })();
+ liveAssessmentInFlight.set(ticker,request);
+ try{return await request;}finally{if(liveAssessmentInFlight.get(ticker)===request)liveAssessmentInFlight.delete(ticker);}
 }
 function sourceFreshness(label,ageSeconds){
  if(!label)return "UNKNOWN";
@@ -885,7 +892,7 @@ async function loadMorningBrief(force=false) {
  })();
  try{return await morningBriefRequest;}finally{morningBriefRequest=null;}
 }
-loadMorningBrief();
+// Morning Brief loads on demand from its modal; it must not block dashboard startup.
 
 /// MODULE: Morning Command Brief modal
 /// PURPOSE: Reuse the same live API brief in the header modal and the collapsed full-width footer section.
