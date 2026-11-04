@@ -1,3 +1,23 @@
+## Red Zone recovery and import handling (added 2026-11-03)
+
+- [ ] After pulling the latest branch, import the current scanner CSV.
+- [ ] Confirm the import feedback reports the number of prior matching dismissals reset.
+- [ ] Confirm up to four eligible candidates render. Historical CSV gates select the preview; current price, liquidity, catalyst, 5M and 1M evidence remain separate qualification gates.
+- [ ] Use **Dismiss/Clear all Red Zone Candidates** to clear the selected scanner group's candidates.
+- [ ] Use **Restore dismissed / repopulate** to bring the selected group's eligible candidates back.
+- [ ] Re-importing a fresh CSV resets prior dismissals for symbols in that file; it does not mark them READY.
+
+## 20-session capture acceptance (added 2026-11-03)
+
+- [ ] Run capture once after API restart and record elapsed duration.
+- [ ] Verify provider/feed, fetched bars, newly persisted count, exact provider/store boundary counts and missing timestamps.
+- [ ] A zero newly persisted count can be normal when identical observations already exist.
+- [ ] Do not treat a zero snapshot count as zero market bars; snapshots are evaluator-input audit records.
+- [ ] Do not calculate rolling metrics with missing exact close/open pairs.
+- [ ] Do not substitute a nearby bar without an explicit strategy-definition change and a separate validation of the revised metric.
+
+---
+
 # Overnight Process — Operational Checklist (2026-11-03)
 
 ## Purpose and controlling definition
