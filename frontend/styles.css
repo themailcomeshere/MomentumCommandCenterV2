@@ -1599,3 +1599,7 @@ main{margin-top:16px}
 .overnight-boundary-details > summary { cursor: pointer; color: var(--muted, inherit); padding: .45rem 0; font-weight: 600; }
 .overnight-boundary-details[open] > summary { margin-bottom: .5rem; }
 .overnight-boundary-details .table-wrap { max-height: 22rem; overflow: auto; }
+
+.overnight-control-details { margin-top: .35rem; }
+.overnight-control-details > summary { cursor: pointer; color: var(--muted, inherit); padding: .45rem 0; font-weight: 600; }
+.overnight-control-details[open] > summary { margin-bottom: .5rem; }
