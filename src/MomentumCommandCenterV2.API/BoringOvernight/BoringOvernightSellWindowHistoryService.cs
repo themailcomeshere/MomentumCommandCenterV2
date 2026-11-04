@@ -12,7 +12,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
 {
     private const int RequiredWindow = 20;
     private const int MinutesPerEligibleWindow = 13 * 60;
-    private const int QueryLimitPerSession = 10000; // Store limit; fetch all coexisting feeds before filtering to the requested feed.
+    private const int QueryLimitPerChunk = 10000;
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     public static DateOnly GetLatestCompletedSellSessionDate(DateTimeOffset asOfUtc)
@@ -106,6 +106,22 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         // Each boundary's NextSessionDate is the sell-window date; PreviousCloseBarTimestampUtc
         // is the exact reference-close bar timestamp (15:59 or 12:59 ET).
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(latestSellSession, RequiredWindow);
+        var allObservations = new List<MarketBarObservation>();
+        var queryCursor = boundaries[0].PreviousCloseBarTimestampUtc;
+        var queryEndUtc = ToUtc(boundaries[^1].NextSessionDate, new TimeOnly(20, 0));
+        // Read source-isolated 7-day chunks instead of rescanning the full JSONL store once per session.
+        // Feed is filtered in the store before the 10,000-row cap is applied.
+        while (queryCursor < queryEndUtc)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var chunkEnd = queryCursor.AddDays(7) < queryEndUtc ? queryCursor.AddDays(7) : queryEndUtc;
+            var chunk = await store.GetLatestAsync(
+                symbol.Trim().ToUpperInvariant(), provider.Trim(),
+                queryCursor, chunkEnd, QueryLimitPerChunk, cancellationToken, "1m", feed.Trim());
+            allObservations.AddRange(chunk);
+            queryCursor = chunkEnd;
+        }
+
         var windows = new List<BoringOvernightSellWindowAudit>(RequiredWindow);
         foreach (var boundary in boundaries)
         {
@@ -114,10 +130,9 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             var windowStartUtc = ToUtc(sessionDate, new TimeOnly(7, 0));
             var windowEndUtc = ToUtc(sessionDate, new TimeOnly(20, 0)); // exclusive; final expected bar starts 19:59 ET
 
-            var observations = await store.GetLatestAsync(
-                symbol.Trim().ToUpperInvariant(), provider.Trim(),
-                boundary.PreviousCloseBarTimestampUtc, windowEndUtc,
-                QueryLimitPerSession, cancellationToken, "1m");
+            var observations = allObservations
+                .Where(x => x.SourceTimestamp >= boundary.PreviousCloseBarTimestampUtc && x.SourceTimestamp < windowEndUtc)
+                .ToArray();
 
             var sourceBars = observations
                 .Select(x => x.Bar)
