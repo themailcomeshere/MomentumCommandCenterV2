@@ -52,7 +52,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
 
         Assert.False(result.AllWindowsComplete);
         Assert.Equal(19, result.CompleteWindowCount);
-        var incomplete = Assert.Single(result.Windows.Where(x => x.SellSessionDate == lastWindow.NextSessionDate));
+        var incomplete = Assert.Single(result.Windows, x => x.SellSessionDate == lastWindow.NextSessionDate);
         Assert.False(incomplete.CoverageComplete);
         Assert.Equal(779, incomplete.ObservedIntervalCount);
         Assert.Equal(1, incomplete.MissingIntervalCount);
