@@ -53,8 +53,8 @@ public sealed class SchwabTradeImporter : ITradeImporter
         PriceHeader,
         TimingHeader,
         FillPriceHeader,
-        QuantityHeader,
-        TimestampHeader
+        TimestampHeader,
+        QuantityHeader
     };
 
     /// <summary>
