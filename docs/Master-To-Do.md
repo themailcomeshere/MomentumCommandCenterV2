@@ -8,7 +8,9 @@
 - [x] Catalyst triage statuses are `RISK_PRESENT`, `MATERIAL_EVENT_REVIEW`, `UNCLASSIFIED_NEWS_REVIEW`, or `UNKNOWN`. No-news is UNKNOWN. It never emits `CLEAR_WITH_SOURCE`; no article-level human validation or historical classifier validation is claimed.
 - [x] `POST /api/boring-overnight/evaluate-with-history` now fetches Daily and catalyst evidence, overwrites caller-supplied price/SMA20/average-volume/catalyst values, and persists source timestamps. Only explicit `RISK_PRESENT` maps to evaluator `RISK`; every other catalyst state remains UNKNOWN. Missing/incomplete Daily data remains null. Existing 5M/1M inputs are not automatically sourced by this change.
 - [x] Daily API implementation through commit `62320098083cfc4aeb353397059e83ffc27aaf47` passed Release build and **188/188 tests**, 0 warnings/0 errors, Actions run [41875185646](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875185646).
-- [x] Daily + catalyst snapshot integration, exact-session calendar checks, and SIP-only qualification gating passed Release build and **188/188 tests**, 0 warnings/0 errors, on code commit `b677d1ce75096438f04019e16dc8ad37a79c5209`, Actions run [41875774384](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875774384). Documentation-only commits follow this code head; exact latest documentation-head workflow is separate.
+- [x] Daily + catalyst evidence now flows through the actual `POST /api/boring-overnight/capture-history` button workflow as well as `evaluate-with-history`. Snapshots persist exact requested/valid/missing history pairs, Daily feed/adjustment/completeness/observed metrics, and catalyst article IDs/headlines/publication times/URLs/categories/rule version/coverage.
+- [x] Production and prototype saved-snapshot tables now show historical pair completeness, Daily qualification values/feed coverage/adjustment/source timestamp, and catalyst article count/coverage/rule version plus the first two headlines. This is snapshot evidence visibility; the separate scanner qualification panel still needs Daily/catalyst integration.
+- [x] Daily + catalyst capture/snapshot evidence integration, exact-session calendar checks, SIP-only qualification gating, snapshot persistence tests, and production/prototype table changes passed Release build and **188/188 tests**, 0 warnings/0 errors, on code commit `9fb66f14e907ef029ac7955ef46802aa789e74c6`, Actions run [41876561554](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41876561554).
 
 ### Operator validation required
 - [ ] Pull latest feature branch using `scripts/Get-Latest-And-Test.ps1`, restart the API, and confirm exact-head local Release build/tests.
@@ -18,7 +20,8 @@
 - [ ] Browser/UI integration of Daily and catalyst evidence into the Boring Overnight qualification panel remains outstanding.
 
 ### Remaining strategy/data work
-- [ ] Snapshot completeness visibility: expected/valid close-open pair counts, historical-metric status and per-field presence/status.
+- [x] Snapshot completeness visibility added to persisted snapshot contract and saved-snapshot table: expected/valid/missing close-open pairs, Daily evidence quality/provenance and catalyst evidence status/source details.
+- [ ] Browser-verify the expanded saved-snapshot table in production and prototype after pulling the latest branch.
 - [ ] Official 09:30 ET opening-print source/feed parity; the 09:30 one-minute bar Open remains a proxy, not the official auction print.
 - [ ] EVR's eight missing NEXT_SESSION_OPEN observations remain absent from provider response and store; nearest bars 1–7 minutes later are diagnostic only. Do not impute.
 - [ ] Complete GTC_EXT 07:00–20:00 ET eligible-window outcome study, walk-forward sell-target quantile validation, and actual fills/exits/fees/realized P&L linkage.
