@@ -120,7 +120,8 @@
   <div class="table-wrap" id="mcc-static-0175-div"><table id="mcc-static-0176-table"><thead id="mcc-static-0177-thead"><tr id="mcc-static-0178-tr"><th id="mcc-static-0179-th">Session</th><th id="mcc-static-0180-th">Boundary</th><th id="mcc-static-0181-th">Expected timestamp (UTC)</th><th id="mcc-static-0182-th">Provider exact bar</th><th id="mcc-static-0183-th">Store exact bar</th><th id="mcc-static-0184-th">Nearest provider bar</th><th id="mcc-static-0185-th">Audit result</th></tr></thead><tbody id="overnightBoundaryCoverageRows"><tr id="mcc-static-0186-tr"><td colspan="7" id="mcc-static-0187-td">Run the 20-session capture to audit all 40 expected boundary bars.</td></tr></tbody></table></div>
   </details>
  </div>
- <section class="overnight-coverage-audit" aria-labelledby="overnightCoverageTitle" id="mcc-static-0188-section">
+ <details class="overnight-control-details"><summary>Optional diagnostic: compare this ticker with SPY</summary>
+            <section class="overnight-coverage-audit" aria-labelledby="overnightCoverageTitle" id="mcc-static-0188-section">
   <div class="section-heading" id="mcc-static-0189-div"><div id="mcc-static-0190-div"><div class="eyebrow" id="overnightControlTestEyebrow">POST-MARKET CONTROL TEST</div><h3 id="overnightCoverageTitle">Ticker vs SPY control test</h3><p class="muted" id="mcc-static-0192-p">Fetches the selected ticker and SPY over the identical UTC window. This checks whether the configured source returns any observations; it is not a full provider-entitlement or exact-boundary coverage audit.</p></div></div>
   <form id="overnightCoverageForm" class="overnight-controls">
    <label id="mcc-static-0193-label">From (UTC) <input id="overnightCoverageFrom" type="datetime-local" value="2026-10-28T20:00" required></label>
@@ -131,9 +132,8 @@
   <div class="table-wrap" id="mcc-static-0195-div"><table id="mcc-static-0196-table"><thead id="mcc-static-0197-thead"><tr id="mcc-static-0198-tr"><th id="mcc-static-0199-th">Symbol</th><th id="mcc-static-0200-th">Provider / feed</th><th id="mcc-static-0201-th">Bars</th><th id="mcc-static-0202-th">First / latest source time (UTC)</th><th id="mcc-static-0203-th">Interpretation</th></tr></thead><tbody id="overnightCoverageRows"><tr id="mcc-static-0204-tr"><td colspan="5" id="mcc-static-0205-td">No coverage results.</td></tr></tbody></table></div>
   <p class="notice" id="mcc-static-0206-p">On 2026-10-28, 20:00 UTC was 16:00 EDT (regular close); later timestamps are post-market. Sparse IEX bars prove only that the feed returned those observations for that symbol/window. Empty results do not prove no trading or identify entitlement cause.</p>
  </section>
-
-
- <div class="overnight-results-grid" id="mcc-static-0207-div">
+            </details>
+            <div class="overnight-results-grid" id="mcc-static-0207-div">
  <section class="overnight-result" aria-labelledby="overnightSellLimitTitle" id="mcc-static-0208-section">
   <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
   <dl id="mcc-static-0209-dl">
