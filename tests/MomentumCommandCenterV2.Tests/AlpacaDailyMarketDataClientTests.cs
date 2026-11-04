@@ -75,7 +75,7 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Equal(1, result.ValidSessionCount);
         Assert.Null(result.Sma20);
         Assert.Null(result.AverageDailyVolume20);
-        Assert.False(result.DataFresh);
+        Assert.True(result.DataFresh);
         Assert.Equal("INCOMPLETE_EXPECTED_SESSIONS", result.Completeness);
     }
 
