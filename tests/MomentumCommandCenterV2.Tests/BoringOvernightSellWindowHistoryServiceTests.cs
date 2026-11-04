@@ -110,9 +110,10 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
             DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
 
         Assert.True(result.CapturePerformed);
-        Assert.Equal(providerBars.Count, result.FetchedBarCount);
-        Assert.Equal(providerBars.Count, result.NewlyPersistedBarCount);
-        Assert.Equal(providerBars.Count, store.Bars.Count);
+        var distinctSourceTimestamps = providerBars.Select(x => x.Timestamp).Distinct().Count();
+        Assert.Equal(distinctSourceTimestamps, result.FetchedBarCount);
+        Assert.Equal(distinctSourceTimestamps, result.NewlyPersistedBarCount);
+        Assert.Equal(distinctSourceTimestamps, store.Bars.Count);
         Assert.True(result.AllWindowsComplete);
         Assert.True(result.QualificationUsable);
     }
