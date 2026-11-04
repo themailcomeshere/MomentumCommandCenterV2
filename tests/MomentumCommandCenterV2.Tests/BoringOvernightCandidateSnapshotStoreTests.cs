@@ -46,14 +46,17 @@ public sealed class BoringOvernightCandidateSnapshotStoreTests
             Assert.Equal(saved.SnapshotId, read[0].SnapshotId);
             Assert.Equal(fieldTimes["price"], read[0].FieldSourceTimestampsUtc["price"]);
             Assert.Equal(0.4, read[0].EvaluationRequest.CurrentOvernightPct);
-            Assert.Equal(20, read[0].HistoricalCompleteness!.RequestedPairCount);
-            Assert.Equal(17, read[0].HistoricalCompleteness.ValidPairCount);
-            Assert.Equal(3, read[0].HistoricalCompleteness.MissingPairCount);
-            Assert.Equal("INCOMPLETE", read[0].HistoricalCompleteness.Status);
-            Assert.Equal("IEX_PARTIAL", read[0].DailyEvidence!.FeedCoverage);
-            Assert.False(read[0].DailyEvidence.QualificationUsable);
-            Assert.Equal("RISK_PRESENT", read[0].CatalystEvidence!.Status);
-            Assert.Equal("Company announces public offering", read[0].CatalystEvidence.Articles.Single().Headline);
+            var savedAudit = Assert.IsType<BoringOvernightHistoryAudit>(read[0].HistoricalCompleteness);
+            var savedDaily = Assert.IsType<BoringOvernightDailyEvidence>(read[0].DailyEvidence);
+            var savedCatalyst = Assert.IsType<BoringOvernightCatalystEvidence>(read[0].CatalystEvidence);
+            Assert.Equal(20, savedAudit.RequestedPairCount);
+            Assert.Equal(17, savedAudit.ValidPairCount);
+            Assert.Equal(3, savedAudit.MissingPairCount);
+            Assert.Equal("INCOMPLETE", savedAudit.Status);
+            Assert.Equal("IEX_PARTIAL", savedDaily.FeedCoverage);
+            Assert.False(savedDaily.QualificationUsable);
+            Assert.Equal("RISK_PRESENT", savedCatalyst.Status);
+            Assert.Equal("Company announces public offering", savedCatalyst.Articles.Single().Headline);
         }
         finally
         {
