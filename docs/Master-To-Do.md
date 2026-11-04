@@ -1,3 +1,30 @@
+## 2026-11-04 — Daily data and catalyst source integration
+
+### Implemented on `feature/opportunity-quality-classification`
+- [x] Added `AlpacaDailyMarketDataClient` and `GET /api/market-data/daily?symbol=RTO`. It requests Alpaca `1Day` bars with `adjustment=all` and the configured feed; the response exposes provider/feed, adjustment mode, retrieval time, latest completed session, price, SMA20, 20-session average daily volume, freshness and completeness.
+- [x] Daily calculations use the exact latest 20 expected sessions from `MCC_US_EQUITIES_CALENDAR_V2`, exclude the current session until its scheduled regular close (including early closes), and do not reach farther back when an expected session is missing. SMA20 and average volume remain null unless all 20 expected sessions are present. Price is null when the latest expected completed session is absent.
+- [x] Added Daily adapter tests for adjusted request parameters, exact exchange-session coverage, current partial-session exclusion, rolling calculations, missing-session behavior and freshness.
+- [x] Added ticker-scoped Alpaca news retrieval and `GET /api/market-data/catalyst-assessment?symbol=RTO`. It queries the preceding 24 hours, follows pagination up to 10 pages, records coverage completeness, and applies versioned transparent phrase triage (`MCC-CATALYST-TRIAGE-1.0`).
+- [x] Catalyst triage statuses are `RISK_PRESENT`, `MATERIAL_EVENT_REVIEW`, `UNCLASSIFIED_NEWS_REVIEW`, or `UNKNOWN`. No-news is UNKNOWN. It never emits `CLEAR_WITH_SOURCE`; no article-level human validation or historical classifier validation is claimed.
+- [x] `POST /api/boring-overnight/evaluate-with-history` now fetches Daily and catalyst evidence, overwrites caller-supplied price/SMA20/average-volume/catalyst values, and persists source timestamps. Only explicit `RISK_PRESENT` maps to evaluator `RISK`; every other catalyst state remains UNKNOWN. Missing/incomplete Daily data remains null. Existing 5M/1M inputs are not automatically sourced by this change.
+- [x] Daily API implementation through commit `62320098083cfc4aeb353397059e83ffc27aaf47` passed Release build and **188/188 tests**, 0 warnings/0 errors, Actions run [41875185646](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875185646).
+- [ ] Exact-head CI for the subsequent evaluate-with-history integration commit `ae646383963239f0494fe3aae3825e6d7374aa35` is pending; do not mark it verified until that run completes.
+
+### Operator validation required
+- [ ] Pull latest feature branch using `scripts/Get-Latest-And-Test.ps1`, restart the API, and confirm exact-head local Release build/tests.
+- [ ] Smoke-test Daily endpoint for RTO and EVR; save full JSON responses and `/api/providers/status`. Compare latest completed Daily close, SMA20 and average volume with an independent chart/provider using the same adjustment basis. Report any 401/403/provider errors without sharing credentials.
+- [ ] Smoke-test catalyst endpoint for RTO and EVR; save JSON including article headlines, publication timestamps, URLs, pagination and coverage status. Confirm ticker-linked articles are returned and review classifications against primary filings/news manually.
+- [ ] Run the 20-session capture/evaluate-with-history flow once for RTO and EVR. Confirm snapshot Daily fields are populated only when the exact 20 expected sessions exist, and catalyst remains UNKNOWN unless an explicit risk phrase is detected. No candidate should become READY from this integration alone.
+- [ ] Browser/UI integration of Daily and catalyst evidence into the Boring Overnight qualification panel remains outstanding.
+
+### Remaining strategy/data work
+- [ ] Snapshot completeness visibility: expected/valid close-open pair counts, historical-metric status and per-field presence/status.
+- [ ] Official 09:30 ET opening-print source/feed parity; the 09:30 one-minute bar Open remains a proxy, not the official auction print.
+- [ ] EVR's eight missing NEXT_SESSION_OPEN observations remain absent from provider response and store; nearest bars 1–7 minutes later are diagnostic only. Do not impute.
+- [ ] Complete GTC_EXT 07:00–20:00 ET eligible-window outcome study, walk-forward sell-target quantile validation, and actual fills/exits/fees/realized P&L linkage.
+- [ ] Opportunity Quality current-data adapter/ranking and Red Zone integration remain incomplete; provisional domain bands are not calibrated.
+- [ ] Validated catalyst classification still requires human-labelled examples, authoritative-source coverage assessment, and measured false-positive/false-negative performance before CLEAR_WITH_SOURCE can exist.
+
 ## 2026-11-03 7:43 PM Arizona — operator acceptance and performance follow-up
 
 ### Verified by user
