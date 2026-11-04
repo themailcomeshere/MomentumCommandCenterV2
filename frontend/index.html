@@ -166,8 +166,9 @@
 <section id="overnight-qualification" class="panel overnight-qualification-panel">
  <div class="section-heading">
   <div><div class="eyebrow">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
-   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV; missing current price, 20D volume, catalyst and chart evidence remain DATA?.</p>
+   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. Live Daily and catalyst evidence is fetched only for the four highest-scored imported candidates; other rows remain DATA?.</p>
   </div>
+  <button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for top 4</button>
  </div>
  <div class="overnight-qualification-summary">
   <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
@@ -179,11 +180,11 @@
  <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
  <div class="table-wrap overnight-qualification-table">
   <table>
-   <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON</th><th>5D ON</th><th>Current ON</th><th>Above 20 SMA</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Decision</th></tr></thead>
-   <tbody id="overnightQualificationRows"><tr><td colspan="11">No imported Overnight Scanner data.</td></tr></tbody>
+   <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON</th><th>5D ON</th><th>Current ON</th><th>Above 20 SMA</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
+   <tbody id="overnightQualificationRows"><tr><td colspan="12">No imported Overnight Scanner data.</td></tr></tbody>
   </table>
  </div>
- <p class="notice">A historical pass is not READY. Price must be &gt; $5, 20D average daily volume must be &gt;= 500,000, catalyst risk must be cleared, and current Daily / 5M authority / 1M execution evidence must be reviewed. This panel will not substitute missing values with zero.</p>
+ <p class="notice">A historical pass is not READY. Price must be &gt; $5 and 20D average daily volume must be &gt;= 500,000 on complete SIP data. RISK_PRESENT blocks; material, unclassified or incomplete catalyst coverage requires manual review. This provisional classifier never clears a catalyst, so READY remains 0. 5M authority / 1M execution evidence is still not connected. This panel will not substitute missing values with zero.</p>
 </section>
 <section id="data-integrations" class="integration-grid">
  <article class="panel" id="mcc-static-0297-article">
