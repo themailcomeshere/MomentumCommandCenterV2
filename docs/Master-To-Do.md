@@ -2175,3 +2175,18 @@ The compact table does not prove that all historical metrics were populated only
 - The 91–105 ms timings do not establish cache, persisted-store, or fresh-provider origin. Data not found in sources.
 - The pasted snapshot summary does not expose complete historical metrics or explicit 20/20 completeness. Data not found in sources.
 - Daily adjustment behavior, entitlement and provider coverage remain unverified.
+
+
+## 2026-11-04 — MCC-native recovery actions and workflow corrections
+
+- [x] Production and prototype System Readiness are now collapsed by default behind a disclosure summary. The underlying readiness details remain available on demand. Browser visual acceptance is still required.
+- [x] Focused Decision Explanation now displays `UPDATING TO <SYMBOL>` while requesting a new symbol assessment. A request sequence guard prevents a slower prior-symbol response from replacing the latest symbol's result. Browser acceptance is still required.
+- [x] Timeframe Handoff now explicitly distinguishes entry review from exit management. The current live panel is not a position-specific exit tool because no broker-synchronized open-position state is available.
+- [x] Corrected historical CSV qualification precedence: if any required custom-expression metric is unavailable, the row is `DATA?`, not `FAIL`. A row is `FAIL` only when all required metrics are present and at least one gate fails. Browser/test acceptance remains pending.
+- [x] Renamed the existing 20-session history action to **Fetch / retry 20-session close/open history** and clarified that it re-fetches exact provider bars, persists returned observations, and re-audits all 40 required close/open timestamps. It cannot create a missing provider bar or substitute a nearby minute.
+- [x] Added **Fetch 20-session GTC_EXT sell-window history** to the Calculated Limit Sell panel in production and prototype. It checks `/api/providers/status` first and makes no provider request unless the effective Alpaca feed is SIP. When SIP is effective, it invokes the existing capture endpoint and displays exact 780-minute window coverage, missing observations, and provenance.
+- [ ] Current effective feed is IEX from local `secrets.json`; recent SIP access previously returned HTTP 403. Therefore the new GTC_EXT button is expected to stop at its preflight and report why; no SIP history capture has been performed by this UI change.
+- [ ] EVR's eight exact 09:30 ET opens remain absent from the supplied provider response/store. Use the 20-session retry button after the UI update is deployed. It can populate them only if the provider returns the exact timestamps; nearest later bars remain diagnostic and cannot be imputed.
+- [ ] Calculated Limit Sell remains DATA? / NOT CALCULATED. Do not connect the captured window highs to a numeric target until 20/20 exact SIP windows are complete, ATR parity is MATCH, and walk-forward target-touch/adverse-excursion validation is complete. Actual bar-high touches are not fills.
+- [ ] The top-four Daily + catalyst button is documented as a post-import shortlist refresh, not a pre-entry or exit button. It queries only the four highest-scored imported CSV rows and cannot emit READY.
+- [ ] Run exact-head GitHub Actions, local Release build/tests, JavaScript syntax validation, and browser acceptance on the latest feature-branch head before calling these UI changes accepted.
