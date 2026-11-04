@@ -35,7 +35,9 @@ public sealed class BoringOvernightCandidateSnapshotStore
                 input.CalculationVersion.Trim(),
                 input.FieldSourceTimestampsUtc,
                 input.EvaluationRequest with { Symbol = input.Symbol.Trim().ToUpperInvariant() },
-                input.HistoricalCompleteness);
+                input.HistoricalCompleteness,
+                input.DailyEvidence,
+                input.CatalystEvidence);
             await using var stream = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read,
                 16 * 1024, FileOptions.Asynchronous);
             await using var writer = new StreamWriter(stream);
@@ -102,7 +104,9 @@ public sealed record BoringOvernightCandidateSnapshotInput(
     string CalculationVersion,
     IReadOnlyDictionary<string, DateTimeOffset> FieldSourceTimestampsUtc,
     BoringOvernightEvaluationRequest EvaluationRequest,
-    BoringOvernightHistoryAudit? HistoricalCompleteness = null);
+    BoringOvernightHistoryAudit? HistoricalCompleteness = null,
+    BoringOvernightDailyEvidence? DailyEvidence = null,
+    BoringOvernightCatalystEvidence? CatalystEvidence = null);
 
 public sealed record BoringOvernightHistoryAudit(
     int RequiredWindow,
@@ -112,6 +116,41 @@ public sealed record BoringOvernightHistoryAudit(
     bool AllPairsComplete,
     bool EnoughHistory,
     string Status);
+
+public sealed record BoringOvernightDailyEvidence(
+    string Provider,
+    string Feed,
+    string Adjustment,
+    DateTimeOffset RetrievedAtUtc,
+    DateTimeOffset? LatestCompletedSessionTimestampUtc,
+    bool DataFresh,
+    string Completeness,
+    string FeedCoverage,
+    bool QualificationUsable,
+    double? ObservedClose,
+    double? ObservedSma20,
+    double? ObservedAverageDailyVolume20);
+
+public sealed record BoringOvernightCatalystEvidence(
+    string Provider,
+    string Status,
+    DateTimeOffset WindowStartUtc,
+    DateTimeOffset WindowEndUtc,
+    DateTimeOffset RetrievedAtUtc,
+    bool CoverageComplete,
+    int PagesRead,
+    int ArticleCount,
+    string RuleSetVersion,
+    IReadOnlyList<BoringOvernightCatalystArticleEvidence> Articles);
+
+public sealed record BoringOvernightCatalystArticleEvidence(
+    string? Id,
+    string Headline,
+    DateTimeOffset? PublishedAtUtc,
+    string? Url,
+    string Severity,
+    IReadOnlyList<string> Categories,
+    string Reason);
 
 public sealed record BoringOvernightCandidateSnapshot(
     string SnapshotId,
@@ -124,4 +163,6 @@ public sealed record BoringOvernightCandidateSnapshot(
     string CalculationVersion,
     IReadOnlyDictionary<string, DateTimeOffset> FieldSourceTimestampsUtc,
     BoringOvernightEvaluationRequest EvaluationRequest,
-    BoringOvernightHistoryAudit? HistoricalCompleteness = null);
+    BoringOvernightHistoryAudit? HistoricalCompleteness = null,
+    BoringOvernightDailyEvidence? DailyEvidence = null,
+    BoringOvernightCatalystEvidence? CatalystEvidence = null);
