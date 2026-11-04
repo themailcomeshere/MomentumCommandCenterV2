@@ -1605,3 +1605,12 @@ main{margin-top:16px}
 .overnight-control-details { margin-top: .35rem; }
 .overnight-control-details > summary { cursor: pointer; color: var(--muted, inherit); padding: .45rem 0; font-weight: 600; }
 .overnight-control-details[open] > summary { margin-bottom: .5rem; }
+
+/* Compact, keyboard-accessible System Readiness disclosure. */
+.topbar-readiness>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none;user-select:none}
+.topbar-readiness>summary::-webkit-details-marker{display:none}
+.topbar-readiness>summary::after{content:"Expand";font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 7px;white-space:nowrap}
+.topbar-readiness[open]>summary::after{content:"Collapse"}
+.topbar-readiness:not([open]) .readiness-grid{display:none}
+#overnightCaptureSellWindow{margin:0 0 6px}
+#overnightSellWindowStatus{margin:4px 0 12px;overflow-wrap:anywhere}
