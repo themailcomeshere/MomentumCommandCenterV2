@@ -129,7 +129,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
             {
                 var timestamp = start.AddMinutes(minute);
                 bars.Add(new MarketBar("RTO", timestamp,
-                    100, 101, 99, 100, 1000, "Alpaca", "sip", "1m"));
+                    100, 101, 99, 100, 1000, "Alpaca", feed, "1m"));
             }
         }
         return bars;
