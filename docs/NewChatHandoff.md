@@ -2271,3 +2271,38 @@ The active checklist now has 26 unchecked operational items: 3 Boring Overnight,
 - `ExclusionWatchlistStore` persists a local JSON file at API `App_Data/exclusions-watchlist.json`; it supports local Add/Remove and is consulted by Boring Overnight snapshot/evaluate-with-history paths.
 - It is not a Schwab account sync and does not seed the user's canonical exclusion list automatically. Scanner-wide integration and source-list reconciliation remain open.
 - Do not claim the full exclusion list is active merely because the local store endpoint exists.
+
+
+## November 4, 2026 — operator acceptance and active engineering handoff
+
+**Branch:** feature/opportunity-quality-classification  
+**Execution checklist:** docs/Master-To-Do.md
+
+### Operator measurements
+- Dashboard load 732 ms; DOMContentLoaded 638 ms. Pending localhost WebSocket is expected to remain open.
+- Morning Brief waits for modal open; request observed at 6.49 s.
+- Fetch & Analyze: RTO 105/91 ms, EVR 102 ms. These timings do not prove cache or fresh provider data.
+- 20-session capture: RTO 9.12 s; EVR 6.22 s.
+- RTO snapshot append passed and is labelled INPUT SNAPSHOT — NOT A DECISION. Summary shows dataFresh, catalyst, 5M permission, 5M structure and 1M state UNKNOWN.
+- EVR has eight missing exact next-session-open boundaries (Oct 12, 14, 15, 22, 26, 30, Nov 3, Nov 4). Provider/store exact are NO; nearest bars 1–7 minutes late. No substitution.
+
+### Immediate engineering priority
+Implement validated Daily data independently of intraday 1m/5m bars: last eligible price, SMA20 and 20-session average regular-session volume. Require 20 completed daily sessions, explicit adjustment mode, provider/feed and source/retrieval timestamps. Fail closed to DATA? on insufficient, stale or ambiguous data. Add boundary and incomplete-history tests. Expose values/provenance to Boring Overnight evaluation/snapshots without bypassing catalyst/chart gates.
+
+### Snapshot/UI follow-up
+Add visible expected/valid pair counts and historical metric status/presence. Current compact table is insufficient to confirm whether all historical metrics were populated only with 20/20 valid pairs. Keep current-day gates UNKNOWN until sourced.
+
+### Cache/freshness investigation
+91–105 ms does not prove whether Fetch & Analyze reads cache, local persistence or upstream provider. Inspect route implementation and response metadata; expose data source, cache hit/miss, fetched/retrieved timestamp and provider/feed when known. Do not label as live if not verified.
+
+### User inputs required
+1. After Daily endpoint implementation, run local RTO and EVR smoke tests and return response bodies plus /api/providers/status output.
+2. For bars freshness diagnosis, provide one response body per symbol and response headers if available.
+3. Pull latest branch and run local build/test; report exact output. Browser tests remain separate from CI.
+
+No additional EVR boundary export is required. Official opening-print parity remains unresolved; current 09:30 one-minute bar Open is only a proxy. No READY result or sell-target profitability claim is authorized by these measurements.
+
+[Uncertainties]
+- Cache/provider provenance for the 91–105 ms requests is not established.
+- Snapshot table does not expose complete historical metrics or a 20/20 count.
+- Daily provider entitlement, adjustment semantics and symbol coverage remain to be verified.
