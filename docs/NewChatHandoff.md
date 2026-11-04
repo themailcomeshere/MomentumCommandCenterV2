@@ -1,3 +1,45 @@
+# New Chat Handoff — November 4, 2026
+
+**Working branch:** `feature/opportunity-quality-classification`  
+**Current source head at handoff update:** `ae646383963239f0494fe3aae3825e6d7374aa35`  
+**Canonical execution checklist:** `docs/Master-To-Do.md`
+
+## Latest implementation
+- Daily API: `GET /api/market-data/daily?symbol=RTO`. Alpaca `1Day`, `adjustment=all`, exact 20 expected sessions from MCC's versioned exchange calendar. Current session excluded until scheduled close; early closes honored. Missing any expected session suppresses SMA20 and 20-session average volume. Price is suppressed if latest expected session is absent.
+- Catalyst API: `GET /api/market-data/catalyst-assessment?symbol=RTO`. Ticker-scoped Alpaca News for the preceding 24 hours, pagination up to 10 pages, versioned provisional keyword triage. It cannot return CLEAR. No news = UNKNOWN; material/unclassified news requires manual review; severe risk phrase = RISK_PRESENT.
+- The history-backed snapshot endpoint now fetches Daily and catalyst inputs itself, overwrites caller-supplied Daily/catalyst values, records field source timestamps, and keeps catalyst UNKNOWN except explicit RISK_PRESENT.
+- Daily implementation commit `62320098083cfc4aeb353397059e83ffc27aaf47` passed Release build and **188/188 tests**, 0 warnings/0 errors (Actions run [41875185646](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875185646)). The later snapshot-integration commit `ae646383963239f0494fe3aae3825e6d7374aa35` still needs exact-head CI confirmation.
+- This is not yet live-provider validation, browser acceptance, or final catalyst-classifier validation. Daily provider entitlement/adjustment parity is not established. 5M/1M evidence remains separately sourced.
+
+## What I need from the operator
+1. Pull the branch and run `scripts/Get-Latest-And-Test.ps1`; restart the API.
+2. Request:
+   - `GET /api/market-data/daily?symbol=RTO`
+   - `GET /api/market-data/daily?symbol=EVR`
+   - `GET /api/market-data/catalyst-assessment?symbol=RTO`
+   - `GET /api/market-data/catalyst-assessment?symbol=EVR`
+   - `GET /api/providers/status`
+3. Paste the full JSON responses (do not include API keys/secrets). For Daily, we need provider/feed, latest completed session, close, SMA20, average volume and completeness. For catalysts, we need article headlines, publication times, URLs, coverage completeness and provisional categories.
+4. Run the existing 20-session capture/evaluate-with-history flow for RTO and EVR. Confirm the new snapshot contains the Daily inputs only when all 20 expected sessions exist, and that catalyst is UNKNOWN unless the provisional rules detect an explicit risk phrase.
+5. Compare Daily values against an independent chart/provider on the same adjustment basis. Report any provider 401/403 errors verbatim with credentials removed.
+
+## Remaining engineering
+- Surface Daily and catalyst provenance/status in the Boring Overnight qualification panel.
+- Improve snapshot completeness visibility (expected/valid boundary pairs, historical-metric status, per-field presence).
+- Resolve EVR's eight missing exact next-session opens without nearest-bar substitution.
+- Establish official 09:30 ET auction-print parity; 09:30 one-minute bar Open is still only a proxy.
+- Complete GTC_EXT 07:00–20:00 ET outcome windows, walk-forward target validation, and actual fills/exits/fees/realized P&L.
+- Integrate current-data Opportunity Quality and Red Zone ranking; calibrate only from historical outcomes.
+- Validate catalyst rules with human-labelled articles and authoritative-source coverage before any CLEAR_WITH_SOURCE status is introduced.
+
+[Uncertainties]
+- Alpaca Daily feed entitlement and corporate-action adjustment parity have not been runtime-verified.
+- The 20-session exchange calendar is MCC-maintained; unexpected exchange closures are not automatically covered.
+- Phrase triage is provisional and has not been measured against a labelled catalyst dataset.
+- Exact-head CI for the latest snapshot integration commit is pending.
+
+---
+
 ## November 3, 2026 — latest operator acceptance and follow-up
 
 **Branch:** `feature/opportunity-quality-classification`  
