@@ -53,7 +53,7 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.True(result.QualificationUsable);
         Assert.Contains("timeframe=1Day", handler.Request!.RequestUri!.ToString());
         Assert.Contains("adjustment=all", handler.Request.RequestUri.ToString());
-        Assert.Contains("feed=iex", handler.Request.RequestUri.ToString());
+        Assert.Contains("feed=sip", handler.Request.RequestUri.ToString());
         Assert.Equal("key", handler.Request.Headers.GetValues("APCA-API-KEY-ID").Single());
     }
 
@@ -76,8 +76,6 @@ public sealed class AlpacaDailyMarketDataClientTests
         var result = await client.GetMetricsAsync("EVR", new DateTimeOffset(2026, 11, 4, 15, 0, 0, TimeSpan.Zero), CancellationToken.None);
 
         Assert.Equal(1, result.ValidSessionCount);
-        Assert.Null(result.Sma20);
-        Assert.Null(result.AverageDailyVolume20);
         Assert.True(result.DataFresh);
         Assert.Null(result.Price);
         Assert.Null(result.Sma20);
