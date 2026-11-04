@@ -459,6 +459,12 @@ $("scannerFile").addEventListener("change",event=>{
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;
+  const importedSymbols=new Set(imported.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
+  const redZoneState=readRedZoneState();
+  const previouslyDismissed=redZoneState.dismissed.length;
+  redZoneState.dismissed=redZoneState.dismissed.filter(symbol=>!importedSymbols.has(String(symbol).toUpperCase()));
+  const dismissalResetCount=previouslyDismissed-redZoneState.dismissed.length;
+  writeRedZoneState(redZoneState);
   let persistenceNote="";
   try{localStorage.setItem("mcc.scannerImport.v1",JSON.stringify({filename:file.name,importedAtUtc:new Date().toISOString(),rows:imported}));}
   catch(error){persistenceNote=" · browser storage unavailable: "+error.message;}
@@ -466,7 +472,7 @@ $("scannerFile").addEventListener("change",event=>{
   const renderedRows=$("scannerRows")?.querySelectorAll("tr").length??0;
   const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
   const redZoneSymbols=[...($("redZoneGrid")?.querySelectorAll(".redzone-card h3")??[])].map(node=>node.textContent).filter(Boolean);
-  $("scannerSource").textContent=`Imported ${imported.length} local rows · scanner table rendered ${renderedRows} · Red Zone rendered ${redZoneCards}/4: ${redZoneSymbols.join(", ")||"none"}${persistenceNote}`;
+  $("scannerSource").textContent=`Imported ${imported.length} local rows · scanner table rendered ${renderedRows} · Red Zone rendered ${redZoneCards}/4: ${redZoneSymbols.join(", ")||"none"} · reset ${dismissalResetCount} matching old dismissals${persistenceNote}`;
   void renderOvernightQualification();
  };reader.readAsText(file);
 });
@@ -666,8 +672,18 @@ $("redZoneAddForm")?.addEventListener("submit",event=>{
  $("redZoneManageStatus").textContent=ticker+" pinned to Red Zone. Missing evidence remains DATA? until supplied.";
 });
 $("restoreRedZone")?.addEventListener("click",()=>{
- const state=readRedZoneState();state.dismissed=[];writeRedZoneState(state);
- $("redZoneManageStatus").textContent="Dismissed scanner candidates restored.";
+ const state=readRedZoneState();const restored=state.dismissed.length;state.dismissed=[];writeRedZoneState(state);
+ $("redZoneManageStatus").textContent="Restored "+restored+" dismissed symbols. Red Zone repopulated from the selected scanner group.";
+});
+$("clearRedZoneCandidates")?.addEventListener("click",()=>{
+ const group=$("scannerGroup")?.value||"momentum";
+ const rows=Array.isArray(scannerData[group])?scannerData[group]:[];
+ const symbols=[...new Set(rows.map(item=>String(item?.symbol||"").trim().toUpperCase()).filter(Boolean))];
+ const state=readRedZoneState();
+ state.dismissed=[...new Set([...state.dismissed,...symbols])];
+ state.pinned=state.pinned.filter(symbol=>!symbols.includes(String(symbol).toUpperCase()));
+ writeRedZoneState(state);
+ $("redZoneManageStatus").textContent="Cleared "+symbols.length+" symbols from this scanner group. Use Restore dismissed / repopulate to bring eligible candidates back.";
 });
 $("refreshRedZone")?.addEventListener("click",()=>{
  renderMorningReport();refreshFocusedPriceChart();
@@ -1158,7 +1174,7 @@ async function overnightFetchJson(url, options) {
  return body;
 }
 async function refreshOvernightSnapshots() {
- const status = $("overnightStatus"), rows = $("overnightSnapshotRows");
+ const status = $("overnightSnapshotStatus") || $("overnightStatus"), rows = $("overnightSnapshotRows");
  if (!status || !rows) return;
  status.textContent = "Loading saved Overnight evaluations…";
  try {
