@@ -9,7 +9,7 @@
 - Catalyst API: `GET /api/market-data/catalyst-assessment?symbol=RTO`. Ticker-scoped Alpaca News for the preceding 24 hours, pagination up to 10 pages, versioned provisional keyword triage. It cannot return CLEAR. No news = UNKNOWN; material/unclassified news requires manual review; severe risk phrase = RISK_PRESENT.
 - The history-backed snapshot endpoint now fetches Daily and catalyst inputs itself, overwrites caller-supplied Daily/catalyst values, records field source timestamps, and keeps catalyst UNKNOWN except explicit RISK_PRESENT. IEX Daily bars are diagnostic only: qualification price/SMA20/average-volume are null unless the configured feed is SIP, because IEX is partial-exchange coverage.
 - Daily and catalyst integration, including the history-backed snapshot wiring and SIP-only qualification gate, passed Release build and **188/188 tests**, 0 warnings/0 errors on code commit `b677d1ce75096438f04019e16dc8ad37a79c5209` (Actions run [41875774384](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41875774384)). Subsequent commits are documentation-only.
-- This is not yet live-provider validation, browser acceptance, or final catalyst-classifier validation. Daily provider entitlement/adjustment parity is not established. 5M/1M evidence remains separately sourced.
+- This is not yet live-provider validation, browser acceptance, or final catalyst-classifier validation. SIP entitlement and Daily adjustment parity are not established. If Alpaca is currently configured for IEX, the qualification Daily fields will intentionally be null. 5M/1M evidence remains separately sourced.
 
 ## What I need from the operator
 1. Pull the branch and run `scripts/Get-Latest-And-Test.ps1`; restart the API.
