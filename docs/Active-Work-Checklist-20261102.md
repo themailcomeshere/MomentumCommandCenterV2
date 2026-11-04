@@ -215,6 +215,7 @@ The RTO audit checks 40 exact prior-close/next-open 1-minute timestamps across 2
 - [x] Missing required scanner custom-expression metrics now classify as DATA? rather than FAIL; exact November 4 import acceptance must confirm 243 unavailable rows remain unknown and 32 complete rows remain historical FAIL.
 - [x] Existing close/open capture action renamed and documented as a retry/recovery operation for exact missing timestamps; EVR's eight exact opens remain dependent on provider return.
 - [x] Added SIP-preflighted GTC_EXT capture action to Calculated Limit Sell in production and prototype; it will not fetch when the effective feed is IEX.
+- [x] Exact-head GitHub Actions run [41916672903](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41916672903) passed: Node JavaScript syntax check, .NET 8 restore, Release build and full test suite.
 - [ ] Browser acceptance of the latest feature branch, including the 443-row import, 200 complete / 243 unknown split, Red Zone cards, collapsed readiness and new GTC_EXT button.
 - [ ] Effective runtime feed remains IEX; SIP entitlement/configuration must be resolved before any qualification-grade GTC_EXT capture.
 - [ ] Calculated Limit Sell remains unconnected to the capture output until complete SIP coverage, ATR parity MATCH and walk-forward validation are present.
