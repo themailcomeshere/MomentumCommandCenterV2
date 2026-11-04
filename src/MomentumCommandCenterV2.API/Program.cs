@@ -23,7 +23,7 @@ builder.Services.AddSwaggerGen(options =>
         string tag;
         if (path == "/api/health" || path == "/api/providers/status")
             tag = "System & Provider Health";
-        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status" || path == "/api/market-data/daily")
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status" || path == "/api/market-data/daily" || path == "/api/market-data/catalyst-assessment")
             tag = "Market Data";
         else if (path == "/api/scanner/universe")
             tag = "Scanner & Discovery";
@@ -62,6 +62,11 @@ builder.Services.AddHttpClient<AlpacaNewsClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(15);
 });
 builder.Services.AddHttpClient<AlpacaDailyMarketDataClient>(client =>
+{
+    client.BaseAddress = new Uri("https://data.alpaca.markets/");
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
+builder.Services.AddHttpClient<AlpacaCatalystAssessmentClient>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
     client.Timeout = TimeSpan.FromSeconds(20);
@@ -135,6 +140,32 @@ app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketData
 .WithName("GetDailyMarketMetrics")
 .WithSummary("Get adjusted Daily close, SMA20 and 20-session average volume")
 .WithDescription("Uses Alpaca 1Day bars with adjustment=all. SMA20 and average daily volume use the latest 20 completed regular sessions; the current session is excluded until 16:00 America/New_York. Fewer than 20 completed sessions returns null metrics. Feed entitlement, source coverage and adjustment parity require runtime validation.");
+
+app.MapGet("/api/market-data/catalyst-assessment", async (string symbol, AlpacaCatalystAssessmentClient catalystClient, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var assessment = await catalystClient.AssessAsync(symbol, DateTimeOffset.UtcNow, ct);
+        return Results.Ok(assessment);
+    }
+    catch (ProviderNotConfiguredException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Catalyst news provider not configured", detail: ex.Message);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Catalyst news provider request failed", detail: ex.Message);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Catalyst news response invalid", detail: ex.Message);
+    }
+})
+.WithName("GetCatalystAssessment")
+.WithSummary("Retrieve ticker-scoped news and apply provisional catalyst triage")
+.WithDescription("Retrieves Alpaca News for the symbol over the preceding 24 hours and applies versioned transparent phrase rules. Statuses are RISK_PRESENT, MATERIAL_EVENT_REVIEW, UNCLASSIFIED_NEWS_REVIEW or UNKNOWN. This is not a validated classifier, does not assert CLEAR_WITH_SOURCE, and cannot independently clear a candidate.");
 
 app.MapGet("/api/market-session/clock", () =>
     Results.Ok(MomentumCommandCenterV2.API.MarketData.MarketSessionClock.GetSnapshot(DateTimeOffset.UtcNow)))
