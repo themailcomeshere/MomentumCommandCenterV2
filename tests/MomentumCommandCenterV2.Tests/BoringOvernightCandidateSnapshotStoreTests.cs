@@ -21,9 +21,18 @@ public sealed class BoringOvernightCandidateSnapshotStoreTests
                 ["overnightWinRatePct"] = asOf.AddDays(-1)
             };
             var audit = new BoringOvernightHistoryAudit(20, 20, 17, 3, false, false, "INCOMPLETE");
+            var daily = new BoringOvernightDailyEvidence(
+                "Alpaca", "iex", "all (split/dividend adjusted)", asOf, asOf.AddDays(-1),
+                true, "COMPLETE_20_EXPECTED_SESSIONS", "IEX_PARTIAL", false, 10.5, 9.5, 250000);
+            var catalyst = new BoringOvernightCatalystEvidence(
+                "Alpaca News", "RISK_PRESENT", asOf.AddHours(-24), asOf, asOf,
+                true, 1, 1, "MCC-CATALYST-TRIAGE-1.0",
+                new[] { new BoringOvernightCatalystArticleEvidence(
+                    "news-1", "Company announces public offering", asOf.AddMinutes(-10),
+                    "https://example.test/news", "RISK", new[] { "CAPITAL_RAISE_OR_DILUTION" }, "test reason") });
             var input = new BoringOvernightCandidateSnapshotInput(
                 "RTO", asOf, "test-fixture", "fixture-provider", "fixture-feed", "test-v1", fieldTimes,
-                Request("RTO"), audit);
+                Request("RTO"), audit, daily, catalyst);
 
             var saved = await store.AppendAsync(input, CancellationToken.None);
             var read = await store.GetLatestAsync("rto", 10, CancellationToken.None);
@@ -41,6 +50,10 @@ public sealed class BoringOvernightCandidateSnapshotStoreTests
             Assert.Equal(17, read[0].HistoricalCompleteness.ValidPairCount);
             Assert.Equal(3, read[0].HistoricalCompleteness.MissingPairCount);
             Assert.Equal("INCOMPLETE", read[0].HistoricalCompleteness.Status);
+            Assert.Equal("IEX_PARTIAL", read[0].DailyEvidence!.FeedCoverage);
+            Assert.False(read[0].DailyEvidence.QualificationUsable);
+            Assert.Equal("RISK_PRESENT", read[0].CatalystEvidence!.Status);
+            Assert.Equal("Company announces public offering", read[0].CatalystEvidence.Articles.Single().Headline);
         }
         finally
         {
