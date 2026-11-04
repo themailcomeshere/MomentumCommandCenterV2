@@ -39,6 +39,7 @@ The existing +0.5% target remains a user heuristic comparison only. Median close
 - The ATR calculator implements Wilder ATR from supplied OHLC bars but has no certified parity with the exact installed TOS study.
 - The history-backed evaluator forces catalyst status to UNKNOWN because no validated catalyst provider is wired to that route.
 - The dashboard's new Calculated Limit Sell panel displays DATA? until required target and ATR evidence is available.
+- The sell-limit calculator distinguishes complete zero/negative maximum-favorable-return windows from missing/incomplete data. A non-positive selected quantile returns `NO_POSITIVE_TARGET` with no numeric limit or target-touch rate; it is not mislabeled `DATA?`.
 
 ## Current disposition
 
