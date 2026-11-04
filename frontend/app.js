@@ -336,8 +336,41 @@ function renderScanner(){
  }));
 }
 
-/// MODULE: Boring Overnight qualification preview
-/// PURPOSE: Apply only the historical gates present in the imported scanner CSV and expose every missing downstream gate.
+/// MODULE: Boring Overnight qualification
+/// PURPOSE: Evaluate imported historical gates and display source-backed Daily/catalyst evidence for a bounded top-four review set.
+/// IMPORTANT: Provisional catalyst triage never clears a candidate; no READY state is possible from this panel.
+const overnightLiveEvidence = new Map();
+
+async function fetchOvernightTopFourEvidence(){
+ const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
+ if(!rows.length){if(status)status.textContent="Import the Overnight Scanner CSV first.";return;}
+ if(button)button.disabled=true;
+ if(status)status.textContent="Fetching Daily and catalyst evidence for the four highest-scored imported candidates…";
+ const ranked=rows.slice().sort((a,b)=>(Number(String(b.score??"").replace(/[^0-9.-]/g,""))||-Infinity)-(Number(String(a.score??"").replace(/[^0-9.-]/g,""))||-Infinity)||String(a.symbol).localeCompare(String(b.symbol))).slice(0,4);
+ const results=await Promise.all(ranked.map(async item=>{
+  const symbol=String(item.symbol||"").trim().toUpperCase();
+  const get=async path=>{const response=await fetch(path,{cache:"no-store",headers:{Accept:"application/json"}});if(!response.ok){let detail="HTTP "+response.status;try{const body=await response.json();detail=body.detail||body.title||body.error||detail;}catch{}throw new Error(detail);}return response.json();};
+  const [daily,catalyst]=await Promise.allSettled([
+   get("/api/market-data/daily?symbol="+encodeURIComponent(symbol)),
+   get("/api/market-data/catalyst-assessment?symbol="+encodeURIComponent(symbol))
+  ]);
+  const evidence={
+   daily:daily.status==="fulfilled"?daily.value:null,
+   dailyError:daily.status==="rejected"?daily.reason.message:null,
+   catalyst:catalyst.status==="fulfilled"?catalyst.value:null,
+   catalystError:catalyst.status==="rejected"?catalyst.reason.message:null,
+   retrievedAtUtc:new Date().toISOString()
+  };
+  overnightLiveEvidence.set(symbol,evidence);
+  return {symbol,evidence};
+ }));
+ if(button)button.disabled=false;
+ renderOvernightQualification();
+ const failed=results.filter(x=>x.evidence.dailyError||x.evidence.catalystError);
+ if(status)status.textContent="Live evidence fetched for "+results.length+" candidates: "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. Only these four were queried; other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
+}
+
 async function renderOvernightQualification(){
  const body=$("overnightQualificationRows");
  if(!body)return;
@@ -345,12 +378,11 @@ async function renderOvernightQualification(){
  const setText=(id,value)=>{const node=$(id);if(node)node.textContent=String(value);};
  setText("overnightQualImported",rows.length);
  if(!rows.length){
-  body.replaceChildren(Object.assign(document.createElement("tr"),{innerHTML:"<td colspan=\"11\">Import the Overnight Scanner CSV from Scanner Workbench → Candidate discovery.</td>"}));
+  body.replaceChildren(Object.assign(document.createElement("tr"),{innerHTML:"<td colspan=\"12\">Import the Overnight Scanner CSV from Scanner Workbench → Candidate discovery.</td>"}));
   setText("overnightQualificationStatus","No imported scanner rows. This panel does not run a new Thinkorswim scan.");
   setText("overnightQualPass","DATA?");setText("overnightQualFail","DATA?");setText("overnightQualUnknown","DATA?");setText("overnightQualExcluded","DATA?");setText("overnightQualReady","0");
   return;
  }
- setText("overnightQualificationStatus","Checking MCC's local exclusion list…");
  let exclusionSet=null,exclusionCount="DATA?",exclusionError=null;
  try{
   const response=await fetch("/api/watchlists/exclusions",{cache:"no-store",headers:{Accept:"application/json"}});
@@ -361,7 +393,8 @@ async function renderOvernightQualification(){
   exclusionSet=new Set(entries.map(x=>normalize(x.symbol??x.Symbol)).filter(Boolean));
   exclusionCount=entries.length;
  }catch(error){exclusionError=error.message;}
- const metric=(value)=>{const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const n=Number(raw.replace("%","").trim());return Number.isFinite(n)?n:null;};
+ const metric=value=>{const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const n=Number(raw.replace("%","").replace(/,/g,"").trim());return Number.isFinite(n)?n:null;};
+ const fmt=value=>value===null||value===undefined?"DATA?":Number(value).toLocaleString(undefined,{maximumFractionDigits:3});
  let passed=0,failed=0,unknown=0,excluded=0;
  const evaluated=rows.map(item=>{
   const m=item.overnightMetrics||{};
@@ -372,19 +405,30 @@ async function renderOvernightQualification(){
   const normalized=String(item.symbol||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
   const isExcluded=exclusionSet?exclusionSet.has(normalized):null;
   if(isExcluded)excluded++;
-  const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":exclusionError?"DATA? · EXCLUSION LIST":history==="FAIL"?"BLOCKED · HISTORICAL GATE":history==="DATA?"?"DATA? · HISTORY INPUT":"DATA? · PRICE / 20D VOL / CATALYST / CHART";
-  return {...item,onWin,avgOn,fiveDay,currentOn,above20,history,isExcluded,decision};
+  const live=overnightLiveEvidence.get(String(item.symbol||"").toUpperCase())||{};
+  const daily=live.daily||null,catalyst=live.catalyst||null;
+  const dailyUsable=daily?.qualificationUsable===true;
+  const price=dailyUsable&&Number.isFinite(Number(daily.price))?Number(daily.price):null;
+  const averageVolume=dailyUsable&&Number.isFinite(Number(daily.averageDailyVolume20))?Number(daily.averageDailyVolume20):null;
+  const dailyGate=price!==null&&averageVolume!==null?(price<=5||averageVolume<500000?"FAIL":"PASS"):"DATA?";
+  const catalystStatus=catalyst?.status||"UNKNOWN";
+  const catalystLabel=live.catalystError?"ERROR":!catalyst?(live.dailyError||live.daily?"NOT LOADED":"NOT FETCHED"):catalystStatus+(catalyst.coverageComplete===false?" · COVERAGE INCOMPLETE":"");
+  const catalystRisk=catalystStatus==="RISK_PRESENT";
+  const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":exclusionError?"DATA? · EXCLUSION LIST":history==="FAIL"?"BLOCKED · HISTORICAL GATE":dailyGate==="FAIL"?"BLOCKED · DAILY PRICE / LIQUIDITY":catalystRisk?"BLOCKED · CATALYST RISK":daily?.qualificationUsable!==true?"DATA? · DAILY SIP / 20 SESSIONS":dailyGate!=="PASS"?"DATA? · DAILY METRICS":!catalyst||catalyst.coverageComplete!==true||catalystStatus!=="CLEAR_WITH_SOURCE"?"MANUAL REVIEW · CATALYST": "MANUAL REVIEW · 5M / 1M";
+  return {...item,onWin,avgOn,fiveDay,currentOn,above20,history,isExcluded,decision,daily,price,averageVolume,dailyGate,catalystLabel,live};
  }).sort((a,b)=>(metric(b.score)??-Infinity)-(metric(a.score)??-Infinity)||String(a.symbol).localeCompare(String(b.symbol)));
  const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined?"DATA?":String(value);return td;};
  body.replaceChildren(...evaluated.map(item=>{
   const tr=document.createElement("tr");
-  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.fiveDay),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell("DATA?"),cell("DATA?"),cell(item.decision));
+  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.fiveDay),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell(item.price===null?(item.daily?.feedCoverage==="IEX_PARTIAL"?"DATA? · IEX PARTIAL":item.live.dailyError?"ERROR":null):fmt(item.price)),cell(item.averageVolume===null?null:fmt(item.averageVolume)),cell(item.catalystLabel),cell(item.decision));
   tr.className=item.decision.startsWith("BLOCKED")?"qualification-blocked":"qualification-pending";
   return tr;
  }));
  setText("overnightQualPass",passed);setText("overnightQualFail",failed);setText("overnightQualUnknown",unknown);setText("overnightQualExcluded",exclusionError?"DATA?":excluded);setText("overnightQualReady","0");
- setText("overnightQualificationStatus",`Imported ${rows.length} rows · historical gates: ${passed} PASS / ${failed} FAIL / ${unknown} DATA? · exclusions: ${exclusionError?"DATA? ("+exclusionError+")":exclusionCount+" loaded, "+excluded+" matches"} · current price, 20D average volume, catalyst and chart gates remain DATA?; no READY decisions are possible from this CSV.`);
+ const liveCount=overnightLiveEvidence.size;
+ setText("overnightQualificationStatus",`Imported ${rows.length} rows · historical gates: ${passed} PASS / ${failed} FAIL / ${unknown} DATA? · exclusions: ${exclusionError?"DATA? ("+exclusionError+")":exclusionCount+" loaded, "+excluded+" matches"} · Daily/catalyst queried for ${liveCount} symbols only. SIP entitlement and catalyst clearance are not assumed; READY remains 0.`);
 }
+$("overnightQualRefreshMarket")?.addEventListener("click",()=>void fetchOvernightTopFourEvidence());
 
 function readWatchlist(){
  try{return JSON.parse(localStorage.getItem("mcc.watchlist")||"[]").filter(item=>typeof item.symbol==="string");}
