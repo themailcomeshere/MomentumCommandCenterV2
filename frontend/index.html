@@ -21,7 +21,7 @@
    <section id="workspace-toolbar" class="toolbar panel"><div id="mcc-static-0017-div"><label for="mode" id="mcc-static-0018-label">Workspace</label><select id="mode"><option value="momentum" id="mcc-static-0019-option">Intraday Momentum</option><option value="overnight" id="mcc-static-0020-option">Boring Overnight</option></select></div><div id="mcc-static-0021-div"><label for="symbol" id="mcc-static-0022-label">Symbol</label><select id="symbol"><option selected id="mcc-static-0023-option">SPY</option><option id="mcc-static-0024-option">RKLX</option><option id="mcc-static-0025-option">ASTX</option><option id="mcc-static-0026-option">XRPN</option><option id="mcc-static-0027-option">MNSB</option><option id="mcc-static-0028-option">DEMO</option></select></div><button id="reset">Reset workspace</button></section>
   </div>
   <details class="topbar-readiness" id="system-readiness" aria-label="System readiness">
-   <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support · expand</span></summary>
+   <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></summary>
    <div class="readiness-grid" id="mcc-static-0032-div">
     <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
     <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
@@ -68,8 +68,9 @@
  <ul id="mcc-static-0102-ul">
   <li id="mcc-static-0103-li"><b id="mcc-static-0104-b">Before considering an entry:</b> check 5M permission first. If it is NO, UNKNOWN, or stale, do not treat a 1M move as an authorized setup.</li>
   <li id="mcc-static-0105-li"><b id="mcc-static-0106-b">When 5M permission is YES:</b> watch 1M for a separate execution confirmation. A high 5M score alone is not an entry signal.</li>
-  <li id="mcc-static-0107-li"><b id="mcc-static-0108-b">How often:</b> review when a new completed 5M bar closes, and inspect 1M as each completed minute arrives. The dashboard refreshes every 15 seconds; it is not a tick feed.</li>
+  <li id="mcc-static-0107-li"><b id="mcc-static-0108-b">How often:</b> review when a new completed 5M bar closes, and inspect 1M as each completed minute arrives. No button press is required; the dashboard refreshes automatically every 15 seconds, but it is not a tick feed.</li>
   <li id="mcc-static-0109-li"><b id="mcc-static-0110-b">After entry:</b> reassess 1M management on each completed minute and recheck 5M structure on each completed 5M bar. Missing or stale data means WAIT / UNKNOWN.</li>
+  <li><b>For an exit:</b> this handoff is not an exit button and does not currently receive a broker-synced open position. It therefore cannot produce a position-specific EXIT decision. Evaluate exits against the actual open position separately; do not reuse a fresh-entry check as an exit rule.</li>
   <li id="mcc-static-0111-li"><b id="mcc-static-0112-b">Replay:</b> use it after historical bars have been stored to inspect a past decision. It does not predict a future setup or recover a historical broker position.</li>
  </ul>
 </div>
@@ -168,10 +169,9 @@
 <section id="overnight-qualification" class="panel overnight-qualification-panel">
  <div class="section-heading">
   <div><div class="eyebrow">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
-   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. Live Daily and catalyst evidence is fetched only for the four highest-scored imported candidates; other rows remain DATA?.</p>
+   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import and shortlist review, the button fetches adjusted Daily metrics and the preceding 24 hours of ticker news for only the four highest-scored imported rows (scanner score descending); it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p>
   </div>
   <button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for top 4</button>
-  <p class="muted small">Use after importing the scanner CSV and narrowing the review list. Fetches adjusted Daily metrics and the preceding 24 hours of ticker news for only the four highest-scored imported rows. It is not an entry/exit trigger; UNKNOWN or material-review catalyst results still require manual review.</p>
  </div>
  <div class="overnight-qualification-summary">
   <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
