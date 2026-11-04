@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using MomentumCommandCenterV2.API.BoringOvernight;
 
 namespace MomentumCommandCenterV2.API.MarketData;
 
@@ -9,6 +10,7 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// </summary>
 public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguration configuration)
 {
+    private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"] ?? Environment.GetEnvironmentVariable("ALPACA_API_KEY");
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"] ?? Environment.GetEnvironmentVariable("ALPACA_API_SECRET");
     private readonly string _feed = (configuration["MarketData:Alpaca:Feed"] ?? "sip").Trim().ToLowerInvariant();
@@ -20,8 +22,10 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
             !symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
             throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
+        if (nowUtc.Offset != TimeSpan.Zero)
+            throw new ArgumentException("nowUtc must use UTC.", nameof(nowUtc));
 
-        var start = nowUtc.AddDays(-55).UtcDateTime.ToString("O");
+        var start = nowUtc.AddDays(-60).UtcDateTime.ToString("O");
         var end = nowUtc.UtcDateTime.ToString("O");
         using var request = new HttpRequestMessage(HttpMethod.Get,
             $"v2/stocks/{Uri.EscapeDataString(symbol.ToUpperInvariant())}/bars?timeframe=1Day&start={Uri.EscapeDataString(start)}&end={Uri.EscapeDataString(end)}&limit=1000&feed={Uri.EscapeDataString(_feed)}&adjustment=all&sort=asc");
@@ -50,27 +54,48 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
             .Select(group => group.First())
             .ToArray();
 
-        // Alpaca daily bars are stamped at the regular-session open. Exclude today's bar
-        // until after the regular close in New York; this prevents partial-day volume/close
-        // from contaminating 20-session averages.
-        var newYorkNow = TimeZoneInfo.ConvertTime(nowUtc, TimeZoneInfo.FindSystemTimeZoneById("America/New_York"));
-        var completed = parsed.Where(bar =>
-        {
-            var sessionDate = TimeZoneInfo.ConvertTime(bar.TimestampUtc, TimeZoneInfo.FindSystemTimeZoneById("America/New_York")).Date;
-            return sessionDate < newYorkNow.Date || (sessionDate == newYorkNow.Date && newYorkNow.TimeOfDay >= TimeSpan.FromHours(16));
-        }).ToArray();
+        var newYorkNow = TimeZoneInfo.ConvertTime(nowUtc, Eastern);
+        var today = DateOnly.FromDateTime(newYorkNow.Date);
+        var completedBySession = parsed
+            .Where(bar => bar.TimestampUtc <= nowUtc)
+            .Select(bar => new { Bar = bar, SessionDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(bar.TimestampUtc, Eastern).Date) })
+            .Where(item => UsEquitiesSessionCalendar.IsTradingSession(item.SessionDate))
+            .Where(item => item.SessionDate < today ||
+                (item.SessionDate == today && newYorkNow.TimeOfDay >= UsEquitiesSessionCalendar.GetRegularClose(item.SessionDate).ToTimeSpan()))
+            .GroupBy(item => item.SessionDate)
+            .ToDictionary(group => group.Key, group => group.Last().Bar);
 
-        var last = completed.LastOrDefault();
-        var sample = completed.TakeLast(20).ToArray();
-        var fresh = last is not null && nowUtc - last.TimestampUtc <= TimeSpan.FromDays(7);
+        // Build the exact latest 20 expected sessions from MCC's versioned calendar.
+        // A missing session is a data-quality gap, not a zero-volume day or a reason to
+        // reach farther back and silently change the rolling window.
+        var latestExpected = today;
+        if (!UsEquitiesSessionCalendar.IsTradingSession(latestExpected) ||
+            newYorkNow.TimeOfDay < UsEquitiesSessionCalendar.GetRegularClose(latestExpected).ToTimeSpan())
+        {
+            do { latestExpected = latestExpected.AddDays(-1); }
+            while (!UsEquitiesSessionCalendar.IsTradingSession(latestExpected));
+        }
+
+        var expectedDates = new List<DateOnly>(20);
+        for (var date = latestExpected; expectedDates.Count < 20; date = date.AddDays(-1))
+            if (UsEquitiesSessionCalendar.IsTradingSession(date)) expectedDates.Add(date);
+        expectedDates.Reverse();
+
+        var present = expectedDates.Where(completedBySession.ContainsKey).ToArray();
+        var latest = completedBySession.TryGetValue(latestExpected, out var latestBar) ? latestBar : null;
+        var complete = present.Length == 20;
+        var latestTimestamp = latest?.TimestampUtc;
+        var fresh = latest is not null && latestExpected == completedBySession.Keys.Max() &&
+            latestTimestamp <= nowUtc && nowUtc - latestTimestamp <= TimeSpan.FromDays(5);
+        var sma20 = complete ? expectedDates.Average(date => completedBySession[date].Close) : (double?)null;
+        var averageVolume20 = complete ? expectedDates.Average(date => (double)completedBySession[date].Volume) : (double?)null;
+
         return new DailyMarketMetrics(
             symbol.ToUpperInvariant(), "Alpaca", _feed, "all (split/dividend adjusted)",
-            nowUtc, last?.TimestampUtc, last?.Close,
-            sample.Length == 20 ? sample.Average(x => x.Close) : null,
-            sample.Length == 20 ? sample.Average(x => (double)x.Volume) : null,
-            sample.Length, completed.Length, fresh,
-            sample.Length == 20 ? "COMPLETE_20_SESSIONS" : "INSUFFICIENT_DAILY_HISTORY",
-            "Daily bars use adjustment=all. Metrics use the latest 20 completed regular-session bars; the current session is excluded until 16:00 America/New_York. Provider coverage, feed entitlement and adjustment parity still require operator validation.");
+            nowUtc, latestTimestamp, latest?.Close, sma20, averageVolume20,
+            present.Length, completedBySession.Count, fresh,
+            complete ? "COMPLETE_20_EXPECTED_SESSIONS" : "INCOMPLETE_EXPECTED_SESSIONS",
+            $"Metrics use the exact latest 20 expected sessions from {UsEquitiesSessionCalendar.Version}. Missing expected sessions are not backfilled with older sessions. Current session is included only after its scheduled regular close (including early closes). adjustment=all requests split/dividend-adjusted bars. Feed entitlement, source coverage and adjustment parity still require runtime validation.");
     }
 
     private sealed record DailyBar(DateTimeOffset TimestampUtc, double Open, double High, double Low, double Close, long Volume);
