@@ -81,7 +81,8 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         DateTimeOffset toUtc,
         int limit,
         CancellationToken cancellationToken,
-        string? timeframe = null)
+        string? timeframe = null,
+        string? feed = null)
     {
         if (string.IsNullOrWhiteSpace(symbol))
             throw new ArgumentException("Symbol is required.", nameof(symbol));
@@ -105,6 +106,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
                 if (!observation.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase) ||
                     (provider is not null && !observation.Provider.Equals(provider.Trim(), StringComparison.OrdinalIgnoreCase)) ||
                     (normalizedTimeframe is not null && !NormalizeTimeframe(observation.Bar.Timeframe).Equals(normalizedTimeframe, StringComparison.OrdinalIgnoreCase)) ||
+                    (feed is not null && !string.Equals(observation.Bar.Feed, feed.Trim(), StringComparison.OrdinalIgnoreCase)) ||
                     observation.SourceTimestamp < fromUtc || observation.SourceTimestamp > toUtc)
                     continue;
 
