@@ -122,7 +122,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         var bars = new List<MarketBar>(boundaries.Count * 781);
         foreach (var boundary in boundaries)
         {
-            bars.Add(new MarketBar("RTO", boundary.PreviousRegularCloseUtc,
+            bars.Add(new MarketBar("RTO", boundary.PreviousCloseBarTimestampUtc,
                 100, 100.2, 99.8, 100, 1000, "Alpaca", feed, "1m"));
             var start = ToUtc(boundary.NextSessionDate, new TimeOnly(7, 0));
             for (var minute = 0; minute < 780; minute++)
