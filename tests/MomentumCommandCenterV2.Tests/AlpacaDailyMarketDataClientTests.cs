@@ -31,9 +31,9 @@ public sealed class AlpacaDailyMarketDataClientTests
 
         Assert.Equal(20, result.ValidSessionCount);
         Assert.Equal(20, result.AvailableCompletedSessionCount);
-        Assert.Equal(120, result.Price);
-        Assert.Equal(110.5, result.Sma20);
-        Assert.Equal(1010.5, result.AverageDailyVolume20);
+        Assert.Equal(120d, result.Price);
+        Assert.Equal(110.5d, result.Sma20);
+        Assert.Equal(1010.5d, result.AverageDailyVolume20);
         Assert.Equal("all (split/dividend adjusted)", result.Adjustment);
         Assert.True(result.DataFresh);
         Assert.Contains("timeframe=1Day", handler.Request!.RequestUri!.ToString());
