@@ -43,7 +43,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             while (!UsEquitiesSessionCalendar.IsTradingSession(latestSellSession));
         }
 
-        // Each boundary's NextSessionDate is the sell-window date; PreviousRegularCloseUtc
+        // Each boundary's NextSessionDate is the sell-window date; PreviousCloseBarTimestampUtc
         // is the exact reference-close bar timestamp (15:59 or 12:59 ET).
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(latestSellSession, RequiredWindow);
         var windows = new List<BoringOvernightSellWindowAudit>(RequiredWindow);
@@ -56,12 +56,12 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
 
             var observations = await store.GetLatestAsync(
                 symbol.Trim().ToUpperInvariant(), provider.Trim(),
-                boundary.PreviousRegularCloseUtc, windowEndUtc,
+                boundary.PreviousCloseBarTimestampUtc, windowEndUtc,
                 QueryLimitPerSession, cancellationToken, "1m");
 
             var sourceBars = observations
                 .Select(x => x.Bar)
-                .Where(x => x.Timestamp >= boundary.PreviousRegularCloseUtc && x.Timestamp < windowEndUtc)
+                .Where(x => x.Timestamp >= boundary.PreviousCloseBarTimestampUtc && x.Timestamp < windowEndUtc)
                 .Where(x => string.Equals(x.Provider, provider.Trim(), StringComparison.OrdinalIgnoreCase))
                 .Where(x => string.Equals(x.Feed, feed.Trim(), StringComparison.OrdinalIgnoreCase))
                 .Where(x => string.Equals(x.Timeframe, "1m", StringComparison.OrdinalIgnoreCase))
@@ -69,7 +69,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
                 .Select(group => group.Last())
                 .ToArray();
 
-            var referenceBar = sourceBars.SingleOrDefault(x => x.Timestamp == boundary.PreviousRegularCloseUtc);
+            var referenceBar = sourceBars.SingleOrDefault(x => x.Timestamp == boundary.PreviousCloseBarTimestampUtc);
             var barsByTimestamp = sourceBars
                 .Where(x => x.Timestamp >= windowStartUtc && x.Timestamp < windowEndUtc)
                 .ToDictionary(x => x.Timestamp, x => x);
@@ -87,7 +87,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             windows.Add(new BoringOvernightSellWindowAudit(
                 boundary.PreviousSessionDate,
                 sessionDate,
-                boundary.PreviousRegularCloseUtc,
+                boundary.PreviousCloseBarTimestampUtc,
                 referenceBar is null ? null : (decimal)referenceBar.Close,
                 windowStartUtc,
                 windowEndUtc,
