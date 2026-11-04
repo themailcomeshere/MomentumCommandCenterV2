@@ -661,16 +661,22 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             return Results.Problem("Provider returned multiple feeds in one capture. The capture was persisted but no mixed-feed calculation was performed.", statusCode: 422);
         var actualFeed = distinctFeeds.Length == 0 || string.IsNullOrWhiteSpace(distinctFeeds[0]) ? null : distinctFeeds[0];
 
-        // Query each close-to-open pair separately so the store's 10,000-row safety limit
-        // cannot truncate the oldest boundaries when extended-hours bars are dense.
-        var observations = new List<MarketBarObservation>();
-        foreach (var boundary in boundaries)
+        // Prefer one JSONL scan for the complete history window. The store caps a query at
+        // 10,000 observations; if this symbol/feed has a denser extended-hours history, fall
+        // back to exact per-pair reads so older requested boundaries cannot be truncated.
+        var observations = (await barStore.GetLatestAsync(
+            request.Symbol, provider.ProviderName, fromUtc, toUtc, 10000, ct, "1m")).ToList();
+        if (observations.Count >= 10000)
         {
-            var pairObservations = await barStore.GetLatestAsync(
-                request.Symbol, provider.ProviderName,
-                boundary.PreviousCloseBarTimestampUtc, boundary.NextOpenBarTimestampUtc,
-                10000, ct, "1m");
-            observations.AddRange(pairObservations);
+            observations.Clear();
+            foreach (var boundary in boundaries)
+            {
+                var pairObservations = await barStore.GetLatestAsync(
+                    request.Symbol, provider.ProviderName,
+                    boundary.PreviousCloseBarTimestampUtc, boundary.NextOpenBarTimestampUtc,
+                    10000, ct, "1m");
+                observations.AddRange(pairObservations);
+            }
         }
         // If the provider returned no bars on this refresh, retain feed provenance only when
         // the persisted boundary observations identify exactly one unambiguous feed.
