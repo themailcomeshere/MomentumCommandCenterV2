@@ -1193,6 +1193,22 @@ async function refreshOvernightSnapshots() {
   rows.replaceChildren(...(snapshots.length ? snapshots.map(snapshot => {
    const tr = document.createElement("tr");
    const request = snapshot.evaluationRequest || snapshot.EvaluationRequest || {};
+   const history = snapshot.historicalCompleteness || snapshot.HistoricalCompleteness || {};
+   const sourceTimestamps = snapshot.fieldSourceTimestampsUtc || snapshot.FieldSourceTimestampsUtc || {};
+   const validPairs = history.validPairCount ?? history.ValidPairCount;
+   const requestedPairs = history.requestedPairCount ?? history.RequestedPairCount;
+   const missingPairs = history.missingPairCount ?? history.MissingPairCount;
+   const historyLabel = validPairs === undefined
+    ? "UNKNOWN"
+    : String(validPairs)+"/"+String(requestedPairs)+" valid · "+String(missingPairs)+" missing · "+(history.status || history.Status || "UNKNOWN");
+   const fmt = value => value === null || value === undefined ? "UNKNOWN" :
+    Number.isFinite(Number(value)) ? Number(value).toLocaleString(undefined,{maximumFractionDigits:4}) : String(value);
+   const dailyLabel = [
+    "price="+fmt(request.price ?? request.Price),
+    "SMA20="+fmt(request.sma20 ?? request.Sma20),
+    "avgVol20="+fmt(request.averageDailyVolume20 ?? request.AverageDailyVolume20),
+    "bar="+(sourceTimestamps.price || sourceTimestamps.Price || "UNKNOWN")
+   ].join(" · ");
    const gateInputs = [
     "dataFresh="+(request.dataFresh ?? request.DataFresh ?? "UNKNOWN"),
     "catalyst="+(request.catalystStatus || request.CatalystStatus || "UNKNOWN"),
@@ -1206,11 +1222,13 @@ async function refreshOvernightSnapshots() {
     snapshot.recordedAtUtc || snapshot.RecordedAtUtc || "DATA?",
     (snapshot.provider || snapshot.Provider || "DATA?")+" / "+(snapshot.feed || snapshot.Feed || "DATA?"),
     "INPUT SNAPSHOT — NOT A DECISION",
+    historyLabel,
+    dailyLabel,
     gateInputs
    ];
    for (const value of values) { const td=document.createElement("td"); td.textContent=String(value); tr.append(td); }
    return tr;
-  }) : [Object.assign(document.createElement("tr"),{innerHTML:"<td colspan='6'>No saved evaluations found for this query.</td>"})]));
+  }) : [Object.assign(document.createElement("tr"),{innerHTML:"<td colspan='8'>No saved evaluations found for this query.</td>"})]));
   status.textContent = "Loaded "+snapshots.length+" saved input snapshot(s); GET returns inputs, not the evaluator decision. "+(data.note||"");
  } catch(error) {
   status.textContent = "Could not load saved evaluations: "+error.message;
