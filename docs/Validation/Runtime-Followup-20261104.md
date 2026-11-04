@@ -74,3 +74,8 @@ The Schwab trade CSV importer exists, but the current export format does not pro
 The Schwab CSV importer previously substituted quantity=1 because the reviewed order-history export did not include a quantity field. That behavior could produce fabricated position sizes and realized P/L. The importer now requires an explicit positive integer `Quantity` column and rejects missing/invalid quantities; it no longer silently assumes one share. Tests cover multi-share FIFO matching and missing-quantity rejection.
 
 This is a safety improvement, not completion of Schwab integration. The operator must export a Schwab order-history format that includes filled quantity. Fees/commissions, order IDs, partial-fill aggregation, account sync/OAuth, actual order/position state and realized P/L reconciliation remain outstanding. A CSV without the Quantity column is intentionally rejected.
+
+
+## Catalyst human-label collection layer
+
+Added `CatalystHumanReviewStore` and `POST/GET /api/market-data/catalyst-reviews`. The append-only JSONL store validates symbol, source URL, headline and a fixed human label taxonomy (`MATERIAL_RISK`, `MATERIAL_EVENT`, `NON_MATERIAL`, `IRRELEVANT`, `DUPLICATE`, `UNCERTAIN`). It does not write to the automated assessment, does not infer CLEAR, and does not train a classifier. The local API currently has no reviewer identity/authentication or review UI. The next operator step is to inspect actual returned article bodies/filings and submit human labels; classifier evaluation still needs adjudicated, time-separated examples.
