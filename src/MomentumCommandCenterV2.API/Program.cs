@@ -615,6 +615,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureHistoryRequest request,
     IEnumerable<IMarketDataProvider> providers,
     IMarketBarObservationStore barStore,
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore snapshotStore,
+    MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
     CancellationToken ct) =>
 {
     if (!IsValidSymbol(request.Symbol))
@@ -690,6 +692,26 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
 
+        // Persist an auditable input snapshot on every explicit 20-session capture.
+        // Only historical fields are populated from the calculated bars; current price,
+        // Daily liquidity, catalyst and chart gates remain UNKNOWN until independently supplied.
+        var exclusions = await exclusionStore.GetAsync(ct);
+        var excluded = exclusions.Any(x => x.Symbol.Equals(request.Symbol, StringComparison.OrdinalIgnoreCase));
+        var captureInputs = new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluationRequest(
+            request.Symbol.Trim().ToUpperInvariant(), null, null, null, null,
+            null, null, null, null, null, excluded, "UNKNOWN",
+            null, null, null, null, null, null, null);
+        captureInputs = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService
+            .ApplyHistory(captureInputs, history) with { Excluded = excluded, CatalystStatus = "UNKNOWN" };
+        var snapshot = await snapshotStore.AppendAsync(
+            new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
+                request.Symbol, DateTimeOffset.UtcNow, "Alpaca 20-session history capture",
+                provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
+                new Dictionary<string, DateTimeOffset> { ["overnightHistoryCalculatedAtUtc"] = history.CalculatedAtUtc },
+                captureInputs),
+            ct);
+        var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
+
         var providerBoundaryBars = fetchedBars.Where(x =>
             actualFeed is null || string.Equals(x.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
         var storedBoundaryBars = observations.Where(x =>
@@ -740,7 +762,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             newlyPersistedObservationCount = persistedCount,
             boundaryCoverageAudit,
             history,
-            note = "Fetched and persisted 1m provider bars, then calculated 20 previous-RTH-close to next-RTH-open pairs using the versioned MCC US-equities calendar. Missing boundary bars suppress all rolling metrics. Verify calendar rules and provider feed coverage; this is not the separate 07:00–20:00 ET GTC_EXT sell-window study and does not qualify a candidate or submit orders."
+            snapshot,
+            evaluation,
+            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact pairs exist. Current price, Daily liquidity, catalyst and chart inputs remain UNKNOWN; this capture does not qualify a candidate or submit orders."
         });
     }
     catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
