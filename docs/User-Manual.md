@@ -294,3 +294,24 @@ The former slider only selected one of five fixed demo examples. It did not repl
 - The replay checkbox simulates the engine's existing boolean position state. It does not connect to Schwab or represent actual shares/entry price.
 - The header WebSocket chip reports the optional Alpaca minute-bar stream. When connected and sufficiently populated, the live assessment uses the latest WebSocket-sourced 1m series; otherwise it falls back to REST. The 5m permission series remains REST-backed. Verify source transport in Decision Explanation before relying on the stream path.
 - If a live assessment says stale, inspect its `freshnessDiagnostics` for 1m/5m age, threshold, source timestamp, and expected close. A generic stale message cannot diagnose a specific ticker.
+
+
+## 2026-11-04 — Overnight data-recovery controls
+
+### Daily + catalyst refresh
+
+After importing the Overnight Scanner CSV and reviewing the score-ranked candidates, use **Fetch Daily + catalyst for top 4** for a bounded evidence refresh. It queries the four highest-scored imported rows (scanner score descending), not a manually chosen shortlist. For each symbol it calls the adjusted Daily metrics endpoint and the ticker-scoped Alpaca News endpoint for the preceding 24 hours. The panel displays the result and keeps other imported rows DATA?. IEX Daily metrics are diagnostic only; qualification requires complete fresh SIP data. Catalyst triage is provisional, and no-news is UNKNOWN. This is not a pre-entry click, an exit tool, or a READY decision.
+
+### Retry missing close/open pairs
+
+Use **Fetch / retry 20-session close/open history** for a serious candidate whose 20-session history is incomplete. MCC fetches provider 1-minute history, persists returned observations, and shows the exact provider/store audit for all 40 expected close/open timestamps. This is the retry action for EVR's missing exact 09:30 ET opens. It cannot manufacture missing provider bars or substitute the next minute.
+
+### GTC_EXT sell-window capture
+
+In **Calculated Limit Sell**, use **Fetch 20-session GTC_EXT sell-window history** only after the effective Alpaca feed is SIP. The button checks provider status first and does not start a fetch when IEX or an unknown feed is effective. With SIP, it captures the exact 780 one-minute bar starts from 07:00 through 19:59 ET for each of 20 sell sessions, plus each exact previous regular-session close. Missing bars remain visible; no interpolation or nearest-minute substitution occurs.
+
+The capture action is not the numeric limit calculation. A numeric target remains withheld until 20/20 exact SIP windows are complete, ATR parity is MATCH, and walk-forward target validation is complete. A historical high touching a target is not proof of an executable quote or fill.
+
+### Entry and exit are separate
+
+The Timeframe Handoff refreshes automatically. Before a new entry, use 5M permission as the authority check and 1M as the execution-timing check. After entry, evaluate exit rules against the actual open position. MCC does not currently receive broker-synchronized position state, so the live handoff cannot issue a position-specific exit decision.
