@@ -2,7 +2,8 @@
 
 **Working branch:** `feature/opportunity-quality-classification`  
 **Latest validated code head:** `15d642ae986686a0c0a44fe48f27c04718fc6a19`  
-**Current implementation under CI:** top-four qualification UI, sell-target correction, and provider-backed GTC_EXT capture (exact head pending)  
+**Current branch head:** `9d76b11ed5a20016b889f63e77a7a54b22f42ba6` (exact-head CI pending)  
+**Last validated code head:** `a88eb316b9c266e16efac3d027178d457817c328` (Release build, JS syntax check, 197/197 tests passed; Actions run [41881994385](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41881994385))  
 **Canonical execution checklist:** `docs/Master-To-Do.md`
 
 ## Latest implementation
