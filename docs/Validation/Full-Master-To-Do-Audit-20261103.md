@@ -1,3 +1,42 @@
+# 2026-11-03 follow-up — Red Zone and Overnight capture diagnosis
+
+**Execution checklist:** `docs/Master-To-Do.md` is the active checklist. This audit is the source reconciliation and dependency inventory, not a competing work queue.
+
+## New user evidence
+- Red Zone remained empty after importing 198 rows because `mcc.redZoneState.v1` retains dismissed symbols globally. Import did not clear matching dismissals.
+- User observed 17/20 valid close/open pairs; provider and store each had 37/40 exact boundaries; 3,965 bars fetched and 0 newly persisted; Alpaca/IEX; calendar `MCC_US_EQUITIES_CALENDAR_V2`.
+- The separate snapshot GET reports persisted evaluator inputs, not the market-bar fetch result and not an evaluator decision. Zero snapshots is not evidence of zero fetched bars.
+
+## Source diagnosis and code changes
+- [x] `frontend/app.js`: bulk dismiss/clear handler, full restore/repopulate handler, and matching-dismissal reset on fresh CSV import.
+- [x] `frontend/prototypeIndex.html` and `frontend/index.html`: added the bulk Red Zone control and separate snapshot-status element.
+- [x] `frontend/app.js`: snapshot GET status now targets `overnightSnapshotStatus`, leaving the OHLCV fetch status intact.
+- [x] `frontend/app.js`: elapsed-time status updates while the 20-session capture is running.
+- [x] `src/MomentumCommandCenterV2.API/Program.cs`: optimized history lookup to one bounded range scan when fewer than 10,000 observations are returned; exact per-pair fallback remains when the store cap is reached.
+- [ ] Exact-head CI and local Release build/test after the code changes.
+- [ ] Browser acceptance in production and prototype after pull.
+- [ ] Runtime duration measurement after optimization.
+
+## Interpretation of 17/20 and 37/40
+The calculator requires exact timestamps supplied by `UsEquitiesSessionCalendar`. It does not select a nearest bar. The current 37/40 audit therefore means three expected exact timestamp bars were absent from both provider response and the persisted store for the selected feed. A 0 newly stored count is compatible with all returned bars already existing in the append-only store; it is not a failure signal by itself.
+
+The missing bars must be resolved from exact source/feed evidence. Do not impute a nearby minute. In particular, distinguish:
+1. official 09:30 ET opening print versus first eligible trade/bar after 09:30;
+2. no eligible IEX print during the exact minute;
+3. provider response pagination/window behavior;
+4. calendar or provider timestamp convention mismatch.
+
+Changing from exact 09:30 to first observed bar after open would change the measured return definition and needs an explicit strategy decision. Keep win rate, 20-pair mean/median and 5-pair mean as DATA? until all required pairs are valid.
+
+## To-Do authority and stale audit cleanup
+- [x] Confirmed `docs/Master-To-Do.md` is the active execution checklist.
+- [x] Retained this file as the full audit/dependency inventory.
+- [x] Reconciled old 248-row CSV requests as superseded by the user's accepted 198-row November 3 file. Do not ask for a 248-row export unless the user explicitly reopens that requirement.
+- [ ] Runtime ZIP JSON contents still require analysis; archive receipt is not data inspection.
+- [ ] RTO EOD Thinkorswim cutoff, 3 missing RTO historical boundaries, TOS compile/parity, runtime WebSocket provenance, catalyst coverage, Daily liquidity and GTC_EXT outcomes remain open.
+
+---
+
 # November 3 follow-up — user evidence and second dependency pass
 
 **Branch:** `feature/opportunity-quality-classification`  
