@@ -34,7 +34,8 @@ public sealed class BoringOvernightCandidateSnapshotStore
                 input.Feed?.Trim(),
                 input.CalculationVersion.Trim(),
                 input.FieldSourceTimestampsUtc,
-                input.EvaluationRequest with { Symbol = input.Symbol.Trim().ToUpperInvariant() });
+                input.EvaluationRequest with { Symbol = input.Symbol.Trim().ToUpperInvariant() },
+                input.HistoricalCompleteness);
             await using var stream = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read,
                 16 * 1024, FileOptions.Asynchronous);
             await using var writer = new StreamWriter(stream);
@@ -100,7 +101,17 @@ public sealed record BoringOvernightCandidateSnapshotInput(
     string? Feed,
     string CalculationVersion,
     IReadOnlyDictionary<string, DateTimeOffset> FieldSourceTimestampsUtc,
-    BoringOvernightEvaluationRequest EvaluationRequest);
+    BoringOvernightEvaluationRequest EvaluationRequest,
+    BoringOvernightHistoryAudit? HistoricalCompleteness = null);
+
+public sealed record BoringOvernightHistoryAudit(
+    int RequiredWindow,
+    int RequestedPairCount,
+    int ValidPairCount,
+    int MissingPairCount,
+    bool AllPairsComplete,
+    bool EnoughHistory,
+    string Status);
 
 public sealed record BoringOvernightCandidateSnapshot(
     string SnapshotId,
@@ -112,4 +123,5 @@ public sealed record BoringOvernightCandidateSnapshot(
     string? Feed,
     string CalculationVersion,
     IReadOnlyDictionary<string, DateTimeOffset> FieldSourceTimestampsUtc,
-    BoringOvernightEvaluationRequest EvaluationRequest);
+    BoringOvernightEvaluationRequest EvaluationRequest,
+    BoringOvernightHistoryAudit? HistoricalCompleteness = null);
