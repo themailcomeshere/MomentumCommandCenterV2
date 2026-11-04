@@ -113,8 +113,10 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             symbol.Trim().ToUpperInvariant(), provider.Trim(), feed.Trim(), asOfUtc,
             RequiredWindow, MinutesPerEligibleWindow, completeCount,
             completeCount == RequiredWindow,
+            feed.Trim().Equals("sip", StringComparison.OrdinalIgnoreCase) ? "CONSOLIDATED_SIP" : "PARTIAL_FEED",
+            completeCount == RequiredWindow && feed.Trim().Equals("sip", StringComparison.OrdinalIgnoreCase),
             windows, calculatorObservations,
-            "Uses persisted 1-minute bars only. Each sell window requires all 780 exact bar-start timestamps from 07:00 through 19:59 America/New_York plus the exact prior regular-session close bar. Missing minutes and missing reference closes are not imputed. Coverage is not proof of executable quotes, a limit touch, or an actual fill.");
+            "Uses persisted 1-minute bars only. Each sell window requires all 780 exact bar-start timestamps from 07:00 through 19:59 America/New_York plus the exact prior regular-session close bar. Missing minutes and missing reference closes are not imputed. IEX is partial-exchange coverage and is never marked qualification-usable even if every timestamp exists; SIP is required for consolidated market-wide target research. Coverage is not proof of executable quotes, a limit touch, or an actual fill.");
     }
 
     private static DateTimeOffset ToUtc(DateOnly date, TimeOnly time)
@@ -149,6 +151,8 @@ public sealed record BoringOvernightSellWindowHistoryResult(
     int ExpectedIntervalsPerSession,
     int CompleteWindowCount,
     bool AllWindowsComplete,
+    string FeedCoverage,
+    bool QualificationUsable,
     IReadOnlyList<BoringOvernightSellWindowAudit> Windows,
     IReadOnlyList<BoringOvernightSellWindowObservation> CalculatorObservations,
     string Note);
