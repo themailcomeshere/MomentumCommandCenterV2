@@ -1,7 +1,8 @@
 # New Chat Handoff — November 4, 2026
 
 **Working branch:** `feature/opportunity-quality-classification`  
-**Latest validated code head:** `9fb66f14e907ef029ac7955ef46802aa789e74c6`  
+**Latest validated code head:** `15d642ae986686a0c0a44fe48f27c04718fc6a19`  
+**Current implementation under CI:** top-four qualification UI integration (exact head pending)  
 **Canonical execution checklist:** `docs/Master-To-Do.md`
 
 ## Latest implementation
@@ -9,7 +10,7 @@
 - Catalyst API: `GET /api/market-data/catalyst-assessment?symbol=RTO`. Ticker-scoped Alpaca News for the preceding 24 hours, pagination up to 10 pages, versioned provisional keyword triage. It cannot return CLEAR. No news = UNKNOWN; material/unclassified news requires manual review; severe risk phrase = RISK_PRESENT.
 - Both the actual UI button workflow (`POST /api/boring-overnight/capture-history`) and `evaluate-with-history` now fetch Daily and catalyst inputs, overwrite caller-supplied Daily/catalyst values, and keep catalyst UNKNOWN except explicit RISK_PRESENT. IEX Daily bars are diagnostic only: qualification price/SMA20/average-volume are null unless the configured feed is SIP, because IEX is partial-exchange coverage.
 - Snapshots now persist requested/valid/missing Overnight pair counts, Daily source/feed/adjustment/completeness/observed metrics, and catalyst article IDs/headlines/publication timestamps/URLs/categories/rule version/coverage. Production and prototype saved-snapshot tables show history coverage, Daily fields/feed quality/source timestamp, and catalyst count/coverage/rules plus up to two headlines.
-- Daily and catalyst capture/snapshot evidence integration, exact-session completeness audit, SIP-only qualification gate, snapshot persistence tests, and production/prototype table changes passed Release build and **188/188 tests**, 0 warnings/0 errors on code commit `9fb66f14e907ef029ac7955ef46802aa789e74c6` (Actions run [41876561554](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41876561554)).
+- Daily and catalyst capture/snapshot evidence integration, exact-session completeness audit, SIP-only qualification gate, snapshot persistence tests, and production/prototype table changes passed Release build and **188/188 tests**, 0 warnings/0 errors on code commit `9fb66f14e907ef029ac7955ef46802aa789e74c6` (Actions run [41876561554](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41876561554)). The subsequent top-four qualification UI integration is not yet included in that validated head.
 - This is not yet live-provider validation, browser acceptance, or final catalyst-classifier validation. SIP entitlement and Daily adjustment parity are not established. If Alpaca is currently configured for IEX, the qualification Daily fields will intentionally be null. 5M/1M evidence remains separately sourced.
 
 ## What I need from the operator
@@ -25,7 +26,7 @@
 5. Compare Daily values against an independent chart/provider on the same adjustment basis. Report any provider 401/403 errors verbatim with credentials removed.
 
 ## Remaining engineering
-- Integrate Daily and catalyst evidence into the separate Boring Overnight scanner qualification panel; current work adds it to persisted snapshots, not yet the scanner panel.
+- Browser-verify the new top-four Daily/catalyst refresh in both qualification panels. Exact-head CI for the new UI integration must pass first.
 - Browser-verify the expanded saved-snapshot table in production and prototype.
 - Resolve EVR's eight missing exact next-session opens without nearest-bar substitution.
 - Establish official 09:30 ET auction-print parity; 09:30 one-minute bar Open is still only a proxy.
