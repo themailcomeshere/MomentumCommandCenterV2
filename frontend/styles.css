@@ -1592,3 +1592,10 @@ main{margin-top:16px}
 .overnight-qualification-table .qualification-blocked td:nth-child(7),.overnight-qualification-table .qualification-blocked td:last-child{color:var(--danger)}
 .overnight-qualification-table .qualification-pending td:last-child{color:var(--warning)}
 @media(max-width:760px){.overnight-qualification-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.overnight-qualification-summary>div:last-child{grid-column:1/-1}}
+
+
+/* Collapsed audit detail keeps the default Overnight workspace compact. */
+.overnight-boundary-details { margin-top: .5rem; }
+.overnight-boundary-details > summary { cursor: pointer; color: var(--muted, inherit); padding: .45rem 0; font-weight: 600; }
+.overnight-boundary-details[open] > summary { margin-bottom: .5rem; }
+.overnight-boundary-details .table-wrap { max-height: 22rem; overflow: auto; }
