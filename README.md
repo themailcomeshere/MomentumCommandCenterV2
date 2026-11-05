@@ -259,3 +259,8 @@ The prototype's `#system-readiness` section is nested inside the same `.topbar-b
 ## 2026-11-04 — MCC-native workflow updates
 
 The production and prototype dashboards now provide button-driven 20-session regular close/open retry and SIP-gated 20-session GTC_EXT sell-window capture. The latter checks the effective Alpaca feed and does not request qualification history when IEX is configured. Missing custom-expression metrics are classified DATA?, not FAIL. System Readiness is collapsible, and Decision Explanation shows the symbol being refreshed. See [Technical Workflow](docs/Technical-Workflow.md), [Overnight Scanner to Boring Overnight Workflow](docs/Overnight-Scanner-to-Boring-Overnight-Workflow.md), and [Master To-Do](docs/Master-To-Do.md) for operating instructions and remaining validation gates.
+
+
+## 2026-11-04 — candidate-group and header workflow
+
+The Overnight qualification panel now supports separate **MCC Top 4** (four highest imported scanner scores) and **My Top 4** (exactly four user-selected imported symbols) groups. Selection persists in the browser; Daily + catalyst refresh queries only the active four. This is scanner-score selection, not a calibrated Opportunity Quality rank. Morning Command Brief is adjacent to the product title; WebSocket status and prototype badge are within System Readiness. Quick Start is in the prototype left dock; production left-rail placement remains outstanding because the production page has no aside.
