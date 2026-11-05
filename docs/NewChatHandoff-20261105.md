@@ -55,3 +55,32 @@ User supplied `/api/providers/status`: Alpaca configured/validated, effective fe
 
 [Uncertainties]
 The revised study has not yet been compiled in Thinkorswim. Compatibility of each aggregation enum in the user's installed TOS build, actual strategy-report payload preservation, ATR parity, SIP entitlement, GTC_EXT completeness and broker fills remain unverified.
+
+
+# Handoff update — November 5, 2026 (latest V2.1 exports and candidate review)
+
+The operator confirmed the aggregation-selector change works and supplied corrected V2.1 EVR Strategy Reports:
+- `data/ScannerExports/StrategyReports_EVR_11032026_1M_ATR_v2_1.csv`: 346 ATR payload observations, 48 intraday gaps overall, 13 intraday gaps in latest 119.
+- `data/ScannerExports/StrategyReports_EVR_11032026_5M_ATR_v2_1.csv`: 81 ATR payload observations, one 10-minute jump; insufficient for 99 warm-up + 20 comparison bars.
+- The 1m last 20 post-warm-up numeric ATR values have mean absolute error ~0.00002603 and max ~0.00004669 against server Wilder calculation, within 0.00005 export tolerance. The latest 119 rows still contain 13 intraday gaps, so this is not certified MATCH. This was computed from the committed CSVs; Dashboard import/API verification remains to be done.
+
+New code:
+- `AtrTimestampGapDetector.cs` now excludes scheduled overnight/weekend date transitions from intraday gap counts in parser and parity service.
+- Same-New-York-date missing intervals still block MATCH.
+- Full-session completeness (detecting a completely absent trading session) remains an open item.
+- Added regression tests for overnight/weekend transitions.
+- Latest code commit: `c9003fd24d3b39817a874304195e01619c79de21`; CI [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) was queued at last check.
+
+SIP: Prior recent-history SIP requests returned HTTP 403 due subscription entitlement. IEX preflight rejection is a separate known limitation. Do not repeat SIP requests or ask the operator to repeat them; do not run GTC_EXT capture while entitlement remains denied. Continue IEX-only diagnostic development.
+
+Button location:
+Dashboard → Workspace dropdown → Boring Overnight → Calculated Limit Sell → Research target quantile (%) → **Assess sell-limit evidence gates**. HTML ID: `overnightCalculateSellLimit`. Do not click the separate GTC_EXT history capture button while SIP is blocked.
+
+Candidate review:
+`docs/Validation/Overnight-Candidate-Review-20261105.md` documents AVNT, BLMN, EVER, BLK and CBOE. CBOE is the preferred addition to the next ordinary Overnight review; BLK has the best historical win rate; AVNT is a post-earnings momentum watch; EVER is secondary; BLMN is excluded for the Nov 5→Nov 6 routine overnight because it reports earnings premarket Nov 6. These are research priorities, not READY decisions.
+
+Next operator actions:
+1. Pull latest branch and run `.\scripts\Get-Latest-And-Test.ps1` after CI is green.
+2. Import the two V2.1 exports through Dashboard → StrategyReport; verify counts and parity states.
+3. Export a longer 5m V2.1 history with at least 119 observations, allowing multiple sessions; no intraday gaps within a New York date in the comparison window.
+4. Use the sell-limit evidence button only for diagnosis; numeric limit remains blocked by walk-forward validation and SIP GTC_EXT history.
