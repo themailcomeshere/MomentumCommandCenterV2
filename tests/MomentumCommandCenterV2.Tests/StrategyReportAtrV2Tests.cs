@@ -57,6 +57,20 @@ public sealed class StrategyReportAtrV2Tests
     }
 
     [Fact]
+    public void DoesNotCountScheduledOvernightAndWeekendClosureAsIntradayGap()
+    {
+        var fridayLastBar = DateTimeOffset.Parse("2026-11-07T00:59:00Z").ToUnixTimeMilliseconds();
+        var mondayFirstBar = DateTimeOffset.Parse("2026-11-09T09:00:00Z").ToUnixTimeMilliseconds();
+        var report = $"Strategy report\nSymbol: EVR\nId;Strategy;Side;\n" +
+            $"1;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|1m|{fridayLastBar}|10|11|9|10.5|100|0.25);Buy to Open;\n" +
+            $"2;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|1m|{mondayFirstBar}|10.5|11|10|10.8|200|0.30);Buy to Open;\n";
+
+        var result = StrategyReportAtrV2Parser.Parse(report);
+
+        Assert.Equal(0, result.GapCount);
+    }
+
+    [Fact]
     public void DetectsCorrectedV21PayloadVersion()
     {
         const string report = "Strategy report\nSymbol: EVR\nId;Strategy;Side;\n" +
@@ -152,6 +166,30 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal(1, result.TimestampGapCount);
         Assert.Equal(31, result.ComparedBarCount);
         Assert.Equal(0m, result.MaximumAbsoluteError);
+    }
+
+    [Fact]
+    public void WilderParityIgnoresScheduledOvernightClosureBetweenSessionDates()
+    {
+        var metadata = Metadata();
+        var firstSession = DateTimeOffset.Parse("2026-11-03T14:00:00Z");
+        var secondSession = DateTimeOffset.Parse("2026-11-04T14:00:00Z");
+        var observations = Enumerable.Range(0, 130).Select(index =>
+        {
+            var timestamp = index < 65
+                ? firstSession.AddMinutes(index)
+                : secondSession.AddMinutes(index - 65);
+            return new StrategyReportAtrObservation(index.ToString(), "EVR", "1m",
+                timestamp, 100m, 101m, 99m, 100m, 1000m, 2m);
+        }).ToArray();
+        var stored = observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored);
+
+        Assert.Equal("MATCH", result.Status);
+        Assert.Equal(0, result.TimestampGapCount);
+        Assert.Equal(31, result.ComparedBarCount);
     }
 
     [Fact]
