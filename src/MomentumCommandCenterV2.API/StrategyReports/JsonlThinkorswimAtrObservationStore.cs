@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -78,8 +79,8 @@ public sealed class JsonlThinkorswimAtrObservationStore : IThinkorswimAtrObserva
             return _latest.Values
                 .Where(x => symbol is null || x.Observation.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase))
                 .Where(x => timeframe is null || x.Observation.Timeframe.Equals(timeframe, StringComparison.OrdinalIgnoreCase))
-                .Where(x => fromUtc is null || x.Observation.SourceTimestampUtc >= fromUtc)
-                .Where(x => toUtc is null || x.Observation.SourceTimestampUtc <= toUtc)
+                .Where(x => fromUtc is null || x.Observation.SourceTimestampUtc >= fromUtc.Value)
+                .Where(x => toUtc is null || x.Observation.SourceTimestampUtc <= toUtc.Value)
                 .OrderBy(x => x.Observation.SourceTimestampUtc)
                 .TakeLast(limit).ToArray();
         }
@@ -111,7 +112,12 @@ public sealed class JsonlThinkorswimAtrObservationStore : IThinkorswimAtrObserva
     private static string Hash(StrategyReportAtrObservation item, StrategyReportAtrImportMetadata metadata)
     {
         var value = string.Join("|", Identity(item, metadata),
-            item.Open, item.High, item.Low, item.Close, item.Volume, item.Atr, metadata.SourceFileName);
+            item.Open.ToString(CultureInfo.InvariantCulture),
+            item.High.ToString(CultureInfo.InvariantCulture),
+            item.Low.ToString(CultureInfo.InvariantCulture),
+            item.Close.ToString(CultureInfo.InvariantCulture),
+            item.Volume.ToString(CultureInfo.InvariantCulture),
+            item.Atr.ToString(CultureInfo.InvariantCulture));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value)));
     }
 
