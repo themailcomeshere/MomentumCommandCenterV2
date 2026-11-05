@@ -64,7 +64,9 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 ? $"Missing exact {referenceCloseTimestamp:O} 1m {provider}/{feed} reference-close bar for session {referenceSession:yyyy-MM-dd}."
                 : $"Reference close is {referenceClose.Value} from exact 1m bar {referenceCloseTimestamp:O} ({provider}/{feed})."));
 
-        var atrRows = await atrStore.GetLatestAsync(symbol, "5m", null, null, 10000, cancellationToken);
+        var atrRows = (await atrStore.GetLatestAsync(symbol, "5m", null, null, 10000, cancellationToken))
+            .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal))
+            .ToArray();
         var parity = ThinkorswimAtrParityService.Compare(atrRows);
         var orderedAtrRows = atrRows.OrderBy(x => x.Observation.SourceTimestampUtc).ToArray();
         var latestAtr = orderedAtrRows.LastOrDefault();
@@ -76,7 +78,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             metadata.ChartTimezone.Equals("America/Phoenix", StringComparison.OrdinalIgnoreCase) &&
             metadata.ExtendedHours &&
             metadata.CorporateActionAdjustment &&
-            metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2", StringComparison.Ordinal);
+            metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal);
         gates.Add(new("ATR_STUDY_SETTINGS", settingsValid,
             settingsValid
                 ? "ATR(14) Wilder; Phoenix timezone; extended-hours ON; corporate-action adjustment ON; MCC_OHLCV_ATR_V2."
