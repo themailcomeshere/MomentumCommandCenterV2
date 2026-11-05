@@ -100,7 +100,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     private static IReadOnlyList<ThinkorswimAtrStoredObservation> BuildMatchedTosAtrRows(DateTimeOffset receivedAt)
     {
         var metadata = new StrategyReportAtrImportMetadata(
-            "EVR-corrected-5m.csv", "MCC_OHLCV_ATR_V2", 14, "Wilder",
+            "EVR-corrected-5m.csv", "MCC_OHLCV_ATR_V2.1", 14, "Wilder",
             "America/Phoenix", true, true, "test-batch", receivedAt);
         var start = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(10, 5));
         return Enumerable.Range(0, 119).Select(index =>
