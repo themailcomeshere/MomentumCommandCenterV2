@@ -54,7 +54,7 @@ User supplied `/api/providers/status`: Alpaca configured/validated, effective fe
 7. Run `.\\scripts\\Get-Latest-And-Test.ps1`, restart MCC and browser-test after code implementation.
 
 [Uncertainties]
-The revised study has not yet been compiled in Thinkorswim. Compatibility of each aggregation enum in the user's installed TOS build, actual strategy-report payload preservation, ATR parity, SIP entitlement, GTC_EXT completeness and broker fills remain unverified.
+The operator has supplied V2.1 payload exports, confirming the revised study executed. Full ATR parity remains unverified because the latest 1m window has 13 intraday gaps and the 5m report has only 81 observations. Prior recent-history SIP requests returned HTTP 403 due subscription entitlement; do not ask the operator to repeat them. GTC_EXT completeness and broker fills remain unavailable.
 
 
 # Handoff update — November 5, 2026 (latest V2.1 exports and candidate review)
