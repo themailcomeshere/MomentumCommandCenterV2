@@ -1638,3 +1638,9 @@ main{margin-top:16px}
 .catalyst-review-controls{display:grid;grid-template-columns:1fr;gap:6px}
 .catalyst-review-controls select,.catalyst-review-controls textarea{width:100%;min-width:0}
 .catalyst-review-controls textarea{min-height:54px;resize:vertical}
+
+.overnight-shortlist-lists{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:440px}
+.overnight-shortlist-lists>div{display:flex;flex-direction:column;gap:5px}
+.overnight-shortlist-lists strong{font-size:11px}
+.overnight-shortlist-symbols{display:flex;flex-wrap:wrap;gap:4px}
+.overnight-shortlist-symbol{padding:4px 7px;border:1px solid var(--line);border-radius:6px;font-size:11px;font-weight:700}
