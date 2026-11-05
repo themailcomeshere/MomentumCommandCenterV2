@@ -39,7 +39,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     [Fact]
     public async Task IexCannotProduceNumericSellLimitEvenWithNoOtherEvidence()
     {
-        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(20, 2));
+        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 42));
         var orchestrator = new BoringOvernightSellLimitOrchestrator(
             new MemoryMarketBarStore(Array.Empty<MarketBarObservation>()),
             new MemoryAtrStore(Array.Empty<ThinkorswimAtrStoredObservation>()));
@@ -58,7 +58,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     [Fact]
     public async Task ProviderBarMismatchBlocksOtherwiseCompleteSellLimitEvidence()
     {
-        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(20, 2));
+        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 42));
         var bars = BuildCompleteSIPBars(asOf).ToList();
         var target = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 35));
         var index = bars.FindIndex(x => x.Bar.Timeframe == "5m" && x.SourceTimestamp == target);
@@ -104,7 +104,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         var metadata = new StrategyReportAtrImportMetadata(
             "EVR-corrected-5m.csv", "MCC_OHLCV_ATR_V2.1", 14, "Wilder",
             "America/Phoenix", true, true, "test-batch", receivedAt);
-        var start = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(10, 5));
+        var start = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(6, 45));
         return Enumerable.Range(0, 119).Select(index =>
         {
             var observation = new StrategyReportAtrObservation(
