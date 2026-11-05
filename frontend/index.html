@@ -138,6 +138,11 @@
  <section class="overnight-result" aria-labelledby="overnightSellLimitTitle" id="mcc-static-0208-section">
   <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
   <button id="overnightCaptureSellWindow" type="button" class="quiet-button">Fetch 20-session GTC_EXT sell-window history</button>
+  <label for="overnightSellLimitQuantile">Research target quantile (%)</label>
+  <input id="overnightSellLimitQuantile" type="number" min="1" max="99" step="1" placeholder="Choose 1–99" inputmode="numeric">
+  <button id="overnightCalculateSellLimit" type="button" class="quiet-button">Assess sell-limit evidence gates</button>
+  <p id="overnightSellLimitAssessmentStatus" class="muted" role="status">No sell-limit assessment run. This endpoint is diagnostic and never submits an order.</p>
+  <div id="overnightSellLimitEvidenceGates" aria-live="polite"></div>
   <p id="overnightSellWindowStatus" class="muted" role="status">Not captured. This fetches the exact 07:00–19:59 ET one-minute bars for each of the latest 20 completed sell sessions plus each prior regular-session close. SIP is required for qualification; IEX is diagnostic only.</p>
   <dl id="mcc-static-0209-dl">
    <div id="mcc-static-0210-div"><dt id="mcc-static-0211-dt">Calculated limit</dt><dd id="overnightSellLimitPrice">DATA? — NOT CALCULATED</dd></div>
