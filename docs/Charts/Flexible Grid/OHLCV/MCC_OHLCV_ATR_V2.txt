@@ -19,6 +19,9 @@
 # - Load sufficient history: at least 99 consecutive completed source bars
 #   before the first comparison bar (98 Wilder prefetch bars + comparison bar).
 # - Match chart extended-hours and corporate-action adjustment settings to MCC.
+# - The time-window functions below use the EST/Eastern clock, not the chart's
+#   displayed Phoenix timezone. The default 07:00–20:00 ET window spans the
+#   Overnight sell-window research interval and includes after-hours bars.
 # - Export the Strategy Report and preserve full order names/precision.
 #
 # V2 payload:
@@ -33,8 +36,8 @@ declare upper;
 
 input startDate = 20261019;
 input endDate = 20261019;
-input startTime = 0600;
-input endTime = 1600;
+input startTime = 0700;
+input endTime = 2000;
 input chartAggregation = AggregationPeriod.FIVE_MIN;
 input atrLength = 14;
 
