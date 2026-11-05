@@ -80,7 +80,7 @@ Sources:
 **Assessment:** The scanner metrics are respectable, but the earnings release falls inside the overnight holding period from November 5 to November 6. That creates a binary event gap risk. Exclude it from the ordinary overnight shortlist unless the strategy explicitly intends to hold through earnings and has a separately validated event-risk rule.
 
 Sources:
-- https://www.businesswire.com/news/home/20261016005321/en/Bloomin-Brands-Inc.-to-Host-Fiscal-2026-Third-Quarter-Earnings-Conference-Call-at-8-00-AM-ET-on-November-6-2026
+- https://www.stocktitan.net/news/BLMN/
 - https://www.stocktitan.net/news/BLMN/
 
 ## Recommended shortlist for the next ordinary overnight review
