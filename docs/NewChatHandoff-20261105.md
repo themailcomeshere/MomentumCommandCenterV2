@@ -1,3 +1,20 @@
+# November 5 — ATR V2 ThinkScript compile-error correction
+
+- User reported `AggregationPeriod.ONE_MIN` unknown, `Expected double`, and incompatible string parameters.
+- Root causes: ThinkScript's one-minute aggregation enum is `AggregationPeriod.MIN`; `def` is numeric and cannot hold string labels.
+- Corrected `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt`: replaced `ONE_MIN` with `MIN`; removed string-valued `def timeframeLabel`; embedded the conditional timeframe string directly in label and order-name expressions.
+- Commit `39cacef3a68f88e2e3fc33467d260ac00f175b37` (subsequent Master To-Do documentation commit `56188b80ec61210a0ee5f94cef6b9712544ebba3`).
+- GitHub Actions `build-and-test` for the ThinkScript/documentation commit was still in progress at last check. .NET CI cannot compile ThinkScript.
+- **Not yet done:** Thinkorswim compile/export validation; V2 parser/tests; separate ATR persistence; production Wilder ATR seed parity; matched-bar parity service; sell-limit orchestration API/UI; SIP entitlement/history; walk-forward validation; broker-fill reconciliation.
+- Existing V1 parser and research calculators are not completion of those deliverables. Full status is tracked in `docs/Master-To-Do.md`.
+
+## Immediate operator validation
+1. Pull the feature branch and open the corrected `MCC_OHLCV_ATR_V2.txt`.
+2. Compile in Thinkorswim. If it still errors, send the complete new compiler output; do not edit the study manually.
+3. On EVR 5m, set `chartAggregation=FIVE_MIN`, confirm chart aggregation is 5m and the label says MATCH.
+4. Export a short date range and verify payload contains 11 pipe-delimited fields: marker, version, symbol, timeframe, epoch milliseconds, O, H, L, C, volume, ATR.
+5. Do not use the export for a numerical sell limit yet.
+
 # Handoff — November 5, 2026 (updated)
 
 Branch: feature/opportunity-quality-classification
