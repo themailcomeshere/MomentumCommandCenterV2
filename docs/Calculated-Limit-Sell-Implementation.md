@@ -74,3 +74,9 @@ The exports are sufficient to implement and test the V2 report parser, store tim
 - [ ] Implement server-side ATR series calculation and timestamp-matched parity audit. Require consecutive matched bars and documented precision tolerance; caller cannot submit a MATCH flag.
 - [ ] Implement orchestration endpoint using persisted SIP GTC_EXT history and persisted reference close only; return reason-coded DATA?/NOT VERIFIED until every gate passes.
 - [ ] Add UI provenance/status and walk-forward evaluation. Keep touch rate labelled in-sample descriptive, not fill probability.
+
+
+## 2026-11-05 — configurable Thinkorswim chart aggregation
+The ATR V2 study now exposes a `chartAggregation` input with 1m, 5m, 15m, 30m, 1h and 4h choices. The selected period is written into the payload and the study blocks export unless the actual chart aggregation matches. ThinkScript cannot change the host chart's aggregation itself: the operator sets the chart period in Thinkorswim's chart aggregation control and selects the same value in the study input. This removes source-code edits when switching supported periods. The revised script still requires compilation and validation in Thinkorswim for each desired aggregation.
+
+Operator-confirmed defaults remain extended-hours ON, corporate-action adjustment ON, Phoenix timezone, ATR14 Wilder. Current provider status is Alpaca IEX configured/validated; Massive is unconfigured. SIP entitlement is not established, so GTC_EXT SIP capture remains blocked.
