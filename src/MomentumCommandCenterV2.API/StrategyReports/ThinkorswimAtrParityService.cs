@@ -37,6 +37,8 @@ public static class ThinkorswimAtrParityService
             return Empty("Only Wilder ATR is supported by this parity implementation.", "UNSUPPORTED_AVERAGE_TYPE");
 
         var rows = ordered.Select(x => x.Observation).ToArray();
+        if (rows.Select(x => (x.Symbol, x.Timeframe)).Distinct().Count() != 1)
+            return Empty("Multiple symbols or timeframes are present; request parity for one symbol and timeframe.", "MIXED_SERIES");
         if (rows.Select(x => x.SourceTimestampUtc).Distinct().Count() != rows.Length)
             return Empty("Multiple ATR observations share a source timestamp under different provenance; isolate one import configuration.", "DUPLICATE_SOURCE_TIMESTAMPS");
 
