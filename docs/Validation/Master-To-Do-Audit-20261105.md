@@ -28,7 +28,7 @@ Exact code commit with green CI: `c990faf973fb9e3a14ec948386e210b9eb8b4fc5`; Act
 
 | Previously blocked work | Did it become unblocked? | Current action/status |
 |---|---|---|
-| ATR parity | Yes, at algorithm-diagnostic level | Service and API compare the latest 119 bars (99 warm-up + 20 comparisons) and return GAPS_PRESENT rather than MATCH when timestamps are missing. Legacy V2.0 exports show the old shifted formula; corrected V2.1 platform export still needed. |
+| ATR parity | Yes, at algorithm-diagnostic level | Service and API compare the latest 119 bars (99 warm-up + 20 comparisons) and return GAPS_PRESENT rather than MATCH when timestamps are missing. Legacy V2.0 exports show the old shifted formula; corrected V2.1 exports are now supplied, but 1m latest-window gaps and insufficient 5m history prevent certification. |
 | Sell-limit orchestration | Partially | API/UI now check the upstream evidence gates, including exact provider/TOS OHLCV across the full 119-bar parity window. Numeric output remains blocked by the explicit walk-forward gate and SIP qualification. |
 | Provider/TOS 5m parity | Partially | Exact comparison code exists for the latest 119 bars (99 warm-up + 20 comparison). User/runtime SIP 5m bars and corrected V2.1 export are not present. |
 | GTC_EXT history qualification | No | Effective Alpaca feed is IEX; prior SIP history request returned 403. No 20/20 SIP qualification evidence. |
@@ -52,6 +52,6 @@ Exact code commit with green CI: `c990faf973fb9e3a14ec948386e210b9eb8b4fc5`; Act
 ## [Uncertainties]
 
 - Thinkorswim V2.1 compilation and corrected export parity have not been operator-verified.
-- SIP entitlement and 20/20 SIP GTC_EXT coverage are not established.
+- Prior recent-history SIP access returned HTTP 403 due subscription entitlement; no repeat request is warranted. 20/20 SIP GTC_EXT coverage remains blocked.
 - Walk-forward thresholds have not been agreed or calibrated; target-touch results must not be represented as actual fills.
 - Local browser acceptance, WebSocket recovery, collector schedule and performance are not established by repository CI.
