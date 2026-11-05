@@ -21,8 +21,8 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
             new BoringOvernightSellLimitRequest("EVR", "Alpaca", "sip", 75),
             asOf, CancellationToken.None);
 
-        Assert.Equal("BLOCKED", result.Status);
-        Assert.Equal(20, result.History.CompleteWindowCount);
+        Assert.Equal("PROVISIONAL", result.Status);
+        Assert.Equal(40, result.History.CompleteWindowCount);
         Assert.True(result.History.QualificationUsable);
         Assert.Equal(100.5m, result.ReferenceClose);
         Assert.Equal(2m, result.CurrentAtr);
@@ -31,8 +31,8 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         Assert.Equal(119, result.TOSParityWindowObservationCount);
         Assert.Equal(119, result.ProviderParityObservationCount);
         Assert.Equal(0, result.ProviderBarMismatchCount);
-        Assert.Null(result.Calculation?.CalculatedLimitSell);
-        Assert.Contains(result.Gates, gate => gate.Code == "WALK_FORWARD_VALIDATION" && !gate.Passed);
+        Assert.NotNull(result.Calculation?.CalculatedLimitSell);
+        Assert.Contains(result.Gates, gate => gate.Code == "WALK_FORWARD_VALIDATION" && gate.Passed);
         Assert.All(result.Gates.Where(gate => gate.Code is not ("WALK_FORWARD_VALIDATION" or "SELL_LIMIT_CALCULATION")),
             gate => Assert.True(gate.Passed, gate.Code + ": " + gate.Detail));
     }
@@ -52,7 +52,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         Assert.Equal("BLOCKED", result.Status);
         Assert.Null(result.Calculation?.CalculatedLimitSell);
         Assert.Contains(result.Gates, x => x.Code == "SIP_REQUIRED" && !x.Passed);
-        Assert.Contains(result.Gates, x => x.Code == "HISTORY_20_OF_20" && !x.Passed);
+        Assert.Contains(result.Gates, x => x.Code == "HISTORY_40_OF_40" && !x.Passed);
         Assert.Contains(result.Gates, x => x.Code == "ATR_PARITY" && !x.Passed);
     }
 
@@ -82,7 +82,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     private static IReadOnlyList<MarketBarObservation> BuildCompleteSIPBars(DateTimeOffset receivedAt)
     {
         var output = new List<MarketBarObservation>();
-        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 11, 4), 20);
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 11, 4), 40);
         foreach (var boundary in boundaries)
         {
             AddBar(output, boundary.PreviousCloseBarTimestampUtc, "1m", 100, 101, 99, 100, 1000, receivedAt);
