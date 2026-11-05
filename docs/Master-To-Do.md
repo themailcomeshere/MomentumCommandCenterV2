@@ -5,7 +5,7 @@
 - [x] Recomputed one-minute Wilder ATR from the exported OHLCV using the parity service's seed and recurrence. The 20 bars after the 99-observation warm-up have mean absolute error approximately 0.00002603 and maximum absolute error approximately 0.00004669, within the 0.00005 export-rounding tolerance. This is a numeric diagnostic only; the latest 119-row window has 13 intraday timestamp gaps, so parity correctly remains blocked.
 - [x] Confirmed the five-minute report has only 81 observations and one 10-minute timestamp jump. It cannot satisfy the 99-observation warm-up or 20-bar comparison requirement.
 - [x] Added New York session-date-aware ATR gap detection to the parser and parity service. Normal overnight/weekend date transitions no longer count as missing intraday bars; same-session missing intervals still block MATCH.
-- [x] Added regression tests for scheduled overnight/weekend closures and intraday missing-bar detection. CI for the new code commit is running; do not treat it as passed until the Actions result is green.
+- [x] Added regression tests for scheduled overnight/weekend closures and intraday missing-bar detection. CI for code commit `c9003fd24d3b39817a874304195e01619c79de21` is green: build succeeded and 225/225 tests passed in [Actions run 42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682).
 - [x] Located and verified the Dashboard assessment control. Navigation: Workspace = Boring Overnight → Calculated Limit Sell → Research target quantile (%) → **Assess sell-limit evidence gates**. HTML ID: `overnightCalculateSellLimit`.
 - [x] Reviewed AVNT, BLMN, EVER, BLK and CBOE scanner metrics and current catalysts. Added `docs/Validation/Overnight-Candidate-Review-20261105.md`.
 - [x] Reconciled SIP history: prior recent-history SIP request returned HTTP 403 due subscription entitlement; IEX preflight rejection is a separate known limitation. No new SIP request was made and the operator is not being asked to repeat failed attempts.
@@ -76,7 +76,7 @@ This section supersedes the earlier statement below that only the ThinkScript co
 2. In Thinkorswim, replace the V2 study with the corrected source, compile it, and verify the chart label says `chart=MATCH`.
 3. Export EVR 1m and 5m again using ATR 14 / Wilder, Phoenix timezone, extended-hours ON and corporate-action adjustment ON. For 5m include at least 119 consecutive completed bars (99 warm-up + 20 comparison bars).
 4. Import both files through Dashboard → StrategyReport upload. Send me the import and parity results if either does not show the expected counts/status.
-5. Do not change Alpaca to SIP until you have confirmed that the account entitlement allows SIP historical requests. We will verify the provider status and exact 20/20 history before changing qualification.
+5. No SIP retry is requested. Prior recent-history SIP access returned HTTP 403 due subscription entitlement. Keep SIP qualification disabled; continue with IEX only for non-qualifying diagnostics unless account entitlement materially changes.
 
 ## 2026-11-05 — ATR V2 compile-error correction and sell-limit implementation status
 
