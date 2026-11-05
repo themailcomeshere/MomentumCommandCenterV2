@@ -926,7 +926,7 @@ app.MapPost("/api/boring-overnight/capture-sell-window-history", async (
     catch (InvalidOperationException ex) { return Results.Problem(ex.Message, statusCode: 422); }
 })
 .WithName("CaptureBoringOvernightSellWindowHistory")
-.WithSummary("Fetch and audit 20 complete 07:00–20:00 ET GTC_EXT sell windows")
+.WithSummary("Fetch and audit 40 complete 07:00–20:00 ET GTC_EXT sell windows")
 .WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"feed\": \"sip\" }. Fetches 1-minute bars from the exact prior regular-session close through the latest completed 20:00 ET sell window, persists raw observations, and returns exact 780-minute coverage per session. IEX is diagnostic partial-exchange data and cannot qualify consolidated target research; SIP is required. Missing intervals are not imputed and no fill probability is claimed.");
 
 app.MapGet("/api/boring-overnight/sell-window-history", async (
@@ -948,7 +948,7 @@ app.MapGet("/api/boring-overnight/sell-window-history", async (
 })
 .WithName("GetBoringOvernightSellWindowHistory")
 .WithSummary("Audit exact 07:00–20:00 ET GTC_EXT coverage from persisted 1-minute bars")
-.WithDescription("Requires symbol, provider, feed and an ISO-8601 UTC asOfUtc. Returns the latest 20 completed sell sessions, each requiring the exact prior regular-session close bar and all 780 1-minute bar-start timestamps from 07:00 through 19:59 ET. This endpoint reads persisted bars only; it does not fetch data, impute gaps, infer executable quotes, or claim fills.");
+.WithDescription("Requires symbol, provider, feed and an ISO-8601 UTC asOfUtc. Returns the latest 40 completed sell sessions (20 training + 20 later unseen test), each requiring the exact prior regular-session close bar and all 780 1-minute bar-start timestamps from 07:00 through 19:59 ET. This endpoint reads persisted bars only; it does not fetch data, impute gaps, infer executable quotes, or claim fills.");
 
 app.MapPost("/api/boring-overnight/history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryRequest request,
