@@ -25,7 +25,7 @@ This section supersedes the earlier statement below that only the ThinkScript co
 ### Second pass — re-check whether first-pass work unblocked other tasks
 
 - [x] ATR parity was previously blocked by missing TOS ATR values. V2 export + persistence + comparison now make the algorithm-level parity test executable. The legacy 1m file deliberately reports `NOT_MATCH`; the current 5m file reports `INSUFFICIENT_WARMUP`.
-- [ ] Fail-closed sell-limit orchestration API/UI is now implemented and checks corrected-study parity, 99 consecutive same-source 5m bars, exact reference close and 20/20 SIP GTC_EXT windows. The endpoint still deliberately withholds a numeric limit because walk-forward validation is not implemented and SIP entitlement remains unverified.
+- [x] Fail-closed sell-limit orchestration API/UI is implemented and checks corrected-study parity, 99 consecutive same-source 5m bars, exact reference close and 20/20 SIP GTC_EXT windows. It deliberately withholds a numeric limit because walk-forward validation is not implemented and SIP entitlement remains unverified.
 - [x] ATR import/provenance and sell-limit evidence-assessment UI are implemented. Browser acceptance and saved-observation review after page reload remain open.
 - [ ] Opportunity Quality full-pool ranking remains blocked by 296 rows with unavailable custom-expression values in the updated scanner. The top-score preview is not a qualified candidate list; current price/liquidity, catalyst, exclusion, 5m and 1m evidence are still separate gates.
 - [ ] SIP history remains blocked: the effective runtime feed is still IEX and SIP entitlement has not been demonstrated. No SIP capture or qualification claim.
@@ -46,7 +46,7 @@ This section supersedes the earlier statement below that only the ThinkScript co
 
 - [x] Diagnosed the user's ThinkScript compile errors: `AggregationPeriod.ONE_MIN` is not the ThinkScript one-minute constant; the supported constant is `AggregationPeriod.MIN`. The script also assigned string labels to `def` variables, which are numeric-only in ThinkScript and caused the cascade of `Expected double` / incompatible string parameter errors.
 - [x] Corrected the V2 study: replaced `ONE_MIN` with `MIN` and inlined the string conditional into the label and Strategy Report order-name expressions instead of storing a string in `def timeframeLabel`. Commit: [39cacef](https://github.com/themailcomeshere/MomentumCommandCenterV2/commit/39cacef3a68f88e2e3fc33467d260ac00f175b37).
-- [ ] Thinkorswim compilation and export validation of this correction. Repository-side edits cannot compile ThinkScript in the user's installed platform.
+- [x] User confirmed the earlier aggregation-selector/compiler correction works. The later V2.1 TrueRange/payload revision is a separate source change and still requires Thinkorswim compile/export validation.
 - [x] V2 Strategy Report parser: dedicated V2 parser now validates the 11-field ATR payload, six timeframes, UTC timestamps, invariant decimals, duplicates/gaps, and actual full 1m/5m fixtures; V1 parser remains unchanged.
 - [x] Separate append-only Thinkorswim ATR observation persistence: JSONL store records symbol/timeframe/timestamp, ATR settings, study revision, chart timezone, ETH/adjustment, import batch/hash and correction linkage. It remains isolated from provider OHLCV.
 - [x] Server Wilder ATR diagnostic: versioned series calculation and timestamp-matched comparison now use the same imported TOS OHLCV with 99-bar warm-up. Production provider-feed calculation/validation remains a separate acceptance gate.
@@ -57,7 +57,7 @@ This section supersedes the earlier statement below that only the ThinkScript co
 - [ ] Chronological walk-forward validation: use time-separated train/test windows, record target touches and adverse excursion, avoid look-ahead, and report sample sizes/coverage.
 - [ ] Execution reconciliation: import actual broker fills, quantities, fees and timestamps separately from theoretical bar-high target touches. No execution integration may infer fills from OHLCV.
 
-**Scope decision:** The above eight application workstreams were requested together, but only the ThinkScript compile-error correction was implemented in this update. The existing V1 parser, ATR helper and sell-limit calculator are not evidence that the V2 ingestion, durable ATR store, parity service, orchestration API/UI, SIP qualification, walk-forward validation or broker-fill reconciliation are complete. Keep these items open until code, automated tests and runtime evidence exist.
+**Status note:** This historical section is superseded by the first section above. Subsequent commits added the V2 parser, separate ATR store, Wilder parity diagnostic, fail-closed sell-limit orchestration API and Dashboard gate UI. SIP qualification, corrected V2.1 platform re-export, walk-forward validation and actual broker-fill reconciliation remain open.
 
 ---
 
