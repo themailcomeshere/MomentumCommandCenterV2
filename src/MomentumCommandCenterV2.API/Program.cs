@@ -1381,6 +1381,26 @@ app.MapPost("/api/strategy-report/atr-import", async (
 .WithDescription("Upload the MCC_OHLCV_ATR_V2 Strategy Report as multipart/form-data. Required fields: file, atrPeriod, atrAverageType=Wilder, chartTimezone, extendedHours=true/false, corporateActionAdjustment=true/false. ATR observations are persisted separately from provider OHLCV. Re-imports are idempotent; changed values are retained as corrections. Gaps are reported and never imputed.")
 .ProducesProblem(400);
 
+app.MapPost("/api/boring-overnight/sell-limit", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellLimitRequest request,
+    IMarketBarObservationStore barStore,
+    MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var result = await new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellLimitOrchestrator(
+            barStore, atrStore).CalculateAsync(request, DateTimeOffset.UtcNow, ct);
+        return Results.Ok(result);
+    }
+    catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("CalculateBoringOvernightSellLimit")
+.WithSummary("Calculate a fail-closed Overnight sell-limit research candidate")
+.WithDescription("Example request: { \"symbol\": \"EVR\", \"providerName\": \"Alpaca\", \"feed\": \"sip\", \"targetQuantilePct\": 75 }. Requires 20/20 exact SIP GTC_EXT windows, exact latest regular-session 1m reference close, corrected TOS ATR(14) Wilder provenance, MATCH parity, 99 consecutive 5m bars, exact provider/TOS 5m OHLCV match and a fresh completed 5m ATR. Returns BLOCKED with explicit gate failures otherwise. PROVISIONAL is research-only; this endpoint never submits an order.")
+.ProducesProblem(400);
+
 app.MapGet("/api/strategy-report/atr-observations", async (
     MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
     string? symbol, string? timeframe, DateTimeOffset? fromUtc, DateTimeOffset? toUtc, int? limit, CancellationToken ct) =>
