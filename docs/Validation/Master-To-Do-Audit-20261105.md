@@ -3,7 +3,7 @@
 ## November 5 follow-up — corrected V2.1 export and candidate evidence
 
 - The newly committed V2.1 1m/5m EVR exports were reviewed. 1m has 346 observations, 48 intraday gaps overall and 13 in its latest 119 rows. Its 20 post-warm-up numeric ATR comparisons are within export rounding tolerance (mean absolute error ~0.00002603; maximum ~0.00004669), but gaps prevent certification. 5m has 81 observations and one intraday gap, so it remains below warm-up.
-- The parser and parity service now exclude normal overnight/weekend date transitions from intraday gap counts. Same-New-York-date missing intervals still block MATCH. Full-session completeness remains open.
+- The parser and parity service now exclude normal overnight/weekend date transitions from intraday gap counts. Same-New-York-date missing intervals still block MATCH. Full-session completeness remains open. CI run [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) passed: 225/225 tests.
 - The operator does not need to repeat SIP requests: prior recent-history SIP access returned HTTP 403 from subscription entitlement; IEX GTC_EXT rejection is also documented. Continue non-SIP development and keep SIP qualification disabled.
 - The evidence-assessment button is located in Boring Overnight → Calculated Limit Sell, below the research quantile input. Do not click the separate GTC_EXT capture button while SIP access remains blocked.
 - Candidate review: CBOE preferred addition, BLK strongest historical win rate, AVNT post-earnings momentum watch, EVER secondary, BLMN excluded from the Nov 5→Nov 6 ordinary overnight because of Nov 6 premarket earnings. Full analysis: `docs/Validation/Overnight-Candidate-Review-20261105.md`.
