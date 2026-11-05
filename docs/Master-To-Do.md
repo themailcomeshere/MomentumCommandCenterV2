@@ -3,6 +3,7 @@
 This section supersedes the earlier statement below that only the ThinkScript compiler correction had been implemented. Code has now been added on `feature/opportunity-quality-classification`; the earlier history is retained for audit.
 
 ### First pass — implement every item that current evidence permits
+- [x] Enumerated the remaining unchecked entries and completed a second-pass dependency review; current workstream status is consolidated in `docs/Validation/Master-To-Do-Audit-20261105.md`.
 
 - [x] Parsed both new full ATR V2 exports: 346 1m ATR observations and 81 5m ATR observations. Their Strategy Reports contain 692 and 162 numbered order rows respectively because each source bar emits a transport-close row and an ATR payload row.
 - [x] Added a dedicated V2 parser with 11-field payload validation, all six documented timeframes, UTC epoch-millisecond parsing, invariant decimal parsing, symbol/timeframe consistency, duplicate rejection, and explicit gap reporting. V1 parser remains unchanged.
