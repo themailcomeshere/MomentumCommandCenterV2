@@ -18,6 +18,18 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.All(boundaries, x => Assert.True(x.PreviousSessionDate < x.NextSessionDate));
     }
 
+
+    [Fact]
+    public void BuildsFortyChronologicalTrainingAndTestSessionBoundaries()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 11, 2), 40);
+
+        Assert.Equal(40, boundaries.Count);
+        Assert.Equal(40, boundaries.Select(x => x.NextSessionDate).Distinct().Count());
+        Assert.All(boundaries, x => Assert.True(x.PreviousSessionDate < x.NextSessionDate));
+        Assert.Equal(new DateOnly(2026, 11, 2), boundaries[^1].NextSessionDate);
+    }
+
     [Fact]
     public void SkipsThanksgivingAndUsesDayAfterThanksgivingEarlyClose()
     {
