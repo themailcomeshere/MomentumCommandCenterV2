@@ -1398,7 +1398,7 @@ app.MapPost("/api/boring-overnight/sell-limit", async (
 })
 .WithName("CalculateBoringOvernightSellLimit")
 .WithSummary("Calculate a fail-closed Overnight sell-limit research candidate")
-.WithDescription("Example request: { \"symbol\": \"EVR\", \"providerName\": \"Alpaca\", \"feed\": \"sip\", \"targetQuantilePct\": 75 }. Requires 20/20 exact SIP GTC_EXT windows, exact latest regular-session 1m reference close, corrected TOS ATR(14) Wilder provenance, MATCH parity, 99 consecutive 5m bars, exact provider/TOS 5m OHLCV match and a fresh completed 5m ATR. Returns BLOCKED with explicit gate failures otherwise. PROVISIONAL is research-only; this endpoint never submits an order.")
+.WithDescription("Example request: { \"symbol\": \"EVR\", \"providerName\": \"Alpaca\", \"feed\": \"sip\", \"targetQuantilePct\": 75 }. Requires 40/40 exact SIP GTC_EXT sessions (20 chronological training + 20 later unseen test sessions), exact latest regular-session 1m reference close, corrected TOS ATR(14) Wilder provenance, MATCH parity, 99 consecutive 5m bars, exact provider/TOS 5m OHLCV match, a fresh completed 5m ATR, test target-touch rate at least the training empirical rate, and test maximum adverse excursion no worse than the training 95th-percentile bound. All theoretical touches are derived from OHLCV highs and are kept separate from actual broker fills. Returns BLOCKED with explicit gate failures otherwise. PROVISIONAL is research-only; this endpoint never submits an order.")
 .ProducesProblem(400);
 
 app.MapGet("/api/strategy-report/atr-observations", async (
