@@ -109,7 +109,7 @@ public sealed class StrategyReportAtrV2Tests
     {
         using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_1M.csv"));
         var parsed = StrategyReportAtrV2Parser.Parse(reader.ReadToEnd());
-        var metadata = Metadata();
+        var metadata = Metadata() with { StudyVersion = "MCC_OHLCV_ATR_V2.0" };
         var stored = parsed.Observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
             "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
 
@@ -185,6 +185,6 @@ public sealed class StrategyReportAtrV2Tests
     }
 
     private static StrategyReportAtrImportMetadata Metadata() => new(
-        "test.csv", "MCC_OHLCV_ATR_V2", 14, "Wilder", "America/Phoenix",
+        "test.csv", "MCC_OHLCV_ATR_V2.1", 14, "Wilder", "America/Phoenix",
         true, true, "batch-1", DateTimeOffset.UtcNow);
 }
