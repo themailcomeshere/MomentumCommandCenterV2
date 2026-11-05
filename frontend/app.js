@@ -1563,7 +1563,7 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
   const reason=$("overnightSellLimitReason");
   if(reason)reason.textContent=qualification
    ?"GTC_EXT SIP coverage is complete. The numeric target remains NOT CALCULATED until ATR parity is MATCH and walk-forward target-touch/adverse-excursion validation is complete. Coverage is not proof of executable quotes or fills."
-   :"Sell target remains DATA? — NOT CALCULATED. Complete 20/20 exact SIP windows and ATR parity are required; missing intervals are not imputed.";
+   :"Sell target remains DATA? — NOT CALCULATED. Complete 40/40 exact SIP windows (20 training + 20 later test) and ATR parity are required; missing intervals are not imputed.";
  }catch(error){
   status.textContent="GTC_EXT capture failed or was blocked: "+error.message+" No sell target was calculated.";
  }finally{
