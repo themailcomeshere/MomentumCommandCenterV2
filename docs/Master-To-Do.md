@@ -1,3 +1,22 @@
+## 2026-11-05 — ATR V2 compile-error correction and sell-limit implementation status
+
+- [x] Diagnosed the user's ThinkScript compile errors: `AggregationPeriod.ONE_MIN` is not the ThinkScript one-minute constant; the supported constant is `AggregationPeriod.MIN`. The script also assigned string labels to `def` variables, which are numeric-only in ThinkScript and caused the cascade of `Expected double` / incompatible string parameter errors.
+- [x] Corrected the V2 study: replaced `ONE_MIN` with `MIN` and inlined the string conditional into the label and Strategy Report order-name expressions instead of storing a string in `def timeframeLabel`. Commit: [39cacef](https://github.com/themailcomeshere/MomentumCommandCenterV2/commit/39cacef3a68f88e2e3fc33467d260ac00f175b37).
+- [ ] Thinkorswim compilation and export validation of this correction. Repository-side edits cannot compile ThinkScript in the user's installed platform.
+- [ ] V2 Strategy Report parser: existing parser/reader still consume MCC OHLCV V1 only. Add explicit V2 schema handling (11 fields including ATR), strict timeframe/UTC/decimal validation, duplicate/gap checks, and fixtures for the actual manually edited and ATR exports. Preserve V1 compatibility.
+- [ ] Separate append-only Thinkorswim ATR observation persistence with source metadata (symbol, timeframe, source bar timestamp, ATR period/average type/value, study version, chart timezone, ETH, adjustment, import batch/hash). Enforce idempotency on source identity; never merge ATR with a different OHLCV feed or timestamp.
+- [ ] Server Wilder ATR: calculate with an explicitly versioned seed/warm-up contract and compare only identical completed bars. Current `BoringOvernightAtrCalculator` is a research helper, not yet a parity-certified production service.
+- [ ] Timestamp-matched ATR parity service: compare TOS and MCC ATR values on identical source bars, report count, gaps, max/mean absolute and relative error, and require a threshold justified by observed TOS precision. No `MATCH` until operator/platform exports establish tolerance.
+- [ ] Sell-limit orchestration API: compose exact persisted 20/20 SIP GTC_EXT windows, exact prior-session reference close, current verified close, continuous 5m ATR warm-up, ATR parity, quantile and provenance. Current calculator is not end-to-end orchestration and must remain fail-closed.
+- [ ] UI status/provenance/failure reasons for import, parity, reference close, history completeness, quantile, and calculated limit. No numeric target until every gate is satisfied.
+- [ ] SIP history qualification: user runtime currently reports effective Alpaca IEX. SIP entitlement is not demonstrated; prior SIP request returned 403. Do not mark complete or request SIP capture while effective feed is IEX or entitlement is denied.
+- [ ] Chronological walk-forward validation: use time-separated train/test windows, record target touches and adverse excursion, avoid look-ahead, and report sample sizes/coverage.
+- [ ] Execution reconciliation: import actual broker fills, quantities, fees and timestamps separately from theoretical bar-high target touches. No execution integration may infer fills from OHLCV.
+
+**Scope decision:** The above eight application workstreams were requested together, but only the ThinkScript compile-error correction was implemented in this update. The existing V1 parser, ATR helper and sell-limit calculator are not evidence that the V2 ingestion, durable ATR store, parity service, orchestration API/UI, SIP qualification, walk-forward validation or broker-fill reconciliation are complete. Keep these items open until code, automated tests and runtime evidence exist.
+
+---
+
 ## 2026-11-04 — first-pass / second-pass reconciliation and Red Zone mode work
 
 - [x] Diagnosed the GTC_EXT HTTP 422: the runtime feed is IEX from local `secrets.json`, overriding tracked `appsettings.json` SIP. The preflight correctly rejects requested SIP before fetching. Keep IEX as diagnostic until a recent SIP request succeeds; prior SIP access returned 403. Do not change configuration and assume entitlement.
