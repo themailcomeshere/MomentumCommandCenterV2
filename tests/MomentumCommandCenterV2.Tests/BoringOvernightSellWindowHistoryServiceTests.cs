@@ -101,7 +101,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     public async Task DoesNotTreatCurrentSessionAsCompleteBeforeTwentyHundredEastern()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 29), 20);
+            new DateOnly(2026, 10, 29), 40);
         var bars = BuildBars(boundaries);
         var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
 
