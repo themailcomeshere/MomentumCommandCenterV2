@@ -137,20 +137,20 @@
             <div class="overnight-results-grid" id="mcc-static-0207-div">
  <section class="overnight-result" aria-labelledby="overnightSellLimitTitle" id="mcc-static-0208-section">
   <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
-  <button id="overnightCaptureSellWindow" type="button" class="quiet-button">Fetch 20-session GTC_EXT sell-window history</button>
+  <button id="overnightCaptureSellWindow" type="button" class="quiet-button">Fetch 40-session GTC_EXT sell-window history</button>
   <label for="overnightSellLimitQuantile">Research target quantile (%)</label>
   <input id="overnightSellLimitQuantile" type="number" min="1" max="99" step="1" placeholder="Choose 1–99" inputmode="numeric">
   <button id="overnightCalculateSellLimit" type="button" class="quiet-button">Assess sell-limit evidence gates</button>
   <p id="overnightSellLimitAssessmentStatus" class="muted" role="status">No sell-limit assessment run. This endpoint is diagnostic and never submits an order.</p>
   <div id="overnightSellLimitEvidenceGates" aria-live="polite"></div>
-  <p id="overnightSellWindowStatus" class="muted" role="status">Not captured. This fetches the exact 07:00–19:59 ET one-minute bars for each of the latest 20 completed sell sessions plus each prior regular-session close. SIP is required for qualification; IEX is diagnostic only.</p>
+  <p id="overnightSellWindowStatus" class="muted" role="status">Not captured. This fetches the exact 07:00–19:59 ET one-minute bars for each of the latest 40 completed sell sessions (20 training + 20 later test) plus each prior regular-session close. SIP is required for qualification; IEX is diagnostic only.</p>
   <dl id="mcc-static-0209-dl">
    <div id="mcc-static-0210-div"><dt id="mcc-static-0211-dt">Calculated limit</dt><dd id="overnightSellLimitPrice">DATA? — NOT CALCULATED</dd></div>
    <div id="mcc-static-0212-div"><dt id="mcc-static-0213-dt">Reference close</dt><dd id="overnightSellLimitClose">DATA?</dd></div>
    <div id="mcc-static-0214-div"><dt id="mcc-static-0215-dt">Target basis</dt><dd id="overnightSellLimitMethod">Historical eligible-window target distribution + ATR context</dd></div>
    <div id="mcc-static-0216-div"><dt id="mcc-static-0217-dt">Validation</dt><dd id="overnightSellLimitValidation">NOT VERIFIED</dd></div>
   </dl>
-  <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until 20/20 exact GTC_EXT windows are complete on SIP, ATR parity is MATCH, and walk-forward target validation is complete. A bar high touching a limit is not an actual fill.</p>
+  <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until 40/40 exact GTC_EXT windows are complete on SIP, ATR parity is MATCH, and walk-forward validation passes on 20 training + 20 later unseen test sessions. A bar high touching a limit is not an actual fill.</p>
  </section>
   <article class="overnight-result" id="mcc-static-0218-article"><h3 id="mcc-static-0219-h3">Requested bar coverage</h3><dl id="mcc-static-0220-dl"><div id="mcc-static-0221-div"><dt id="mcc-static-0222-dt">Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div id="mcc-static-0223-div"><dt id="mcc-static-0224-dt">Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div id="mcc-static-0225-div"><dt id="mcc-static-0226-dt">First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div id="mcc-static-0227-div"><dt id="mcc-static-0228-dt">Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div id="mcc-static-0229-div"><dt id="mcc-static-0230-dt">Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div id="mcc-static-0231-div"><dt id="mcc-static-0232-dt">Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
   <article class="overnight-result" id="mcc-static-0233-article"><h3 id="mcc-static-0234-h3">What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice" id="mcc-static-0235-p">The new capture button requests and persists Alpaca 1-minute bars, generates 20 close/open boundaries with the MCC US-equities calendar ruleset, and displays every valid or missing pair. This is a history calculation only; it does not calculate the separate GTC_EXT sell-window target or qualify a candidate.</p></article>
