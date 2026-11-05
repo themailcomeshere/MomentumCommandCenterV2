@@ -331,3 +331,8 @@ Select a group, then click **Fetch Daily + catalyst for [group]**. MCC requests 
 - **Morning Command Brief** is adjacent to the Momentum Command Center title.
 - **System Readiness** expands/collapses the operational status details. WebSocket status and (on the prototype) the prototype warning badge live inside it.
 - **Quick Start** is in the left prototype dock. The production page does not currently have a left dock; its access point must remain available until a production-side rail is implemented.
+
+
+### Human catalyst review
+
+After fetching Daily + catalyst for the active four, the **Human catalyst review queue** lists returned source articles. Open each article, select the appropriate label, explain the decision in Notes, and save. Reviews are append-only and remain separate from automated triage. Saving a label never clears the catalyst or changes READY. No-news remains UNKNOWN and cannot be labelled as CLEAR.
