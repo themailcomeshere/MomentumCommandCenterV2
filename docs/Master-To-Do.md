@@ -2288,3 +2288,36 @@ The compact table does not prove that all historical metrics were populated only
 - [x] Recorded that current Alpaca public docs list Basic as free with IEX and Algo Trader Plus at $99/month with all-US-exchange SIP coverage. Recent SIP requests require eligible subscription.
 - [x] No verified public employee code, promotional code, or free trial was found in the sources checked. Alpaca Elite advertises free Algo Trader Plus market data but has a $100,000 deposit requirement; not recommended solely to avoid the $99 development fee.
 - [ ] Keep development on IEX where technically appropriate; schedule paid SIP activation only for consolidated-feed acceptance and exact historical recovery. Never mark IEX as equivalent to SIP.
+
+
+## 2026-11-05 — Calculated Limit Sell focus and EVR evidence
+
+### Operator evidence reconciled
+- [x] Confirmed the UI action **Fetch / retry 20-session close/open history** is the existing 20-pair capture workflow (POST /api/boring-overnight/capture-history); the earlier label “Capture 20-session Overnight history” was descriptive, not the visible button text.
+- [x] Reviewed the 2026-11-05 result: 11/20 valid pairs, 9 missing next-session opens, provider exact-boundary coverage 31/40, persisted coverage 31/40, 3,759 bars fetched, 0 newly stored, effective Alpaca feed IEX. No 20-session rolling metrics are valid. Changing From/To is not indicated for a retry of the same rolling-window request; use a custom range only for a separately scoped diagnostic.
+- [x] Confirmed the operator's appsettings.json and secrets.json both intentionally specify IEX. Runtime result agrees; do not describe this as an unknown secrets override. GTC_EXT SIP capture correctly refuses to run under effective IEX.
+- [x] Parsed the EVR Thinkorswim strategy reports: 1M export contains 365 encoded MCC_OHLCV bar records with 21 gaps between adjacent records (not a continuous 1M tape); 5M export contains 79 distinct, contiguous 5-minute regular-session bars. These exports contain OHLCV encoded in strategy names and execution/P&L rows, but no Thinkorswim ATR14 output, ATR study settings, or independent ATR value. They therefore support a limited OHLCV inspection, not ATR parity certification.
+
+### Calculated Limit Sell — current implementation status
+- [x] Existing BoringOvernightSellLimitCalculator computes a nearest-rank quantile of each complete session's maximum eligible 07:00–19:59 ET price relative to its exact prior-session close. It handles flat/adverse samples without mislabelling them as missing data and refuses numeric output unless ATR parity status is MATCH.
+- [x] Existing capture/audit APIs persist and audit source/feed-isolated 1-minute GTC_EXT observations, requiring all 780 exact minute timestamps and the exact previous regular-session close for each of 20 sessions. IEX is diagnostic only; SIP is required for consolidated target research.
+- [ ] **Orchestration is not implemented:** no API/UI workflow currently binds 20 complete persisted SIP windows, a fresh exact reference close, independently parity-checked ATR, and the calculator into one source-provenance result.
+- [ ] Add a fail-closed POST /api/boring-overnight/calculate-sell-limit workflow. It must read persisted SIP bars (never caller-supplied historical observations), verify 20/20 complete GTC_EXT sessions, verify the exact reference-close bar and timestamp, calculate ATR from a defined timeframe/period and sufficient warm-up, compare it with a timestamp-matched Thinkorswim ATR value using an explicitly justified tolerance, then invoke the existing quantile calculator. A caller-provided MATCH string alone is not acceptable evidence.
+- [ ] Add UI display for status, numeric limit only when every gate passes, reference close/source timestamp, ATR/timeframe/period/parity difference, target quantile, 20-session sample and per-session coverage, in-sample touch rate caveat, source/feed, calculation timestamp, and explanation/reason codes. No order placement or automatic sell.
+- [ ] Capture more than the initial 20 windows before out-of-sample validation. Run chronological walk-forward: train on prior windows, evaluate only subsequent sessions; report target touch, time-to-touch and adverse excursion separately. In-sample quantile touch rate is not a fill probability.
+- [ ] Actual fills must be joined from broker execution records with order ID, client ID, side, quantity, fill price/time, fees and status. OHLCV high touching a target is not a fill.
+
+### EVR ATR parity data gap
+- [ ] Obtain a Thinkorswim export containing the actual ATR(14) study output for the same 5-minute bars, including study name, inputs/average type, extended-hours setting, adjustment mode, timestamp and displayed precision. The supplied 5M StrategyReport is OHLCV-only and contains 79 bars; it is shorter than the 98-bar Thinkorswim Wilder prefetch context previously documented, so it cannot certify parity.
+- [ ] Obtain at least 99 consecutive matching 5M OHLCV bars (98 prefetch bars plus the comparison bar) from the same feed/session/adjustment context and compare several consecutive completed bars, not a single rounded value. The 1M report's 365 encoded bars are sparse and are not a continuous ATR input series.
+
+### Next operator actions
+1. Keep the configured feed as IEX for now; do not expect GTC_EXT qualification from it. No paid-feed purchase or configuration change is authorized by these results.
+2. Use **Fetch / retry 20-session close/open history** without changing From/To for a repeat of the same rolling request. For diagnosis only, record exact missing timestamp offsets from the boundary audit; do not accept nearest-minute substitutions.
+3. For the sell-limit pipeline, first capture complete 20-session GTC_EXT history on an entitled SIP feed. Until then the calculated limit remains DATA? / NOT CALCULATED.
+4. Export the actual Thinkorswim ATR14 value series and matching continuous 5M bars as specified above. The two supplied StrategyReports are not ATR-value exports.
+5. After pulling any new code, run .\scripts\Get-Latest-And-Test.ps1 from a clean checkout on feature/opportunity-quality-classification, then restart MCC and verify the runtime API. PowerShell remains an accepted operator workflow.
+
+[Uncertainties]
+- The exact reason for the nine missing 09:30 open bars is not established by the summary; use the per-boundary provider/store nearest-offset audit to distinguish provider absence from storage mismatch.
+- No complete 20-session GTC_EXT SIP dataset, current runtime SIP entitlement, Thinkorswim ATR14 values, or broker execution records were supplied.
