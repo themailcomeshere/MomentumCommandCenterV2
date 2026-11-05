@@ -106,14 +106,17 @@ public static class ThinkorswimAtrParityService
         var meanRelative = errors.Average(x => x.RelativePct);
         var maxAbsolute = orderedErrors[^1];
         var p90 = orderedErrors[(int)Math.Ceiling(orderedErrors.Length * 0.90m) - 1];
-        var matched = maxAbsolute <= ExportRoundingTolerance;
+        var matched = maxAbsolute <= ExportRoundingTolerance && gaps == 0;
+        var status = maxAbsolute > ExportRoundingTolerance ? "NOT_MATCH" : gaps > 0 ? "GAPS_PRESENT" : "MATCH";
         return new ThinkorswimAtrParityResult(
-            matched ? "MATCH" : "NOT_MATCH", Version, rows[0].Symbol, rows[0].Timeframe, period,
+            status, Version, rows[0].Symbol, rows[0].Timeframe, period,
             warmupBars, MinimumComparisonBars, ExportRoundingTolerance, rows.Length, errors.Count, gaps,
             meanAbsolute, maxAbsolute, p90, errors[0].Timestamp, errors[^1].Timestamp, meanRelative, first,
             matched
-                ? "Every compared Wilder ATR value matches the Thinkorswim export within the four-decimal export rounding bound. This validates the ATR algorithm on these imported bars only; provider-feed and live-history parity remain separate."
-                : "Server Wilder ATR does not match the exported Thinkorswim ATR within the four-decimal export rounding bound. Numeric sell-limit orchestration must remain blocked. This comparison uses the imported TOS OHLCV bars and does not diagnose provider-feed differences.");
+                ? "Every compared Wilder ATR value matches the Thinkorswim export within the four-decimal export rounding bound, and the comparison window has no timestamp gaps. This validates the ATR algorithm on these imported bars only; provider-feed and live-history parity remain separate."
+                : status == "GAPS_PRESENT"
+                    ? "ATR values are within numeric tolerance, but one or more source timestamps are missing. Wilder recurrence across missing bars cannot be certified; no gap is imputed and parity is not MATCH."
+                    : "Server Wilder ATR does not match the exported Thinkorswim ATR within the four-decimal export rounding bound. Numeric sell-limit orchestration must remain blocked. This comparison uses the imported TOS OHLCV bars and does not diagnose provider-feed differences.");
     }
 
     private static ThinkorswimAtrParityResult Empty(string reason, string status = "NO_DATA") =>
