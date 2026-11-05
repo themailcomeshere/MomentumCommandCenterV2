@@ -1553,6 +1553,49 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
   button.disabled=false;
  }
 });
+
+$("overnightCalculateSellLimit")?.addEventListener("click", async () => {
+ const button=$("overnightCalculateSellLimit");
+ const status=$("overnightSellLimitAssessmentStatus");
+ const gateList=$("overnightSellLimitEvidenceGates");
+ const symbol=($("overnightSymbol")?.value||"").trim().toUpperCase();
+ const quantile=Number($("overnightSellLimitQuantile")?.value);
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid Overnight candidate symbol first.";return;}
+ if(!Number.isInteger(quantile)||quantile<1||quantile>99){status.textContent="Choose a research target quantile from 1 to 99.";return;}
+ button.disabled=true; gateList.replaceChildren();
+ status.textContent="Reading effective provider/feed and evaluating persisted sell-limit evidence for "+symbol+"…";
+ try{
+  const providerResponse=await fetch("/api/providers/status",{cache:"no-store",headers:{Accept:"application/json"}});
+  const providers=await providerResponse.json();
+  if(!providerResponse.ok)throw new Error(providers.detail||providers.title||("Provider status HTTP "+providerResponse.status));
+  const alpaca=Array.isArray(providers)?providers.find(x=>String(x.provider||"").toLowerCase()==="alpaca"):null;
+  if(!alpaca)throw new Error("Alpaca provider status was not returned; no sell-limit assessment was submitted.");
+  const feed=String(alpaca.configuredFeed||"").trim().toLowerCase();
+  if(!feed)throw new Error("Alpaca effective feed is unknown; no sell-limit assessment was submitted.");
+  const response=await fetch("/api/boring-overnight/sell-limit",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
+   body:JSON.stringify({symbol,providerName:"Alpaca",feed,targetQuantilePct:quantile})});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.detail||data.title||data.error||("HTTP "+response.status));
+  const calculation=data.calculation;
+  $("overnightSellLimitPrice").textContent=calculation?.calculatedLimitSell!=null
+   ? Number(calculation.calculatedLimitSell).toFixed(2) : "DATA? — NOT CALCULATED";
+  $("overnightSellLimitClose").textContent=data.referenceClose!=null?Number(data.referenceClose).toFixed(2):"DATA?";
+  $("overnightSellLimitMethod").textContent="Historical "+quantile+"th percentile · "+(data.atrParity?.status||"ATR DATA?");
+  $("overnightSellLimitValidation").textContent=data.status+" · "+(data.atrParity?.status||"ATR DATA?");
+  $("overnightSellLimitReason").textContent=data.explanation||"No sell-limit explanation was returned.";
+  const gates=Array.isArray(data.gates)?data.gates:[];
+  for(const gate of gates){
+   const row=document.createElement("p");
+   row.className=gate.passed?"muted":"upload-warning";
+   row.textContent=(gate.passed?"PASS":"BLOCKED")+" · "+gate.code+" — "+gate.detail;
+   gateList.append(row);
+  }
+  status.textContent=data.status+" · effective Alpaca feed "+feed.toUpperCase()+" · "+gates.filter(x=>x.passed).length+"/"+gates.length+" evidence gates passed · no order submitted.";
+ }catch(error){
+  status.textContent="Sell-limit assessment failed: "+error.message+" No numeric limit was calculated.";
+  $("overnightSellLimitPrice").textContent="DATA? — NOT CALCULATED";
+ }finally{button.disabled=false;}
+});
  
 $("overnightBarsForm")?.addEventListener("submit", async event => {
  event.preventDefault();
