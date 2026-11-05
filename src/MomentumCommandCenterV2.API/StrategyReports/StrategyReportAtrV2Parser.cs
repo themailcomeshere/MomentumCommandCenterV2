@@ -102,8 +102,8 @@ public static class StrategyReportAtrV2Parser
             "4h" => TimeSpan.FromHours(4),
             _ => throw new InvalidOperationException("Validated timeframe has no interval mapping.")
         };
-        var gaps = ordered.Zip(ordered.Skip(1), (left, right) => new { Expected = left.SourceTimestampUtc + interval, Actual = right.SourceTimestampUtc })
-            .Where(x => x.Actual - x.Expected > TimeSpan.FromSeconds(1))
+        var gaps = ordered.Zip(ordered.Skip(1), (left, right) => new { Left = left, Expected = left.SourceTimestampUtc + interval, Actual = right.SourceTimestampUtc })
+            .Where(x => AtrTimestampGapDetector.IsUnexpectedGap(x.Left.SourceTimestampUtc, x.Actual, interval))
             .Select(x => new StrategyReportAtrGap(x.Expected, x.Actual, x.Actual - x.Expected))
             .ToArray();
 
