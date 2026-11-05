@@ -2321,3 +2321,21 @@ The compact table does not prove that all historical metrics were populated only
 [Uncertainties]
 - The exact reason for the nine missing 09:30 open bars is not established by the summary; use the per-boundary provider/store nearest-offset audit to distinguish provider absence from storage mismatch.
 - No complete 20-session GTC_EXT SIP dataset, current runtime SIP entitlement, Thinkorswim ATR14 values, or broker execution records were supplied.
+
+
+## 2026-11-05 — EVR V2 ATR exports and Calculated Limit Sell readiness
+
+### Verified from newly uploaded Strategy Reports
+- [x] Audited `data/StrategyReports_EVR_11032026_5M_ATR.csv`: 81 V2 payloads; every row has the documented symbol/timeframe/epoch/OHLCV/volume/ATR14 shape; one 10-minute timestamp step, all other adjacent steps 5 minutes; ATR values 0.4962–2.0107.
+- [x] Audited `data/StrategyReports_EVR_11042026_5M_ATR.csv`: 79 V2 payloads; all adjacent timestamps are 5 minutes; ATR values 0.7834–2.5238.
+- [x] Recorded operator chart settings: extended-hours ON; corporate-action adjustment ON; chart timezone Phoenix local UTC-07:00; ATR length 14; Wilder average type. V2 script default is atrLength=14 and Wilder averaging.
+- [ ] Verify at least 20 consecutive rows against Thinkorswim chart ATR plot and OHLCV; exported values alone do not establish parity.
+- [ ] Resolve whether the 11/03 10-minute timestamp step is a true missing 5m bar or report-export omission. Never synthesize it.
+- [ ] Add V2 ATR parser/storage and tests for both exports while retaining V1 reader compatibility.
+- [ ] Implement server-calculated ATR series and timestamp-matched TOS parity audit; server derives MATCH from stored evidence, not a caller flag.
+- [ ] Implement end-to-end Calculated Limit Sell orchestration API/UI with provenance and fail-closed reason codes.
+- [ ] Obtain 20/20 complete GTC_EXT SIP windows (780 exact 1m bar starts/session plus exact prior close); current effective IEX feed is not qualification-usable. Verify SIP entitlement/config before changing runtime feed.
+- [ ] Verify exact current reference close and adequate same-source 5m OHLCV warmup/anchor.
+- [ ] Complete chronological walk-forward validation and integrate actual broker execution records separately.
+
+**Readiness decision:** The 160 V2 rows across two dates are sufficient to start and test ATR parser/parity engineering. They are not sufficient to certify a numeric sell limit or complete end-to-end validation. Numeric output remains DATA? / NOT VERIFIED until every source, coverage, reference-close and parity gate passes. See `docs/Calculated-Limit-Sell-Implementation.md`.
