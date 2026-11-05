@@ -1,3 +1,38 @@
+## 2026-11-05 — corrected V2.1 exports, ATR session-gap handling, and Overnight candidate review
+
+### Completed in this pass
+- [x] Reviewed the newly committed EVR V2.1 Strategy Reports: 346 one-minute observations and 81 five-minute observations. The explicit payload markers are `v2.1`.
+- [x] Recomputed one-minute Wilder ATR from the exported OHLCV using the parity service's seed and recurrence. The 20 bars after the 99-observation warm-up have mean absolute error approximately 0.00002603 and maximum absolute error approximately 0.00004669, within the 0.00005 export-rounding tolerance. This is a numeric diagnostic only; the latest 119-row window has 13 intraday timestamp gaps, so parity correctly remains blocked.
+- [x] Confirmed the five-minute report has only 81 observations and one 10-minute timestamp jump. It cannot satisfy the 99-observation warm-up or 20-bar comparison requirement.
+- [x] Added New York session-date-aware ATR gap detection to the parser and parity service. Normal overnight/weekend date transitions no longer count as missing intraday bars; same-session missing intervals still block MATCH.
+- [x] Added regression tests for scheduled overnight/weekend closures and intraday missing-bar detection. CI for the new code commit is running; do not treat it as passed until the Actions result is green.
+- [x] Located and verified the Dashboard assessment control. Navigation: Workspace = Boring Overnight → Calculated Limit Sell → Research target quantile (%) → **Assess sell-limit evidence gates**. HTML ID: `overnightCalculateSellLimit`.
+- [x] Reviewed AVNT, BLMN, EVER, BLK and CBOE scanner metrics and current catalysts. Added `docs/Validation/Overnight-Candidate-Review-20261105.md`.
+- [x] Reconciled SIP history: prior recent-history SIP request returned HTTP 403 due subscription entitlement; IEX preflight rejection is a separate known limitation. No new SIP request was made and the operator is not being asked to repeat failed attempts.
+
+### Still open after this pass
+- [ ] Import the two supplied V2.1 reports through Dashboard → StrategyReport and verify persisted observation counts and parity response. Repository review of the CSVs is not the same as a successful Dashboard import.
+- [ ] Export a longer 5m V2.1 history with at least 119 observations (99 warm-up + 20 comparisons). Multiple sessions are allowed; the updated detector excludes scheduled overnight/weekend transitions. Missing intervals within a New York session date still block MATCH.
+- [ ] Resolve the 13 intraday gaps in the latest 119 observations of the supplied 1m export if 1m parity is needed for validation. The last 20 post-warm-up numeric values are within tolerance, but the full window is not gap-free.
+- [ ] Add explicit full-session coverage checks so an entirely missing trading session cannot be mistaken for a normal date transition. The current gap detector is intraday/session-date aware, not a full-session completeness validator.
+- [ ] Implement chronological walk-forward target-touch and adverse-excursion validation. This remains the numeric sell-limit gate.
+- [ ] Keep actual broker fills/fees/quantities separate from theoretical OHLCV target touches.
+- [ ] Continue non-SIP work; do not request another SIP history attempt unless the account entitlement or provider access changes.
+- [ ] Complete Daily/catalyst qualification, current 5m/1m evidence, scanner full-pool field availability, and local browser/runtime acceptance.
+
+### Candidate review outcome
+- Preferred addition to the next ordinary Overnight shortlist: **CBOE**.
+- Strong historical consistency: **BLK**.
+- Momentum watch: **AVNT**, but it is immediately post-earnings.
+- Secondary only: **EVER**, because current ON is negative and mean ON substantially exceeds median ON.
+- Exclude from an ordinary overnight hold into November 6: **BLMN**, because its Q3 earnings are scheduled for November 6 premarket.
+- These are research priorities, not READY/buy decisions. Full rationale and sources are in `docs/Validation/Overnight-Candidate-Review-20261105.md`.
+
+### Operator UI and SIP note
+The **Assess sell-limit evidence gates** button is in the Boring Overnight workspace under Calculated Limit Sell, immediately below the research quantile input. Do not click **Fetch 20-session GTC_EXT sell-window history** while the previously tested SIP access remains denied. No repeated SIP test is requested.
+
+---
+
 ## 2026-11-05 — ATR V2 ingestion, parity diagnosis, and second-pass unblock review
 
 This section supersedes the earlier statement below that only the ThinkScript compiler correction had been implemented. Code has now been added on `feature/opportunity-quality-classification`; the earlier history is retained for audit.
