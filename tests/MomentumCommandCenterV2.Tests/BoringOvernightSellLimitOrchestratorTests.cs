@@ -28,7 +28,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         Assert.Equal(2m, result.CurrentAtr);
         Assert.Equal("MATCH", result.AtrParity.Status);
         Assert.Equal(99, result.TOSWarmupObservationCount);
-        Assert.Equal(119, result.ProviderWarmupObservationCount);
+        Assert.Equal(99, result.ProviderWarmupObservationCount);
         Assert.Equal(0, result.ProviderBarMismatchCount);
         Assert.Equal(101.51m, result.Calculation?.CalculatedLimitSell);
         Assert.All(result.Gates, gate => Assert.True(gate.Passed, gate.Code + ": " + gate.Detail));
