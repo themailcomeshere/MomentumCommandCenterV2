@@ -57,3 +57,14 @@ Omit symbol to read the latest records across symbols. Limit is 1–500.
 ## [Uncertainties]
 
 The existing Alpaca news endpoint returns ticker-linked articles, but article-level source completeness and historical lookback coverage have not been independently validated. Human reviewers must verify the original article and its timestamp.
+
+
+## Dashboard workflow
+
+1. Import the scanner CSV and select either MCC Top 4 or My Top 4 in the Overnight qualification panel.
+2. Click Fetch Daily + catalyst for the active four.
+3. For each returned article, open the source link and review the original article/filing.
+4. Select one of the six allowed labels, add concise rationale in Notes, and click Save human review.
+5. MCC appends the record to its local review store. The UI confirms the review ID/status; it does not change the automated catalyst assessment or candidate decision.
+
+The production and prototype dashboard both expose this queue. Articles only appear after a successful catalyst fetch; no-news remains UNKNOWN and is not a labelable article.
