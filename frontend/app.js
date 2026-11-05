@@ -1117,37 +1117,72 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
  const file = $("strategyReportFile").files?.[0];
  const status = $("strategyReportStatus"), summary = $("strategyReportSummary"), download = $("downloadStrategyReportJson"), parityDownload = $("downloadParityCsv");
  if (!file) { status.textContent = "Choose a CSV file first."; return; }
- status.textContent = "Uploading and parsing " + file.name + "…";
+ status.textContent = "Reading and validating " + file.name + "…";
  summary.classList.add("hidden"); download.classList.add("hidden"); parityDownload?.classList.add("hidden"); latestStrategyReportJson = null;
  try {
+  const sourceText = await file.text();
+  const isAtrV2 = sourceText.includes("MCC_OHLCV_ATR|v2|");
   const form = new FormData(); form.append("file", file, file.name);
-  const response = await fetch("/api/strategy-report/upload", {method:"POST",body:form,headers:{Accept:"application/json"}});
+  const endpoint = isAtrV2 ? "/api/strategy-report/atr-import" : "/api/strategy-report/upload";
+  if (isAtrV2) {
+   form.append("atrPeriod", $("atrImportPeriod").value);
+   form.append("atrAverageType", $("atrImportAverage").value);
+   form.append("chartTimezone", $("atrImportTimezone").value.trim());
+   form.append("extendedHours", String($("atrImportExtendedHours").checked));
+   form.append("corporateActionAdjustment", String($("atrImportAdjustment").checked));
+   form.append("studyVersion", "MCC_OHLCV_ATR_V2");
+  }
+  status.textContent = (isAtrV2 ? "Importing and saving ATR V2 observations…" : "Uploading and parsing StrategyReport…");
+  const response = await fetch(endpoint, {method:"POST",body:form,headers:{Accept:"application/json"}});
   const body = await response.json();
   if (!response.ok) throw new Error(body.error || ("HTTP " + response.status));
   latestStrategyReportJson = body;
-  const parsed = body.parsed;
   summary.replaceChildren();
-  const intro = document.createElement("p");
-  intro.textContent = body.fileName + " · " + parsed.parsedRowCount + " parsed rows · " + parsed.headers.length + " columns";
-  summary.append(intro);
-  const headers = document.createElement("p");
-  headers.textContent = "Columns: " + parsed.headers.join(", ");
-  summary.append(headers);
-  if (parsed.warnings?.length) {
-   const warning = document.createElement("p"); warning.className = "upload-warning";
-   warning.textContent = "Warnings: " + parsed.warnings.slice(0,8).join(" | ");
-   summary.append(warning);
+  if (isAtrV2) {
+   const intro = document.createElement("p");
+   intro.textContent = body.symbol + " · " + body.timeframe + " · " + body.atrObservationCount + " ATR observations · " + body.gapCount + " timestamp gap(s)";
+   summary.append(intro);
+   const details = document.createElement("p");
+   details.textContent = "Source window: " + body.firstTimestampUtc + " through " + body.lastTimestampUtc +
+    " · appended " + body.persistence.appendedCount + " · identical skipped " + body.persistence.identicalSkippedCount +
+    " · corrections " + body.persistence.correctionCount;
+   summary.append(details);
+   if (body.gapCount > 0) {
+    const warning = document.createElement("p"); warning.className = "upload-warning";
+    warning.textContent = "Gaps are retained as gaps; no bars were synthesized. Inspect the returned gap samples before using this data for continuous ATR calculations.";
+    summary.append(warning);
+   }
+   const provenance = document.createElement("pre");
+   provenance.textContent = JSON.stringify(body.metadata, null, 2);
+   summary.append(provenance);
+   status.textContent = "ATR V2 import saved. " + body.atrObservationCount + " observations parsed; " +
+    body.persistence.appendedCount + " new records, " + body.persistence.identicalSkippedCount + " unchanged, " +
+    body.persistence.correctionCount + " corrections.";
+  } else {
+   const parsed = body.parsed;
+   const intro = document.createElement("p");
+   intro.textContent = body.fileName + " · " + parsed.parsedRowCount + " parsed rows · " + parsed.headers.length + " columns";
+   summary.append(intro);
+   const headers = document.createElement("p");
+   headers.textContent = "Columns: " + parsed.headers.join(", ");
+   summary.append(headers);
+   if (parsed.warnings?.length) {
+    const warning = document.createElement("p"); warning.className = "upload-warning";
+    warning.textContent = "Warnings: " + parsed.warnings.slice(0,8).join(" | ");
+    summary.append(warning);
+   }
+   const preview = document.createElement("pre");
+   preview.textContent = JSON.stringify(parsed.previewRows || [], null, 2);
+   summary.append(preview);
+   status.textContent = "Parse complete. " + (parsed.parityRows || []).length + " MCC OHLCV V1 row(s) converted to the Chart Parity Template.";
+   if ((parsed.parityRows || []).length > 0) parityDownload?.classList.remove("hidden");
   }
-  const preview = document.createElement("pre");
-  preview.textContent = JSON.stringify(parsed.previewRows || [], null, 2);
-  summary.append(preview);
   summary.classList.remove("hidden"); download.classList.remove("hidden");
-  if ((parsed.parityRows || []).length > 0) parityDownload?.classList.remove("hidden");
-  status.textContent = "Parse complete. " + (parsed.parityRows || []).length + " MCC OHLCV row(s) converted to the Chart Parity Template.";
  } catch (e) {
-  status.textContent = "StrategyReport upload failed: " + e.message;
+  status.textContent = "StrategyReport import failed: " + e.message;
  }
 });
+
 $("downloadStrategyReportJson")?.addEventListener("click", () => {
  if (!latestStrategyReportJson) return;
  const blob = new Blob([JSON.stringify(latestStrategyReportJson, null, 2)], {type:"application/json"});
