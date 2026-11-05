@@ -1152,12 +1152,31 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
     warning.textContent = "Gaps are retained as gaps; no bars were synthesized. Inspect the returned gap samples before using this data for continuous ATR calculations.";
     summary.append(warning);
    }
+   let parity = null;
+   try {
+    const parityResponse = await fetch("/api/strategy-report/atr-parity?symbol=" +
+     encodeURIComponent(body.symbol) + "&timeframe=" + encodeURIComponent(body.timeframe), {headers:{Accept:"application/json"}});
+    const parityBody = await parityResponse.json();
+    if (parityResponse.ok) parity = parityBody;
+    else parity = {status:"UNAVAILABLE",explanation:parityBody.error || ("HTTP " + parityResponse.status)};
+   } catch (parityError) {
+    parity = {status:"UNAVAILABLE",explanation:parityError.message};
+   }
+   const parityLine = document.createElement("p");
+   parityLine.textContent = "Server Wilder ATR parity: " + parity.status +
+    (parity.comparedBarCount != null ? " · " + parity.comparedBarCount + " matched timestamps · mean abs error " +
+     (parity.meanAbsoluteError == null ? "DATA?" : Number(parity.meanAbsoluteError).toFixed(6)) +
+     " · max abs error " + (parity.maximumAbsoluteError == null ? "DATA?" : Number(parity.maximumAbsoluteError).toFixed(6)) : "") +
+    (parity.explanation ? " · " + parity.explanation : "");
+   if (parity.status !== "MATCH") parityLine.className = "upload-warning";
+   summary.append(parityLine);
    const provenance = document.createElement("pre");
    provenance.textContent = JSON.stringify(body.metadata, null, 2);
    summary.append(provenance);
    status.textContent = "ATR V2 import saved. " + body.atrObservationCount + " observations parsed; " +
     body.persistence.appendedCount + " new records, " + body.persistence.identicalSkippedCount + " unchanged, " +
-    body.persistence.correctionCount + " corrections.";
+    body.persistence.correctionCount + " corrections. ATR parity: " + parity.status +
+    ". A numeric sell limit remains withheld unless all independent gates pass.";
   } else {
    const parsed = body.parsed;
    const intro = document.createElement("p");
