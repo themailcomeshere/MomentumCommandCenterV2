@@ -37,7 +37,7 @@ declare upper;
 input startDate = 20261019;
 input endDate = 20261019;
 input startTime = 0700;
-input endTime = 2000;
+input endTime = 1959;
 input chartAggregation = AggregationPeriod.FIVE_MIN;
 input atrLength = 14;
 
