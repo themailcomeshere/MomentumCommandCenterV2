@@ -70,7 +70,10 @@ public sealed record BoringOvernightSellWindowObservation(
     decimal ReferenceClose,
     decimal HighestEligiblePrice,
     bool CoverageComplete,
-    int MissingIntervalCount);
+    int MissingIntervalCount)
+{
+    public decimal LowestEligiblePrice { get; init; }
+}
 
 public sealed record BoringOvernightSellLimitResult(
     string Status,
