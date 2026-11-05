@@ -1402,6 +1402,28 @@ app.MapGet("/api/strategy-report/atr-observations", async (
 .WithSummary("Query persisted Thinkorswim ATR observations")
 .WithDescription("Optional filters: symbol, timeframe (1m/5m), fromUtc, toUtc, limit (1–10000). Timestamps must be UTC. The response includes source OHLCV, ATR, chart settings, source file, and correction provenance.");
 
+app.MapGet("/api/strategy-report/atr-parity", async (
+    string symbol, string timeframe,
+    MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
+    int? warmupBars, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (timeframe is not ("1m" or "5m" or "15m" or "30m" or "1h" or "4h"))
+        return Results.BadRequest(new { error = "timeframe must be 1m, 5m, 15m, 30m, 1h, or 4h." });
+    try
+    {
+        var rows = await atrStore.GetLatestAsync(symbol, timeframe, null, null, 10000, ct);
+        return Results.Ok(MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.Compare(
+            rows, warmupBars ?? MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.DefaultWarmupBars));
+    }
+    catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("CompareThinkorswimAtrParity")
+.WithSummary("Compare server Wilder ATR with timestamp-matched Thinkorswim ATR")
+.WithDescription("Example: /api/strategy-report/atr-parity?symbol=EVR&timeframe=1m. Requires one imported symbol/timeframe and consistent chart provenance. Uses a 99-observation warm-up and a 20-bar minimum comparison sample. Tolerance is fixed at 0.00005, half of the V2 export's four-decimal precision. This compares the algorithm on the imported TOS OHLCV bars; provider-feed parity is a separate gate.");
+
 app.MapGet("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
     Results.Ok(new { count = (await store.GetAsync(ct)).Count, symbols = await store.GetAsync(ct) }))
 .WithSummary("List MCC exclusion-watchlist symbols")
