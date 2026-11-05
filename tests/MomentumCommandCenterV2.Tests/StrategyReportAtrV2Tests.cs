@@ -105,7 +105,7 @@ public sealed class StrategyReportAtrV2Tests
     }
 
     [Fact]
-    public void ActualOneMinuteExportDoesNotPassAtrParity()
+    public void LegacyNovemberThirdOneMinuteExportDoesNotPassCorrectedAtrParity()
     {
         using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_1M.csv"));
         var parsed = StrategyReportAtrV2Parser.Parse(reader.ReadToEnd());
@@ -118,8 +118,35 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal("NOT_MATCH", result.Status);
         Assert.Equal(346, result.SourceObservationCount);
         Assert.Equal(247, result.ComparedBarCount);
-        Assert.True(result.MaximumAbsoluteError > result.Tolerance);
+        Assert.True(result.MaximumAbsoluteError > 0.14m);
+        Assert.InRange(result.MeanAbsoluteError!.Value, 0.063m, 0.064m);
         Assert.True(result.TimestampGapCount > 0);
+    }
+
+    [Fact]
+    public void LegacyNovemberThirdOneMinuteExportMatchesTheDoubleShiftedTrueRangeDefect()
+    {
+        using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_1M.csv"));
+        var parsed = StrategyReportAtrV2Parser.Parse(reader.ReadToEnd());
+        var rows = parsed.Observations;
+        var trueRanges = new decimal[rows.Count];
+        for (var i = 1; i < rows.Count; i++)
+        {
+            var previousClose = rows[Math.Max(0, i - 2)].Close;
+            trueRanges[i] = Math.Max(rows[i].High - rows[i].Low,
+                Math.Max(Math.Abs(rows[i].High - previousClose), Math.Abs(rows[i].Low - previousClose)));
+        }
+        var atr = trueRanges.Skip(1).Take(14).Average();
+        var errors = new List<decimal>();
+        for (var i = 15; i < rows.Count; i++)
+        {
+            atr = ((atr * 13m) + trueRanges[i]) / 14m;
+            if (i >= 99) errors.Add(Math.Abs(atr - rows[i].Atr));
+        }
+
+        Assert.Equal(247, errors.Count);
+        Assert.True(errors.Max() <= ThinkorswimAtrParityService.ExportRoundingTolerance);
+        Assert.InRange(errors.Average(), 0.00002m, 0.00003m);
     }
 
     [Fact]
