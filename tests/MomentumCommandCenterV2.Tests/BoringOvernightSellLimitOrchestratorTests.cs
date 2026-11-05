@@ -10,7 +10,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     [Fact]
     public async Task ReturnsProvisionalResearchLimitOnlyWhenEveryEvidenceGatePasses()
     {
-        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(20, 2));
+        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 42));
         var bars = BuildCompleteSIPBars(asOf);
         var atrRows = BuildMatchedTosAtrRows(asOf);
         var orchestrator = new BoringOvernightSellLimitOrchestrator(
@@ -58,7 +58,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     {
         var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(20, 2));
         var bars = BuildCompleteSIPBars(asOf).ToList();
-        var target = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(19, 55));
+        var target = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 35));
         var index = bars.FindIndex(x => x.Bar.Timeframe == "5m" && x.SourceTimestamp == target);
         Assert.True(index >= 0);
         bars[index] = bars[index] with { Bar = bars[index].Bar with { Close = 100.25 } };
@@ -79,7 +79,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
     private static IReadOnlyList<MarketBarObservation> BuildCompleteSIPBars(DateTimeOffset receivedAt)
     {
         var output = new List<MarketBarObservation>();
-        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 11, 5), 20);
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 11, 4), 20);
         foreach (var boundary in boundaries)
         {
             AddBar(output, boundary.PreviousCloseBarTimestampUtc, "1m", 100, 101, 99, 100, 1000, receivedAt);
@@ -91,7 +91,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         var currentReference = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(15, 59));
         AddBar(output, currentReference, "1m", 100.5, 100.5, 100.5, 100.5, 1000, receivedAt);
 
-        var fiveMinuteStart = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(10, 5));
+        var fiveMinuteStart = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(6, 45));
         for (var index = 0; index < 119; index++)
             AddBar(output, fiveMinuteStart.AddMinutes(index * 5), "5m", 100, 101, 99, 100, 1000, receivedAt);
         return output;
