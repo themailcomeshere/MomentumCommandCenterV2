@@ -5,8 +5,8 @@
 <header class="topbar" id="mcc-header">
  <div class="topbar-layout" id="mcc-static-0009-div">
   <div class="topbar-brand" id="mcc-static-0010-div">
-   <div id="mcc-static-0011-div"><div class="eyebrow" id="mcc-static-0012-div">RESEARCH WORKBENCH</div><h1 id="mcc-static-0013-h1">Momentum Command Center</h1></div>
-   <div class="topbar-tools" id="mcc-static-0014-div"><div class="demo-flag" id="mcc-static-0015-div"><span id="mcc-static-0016-span"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div><span id="streamStatus" class="chip">WS minute bars: checking…</span><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button><button id="openQuickStart" type="button" class="quiet-button">Quick start</button></div>
+   <div class="topbar-title-row" id="mcc-static-0011-div"><div><div class="eyebrow" id="mcc-static-0012-div">RESEARCH WORKBENCH</div><h1 id="mcc-static-0013-h1">Momentum Command Center</h1></div><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button></div>
+   <div class="topbar-tools" id="mcc-static-0014-div"><div class="demo-flag" id="mcc-static-0015-div"><span id="mcc-static-0016-span"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div></div>
    <div id="marketSessionClock" class="market-session-clock" aria-live="polite">
     <span id="marketSessionLabel">Market session</span>
     <strong id="marketSessionCountdown">Loading…</strong>
@@ -22,7 +22,7 @@
   </div>
   <details class="topbar-readiness" id="system-readiness" aria-label="System readiness">
    <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></summary>
-   <div class="readiness-grid" id="mcc-static-0032-div">
+   <div class="readiness-grid" id="mcc-static-0032-div"><div class="readiness-runtime"><strong>WebSocket</strong><span id="streamStatus" class="chip">WS minute bars: checking…</span></div>
     <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
     <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
     <div id="mcc-static-0041-div"><span class="readiness-dot demo" id="mcc-static-0042-span"></span><strong id="mcc-static-0043-strong">Live scanner</strong><span id="mcc-static-0044-span">Top movers · SIP entitlement required</span></div>
@@ -169,9 +169,9 @@
 <section id="overnight-qualification" class="panel overnight-qualification-panel">
  <div class="section-heading">
   <div><div class="eyebrow">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
-   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import and shortlist review, the button fetches adjusted Daily metrics and the preceding 24 hours of ticker news for only the four highest-scored imported rows (scanner score descending); it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p>
+   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import, switch between MCC Top 4 (highest imported scanner scores) and My Top 4 (four symbols you select). Fetching retrieves adjusted Daily metrics and the preceding 24 hours of ticker news for exactly the active four; it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p>
   </div>
-  <button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for top 4</button>
+  <div class="overnight-shortlist-controls"><div class="overnight-shortlist-toggle" role="group" aria-label="Daily and catalyst candidate group"><button id="overnightShortlistMcc" type="button" class="quiet-button" aria-pressed="true">MCC Top 4</button><button id="overnightShortlistManual" type="button" class="quiet-button" aria-pressed="false" disabled>My Top 4</button></div><strong id="overnightShortlistActive" class="muted small">Active group: MCC Top 4 · highest imported scanner scores</strong><p class="muted small">Select exactly four imported symbols for My Top 4. Your selection is saved in this browser and kept separate from MCC Top 4.</p><div id="overnightManualTopFourPicker" class="overnight-shortlist-picker" aria-label="Select four personal candidates"></div><span id="overnightShortlistSummary" class="muted small">0/4 selected</span><button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for MCC Top 4</button></div>
  </div>
  <div class="overnight-qualification-summary">
   <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
