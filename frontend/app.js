@@ -399,11 +399,11 @@ function renderCatalystHumanReviewQueue(){
  const host=$("catalystReviewQueue"),count=$("catalystReviewQueueCount");if(!host)return;
  const rows=[];
  overnightLiveEvidence.forEach((evidence,symbol)=>{
-  (Array.isArray(evidence.catalyst?.articles)?evidence.catalyst.articles:[]).forEach(item=>{const article=item.article||item;rows.push({symbol,item,article});});
+  (Array.isArray(evidence.catalyst?.articles)?evidence.catalyst.articles:[]).forEach(item=>{const article=item.article||item;rows.push({symbol,item,article,evidence});});
  });
  if(count)count.textContent=rows.length+" articles";
  if(!rows.length){host.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"No articles returned for the currently fetched candidate groups. No news is UNKNOWN, not CLEAR."}));return;}
- host.replaceChildren(...rows.map(({symbol,item,article})=>{
+ host.replaceChildren(...rows.map(({symbol,item,article,evidence})=>{
   const card=document.createElement("article");card.className="catalyst-review-card";
   const title=document.createElement("strong");title.textContent=symbol+" · "+(article.headline||"Untitled article");
   const meta=document.createElement("p");meta.className="muted small";meta.textContent=[item.severity||"UNCLASSIFIED",(article.publishedAtUtc||"Publication time unavailable"),(item.categories||[]).join(", ")].filter(Boolean).join(" · ");
