@@ -344,15 +344,34 @@ function renderScanner(){
 /// PURPOSE: Evaluate imported historical gates and display source-backed Daily/catalyst evidence for a bounded top-four review set.
 /// IMPORTANT: Provisional catalyst triage never clears a candidate; no READY state is possible from this panel.
 const overnightLiveEvidence = new Map();
-
+const overnightShortlistStorageKey="mcc.overnightShortlists.v1";
+let overnightShortlistMode="mcc",overnightManualSymbols=[];
+try{const saved=JSON.parse(localStorage.getItem(overnightShortlistStorageKey)||"null");if(saved&&Array.isArray(saved.manualSymbols))overnightManualSymbols=[...new Set(saved.manualSymbols.map(x=>String(x).trim().toUpperCase()).filter(Boolean))].slice(0,4);if(saved?.mode==="manual")overnightShortlistMode="manual";}catch{}
+function saveOvernightShortlists(){try{localStorage.setItem(overnightShortlistStorageKey,JSON.stringify({mode:overnightShortlistMode,manualSymbols:overnightManualSymbols}));}catch{}}
+function renderOvernightShortlistPicker(rows){
+ const picker=$("overnightManualTopFourPicker"),summary=$("overnightShortlistSummary");if(!picker)return;
+ const symbols=[...new Set(rows.map(x=>String(x.symbol||"").trim().toUpperCase()).filter(Boolean))];overnightManualSymbols=overnightManualSymbols.filter(x=>symbols.includes(x)).slice(0,4);picker.replaceChildren();
+ symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
+ if(summary)summary.textContent=overnightManualSymbols.length+"/4 selected"+(overnightManualSymbols.length===4?"":" · select exactly four");
+ const manual=$("overnightShortlistManual");if(manual)manual.disabled=overnightManualSymbols.length!==4;
+}
+function updateOvernightShortlistMode(){
+ const mcc=$("overnightShortlistMcc"),manual=$("overnightShortlistManual"),button=$("overnightQualRefreshMarket"),active=$("overnightShortlistActive");
+ if(mcc){mcc.setAttribute("aria-pressed",String(overnightShortlistMode==="mcc"));mcc.classList.toggle("active",overnightShortlistMode==="mcc");}
+ if(manual){manual.setAttribute("aria-pressed",String(overnightShortlistMode==="manual"));manual.classList.toggle("active",overnightShortlistMode==="manual");manual.disabled=overnightManualSymbols.length!==4;}
+ if(button)button.textContent=overnightShortlistMode==="mcc"?"Fetch Daily + catalyst for MCC Top 4":"Fetch Daily + catalyst for My Top 4";
+ if(active)active.textContent=overnightShortlistMode==="mcc"?"Active group: MCC Top 4 · highest imported scanner scores":"Active group: My Top 4 · "+(overnightManualSymbols.length===4?overnightManualSymbols.join(", "):"select four symbols");
+}
+$("overnightShortlistMcc")?.addEventListener("click",()=>{overnightShortlistMode="mcc";saveOvernightShortlists();updateOvernightShortlistMode();});
+$("overnightShortlistManual")?.addEventListener("click",()=>{if(overnightManualSymbols.length!==4)return;overnightShortlistMode="manual";saveOvernightShortlists();updateOvernightShortlistMode();});
 async function fetchOvernightTopFourEvidence(){
- const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
- const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
+ const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
  if(!rows.length){if(status)status.textContent="Import the Overnight Scanner CSV first.";return;}
- if(button)button.disabled=true;
- if(status)status.textContent="Fetching Daily and catalyst evidence for the four highest-scored imported candidates…";
- const ranked=rows.slice().sort((a,b)=>(Number(String(b.score??"").replace(/[^0-9.-]/g,""))||-Infinity)-(Number(String(a.score??"").replace(/[^0-9.-]/g,""))||-Infinity)||String(a.symbol).localeCompare(String(b.symbol))).slice(0,4);
- const results=await Promise.all(ranked.map(async item=>{
+ const ranked=rows.slice().sort((a,b)=>(Number(String(b.score??"").replace(/[^0-9.-]/g,""))||-Infinity)-(Number(String(a.score??"").replace(/[^0-9.-]/g,""))||-Infinity)||String(a.symbol).localeCompare(String(b.symbol)));
+ const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>rows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):ranked.slice(0,4);
+ if(selected.length!==4){if(status)status.textContent=overnightShortlistMode==="manual"?"Select exactly four symbols in My Top 4 before fetching.":"MCC could not identify four distinct imported candidates.";return;}
+ if(button)button.disabled=true;if(status)status.textContent="Fetching Daily and catalyst evidence for "+(overnightShortlistMode==="manual"?"My Top 4":"MCC Top 4")+": "+selected.map(x=>x.symbol).join(", ")+"…";
+ const results=await Promise.all(selected.map(async item=>{
   const symbol=String(item.symbol||"").trim().toUpperCase();
   const get=async path=>{const response=await fetch(path,{cache:"no-store",headers:{Accept:"application/json"}});if(!response.ok){let detail="HTTP "+response.status;try{const body=await response.json();detail=body.detail||body.title||body.error||detail;}catch{}throw new Error(detail);}return response.json();};
   const [daily,catalyst]=await Promise.allSettled([
@@ -372,13 +391,14 @@ async function fetchOvernightTopFourEvidence(){
  if(button)button.disabled=false;
  renderOvernightQualification();
  const failed=results.filter(x=>x.evidence.dailyError||x.evidence.catalystError);
- if(status)status.textContent="Live evidence fetched for "+results.length+" candidates: "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. Only these four were queried; other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
+ if(status)status.textContent="Live evidence fetched for "+results.length+" candidates: "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. Only this selected group of four was queried; other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
 }
 
 async function renderOvernightQualification(){
  const body=$("overnightQualificationRows");
  if(!body)return;
  const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();
  const setText=(id,value)=>{const node=$(id);if(node)node.textContent=String(value);};
  setText("overnightQualImported",rows.length);
  if(!rows.length){
