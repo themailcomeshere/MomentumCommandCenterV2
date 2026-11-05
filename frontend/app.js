@@ -1121,7 +1121,7 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
  summary.classList.add("hidden"); download.classList.add("hidden"); parityDownload?.classList.add("hidden"); latestStrategyReportJson = null;
  try {
   const sourceText = await file.text();
-  const isAtrV2 = sourceText.includes("MCC_OHLCV_ATR|v2|");
+  const isAtrV2 = sourceText.includes("MCC_OHLCV_ATR|v2");
   const form = new FormData(); form.append("file", file, file.name);
   const endpoint = isAtrV2 ? "/api/strategy-report/atr-import" : "/api/strategy-report/upload";
   if (isAtrV2) {
@@ -1130,7 +1130,6 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
    form.append("chartTimezone", $("atrImportTimezone").value.trim());
    form.append("extendedHours", String($("atrImportExtendedHours").checked));
    form.append("corporateActionAdjustment", String($("atrImportAdjustment").checked));
-   form.append("studyVersion", "MCC_OHLCV_ATR_V2");
   }
   status.textContent = (isAtrV2 ? "Importing and saving ATR V2 observations…" : "Uploading and parsing StrategyReport…");
   const response = await fetch(endpoint, {method:"POST",body:form,headers:{Accept:"application/json"}});
@@ -1155,7 +1154,8 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
    let parity = null;
    try {
     const parityResponse = await fetch("/api/strategy-report/atr-parity?symbol=" +
-     encodeURIComponent(body.symbol) + "&timeframe=" + encodeURIComponent(body.timeframe), {headers:{Accept:"application/json"}});
+     encodeURIComponent(body.symbol) + "&timeframe=" + encodeURIComponent(body.timeframe) +
+     "&studyVersion=" + encodeURIComponent("MCC_OHLCV_ATR_V2.1"), {headers:{Accept:"application/json"}});
     const parityBody = await parityResponse.json();
     if (parityResponse.ok) parity = parityBody;
     else parity = {status:"UNAVAILABLE",explanation:parityBody.error || ("HTTP " + parityResponse.status)};
