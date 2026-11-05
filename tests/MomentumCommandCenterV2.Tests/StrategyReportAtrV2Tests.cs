@@ -104,6 +104,59 @@ public sealed class StrategyReportAtrV2Tests
         }
     }
 
+    [Fact]
+    public void ActualOneMinuteExportDoesNotPassAtrParity()
+    {
+        using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_1M.csv"));
+        var parsed = StrategyReportAtrV2Parser.Parse(reader.ReadToEnd());
+        var metadata = Metadata();
+        var stored = parsed.Observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored);
+
+        Assert.Equal("NOT_MATCH", result.Status);
+        Assert.Equal(346, result.SourceObservationCount);
+        Assert.Equal(247, result.ComparedBarCount);
+        Assert.True(result.MaximumAbsoluteError > result.Tolerance);
+        Assert.True(result.TimestampGapCount > 0);
+    }
+
+    [Fact]
+    public void ActualFiveMinuteExportNeedsMoreThanNinetyNineWarmupRows()
+    {
+        using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_5M.csv"));
+        var parsed = StrategyReportAtrV2Parser.Parse(reader.ReadToEnd());
+        var metadata = Metadata();
+        var stored = parsed.Observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored);
+
+        Assert.Equal("INSUFFICIENT_WARMUP", result.Status);
+        Assert.Equal(81, result.SourceObservationCount);
+        Assert.Equal(99, result.WarmupBars);
+        Assert.Equal(0, result.ComparedBarCount);
+    }
+
+    [Fact]
+    public void WilderAtrMatchesWhenExportedValuesUseTheSameSeedAndBars()
+    {
+        var metadata = Metadata();
+        var observations = Enumerable.Range(0, 130).Select(index => new StrategyReportAtrObservation(
+            index.ToString(), "EVR", "1m", DateTimeOffset.Parse("2026-11-03T14:00:00Z").AddMinutes(index),
+            100m, 101m, 99m, 100m, 1000m, 2m)).ToArray();
+        var stored = observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored);
+
+        Assert.Equal("MATCH", result.Status);
+        Assert.Equal(31, result.ComparedBarCount);
+        Assert.Equal(0m, result.MaximumAbsoluteError);
+        Assert.Equal(0, result.TimestampGapCount);
+    }
+
     private static StrategyReportAtrImportMetadata Metadata() => new(
         "test.csv", "MCC_OHLCV_ATR_V2", 14, "Wilder", "America/Phoenix",
         true, true, "batch-1", DateTimeOffset.UtcNow);
