@@ -32,3 +32,10 @@ Do not claim the calculation pipeline is complete. No numeric sell limit is vali
 
 ## [Uncertainties]
 ThinkScript compilation and report field preservation are unverified. Exact equivalence of the exported Wilder ATR seed/prefetch behavior to the user's installed ATR study must be tested against chart values. No SIP GTC_EXT sample or current reference close is available.
+
+
+## 2026-11-05 — selectable chart aggregation added
+- Updated `MCC_OHLCV_ATR_V2.txt` with a `chartAggregation` input, supported periods 1m/5m/15m/30m/1h/4h, dynamic timeframe label and payload, and a fail-closed chart/input mismatch guard.
+- Important: ThinkScript cannot change the host chart's aggregation. Select the period in the study input AND set the chart's aggregation control to the same period. The study now blocks export if they differ, so source-code edits are no longer needed when switching among supported periods.
+- ATR length remains 14 and Wilder remains the average type. Date/time filters and manual ETH/adjustment recording remain.
+- The updated script has not yet been recompiled in Thinkorswim after this change; validate every aggregation you intend to use before importing its reports.
