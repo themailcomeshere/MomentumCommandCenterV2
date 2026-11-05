@@ -315,3 +315,19 @@ The capture action is not the numeric limit calculation. A numeric target remain
 ### Entry and exit are separate
 
 The Timeframe Handoff refreshes automatically. Before a new entry, use 5M permission as the authority check and 1M as the execution-timing check. After entry, evaluate exit rules against the actual open position. MCC does not currently receive broker-synchronized position state, so the live handoff cannot issue a position-specific exit decision.
+
+
+## Daily + catalyst: MCC Top 4 versus My Top 4
+
+The qualification panel has two independent candidate groups:
+
+- **MCC Top 4**: the four highest-scored imported CSV rows, sorted by scanner score descending with symbol as the deterministic tie-breaker. This is a scanner-score preview, not a calibrated Opportunity Quality rank.
+- **My Top 4**: choose exactly four symbols from the imported rows using the checkbox picker. Selections and active mode are saved in this browser. The UI will not silently drop a fifth manually reviewed symbol; choose the four to use for this evidence request.
+
+Select a group, then click **Fetch Daily + catalyst for [group]**. MCC requests adjusted Daily metrics and preceding-24-hour ticker news for exactly those four symbols. Other imported rows remain DATA?. The selected symbols are shown in the status line. Switching groups does not overwrite the other group's definition or its prior evidence. This action does not refresh 1M/5M bars, clear catalyst status, or produce READY.
+
+### Header controls
+
+- **Morning Command Brief** is adjacent to the Momentum Command Center title.
+- **System Readiness** expands/collapses the operational status details. WebSocket status and (on the prototype) the prototype warning badge live inside it.
+- **Quick Start** is in the left prototype dock. The production page does not currently have a left dock; its access point must remain available until a production-side rail is implemented.
