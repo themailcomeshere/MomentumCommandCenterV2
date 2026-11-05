@@ -1,4 +1,4 @@
-# MCC_OHLCV_ATR_V2 — OHLCV + Thinkorswim ATR parity export
+# MCC_OHLCV_ATR_V2.1 — OHLCV + Thinkorswim ATR parity export
 #
 # STATUS: Aggregation selector added. Compile and validate each selected chart
 # aggregation in Thinkorswim before relying on its output.
@@ -22,7 +22,7 @@
 # - Export the Strategy Report and preserve full order names/precision.
 #
 # V2 payload:
-# MCC_OHLCV_ATR|v2|symbol|timeframe|epochMillis|open|high|low|close|volume|atr
+# MCC_OHLCV_ATR|v2.1|symbol|timeframe|epochMillis|open|high|low|close|volume|atr
 #
 # ATR is calculated from chart bars using ThinkScript Wilder averaging.
 # TrueRange receives the unshifted close series; the function itself references
@@ -100,7 +100,7 @@ AddOrder(OrderType.BUY_TO_OPEN, exportBar,
     1,
     Color.CURRENT,
     Color.CURRENT,
-    "MCC_OHLCV_ATR|v2|" + GetSymbol() + "|" +
+    "MCC_OHLCV_ATR|v2.1|" + GetSymbol() + "|" +
     (if chartAggregation == AggregationPeriod.MIN then "1m"
      else if chartAggregation == AggregationPeriod.FIVE_MIN then "5m"
      else if chartAggregation == AggregationPeriod.FIFTEEN_MIN then "15m"
