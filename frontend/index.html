@@ -204,11 +204,21 @@
  </article>
  <article class="panel" id="mcc-static-0304-article">
   <div class="section-heading" id="mcc-static-0305-div"><div id="mcc-static-0306-div"><div class="eyebrow" id="mcc-static-0307-div">THINKORSWIM · CSV</div><h2 id="mcc-static-0308-h2">StrategyReport upload</h2></div></div>
-  <form id="strategyReportForm" class="upload-form"><label for="strategyReportFile" id="mcc-static-0309-label">StrategyReport CSV (max 10 MB)</label><input id="strategyReportFile" type="file" accept=".csv,text/csv" required><button type="submit" id="mcc-static-0310-button">Upload and parse</button></form>
-  <p id="strategyReportStatus" class="muted">Choose a TOS StrategyReport export to parse through the API.</p>
+  <form id="strategyReportForm" class="upload-form">
+   <label for="strategyReportFile" id="mcc-static-0309-label">Thinkorswim StrategyReport CSV (max 10 MB)</label><input id="strategyReportFile" type="file" accept=".csv,text/csv" required>
+   <fieldset class="atr-import-metadata"><legend>ATR V2 chart provenance</legend>
+    <label for="atrImportPeriod">ATR length <input id="atrImportPeriod" type="number" min="1" max="200" value="14" required></label>
+    <label for="atrImportAverage">Average type <select id="atrImportAverage"><option value="Wilder" selected>Wilder</option></select></label>
+    <label for="atrImportTimezone">Chart timezone <input id="atrImportTimezone" value="America/Phoenix" required></label>
+    <label><input id="atrImportExtendedHours" type="checkbox" checked> Extended hours ON</label>
+    <label><input id="atrImportAdjustment" type="checkbox" checked> Corporate-action adjustment ON</label>
+   </fieldset>
+   <button type="submit" id="mcc-static-0310-button">Import StrategyReport</button>
+  </form>
+  <p id="strategyReportStatus" class="muted">V1 reports are parsed for review. ATR V2 reports are validated and saved in MCC’s separate Thinkorswim ATR store.</p>
   <div id="strategyReportSummary" class="upload-summary hidden"></div>
   <div class="button-row" id="mcc-static-0311-div"><button id="downloadStrategyReportJson" type="button" class="quiet-button hidden">Download parsed JSON</button><button id="downloadParityCsv" type="button" class="quiet-button hidden">Download Parity Template CSV</button></div>
-  <p class="notice" id="mcc-static-0312-p">The API preserves report rows and warnings. A StrategyReport is not assumed to be continuous OHLCV data and does not prove fills unless the export records them.</p>
+  <p class="notice" id="mcc-static-0312-p">ATR V2 imports preserve source chart settings and timestamp gaps; repeated imports are idempotent. StrategyReport order-event prices are not broker fills.</p>
  </article>
 </section>
 
