@@ -203,3 +203,10 @@ The dashboard now owns the routine data actions. Use PowerShell only for develop
 [Uncertainties]
 
 The local runtime's effective feed may differ from tracked configuration because local secrets/environment settings take precedence. Always trust the current `/api/providers/status` response, not the tracked appsettings value or a requested feed label.
+
+
+## November 4 UI workflow updates
+
+The Overnight qualification panel supports **MCC Top 4** and **My Top 4**. MCC Top 4 is the four highest imported scanner scores. My Top 4 is exactly four user-selected imported symbols, saved in browser local storage. The Daily + catalyst action queries only the active group. Do not conflate scanner-score ordering with a calibrated Opportunity Quality ranking.
+
+The Morning Command Brief sits beside the product title. System Readiness contains the WebSocket status (and prototype badge on the prototype page). Quick Start is in the prototype's left dock; production currently has no aside/dock, so production Quick Start access is an outstanding layout item rather than a claim of completion.
