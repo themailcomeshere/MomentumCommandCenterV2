@@ -2397,3 +2397,28 @@ Interpretation: Alpaca rejected the SIP request because the account's current ma
 - Keep calculated sell limit DATA? / NOT CALCULATED.
 - Do not switch qualification to IEX to hide the 403. IEX is partial coverage and cannot satisfy consolidated qualification or target research.
 - Do not call a manual config value or an operator assertion of MATCH proof of ATR parity.
+
+
+ 
+## November 4, 2026 — follow-up: local runtime unavailable; TOS ATR spec verified
+
+### Runtime status
+- Repository `src/MomentumCommandCenterV2.API/appsettings.json` specifies `MarketData:Alpaca:Feed=sip`. This is not runtime verification. `GET /api/providers/status` reports effective adapter configuration and source provider.
+- Existing UI action `overnightCapture20` calls `POST /api/boring-overnight/capture-history` and fetches/persists the latest 20 exact regular-session close/open pairs. This is the MCC-native operation for EVR's missing opens.
+- Existing UI action `overnightCaptureSellWindow` preflights `/api/providers/status`, requires effective SIP, then calls `POST /api/boring-overnight/capture-sell-window-history`.
+- This session cannot reach the user's local `localhost:53360`; a connection attempt from the isolated runtime failed. Therefore I did not execute either action, cannot report EVR's missing opens recovered, and cannot certify the persisted store. Data not found in sources for fresh runtime results.
+- Next in-app action: select EVR and click **Capture 20-session Overnight history** (`overnightCapture20`). Review all 20 close/open pairs and missing boundary timestamps. Then independently query the persisted observations through MCC's stored-bars/history audit. If feed=IEX, these are partial-feed diagnostics only. If SIP returns 403, do not retry repeatedly; leave the paid entitlement off until ready to run acceptance.
+
+### Thinkorswim ATR facts established from official docs
+- Built-in ATR default: length 14, average type Wilder's. Both are configurable.
+- WildersAverage initialization: first value is a simple moving average; later values use recursive smoothing with alpha 1/length.
+- WildersAverage prefetch: 7 * length bars for range-independent results.
+- Official references:
+  - https://toslc.thinkorswim.com/center/reference/Tech-Indicators/studies-library/A-B/ATR
+  - https://toslc.thinkorswim.com/center/reference/thinkScript/Functions/Tech-Analysis/WildersAverage
+  - https://toslc.thinkorswim.com/center/reference/thinkScript/tutorials/Advanced/Chapter-12---Past-Offset-and-Prefetch
+- Still unknown: actual study settings in the user's instance, selected timeframe (daily/5m/1m), extended-hours inclusion, adjustments, exact matched bar values, and numeric parity tolerance. Existing MCC ATR uses a Wilder seed but can differ if history is too short; parity must use sufficient prefetch warm-up and a multi-bar fixture.
+- No numeric sell limit is approved. The current 20-session GTC_EXT audit is not enough by itself for a 20-session rolling walk-forward test: need prior 20 training windows plus subsequent test windows. Actual broker fills require order/execution records and must remain separate from OHLCV touches.
+
+### Subscription timing
+Alpaca's public docs show Basic/free IEX and Algo Trader Plus/$99 monthly SIP coverage. No verified promo/employee code or free trial found. Elite lists free Algo Trader Plus market data with a $100,000 deposit requirement, which is not a sensible development workaround. Keep IEX for non-qualification development; activate SIP only for consolidated acceptance.
