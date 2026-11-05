@@ -11,7 +11,9 @@ public sealed class BoringOvernightSellLimitOrchestrator(
     IMarketBarObservationStore barStore,
     IThinkorswimAtrObservationStore atrStore)
 {
-    private const int RequiredWindow = 20;
+    private const int RequiredWindow = 40;
+    private const int CalculatorTrainingWindow = 20;
+    private const int WalkForwardTestWindow = 20;
     private const int AtrWarmupBars = 99;
     private const int RequiredProviderAtrBars = AtrWarmupBars;
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -44,7 +46,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
 
         var history = await new BoringOvernightSellWindowHistoryService(barStore)
             .GetHistoryAsync(symbol, provider, feed, asOfUtc, cancellationToken);
-        gates.Add(new("HISTORY_20_OF_20", history.QualificationUsable,
+        gates.Add(new("HISTORY_40_OF_40", history.QualificationUsable,
             $"Complete eligible GTC_EXT windows: {history.CompleteWindowCount}/{history.RequiredWindow}; feed coverage: {history.FeedCoverage}. " +
             (history.QualificationUsable ? "Every 07:00–19:59 ET minute and exact prior-session close is present." : "All 20 windows must be complete on SIP; missing timestamps and reference closes are not imputed.")));
 
@@ -133,8 +135,11 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 ? "No current 5m Thinkorswim ATR observation is persisted."
                 : $"Latest 5m ATR bar starts {latestAtr.Observation.SourceTimestampUtc:O}; completion is {latestAtr.Observation.SourceTimestampUtc.AddMinutes(5):O}; evaluated at {asOfUtc:O}."));
 
-        gates.Add(new("WALK_FORWARD_VALIDATION", false,
-            "Time-separated train/test target-touch and adverse-excursion validation is not yet implemented. The numeric sell limit remains withheld until this independent validation exists."));
+        var walkForward = BoringOvernightWalkForwardValidator.Validate(
+            history.CalculatorObservations, request.TargetQuantilePct,
+            CalculatorTrainingWindow, WalkForwardTestWindow);
+        gates.Add(new("WALK_FORWARD_VALIDATION", walkForward.Passed,
+            walkForward.Explanation));
 
         var allPassed = gates.All(x => x.Passed);
         BoringOvernightSellLimitResult? calculation = null;
@@ -145,9 +150,10 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 latestAtr.Observation.Atr,
                 latestAtr.Observation.SourceTimestampUtc,
                 parity.Status,
-                history.CalculatorObservations,
+                history.CalculatorObservations.OrderBy(x => x.SessionDate)
+                    .Take(CalculatorTrainingWindow).ToArray(),
                 request.TargetQuantilePct,
-                RequiredWindow);
+                CalculatorTrainingWindow);
             if (calculation.Status != "PROVISIONAL" || calculation.CalculatedLimitSell is null)
                 gates.Add(new("SELL_LIMIT_CALCULATION", false, calculation.Explanation));
             else
@@ -166,7 +172,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             referenceSession, referenceCloseTimestamp, referenceClose,
             latestAtr?.Observation.Atr, latestAtr?.Observation.SourceTimestampUtc,
             parity, lastWarmupRows.Length, parityWindowRows.Length, providerAtrBars.Length, providerMismatchCount,
-            history, calculation, gates,
+            history, walkForward, calculation, gates,
             approved
                 ? "A research-only sell-limit candidate was calculated from 20 complete SIP GTC_EXT sessions and matched current 5m ATR evidence. This is not a broker order, executable quote, fill probability or validated walk-forward result."
                 : "No numeric sell limit is issued. Resolve every failed evidence gate; no data has been imputed and no order has been submitted.");
@@ -228,6 +234,7 @@ public sealed record BoringOvernightSellLimitOrchestrationResult(
     int ProviderParityObservationCount,
     int ProviderBarMismatchCount,
     BoringOvernightSellWindowHistoryResult History,
+    BoringOvernightWalkForwardResult WalkForward,
     BoringOvernightSellLimitResult? Calculation,
     IReadOnlyList<SellLimitEvidenceGate> Gates,
     string Explanation);
