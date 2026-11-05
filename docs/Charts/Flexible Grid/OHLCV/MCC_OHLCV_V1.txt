@@ -1,0 +1,96 @@
+# MCC_OHLCV_V1 — owned Thinkorswim strategy export artifact
+#
+# STATUS: Draft until compiled in Thinkorswim and chart parity is completed.
+# PURPOSE: Emit one completed-bar OHLCV payload for normalization by
+# ThinkorswimOhlcvStrategyReportReader. This is a strategy, not a chart study.
+#
+# IMPORTANT:
+# - AddOrder is used only because Thinkorswim strategy reports are the transport.
+# - This artifact does not submit broker orders and must be used in a paper/research
+#   workspace with order submission disabled.
+# - Source-controlled text is not proof of Thinkorswim compilation or installed-study identity.
+#
+# Paste into a new Thinkorswim strategy named exactly MCC_OHLCV_V1.
+# Set the chart aggregation to the requested input (1 minute or 5 minutes), set
+# the date and time inputs explicitly, and ensure the chart has loaded the full
+# requested range before exporting the Strategy Report.
+
+declare upper;
+
+input aggregationLabel = {default OneMinute, FiveMinute};
+input startDate = 20261019;
+input endDate = 20261019;
+input startTime = 0600; # Eastern Time, as used by SecondsFromTime/SecondsTillTime
+input endTime = 1600; # Eastern Time, as used by SecondsFromTime/SecondsTillTime
+
+# A strategy report row is emitted on the current bar for the immediately
+# preceding completed bar. The payload timestamp is the source bar timestamp,
+# not the report execution timestamp. [1] is intentional: it prevents the
+# current in-progress bar from being exported. The time filter is also indexed
+# [1], so it filters the source bar rather than the later execution bar.
+#
+# The close/reopen pair is intentional. Thinkorswim strategy reports do not
+# reliably emit repeated BUY_TO_OPEN rows while a simulated position remains
+# open. Closing and reopening the one-unit transport position creates one
+# report cycle per source bar, matching the alternating pattern observed in the
+# imported legacy reports. These are simulated strategy-report events only;
+# this artifact must not be connected to live order submission.
+def secondsFromStart = SecondsFromTime(startTime);
+def secondsTillEnd = SecondsTillTime(endTime);
+def sourceDate = GetYYYYMMDD()[1];
+def sourceInDateRange = sourceDate >= startDate and sourceDate <= endDate;
+def chartIsOneMinute = GetAggregationPeriod() == AggregationPeriod.MIN;
+def chartIsFiveMinute = GetAggregationPeriod() == AggregationPeriod.FIVE_MIN;
+def aggregationMatches = if aggregationLabel == aggregationLabel.OneMinute
+    then chartIsOneMinute
+    else chartIsFiveMinute;
+def sourceInConfiguredWindow = if startTime <= endTime
+    then secondsFromStart[1] >= 0 and secondsTillEnd[1] >= 0
+    else secondsFromStart[1] >= 0 or secondsTillEnd[1] >= 0;
+def exportBar = BarNumber() > 1 and aggregationMatches and sourceInDateRange and sourceInConfiguredWindow;
+def sourceTimestamp = GetTime()[1];
+def sourceOpen = open[1];
+def sourceHigh = high[1];
+def sourceLow = low[1];
+def sourceClose = close[1];
+def sourceVolume = volume[1];
+
+# Visible diagnostics: these do not change the strategy-report payload.
+# The label confirms that this exact strategy instance is installed. The point
+# confirms that the date/time filter is producing export events on the chart.
+plot MCCExportMarker = if exportBar then low else Double.NaN;
+MCCExportMarker.SetPaintingStrategy(PaintingStrategy.POINTS);
+MCCExportMarker.SetDefaultColor(Color.CYAN);
+MCCExportMarker.SetLineWeight(3);
+AddLabel(yes, "MCC_OHLCV_V1 loaded", if aggregationMatches then Color.CYAN else Color.RED);
+
+# The name is intentionally machine-readable. Dynamic AddOrder names and the
+# numeric epoch timestamp must be compiled and then checked in Thinkorswim.
+# Keep the payload BUY_TO_OPEN declaration before the transport close. This
+# matches the imported strategy's declaration order and ensures the first
+# export bar opens the transport position instead of becoming Sell to Open.
+AddOrder(OrderType.BUY_TO_OPEN, exportBar,
+    close,
+    1,
+    Color.CURRENT,
+    Color.CURRENT,
+    "MCC_OHLCV|v1|" + GetSymbol() + "|" +
+    (if chartIsOneMinute then "1m" else "5m") + "|" +
+    sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" + sourceLow + "|" + sourceClose + "|" + sourceVolume);
+
+# This transport close has no OHLCV payload and is ignored by the normalizer.
+AddOrder(OrderType.SELL_TO_CLOSE, exportBar,
+    close,
+    1,
+    Color.CURRENT,
+    Color.CURRENT,
+    "MCC_OHLCV_TRANSPORT_CLOSE");
+
+# Validation notes:
+# 1. Confirm the strategy compiles in Thinkorswim; this repository cannot do so.
+# 2. Confirm that the Strategy Report preserves the dynamic name without truncation.
+# 3. Compare at least 20 consecutive 1m and 5m rows with chart OHLCV, including
+#    a session boundary and a DST-observing date.
+# 4. If GetTime()[1] or dynamic order names are unsupported/truncated, do not
+#    normalize the report. Use the documented native chart-data export alternative
+#    or record a verified report-timestamp reconstruction instead.
