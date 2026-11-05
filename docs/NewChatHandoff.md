@@ -2360,3 +2360,40 @@ No additional EVR boundary export is required. Official opening-print parity rem
 ## 2026-11-04 handoff — MCC-native recovery controls
 
 Latest feature-branch UI work adds a collapsed System Readiness disclosure, symbol-specific Decision Explanation loading state, explicit entry/exit handoff guidance, fail-closed handling for missing custom-expression metrics, an exact 20-session close/open retry description, and a SIP-preflighted GTC_EXT capture button. Current runtime feed is IEX; GTC_EXT capture must not run until effective SIP entitlement is confirmed. EVR's eight exact opens remain unverified/missing; retry the 20-session close/open capture only after deployment and inspect the exact-boundary audit. Calculated Limit Sell remains DATA? until 20/20 complete SIP windows, ATR parity MATCH, and walk-forward validation. Run exact-head CI/local Release tests and browser acceptance.
+
+
+ 
+## November 4, 2026 — SIP entitlement failure and active sell-limit work
+
+**Branch:** `feature/opportunity-quality-classification`  
+**Canonical checklist:** `docs/Master-To-Do.md`
+
+### Latest operator runtime evidence
+The user reports:
+`Alpaca returned 403 Forbidden: {"message":"subscription does not permit querying recent SIP data"}`
+and the dashboard displays Live scanner / Top movers · SIP entitlement required, Live Opportunity Classification DATA UNAVAILABLE, 5M permission UNKNOWN and freshness UNKNOWN.
+
+Interpretation: Alpaca rejected the SIP request because the account's current market-data subscription does not grant recent SIP access. This is not fixed by changing the symbol, retrying the same request, or changing MCC's UI. Feed choice is between partial IEX and consolidated SIP, but SIP requires an eligible Alpaca subscription. The earlier provider-status evidence showed configured IEX; verify the current effective configuration after entitlement is changed because different endpoints may request SIP explicitly.
+
+### Code changes in this continuation
+- WebSocket status chip now uses compact text (WS OFF / WS OK / WS <state>); detailed subscription counts, symbols, last bar and errors are in the tooltip. CSS constrains the chip to its readiness card and permits wrapping. Browser fit still needs acceptance.
+- The sell-window capture/audit service already fetches and persists exact 1-minute observations for 20 GTC_EXT sessions, with 780 exact bar-start timestamps per sell session plus exact prior close. It explicitly rejects requested feed/config mismatches and never imputes missing timestamps.
+- `BoringOvernightSellLimitCalculator` already computes a historical favorable-price quantile only when 20 complete eligible windows are present and ATR parity is MATCH; flat/negative target quantiles return no numeric target.
+- **Not complete:** there is no fully provenance-bound API path joining persisted SIP window observations, exact current reference close, matched ATR evidence and sell-limit calculator into an approved calculation result. Do not report the GTC_EXT calculation pipeline complete.
+- **Not complete:** Wilder ATR code exists, but it has not been matched to Thinkorswim on identical bars. A self-test is not parity validation.
+- **Not complete:** walk-forward target-touch/adverse-excursion evaluation is not validated against actual historical data. A high touching a price is not an execution fill.
+
+### Required operator actions
+1. Activate SIP market-data entitlement in Alpaca. If the plan has a separate SIP add-on/market-data subscription, enable the applicable recent SIP feed. Do not share API keys.
+2. Once Alpaca confirms entitlement, set local effective `MarketData:Alpaca:Feed=sip` (also check environment overrides), restart MCC, and verify `GET /api/providers/status` reports SIP.
+3. Test one recent SPY bar request. If it still returns 403, stop and resolve account entitlement with Alpaca before bulk capture.
+4. When SIP succeeds, run exact close/open recovery for EVR and GTC_EXT capture for RTO/EVR. Inspect exact missing timestamps and 20/20 complete windows.
+5. Export one Thinkorswim parity fixture: symbol, exact completed timestamp, timeframe, session scope, adjustment, study versions/settings, OHLC, ATR14 and ExtensionATR. Use the same completed bar as MCC.
+6. After that evidence exists, finish the integrated sell-limit API, walk-forward evaluation and UI result provenance.
+
+### Current safe state
+- Keep Live Opportunity Classification DATA UNAVAILABLE when its SIP request is rejected.
+- Keep 5M permission and freshness UNKNOWN when the source request failed.
+- Keep calculated sell limit DATA? / NOT CALCULATED.
+- Do not switch qualification to IEX to hide the 403. IEX is partial coverage and cannot satisfy consolidated qualification or target research.
+- Do not call a manual config value or an operator assertion of MATCH proof of ATR parity.
