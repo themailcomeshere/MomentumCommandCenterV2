@@ -38,21 +38,12 @@ input atrLength = 14;
 
 def chartAggregationMatches = GetAggregationPeriod() == chartAggregation;
 def aggregationIsSupported =
-    chartAggregation == AggregationPeriod.ONE_MIN or
+    chartAggregation == AggregationPeriod.MIN or
     chartAggregation == AggregationPeriod.FIVE_MIN or
     chartAggregation == AggregationPeriod.FIFTEEN_MIN or
     chartAggregation == AggregationPeriod.THIRTY_MIN or
     chartAggregation == AggregationPeriod.HOUR or
     chartAggregation == AggregationPeriod.FOUR_HOURS;
-
-def timeframeLabel =
-    if chartAggregation == AggregationPeriod.ONE_MIN then "1m"
-    else if chartAggregation == AggregationPeriod.FIVE_MIN then "5m"
-    else if chartAggregation == AggregationPeriod.FIFTEEN_MIN then "15m"
-    else if chartAggregation == AggregationPeriod.THIRTY_MIN then "30m"
-    else if chartAggregation == AggregationPeriod.HOUR then "1h"
-    else if chartAggregation == AggregationPeriod.FOUR_HOURS then "4h"
-    else "unsupported";
 
 def sourceDate = GetYYYYMMDD()[1];
 def sourceInDateRange = sourceDate >= startDate and sourceDate <= endDate;
@@ -85,7 +76,14 @@ MCCExportMarker.SetDefaultColor(Color.CYAN);
 MCCExportMarker.SetLineWeight(3);
 
 AddLabel(yes,
-    "MCC_OHLCV_ATR_V2 | selected=" + timeframeLabel +
+    "MCC_OHLCV_ATR_V2 | selected=" +
+    (if chartAggregation == AggregationPeriod.MIN then "1m"
+     else if chartAggregation == AggregationPeriod.FIVE_MIN then "5m"
+     else if chartAggregation == AggregationPeriod.FIFTEEN_MIN then "15m"
+     else if chartAggregation == AggregationPeriod.THIRTY_MIN then "30m"
+     else if chartAggregation == AggregationPeriod.HOUR then "1h"
+     else if chartAggregation == AggregationPeriod.FOUR_HOURS then "4h"
+     else "unsupported") +
     " | chart=" + (if chartAggregationMatches then "MATCH" else "MISMATCH") +
     " | ATR(" + atrLength + ") WILDERS",
     if aggregationIsSupported and chartAggregationMatches then Color.CYAN else Color.RED);
@@ -100,7 +98,14 @@ AddOrder(OrderType.BUY_TO_OPEN, exportBar,
     1,
     Color.CURRENT,
     Color.CURRENT,
-    "MCC_OHLCV_ATR|v2|" + GetSymbol() + "|" + timeframeLabel + "|" +
+    "MCC_OHLCV_ATR|v2|" + GetSymbol() + "|" +
+    (if chartAggregation == AggregationPeriod.MIN then "1m"
+     else if chartAggregation == AggregationPeriod.FIVE_MIN then "5m"
+     else if chartAggregation == AggregationPeriod.FIFTEEN_MIN then "15m"
+     else if chartAggregation == AggregationPeriod.THIRTY_MIN then "30m"
+     else if chartAggregation == AggregationPeriod.HOUR then "1h"
+     else if chartAggregation == AggregationPeriod.FOUR_HOURS then "4h"
+     else "unsupported") + "|" +
     sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" +
     sourceLow + "|" + sourceClose + "|" + sourceVolume + "|" + sourceAtr);
 
