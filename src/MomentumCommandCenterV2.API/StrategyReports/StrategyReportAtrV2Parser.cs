@@ -47,8 +47,8 @@ public static class StrategyReportAtrV2Parser
                 throw new FormatException($"Payload symbol {symbol} does not match Strategy Report header symbol {reportSymbol}.");
 
             var timeframe = fields[3].Trim().ToLowerInvariant();
-            if (timeframe is not ("1m" or "5m"))
-                throw new FormatException($"Strategy Report row {record[0]} has unsupported timeframe '{timeframe}'. Only 1m and 5m are accepted.");
+            if (timeframe is not ("1m" or "5m" or "15m" or "30m" or "1h" or "4h"))
+                throw new FormatException($"Strategy Report row {record[0]} has unsupported timeframe '{timeframe}'. Supported values: 1m, 5m, 15m, 30m, 1h, 4h.");
 
             var epochText = fields[4].Replace(",", "", StringComparison.Ordinal).Trim();
             if (!long.TryParse(epochText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var epoch) || epoch <= 0)
@@ -88,7 +88,16 @@ public static class StrategyReportAtrV2Parser
         if (duplicateTimestamps.Length > 0)
             throw new FormatException($"Strategy Report contains {duplicateTimestamps.Length} duplicate source timestamp(s).");
 
-        var interval = ordered[0].Timeframe == "1m" ? TimeSpan.FromMinutes(1) : TimeSpan.FromMinutes(5);
+        var interval = ordered[0].Timeframe switch
+        {
+            "1m" => TimeSpan.FromMinutes(1),
+            "5m" => TimeSpan.FromMinutes(5),
+            "15m" => TimeSpan.FromMinutes(15),
+            "30m" => TimeSpan.FromMinutes(30),
+            "1h" => TimeSpan.FromHours(1),
+            "4h" => TimeSpan.FromHours(4),
+            _ => throw new InvalidOperationException("Validated timeframe has no interval mapping.")
+        };
         var gaps = ordered.Zip(ordered.Skip(1), (left, right) => new { Expected = left.SourceTimestampUtc + interval, Actual = right.SourceTimestampUtc })
             .Where(x => x.Actual - x.Expected > TimeSpan.FromSeconds(1))
             .Select(x => new StrategyReportAtrGap(x.Expected, x.Actual, x.Actual - x.Expected))
