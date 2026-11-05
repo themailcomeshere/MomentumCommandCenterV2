@@ -31,7 +31,7 @@ builder.Services.AddSwaggerGen(options =>
             tag = "Collection & Operations";
         else if (path == "/api/watchlists/exclusions" || path.StartsWith("/api/watchlists/exclusions/", StringComparison.OrdinalIgnoreCase))
             tag = "Watchlists & Exclusions";
-        else if (path == "/api/strategy-report/upload")
+        else if (path.StartsWith("/api/strategy-report/", StringComparison.OrdinalIgnoreCase))
             tag = "Strategy Reports";
         else if (path.StartsWith("/api/boring-overnight/", StringComparison.OrdinalIgnoreCase))
             tag = "Boring Overnight";
@@ -43,6 +43,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddSingleton<CatalystHumanReviewStore>();
+builder.Services.AddSingleton<MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore, MomentumCommandCenterV2.API.StrategyReports.JsonlThinkorswimAtrObservationStore>();
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 builder.Services.AddSingleton<LiveSymbolAssessmentService>();
 builder.Services.AddSingleton<AlpacaMinuteBarStreamWorker>();
@@ -1320,6 +1321,86 @@ app.MapPost("/api/strategy-report/upload", async (HttpRequest request, Cancellat
     };
     return operation;
 });
+
+app.MapPost("/api/strategy-report/atr-import", async (
+    HttpRequest request,
+    MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
+    CancellationToken ct) =>
+{
+    if (!request.HasFormContentType)
+        return Results.BadRequest(new { error = "Use multipart/form-data with a file field named 'file' and explicit chart metadata." });
+    var form = await request.ReadFormAsync(ct);
+    var file = form.Files.GetFile("file");
+    if (file is null || file.Length == 0)
+        return Results.BadRequest(new { error = "Upload a non-empty Thinkorswim Strategy Report CSV in the 'file' field." });
+    if (file.Length > 10 * 1024 * 1024 || !file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "Only CSV files up to 10 MB are accepted." });
+    if (!int.TryParse(form["atrPeriod"], out var atrPeriod) || atrPeriod is < 1 or > 200)
+        return Results.BadRequest(new { error = "atrPeriod must be an integer from 1 to 200." });
+    if (!bool.TryParse(form["extendedHours"], out var extendedHours) ||
+        !bool.TryParse(form["corporateActionAdjustment"], out var corporateActionAdjustment))
+        return Results.BadRequest(new { error = "Provide explicit true/false values for extendedHours and corporateActionAdjustment." });
+    var chartTimezone = form["chartTimezone"].ToString().Trim();
+    var averageType = form["atrAverageType"].ToString().Trim();
+    if (string.IsNullOrWhiteSpace(chartTimezone) || !averageType.Equals("Wilder", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "Provide chartTimezone and atrAverageType=Wilder." });
+
+    try
+    {
+        using var reader = new StreamReader(file.OpenReadStream());
+        var csv = await reader.ReadToEndAsync(ct);
+        var parsed = MomentumCommandCenterV2.API.StrategyReports.StrategyReportAtrV2Parser.Parse(csv);
+        var metadata = new MomentumCommandCenterV2.API.StrategyReports.StrategyReportAtrImportMetadata(
+            Path.GetFileName(file.FileName),
+            string.IsNullOrWhiteSpace(form["studyVersion"]) ? "MCC_OHLCV_ATR_V2" : form["studyVersion"].ToString().Trim(),
+            atrPeriod, "Wilder", chartTimezone, extendedHours, corporateActionAdjustment,
+            Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow);
+        var persistence = await atrStore.AppendAsync(parsed.Observations, metadata, ct);
+        return Results.Ok(new
+        {
+            fileName = metadata.SourceFileName,
+            metadata,
+            parsed.Symbol,
+            parsed.Timeframe,
+            parsed.ReportDataRowCount,
+            parsed.AtrObservationCount,
+            parsed.FirstTimestampUtc,
+            parsed.LastTimestampUtc,
+            parsed.GapCount,
+            parsed.GapSamples,
+            persistence,
+            interpretation = parsed.Interpretation
+        });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (FormatException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (InvalidDataException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("ImportThinkorswimAtrV2Report")
+.WithSummary("Parse and persist Thinkorswim ATR V2 observations")
+.WithDescription("Upload the MCC_OHLCV_ATR_V2 Strategy Report as multipart/form-data. Required fields: file, atrPeriod, atrAverageType=Wilder, chartTimezone, extendedHours=true/false, corporateActionAdjustment=true/false. ATR observations are persisted separately from provider OHLCV. Re-imports are idempotent; changed values are retained as corrections. Gaps are reported and never imputed.")
+.ProducesProblem(400);
+
+app.MapGet("/api/strategy-report/atr-observations", async (
+    MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
+    string? symbol, string? timeframe, DateTimeOffset? fromUtc, DateTimeOffset? toUtc, int? limit, CancellationToken ct) =>
+{
+    try
+    {
+        var rows = await atrStore.GetLatestAsync(symbol, timeframe, fromUtc, toUtc, limit ?? 1000, ct);
+        return Results.Ok(new
+        {
+            count = rows.Count,
+            observations = rows,
+            interpretation = "Latest append-only Thinkorswim ATR observations, kept separate from provider OHLCV. Source chart settings and import provenance are included on every observation."
+        });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("GetThinkorswimAtrObservations")
+.WithSummary("Query persisted Thinkorswim ATR observations")
+.WithDescription("Optional filters: symbol, timeframe (1m/5m), fromUtc, toUtc, limit (1–10000). Timestamps must be UTC. The response includes source OHLCV, ATR, chart settings, source file, and correction provenance.");
 
 app.MapGet("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
     Results.Ok(new { count = (await store.GetAsync(ct)).Count, symbols = await store.GetAsync(ct) }))
