@@ -1125,9 +1125,27 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
   const form = new FormData(); form.append("file", file, file.name);
   const endpoint = isAtrV2 ? "/api/strategy-report/atr-import" : "/api/strategy-report/upload";
   if (isAtrV2) {
-   form.append("atrPeriod", $("atrImportPeriod").value);
-   form.append("atrAverageType", $("atrImportAverage").value);
-   form.append("chartTimezone", $("atrImportTimezone").value.trim());
+   // HTML and JS can be served from different browser-cache generations. Validate
+   // every required control before reading it so a stale/mismatched page cannot
+   // throw "Cannot read properties of null (reading 'value')" before upload.
+   const metadataIds = [
+    "atrImportPeriod", "atrImportAverage", "atrImportTimezone",
+    "atrImportExtendedHours", "atrImportAdjustment"
+   ];
+   const missingControls = metadataIds.filter(id => !$(id));
+   if (missingControls.length) {
+    throw new Error("ATR import controls are missing from this Dashboard page: " +
+     missingControls.join(", ") + ". Reload the page without cache (Ctrl+F5) and try again. The CSV was not uploaded.");
+   }
+   const period = $("atrImportPeriod").value.trim();
+   const average = $("atrImportAverage").value.trim();
+   const timezone = $("atrImportTimezone").value.trim();
+   if (!period || !average || !timezone) {
+    throw new Error("ATR import metadata is incomplete. Supply ATR length, average type and chart timezone.");
+   }
+   form.append("atrPeriod", period);
+   form.append("atrAverageType", average);
+   form.append("chartTimezone", timezone);
    form.append("extendedHours", String($("atrImportExtendedHours").checked));
    form.append("corporateActionAdjustment", String($("atrImportAdjustment").checked));
   }
