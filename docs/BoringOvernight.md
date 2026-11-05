@@ -398,3 +398,18 @@ Keep Day 1 after-hours bars and Day 2 premarket bars separately observable in so
 **Implementation status:** this is an operator/specification correction. It does not establish that the runtime scheduler, scanner, or historical metric calculation has been changed. The exact historical return endpoint and bar-inclusion rules must still be verified against the source implementation and data. Broker order/session eligibility is a separate check.
 
 The previous 20:00 ET process-start recommendation is superseded and must not be used.
+
+
+ 
+## 2026-11-04 — ATR method specification and remaining parity evidence
+
+Official thinkorswim documentation establishes the built-in ATR defaults as length 14 and Wilder's average type. The WildersAverage function documents an initial simple-average seed, followed by recursive smoothing with coefficient 1/length. thinkScript documents 7*length bars of prefetch for Wilder's Average to become range-independent.
+
+This establishes the documented default method, not the user's installed chart configuration or MCC parity. The user's actual timeframe, extended-hours setting, adjustment, source feed and study overrides remain unverified. MCC's existing Wilder implementation seeds at the beginning of the supplied history; parity testing must supply sufficient warm-up history and compare several identical completed bars. Numeric tolerance must be derived from an actual Thinkorswim export, not guessed.
+
+References:
+- https://toslc.thinkorswim.com/center/reference/Tech-Indicators/studies-library/A-B/ATR
+- https://toslc.thinkorswim.com/center/reference/thinkScript/Functions/Tech-Analysis/WildersAverage
+- https://toslc.thinkorswim.com/center/reference/thinkScript/tutorials/Advanced/Chapter-12---Past-Offset-and-Prefetch
+
+The current GTC_EXT UI capture control requires effective SIP and retrieves exact 07:00–19:59 ET 1-minute timestamps plus the exact previous regular close. The current 20-window audit is insufficient for a robust rolling 20-window walk-forward series; capture must be extended to a larger chronological sample before evaluation. OHLCV target touches are not broker fills. Actual fill evidence must come from broker order/execution records or a separate source-identified execution ledger.
