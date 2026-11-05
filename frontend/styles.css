@@ -1628,3 +1628,13 @@ main{margin-top:16px}
 .overnight-shortlist-option input{width:auto;margin:0}
 .prototype-quick-start{width:calc(100% - 20px);margin:10px 10px 6px;padding:9px 7px;font-size:11px}
 @media(max-width:850px){.overnight-shortlist-controls{align-items:flex-start}.topbar-title-row{align-items:flex-start}}
+
+.catalyst-human-review{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:rgba(10,18,32,.35)}
+.catalyst-review-queue{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:9px}
+.catalyst-review-card{display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.catalyst-review-card>strong{font-size:12px;overflow-wrap:anywhere}
+.catalyst-review-card p{margin:0;overflow-wrap:anywhere}
+.catalyst-review-card a{font-size:11px}
+.catalyst-review-controls{display:grid;grid-template-columns:1fr;gap:6px}
+.catalyst-review-controls select,.catalyst-review-controls textarea{width:100%;min-width:0}
+.catalyst-review-controls textarea{min-height:54px;resize:vertical}
