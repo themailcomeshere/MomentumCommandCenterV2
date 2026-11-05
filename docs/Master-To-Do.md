@@ -2339,3 +2339,13 @@ The compact table does not prove that all historical metrics were populated only
 - [ ] Complete chronological walk-forward validation and integrate actual broker execution records separately.
 
 **Readiness decision:** The 160 V2 rows across two dates are sufficient to start and test ATR parser/parity engineering. They are not sufficient to certify a numeric sell limit or complete end-to-end validation. Numeric output remains DATA? / NOT VERIFIED until every source, coverage, reference-close and parity gate passes. See `docs/Calculated-Limit-Sell-Implementation.md`.
+
+
+## 2026-11-05 — ATR V2 aggregation selector and runtime feed confirmation
+- [x] User confirmed extended-hours ON, corporate-action adjustment ON, Phoenix local timezone, ATR length 14 and Wilder average; original V2 compiles in Thinkorswim.
+- [x] User supplied provider status: Alpaca configured/validated with effective IEX feed; appsettings and secrets both specify IEX; last validation returned 34 bars; Massive is not configured.
+- [x] Added `chartAggregation` selector to ATR V2 study for 1m, 5m, 15m, 30m, 1h and 4h; timeframe label/payload are dynamic and export is blocked when selected input does not match actual chart aggregation.
+- [ ] Compile revised study in Thinkorswim and validate each desired aggregation. ThinkScript cannot change host chart aggregation; set chart control and study input to the same value.
+- [ ] Re-export and verify at least 20 consecutive rows at 5m; resolve the Nov 3 missing 5m interval.
+- [ ] Keep IEX configuration unchanged until SIP entitlement is verified. GTC_EXT SIP qualification remains blocked; no SIP capture should be attempted against effective IEX.
+- [ ] Implement V2 parser/tests, separate ATR persistence, server-side ATR calculation/parity, sell-limit orchestration API/UI, SIP history qualification, walk-forward and actual execution reconciliation.
