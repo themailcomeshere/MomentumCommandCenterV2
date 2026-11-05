@@ -10,7 +10,7 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservationStore store)
 {
-    private const int RequiredWindow = 20;
+    private const int RequiredWindow = 40;
     private const int MinutesPerEligibleWindow = 13 * 60;
     private const int QueryLimitPerChunk = 10000;
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
@@ -169,6 +169,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
 
             var observedBars = barsByTimestamp.Values.OrderBy(x => x.Timestamp).ToArray();
             var highest = observedBars.Length == 0 ? (decimal?)null : observedBars.Max(x => (decimal)x.High);
+            var lowest = observedBars.Length == 0 ? (decimal?)null : observedBars.Min(x => (decimal)x.Low);
             var complete = referenceBar is not null && missing.Count == 0;
             windows.Add(new BoringOvernightSellWindowAudit(
                 boundary.PreviousSessionDate,
@@ -184,7 +185,8 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
                 observedBars.FirstOrDefault()?.Timestamp,
                 observedBars.LastOrDefault()?.Timestamp,
                 highest,
-                complete));
+                complete)
+            { LowestEligiblePrice = lowest });
         }
 
         var completeCount = windows.Count(x => x.CoverageComplete);
@@ -193,7 +195,8 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             x.ReferenceClose ?? 0m,
             x.HighestEligiblePrice ?? 0m,
             x.CoverageComplete,
-            x.MissingIntervalCount)).ToArray();
+            x.MissingIntervalCount)
+        { LowestEligiblePrice = x.LowestEligiblePrice ?? 0m }).ToArray();
 
         return new BoringOvernightSellWindowHistoryResult(
             symbol.Trim().ToUpperInvariant(), provider.Trim(), feed.Trim(), asOfUtc,
@@ -226,7 +229,10 @@ public sealed record BoringOvernightSellWindowAudit(
     DateTimeOffset? FirstObservedTimestampUtc,
     DateTimeOffset? LastObservedTimestampUtc,
     decimal? HighestEligiblePrice,
-    bool CoverageComplete);
+    bool CoverageComplete)
+{
+    public decimal? LowestEligiblePrice { get; init; }
+}
 
 public sealed record BoringOvernightSellWindowHistoryResult(
     string Symbol,
