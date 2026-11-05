@@ -13,6 +13,7 @@ public sealed class StrategyReportAtrV2Tests
 
         Assert.Equal("EVR", result.Symbol);
         Assert.Equal("1m", result.Timeframe);
+        Assert.Equal("v2", result.PayloadVersion);
         Assert.Equal(692, result.ReportDataRowCount);
         Assert.Equal(346, result.AtrObservationCount);
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T14:04:00Z"), result.FirstTimestampUtc);
@@ -33,6 +34,7 @@ public sealed class StrategyReportAtrV2Tests
 
         Assert.Equal("EVR", result.Symbol);
         Assert.Equal("5m", result.Timeframe);
+        Assert.Equal("v2", result.PayloadVersion);
         Assert.Equal(162, result.ReportDataRowCount);
         Assert.Equal(81, result.AtrObservationCount);
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T14:05:00Z"), result.FirstTimestampUtc);
@@ -52,6 +54,16 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal(2, result.AtrObservationCount);
         Assert.Single(result.GapSamples);
         Assert.Equal(TimeSpan.FromMinutes(1), result.GapSamples[0].Duration);
+    }
+
+    [Fact]
+    public void DetectsCorrectedV21PayloadVersion()
+    {
+        const string report = "Strategy report\nSymbol: EVR\nId;Strategy;Side;\n" +
+            "1;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|1m|1793714400000|10|11|9|10.5|100|0.25);Buy to Open;\n";
+        var result = StrategyReportAtrV2Parser.Parse(report);
+        Assert.Equal("v2.1", result.PayloadVersion);
+        Assert.Single(result.Observations);
     }
 
     [Fact]
@@ -154,7 +166,7 @@ public sealed class StrategyReportAtrV2Tests
     {
         using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_5M.csv"));
         var parsed = StrategyReportAtrV2Parser.Parse(reader.ReadToEnd());
-        var metadata = Metadata();
+        var metadata = Metadata() with { StudyVersion = "MCC_OHLCV_ATR_V2.0" };
         var stored = parsed.Observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
             "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
 
