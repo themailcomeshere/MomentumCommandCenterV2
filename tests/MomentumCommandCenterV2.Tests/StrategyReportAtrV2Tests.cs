@@ -136,6 +136,25 @@ public sealed class StrategyReportAtrV2Tests
     }
 
     [Fact]
+    public void MatchingAtrValuesWithMissingTimestampsDoNotReturnMatch()
+    {
+        var metadata = Metadata();
+        var start = DateTimeOffset.Parse("2026-11-03T14:00:00Z");
+        var observations = Enumerable.Range(0, 130).Select(index => new StrategyReportAtrObservation(
+            index.ToString(), "EVR", "1m", start.AddMinutes(index + (index >= 110 ? 1 : 0)),
+            100m, 101m, 99m, 100m, 1000m, 2m)).ToArray();
+        var stored = observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored);
+
+        Assert.Equal("GAPS_PRESENT", result.Status);
+        Assert.Equal(1, result.TimestampGapCount);
+        Assert.Equal(31, result.ComparedBarCount);
+        Assert.Equal(0m, result.MaximumAbsoluteError);
+    }
+
+    [Fact]
     public void LegacyNovemberThirdOneMinuteExportMatchesTheDoubleShiftedTrueRangeDefect()
     {
         using var reader = File.OpenText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "StrategyReports_EVR_11032026_FULL_1M.csv"));
