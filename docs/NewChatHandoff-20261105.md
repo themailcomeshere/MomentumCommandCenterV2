@@ -1,3 +1,33 @@
+# Handoff update — November 5, 2026 (StrategyReport import, after-hours window, walk-forward)
+
+**Branch:** `feature/opportunity-quality-classification`
+
+## Implemented
+- Dashboard ATR import handler now validates all required ATR metadata DOM controls before dereferencing them; missing controls are named in the visible error. Dashboard HTML cache-bust key updated to load the guarded app.js.
+- New November 4 EVR 5m V2.1 report contains 82 payloads from 09:05–16:00 Eastern (07:05–14:00 Arizona), with one 15-minute gap from 09:15–09:30 ET. No payload after 16:00 ET.
+- Root cause for the 16:00 ET cutoff: ThinkScript study filtered source bars using `startTime=0600`, `endTime=1600`. Extended-hours chart setting ON cannot override the script's time filter.
+- ThinkScript defaults changed to `startTime=0700`, `endTime=2000`; official `SecondsFromTime` docs specify EST/Eastern clock, not Phoenix chart display time. User must reload/compile and export again to verify after-hours inclusion.
+- Implemented walk-forward validator: 20 chronological training sessions + 20 later unseen test sessions. Target quantile is selected from training only; test touch rate and adverse excursion are measured separately. Test touch rate must meet training empirical touch rate; max test adverse excursion must not exceed training adverse-excursion P95; 100% session coverage required.
+- Expanded GTC_EXT history service to 40 sessions, capturing lowest and highest eligible prices. Sell-limit calculator receives only the 20 training sessions. Orchestrator adds hard `WALK_FORWARD_VALIDATION` gate.
+- Added tests for pass, target-touch failure, adverse-excursion failure, insufficient sample and incomplete coverage.
+- Added `docs/Validation/Walk-Forward-Validation-Design-20261105.md`.
+
+## Operator verification still required
+1. Pull branch and run `.scripts\Get-Latest-And-Test.ps1`. Confirm C# build/tests and frontend JS validation pass.
+2. Ctrl+F5 Dashboard. Re-import Nov 3 1m and 5m V2.1 files. Record full import response, persisted counts, parity status.
+3. Pull updated ThinkScript, set chartAggregation and actual chart to 5m, confirm ETH ON / corporate-action adjustment ON, compile, export new report.
+4. Confirm new payload has bars after 16:00 ET. If gaps persist, send the full new StrategyReport; do not interpolate.
+5. Do not retry SIP while prior entitlement 403 remains unchanged.
+6. A passing walk-forward gate is not sufficient by itself: SIP GTC_EXT, exact close, ATR parity, continuous 99-bar warm-up and exact provider/TOS 5m OHLCV gates remain mandatory.
+
+## Key policy
+Walk-forward v1.0 details and formulas are in `docs/Validation/Walk-Forward-Validation-Design-20261105.md`. OHLCV high/low touches are theoretical observations, not broker fills. Actual fills require a separate broker execution ledger.
+
+[Uncertainties]
+CI and local runtime acceptance for the newly committed validator/import guard are not yet verified. The Nov 4 report's missing after-hours payload is explained by the old 16:00 ET study filter; actual post-close bar availability must be checked after the revised study is loaded.
+
+---
+
 # November 5 — ATR V2 ThinkScript compile-error correction
 
 - User reported `AggregationPeriod.ONE_MIN` unknown, `Expected double`, and incompatible string parameters.
