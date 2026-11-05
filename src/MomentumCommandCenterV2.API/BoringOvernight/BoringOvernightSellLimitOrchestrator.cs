@@ -65,7 +65,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 : $"Reference close is {referenceClose.GetValueOrDefault()} from exact 1m bar {referenceCloseTimestamp:O} ({provider}/{feed})."));
 
         var atrRows = (await atrStore.GetLatestAsync(symbol, "5m", null, null, 10000, cancellationToken))
-            .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1.1", StringComparison.Ordinal))
+            .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal))
             .ToArray();
         var orderedAtrRows = atrRows.OrderBy(x => x.Observation.SourceTimestampUtc).ToArray();
         var parityWindowRows = orderedAtrRows.TakeLast(ThinkorswimAtrParityService.DefaultWarmupBars +
@@ -80,7 +80,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             metadata.ChartTimezone.Equals("America/Phoenix", StringComparison.OrdinalIgnoreCase) &&
             metadata.ExtendedHours &&
             metadata.CorporateActionAdjustment &&
-            metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1.1", StringComparison.Ordinal);
+            metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal);
         gates.Add(new("ATR_STUDY_SETTINGS", settingsValid,
             settingsValid
                 ? "ATR(14) Wilder; Phoenix timezone; extended-hours ON; corporate-action adjustment ON; MCC_OHLCV_ATR_V2.1."
@@ -118,12 +118,12 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                     !MatchesExactOhlcv(providerBar, source))
                     providerMismatchCount++;
             }
-            providerBarsMatch = lastWarmupRows.Length == AtrWarmupBars &&
+            providerBarsMatch = parityWindowRows.Length == AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars &&
                 providerMismatchCount == 0 &&
-                providerAtrBars.Length >= AtrWarmupBars;
+                providerAtrBars.Length >= parityWindowRows.Length;
         }
         gates.Add(new("SAME_SOURCE_5M_OHLCV", providerBarsMatch,
-            $"Exact 5m provider/TOS OHLCV matches over the latest warm-up: {Math.Max(0, parityWindowRows.Length - providerMismatchCount)}/{AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars}; mismatches or missing timestamps: {providerMismatchCount}."));
+            $"Exact 5m provider/TOS OHLCV matches over the latest parity window: {Math.Max(0, parityWindowRows.Length - providerMismatchCount)}/{AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars}; mismatches or missing timestamps: {providerMismatchCount}."));
 
         var atrTimestampValid = latestAtr is not null &&
             latestAtr.Observation.SourceTimestampUtc.AddMinutes(5) <= asOfUtc &&
