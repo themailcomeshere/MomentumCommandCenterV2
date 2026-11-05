@@ -20,7 +20,7 @@ Code update:
 - A scheduled overnight/weekend date transition in America/New_York no longer counts as a missing intraday bar. Missing intervals within the same New York date still count and block `MATCH`.
 - Full-session completeness is not yet implemented. A missing entire trading session needs its own coverage check and must not be silently inferred as complete.
 - Added regression tests for overnight/weekend transitions and intraday gaps.
-- Latest code commit: `c9003fd24d3b39817a874304195e01619c79de21`. CI run [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) was queued when this handoff was updated; verify its final result before treating the commit as tested.
+- Latest code commit: `c9003fd24d3b39817a874304195e01619c79de21`. CI run [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) succeeded: build succeeded and 225/225 tests passed.
 
 Dashboard button location:
 1. Workspace dropdown → **Boring Overnight**.
