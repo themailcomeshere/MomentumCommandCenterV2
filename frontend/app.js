@@ -351,7 +351,7 @@ function saveOvernightShortlists(){try{localStorage.setItem(overnightShortlistSt
 function renderOvernightShortlistPicker(rows){
  const picker=$("overnightManualTopFourPicker"),summary=$("overnightShortlistSummary");if(!picker)return;
  const symbols=[...new Set(rows.map(x=>String(x.symbol||"").trim().toUpperCase()).filter(Boolean))];overnightManualSymbols=overnightManualSymbols.filter(x=>symbols.includes(x)).slice(0,4);picker.replaceChildren();
- symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
+ symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();renderCatalystHumanReviewQueue();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
  if(summary)summary.textContent=overnightManualSymbols.length+"/4 selected"+(overnightManualSymbols.length===4?"":" · select exactly four");
  const manual=$("overnightShortlistManual");if(manual)manual.disabled=overnightManualSymbols.length!==4;
 }
@@ -391,7 +391,42 @@ async function fetchOvernightTopFourEvidence(){
  if(button)button.disabled=false;
  renderOvernightQualification();
  const failed=results.filter(x=>x.evidence.dailyError||x.evidence.catalystError);
+ renderCatalystHumanReviewQueue();
  if(status)status.textContent="Live evidence fetched for "+results.length+" candidates: "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. Only this selected group of four was queried; other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
+}
+
+function renderCatalystHumanReviewQueue(){
+ const host=$("catalystReviewQueue"),count=$("catalystReviewQueueCount");if(!host)return;
+ const rows=[];
+ overnightLiveEvidence.forEach((evidence,symbol)=>{
+  (Array.isArray(evidence.catalyst?.articles)?evidence.catalyst.articles:[]).forEach(item=>{const article=item.article||item;rows.push({symbol,item,article});});
+ });
+ if(count)count.textContent=rows.length+" articles";
+ if(!rows.length){host.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"No articles returned for the currently fetched candidate groups. No news is UNKNOWN, not CLEAR."}));return;}
+ host.replaceChildren(...rows.map(({symbol,item,article})=>{
+  const card=document.createElement("article");card.className="catalyst-review-card";
+  const title=document.createElement("strong");title.textContent=symbol+" · "+(article.headline||"Untitled article");
+  const meta=document.createElement("p");meta.className="muted small";meta.textContent=[item.severity||"UNCLASSIFIED",(article.publishedAtUtc||"Publication time unavailable"),(item.categories||[]).join(", ")].filter(Boolean).join(" · ");
+  const summary=document.createElement("p");summary.className="small";summary.textContent=article.summary||item.reason||"No article summary supplied.";
+  const link=document.createElement("a");link.href=article.url||"#";link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open source article";
+  const controls=document.createElement("div");controls.className="catalyst-review-controls";
+  const label=document.createElement("select");label.setAttribute("aria-label","Human catalyst label for "+symbol);
+  ["MATERIAL_RISK","MATERIAL_EVENT","NON_MATERIAL","IRRELEVANT","DUPLICATE","UNCERTAIN"].forEach(value=>{const option=document.createElement("option");option.value=value;option.textContent=value;label.append(option);});
+  const notes=document.createElement("textarea");notes.maxLength=2000;notes.placeholder="Why does this label fit? Review the source article.";notes.setAttribute("aria-label","Review notes for "+symbol);
+  const save=document.createElement("button");save.type="button";save.className="quiet-button";save.textContent="Save human review";
+  const status=document.createElement("span");status.className="muted small";
+  save.addEventListener("click",async()=>{
+   if(!article.url||!/^https?:\/\//i.test(article.url)){status.textContent="Cannot save: source article URL is missing or invalid.";return;}
+   save.disabled=true;status.textContent="Saving append-only review…";
+   try{
+    const response=await fetch("/api/market-data/catalyst-reviews",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,articleId:article.id||null,headline:article.headline||"Untitled article",url:article.url,publishedAtUtc:article.publishedAtUtc||null,source:"Alpaca News",label:label.value,ruleSetVersion:evidence.catalyst?.ruleSetVersion||"MCC-CATALYST-TRIAGE-1.0",notes:notes.value||null})});
+    const payload=await response.json();if(!response.ok)throw new Error(payload.detail||payload.title||payload.error||("HTTP "+response.status));
+    status.textContent="Saved "+label.value+" · "+(payload.reviewId||payload.review?.reviewId||"review recorded")+". This does not clear catalyst status.";
+    const overall=$("catalystReviewStatus");if(overall)overall.textContent="Human review appended for "+symbol+". Automated triage remains unchanged.";
+   }catch(error){status.textContent="Review save failed: "+error.message;save.disabled=false;}
+  });
+  controls.append(label,notes,save);card.append(title,meta,summary,link,controls,status);return card;
+ }));
 }
 
 async function renderOvernightQualification(){
