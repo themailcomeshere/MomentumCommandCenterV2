@@ -1,0 +1,101 @@
+# MCC_OHLCV_ATR_V2 — OHLCV + Thinkorswim ATR parity export
+#
+# STATUS: Draft. Compile and validate in Thinkorswim before relying on output.
+# PURPOSE: Versioned Strategy Report transport carrying the completed source
+# bar's OHLCV plus Thinkorswim Wilder ATR(14) for that exact source bar.
+#
+# This is a strategy-report export adapter, not a broker strategy. Use a paper/
+# research workspace with broker order submission disabled.
+#
+# SETUP:
+# - Add this strategy to an EVR chart.
+# - Set chart aggregation to 5 minutes.
+# - Load sufficient history: at least 99 consecutive completed 5m bars before
+#   the first comparison bar (98 Wilder prefetch bars + comparison bar).
+# - Match the chart's extended-hours and corporate-action adjustment settings
+#   to the MCC data series being validated.
+# - Export the Strategy Report and preserve full order names/precision.
+#
+# V2 payload appends ATR14 to the V1 OHLCV payload:
+# MCC_OHLCV_ATR|v2|symbol|5m|epochMillis|open|high|low|close|volume|atr14
+#
+# The ATR is computed on chart bars using ThinkScript's Wilder average type.
+# Index [1] on the final expression selects the completed source bar; the
+# TrueRange inputs are evaluated on that same source bar and its prior close.
+
+declare upper;
+
+input startDate = 20261019;
+input endDate = 20261019;
+input startTime = 0600;
+input endTime = 1600;
+input atrLength = 14;
+
+def sourceDate = GetYYYYMMDD()[1];
+def sourceInDateRange = sourceDate >= startDate and sourceDate <= endDate;
+def chartIsFiveMinute = GetAggregationPeriod() == AggregationPeriod.FIVE_MIN;
+def secondsFromStart = SecondsFromTime(startTime);
+def secondsTillEnd = SecondsTillTime(endTime);
+def sourceInConfiguredWindow =
+    if startTime <= endTime
+    then secondsFromStart[1] >= 0 and secondsTillEnd[1] >= 0
+    else secondsFromStart[1] >= 0 or secondsTillEnd[1] >= 0;
+
+def sourceTimestamp = GetTime()[1];
+def sourceOpen = open[1];
+def sourceHigh = high[1];
+def sourceLow = low[1];
+def sourceClose = close[1];
+def sourceVolume = volume[1];
+
+# Wilder ATR on each bar; [1] exports the value for the completed source bar.
+def trueRange = TrueRange(high, close[1], low);
+def atrSeries = MovingAverage(AverageType.WILDERS, trueRange, atrLength);
+def sourceAtr = atrSeries[1];
+
+def exportBar = BarNumber() > 2 and chartIsFiveMinute
+    and sourceInDateRange and sourceInConfiguredWindow
+    and !IsNaN(sourceAtr);
+
+plot MCCExportMarker = if exportBar then low else Double.NaN;
+MCCExportMarker.SetPaintingStrategy(PaintingStrategy.POINTS);
+MCCExportMarker.SetDefaultColor(Color.CYAN);
+MCCExportMarker.SetLineWeight(3);
+
+AddLabel(yes,
+    "MCC_OHLCV_ATR_V2 | 5m | ATR(" + atrLength + ") WILDERS | " +
+    "ETH=" + (if GetTime() then "chart setting" else "unknown") +
+    " | adjustment=chart setting",
+    if chartIsFiveMinute then Color.CYAN else Color.RED);
+AddLabel(yes,
+    "Export requires chart ETH/adjustment settings to be recorded separately",
+    Color.YELLOW);
+
+# Strategy Report transport only. The simulated open/close pair emits a row
+# for each eligible completed source bar. The transport close has no payload.
+AddOrder(OrderType.BUY_TO_OPEN, exportBar,
+    close,
+    1,
+    Color.CURRENT,
+    Color.CURRENT,
+    "MCC_OHLCV_ATR|v2|" + GetSymbol() + "|5m|" +
+    sourceTimestamp + "|" + sourceOpen + "|" + sourceHigh + "|" +
+    sourceLow + "|" + sourceClose + "|" + sourceVolume + "|" + sourceAtr);
+
+AddOrder(OrderType.SELL_TO_CLOSE, exportBar,
+    close,
+    1,
+    Color.CURRENT,
+    Color.CURRENT,
+    "MCC_OHLCV_ATR_TRANSPORT_CLOSE");
+
+# Validation before using any export:
+# 1. Confirm ThinkScript compilation; source-controlled text alone is not proof.
+# 2. Confirm Strategy Report retains the entire dynamic order name and decimals.
+# 3. Compare >=20 consecutive completed rows against chart OHLCV and ATR plot.
+# 4. Export chart aggregation=5m, symbol, timezone, ETH on/off, adjustment mode,
+#    ATR length, average type, and the chart's displayed decimal precision.
+# 5. This strategy cannot infer/report the chart's ETH or adjustment setting.
+#    Record those settings manually in the accompanying export notes.
+# 6. Do not use this file as a substitute for a continuous native OHLCV export
+#    until row continuity and timestamp semantics are independently validated.
