@@ -1395,8 +1395,8 @@ app.MapGet("/api/strategy-report/atr-observations", async (
             interpretation = "Latest append-only Thinkorswim ATR observations, kept separate from provider OHLCV. Source chart settings and import provenance are included on every observation."
         });
     }
-    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
     catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
 })
 .WithName("GetThinkorswimAtrObservations")
 .WithSummary("Query persisted Thinkorswim ATR observations")
