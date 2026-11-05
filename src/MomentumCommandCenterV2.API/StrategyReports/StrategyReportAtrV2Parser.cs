@@ -9,7 +9,7 @@ namespace MomentumCommandCenterV2.API.StrategyReports;
 /// </summary>
 public static class StrategyReportAtrV2Parser
 {
-    private const string Marker = "MCC_OHLCV_ATR|v2|";
+    private const string Marker = "MCC_OHLCV_ATR|";
 
     public static StrategyReportAtrImportResult Parse(string csv, int maxRows = 10000)
     {
@@ -23,6 +23,7 @@ public static class StrategyReportAtrV2Parser
         var reportSymbol = symbolHeader?["Symbol:".Length..].Trim().ToUpperInvariant();
         var observations = new List<StrategyReportAtrObservation>();
         var dataRows = 0;
+        string? payloadVersion = null;
         foreach (var record in records)
         {
             if (record.Count < 2 || !int.TryParse(record[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
@@ -36,8 +37,11 @@ public static class StrategyReportAtrV2Parser
             var end = strategy.IndexOf(')', markerIndex);
             var payload = end >= 0 ? strategy[markerIndex..end] : strategy[markerIndex..];
             var fields = payload.Split('|');
-            if (fields.Length != 11 || fields[0] != "MCC_OHLCV_ATR" || fields[1] != "v2")
-                throw new FormatException($"Strategy Report row {record[0]} contains a malformed MCC_OHLCV_ATR v2 payload; expected exactly 11 pipe-delimited fields.");
+            if (fields.Length != 11 || fields[0] != "MCC_OHLCV_ATR" || fields[1] is not ("v2" or "v2.1"))
+                throw new FormatException($"Strategy Report row {record[0]} contains an unsupported or malformed MCC_OHLCV_ATR payload; expected v2 or v2.1 with exactly 11 pipe-delimited fields.");
+            if (payloadVersion is not null && payloadVersion != fields[1])
+                throw new FormatException("One Strategy Report import cannot mix ATR payload versions.");
+            payloadVersion = fields[1];
 
             var symbol = fields[2].Trim().ToUpperInvariant();
             if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
@@ -104,7 +108,7 @@ public static class StrategyReportAtrV2Parser
             .ToArray();
 
         return new StrategyReportAtrImportResult(
-            ordered[0].Symbol, ordered[0].Timeframe, dataRows, ordered.Length,
+            ordered[0].Symbol, ordered[0].Timeframe, payloadVersion!, dataRows, ordered.Length,
             ordered[0].SourceTimestampUtc, ordered[^1].SourceTimestampUtc,
             gaps.Length, gaps.Take(100).ToArray(), ordered,
             "V2 ATR observations parsed from explicit completed-bar payloads. Gaps are reported, not imputed; the Strategy Report Date/Time order-event timestamp is not used as a bar timestamp.");
@@ -157,6 +161,7 @@ public sealed record StrategyReportAtrGap(
 public sealed record StrategyReportAtrImportResult(
     string Symbol,
     string Timeframe,
+    string PayloadVersion,
     int ReportDataRowCount,
     int AtrObservationCount,
     DateTimeOffset FirstTimestampUtc,
