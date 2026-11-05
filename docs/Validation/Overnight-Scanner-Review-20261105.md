@@ -67,3 +67,8 @@ Therefore no candidate is marked READY from these files. Rows with missing custo
 2. Keep scanner ranking separate from qualification; do not let a high Overnight Score bypass current market-data, catalyst, exclusion or execution gates.
 3. Add an import comparison showing symbols newly complete, newly incomplete and unchanged between scanner refreshes.
 4. Use the updated export as the latest scanner snapshot, but retain the original file as an immutable comparison input.
+
+
+## Related candidate review
+
+The November 5 Red Zone shortlist and CBOE comparison are documented in [Overnight-Candidate-Review-20261105.md](Overnight-Candidate-Review-20261105.md). CBOE is the preferred addition to the next ordinary Overnight review; BLMN is excluded from a routine November 5→6 hold because of its November 6 premarket earnings event.
