@@ -118,7 +118,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             }
             providerBarsMatch = lastWarmupRows.Length == AtrWarmupBars &&
                 providerMismatchCount == 0 &&
-                providerAtrBars.Count >= AtrWarmupBars;
+                providerAtrBars.Length >= AtrWarmupBars;
         }
         gates.Add(new("SAME_SOURCE_5M_OHLCV", providerBarsMatch,
             $"Exact 5m provider/TOS OHLCV matches over the latest warm-up: {Math.Max(0, lastWarmupRows.Length - providerMismatchCount)}/{AtrWarmupBars}; mismatches or missing timestamps: {providerMismatchCount}."));
@@ -136,7 +136,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         if (allPassed && referenceClose is > 0 && latestAtr is not null)
         {
             calculation = BoringOvernightSellLimitCalculator.Calculate(
-                referenceClose.Value,
+                referenceClose.GetValueOrDefault(),
                 latestAtr.Observation.Atr,
                 latestAtr.Observation.SourceTimestampUtc,
                 parity.Status,
@@ -160,7 +160,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             symbol, provider, feed, request.TargetQuantilePct, asOfUtc,
             referenceSession, referenceCloseTimestamp, referenceClose,
             latestAtr?.Observation.Atr, latestAtr?.Observation.SourceTimestampUtc,
-            parity, lastWarmupRows.Length, providerAtrBars.Count, providerMismatchCount,
+            parity, lastWarmupRows.Length, providerAtrBars.Length, providerMismatchCount,
             history, calculation, gates,
             approved
                 ? "A research-only sell-limit candidate was calculated from 20 complete SIP GTC_EXT sessions and matched current 5m ATR evidence. This is not a broker order, executable quote, fill probability or validated walk-forward result."
