@@ -1614,3 +1614,17 @@ main{margin-top:16px}
 .topbar-readiness:not([open]) .readiness-grid{display:none}
 #overnightCaptureSellWindow{margin:0 0 6px}
 #overnightSellWindowStatus{margin:4px 0 12px;overflow-wrap:anywhere}
+
+/* November 4 workflow and header refinements */
+.topbar-title-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.topbar-title-row h1{margin:0}
+.topbar-title-row>button{white-space:nowrap}
+.readiness-runtime{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:8px;background:transparent}
+.overnight-shortlist-controls{display:flex;flex-direction:column;align-items:flex-end;gap:7px;min-width:min(360px,100%)}
+.overnight-shortlist-toggle{display:flex;gap:6px}
+.overnight-shortlist-toggle button[aria-pressed="true"]{border-color:var(--blue);background:rgba(74,144,226,.16)}
+.overnight-shortlist-picker{display:grid;grid-template-columns:repeat(4,minmax(52px,1fr));gap:5px;max-width:360px;max-height:150px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:8px}
+.overnight-shortlist-option{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text);min-width:0}
+.overnight-shortlist-option input{width:auto;margin:0}
+.prototype-quick-start{width:calc(100% - 20px);margin:10px 10px 6px;padding:9px 7px;font-size:11px}
+@media(max-width:850px){.overnight-shortlist-controls{align-items:flex-start}.topbar-title-row{align-items:flex-start}}
