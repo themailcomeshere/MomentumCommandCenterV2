@@ -53,3 +53,24 @@ Add POST /api/boring-overnight/calculate-sell-limit and a UI control only after 
 
 - The reason for the nine missing 09:30 open bars is not established by the summary alone. Use per-boundary nearest-provider offsets to distinguish provider absence from a persistence mismatch.
 - Current runtime SIP entitlement, 20/20 GTC_EXT SIP coverage, exact current reference close, TOS ATR14 output series, and broker execution records have not been supplied.
+
+
+## 2026-11-05 — V2 ATR export evidence received
+
+### Export audit
+- `data/StrategyReports_EVR_11032026_5M_ATR.csv`: 81 V2 payload records, all with the expected 9 pipe-delimited fields after the V2 prefix (symbol, timeframe, epoch-ms, OHLC, volume, ATR14). Source timestamps span 2026-11-03 14:05Z through 20:50Z. There is one 10-minute timestamp step (one missing 5-minute bar); the remaining steps are 5 minutes. ATR values are present on all 81 rows (0.4962–2.0107).
+- `data/StrategyReports_EVR_11042026_5M_ATR.csv`: 79 V2 payload records with the same 9-field shape. Timestamps span 2026-11-04 14:30Z through 21:00Z with contiguous 5-minute steps. ATR values are present on all 79 rows (0.7834–2.5238).
+- Combined: 160 timestamped EVR 5m OHLCV+ATR14 records across two dates. These are useful parser/parity fixtures and prove the export carries an ATR field. They are not 20 sessions and do not provide 98 prefetch bars preceding every required comparison point.
+- User-recorded chart settings: extended-hours ON; corporate-action adjustment ON; chart timezone Phoenix local time (UTC-07:00); ATR length 14; average type Wilder. The V2 script's default input is atrLength=14 and uses ThinkScript Wilder averaging. User confirmation is consistent with the script default.
+- The report rows are syntactically populated. A chart-plot-to-export comparison of at least 20 rows has not been independently documented in the evidence received here. Do not mark ATR parity MATCH solely because the export contains ATR values.
+
+### Orchestration readiness decision
+The exports are sufficient to implement and test the V2 report parser, store timestamped TOS ATR observations, and build the parity-comparison path against matching server-calculated 5m ATR. They are **not sufficient to certify or run a numeric Calculated Limit Sell**. The service still needs source-isolated 20/20 complete GTC_EXT windows from SIP (780 exact 1m starts per session plus exact prior regular close), verified current reference close, continuous 5m OHLCV warmup/anchor, chart-to-export spot checks, and server-derived parity MATCH. The current runtime feed is IEX; do not request SIP capture until effective SIP configuration/entitlement is verified.
+
+### Implementation checklist
+- [ ] Add a V2 ATR report reader without changing the V1 OHLCV reader contract; validate exact payload schema, symbol, 5m aggregation, epoch timestamps, numeric ATR > 0, duplicate timestamps, and source-row errors.
+- [ ] Add tests/fixtures for both supplied exports, including the 11/03 missing 5m interval; do not silently fill it.
+- [ ] Persist TOS ATR observations with explicit source metadata and chart settings; do not store these as provider OHLCV bars.
+- [ ] Implement server-side ATR series calculation and timestamp-matched parity audit. Require consecutive matched bars and documented precision tolerance; caller cannot submit a MATCH flag.
+- [ ] Implement orchestration endpoint using persisted SIP GTC_EXT history and persisted reference close only; return reason-coded DATA?/NOT VERIFIED until every gate passes.
+- [ ] Add UI provenance/status and walk-forward evaluation. Keep touch rate labelled in-sample descriptive, not fill probability.
