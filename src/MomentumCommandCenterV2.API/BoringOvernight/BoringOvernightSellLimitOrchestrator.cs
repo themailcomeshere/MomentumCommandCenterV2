@@ -62,7 +62,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         gates.Add(new("EXACT_REFERENCE_CLOSE", referenceClose is > 0,
             referenceBar is null
                 ? $"Missing exact {referenceCloseTimestamp:O} 1m {provider}/{feed} reference-close bar for session {referenceSession:yyyy-MM-dd}."
-                : $"Reference close is {referenceClose.Value} from exact 1m bar {referenceCloseTimestamp:O} ({provider}/{feed})."));
+                : $"Reference close is {referenceClose.GetValueOrDefault()} from exact 1m bar {referenceCloseTimestamp:O} ({provider}/{feed})."));
 
         var atrRows = (await atrStore.GetLatestAsync(symbol, "5m", null, null, 10000, cancellationToken))
             .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal))
