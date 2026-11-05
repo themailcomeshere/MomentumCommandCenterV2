@@ -14,14 +14,14 @@ This is the second-pass index for the unchecked entries in `docs/Master-To-Do.md
 | Sell-limit UI | Target quantile input, assessment action, per-gate reasons, DATA? state | Frontend syntax test; browser acceptance still required |
 | Overnight scanner evidence | Original and updated exports compared; top-20 score review and row completeness documented | `docs/Validation/Overnight-Scanner-Review-20261105.md` |
 
-Exact code commit with green CI: `f3f384392843ce8d3f4b434a8e5687e0dd1d7125`; Actions run [42118758103](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42118758103), 222/222 tests passed. Subsequent documentation-only commits do not change that tested code.
+Exact code commit with green CI: `c990faf973fb9e3a14ec948386e210b9eb8b4fc5`; Actions run [42119562504](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42119562504), 223/223 tests passed. Subsequent documentation-only commits do not change that tested code.
 
 ## Second pass — check what the first pass unblocked
 
 | Previously blocked work | Did it become unblocked? | Current action/status |
 |---|---|---|
-| ATR parity | Yes, at algorithm-diagnostic level | Service and API implemented. Legacy V2.0 exports show the old shifted formula; corrected V2.1 platform export still needed. |
-| Sell-limit orchestration | Partially | API/UI now check the upstream evidence gates. Numeric output remains blocked by the explicit walk-forward gate and SIP qualification. |
+| ATR parity | Yes, at algorithm-diagnostic level | Service and API compare the latest 119 bars (99 warm-up + 20 comparisons) and return GAPS_PRESENT rather than MATCH when timestamps are missing. Legacy V2.0 exports show the old shifted formula; corrected V2.1 platform export still needed. |
+| Sell-limit orchestration | Partially | API/UI now check the upstream evidence gates, including exact provider/TOS OHLCV across the full 119-bar parity window. Numeric output remains blocked by the explicit walk-forward gate and SIP qualification. |
 | Provider/TOS 5m parity | Partially | Exact comparison code exists for the latest 99 bars. User/runtime SIP 5m bars and corrected V2.1 export are not present. |
 | GTC_EXT history qualification | No | Effective Alpaca feed is IEX; prior SIP history request returned 403. No 20/20 SIP qualification evidence. |
 | Walk-forward target validation | No | Train/test target-touch and adverse-excursion validation is not implemented. The API fails closed at this gate. |
@@ -36,7 +36,7 @@ Exact code commit with green CI: `f3f384392843ce8d3f4b434a8e5687e0dd1d7125`; Act
 
 1. Pull the latest feature branch and run `.\scripts\Get-Latest-And-Test.ps1`.
 2. Compile the corrected ThinkScript V2.1 in Thinkorswim. The corrected payload marker is `MCC_OHLCV_ATR|v2.1|`; legacy `v2` files are tagged V2.0 and excluded from sell-limit parity.
-3. Export corrected EVR 1m and 5m Strategy Reports. The 5m report needs at least 119 completed observations (99 warm-up + 20 comparison) and a continuous latest 99-bar segment.
+3. Export corrected EVR 1m and 5m Strategy Reports. The 5m report needs at least 119 consecutive completed observations (99 warm-up + 20 comparison); any gap in that window blocks MATCH.
 4. Import both through Dashboard → StrategyReport. Confirm the parity state and source metadata.
 5. Confirm actual Alpaca SIP historical entitlement before changing the effective feed. Do not attempt GTC_EXT qualification on IEX.
 6. Use the Overnight **Assess sell-limit evidence gates** action to see the remaining blocked reasons. It will not issue a numeric limit until walk-forward validation is implemented.
