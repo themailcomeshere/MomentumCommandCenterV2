@@ -65,13 +65,12 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 : $"Reference close is {referenceClose.GetValueOrDefault()} from exact 1m bar {referenceCloseTimestamp:O} ({provider}/{feed})."));
 
         var atrRows = (await atrStore.GetLatestAsync(symbol, "5m", null, null, 10000, cancellationToken))
-            .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal))
+            .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1.1", StringComparison.Ordinal))
             .ToArray();
-        var parity = ThinkorswimAtrParityService.Compare(atrRows);
         var orderedAtrRows = atrRows.OrderBy(x => x.Observation.SourceTimestampUtc).ToArray();
         var parityWindowRows = orderedAtrRows.TakeLast(ThinkorswimAtrParityService.DefaultWarmupBars +
             ThinkorswimAtrParityService.MinimumComparisonBars).ToArray();
-        parity = ThinkorswimAtrParityService.Compare(parityWindowRows);
+        var parity = ThinkorswimAtrParityService.Compare(parityWindowRows);
         var latestAtr = orderedAtrRows.LastOrDefault();
         var metadata = latestAtr?.Metadata;
 
@@ -81,11 +80,11 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             metadata.ChartTimezone.Equals("America/Phoenix", StringComparison.OrdinalIgnoreCase) &&
             metadata.ExtendedHours &&
             metadata.CorporateActionAdjustment &&
-            metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal);
+            metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1.1", StringComparison.Ordinal);
         gates.Add(new("ATR_STUDY_SETTINGS", settingsValid,
             settingsValid
-                ? "ATR(14) Wilder; Phoenix timezone; extended-hours ON; corporate-action adjustment ON; MCC_OHLCV_ATR_V2."
-                : "ATR provenance must be ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON and MCC_OHLCV_ATR_V2."));
+                ? "ATR(14) Wilder; Phoenix timezone; extended-hours ON; corporate-action adjustment ON; MCC_OHLCV_ATR_V2.1."
+                : "ATR provenance must be ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON and MCC_OHLCV_ATR_V2.1."));
 
         var parityMatched = parity.Status == "MATCH";
         gates.Add(new("ATR_PARITY", parityMatched,
@@ -102,17 +101,17 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         var providerAtrBars = Array.Empty<MarketBarObservation>();
         var providerBarsMatch = false;
         var providerMismatchCount = 0;
-        if (lastWarmupRows.Length > 0)
+        if (parityWindowRows.Length > 0)
         {
             providerAtrBars = (await barStore.GetLatestAsync(
-                symbol, provider, lastWarmupRows[0].Observation.SourceTimestampUtc,
-                lastWarmupRows[^1].Observation.SourceTimestampUtc, 10000,
+                symbol, provider, parityWindowRows[0].Observation.SourceTimestampUtc,
+                parityWindowRows[^1].Observation.SourceTimestampUtc, 10000,
                 cancellationToken, "5m", feed)).ToArray();
             var providerByTimestamp = providerAtrBars
                 .Select(x => x.Bar)
                 .GroupBy(x => x.Timestamp)
                 .ToDictionary(g => g.Key, g => g.Last());
-            foreach (var stored in lastWarmupRows)
+            foreach (var stored in parityWindowRows)
             {
                 var source = stored.Observation;
                 if (!providerByTimestamp.TryGetValue(source.SourceTimestampUtc, out var providerBar) ||
@@ -124,7 +123,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 providerAtrBars.Length >= AtrWarmupBars;
         }
         gates.Add(new("SAME_SOURCE_5M_OHLCV", providerBarsMatch,
-            $"Exact 5m provider/TOS OHLCV matches over the latest warm-up: {Math.Max(0, lastWarmupRows.Length - providerMismatchCount)}/{AtrWarmupBars}; mismatches or missing timestamps: {providerMismatchCount}."));
+            $"Exact 5m provider/TOS OHLCV matches over the latest warm-up: {Math.Max(0, parityWindowRows.Length - providerMismatchCount)}/{AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars}; mismatches or missing timestamps: {providerMismatchCount}."));
 
         var atrTimestampValid = latestAtr is not null &&
             latestAtr.Observation.SourceTimestampUtc.AddMinutes(5) <= asOfUtc &&
@@ -166,7 +165,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             symbol, provider, feed, request.TargetQuantilePct, asOfUtc,
             referenceSession, referenceCloseTimestamp, referenceClose,
             latestAtr?.Observation.Atr, latestAtr?.Observation.SourceTimestampUtc,
-            parity, lastWarmupRows.Length, providerAtrBars.Length, providerMismatchCount,
+            parity, lastWarmupRows.Length, parityWindowRows.Length, providerAtrBars.Length, providerMismatchCount,
             history, calculation, gates,
             approved
                 ? "A research-only sell-limit candidate was calculated from 20 complete SIP GTC_EXT sessions and matched current 5m ATR evidence. This is not a broker order, executable quote, fill probability or validated walk-forward result."
@@ -225,7 +224,8 @@ public sealed record BoringOvernightSellLimitOrchestrationResult(
     DateTimeOffset? AtrAsOfUtc,
     ThinkorswimAtrParityResult AtrParity,
     int TOSWarmupObservationCount,
-    int ProviderWarmupObservationCount,
+    int TOSParityWindowObservationCount,
+    int ProviderParityObservationCount,
     int ProviderBarMismatchCount,
     BoringOvernightSellWindowHistoryResult History,
     BoringOvernightSellLimitResult? Calculation,
