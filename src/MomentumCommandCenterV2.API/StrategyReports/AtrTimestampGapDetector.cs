@@ -1,5 +1,3 @@
-using MomentumCommandCenterV2.API.BoringOvernight;
-
 namespace MomentumCommandCenterV2.API.StrategyReports;
 
 /// <summary>
