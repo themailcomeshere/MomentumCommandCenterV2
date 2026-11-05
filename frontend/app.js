@@ -1528,7 +1528,7 @@ $("overnightCapture20")?.addEventListener("click", async () => {
 
 });
 
-/// MODULE: GTC_EXT sell-window history capture
+/// MODULE: 40-session GTC_EXT sell-window history capture
 /// PURPOSE: Fetch/persist exact extended-hours 1m observations only when the effective Alpaca feed is SIP.
 /// SAFETY: IEX is diagnostic only; no target is calculated from incomplete or partial-exchange coverage.
 $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
@@ -1550,13 +1550,13 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
    status.textContent="NOT RUN — effective Alpaca feed is "+(effectiveFeed.toUpperCase()||"UNKNOWN")+". GTC_EXT qualification research requires SIP. No provider history request was made and no bars were persisted. Resolve SIP entitlement/configuration, restart MCC, and verify /api/providers/status before retrying.";
    return;
   }
-  status.textContent="SIP confirmed as the effective configured feed. Fetching 20 exact GTC_EXT sell windows for "+symbol+"…";
+  status.textContent="SIP confirmed as the effective configured feed. Fetching 40 exact GTC_EXT sell windows for "+symbol+"…";
   const response=await fetch("/api/boring-overnight/capture-sell-window-history",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",feed:"sip"})});
   const data=await response.json();
   if(!response.ok)throw new Error(data.detail||data.title||data.error||("HTTP "+response.status));
   const windows=Array.isArray(data.windows)?data.windows:[];
   const missing=windows.reduce((sum,item)=>sum+(Number(item.missingIntervalCount)||0)+(item.referenceClose===null?1:0),0);
-  const complete=data.completeWindowCount??0,required=data.requiredWindow??20;
+  const complete=data.completeWindowCount??0,required=data.requiredWindow??40;
   const samples=windows.flatMap(item=>(item.missingIntervalSampleUtc||[]).map(ts=>item.sellSessionDate+": "+ts)).slice(0,5);
   const qualification=data.qualificationUsable===true&&data.allWindowsComplete===true;
   status.textContent="Capture finished for "+symbol+" · "+complete+"/"+required+" complete windows · "+missing+" missing minute/reference observations · "+(data.fetchedBarCount??0)+" fetched / "+(data.newlyPersistedBarCount??0)+" newly stored · feed coverage "+(data.feedCoverage||"UNKNOWN")+" · qualification "+(qualification?"USABLE":"NOT USABLE")+". "+(samples.length?"Missing examples: "+samples.join(" | "):"No missing-minute samples were reported.")+" "+(data.note||"");
