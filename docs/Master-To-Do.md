@@ -1,3 +1,42 @@
+## 2026-11-05 — StrategyReport import crash, extended-hours export window, and walk-forward engine
+
+### Completed in this engineering pass
+- [x] Fixed the Dashboard ATR import handler so it validates all five required metadata controls before reading values. A stale/mismatched HTML page now gets a precise missing-control error instead of an uncaught null.value exception; the CSV is not sent when metadata controls are missing.
+- [x] Bumped the Dashboard app.js cache key to force the browser to load the guarded handler with the current HTML.
+- [x] Audited `StrategyReports_EVR_11042026_5M_ATR_v2_1.csv`: 82 V2.1 observations; timestamps 2026-11-04 14:05Z–21:00Z (09:05–16:00 Eastern / 07:05–14:00 Arizona); one 15-minute timestamp gap from 09:15 to 09:30 Eastern. No payload observations occur after 16:00 Eastern.
+- [x] Identified why the Nov 4 payload stops at the regular close: the ThinkScript study itself filtered source bars to `startTime=0600`, `endTime=1600`. Extended-hours chart display ON cannot override this script-level time window.
+- [x] Updated the V2.1 ThinkScript defaults to 07:00–20:00 Eastern and documented that `SecondsFromTime` / `SecondsTillTime` use the EST/Eastern clock even when the chart display timezone is Phoenix. The study must be reloaded/compiled and a new report exported before extended-hours inclusion is verified.
+- [x] Implemented `BoringOvernightWalkForwardValidator`: 20 earlier training sessions + 20 later unseen test sessions; training-only nearest-rank target quantile; test target-touch rate; mean/max test adverse excursion; training adverse-excursion P95 bound; complete-sample coverage and fail-closed outcomes.
+- [x] Extended sell-window history from 20 to 40 sessions and persisted session lows as well as highs. The sell-limit calculator receives only the first 20 training sessions, never the unseen test sessions.
+- [x] Added a hard `WALK_FORWARD_VALIDATION` gate to sell-limit orchestration. Numeric output remains withheld unless the walk-forward gate and every existing independent evidence gate pass.
+- [x] Added unit tests for a passing split, failed test touch rate, failed adverse excursion, insufficient sample, and incomplete coverage.
+- [x] Added `docs/Validation/Walk-Forward-Validation-Design-20261105.md` with the formulas, sample policy, pass/fail rules, data separation, and limitations.
+
+### Still open / operator verification
+- [ ] Pull the branch and run `.scripts\Get-Latest-And-Test.ps1`; verify the new C# validator and tests compile and pass in CI/local.
+- [ ] Hard-refresh the Dashboard (Ctrl+F5). Retry the Nov 3 1m and 5m V2.1 imports. Confirm parsed/persisted counts and parity statuses; the UI crash fix has not yet been browser-verified against the user's running instance.
+- [ ] Pull the updated ThinkScript, set chartAggregation=FIVE_MIN and both chart/study aggregation to 5m, confirm extended-hours ON and corporate-action adjustment ON, compile, and export a fresh EVR 5m report using the new 07:00–20:00 ET study window.
+- [ ] Inspect the new report for payload timestamps after 16:00 ET through the final eligible extended-hours interval. Confirm after-hours bars are present; do not assume the updated filter guarantees bars where no trades occurred.
+- [ ] Investigate the 09:15–09:30 ET 15-minute gap in the Nov 4 report. It may be missing observations or absent trades; the CSV alone does not identify the cause.
+- [ ] Capture/audit 40 complete SIP GTC_EXT sessions only after actual SIP entitlement/effective-feed access changes. Existing SIP HTTP 403 remains a blocker; do not retry SIP now.
+- [ ] Verify ATR V2.1 5m parity, 99-bar warm-up, exact provider/TOS OHLCV match, exact reference close, and all other independent sell-limit gates. Walk-forward PASS alone does not qualify a numeric limit.
+- [ ] Keep actual broker fills completely separate; no broker execution connector or fill ledger was added in this pass.
+- [ ] Run browser acceptance on the Dashboard import flow and sell-limit assessment UI after local tests pass.
+
+### Walk-forward v1.0 policy
+- Training: earliest 20 complete chronological sell sessions.
+- Test: next 20 complete unseen sell sessions.
+- Training-only target: nearest-rank quantile of session maximum favorable return.
+- Pass requires test target-touch rate >= training empirical touch rate and maximum test adverse excursion <= training adverse-excursion P95.
+- Test coverage must be 100%; no missing rows are imputed.
+- The 5m export's ATR observations are a separate technical-validation input; walk-forward uses 1m eligible sell-window OHLCV.
+- OHLCV target touches are theoretical and are never counted as actual broker fills.
+
+### [Uncertainties]
+The import error's exact missing DOM element is not observable from the reported exception alone; the new guard will name any missing control on retry. The Nov 4 report shows a filter cutoff at 16:00 ET consistent with the old study default, but the source data does not prove whether every omitted after-hours minute had a trade. The new 40-session walk-forward engine and tests have been committed but require CI/local execution and operator runtime acceptance.
+
+---
+
 ## 2026-11-05 — corrected V2.1 exports, ATR session-gap handling, and Overnight candidate review
 
 ### Completed in this pass
