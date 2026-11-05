@@ -267,3 +267,11 @@ The Overnight qualification panel now supports separate **MCC Top 4** (four high
 
 
 The qualification panel also exposes an append-only human catalyst review queue for articles returned by the active group. Human labels are stored separately from automated triage and cannot clear a catalyst; labelled-sample adjudication and measured classifier validation remain open.
+
+
+ 
+## SIP entitlement and sell-limit status — November 4, 2026
+
+A current Alpaca SIP request returned HTTP 403 because the account subscription does not permit recent SIP data. IEX is partial-exchange diagnostic coverage; SIP is consolidated coverage required for qualification, live movers and GTC_EXT target research. Changing MCC's configured feed does not grant account entitlement. After SIP entitlement is activated, configure the effective feed locally, restart, and verify `/api/providers/status` before retrying exact history recovery.
+
+The GTC_EXT exact-window capture and the fail-closed sell-limit calculator exist, but a provenance-bound end-to-end calculation and validated walk-forward result are still outstanding. Wilder ATR code exists; Thinkorswim numeric parity is not established. Numeric sell limits remain withheld until exact SIP coverage, matched ATR evidence and walk-forward validation are complete.
