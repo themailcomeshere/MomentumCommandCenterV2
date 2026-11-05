@@ -76,7 +76,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
 
         Assert.True(result.AllWindowsComplete);
         Assert.True(result.QualificationUsable);
-        Assert.Equal(20, result.CompleteWindowCount);
+        Assert.Equal(40, result.CompleteWindowCount);
     }
 
     [Fact]
