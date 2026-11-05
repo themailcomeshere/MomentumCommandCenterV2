@@ -1,3 +1,47 @@
+## 2026-11-05 — ATR V2 ingestion, parity diagnosis, and second-pass unblock review
+
+This section supersedes the earlier statement below that only the ThinkScript compiler correction had been implemented. Code has now been added on `feature/opportunity-quality-classification`; the earlier history is retained for audit.
+
+### First pass — implement every item that current evidence permits
+
+- [x] Parsed both new full ATR V2 exports: 346 1m ATR observations and 81 5m ATR observations. Their Strategy Reports contain 692 and 162 numbered order rows respectively because each source bar emits a transport-close row and an ATR payload row.
+- [x] Added a dedicated V2 parser with 11-field payload validation, all six documented timeframes, UTC epoch-millisecond parsing, invariant decimal parsing, symbol/timeframe consistency, duplicate rejection, and explicit gap reporting. V1 parser remains unchanged.
+- [x] Added an isolated append-only Thinkorswim ATR JSONL store. It records OHLCV + ATR, chart settings, study version, source file, import batch and correction linkage. Identical re-imports are skipped; changed values append a correction. It is not mixed with Alpaca IEX/SIP observations.
+- [x] Added `POST /api/strategy-report/atr-import`, `GET /api/strategy-report/atr-observations`, and `GET /api/strategy-report/atr-parity`.
+- [x] Added the Dashboard import controls for ATR length, average type, chart timezone, extended-hours and corporate-action adjustment. V2 uploads are persisted separately; V1 uploads retain the existing parser flow.
+- [x] Added a versioned Wilder ATR parity service: 99-observation warm-up, at least 20 compared bars, timestamp matching, gap count, mean/max/P90 absolute error, mean relative error, and a fixed 0.00005 tolerance tied to the export's four-decimal precision. It compares the server calculation with TOS ATR on the exact same imported TOS OHLCV; it does not claim provider-feed parity.
+- [x] Added tests using both actual exports, plus malformed payload, duplicate timestamp, gap, idempotent persistence, correction, positive parity, mismatch and insufficient-warm-up cases. Build and tests passed on commit `e87143af82f618b13c8aa07d826757665ae7b63f` (Actions run [42116898016](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42116898016)). Additional regression/UI/source changes after that commit still require a fresh exact-head CI run.
+- [x] Added `docs/Validation/Overnight-Scanner-Review-20261105.md` comparing original and updated scanner exports, row completeness and top-20 scores.
+- [x] Updated the StrategyReport UI to display the ATR parity state after import. Latest UI edit is after the successful CI head and needs the next CI run.
+
+### New evidence discovered while implementing parity
+
+- [x] Found a one-bar previous-close shift in the ThinkScript V2 source: `TrueRange(high, close[1], low)` passes a shifted close series to a function that already uses the previous close. Corrected it to `TrueRange(high, close, low)` in commit `efecef0c26a9af064e5cba68d522fa9d7137ca51`. Official reference: https://toslc.thinkorswim.com/center/reference/thinkScript/Functions/Tech-Analysis/TrueRange
+- [x] Quantified the defect against the 346-row 1m export after 99 warm-up observations: standard Wilder ATR on the exported OHLCV had mean absolute error about 0.06370 and maximum about 0.14788; reproducing the extra previous-close shift had mean absolute error about 0.00002545 and maximum about 0.00004974. This is within the four-decimal export rounding bound. The November 3 export therefore reflects the old shifted formula; it must not be used to certify corrected-study parity.
+- [ ] Recompile the corrected ThinkScript in Thinkorswim and export a new 1m/5m report. The repository cannot compile ThinkScript or confirm the installed chart settings.
+- [ ] The current 5m export has only 81 observations, below the 99-bar warm-up. Export at least 119 completed 5m bars (99 warm-up + 20 comparison bars), with the corrected study.
+- [ ] Re-import the corrected exports and require `MATCH` from the ATR parity endpoint before enabling any numeric sell limit.
+
+### Second pass — re-check whether first-pass work unblocked other tasks
+
+- [x] ATR parity was previously blocked by missing TOS ATR values. V2 export + persistence + comparison now make the algorithm-level parity test executable. The legacy 1m file deliberately reports `NOT_MATCH`; the current 5m file reports `INSUFFICIENT_WARMUP`.
+- [ ] Sell-limit orchestration is only partially unblocked. It can now consume persisted ATR observations, but it remains blocked by corrected-study parity, at least 20 matched bars after warm-up, verified reference close, complete 20/20 SIP GTC_EXT windows, and continuous same-source 5m history. Do not output a numeric sell limit.
+- [x] ATR import/provenance UI was unblocked by the new API and is implemented. Browser acceptance and saved-observation refresh/status after page reload remain open.
+- [ ] Opportunity Quality full-pool ranking remains blocked by 296 rows with unavailable custom-expression values in the updated scanner. The top-score preview is not a qualified candidate list; current price/liquidity, catalyst, exclusion, 5m and 1m evidence are still separate gates.
+- [ ] SIP history remains blocked: the effective runtime feed is still IEX and SIP entitlement has not been demonstrated. No SIP capture or qualification claim.
+- [ ] Catalyst validation remains blocked by the absence of human-labelled adjudication data and measured classification performance.
+- [ ] Walk-forward target validation remains blocked by unqualified SIP history and corrected ATR parity.
+- [ ] Execution reconciliation remains blocked by broker fill/fee/quantity records. TOS Strategy Report order events and OHLCV highs are not broker fills.
+- [ ] Remaining historical runtime/UI tasks (WebSocket recovery, browser acceptance, EOD cutoff screenshots, performance measurements, official auction-print parity and operator runbook verification) were checked for new dependencies; the supplied CSVs do not provide the missing runtime or broker evidence. Keep those items open.
+
+### User actions needed to unblock the next pass
+
+1. Pull the latest feature branch and run `.\scripts\Get-Latest-And-Test.ps1`.
+2. In Thinkorswim, replace the V2 study with the corrected source, compile it, and verify the chart label says `chart=MATCH`.
+3. Export EVR 1m and 5m again using ATR 14 / Wilder, Phoenix timezone, extended-hours ON and corporate-action adjustment ON. For 5m include at least 99 warm-up bars plus 20 comparison bars.
+4. Import both files through Dashboard → StrategyReport upload. Send me the import and parity results if either does not show the expected counts/status.
+5. Do not change Alpaca to SIP until you have confirmed that the account entitlement allows SIP historical requests. We will verify the provider status and exact 20/20 history before changing qualification.
+
 ## 2026-11-05 — ATR V2 compile-error correction and sell-limit implementation status
 
 - [x] Diagnosed the user's ThinkScript compile errors: `AggregationPeriod.ONE_MIN` is not the ThinkScript one-minute constant; the supported constant is `AggregationPeriod.MIN`. The script also assigned string labels to `def` variables, which are numeric-only in ThinkScript and caused the cascade of `Expected double` / incompatible string parameter errors.
