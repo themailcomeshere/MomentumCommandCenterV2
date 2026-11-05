@@ -22,7 +22,7 @@ Exact code commit with green CI: `c990faf973fb9e3a14ec948386e210b9eb8b4fc5`; Act
 |---|---|---|
 | ATR parity | Yes, at algorithm-diagnostic level | Service and API compare the latest 119 bars (99 warm-up + 20 comparisons) and return GAPS_PRESENT rather than MATCH when timestamps are missing. Legacy V2.0 exports show the old shifted formula; corrected V2.1 platform export still needed. |
 | Sell-limit orchestration | Partially | API/UI now check the upstream evidence gates, including exact provider/TOS OHLCV across the full 119-bar parity window. Numeric output remains blocked by the explicit walk-forward gate and SIP qualification. |
-| Provider/TOS 5m parity | Partially | Exact comparison code exists for the latest 99 bars. User/runtime SIP 5m bars and corrected V2.1 export are not present. |
+| Provider/TOS 5m parity | Partially | Exact comparison code exists for the latest 119 bars (99 warm-up + 20 comparison). User/runtime SIP 5m bars and corrected V2.1 export are not present. |
 | GTC_EXT history qualification | No | Effective Alpaca feed is IEX; prior SIP history request returned 403. No 20/20 SIP qualification evidence. |
 | Walk-forward target validation | No | Train/test target-touch and adverse-excursion validation is not implemented. The API fails closed at this gate. |
 | Actual execution reconciliation | No | No actual broker fill, quantity, fee and timestamp records were supplied for reconciliation. OHLCV highs remain theoretical touches only. |
