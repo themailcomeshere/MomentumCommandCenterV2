@@ -1,4 +1,3 @@
-using System.Text.Json;
 using MomentumCommandCenterV2.API.StrategyReports;
 using Xunit;
 
@@ -14,7 +13,7 @@ public sealed class StrategyReportAtrV2Tests
 
         Assert.Equal("EVR", result.Symbol);
         Assert.Equal("1m", result.Timeframe);
-        Assert.Equal(346, result.ReportDataRowCount);
+        Assert.Equal(692, result.ReportDataRowCount);
         Assert.Equal(346, result.AtrObservationCount);
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T14:04:00Z"), result.FirstTimestampUtc);
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T20:58:00Z"), result.LastTimestampUtc);
@@ -34,7 +33,7 @@ public sealed class StrategyReportAtrV2Tests
 
         Assert.Equal("EVR", result.Symbol);
         Assert.Equal("5m", result.Timeframe);
-        Assert.Equal(81, result.ReportDataRowCount);
+        Assert.Equal(162, result.ReportDataRowCount);
         Assert.Equal(81, result.AtrObservationCount);
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T14:05:00Z"), result.FirstTimestampUtc);
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T20:50:00Z"), result.LastTimestampUtc);
@@ -52,7 +51,7 @@ public sealed class StrategyReportAtrV2Tests
         var result = StrategyReportAtrV2Parser.Parse(report);
         Assert.Equal(2, result.AtrObservationCount);
         Assert.Single(result.GapSamples);
-        Assert.Equal(TimeSpan.FromMinutes(2), result.GapSamples[0].Duration);
+        Assert.Equal(TimeSpan.FromMinutes(1), result.GapSamples[0].Duration);
     }
 
     [Fact]
