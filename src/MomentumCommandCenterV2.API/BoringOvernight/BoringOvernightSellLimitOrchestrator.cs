@@ -48,7 +48,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             .GetHistoryAsync(symbol, provider, feed, asOfUtc, cancellationToken);
         gates.Add(new("HISTORY_40_OF_40", history.QualificationUsable,
             $"Complete eligible GTC_EXT windows: {history.CompleteWindowCount}/{history.RequiredWindow}; feed coverage: {history.FeedCoverage}. " +
-            (history.QualificationUsable ? "Every 07:00–19:59 ET minute and exact prior-session close is present." : "All 20 windows must be complete on SIP; missing timestamps and reference closes are not imputed.")));
+            (history.QualificationUsable ? "Every 07:00–19:59 ET minute and exact prior-session close is present." : "All 40 windows (20 training + 20 later test) must be complete on SIP; missing timestamps and reference closes are not imputed.")));
 
         var referenceSession = GetLatestCompletedRegularSessionDate(asOfUtc);
         var referenceCloseTimestamp = ToUtc(referenceSession, UsEquitiesSessionCalendar.GetRegularClose(referenceSession).AddMinutes(-1));
@@ -174,7 +174,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             parity, lastWarmupRows.Length, parityWindowRows.Length, providerAtrBars.Length, providerMismatchCount,
             history, walkForward, calculation, gates,
             approved
-                ? "A research-only sell-limit candidate was calculated from 20 complete SIP GTC_EXT sessions and matched current 5m ATR evidence. This is not a broker order, executable quote, fill probability or validated walk-forward result."
+                ? "A research-only sell-limit candidate passed the 20-session training / 20-session unseen-test walk-forward gate and matched current 5m ATR evidence. This is not a broker order, executable quote or actual fill."
                 : "No numeric sell limit is issued. Resolve every failed evidence gate; no data has been imputed and no order has been submitted.");
     }
 
