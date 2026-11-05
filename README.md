@@ -264,3 +264,6 @@ The production and prototype dashboards now provide button-driven 20-session reg
 ## 2026-11-04 — candidate-group and header workflow
 
 The Overnight qualification panel now supports separate **MCC Top 4** (four highest imported scanner scores) and **My Top 4** (exactly four user-selected imported symbols) groups. Selection persists in the browser; Daily + catalyst refresh queries only the active four. This is scanner-score selection, not a calibrated Opportunity Quality rank. Morning Command Brief is adjacent to the product title; WebSocket status and prototype badge are within System Readiness. Quick Start is in the prototype left dock; production left-rail placement remains outstanding because the production page has no aside.
+
+
+The qualification panel also exposes an append-only human catalyst review queue for articles returned by the active group. Human labels are stored separately from automated triage and cannot clear a catalyst; labelled-sample adjudication and measured classifier validation remain open.
