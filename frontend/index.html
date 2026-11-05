@@ -182,6 +182,11 @@
  </div>
  <p class="muted small">Unknown / incomplete history means one or more required custom-expression metrics are unavailable. These rows are DATA? — not historical FAIL candidates. Inspect their History cells and source CSV values separately.</p>
  <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
+ <section id="catalystHumanReview" class="catalyst-human-review" aria-label="Human catalyst article review">
+  <div class="section-heading"><div><h3>Human catalyst review queue</h3><p class="muted small">Review source articles returned for the active top-four group. Labels are append-only research data; they never clear a catalyst or create READY.</p></div><span id="catalystReviewQueueCount" class="chip">0 articles</span></div>
+  <div id="catalystReviewQueue" class="catalyst-review-queue"><p class="muted small">Fetch Daily + catalyst evidence to load articles for human review.</p></div>
+  <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
+ </section>
  <div class="table-wrap overnight-qualification-table">
   <table>
    <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON</th><th>5D ON</th><th>Current ON</th><th>Above 20 SMA</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
