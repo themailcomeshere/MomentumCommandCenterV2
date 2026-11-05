@@ -69,7 +69,7 @@ New code:
 - Same-New-York-date missing intervals still block MATCH.
 - Full-session completeness (detecting a completely absent trading session) remains an open item.
 - Added regression tests for overnight/weekend transitions.
-- Latest code commit: `c9003fd24d3b39817a874304195e01619c79de21`; CI [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) was queued at last check.
+- Latest code commit: `c9003fd24d3b39817a874304195e01619c79de21`; CI [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) succeeded: build succeeded and 225/225 tests passed.
 
 SIP: Prior recent-history SIP requests returned HTTP 403 due subscription entitlement. IEX preflight rejection is a separate known limitation. Do not repeat SIP requests or ask the operator to repeat them; do not run GTC_EXT capture while entitlement remains denied. Continue IEX-only diagnostic development.
 
