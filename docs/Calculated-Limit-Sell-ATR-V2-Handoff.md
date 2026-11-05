@@ -96,7 +96,7 @@ Measured on the November 3 1m export after 99 warm-up observations:
 - Standard previous-close Wilder ATR vs exported ATR: mean absolute error ~0.06370; maximum ~0.14788.
 - Reproducing the old extra previous-close shift: mean absolute error ~0.00002545; maximum ~0.00004974.
 
-The old export is a regression fixture for the defect, not a valid parity certification. The corrected ThinkScript V2.1 has not yet been compiled and re-exported by the operator.
+The old export is a regression fixture for the defect, not a valid parity certification. The operator has now supplied V2.1 1m/5m exports, confirming the corrected study executed. The 1m export's latest 119 rows contain 13 intraday gaps; the 5m export has only 81 observations and one intraday gap, so neither currently certifies 5m parity.
 
 ## 3. Actual November 3 export coverage
 
@@ -128,7 +128,7 @@ The effective Alpaca feed last reported IEX. Prior SIP historical access returne
 
 1. Implement time-separated walk-forward validation with per-session theoretical target touches and adverse excursions. This is the current explicit gate preventing numeric sell-limit output.
 2. Keep theoretical OHLCV touches separate from actual broker fills, quantities, fees and timestamps.
-3. Verify complete 20/20 SIP GTC_EXT windows and exact reference-close coverage on a confirmed SIP entitlement.
+3. Keep SIP qualification blocked: prior recent-history SIP requests returned HTTP 403 due subscription entitlement. Do not repeat requests unless the account entitlement/provider access changes; continue non-SIP engineering.
 4. Re-import corrected V2.1 reports and establish actual platform parity.
 5. Complete provider-feed parity for current 5m bars and ensure the latest 119 provider/TOS bars match exactly (99 warm-up + 20 comparison).
 6. Complete Daily qualification and catalyst/news classification, Opportunity Quality calibration and full-pool scanner handling.
