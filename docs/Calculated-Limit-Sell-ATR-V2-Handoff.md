@@ -1,8 +1,8 @@
 # Momentum Command Center — ATR V2 and Sell-Limit Engineering Handoff
 
 **Current branch:** `feature/opportunity-quality-classification`  
-**Latest code commit with green CI:** `f3f384392843ce8d3f4b434a8e5687e0dd1d7125`  
-**GitHub Actions:** [run 42118758103](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42118758103) — build succeeded; 222/222 tests passed, including frontend JavaScript syntax validation.
+**Latest code commit with green CI:** `c990faf973fb9e3a14ec948386e210b9eb8b4fc5`  
+**GitHub Actions:** [run 42119562504](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42119562504) — build succeeded; 223/223 tests passed, including frontend JavaScript syntax validation.
 
 ## 1. What is implemented
 
@@ -34,7 +34,7 @@
 
 - `POST /api/boring-overnight/sell-limit`
 - Dashboard has a target-quantile input and an evidence-assessment button. It displays status and each pass/fail gate.
-- The service checks persisted 20/20 GTC_EXT history, exact latest regular-session 1m reference close, V2.1 ATR(14) Wilder provenance, ATR parity, 99 consecutive 5m observations, exact provider/TOS 5m OHLCV equality, and completed/fresh ATR.
+- The service checks persisted 20/20 GTC_EXT history, exact latest regular-session 1m reference close, V2.1 ATR(14) Wilder provenance, gap-free ATR parity across the latest 119 observations, 99 consecutive 5m warm-up observations, exact provider/TOS 5m OHLCV equality across all 119 parity-window bars, and completed/fresh ATR.
 - **The numeric limit is deliberately blocked by the `WALK_FORWARD_VALIDATION` gate.** Time-separated target-touch/adverse-excursion validation is not implemented. The endpoint does not submit orders.
 
 ## 2. Important ThinkScript defect discovered and corrected
@@ -80,7 +80,7 @@ Each source bar creates a transport-close order row and an ATR payload row. Use 
    ```
 2. Open the updated `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt` study in Thinkorswim, replace the previous version and compile it. The payload must contain `v2.1`.
 3. Confirm chart aggregation equals the study input; ATR length 14; average type Wilder; chart timezone Phoenix; extended-hours ON; corporate-action adjustment ON.
-4. Export EVR 1m and 5m again. For 5m include at least 99 warm-up observations plus 20 comparison observations (119 or more total). Include enough completed bars for the latest 99 to be continuous.
+4. Export EVR 1m and 5m again. For 5m include at least 119 consecutive completed observations: 99 warm-up + 20 comparison bars. No timestamp gap is allowed in this latest 119-bar parity window.
 5. Upload both CSVs separately through Dashboard → StrategyReport. The importer detects V2.0 vs V2.1 from the payload marker. Only V2.1 is used for sell-limit parity.
 6. Confirm the 1m and 5m parity results. Both must show `MATCH` on at least 20 compared bars.
 7. In the Overnight workspace, choose a research target quantile and click **Assess sell-limit evidence gates**. The UI will show the remaining failures. A numeric limit remains blocked until walk-forward validation is implemented.
