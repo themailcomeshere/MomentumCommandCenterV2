@@ -15,11 +15,11 @@ public static class UsEquitiesSessionCalendar
         DateOnly lastIncludedSessionDate,
         int requiredPairs = 20)
     {
-        if (requiredPairs is < 5 or > 20)
-            throw new ArgumentOutOfRangeException(nameof(requiredPairs), "Required pairs must be 5–20.");
+        if (requiredPairs is < 5 or > 40)
+            throw new ArgumentOutOfRangeException(nameof(requiredPairs), "Required pairs must be 5–40.");
 
         var sessions = new List<DateOnly>();
-        for (var offset = 0; offset <= 65 && sessions.Count < requiredPairs + 1; offset++)
+        for (var offset = 0; offset <= 90 && sessions.Count < requiredPairs + 1; offset++)
         {
             var date = lastIncludedSessionDate.AddDays(-offset);
             if (IsTradingSession(date)) sessions.Add(date);
