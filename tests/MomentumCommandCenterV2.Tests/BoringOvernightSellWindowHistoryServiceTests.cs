@@ -8,10 +8,10 @@ namespace MomentumCommandCenterV2.Tests;
 public sealed class BoringOvernightSellWindowHistoryServiceTests
 {
     [Fact]
-    public async Task BuildsTwentyCompleteExactEtWindowsFromPersistedBars()
+    public async Task BuildsFortyCompleteExactEtWindowsFromPersistedBars()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var bars = BuildBars(boundaries);
         var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
 
@@ -20,8 +20,8 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
             DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
 
         Assert.True(result.AllWindowsComplete);
-        Assert.Equal(20, result.Windows.Count);
-        Assert.Equal(20, result.CompleteWindowCount);
+        Assert.Equal(40, result.Windows.Count);
+        Assert.Equal(40, result.CompleteWindowCount);
         Assert.Equal("CONSOLIDATED_SIP", result.FeedCoverage);
         Assert.True(result.QualificationUsable);
         Assert.All(result.Windows, window =>
@@ -40,7 +40,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     public async Task MissingExactMinuteRemainsAnExplicitGapAndInvalidatesThatWindow()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var bars = BuildBars(boundaries);
         var lastWindow = boundaries[^1];
         var missingTimestamp = ToUtc(lastWindow.NextSessionDate, new TimeOnly(8, 17));
@@ -52,7 +52,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
             DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
 
         Assert.False(result.AllWindowsComplete);
-        Assert.Equal(19, result.CompleteWindowCount);
+        Assert.Equal(39, result.CompleteWindowCount);
         var incomplete = Assert.Single(result.Windows, x => x.SellSessionDate == lastWindow.NextSessionDate);
         Assert.False(incomplete.CoverageComplete);
         Assert.Equal(779, incomplete.ObservedIntervalCount);
@@ -65,7 +65,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     public async Task RequestedFeedCoverageRemainsCompleteWhenOtherFeedsShareTheStore()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var bars = BuildBars(boundaries, "sip");
         bars.AddRange(BuildBars(boundaries, "iex"));
         var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
@@ -83,7 +83,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     public async Task CompleteIexTimestampsRemainDiagnosticAndCannotQualifyConsolidatedResearch()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var bars = BuildBars(boundaries, "iex");
         var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
 
@@ -115,10 +115,10 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     }
 
     [Fact]
-    public async Task CaptureFetchesPersistsAndReturnsTwentyWindowAudit()
+    public async Task CaptureFetchesPersistsAndReturnsFortyWindowAudit()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var providerBars = BuildBars(boundaries);
         var store = new InMemoryStore(new List<MarketBar>());
         var provider = new InMemoryProvider(providerBars, "Alpaca");
@@ -164,7 +164,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     public async Task CaptureRejectsWrongFeedBeforePersistingAnyBars()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var provider = new InMemoryProvider(BuildBars(boundaries, "iex"), "Alpaca");
         var store = new InMemoryStore(new List<MarketBar>());
         var service = new BoringOvernightSellWindowHistoryService(store);
@@ -179,7 +179,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
     public async Task FeedIsolationPreventsIexAndSipBarsFromBeingCombined()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
-            new DateOnly(2026, 10, 30), 20);
+            new DateOnly(2026, 10, 30), 40);
         var bars = BuildBars(boundaries);
         var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
 
