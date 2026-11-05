@@ -74,8 +74,9 @@ public static class ThinkorswimAtrParityService
             "4h" => TimeSpan.FromHours(4),
             _ => TimeSpan.Zero
         };
-        var gaps = interval == TimeSpan.Zero ? 0 : rows.Zip(rows.Skip(1), (left, right) => right.SourceTimestampUtc - left.SourceTimestampUtc)
-            .Count(delta => delta > interval + TimeSpan.FromSeconds(1));
+        var gaps = interval == TimeSpan.Zero ? 0 : rows.Zip(rows.Skip(1), (left, right) =>
+                AtrTimestampGapDetector.IsUnexpectedGap(left.SourceTimestampUtc, right.SourceTimestampUtc, interval))
+            .Count(isGap => isGap);
 
         if (rows.Length <= warmupBars)
             return new ThinkorswimAtrParityResult(
@@ -113,9 +114,9 @@ public static class ThinkorswimAtrParityService
             warmupBars, MinimumComparisonBars, ExportRoundingTolerance, rows.Length, errors.Count, gaps,
             meanAbsolute, maxAbsolute, p90, errors[0].Timestamp, errors[^1].Timestamp, meanRelative, first,
             matched
-                ? "Every compared Wilder ATR value matches the Thinkorswim export within the four-decimal export rounding bound, and the comparison window has no timestamp gaps. This validates the ATR algorithm on these imported bars only; provider-feed and live-history parity remain separate."
+                ? "Every compared Wilder ATR value matches the Thinkorswim export within the four-decimal export rounding bound, and the comparison window has no intraday timestamp gaps within its New York session dates. This validates the ATR algorithm on these imported bars only; provider-feed and live-history parity remain separate."
                 : status == "GAPS_PRESENT"
-                    ? "ATR values are within numeric tolerance, but one or more source timestamps are missing. Wilder recurrence across missing bars cannot be certified; no gap is imputed and parity is not MATCH."
+                    ? "ATR values are within numeric tolerance, but one or more intraday source timestamps are missing within a New York session date. Wilder recurrence across missing bars cannot be certified; no gap is imputed and parity is not MATCH."
                     : "Server Wilder ATR does not match the exported Thinkorswim ATR within the four-decimal export rounding bound. Numeric sell-limit orchestration must remain blocked. This comparison uses the imported TOS OHLCV bars and does not diagnose provider-feed differences.");
     }
 
