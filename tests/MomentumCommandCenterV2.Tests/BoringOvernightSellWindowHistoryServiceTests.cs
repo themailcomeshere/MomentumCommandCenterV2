@@ -92,7 +92,7 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
             DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
 
         Assert.True(result.AllWindowsComplete);
-        Assert.Equal(20, result.CompleteWindowCount);
+        Assert.Equal(40, result.CompleteWindowCount);
         Assert.Equal("PARTIAL_FEED", result.FeedCoverage);
         Assert.False(result.QualificationUsable);
     }
