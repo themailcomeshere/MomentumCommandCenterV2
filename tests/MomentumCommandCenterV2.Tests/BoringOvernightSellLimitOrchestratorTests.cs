@@ -21,7 +21,7 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
             new BoringOvernightSellLimitRequest("EVR", "Alpaca", "sip", 75),
             asOf, CancellationToken.None);
 
-        Assert.Equal("PROVISIONAL", result.Status);
+        Assert.Equal("BLOCKED", result.Status);
         Assert.Equal(20, result.History.CompleteWindowCount);
         Assert.True(result.History.QualificationUsable);
         Assert.Equal(100.5m, result.ReferenceClose);
@@ -30,8 +30,10 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         Assert.Equal(99, result.TOSWarmupObservationCount);
         Assert.Equal(99, result.ProviderWarmupObservationCount);
         Assert.Equal(0, result.ProviderBarMismatchCount);
-        Assert.Equal(101.51m, result.Calculation?.CalculatedLimitSell);
-        Assert.All(result.Gates, gate => Assert.True(gate.Passed, gate.Code + ": " + gate.Detail));
+        Assert.Null(result.Calculation?.CalculatedLimitSell);
+        Assert.Contains(result.Gates, gate => gate.Code == "WALK_FORWARD_VALIDATION" && !gate.Passed);
+        Assert.All(result.Gates.Where(gate => gate.Code is not ("WALK_FORWARD_VALIDATION" or "SELL_LIMIT_CALCULATION")),
+            gate => Assert.True(gate.Passed, gate.Code + ": " + gate.Detail));
     }
 
     [Fact]
