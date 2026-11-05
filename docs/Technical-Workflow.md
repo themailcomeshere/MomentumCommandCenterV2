@@ -210,3 +210,13 @@ The local runtime's effective feed may differ from tracked configuration because
 The Overnight qualification panel supports **MCC Top 4** and **My Top 4**. MCC Top 4 is the four highest imported scanner scores. My Top 4 is exactly four user-selected imported symbols, saved in browser local storage. The Daily + catalyst action queries only the active group. Do not conflate scanner-score ordering with a calibrated Opportunity Quality ranking.
 
 The Morning Command Brief sits beside the product title. System Readiness contains the WebSocket status (and prototype badge on the prototype page). Quick Start is in the prototype's left dock; production currently has no aside/dock, so production Quick Start access is an outstanding layout item rather than a claim of completion.
+
+
+ 
+## SIP entitlement recovery and GTC_EXT calculation gate
+
+Alpaca HTTP 403 with `subscription does not permit querying recent SIP data` is an account entitlement rejection. Do not retry the same SIP query or downgrade the qualification workflow to IEX. Activate SIP market-data entitlement with Alpaca, configure `MarketData:Alpaca:Feed=sip` locally (including checking environment overrides), restart the API, and confirm `/api/providers/status` reports SIP. Test one recent SPY bar before bulk recovery. Keep credentials local.
+
+Only then run exact EVR close/open recovery and the GTC_EXT 20-session capture. A complete GTC_EXT sample requires 20/20 sessions, each with the exact prior close and all 780 one-minute bars from 07:00 through 19:59 ET. Missing timestamps remain missing.
+
+The sell-limit calculator is fail-closed: no numeric limit until complete SIP windows and independently matched ATR parity are available. MCC's Wilder ATR implementation is not yet proven equivalent to the installed Thinkorswim study. A matched fixture must use identical symbol, completed timestamp, timeframe, session scope, adjustment and study settings. The integrated calculation API and out-of-sample walk-forward validation remain open. A historical bar high touch is not an actual fill.
