@@ -2221,3 +2221,7 @@ The compact table does not prove that all historical metrics were populated only
 [Uncertainties]
 - SIP entitlement, official opening-auction print access, exact Thinkorswim installed versions/settings, and Schwab read-only integration status are not established by repository source alone.
 - Browser runtime acceptance and real provider coverage remain unverified until tested in the user's local environment.
+
+
+- [x] Added MCC-native catalyst article review queue to production and prototype qualification panels. After Daily + catalyst retrieval, returned articles show source link, headline, publication timestamp, provisional triage/category and human-label selector (MATERIAL_RISK / MATERIAL_EVENT / NON_MATERIAL / IRRELEVANT / DUPLICATE / UNCERTAIN), notes and append-only save to /api/market-data/catalyst-reviews. Human labels remain separate from automated triage and cannot clear candidates.
+- [ ] Collect and adjudicate a representative article sample, double-review a subset, measure reviewer agreement and classifier precision/recall on a time-separated holdout. The UI is a label-collection mechanism, not validation completion.
