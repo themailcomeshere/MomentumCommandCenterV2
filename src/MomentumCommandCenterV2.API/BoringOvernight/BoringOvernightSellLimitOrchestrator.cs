@@ -69,6 +69,9 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             .ToArray();
         var parity = ThinkorswimAtrParityService.Compare(atrRows);
         var orderedAtrRows = atrRows.OrderBy(x => x.Observation.SourceTimestampUtc).ToArray();
+        var parityWindowRows = orderedAtrRows.TakeLast(ThinkorswimAtrParityService.DefaultWarmupBars +
+            ThinkorswimAtrParityService.MinimumComparisonBars).ToArray();
+        parity = ThinkorswimAtrParityService.Compare(parityWindowRows);
         var latestAtr = orderedAtrRows.LastOrDefault();
         var metadata = latestAtr?.Metadata;
 
