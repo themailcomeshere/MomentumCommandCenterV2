@@ -1155,7 +1155,7 @@ $("strategyReportForm")?.addEventListener("submit", async event => {
    try {
     const parityResponse = await fetch("/api/strategy-report/atr-parity?symbol=" +
      encodeURIComponent(body.symbol) + "&timeframe=" + encodeURIComponent(body.timeframe) +
-     "&studyVersion=" + encodeURIComponent("MCC_OHLCV_ATR_V2.1"), {headers:{Accept:"application/json"}});
+     "&studyVersion=" + encodeURIComponent("MCC_OHLCV_ATR_V2.1") + "&windowBars=119", {headers:{Accept:"application/json"}});
     const parityBody = await parityResponse.json();
     if (parityResponse.ok) parity = parityBody;
     else parity = {status:"UNAVAILABLE",explanation:parityBody.error || ("HTTP " + parityResponse.status)};
