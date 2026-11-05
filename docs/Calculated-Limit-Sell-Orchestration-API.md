@@ -23,9 +23,9 @@ The API reads persisted observations only. It does not fetch provider bars, inte
 2. **20/20 GTC_EXT history.** Every 07:00–19:59 ET minute plus the exact previous regular-session close must be present for all 20 sessions.
 3. **Exact current reference close.** Latest completed regular-session 15:59 (or 12:59 early-close) 1m bar from the same provider/feed.
 4. **Corrected TOS study provenance.** ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON, payload V2.1 / study version `MCC_OHLCV_ATR_V2.1`.
-5. **ATR algorithm parity.** Timestamp-matched server Wilder ATR vs TOS ATR must return `MATCH` with at least 20 compared bars after 99 warm-up observations.
-6. **Continuous 5m warm-up.** At least 99 consecutive completed 5m TOS observations.
-7. **Same-source 5m OHLCV.** Latest 99 TOS 5m rows must exactly match persisted provider/feed 5m OHLCV at every timestamp.
+5. **ATR algorithm parity.** Timestamp-matched server Wilder ATR vs TOS ATR must return `MATCH` over the latest 119 observations: 99 warm-up + 20 compared bars. Any gap in that window returns `GAPS_PRESENT`, never `MATCH`.
+6. **Continuous 5m warm-up.** At least 99 consecutive completed 5m TOS observations for Wilder initialization.
+7. **Same-source 5m OHLCV.** The complete latest 119-row parity window (99 warm-up + 20 comparison bars) must have no timestamp gaps and must exactly match persisted provider/feed 5m OHLCV at every timestamp.
 8. **Fresh completed ATR.** Latest TOS 5m ATR bar must be completed and no more than 10 minutes old.
 9. **Walk-forward validation.** Currently NOT IMPLEMENTED. The API always reports this gate as failed; no numeric sell limit is issued.
 10. **Quantile calculation.** After all prior gates pass, the existing calculator may produce a provisional research candidate from the complete 20-session sample. It is not an executable quote or validated fill probability.
@@ -47,7 +47,7 @@ The UI reads the effective Alpaca feed from provider status. It does not change 
 - Current reference close: exact latest completed regular-session 1m bar from the same provider/feed.
 - ATR input: imported corrected Thinkorswim V2.1 ATR observation.
 - ATR parity: server Wilder calculation vs TOS ATR on the same imported TOS OHLCV.
-- Provider/TOS 5m parity: exact OHLCV equality over the latest 99 bars.
+- Provider/TOS 5m parity: exact OHLCV equality over all latest 119 parity-window bars.
 - Broker fills: not consumed by this endpoint and never inferred from bar highs.
 
 The endpoint is intentionally strict. A 403 SIP entitlement failure, IEX configuration, absent provider bars, V2.0 legacy export, mixed chart settings, missing timestamp, non-matching OHLCV or incomplete warm-up leaves the result blocked.
