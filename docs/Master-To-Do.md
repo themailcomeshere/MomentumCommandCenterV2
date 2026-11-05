@@ -2258,3 +2258,33 @@ The compact table does not prove that all historical metrics were populated only
 2. Once active, configure SIP locally, restart API, and share sanitized `/api/providers/status` plus one SPY recent-bars response.
 3. Export one same-timestamp Thinkorswim matched-bar fixture with OHLC, ATR14, extension, timeframe/session settings and study versions. This is required to finish ATR parity; no local code change can manufacture the platform's reference output.
 4. After those two external prerequisites, implement and validate the integrated sell-limit endpoint and walk-forward results.
+
+
+ 
+## 2026-11-04 — Follow-up execution attempt and Thinkorswim ATR specification
+
+### Direct runtime access / data retrieval
+- [x] Inspected the committed runtime configuration: `src/MomentumCommandCenterV2.API/appsettings.json` sets `MarketData:Alpaca:Feed=sip`. This is repository configuration only, not proof of the user's effective running configuration; environment variables, user secrets, and launch profile can override it.
+- [x] Inspected `GET /api/providers/status`: it reports the running adapter's configured feed and configuration-provider source.
+- [x] Inspected the existing MCC-native exact Overnight recovery action: `POST /api/boring-overnight/capture-history`, called by the UI button `overnightCapture20`. It fetches Alpaca 1-minute bars, generates the latest 20 calendar close/open boundaries, persists observations, and audits each exact boundary.
+- [x] Inspected the existing GTC_EXT capture action: `POST /api/boring-overnight/capture-sell-window-history`, called by `overnightCaptureSellWindow`. The UI first checks effective feed and refuses to start unless it is SIP.
+- [ ] **Not executed in this session:** this agent has no route to the user's `localhost:53360`. A local connection attempt from the isolated execution environment failed because no API listener is exposed there. Therefore current effective runtime feed, EVR exact opens, and persisted exact timestamp coverage remain unverified. Data not found in sources for a fresh runtime result.
+- [ ] User must click `overnightCapture20` with EVR selected in MCC; then inspect all 20 exact boundary rows and persisted-bar audit. If the effective feed is IEX, the action may fetch IEX but cannot qualify consolidated SIP evidence; if configured SIP without entitlement it will fail with Alpaca 403. Do not label this retrieval successful until the API response reports exact boundaries and the persisted store confirms each timestamp.
+- [ ] Add an MCC-native persisted-observation verification action that directly compares requested expected timestamps to the latest stored observations and reports present/missing, provider, feed, timeframe, content hash and source timestamp. Current capture response reports boundary coverage but no independent second readback acceptance report.
+
+### Thinkorswim ATR specification — source-confirmed defaults, instance evidence still pending
+- [x] Official thinkorswim ATR documentation specifies default length 14 and default average type Wilder's; length and average type are configurable: https://toslc.thinkorswim.com/center/reference/Tech-Indicators/studies-library/A-B/ATR
+- [x] Official thinkScript `WildersAverage` documentation specifies first value = simple moving average, followed by recursive Wilder smoothing with alpha = 1/length: https://toslc.thinkorswim.com/center/reference/thinkScript/Functions/Tech-Analysis/WildersAverage
+- [x] Official prefetch documentation states WildersAverage uses 7 * length bars of prefetch for range-independent results: https://toslc.thinkorswim.com/center/reference/thinkScript/tutorials/Advanced/Chapter-12---Past-Offset-and-Prefetch
+- [ ] Verify the actual installed user's ATR study settings, aggregation/timeframe, extended-hours setting, price adjustment and chart data source. The built-in default is known; user overrides and the strategy's selected timeframe are not.
+- [ ] MCC parity implementation must use sufficient warm-up history consistent with thinkScript prefetch (7*length bars), then compare on identical completed bars. Existing MCC ATR code seeds on the first supplied 14 true ranges; it can be range-dependent when the supplied history is too short. Do not claim parity solely because the recurrence matches.
+- [ ] Obtain at least one matched Thinkorswim fixture (symbol, timeframe, exact bar timestamp, session, adjustment, OHLC, ATR14 and ExtensionATR) and compare multiple consecutive bars.
+- [ ] Establish numeric tolerance from the actual displayed/export precision and observed parity differences; no tolerance is approved yet.
+- [ ] Run chronological walk-forward target testing only after the historical capture is extended to enough sessions to provide an independent prior 20-window training sample plus subsequent test windows. Current 20-window audit alone cannot produce a meaningful 20-session rolling out-of-sample series.
+- [ ] Record target touch, adverse excursion and data exclusions separately. A bar high touching the theoretical limit is not a fill.
+- [ ] Actual fills must come from broker execution/order activity or a separately imported, source-identified execution ledger (order ID, client order ID, symbol, side, quantity, fill price, fill timestamp, fees, status). Do not derive fills from OHLCV touches. No verified broker-fill integration is established by the current source audit.
+ 
+### Subscription-cost decision
+- [x] Recorded that current Alpaca public docs list Basic as free with IEX and Algo Trader Plus at $99/month with all-US-exchange SIP coverage. Recent SIP requests require eligible subscription.
+- [x] No verified public employee code, promotional code, or free trial was found in the sources checked. Alpaca Elite advertises free Algo Trader Plus market data but has a $100,000 deposit requirement; not recommended solely to avoid the $99 development fee.
+- [ ] Keep development on IEX where technically appropriate; schedule paid SIP activation only for consolidated-feed acceptance and exact historical recovery. Never mark IEX as equivalent to SIP.
