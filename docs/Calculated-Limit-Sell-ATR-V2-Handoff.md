@@ -1,3 +1,40 @@
+## November 5, 2026 — latest import, after-hours, and walk-forward engineering update
+
+### StrategyReport import crash
+The operator's Dashboard import failed for both V2.1 reports with `Cannot read properties of null (reading 'value')`. The handler read `atrImportPeriod`, `atrImportAverage`, `atrImportTimezone`, `atrImportExtendedHours`, and `atrImportAdjustment` without verifying the DOM elements existed. The handler now checks all five controls before reading them and reports missing IDs explicitly. `frontend/index.html` has a new app.js cache-bust key. This fix is committed but not yet browser-verified in the operator's local instance.
+
+### November 4 5m report and after-hours diagnosis
+- V2.1 payload count: 82.
+- First/last payload: 2026-11-04 14:05Z to 21:00Z = 09:05–16:00 Eastern = 07:05–14:00 Arizona.
+- One 15-minute gap: 09:15 to 09:30 Eastern.
+- No payload rows after 16:00 Eastern.
+- Root cause in the study source: `startTime=0600`, `endTime=1600` filters out bars after 16:00 Eastern, regardless of extended-hours chart display being enabled.
+- Updated study defaults: `startTime=0700`, `endTime=2000`. Official ThinkScript docs state `SecondsFromTime` and `SecondsTillTime` use EST time; the filter is not Phoenix-local. Source: https://toslc.thinkorswim.com/center/reference/thinkScript/Functions/Date---Time/SecondsFromTime
+- Operator must pull/reload/compile the revised study and export again. Extended-hours data inclusion is not verified until payloads after 16:00 ET appear. A no-trade interval may still produce no bar.
+
+### Walk-forward implementation
+- New `BoringOvernightWalkForwardValidator` performs a chronological 20-session training / 20-session unseen-test split.
+- Training only selects the nearest-rank target quantile. The test set measures target-touch rate and mean/maximum adverse excursion.
+- Pass policy v1.0: test touch rate must meet/exceed the training empirical touch rate; test maximum adverse excursion must not exceed the training adverse-excursion 95th percentile; all 40 sessions must be complete.
+- Sell-window history now requests/audits 40 sessions and stores both session highs and lows. The calculator receives only the first 20 training observations.
+- Orchestrator includes a fail-closed `WALK_FORWARD_VALIDATION` gate. Insufficient data, incomplete coverage, or failed test metrics block the numeric result.
+- Actual broker fills remain completely separate; OHLCV touches are theoretical only.
+- Design and formulas: `docs/Validation/Walk-Forward-Validation-Design-20261105.md`.
+- Tests added for PASS, touch-rate failure, adverse-excursion failure, insufficient sample, and incomplete coverage.
+
+### Current operator next steps
+1. Pull branch and run `.scripts\Get-Latest-And-Test.ps1`; inspect CI.
+2. Hard-refresh Dashboard (Ctrl+F5), re-import Nov 3 1m and 5m V2.1 CSVs, and send the full import summaries/parity status.
+3. Pull revised ThinkScript, compile it, confirm 5m chart/study aggregation match, ETH ON, adjustment ON, and export again.
+4. Verify after-hours payload rows extend past 16:00 ET; report any missing intervals rather than filling them.
+5. Do not retry SIP. It remains blocked by the prior HTTP 403 entitlement response.
+6. Do not treat walk-forward PASS as overall sell-limit approval: SIP GTC_EXT, exact reference close, ATR parity, 99-bar warm-up, and exact provider/TOS OHLCV gates remain independent.
+
+[Uncertainties]
+The local browser cache state and exact missing DOM control have not been directly inspected; the new guard will expose the missing IDs if still mismatched. The Nov 4 report's 16:00 ET cutoff is explained by the old study time filter, but after-hours bar availability depends on actual source trades and the refreshed chart. CI/runtime acceptance for this new code is pending.
+
+---
+
 # Momentum Command Center — ATR V2 and Sell-Limit Engineering Handoff
 
 **Current branch:** `feature/opportunity-quality-classification`  
