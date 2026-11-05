@@ -1,3 +1,33 @@
+## 2026-11-05 current implementation status — supersedes the earlier planning status below
+
+**Status:** ATR V2 ingestion/parity and sell-limit orchestration API/UI exist. Chronological walk-forward validation is now implemented in code, but CI and operator runtime acceptance are pending. The numeric limit remains fail-closed behind all independent evidence gates.
+
+### New import and chart-window findings
+- Dashboard import failed before upload because the frontend dereferenced missing ATR metadata controls. The handler now checks all five DOM controls and emits the missing IDs; HTML cache key is bumped. Operator must hard-refresh and retry.
+- Nov 4 EVR 5m V2.1 report has 82 payload observations from 09:05 to 16:00 ET, with a 15-minute gap at 09:15–09:30 ET.
+- The study's former `endTime=1600` excluded after-hours bars even when the chart's extended-hours display was enabled. The study defaults now use `startTime=0700`, `endTime=2000`; ThinkScript time-window functions use the EST/Eastern clock. Reload/compile and re-export to verify.
+
+### Current sell-limit validation contract
+- The capture/audit history requirement is now 40 complete sell sessions: 20 chronological training + 20 later unseen test sessions.
+- The training set alone determines the nearest-rank target quantile.
+- The unseen test set reports target-touch rate, mean adverse excursion and maximum adverse excursion.
+- Pass requires 100% coverage, test touch rate at least the training empirical touch rate, and test maximum adverse excursion no greater than the training adverse-excursion P95 bound.
+- The sell-limit calculator receives only the first 20 training sessions. The test set is never used to tune the candidate.
+- A failed/insufficient walk-forward gate blocks the numeric limit.
+- Actual broker fills are separate from theoretical OHLCV touches. No broker-fill integration was added.
+
+Design: `docs/Validation/Walk-Forward-Validation-Design-20261105.md`.
+
+### Operator verification
+1. Pull feature branch and run `.scripts\Get-Latest-And-Test.ps1`.
+2. Hard-refresh Dashboard and retry both V2.1 imports.
+3. Compile/reload the revised ThinkScript and export 5m history through 20:00 ET.
+4. Verify after-hours observations, gap list, import counts and parity.
+5. Keep SIP capture disabled until entitlement/effective feed changes; prior SIP request returned HTTP 403.
+
+
+---
+
 # Calculated Limit Sell — implementation plan and current evidence
 
 **Working branch:** feature/opportunity-quality-classification  
