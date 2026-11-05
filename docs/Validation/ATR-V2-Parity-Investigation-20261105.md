@@ -40,10 +40,14 @@ The V2 payload exports ATR to four decimal places. The extra-shift calculation i
 
 The server parity service uses standard Wilder true range (current high/low plus the immediately preceding bar close), with a 99-observation warm-up, at least 20 comparison bars, and 0.00005 maximum absolute error tolerance. The legacy 1m export should report `NOT_MATCH`; the 5m export should report `INSUFFICIENT_WARMUP` because it has only 81 observations.
 
+## Gap policy
+
+A numeric ATR comparison is not a `MATCH` if the latest comparison window contains missing source timestamps, even when the numeric ATR values happen to be within tolerance. The parity service returns `GAPS_PRESENT` and never imputes a missing bar. Sell-limit orchestration evaluates the latest 119 rows (99 warm-up + 20 comparison) and requires exact provider/TOS OHLCV equality across all 119 timestamps.
+
 ## Required re-validation
 
 The corrected ThinkScript has to be compiled and re-exported in the user's Thinkorswim instance. A successful .NET build cannot verify ThinkScript semantics or installed chart settings.
 
-For the 5m report, export at least 119 completed observations: 99 warm-up observations plus 20 comparison observations. Keep the chart on the selected aggregation and confirm ATR(14), Wilder, Phoenix timezone, extended-hours ON and corporate-action adjustment ON.
+For the 5m report, export at least 119 consecutive completed observations: 99 warm-up observations plus 20 comparison observations, with no timestamp gaps in the window. Keep the chart on the selected aggregation and confirm ATR(14), Wilder, Phoenix timezone, extended-hours ON and corporate-action adjustment ON.
 
 Do not mark ATR parity complete or calculate a numeric sell limit until the corrected export returns `MATCH` and the separate SIP/history/reference-close gates pass.
