@@ -131,6 +131,9 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 ? "No current 5m Thinkorswim ATR observation is persisted."
                 : $"Latest 5m ATR bar starts {latestAtr.Observation.SourceTimestampUtc:O}; completion is {latestAtr.Observation.SourceTimestampUtc.AddMinutes(5):O}; evaluated at {asOfUtc:O}."));
 
+        gates.Add(new("WALK_FORWARD_VALIDATION", false,
+            "Time-separated train/test target-touch and adverse-excursion validation is not yet implemented. The numeric sell limit remains withheld until this independent validation exists."));
+
         var allPassed = gates.All(x => x.Passed);
         BoringOvernightSellLimitResult? calculation = null;
         if (allPassed && referenceClose is > 0 && latestAtr is not null)
