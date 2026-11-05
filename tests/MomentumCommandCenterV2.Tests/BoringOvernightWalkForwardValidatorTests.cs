@@ -30,7 +30,7 @@ public sealed class BoringOvernightWalkForwardValidatorTests
     {
         var observations = BuildObservations(
             Enumerable.Range(1, 20).Select(x => (HighReturn: (decimal)x, Adverse: 0.5m))
-                .Concat(Enumerable.Range(1, 20).Select(x => (HighReturn: (decimal)x, Adverse: 0.25m))));
+                .Concat(Enumerable.Range(1, 10).Concat(Enumerable.Range(1, 10)).Select(x => (HighReturn: (decimal)x, Adverse: 0.25m))));
 
         var result = BoringOvernightWalkForwardValidator.Validate(observations, 75);
 
