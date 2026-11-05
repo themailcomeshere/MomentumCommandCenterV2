@@ -981,11 +981,11 @@ async function loadMinuteBarStreamStatus(){
   const selected=$("symbol")?.value;
   if(state.enabled&&selected)void ensureMinuteBarSubscription(selected);
   const subscribed=state.subscribedSymbols||[],barStats=state.barsBySymbol||{};
-  node.textContent=!state.enabled?"WS minute bars: DISABLED":state.connected
-   ?"WS minute bars: CONNECTED · "+(state.feed||"feed")+" · "+subscribed.length+" subscribed · "+(state.persistedBars??0)+" stored"
-   :"WS minute bars: "+(state.state||"UNKNOWN")+(state.lastError?" · "+state.lastError:"");
+  node.textContent=!state.enabled?"WS OFF":state.connected
+   ?"WS OK · "+(state.feed||"feed")+" · "+subscribed.length+" subs · "+(state.persistedBars??0)+" bars"
+   :"WS "+(state.state||"UNKNOWN");
   const perSymbol=Object.entries(barStats).map(([ticker,info])=>ticker+" "+info.barCount+" bars · "+(info.lastBarUtc||"no bar")).join("; ");
-  node.title="MCC dynamically subscribes the selected symbol and Red Zone candidates. Configured symbols are only the initial seed. Acknowledged: "+(subscribed.join(", ")||"none")+" · Per-symbol bars: "+(perSymbol||"none yet")+" · Last stream bar: "+(state.lastBarUtc||"none");
+  node.title="MCC dynamically subscribes the selected symbol and Red Zone candidates. Configured symbols are only the initial seed. Acknowledged: "+(subscribed.join(", ")||"none")+" · Per-symbol bars: "+(perSymbol||"none yet")+" · Last stream bar: "+(state.lastBarUtc||"none")+(state.lastError?" · Last error: "+state.lastError:"");
  }catch(error){node.textContent="WS minute bars: STATUS UNAVAILABLE";node.title=error.message;}
 }
 void loadMinuteBarStreamStatus();
