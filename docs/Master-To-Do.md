@@ -2191,3 +2191,33 @@ The compact table does not prove that all historical metrics were populated only
 - [ ] The top-four Daily + catalyst button is documented as a post-import shortlist refresh, not a pre-entry or exit button. It queries only the four highest-scored imported CSV rows and cannot emit READY.
 - [x] Exact-head GitHub Actions run [41916672903](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41916672903) passed on `3c27c787f7ffcb434be9893ca73ba58b8cad00fe`; workflow includes `node --check frontend/app.js`, .NET 8 restore, Release build and full tests.
 - [ ] Local browser acceptance remains required for the 443-row import, Red Zone rendering, collapsed readiness, symbol loading state, and new GTC_EXT preflight/result feedback.
+
+
+## 2026-11-04 — Dual top-four workflow and remaining completion plan
+
+### Implemented in the latest UI pass
+- [x] Added an explicit **MCC Top 4 / My Top 4** mode for Daily + catalyst retrieval in both production and prototype. MCC Top 4 selects the four highest-scored imported rows; My Top 4 allows exactly four user-selected imported symbols. The two sets are independent; My Top 4 selections and active mode persist in browser local storage. Evidence fetch targets only the active four and labels the group/symbols queried.
+- [x] Preserved the imported qualification summary and historical gate counts. Manual shortlist selection does not change PASS/FAIL/DATA? counts or create READY.
+- [x] Moved Morning Command Brief adjacent to the product title using a flex title row. Moved WebSocket stream status into System Readiness; prototype build badge is also inside System Readiness.
+- [x] Moved Quick Start into the left prototype dock. Production page has no left aside/dock in its current information architecture; retain/restore a production-accessible Quick Start entry before release (do not leave the dialog unreachable).
+- [ ] Browser acceptance: verify both shortlist modes, persistence after refresh, exactly four symbols per request, 443-row qualification counts unchanged, and both production/prototype header behavior.
+
+### Eight requested completion workstreams — current dependency disposition
+1. **SIP provider access and exact history recovery:** implementation supports configured-feed checks and refuses to mislabel IEX as SIP. External blocker: user Alpaca account entitlement and local runtime configuration. Exact EVR 09:30 ET opens were not returned by previous provider requests; no interpolation allowed. Once SIP is entitled and effective, retry exact timestamp recovery and verify provider response + persisted store.
+2. **GTC_EXT to calculated sell-limit engine:** capture/audit endpoint and calculator exist. The UI exposes SIP-preflighted capture. Remaining code: connect persisted calculator observations to the limit calculator, return a fully provenance-bound result contract, and surface sample counts/quantile/ATR context. Gate on 20/20 complete SIP windows and exact reference closes; current IEX runtime has 0/20 complete windows for RTO/EVR.
+3. **ATR parity and walk-forward validation:** ATR calculator and parity notes/tests exist; numeric parity is not proven. Requires user-provided Thinkorswim same-symbol/same-completed-bar OHLC/ATR14/extension values and exact timeframe/session settings. Do not connect a numeric limit or label validation passed until matched parity and out-of-sample walk-forward target-touch/adverse-excursion results are recorded.
+4. **Position-aware entry/exit lifecycle:** core OpenPosition and ExitReason models plus runner/exit validation notes exist, but broker-synchronized open-position state and lifecycle UI are not complete. Requires a read-only broker position/order/fill data source and user-side Schwab app authorization/configuration; never request credentials in chat. Until then the timeframe handoff remains an entry/technical context panel, not a position-specific exit manager.
+5. **Opportunity Quality live-input integration and ranking:** assessor/config/input models and snapshot adapter exist, and provisional reason codes are visible in Red Zone. Missing: live source adapters for complete candidate-pool inputs, versioned full-pool ranker, validated thresholds/calibration, stable rank/hysteresis, persisted source watermarks, and API/UI acceptance. Scanner score remains a preview and must not be called calibrated opportunity quality.
+6. **Catalyst human-label validation:** automated Alpaca phrase triage and append-only human-review storage/API exist. Missing: operator-facing review UI, source-backed human labels, adjudication, a representative labelled sample, measured false-positive/false-negative rates, and versioned validation. No-news remains UNKNOWN; never emit CLEAR_WITH_SOURCE from phrase absence.
+7. **Browser validation:** code/CI is not browser acceptance. Requires local pull/run and production + prototype browser checks for 443-row import, 168 PASS / 32 FAIL / 243 DATA?, Red Zone, top-four toggles, System Readiness, symbol loading, capture buttons and no console/network errors. Record screenshots and HAR/timings.
+8. **Thinkorswim matched-bar and EOD acceptance:** requires the installed V14.5.2 1M and V4.1.7 5M studies compiled in Thinkorswim and exact matched completed-bar outputs across standard/daylight time, cutoff transitions and EOD. .NET tests cannot validate ThinkScript compilation or installed study state.
+
+### User inputs required to unblock external dependencies
+- Confirm Alpaca account entitlement includes SIP, then configure the local API's effective feed to SIP using the documented local secrets workflow; restart and share sanitized /api/providers/status output only. Never share keys/secrets.
+- Supply one matched Thinkorswim capture/export for a symbol and exact completed timestamp showing 1M OHLC, VWAP, ATR14, ExtensionATR and 5M OHLC/permission fields, plus study versions/settings and session scope.
+- For position lifecycle, configure a read-only Schwab developer app/authorization locally and provide sanitized position/order/fill payloads. No trading credentials or tokens in chat; no order placement is in scope.
+- Perform the browser acceptance after pulling the branch and return screenshots plus any console/network errors. The user can choose four symbols in My Top 4 directly in MCC; no five-symbol shortlist will be truncated automatically.
+
+[Uncertainties]
+- SIP entitlement, official opening-auction print access, exact Thinkorswim installed versions/settings, and Schwab read-only integration status are not established by repository source alone.
+- Browser runtime acceptance and real provider coverage remain unverified until tested in the user's local environment.
