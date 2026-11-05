@@ -4,6 +4,41 @@
 **Latest code commit with green CI:** `c990faf973fb9e3a14ec948386e210b9eb8b4fc5`  
 **GitHub Actions:** [run 42119562504](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42119562504) — build succeeded; 223/223 tests passed, including frontend JavaScript syntax validation.
 
+## 0. November 5, 2026 — latest operator exports and engineering update
+
+The operator supplied corrected V2.1 files:
+- `data/ScannerExports/StrategyReports_EVR_11032026_1M_ATR_v2_1.csv`
+- `data/ScannerExports/StrategyReports_EVR_11032026_5M_ATR_v2_1.csv`
+
+Observed payload counts and diagnostics:
+- 1m: 346 payload observations; 48 intraday timestamp gaps across the full file; 13 intraday gaps in the latest 119 observations.
+- 1m numeric Wilder comparison: 20 post-warm-up observations; mean absolute error ~0.00002603; maximum absolute error ~0.00004669, within the 0.00005 four-decimal export tolerance. This is a local recomputation from the supplied CSV, not a Dashboard import or an API response. Because the latest 119-row window has intraday gaps, it is not a certified `MATCH`.
+- 5m: 81 observations and one 10-minute timestamp jump. This is below the 99-row warm-up and cannot produce 20 comparison bars.
+
+Code update:
+- Added `AtrTimestampGapDetector` and wired it into the V2 parser and Wilder parity service.
+- A scheduled overnight/weekend date transition in America/New_York no longer counts as a missing intraday bar. Missing intervals within the same New York date still count and block `MATCH`.
+- Full-session completeness is not yet implemented. A missing entire trading session needs its own coverage check and must not be silently inferred as complete.
+- Added regression tests for overnight/weekend transitions and intraday gaps.
+- Latest code commit: `c9003fd24d3b39817a874304195e01619c79de21`. CI run [42121843682](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42121843682) was queued when this handoff was updated; verify its final result before treating the commit as tested.
+
+Dashboard button location:
+1. Workspace dropdown → **Boring Overnight**.
+2. Scroll to **Calculated Limit Sell**.
+3. Enter a value in **Research target quantile (%)**.
+4. Click **Assess sell-limit evidence gates** (HTML ID `overnightCalculateSellLimit`).
+5. Read the gate results immediately below the button.
+
+SIP status:
+- Prior recent-history SIP access returned HTTP 403 because the subscription did not permit the requested data. Separate IEX preflight attempts were correctly rejected for GTC_EXT qualification.
+- This is a known external entitlement blocker, not an uncompleted operator setup step. Do not ask the operator to repeat SIP requests or click **Fetch 20-session GTC_EXT sell-window history** unless entitlement/provider access has materially changed.
+- Continue development using IEX only for diagnostics. Do not qualify GTC_EXT from IEX.
+
+Candidate review:
+- See `docs/Validation/Overnight-Candidate-Review-20261105.md`.
+- CBOE is the preferred addition to the next ordinary Overnight review; BLK has the strongest historical win rate; AVNT is a post-earnings momentum watch; EVER is secondary; BLMN is excluded from a routine Nov 5→Nov 6 overnight because earnings are scheduled premarket Nov 6.
+- No candidate is marked READY.
+
 ## 1. What is implemented
 
 ### Thinkorswim ATR import
