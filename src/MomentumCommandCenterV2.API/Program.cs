@@ -1352,7 +1352,7 @@ app.MapPost("/api/strategy-report/atr-import", async (
         var parsed = MomentumCommandCenterV2.API.StrategyReports.StrategyReportAtrV2Parser.Parse(csv);
         var metadata = new MomentumCommandCenterV2.API.StrategyReports.StrategyReportAtrImportMetadata(
             Path.GetFileName(file.FileName),
-            string.IsNullOrWhiteSpace(form["studyVersion"]) ? "MCC_OHLCV_ATR_V2" : form["studyVersion"].ToString().Trim(),
+            parsed.PayloadVersion == "v2.1" ? "MCC_OHLCV_ATR_V2.1" : "MCC_OHLCV_ATR_V2.0",
             atrPeriod, "Wilder", chartTimezone, extendedHours, corporateActionAdjustment,
             Guid.NewGuid().ToString("N"), DateTimeOffset.UtcNow);
         var persistence = await atrStore.AppendAsync(parsed.Observations, metadata, ct);
@@ -1425,7 +1425,7 @@ app.MapGet("/api/strategy-report/atr-observations", async (
 app.MapGet("/api/strategy-report/atr-parity", async (
     string symbol, string timeframe,
     MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
-    int? warmupBars, CancellationToken ct) =>
+    int? warmupBars, string? studyVersion, CancellationToken ct) =>
 {
     if (!IsValidSymbol(symbol))
         return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
@@ -1434,8 +1434,10 @@ app.MapGet("/api/strategy-report/atr-parity", async (
     try
     {
         var rows = await atrStore.GetLatestAsync(symbol, timeframe, null, null, 10000, ct);
+        var selectedStudyVersion = string.IsNullOrWhiteSpace(studyVersion) ? "MCC_OHLCV_ATR_V2.1" : studyVersion.Trim();
+        var selectedRows = rows.Where(x => x.Metadata.StudyVersion.Equals(selectedStudyVersion, StringComparison.Ordinal)).ToArray();
         return Results.Ok(MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.Compare(
-            rows, warmupBars ?? MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.DefaultWarmupBars));
+            selectedRows, warmupBars ?? MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.DefaultWarmupBars));
     }
     catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
     catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
