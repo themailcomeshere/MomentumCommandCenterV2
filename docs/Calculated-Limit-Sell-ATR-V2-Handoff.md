@@ -95,7 +95,7 @@ The effective Alpaca feed last reported IEX. Prior SIP historical access returne
 2. Keep theoretical OHLCV touches separate from actual broker fills, quantities, fees and timestamps.
 3. Verify complete 20/20 SIP GTC_EXT windows and exact reference-close coverage on a confirmed SIP entitlement.
 4. Re-import corrected V2.1 reports and establish actual platform parity.
-5. Complete provider-feed parity for current 5m bars and ensure latest 99 provider/TOS bars match.
+5. Complete provider-feed parity for current 5m bars and ensure the latest 119 provider/TOS bars match exactly (99 warm-up + 20 comparison).
 6. Complete Daily qualification and catalyst/news classification, Opportunity Quality calibration and full-pool scanner handling.
 7. Complete runtime/browser acceptance: WebSocket recovery, collector schedule, UI state transitions, EOD/early-close behavior, page-load performance and console/network errors.
 8. Keep broker execution integration separate; the sell-limit endpoint is research-only and never submits an order.
