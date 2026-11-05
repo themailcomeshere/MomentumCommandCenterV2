@@ -2225,3 +2225,36 @@ The compact table does not prove that all historical metrics were populated only
 
 - [x] Added MCC-native catalyst article review queue to production and prototype qualification panels. After Daily + catalyst retrieval, returned articles show source link, headline, publication timestamp, provisional triage/category and human-label selector (MATERIAL_RISK / MATERIAL_EVENT / NON_MATERIAL / IRRELEVANT / DUPLICATE / UNCERTAIN), notes and append-only save to /api/market-data/catalyst-reviews. Human labels remain separate from automated triage and cannot clear candidates.
 - [ ] Collect and adjudicate a representative article sample, double-review a subset, measure reviewer agreement and classifier precision/recall on a time-separated holdout. The UI is a label-collection mechanism, not validation completion.
+
+
+ 
+## 2026-11-04 — SIP 403 diagnosis and sell-limit/ATR execution status
+
+### Operator evidence
+- [x] Recorded runtime failure: Alpaca returns HTTP 403 with `subscription does not permit querying recent SIP data` for recent SIP bars. This is a provider-plan entitlement rejection, not a missing symbol, timestamp, MCC parsing issue, or retryable transient.
+- [x] Clarified feed choice: `IEX` is partial-exchange coverage and can support diagnostics where endpoints permit it; `SIP` is consolidated coverage and required for MCC qualification/live-movers/GTC_EXT research. The configured feed is an application setting, not an automatic upgrade. A SIP request cannot succeed until the Alpaca account has SIP market-data entitlement.
+- [x] Shortened WebSocket readiness chip to compact states (WS OFF / WS OK / WS <state>), moved verbose counts, symbols and last error into its tooltip, and constrained the chip to its parent readiness card.
+- [ ] Verify exact-head CI and browser fit in production and prototype after pull.
+- [ ] User must enable/subscribe to Alpaca SIP market data in the Alpaca account. Do not keep retrying the same recent SIP request while entitlement remains denied.
+- [ ] After entitlement is active, set effective `MarketData:Alpaca:Feed=sip` in local configuration (check environment-variable overrides too), restart API, verify `/api/providers/status` reports configured/effective SIP, then test one recent SIP bar request for SPY. Do not paste API keys or secrets.
+- [ ] Only after the one-symbol request succeeds, retry exact EVR close/open boundaries and GTC_EXT capture for RTO/EVR; verify fetched and persisted exact timestamps, 20/20 complete windows and source provenance.
+
+### GTC_EXT calculation pipeline
+- [x] Exact-window capture and persisted-history audit exist. Each of 20 windows requires the exact prior regular close plus all 780 1-minute timestamps 07:00–19:59 ET. The service does not impute missing bars.
+- [x] Sell-limit calculator exists and suppresses numeric output unless supplied ATR parity is MATCH and at least 20 complete eligible windows exist. It also withholds positive targets when the chosen historical quantile is flat/negative.
+- [ ] The calculation pipeline is NOT connected end-to-end to a verified live ATR/reference-close source. Do not mark complete or issue a numeric limit yet.
+- [ ] Implement an API operation that loads the persisted SIP windows, obtains reference close and ATR from exact source-backed completed bars, verifies parity evidence from matched Thinkorswim output, invokes `BoringOvernightSellLimitCalculator`, and returns all provenance, quantile, sample count and limitations. It must not accept an operator-supplied `atrParityStatus=MATCH` flag as proof.
+- [ ] Add walk-forward evaluation using strictly prior eligible windows for each forecast and next-session observed highs/lows; include target touch, adverse excursion, sample count, missing-data exclusions and source identifiers. A bar high touch is not a fill. Do not optimize quantile/coefficients on the holdout.
+- [ ] UI must show DATA? / NOT CALCULATED until API returns a fully validated result. Keep capture and calculation actions distinct.
+
+### ATR parity and walk-forward
+- [x] Wilder ATR implementation exists with explicit period/timeframe and source bars; signed extension helper exists.
+- [ ] Exact parity is unproven. Need identical symbol, timeframe, session scope, completed-bar timestamp, adjustment and Thinkorswim study settings; compare MCC ATR14 and extension against TOS values on the same bars.
+- [ ] Confirm TOS ATR averaging method/initial seed and whether the strategy's ATR is 1M or 5M before choosing the production calculation source. No assumption is accepted.
+- [ ] Add matched-fixture tests using user-exported OHLC/TOS values, establish numeric tolerance from observed platform precision, then run time-separated walk-forward validation. A unit test of MCC against itself is not parity evidence.
+
+### Next operator action
+1. Check Alpaca market-data plan and activate SIP entitlement.
+2. Once active, configure SIP locally, restart API, and share sanitized `/api/providers/status` plus one SPY recent-bars response.
+3. Export one same-timestamp Thinkorswim matched-bar fixture with OHLC, ATR14, extension, timeframe/session settings and study versions. This is required to finish ATR parity; no local code change can manufacture the platform's reference output.
+4. After those two external prerequisites, implement and validate the integrated sell-limit endpoint and walk-forward results.
