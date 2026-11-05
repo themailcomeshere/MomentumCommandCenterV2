@@ -25,7 +25,9 @@
 # MCC_OHLCV_ATR|v2|symbol|timeframe|epochMillis|open|high|low|close|volume|atr
 #
 # ATR is calculated from chart bars using ThinkScript Wilder averaging.
-# Index [1] exports the completed source bar.
+# TrueRange receives the unshifted close series; the function itself references
+# the previous close. Do not pass close[1], which shifts the previous-close
+# reference back an additional bar. Index [1] exports the completed source bar.
 
 declare upper;
 
@@ -61,7 +63,7 @@ def sourceLow = low[1];
 def sourceClose = close[1];
 def sourceVolume = volume[1];
 
-def trueRange = TrueRange(high, close[1], low);
+def trueRange = TrueRange(high, close, low);
 def atrSeries = MovingAverage(AverageType.WILDERS, trueRange, atrLength);
 def sourceAtr = atrSeries[1];
 
