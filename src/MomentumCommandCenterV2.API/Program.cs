@@ -1425,7 +1425,7 @@ app.MapGet("/api/strategy-report/atr-observations", async (
 app.MapGet("/api/strategy-report/atr-parity", async (
     string symbol, string timeframe,
     MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
-    int? warmupBars, string? studyVersion, CancellationToken ct) =>
+    int? warmupBars, string? studyVersion, int? windowBars, CancellationToken ct) =>
 {
     if (!IsValidSymbol(symbol))
         return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
@@ -1435,7 +1435,9 @@ app.MapGet("/api/strategy-report/atr-parity", async (
     {
         var rows = await atrStore.GetLatestAsync(symbol, timeframe, null, null, 10000, ct);
         var selectedStudyVersion = string.IsNullOrWhiteSpace(studyVersion) ? "MCC_OHLCV_ATR_V2.1" : studyVersion.Trim();
-        var selectedRows = rows.Where(x => x.Metadata.StudyVersion.Equals(selectedStudyVersion, StringComparison.Ordinal)).ToArray();
+        var selectedRows = rows.Where(x => x.Metadata.StudyVersion.Equals(selectedStudyVersion, StringComparison.Ordinal))
+            .OrderBy(x => x.Observation.SourceTimestampUtc)
+            .TakeLast(Math.Clamp(windowBars ?? 119, 1, 10000)).ToArray();
         return Results.Ok(MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.Compare(
             selectedRows, warmupBars ?? MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.DefaultWarmupBars));
     }
@@ -1444,7 +1446,7 @@ app.MapGet("/api/strategy-report/atr-parity", async (
 })
 .WithName("CompareThinkorswimAtrParity")
 .WithSummary("Compare server Wilder ATR with timestamp-matched Thinkorswim ATR")
-.WithDescription("Example: /api/strategy-report/atr-parity?symbol=EVR&timeframe=1m. Requires one imported symbol/timeframe and consistent chart provenance. Uses a 99-observation warm-up and a 20-bar minimum comparison sample. Tolerance is fixed at 0.00005, half of the V2 export's four-decimal precision. This compares the algorithm on the imported TOS OHLCV bars; provider-feed parity is a separate gate.");
+.WithDescription("Example: /api/strategy-report/atr-parity?symbol=EVR&timeframe=1m. Requires one imported symbol/timeframe and consistent chart provenance. Uses the latest 119 observations by default: 99 warm-up plus 20 comparison bars. Any timestamp gap in that window blocks MATCH. Tolerance is fixed at 0.00005, half of the V2 export's four-decimal precision. This compares the algorithm on the imported TOS OHLCV bars; provider-feed parity is a separate gate.");
 
 app.MapGet("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
     Results.Ok(new { count = (await store.GetAsync(ct)).Count, symbols = await store.GetAsync(ct) }))
