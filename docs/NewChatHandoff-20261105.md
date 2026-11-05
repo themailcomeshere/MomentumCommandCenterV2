@@ -1,27 +1,36 @@
-# Handoff — November 5, 2026
+# Handoff — November 5, 2026 (updated after V2 ATR exports)
 
 Branch: feature/opportunity-quality-classification
 
-Priority: Calculated Limit Sell. Detailed implementation contract: docs/Calculated-Limit-Sell-Implementation.md. Master checklist updated in docs/Master-To-Do.md.
+Priority: Calculated Limit Sell. Implementation contract and current evidence: `docs/Calculated-Limit-Sell-Implementation.md`. Master checklist: `docs/Master-To-Do.md`.
 
-## Verified evidence
-- Correct UI control is “Fetch / retry 20-session close/open history”; it is the 20-pair capture action. Leave From/To unchanged when retrying the same rolling window.
-- Latest EVR result: 11/20 pairs valid; 9 opens missing; provider/store boundary coverage 31/40; 3,759 fetched bars; 0 newly stored; Alpaca/IEX. Rolling metrics correctly withheld.
-- User confirms appsettings.json and secrets.json both specify IEX. GTC_EXT SIP capture is blocked under this effective feed.
-- EVR 1M report: 365 OHLCV records with 21 inter-record gaps. EVR 5M report: 79 contiguous 5-minute OHLCV bars. Neither report includes ATR14 values or Thinkorswim study settings. Insufficient for parity certification.
+## New V2 export evidence
 
-## Implementation status
-- Existing: exact GTC_EXT capture/audit (20 sessions, 780 exact 1m bars/session + prior close); fail-closed quantile calculator; adverse/flat windows correctly handled.
-- Missing: orchestration API, verified reference close, server-computed ATR and timestamp-matched TOS parity, UI/provenance, walk-forward validation, broker fill integration.
-- Numeric Calculated Limit Sell must remain DATA? / NOT CALCULATED until complete 20/20 SIP windows and ATR parity pass. OHLCV touches are not fills.
+- 11/03 export: 81 EVR 5m V2 records, all include OHLCV and ATR14. Timestamps 14:05Z–20:50Z; one 10-minute step indicates one missing 5m interval; other intervals are 5m. ATR range 0.4962–2.0107.
+- 11/04 export: 79 EVR 5m V2 records, all include OHLCV and ATR14. Timestamps 14:30Z–21:00Z; contiguous 5m steps. ATR range 0.7834–2.5238.
+- Total: 160 records across two dates. Enough to implement/test V2 parsing and start ATR parity engineering; not enough for 98-bar warmup coverage at every comparison point or 20-session sell-limit qualification.
+- User-recorded settings: extended-hours ON; corporate-action adjustment ON; chart timezone Phoenix local (UTC-07:00); ATR length 14; Wilder average. V2 defaults atrLength=14 and computes Wilder ATR.
+- Export presence is not proof of parity. At least 20 consecutive chart-plot/OHLCV comparisons remain to be explicitly verified. Do not set parity MATCH from export ingestion alone.
+
+## Current blockers and implementation status
+
+- Existing: exact GTC_EXT capture/audit (20 sessions, 780 exact 1m bars/session plus exact prior close); fail-closed quantile calculator; adverse/flat handling.
+- Missing: V2 ATR report reader/storage, server-calculated ATR series and timestamp-matched parity audit, end-to-end orchestration API, UI/provenance, walk-forward validation, broker-fill linkage.
+- Current effective Alpaca feed is IEX. GTC_EXT qualification requires SIP; verify entitlement and effective runtime config before changing feed or attempting capture.
+- Numeric Calculated Limit Sell remains DATA? / NOT VERIFIED until 20/20 SIP windows, exact reference close, adequate same-source 5m ATR history and server-derived parity MATCH all pass.
 
 ## Next actions
-1. Keep IEX unchanged until SIP entitlement/configuration is verified. Do not run GTC_EXT SIP capture with IEX.
-2. Build the server-side calculation endpoint and UI per docs/Calculated-Limit-Sell-Implementation.md. Do not accept caller-supplied history or a bare MATCH flag.
-3. Obtain actual TOS ATR14 values/settings and a continuous matched 5M tape with 98 Wilder prefetch bars plus comparison bars.
-4. Capture >20 complete SIP windows and run chronological walk-forward tests.
-5. Integrate actual broker executions separately.
-6. Pull updates and run .\scripts\Get-Latest-And-Test.ps1 from a clean checkout; restart MCC after tests pass.
+
+1. Compile the V2 ThinkScript in Thinkorswim and confirm ATR length 14 / Wilder average type. Keep the chart settings recorded above.
+2. Compare at least 20 consecutive exported rows against the chart's ATR plot and OHLCV. Include rows around the 11/03 missing 5m interval; confirm the gap is genuinely absent rather than a report-export omission.
+3. Implement the V2 ATR parser and tests against both committed CSV exports, retaining V1 reader compatibility.
+4. Verify Alpaca SIP entitlement and effective feed configuration. Do not switch blindly; confirm `/api/providers/status` after any controlled configuration change.
+5. Capture/audit 20 complete GTC_EXT SIP sessions (780 exact 1m bar starts per session plus exact previous regular close).
+6. Implement the server-side calculation endpoint/UI. Parity must be computed from stored, timestamp-matched TOS and server ATR values; never accept a caller-supplied MATCH flag.
+7. Run chronological walk-forward validation with independent future sessions; separately integrate actual broker executions for fill/outcome analysis.
+8. Pull latest branch and run `.\\scripts\\Get-Latest-And-Test.ps1` from a clean checkout; restart MCC and browser-test the new endpoint/UI after tests pass.
 
 [Uncertainties]
-Cause of the nine missing opens, SIP entitlement, complete GTC_EXT coverage, ATR parity and actual fills are not yet verified.
+- The ThinkScript V2 study has not been independently compiled in Thinkorswim in this pass.
+- The 11/03 10-minute step is a missing source timestamp; whether it reflects an absent chart bar or export omission is not established.
+- The 20-row visual chart comparison, 20/20 SIP coverage, SIP entitlement, exact current close, parity tolerance result and actual broker fills remain unverified.
