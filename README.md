@@ -1,4 +1,21 @@
-## Latest branch-head verification — 2026-11-04
+# Momentum Command Center V3
+
+## Current project status — 2026-11-06
+
+- Working branch: `feature/opportunity-quality-classification`. The main Dashboard is `frontend/index.html`, served at `http://localhost:53360/`. There is no PrototypeIndex acceptance target.
+- Latest operator-reported Release build/test PASS is source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`. Subsequent commits in this update add documentation and PowerShell evidence scripts; exact branch-head GitHub Actions is currently pending. Do not infer a green check from the older run.
+- Alpaca's current usable feed is IEX. Recent SIP requests have repeatedly returned HTTP 403 for this account. Do not retry SIP, switch configuration, or ask the operator to repeat SIP requests. SIP-dependent consolidated qualification and GTC_EXT work remain parked unless the operator reports a genuine entitlement change.
+- The visible **Daily data audit** panel was operator-verified for RTO, EVR, and CBOE: 3 symbols returned, 0 API errors, 0 qualification-usable, all diagnostic-only / `DATA? · IEX_PARTIAL`, with 20/20 sessions, zero missing, and FRESH. RTO/EVR independent OHLCV parity previously failed on IEX; CBOE independent Daily reference data is absent.
+- Existing EVR/CBOE StrategyReport CSVs and persisted observations are already committed. Do not ask for or re-import the same exports. Latest 5m ATR values are within numeric tolerance and Wilder recurrence is rounding-consistent, but EVR/CBOE parity remains `GAPS_PRESENT` because timestamp continuity is unresolved. Only a demonstrably new corrected export after compiling the revised ThinkScript could add new evidence.
+- The 20-training/20-unseen-test walk-forward validator is implemented; runtime qualification against 40 complete eligible sessions is not captured. It is blocked by source-qualified GTC_EXT evidence and the known SIP restriction.
+- New PowerShell evidence scripts: `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1` (CDP console/network/screenshot) and `scripts/validation/Test-RegularSessionStreamCollector.ps1` (regular-session WebSocket/collector polling). See [Browser and Stream Collector Acceptance](docs/Validation/Browser-and-Stream-Collector-Acceptance-20261106.md).
+- Canonical current checklist: [Master To-Do](docs/Master-To-Do.md). Current continuation: [New Chat Handoff](docs/NewChatHandoff-20261106.md). Detailed backlog: [Active Engineering Backlog](docs/Active-Engineering-Backlog-20261106.md).
+
+**Safety boundary:** MCC is decision-support-only. Order submission is NOT IMPLEMENTED. Missing, stale, incomplete, or unverified inputs remain UNKNOWN / DATA? and never become READY by assumption.
+
+---
+
+## Historical branch-head verification — 2026-11-04 (superseded)
 
 The latest feature-branch head for the standalone UI changes is `3c27c787f7ffcb434be9893ca73ba58b8cad00fe`; exact-head GitHub Actions run [41916672903](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41916672903) passed. The workflow runs `node --check frontend/app.js`, .NET 8 restore, Release build, and the full .NET test suite. This is a source/CI result only; local browser acceptance remains open. System Readiness is collapsed by default, symbol refresh state is explicit, missing custom-expression metrics fail closed to DATA?, and GTC_EXT capture is exposed behind an effective-SIP preflight.
 
@@ -245,25 +262,21 @@ GitHub source is authoritative for code and committed documentation. A checked-o
 7. Planned Red Zone work is tracked in the top of `docs/Master-To-Do.md`: Manual/Automatic toggle, versioned excitement rank, participation/volume weighting, Decision Explanation, semantic tile border/accent, stable re-ranking and tests.
 8. Main Chart / Decision Explanation refresh for the focused symbol. 5M Permission, 1M EXECUTION READY and Red Zone excitement remain separate. Red Zone is attention prioritization only and never authorizes an entry or order.
 
-## Prototype header layout
+## Dashboard entry point — main index only
 
-The prototype's `#system-readiness` section is nested inside the same `.topbar-brand` flex container as the title and topbar tools, aligned on the right. The market-session clock appears above the readiness heading. Production markup remains separate and is not changed by prototype experiments.
-
-## Production and prototype dashboard pages
-
-- Production: `/` serves `frontend/index.html`.
-- Prototype: `/prototypeIndex.html` serves `frontend/prototypeIndex.html`.
-- Apply UI experiments to `prototypeIndex.html` only. Promote a design to `index.html` only after explicit user approval.
+- `/` serves `frontend/index.html`. This is the only Dashboard page for implementation, testing, and browser acceptance.
+- `frontend/prototypeIndex.html` was removed after the approved layout was migrated into the main index. Do not recreate, use, or ask the operator to test a PrototypeIndex page.
+- Keep all future Dashboard changes on `frontend/index.html`, `frontend/app.js`, and `frontend/styles.css` as appropriate.
 
 
 ## 2026-11-04 — MCC-native workflow updates
 
-The production and prototype dashboards now provide button-driven 20-session regular close/open retry and SIP-gated 20-session GTC_EXT sell-window capture. The latter checks the effective Alpaca feed and does not request qualification history when IEX is configured. Missing custom-expression metrics are classified DATA?, not FAIL. System Readiness is collapsible, and Decision Explanation shows the symbol being refreshed. See [Technical Workflow](docs/Technical-Workflow.md), [Overnight Scanner to Boring Overnight Workflow](docs/Overnight-Scanner-to-Boring-Overnight-Workflow.md), and [Master To-Do](docs/Master-To-Do.md) for operating instructions and remaining validation gates.
+The main Dashboard provides button-driven 20-session regular close/open retry and SIP-gated 20-session GTC_EXT sell-window capture. The latter checks the effective Alpaca feed and does not request qualification history when IEX is configured. Missing custom-expression metrics are classified DATA?, not FAIL. System Readiness is collapsible, and Decision Explanation shows the symbol being refreshed. See [Technical Workflow](docs/Technical-Workflow.md), [Overnight Scanner to Boring Overnight Workflow](docs/Overnight-Scanner-to-Boring-Overnight-Workflow.md), and [Master To-Do](docs/Master-To-Do.md) for operating instructions and remaining validation gates.
 
 
 ## 2026-11-04 — candidate-group and header workflow
 
-The Overnight qualification panel now supports separate **MCC Top 4** (four highest imported scanner scores) and **My Top 4** (exactly four user-selected imported symbols) groups. Selection persists in the browser; Daily + catalyst refresh queries only the active four. This is scanner-score selection, not a calibrated Opportunity Quality rank. Morning Command Brief is adjacent to the product title; WebSocket status and prototype badge are within System Readiness. Quick Start is in the prototype left dock; production left-rail placement remains outstanding because the production page has no aside.
+The Overnight qualification panel supports separate **MCC Top 4** (four highest imported scanner scores) and **My Top 4** (exactly four user-selected imported symbols) groups. Selection persists in the browser; Daily + catalyst refresh queries only the active four. This is scanner-score selection, not a calibrated Opportunity Quality rank. Morning Command Brief is adjacent to the product title; WebSocket status and prototype badge are within System Readiness. The approved Quick Start and workspace navigation are part of the main Dashboard; no separate prototype page is used.
 
 
 The qualification panel also exposes an append-only human catalyst review queue for articles returned by the active group. Human labels are stored separately from automated triage and cannot clear a catalyst; labelled-sample adjudication and measured classifier validation remain open.
@@ -272,6 +285,6 @@ The qualification panel also exposes an append-only human catalyst review queue 
  
 ## SIP entitlement and sell-limit status — November 4, 2026
 
-A current Alpaca SIP request returned HTTP 403 because the account subscription does not permit recent SIP data. IEX is partial-exchange diagnostic coverage; SIP is consolidated coverage required for qualification, live movers and GTC_EXT target research. Changing MCC's configured feed does not grant account entitlement. After SIP entitlement is activated, configure the effective feed locally, restart, and verify `/api/providers/status` before retrying exact history recovery.
+Repeated recent Alpaca SIP requests returned HTTP 403 because the account subscription does not permit recent SIP data. This is a known external blocker. Do not repeat SIP requests or ask the operator to reconfigure/test SIP. IEX remains partial-exchange diagnostic coverage; SIP-dependent qualification, live movers, and GTC_EXT target research remain parked unless the operator independently reports a genuine entitlement change.
 
 The GTC_EXT exact-window capture and the fail-closed sell-limit calculator exist, but a provenance-bound end-to-end calculation and validated walk-forward result are still outstanding. Wilder ATR code exists; Thinkorswim numeric parity is not established. Numeric sell limits remain withheld until exact SIP coverage, matched ATR evidence and walk-forward validation are complete.
