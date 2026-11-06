@@ -253,6 +253,53 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal(0, result.TimestampGapCount);
     }
 
+    [Fact]
+    public void WilderParityUsesFullImportedHistoryAndComparesOnlyLatestWindow()
+    {
+        var metadata = Metadata();
+        var start = DateTimeOffset.Parse("2026-11-03T14:00:00Z");
+        var bars = Enumerable.Range(0, 346).Select(index => new
+        {
+            High = index < 15 ? 105m : 100.5m,
+            Low = index < 15 ? 95m : 99.5m,
+            Close = 100m
+        }).ToArray();
+        var trueRanges = new decimal[bars.Length];
+        for (var i = 1; i < bars.Length; i++)
+        {
+            var previousClose = bars[i - 1].Close;
+            trueRanges[i] = Math.Max(bars[i].High - bars[i].Low,
+                Math.Max(Math.Abs(bars[i].High - previousClose), Math.Abs(bars[i].Low - previousClose)));
+        }
+
+        var atrValues = new decimal[bars.Length];
+        var atr = trueRanges.Skip(1).Take(14).Average();
+        atrValues[14] = atr;
+        for (var i = 15; i < bars.Length; i++)
+        {
+            atr = ((atr * 13m) + trueRanges[i]) / 14m;
+            atrValues[i] = atr;
+        }
+
+        var stored = bars.Select((bar, index) =>
+        {
+            var observation = new StrategyReportAtrObservation(index.ToString(), "EVR", "1m",
+                start.AddMinutes(index), 100m, bar.High, bar.Low, bar.Close, 1000m,
+                Math.Round(atrValues[index], 4, MidpointRounding.AwayFromZero));
+            return new ThinkorswimAtrStoredObservation(
+                "row-" + index, DateTimeOffset.UtcNow, metadata, observation, "hash-" + index, null);
+        }).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored, comparisonWindowBars: 119);
+
+        Assert.Equal("MATCH", result.Status);
+        Assert.Equal("MCC-WILDER-ATR-PARITY-1.1", result.ComparisonVersion);
+        Assert.Equal(346, result.SourceObservationCount);
+        Assert.Equal(20, result.ComparedBarCount);
+        Assert.Equal(0, result.TimestampGapCount);
+        Assert.True(result.MaximumAbsoluteError <= ThinkorswimAtrParityService.ExportRoundingTolerance);
+    }
+
     private static StrategyReportAtrImportMetadata Metadata() => new(
         "test.csv", "MCC_OHLCV_ATR_V2.1", 14, "Wilder", "America/Phoenix",
         true, true, "batch-1", DateTimeOffset.UtcNow);
