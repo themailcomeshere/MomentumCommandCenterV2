@@ -63,7 +63,7 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
             .Where(item => item.SessionDate < today ||
                 (item.SessionDate == today && newYorkNow.TimeOfDay >= UsEquitiesSessionCalendar.GetRegularClose(item.SessionDate).ToTimeSpan()))
             .GroupBy(item => item.SessionDate)
-            .ToDictionary(group => group.Key, group => group.Last().Bar);
+            .ToDictionary(group => group.Key, group => group.Last());
 
         // Build the exact latest 20 expected sessions from MCC's versioned calendar.
         // A missing session is a data-quality gap, not a zero-volume day or a reason to
@@ -84,7 +84,7 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         var present = expectedDates.Where(completedBySession.ContainsKey).ToArray();
         var latest = completedBySession.TryGetValue(latestExpected, out var latestBar) ? latestBar : null;
         var complete = present.Length == 20;
-        var latestTimestamp = latest?.TimestampUtc;
+        var latestTimestamp = latest?.Bar.TimestampUtc;
         // The requested latest expected session must itself be present. Avoid Max() on
         // an empty collection: a valid empty provider response is DATA?, not an API 500.
         var fresh = latest is not null && latestTimestamp <= nowUtc &&
