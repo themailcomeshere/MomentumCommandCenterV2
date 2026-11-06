@@ -420,7 +420,7 @@ async function fetchDailyDataAudit(){
  body.replaceChildren(...results.map(result=>{
   const tr=document.createElement("tr");
   if(result.error){
-   tr.append(cell(result.symbol),cell("ERROR · "+result.error),cell(null),cell(null),cell("DATA? / 20"),cell(null),cell(null),cell(null),cell("UNKNOWN"),cell("DATA?"),cell(null));
+   tr.append(cell(result.symbol),cell("ERROR · "+result.error),cell(null),cell(null),cell("DATA? / 20"),cell(null),cell(null),cell(null),cell(null),cell("UNKNOWN"),cell("DATA?"),cell(null));
    tr.className="qualification-pending";return tr;
   }
   const d=result.payload||{},complete=d.validSessionCount===20&&Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length===0;
@@ -430,7 +430,7 @@ async function fetchDailyDataAudit(){
   const missing=Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length?d.missingSessionDates.join(", "):complete?"NONE":"UNKNOWN";
   const fresh=d.dataFresh===true?"FRESH":d.dataFresh===false?"STALE / LATEST MISSING":"UNKNOWN";
   const qualified=d.qualificationUsable===true?"QUALIFICATION USABLE":"DATA? · "+(d.feedCoverage||d.completeness||"INCOMPLETE");
-  tr.append(cell(result.symbol),cell(feedLabel),cell(d.adjustment),cell(latest),cell(sessionLabel),cell(fmt(d.observedClose)),cell(fmt(d.observedSma20)),cell(fmt(d.observedAverageDailyVolume20,0)),cell(fresh),cell(qualified),cell(missing));
+  tr.append(cell(result.symbol),cell(feedLabel),cell(d.adjustment),cell(latest),cell(d.retrievedAtUtc),cell(sessionLabel),cell(fmt(d.observedClose)),cell(fmt(d.observedSma20)),cell(fmt(d.observedAverageDailyVolume20,0)),cell(fresh),cell(qualified),cell(missing));
   tr.className=d.qualificationUsable===true?"qualification-pending":"qualification-blocked";
   return tr;
  }));
