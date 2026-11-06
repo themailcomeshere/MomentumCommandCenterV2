@@ -30,7 +30,7 @@ function Get-SafeUrl([string]$Value) {
 function Get-EdgePath {
     if (-not [string]::IsNullOrWhiteSpace($BrowserPath) -and (Test-Path -LiteralPath $BrowserPath)) { return $BrowserPath }
     $candidates = @(
-        (Join-Path $env:ProgramFiles(x86) "Microsoft/Edge/Application/msedge.exe"),
+        (Join-Path ([Environment]::GetEnvironmentVariable("ProgramFiles(x86)")) "Microsoft/Edge/Application/msedge.exe"),
         (Join-Path $env:ProgramFiles "Microsoft/Edge/Application/msedge.exe"),
         (Join-Path $env:LOCALAPPDATA "Microsoft/Edge/Application/msedge.exe")
     ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
@@ -46,7 +46,7 @@ if (-not $debugReady) {
     $edge = Get-EdgePath
     $profile = Join-Path $env:TEMP "MCC-CDP-$stamp"
     New-Item -ItemType Directory -Force -Path $profile | Out-Null
-    $args = @("--remote-debugging-port=$DebugPort","--user-data-dir=$profile","--no-first-run","--disable-default-apps",$BaseUri)
+    $args = @("--remote-debugging-port=$DebugPort","--user-data-dir=`"$profile`"","--no-first-run","--disable-default-apps",$BaseUri)
     Start-Process -FilePath $edge -ArgumentList $args | Out-Null
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds(30)
     do {
@@ -107,7 +107,6 @@ while ([DateTimeOffset]::UtcNow -lt $deadline) {
         $message = Receive-CdpMessage 1000
         if ($message -and $message.method) { $script:events.Add($message) }
     } catch [System.OperationCanceledException] { continue }
-      catch [System.Threading.Tasks.TaskCanceledException] { continue }
 }
 $screenshot = $null
 try {
@@ -155,7 +154,10 @@ $networkPath = Join-Path $OutputDirectory "browser-network.json"
 $manifestPath = Join-Path $OutputDirectory "browser-diagnostics-manifest.json"
 @($console) | ConvertTo-Json -Depth 30 | Set-Content -Encoding utf8 $consolePath
 @($network) | ConvertTo-Json -Depth 30 | Set-Content -Encoding utf8 $networkPath
+$sourceCommit = $null
+try { $repoRootForGit = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path; $sourceCommit = (& git -C $repoRootForGit rev-parse HEAD 2>$null).Trim() } catch {}
 $manifest = [ordered]@{
+    sourceCommit = $sourceCommit
     capturedAtUtc = [DateTimeOffset]::UtcNow.ToString("o")
     startedAtUtc = $startedAt.ToString("o")
     baseUri = $BaseUri
