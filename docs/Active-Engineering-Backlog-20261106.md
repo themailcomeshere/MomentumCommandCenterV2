@@ -38,7 +38,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 ### P0.1 Diagnose numeric ATR mismatches
 
-**Current state:** Parity endpoint and full-history Wilder seed are implemented. Latest EVR/CBOE 5m numeric errors are within 0.00005, but 3 EVR and 1 CBOE gaps in the latest 119-observation window keep both at `GAPS_PRESENT`. Earlier row-level evidence localized the large EVR recurrence break to a long source-history gap. The old study's time-of-day export filter was a design mismatch with its unfiltered ATR calculation. Revised study source exports all chart bars in the selected date range; Thinkorswim compilation and fresh-export validation remain outstanding.
+**Current state:** Parity endpoint and full-history Wilder seed are implemented. Latest EVR/CBOE 5m numeric errors are within 0.00005, but 3 EVR and 1 CBOE timestamp-gap groups in the latest 119-observation window keep both at `GAPS_PRESENT`. Independent recurrence recalculation across all persisted adjacent pairs found no large residuals (max 0.0000928571 for each symbol), superseding the older large EVR recurrence-break diagnosis for the latest import. The old study's time-of-day export filter was a design mismatch with its unfiltered ATR calculation. Revised study source exports all chart bars in the selected date range; Thinkorswim compilation and fresh-export validation remain outstanding. Remaining gap groups require comparison with actual TOS chart/session behavior.
 
 **Missing work**
 - [x] Parse the expanded EVR/CBOE exports and recompute row-level Wilder recurrence from exact payload OHLCV.
@@ -139,12 +139,11 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 **Adjustment note:** reference pages disclose split-adjusted history, while Alpaca requests `adjustment=all`. For this sample the known EVR ex-dates (2026-08-28 and next 2026-11-27) and RTO ex-date (2026-08-13) are outside the 20-session window. The runner therefore requires the explicit `-ConfirmWindowAdjustmentEquivalence` switch before comparing split-adjusted reference rows to the all-adjusted API. Recheck corporate actions before reusing this switch for any other date range.
 
 **Remaining operator/runtime work**
-- Run the Release build/tests against the exact latest branch source.
-- Run `scripts/validation/Test-DailyMarketDataQualification.ps1` against the local API for RTO and EVR.
-- Require exactly 20 distinct expected sessions, no missing dates, latest session fresh, and API aggregates equal to recalculation from the returned session rows.
-- Compare all 20 dates and OHLC rows to the independent reference within $0.0001; require exact volume. Preserve any mismatches, provider errors or 401/403 responses.
-- Confirm current configured/effective feed. IEX may be compared diagnostically but cannot set `qualificationUsable=true` or populate qualification price/SMA/ADV.
-- Click the Dashboard Daily audit button and verify the UI matches the saved API evidence exactly.
+- Run Release build/tests against the exact latest code-bearing branch source (the current updates are documentation/evidence only; prior operator-reported PASS was at SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`).
+- Do not repeat the same IEX qualification run; the 2026-11-06 run already passed internal 20-session checks and failed independent consolidated OHLCV parity.
+- Confirm SIP entitlement externally. Prior HTTP 403 is a hard stop; do not retry until access changes. Then configure effective SIP, restart, and verify provider status and row-level feed identity.
+- Re-run `scripts/validation/Test-DailyMarketDataQualification.ps1` for RTO/EVR only after effective SIP is verified. Require exact 20 sessions, no missing dates, freshness, internal arithmetic and independent OHLCV parity; preserve all mismatch/error details.
+- Click the Dashboard Daily audit button and verify the UI matches the saved API evidence exactly; capture a screenshot.
 - Verify evaluator/snapshot behavior remains DATA? whenever feed is non-SIP, history is incomplete/stale, or any required metric is missing.
 
 **Acceptance:** internal arithmetic consistency AND independent 20-session OHLCV parity; same adjustment basis (or explicitly evidenced window-equivalent basis); source/feed/retrieval timestamp visible; SIP and freshness gates pass before metrics may be used for qualification; incomplete/stale/non-SIP data yields DATA?/UNKNOWN and never READY.
