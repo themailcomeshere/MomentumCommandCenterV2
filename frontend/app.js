@@ -425,7 +425,7 @@ async function fetchDailyDataAudit(){
   }
   const d=result.payload||{},complete=d.validSessionCount===20&&Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length===0;
   const feedLabel=(d.provider||"UNKNOWN")+" / "+(d.feed||"UNKNOWN");
-  const latest=d.latestExpectedSessionDate||d.latestCompletedSessionTimestampUtc?.slice(0,10)||null;
+  const latest=(d.latestExpectedSessionDate||"EXPECTED UNKNOWN")+" · actual "+(d.latestCompletedSessionTimestampUtc||"MISSING");
   const sessionLabel=(d.validSessionCount??0)+"/20";
   const missing=Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length?d.missingSessionDates.join(", "):complete?"NONE":"UNKNOWN";
   const fresh=d.dataFresh===true?"FRESH":d.dataFresh===false?"STALE / LATEST MISSING":"UNKNOWN";
