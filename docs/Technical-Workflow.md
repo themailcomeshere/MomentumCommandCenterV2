@@ -215,7 +215,7 @@ The Morning Command Brief sits beside the product title. System Readiness contai
  
 ## SIP entitlement recovery and GTC_EXT calculation gate
 
-Alpaca HTTP 403 with `subscription does not permit querying recent SIP data` is an account entitlement rejection. Do not retry the same SIP query or downgrade the qualification workflow to IEX. Activate SIP market-data entitlement with Alpaca, configure `MarketData:Alpaca:Feed=sip` locally (including checking environment overrides), restart the API, and confirm `/api/providers/status` reports SIP. Test one recent SPY bar before bulk recovery. Keep credentials local.
+Alpaca HTTP 403 with `subscription does not permit querying recent SIP data` is an established account entitlement rejection. The operator has reconfirmed this multiple times. Do not retry SIP, ask the operator to activate/reconfigure it, or run a smoke request. Keep IEX for diagnostic plumbing and leave SIP-dependent qualification parked unless the operator independently reports an actual entitlement change. Keep credentials local.
 
 Only then run exact EVR close/open recovery and the GTC_EXT 20-session capture. A complete GTC_EXT sample requires 20/20 sessions, each with the exact prior close and all 780 one-minute bars from 07:00 through 19:59 ET. Missing timestamps remain missing.
 
