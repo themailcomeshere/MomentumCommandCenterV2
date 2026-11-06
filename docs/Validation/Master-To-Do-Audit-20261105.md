@@ -1,3 +1,15 @@
+# 2026-11-06 status correction
+
+This audit is historical. The canonical active checklist is now `docs/Master-To-Do.md`; the deduplicated backlog is `docs/Active-Engineering-Backlog-20261106.md`. The 310 historical unchecked boxes were reconciled and preserved in `docs/archive/Master-To-Do-History-20261106.md`.
+
+**Walk-forward correction:** the 2026-11-05 audit below incorrectly states that walk-forward target validation was not implemented. It is implemented in `BoringOvernightWalkForwardValidator` and enforced by the sell-limit orchestrator. The outstanding item is runtime qualification against 40 complete eligible sessions (20 training followed by 20 unseen test), not implementation.
+
+**Latest operator parity:** EVR 1m `GAPS_PRESENT` (346 source observations, 13 gaps in 119-bar window, mean/max error 0.0000260340/0.0000466859); EVR 5m `NOT_MATCH` (163 observations, 1 gap, mean/max 0.0010467166/0.0019357360); CBOE 5m `NOT_MATCH` (165 observations, 3 gaps in window, mean/max 0.0005274676/0.0009650641). Tolerance remains 0.00005. Root causes are unknown.
+
+The 2026-11-06 active backlog distinguishes implemented code from external/data/browser acceptance. Old checkboxes below remain historical evidence, not a current queue.
+
+---
+
 # Master To-Do Audit — 2026-11-05
 
 ## November 5 follow-up — corrected V2.1 export and candidate evidence
