@@ -2,6 +2,8 @@
 
 **Status: release/qualification remains blocked.** This section is the current status authority and supersedes older ATR counts and stale implementation-status statements in the historical log below. Historical entries are retained for audit; do not interpret them as current state.
 
+**Current handoff:** [`docs/NewChatHandoff-20261106.md`](NewChatHandoff-20261106.md).
+
 ## ATR parity — latest API responses
 
 | Symbol | Timeframe | Status | Observations | Compared | Gaps | Mean absolute error | Maximum absolute error |
