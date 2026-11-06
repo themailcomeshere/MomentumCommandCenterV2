@@ -64,3 +64,16 @@ The UI reads the effective Alpaca feed from provider status. It does not change 
 - Broker fills: not consumed by this endpoint and never inferred from bar highs.
 
 The endpoint remains intentionally strict. SIP HTTP 403 entitlement denial, IEX qualification attempts, missing source timestamps, numeric ATR mismatch, non-matching provider/TOS OHLCV, incomplete warm-up, stale ATR, incomplete 20-session history or failed walk-forward validation leaves the result blocked.
+
+
+## 2026-11-06 operator validation — latest state
+
+- Release build/tests passed at source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`.
+- API health is OK in `decision-support-only` mode; order submission remains NOT IMPLEMENTED.
+- Alpaca is configured and validated on IEX. Massive is not configured. A one-bar provider validation is not proof of historical or extended-hours completeness, and IEX does not satisfy the SIP sell-window gate.
+- Latest EVR 1m, EVR 5m, CBOE 5m and two-day CBOE 5m ATR imports all parsed successfully but appended zero observations and made zero corrections. Their source exports report respectively 48, 1, 5 and 6 timestamp gaps.
+- EVR 1m's prior persisted parity result was numeric-within-tolerance but `GAPS_PRESENT`; EVR 5m and CBOE 5m prior results were `NOT_MATCH`. Re-query `GET /api/strategy-report/atr-parity?symbol={symbol}&timeframe={timeframe}` for EVR/1m, EVR/5m and CBOE/5m after API restart. No re-import is needed.
+- The 82-observation EVR 5m export and 85-observation single-day CBOE export do not meet the 119-bar window requirement. The 165-observation CBOE two-day export still has six gaps and a 3h20m discontinuity; aggregate count does not establish continuity.
+- Preserve the fixed 0.00005 tolerance, full-history Wilder seed, and fail-closed gap policy. Do not infer that gaps are no-trade intervals without independent evidence.
+
+See `docs/Master-To-Do.md` and `docs/Validation/ATR-V2-Parity-Investigation-20261105.md` for the detailed current operator checklist and exact PowerShell parity queries.
