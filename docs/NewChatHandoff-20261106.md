@@ -396,6 +396,11 @@ The latest 119-observation windows in `artifacts/sell-limit-evidence/20261106T14
 
 The revised V2.1 ThinkScript removes the old 07:00–19:59 ET export filter, but compile/fresh-export evidence is still absent. Compile it in TOS and produce broad EVR/CBOE exports with all available ETH/RTH bars. Preserve epoch timestamps and inspect the actual source bars around each discontinuity. Do not synthesize bars or change tolerance.
 
+
+### New recurrence audit result
+
+The latest committed EVR/CBOE observation JSON was independently recalculated across every adjacent pair using the Wilder formula. EVR: 326 pairs, maximum absolute residual 0.0000928571, mean 0.0000329316. CBOE: 337 pairs, maximum 0.0000928571, mean 0.0000326198. No residual exceeded 0.0002; these residuals are consistent with four-decimal ATR rounding. The previous large EVR recurrence discontinuity is not present in the latest persisted series. This is not an ATR parity pass: EVR still reports 3 timestamp-gap groups and CBOE 1 in the latest 119-observation window. Inspect TOS chart bars and validate the gap policy against actual extended-hours/no-trade behavior before changing the gate. Detailed audit: `docs/Validation/ATR-Export-Coverage-Fix-20261106.md`.
+
 ## Next operator sequence
 
 1. Do not repeat the IEX Daily run unchanged; it will not produce consolidated liquidity parity. Confirm SIP entitlement externally first. If entitlement is still denied, leave Daily DATA? and continue unrelated engineering.
