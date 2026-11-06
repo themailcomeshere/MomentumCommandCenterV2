@@ -38,7 +38,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 ### P0.1 Diagnose numeric ATR mismatches
 
-**Current state:** Parity endpoint and full-history Wilder seed are implemented. Latest EVR/CBOE 5m numeric errors are within 0.00005, but 3 EVR and 1 CBOE timestamp-gap groups in the latest 119-observation window keep both at `GAPS_PRESENT`. Independent recurrence recalculation across all persisted adjacent pairs found no large residuals (max 0.0000928571 for each symbol), superseding the older large EVR recurrence-break diagnosis for the latest import. The old study's time-of-day export filter was a design mismatch with its unfiltered ATR calculation. Revised study source exports all chart bars in the selected date range; Thinkorswim compilation and fresh-export validation remain outstanding. Remaining gap groups require comparison with actual TOS chart/session behavior.
+**Current state:** Parity endpoint and full-history Wilder seed are implemented. Latest EVR/CBOE 5m numeric errors are within 0.00005; the last verified API result was `GAPS_PRESENT` (3 EVR / 1 CBOE timestamp-gap groups). Independent recurrence recalculation across all persisted adjacent pairs found no large residuals (max 0.0000928571 for each symbol), consistent with four-decimal ATR rounding. A code defect was identified: same-date 00:00–00:10 ET gaps wholly inside the 20:00–04:00 ET closure were incorrectly counted. `AtrTimestampGapDetector` now counts same-date gaps only when they overlap 04:00–20:00 ET, with regression tests for closure, premarket-overlap and after-hours cases. Exact-head CI and a post-restart parity re-read are pending. Remaining session-overlapping gaps still require chart/source evidence.
 
 **Missing work**
 - [x] Parse the expanded EVR/CBOE exports and recompute row-level Wilder recurrence from exact payload OHLCV.
@@ -46,7 +46,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 - [x] Identify the export predicate mismatch: ATR calculation uses every host-chart bar, but the former Strategy Report predicate omitted rows outside 07:00–19:59 ET.
 - [x] Update the V2.1 ThinkScript source to export all available chart bars in the selected date range; retain date filtering only.
 - Compile the revised study in Thinkorswim and verify its full-history export includes premarket, RTH and after-hours bars.
-- Import revised EVR/CBOE exports once, then compare the same 119-bar window and per-bar ATR errors. Preserve 0.00005 tolerance.
+- Do not re-import or re-upload the existing EVR/CBOE CSVs. After the detector change passes CI, pull/build/restart and re-read parity against the existing persisted observations. Only request a genuinely new export if chart evidence proves a specific omission and the revised study is expected to produce new source rows.
 - Verify first-bar/seed convention, previous-close alignment, recurrence, timestamp alignment, completed-bar selection, aggregation, session scope and chart adjustment. Do not change the algorithm or tolerance without a proven defect.
 - Keep symbol/timeframe/import provenance isolated. Reject mixed or duplicate observations.
 - Do not change the 0.00005 precision-derived tolerance to make a failing sample pass.
@@ -61,14 +61,14 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 ### P0.2 Obtain continuous corrected 5m ATR history
 
-**Current state:** Latest persisted history contains 327 EVR and 338 CBOE 5m observations. These are already committed and available; do not request or re-import the same ScannerExports. Final-20 numeric ATR errors are within 0.00005. A fresh recurrence audit across all adjacent persisted pairs found no large residuals (maximum 0.0000928571 for both symbols, consistent with four-decimal ATR rounding). Nevertheless parity reports 3 EVR and 1 CBOE timestamp-gap groups in the latest 119-observation window. Whether these are missing expected chart bars or legitimate no-trade/out-of-session intervals is unresolved. Revised full-chart export source is committed but TOS compilation/fresh-export evidence is absent.
+**Current state:** Latest persisted history contains 327 EVR and 338 CBOE 5m observations. These are already committed and available; do not request or re-import the same ScannerExports. Final-20 numeric ATR errors are within 0.00005. A fresh recurrence audit across all adjacent persisted pairs found no large residuals (maximum 0.0000928571 for both symbols, consistent with four-decimal ATR rounding). The previous detector reported 3 EVR / 1 CBOE gaps. One EVR gap (00:00–00:10 ET) is wholly outside the 04:00–20:00 ET ETH chart session and is now excluded by the updated detector; runtime parity has not yet been re-read. Remaining premarket/after-hours gaps stay blocked until chart/source evidence establishes whether rows were omitted or no chart bars existed. Revised full-chart export source is committed but TOS compilation remains outstanding.
 
 **Missing work**
-- Compile the revised exact V2.1 ThinkScript in Thinkorswim. It now exports all available chart bars within the selected date range and no longer filters payloads by time of day.
-- Set chart and study aggregation to 5m; ATR length 14; Wilder; Phoenix timezone; extended hours ON; corporate-action adjustment ON.
-- Set a sufficiently early start date for at least 99 completed source bars before the latest 119-bar qualification window.
-- Confirm premarket, regular-session and after-hours bars are present in the Strategy Report. Preserve embedded Unix-millisecond source epochs; do not use Strategy Report Date/Time or Work Time as bar timestamps.
-- Determine from the chart/source whether any remaining timestamp gap is a legitimate absent bar or export omission. Never synthesize a bar.
+- First pull/build/restart the new session-aware detector and re-read parity using the existing persisted observations; do not re-import the same files.
+- Compile the revised exact V2.1 ThinkScript in Thinkorswim. It exports all available chart bars in the selected date range without the former time-of-day filter.
+- Confirm chart/study aggregation 5m; ATR14 Wilder; Phoenix timezone; ETH ON; corporate-action adjustment ON.
+- Inspect the existing payload timestamps and actual TOS chart around each remaining premarket/after-hours gap. Determine whether a chart bar existed but was omitted or no bar existed because there was no eligible chart print. Never synthesize a bar.
+- Only if a specific export omission is proven, produce a genuinely new export from the compiled revised study; do not re-send existing CSVs.
 
 **Acceptance:** corrected export imports with provenance intact; 119-bar window is continuous under the declared source/session contract; parity returns MATCH. A numeric MATCH on an incomplete window is not enough.
 
