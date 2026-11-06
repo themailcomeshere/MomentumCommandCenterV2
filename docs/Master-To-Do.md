@@ -53,8 +53,10 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Hardened Daily API: empty history returns incomplete data instead of throwing; response now includes the exact 20 expected dates, missing dates and session-level OHLCV rows.
 - [x] Added RTO/EVR Dashboard Daily audit with provider/feed, adjustment, latest session, retrieval timestamp, close, SMA20, average volume, freshness and missing-session provenance.
 - [x] Added Daily qualification runner and 20-session independent Stock Analysis / S&P Global reference CSVs for RTO and EVR (2026-10-12 through 2026-11-06).
-- [ ] Run `scripts/validation/Test-DailyMarketDataQualification.ps1`; verify exact 20-session API coverage and independently compare all OHLCV rows. Local API response data not yet captured in this session.
-- [ ] Verify the Dashboard audit panel against the same API evidence. IEX remains diagnostic-only; incomplete/stale data or non-SIP feed must remain DATA?, never READY.
+- [x] Run `scripts/validation/Test-DailyMarketDataQualification.ps1`; evidence `artifacts/daily-data-qualification/20261106T215302Z` confirms 20/20 sessions, zero missing, freshness and internal arithmetic for RTO/EVR.
+- [x] Confirm fail-closed behavior: IEX produces `DATA? · IEX_PARTIAL` and null qualification metrics for both symbols.
+- [ ] Resolve independent OHLCV parity. The run FAILED for both symbols: numerous OHLC differences and all 20 volume rows mismatch against consolidated independent reference data. Do not treat IEX partial volume as qualified ADV.
+- [ ] Verify the Dashboard audit panel against the same saved API evidence and capture a browser screenshot; no screenshot is in the committed evidence.
 - [ ] Build and validate human-adjudicated catalyst labels and holdout precision/recall; keyword triage must never claim CLEAR.
 - [ ] Implement/validate a full-pool Opportunity Quality ranker; scanner custom-expression missingness, calibration and rank stability remain unresolved.
 - [ ] Implement the separate V3 Boring Overnight Thinkorswim watchlist column from its design specification; MCC Opportunity Quality is not that feature.
@@ -83,6 +85,19 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 8. Complete the 20-train/20-unseen-test walk-forward runtime validation. Preserve every exclusion and metric; no numeric sell limit before all gates pass.
 
 The latest provider comparison and detailed evidence interpretation are in [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md).
+
+
+
+## Operator evidence update — Daily qualification, 2026-11-06 21:53 UTC
+
+- [x] Inspected committed run `artifacts/daily-data-qualification/20261106T215302Z` (raw API responses, per-symbol summaries, combined summary and reference CSVs).
+- [x] Confirmed internal arithmetic and 20-session coverage pass for RTO and EVR.
+- [x] Confirmed independent parity FAIL for both; API values are internally consistent but IEX differs from consolidated reference OHLCV, especially volume.
+- [x] Kept qualification fail-closed: feed IEX, `IEX_PARTIAL`, qualification values null, DATA?.
+- [ ] Obtain/verify consolidated SIP entitlement before repeating a qualified independent comparison. Prior HTTP 403 remains a hard stop; do not retry until entitlement changes.
+- [ ] Re-run Daily qualification after verified SIP configuration; require independent OHLCV parity and capture Dashboard screenshot.
+
+The current Daily task is no longer “script not run”; it is “script run, independent parity failed, SIP/source qualification outstanding.” See [Daily data qualification](Validation/Daily-Data-Qualification-20261106.md).
 
 ## [Uncertainties]
 
