@@ -64,7 +64,7 @@ foreach ($symbolValue in $Symbols) {
         throw "Invalid symbol '$symbolValue'."
     }
 
-    Write-Host "===== $symbol: TOS parity and provider OHLCV comparison ====="
+    Write-Host "===== $($symbol): TOS parity and provider OHLCV comparison ====="
 
     $parityUri = "$BaseUri/api/strategy-report/atr-parity?symbol=$symbol&timeframe=5m&warmupBars=99&windowBars=119"
     $parity = Invoke-RestMethod -Uri $parityUri -TimeoutSec 30
@@ -88,7 +88,7 @@ foreach ($symbolValue in $Symbols) {
         exactOhlcvMatchCount = 0
         mismatchCount = 0
         exactOhlcvMatch = $false
-        qualificationUsableFeed = ($effectiveFeed -eq "sip")
+        qualificationUsableFeed = $false
         mismatches = @()
         status = "INSUFFICIENT_TOS_HISTORY"
     }
@@ -153,8 +153,9 @@ foreach ($symbolValue in $Symbols) {
         $providerComparison.firstTosTimestampUtc = $firstTimestamp.ToString("o")
         $providerComparison.lastTosTimestampUtc = $lastTimestamp.ToString("o")
         $providerComparison.providerResponseFeed = $providerResponse.feed
+        $providerComparison.qualificationUsableFeed = ($effectiveFeed -eq "sip" -and [string]$providerResponse.feed -eq "sip")
 
-        if ($providerComparison.exactOhlcvMatch -and $effectiveFeed -eq "sip") {
+        if ($providerComparison.exactOhlcvMatch -and $providerComparison.qualificationUsableFeed) {
             $providerComparison.status = "EXACT_SIP_MATCH"
         }
         elseif ($providerComparison.exactOhlcvMatch) {
