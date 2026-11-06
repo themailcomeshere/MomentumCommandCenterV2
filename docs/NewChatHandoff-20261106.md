@@ -40,10 +40,10 @@ The Daily data audit is not the Boring Overnight decision. Imported scanner hist
 
 During capture, interact with the main Dashboard and inspect Daily data audit, Boring Overnight qualification, Red Zone, Morning Brief, and sell-limit gate explanations. It writes to `artifacts/browser-diagnostics/<timestamp>/`.
 
-2. Regular-session stream/collector: `scripts/validation/Test-RegularSessionStreamCollector.ps1`. Read-only polling every 15 seconds for five minutes; it does not alter feed settings. Command:
+2. Regular-session stream/collector: `scripts/validation/Test-RegularSessionStreamCollector.ps1`. Read-only polling every 15 seconds for ten minutes; it does not alter feed settings. Command:
 
 ```powershell
-.\scripts\validation\Test-RegularSessionStreamCollector.ps1 -BaseUri "http://localhost:53360" -Symbols SPY,RKLX,ASTX,XRPN -PollIntervalSeconds 15 -DurationMinutes 5 -ConfirmRegularSession
+.\scripts\validation\Test-RegularSessionStreamCollector.ps1 -BaseUri "http://localhost:53360" -Symbols SPY,RKLX,ASTX,XRPN -PollIntervalSeconds 15 -DurationMinutes 10 -ConfirmRegularSession
 ```
 
 Run during an actual RTH session (script checks weekday and 09:30–16:00 ET bounds; operator must still confirm holiday/early-close calendar). A WebSocket subscription acknowledgement alone is not a pass. Require per-symbol completed-bar count and lastBarUtc advancement, global received/persisted deltas, and fresh assessment provenance. Collector is a separate historical poller; if disabled, report NOT TESTED/disabled.
