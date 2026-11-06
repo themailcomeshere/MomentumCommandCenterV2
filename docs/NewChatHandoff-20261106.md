@@ -66,6 +66,10 @@ Detailed instructions and acceptance criteria: `docs/Validation/Browser-and-Stre
 
 
 
+---
+
+> **Historical context below — not the current operator action list.** Older sections are retained for audit trail. If an older instruction conflicts with the top **LATEST OPERATOR UPDATE**, current [Master To-Do](Master-To-Do.md), or [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md), follow the current documents. In particular: do not re-upload/re-import the same EVR/CBOE ScannerExports and do not retry/reconfigure SIP after the repeated HTTP 403 entitlement denial.
+
 # OPERATOR UPDATE — 2026-11-06, Daily run and ATR gap follow-up
 
 ## Daily qualification evidence now received
