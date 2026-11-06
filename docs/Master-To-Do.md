@@ -27,6 +27,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Supporting documentation, legacy handoffs and audit files were reconciled; a repeatable ATR evidence-export script was added.
 - [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
 - [x] Latest persisted EVR/CBOE 5m observations were independently rechecked across 663 adjacent pairs; maximum Wilder recurrence residual is 0.0000928571 for both, consistent with four-decimal rounding. No large recurrence discontinuity remains in this import.
+- [x] Corrected a gap-detector false positive for same-date 00:00–00:10 ET intervals wholly inside the scheduled 20:00–04:00 ET closure; added tests for overnight closure, premarket-overlap, and after-hours gaps. Exact-head CI and live API parity re-read are pending.
 - [x] Identified and corrected the V2.1 study's export predicate: ATR was calculated on all chart bars while the Strategy Report omitted bars outside 07:00–19:59 ET. The study source now exports every available chart bar in the selected date range.
 - [x] GitHub Actions `build-and-test` passed on commit `d00dbd61ede861f6a9924165377a17e9d8001022`, including the original qualification runner/study source state. It does not validate subsequent runner edits, Thinkorswim compilation, or local PowerShell execution.
 - [x] Reviewed operator evidence ZIP `20261106T105332.zip`: API healthy; effective Alpaca feed IEX; no SIP request or 40-session capture occurred.
@@ -39,9 +40,9 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 ## Current blockers — P0
 
 - [ ] Compile the revised V2.1 ThinkScript in Thinkorswim and export full chart history. The revised source removes the 07:00–19:59 ET export filter, but TOS compilation/run is not yet evidenced.
-- [ ] Resolve EVR 5m parity: latest status `GAPS_PRESENT`, 3 gaps in the 119-observation window; MAE 0.0000294330, max 0.0000495349. Numeric values are within tolerance, but continuity is not certified.
-- [ ] Resolve CBOE 5m parity: latest status `GAPS_PRESENT`, 1 gap in the 119-observation window; MAE 0.0000203866, max 0.0000426076. Numeric values are within tolerance, but continuity is not certified.
-- [ ] Obtain 119 continuous completed 5m observations for each required symbol, plus at least 99 earlier warm-up bars. Investigate every gap against source/chart evidence; never impute.
+- [ ] Re-read EVR 5m parity after the session-aware gap-detector code is built and restarted. Expected to remove one known 00:00–00:10 ET scheduled-closure false positive; premarket-overlapping gaps remain unresolved. Prior MAE 0.0000294330 / max 0.0000495349 were within tolerance.
+- [ ] Re-read CBOE 5m parity after the session-aware gap-detector code is built and restarted. The 16:00–18:40 ET after-hours gap remains; prior MAE 0.0000203866 / max 0.0000426076 were within tolerance.
+- [ ] Investigate remaining EVR/CBOE gaps against actual TOS chart/source bars and the 04:00–20:00 ET ETH session contract. Do not re-upload/re-import the existing CSVs; only request a new corrected export if a specific omission is demonstrated after compiling the revised study. Never impute.
 - [ ] Resolve EVR 1m's 13 gaps in its prior 119-observation window or retain `GAPS_PRESENT`; 1m does not replace the independent 5m gate.
 - [ ] Prove exact provider/TOS 5m OHLCV equality over all 119 timestamps and capture the exact previous RTH close from the same provider/feed. Latest IEX diagnostic returned 0/119 exact rows for EVR and CBOE; it does not establish SIP behavior.
 - [x] Confirmed repeated recent-SIP HTTP 403 entitlement denial; current effective feed remains IEX. Park SIP-dependent work. Do not ask the operator to retry SIP, reconfigure it, or repeat SIP smoke/capture requests. Resume only if the operator independently reports an actual entitlement change.
