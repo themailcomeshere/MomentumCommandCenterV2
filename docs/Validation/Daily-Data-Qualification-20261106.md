@@ -3,7 +3,7 @@
 **Branch:** `feature/opportunity-quality-classification`  
 **API endpoint:** `GET /api/market-data/daily?symbol={RTO|EVR}`  
 **Dashboard:** main `frontend/index.html`, section **Daily data audit**  
-**Qualification:** NOT YET PASSED — local API has not been queried from this session and SIP remains unconfirmed.
+**Qualification:** LIVE RUN COMPLETED — internal consistency and 20-session coverage PASS; independent-source OHLCV parity FAIL on IEX. Qualification remains DATA? because IEX is partial coverage and SIP remains unconfirmed.
 
 ## 1. Findings and implementation changes
 
