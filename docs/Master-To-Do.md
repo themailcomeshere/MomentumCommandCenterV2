@@ -25,7 +25,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
 - [x] Row-level recurrence was analyzed for the expanded EVR/CBOE 5m exports; the EVR mismatch is localized to a recurrence discontinuity across a long source-history gap.
 - [x] Identified and corrected the V2.1 study's export predicate: ATR was calculated on all chart bars while the Strategy Report omitted bars outside 07:00–19:59 ET. The study source now exports every available chart bar in the selected date range.
-- [x] GitHub Actions `build-and-test` passed on the pre-study-update branch head `b379c7b76a1c9b61454719861741d253720ba7da`; the subsequent change is ThinkScript documentation/source and has not been compiled in Thinkorswim.
+- [x] GitHub Actions `build-and-test` passed on commit `d00dbd61ede861f6a9924165377a17e9d8001022`, including the current script/study source state. This validates repository .NET build/tests, not Thinkorswim compilation or PowerShell runner execution.
 
 ## Current blockers — P0
 
