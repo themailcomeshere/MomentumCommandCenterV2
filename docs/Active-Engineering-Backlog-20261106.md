@@ -20,7 +20,7 @@ This document consolidates the distinct unfinished workstreams and defines what 
 - Alpaca: effective feed `iex`; provider validated. The capture returned IEX bars only; no SIP request was made. This is diagnostic connectivity, not qualification.
 - Massive: not configured.
 - Main Dashboard is the only supported Dashboard entry point; do not recreate/use PrototypeIndex.
-- ATR import persistence is separate and append-only. Latest repeated imports were idempotent (0 appended, 0 corrections).
+- ATR import persistence is separate and append-only. Earlier repeated imports were idempotent; the latest 2026-11-06 broad exports appended 2 EVR and 9 CBOE observations with zero corrections.
 
 ### Latest persisted Thinkorswim ATR parity
 
