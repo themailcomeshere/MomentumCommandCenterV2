@@ -141,7 +141,7 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 **Remaining operator/runtime work**
 - Run Release build/tests against the exact latest code-bearing branch source (the current updates are documentation/evidence only; prior operator-reported PASS was at SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`).
 - Do not repeat the same IEX qualification run; the 2026-11-06 run already passed internal 20-session checks and failed independent consolidated OHLCV parity.
-- Confirm SIP entitlement externally. Prior HTTP 403 is a hard stop; do not retry until access changes. Then configure effective SIP, restart, and verify provider status and row-level feed identity.
+- SIP entitlement is a known external blocker after repeated HTTP 403 responses. No further operator action or SIP request is planned; park this gate unless the operator independently reports a genuine entitlement change.
 - Re-run `scripts/validation/Test-DailyMarketDataQualification.ps1` for RTO/EVR only after effective SIP is verified. Require exact 20 sessions, no missing dates, freshness, internal arithmetic and independent OHLCV parity; preserve all mismatch/error details.
 - Click the Dashboard Daily audit button and verify the UI matches the saved API evidence exactly; capture a screenshot.
 - Verify evaluator/snapshot behavior remains DATA? whenever feed is non-SIP, history is incomplete/stale, or any required metric is missing.
@@ -275,7 +275,7 @@ Before selecting technology, decide target OS, installer/update strategy, API li
 3. Export EVR and CBOE with all available premarket, RTH and after-hours chart bars. Confirm embedded source epochs and actual first/last timestamps; filenames do not prove date coverage.
 4. Import each file once; record append/identical/correction counts and inspect per-row provenance. Re-run parity at 0.00005; investigate every gap without imputation.
 5. Run the updated provider comparison only after the TOS window is continuous. With IEX, treat all results as diagnostic-only. Require effective feed, response feed and every row feed to agree.
-6. Obtain SIP entitlement externally. Do not request SIP while the effective feed remains IEX or entitlement is still denied. After confirmation, configure SIP, restart, verify provider status and run the SPY 1m SIP smoke request.
+6. Keep SIP-dependent qualification parked. Do not request another SIP entitlement check, reconfigure the feed, or run a SIP smoke request unless the operator independently reports that entitlement has changed.
 7. Capture exact SIP provider/TOS 119-bar OHLCV and exact prior RTH close. Then capture/audit 40 complete SIP GTC_EXT sessions (20 train + 20 unseen test), each with 780 exact minute bars and the exact previous close.
 8. Run the sell-limit endpoint and preserve all gate results. The walk-forward validator is implemented, but only real complete source-qualified history can establish runtime PASS.
 9. Complete main Dashboard browser acceptance, regular-session WebSocket/collector acceptance, Daily parity, catalyst label validation and scanner field-availability audit as separate workstreams.
