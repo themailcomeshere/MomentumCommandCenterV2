@@ -276,7 +276,7 @@ The main Dashboard provides button-driven 20-session regular close/open retry an
 
 ## 2026-11-04 — candidate-group and header workflow
 
-The Overnight qualification panel supports separate **MCC Top 4** (four highest imported scanner scores) and **My Top 4** (exactly four user-selected imported symbols) groups. Selection persists in the browser; Daily + catalyst refresh queries only the active four. This is scanner-score selection, not a calibrated Opportunity Quality rank. Morning Command Brief is adjacent to the product title; WebSocket status and prototype badge are within System Readiness. The approved Quick Start and workspace navigation are part of the main Dashboard; no separate prototype page is used.
+The Overnight qualification panel supports separate **MCC Top 4** (four highest imported scanner scores) and **My Top 4** (exactly four user-selected imported symbols) groups. Selection persists in the browser; Daily + catalyst refresh queries only the active four. This is scanner-score selection, not a calibrated Opportunity Quality rank. Morning Command Brief is adjacent to the product title; WebSocket status is within System Readiness. The approved Quick Start and workspace navigation are part of the main Dashboard; no separate prototype page is used.
 
 
 The qualification panel also exposes an append-only human catalyst review queue for articles returned by the active group. Human labels are stored separately from automated triage and cannot clear a catalyst; labelled-sample adjudication and measured classifier validation remain open.
