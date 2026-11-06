@@ -1450,16 +1450,18 @@ app.MapGet("/api/strategy-report/atr-parity", async (
         var selectedStudyVersion = string.IsNullOrWhiteSpace(studyVersion) ? "MCC_OHLCV_ATR_V2.1" : studyVersion.Trim();
         var selectedRows = rows.Where(x => x.Metadata.StudyVersion.Equals(selectedStudyVersion, StringComparison.Ordinal))
             .OrderBy(x => x.Observation.SourceTimestampUtc)
-            .TakeLast(Math.Clamp(windowBars ?? 119, 1, 10000)).ToArray();
+            .ToArray();
         return Results.Ok(MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.Compare(
-            selectedRows, warmupBars ?? MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.DefaultWarmupBars));
+            selectedRows,
+            warmupBars ?? MomentumCommandCenterV2.API.StrategyReports.ThinkorswimAtrParityService.DefaultWarmupBars,
+            Math.Clamp(windowBars ?? 119, 1, 10000)));
     }
     catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
     catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
 })
 .WithName("CompareThinkorswimAtrParity")
 .WithSummary("Compare server Wilder ATR with timestamp-matched Thinkorswim ATR")
-.WithDescription("Example: /api/strategy-report/atr-parity?symbol=EVR&timeframe=1m. Requires one imported symbol/timeframe and consistent chart provenance. Uses the latest 119 observations by default: 99 warm-up plus 20 comparison bars. Any timestamp gap in that window blocks MATCH. Tolerance is fixed at 0.00005, half of the V2 export's four-decimal precision. This compares the algorithm on the imported TOS OHLCV bars; provider-feed parity is a separate gate.");
+.WithDescription("Example: /api/strategy-report/atr-parity?symbol=EVR&timeframe=1m. Requires one imported symbol/timeframe and consistent chart provenance. Uses full imported history to seed Wilder ATR, then evaluates the latest 119 observations by default: 99 warm-up plus 20 comparison bars. Timestamp gaps are counted only inside that 119-observation window and block MATCH. Tolerance is fixed at 0.00005, half of the V2 export's four-decimal precision. This compares the algorithm on the imported TOS OHLCV bars; provider-feed parity is a separate gate.");
 
 app.MapGet("/api/watchlists/exclusions", async (MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore store, CancellationToken ct) =>
     Results.Ok(new { count = (await store.GetAsync(ct)).Count, symbols = await store.GetAsync(ct) }))
