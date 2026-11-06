@@ -27,7 +27,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Supporting documentation, legacy handoffs and audit files were reconciled; a repeatable ATR evidence-export script was added.
 - [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
 - [x] Latest persisted EVR/CBOE 5m observations were independently rechecked across 663 adjacent pairs; maximum Wilder recurrence residual is 0.0000928571 for both, consistent with four-decimal rounding. No large recurrence discontinuity remains in this import.
-- [x] Corrected a gap-detector false positive for same-date 00:00–00:10 ET intervals wholly inside the scheduled 20:00–04:00 ET closure; added tests for overnight closure, premarket-overlap, and after-hours gaps. Exact-head CI and live API parity re-read are pending.
+- [x] Corrected a gap-detector false positive for same-date 00:00–00:10 ET intervals wholly inside the scheduled 20:00–04:00 ET closure; added tests for overnight closure, premarket-overlap, and after-hours gaps. GitHub Actions passed Release build and 236/236 tests on `151cb97976121600833c8927bddf4cf175567b7b`; local API parity re-read is pending.
 - [x] Identified and corrected the V2.1 study's export predicate: ATR was calculated on all chart bars while the Strategy Report omitted bars outside 07:00–19:59 ET. The study source now exports every available chart bar in the selected date range.
 - [x] GitHub Actions `build-and-test` passed on commit `d00dbd61ede861f6a9924165377a17e9d8001022`, including the original qualification runner/study source state.
 - [x] Latest ATR session-boundary detector and regression tests passed GitHub Actions on `151cb97976121600833c8927bddf4cf175567b7b`: Release build, 0 warnings/errors, 236/236 tests. It does not validate subsequent runner edits, Thinkorswim compilation, or local PowerShell execution.
@@ -40,7 +40,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Current blockers — P0
 
-- [ ] Compile the revised V2.1 ThinkScript in Thinkorswim and export full chart history. The revised source removes the 07:00–19:59 ET export filter, but TOS compilation/run is not yet evidenced.
+- [ ] Compile the revised V2.1 ThinkScript in Thinkorswim. Inspect the already committed EVR/CBOE exports and persisted rows first; only create a genuinely new export if a specific omission is proven after compilation. TOS compilation/run is not yet evidenced.
 - [ ] Re-read EVR 5m parity after the session-aware gap-detector code is built and restarted. Expected to remove one known 00:00–00:10 ET scheduled-closure false positive; premarket-overlapping gaps remain unresolved. Prior MAE 0.0000294330 / max 0.0000495349 were within tolerance.
 - [ ] Re-read CBOE 5m parity after the session-aware gap-detector code is built and restarted. The 16:00–18:40 ET after-hours gap remains; prior MAE 0.0000203866 / max 0.0000426076 were within tolerance.
 - [ ] Investigate remaining EVR/CBOE gaps against actual TOS chart/source bars and the 04:00–20:00 ET ETH session contract. Do not re-upload/re-import the existing CSVs; only request a new corrected export if a specific omission is demonstrated after compiling the revised study. Never impute.
@@ -59,7 +59,8 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Run `scripts/validation/Test-DailyMarketDataQualification.ps1`; evidence `artifacts/daily-data-qualification/20261106T215302Z` confirms 20/20 sessions, zero missing, freshness and internal arithmetic for RTO/EVR.
 - [x] Confirm fail-closed behavior: IEX produces `DATA? · IEX_PARTIAL` and null qualification metrics for both symbols.
 - [ ] Resolve independent OHLCV parity. The run FAILED for both symbols: numerous OHLC differences and all 20 volume rows mismatch against consolidated independent reference data. Do not treat IEX partial volume as qualified ADV.
-- [ ] Verify the Dashboard audit panel against the same saved API evidence and capture a browser screenshot; no screenshot is in the committed evidence.
+- [x] Operator verified the visible **Daily data audit** panel for RTO,EVR,CBOE: 3 returned, 0 API errors, 0 qualification-usable, all diagnostic-only / DATA? / IEX_PARTIAL, 20/20 sessions, zero missing, FRESH.
+- [ ] Capture a browser screenshot and CDP console/network evidence; the supplied text did not include a screenshot or browser diagnostics.
 - [ ] Build and validate human-adjudicated catalyst labels and holdout precision/recall; keyword triage must never claim CLEAR.
 - [ ] Implement/validate a full-pool Opportunity Quality ranker; scanner custom-expression missingness, calibration and rank stability remain unresolved.
 - [ ] Implement the separate V3 Boring Overnight Thinkorswim watchlist column from its design specification; MCC Opportunity Quality is not that feature.
@@ -81,7 +82,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 1. Do not repeat the same IEX Daily comparison and do not retry SIP. The user has confirmed the SIP HTTP 403 multiple times. Daily audit UI was verified for RTO/EVR/CBOE; independent parity remains unresolved (RTO/EVR failed, CBOE reference absent).
 2. Compile the revised Thinkorswim V2.1 study. Set 5m chart/study aggregation, ATR14 Wilder, Phoenix timezone, extended hours ON, corporate-action adjustment ON, and a date range that actually supplies at least 99 warm-up bars before the latest 119-bar window.
 3. Do not re-upload or re-import the already committed EVR/CBOE ScannerExports. The persisted 327 EVR and 338 CBOE observations and source CSVs are already available. Inspect those first. Only after the revised study is compiled and a specific export defect is demonstrated should a genuinely new, corrected export be requested; never ask for the same files again.
-4. Import once, inspect append/identical/correction counts and per-row provenance, then rerun parity. Do not relax 0.00005 tolerance or impute.
+4. Do not re-import the same committed CSVs. Re-read parity after the detector code is deployed. If and only if a new corrected export is justified by chart evidence, import that new file once and record append/identical/correction counts. Do not relax 0.00005 tolerance or impute.
 5. Inspect every remaining gap in TOS. If a bar is legitimately absent, record the source/session rule and ensure parity's continuity contract handles that rule explicitly; otherwise correct the export and re-import.
 6. Run the updated `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1`. Verify its new feed-identity and mismatch-breakdown fields. With IEX it must remain diagnostic-only and skip SIP/40-session work.
 7. Keep SIP-dependent work parked. No further SIP request, configuration change, smoke test, or GTC_EXT capture is planned unless the operator explicitly reports that Alpaca entitlement has changed.
@@ -97,8 +98,8 @@ The latest provider comparison and detailed evidence interpretation are in [Sell
 - [x] Confirmed internal arithmetic and 20-session coverage pass for RTO and EVR.
 - [x] Confirmed independent parity FAIL for both; API values are internally consistent but IEX differs from consolidated reference OHLCV, especially volume.
 - [x] Kept qualification fail-closed: feed IEX, `IEX_PARTIAL`, qualification values null, DATA?.
-- [ ] Obtain/verify consolidated SIP entitlement before repeating a qualified independent comparison. Prior HTTP 403 remains a hard stop; do not retry until entitlement changes.
-- [ ] Re-run Daily qualification after verified SIP configuration; require independent OHLCV parity and capture Dashboard screenshot.
+- [x] SIP access remains denied by repeated HTTP 403. No further SIP requests or configuration changes are planned; this is a known external blocker.
+- [ ] Find an independent Daily data source that does not require the denied SIP entitlement, or retain IEX values as diagnostic-only. RTO/EVR comparison already failed; CBOE reference is absent. Do not repeat the unchanged IEX comparison.
 
 The current Daily task is no longer “script not run”; it is “script run, independent parity failed, SIP/source qualification outstanding.” See [Daily data qualification](Validation/Daily-Data-Qualification-20261106.md).
 
@@ -108,8 +109,8 @@ The current Daily task is no longer “script not run”; it is “script run, i
 
 - [x] Independently recomputed Wilder recurrence across all adjacent persisted observations: 326 EVR pairs and 337 CBOE pairs.
 - [x] Confirmed maximum absolute recurrence residual 0.0000928571 for both, consistent with four-decimal ATR rounding; no residual exceeded 0.0002.
-- [ ] Resolve the remaining parity timestamp-gap groups (EVR 3, CBOE 1) against actual TOS chart bars and documented ETH/no-trade session behavior. Do not remove the gap gate or synthesize bars without that evidence.
-- [ ] Compile revised V2.1 ThinkScript in TOS and capture a fresh broad export.
+- [ ] Re-read parity after the session-aware detector build/restart. The known EVR 00:00–00:10 ET closure false positive is now excluded; premarket-overlapping EVR and after-hours CBOE gaps remain unresolved until checked against actual TOS chart bars.
+- [ ] Compile revised V2.1 ThinkScript in TOS and inspect existing exported/persisted rows. A new broad export is only needed if a specific omission is proven; do not repeat the same ScannerExports.
 
 
 
