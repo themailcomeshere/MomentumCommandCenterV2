@@ -18,7 +18,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Operator restarted API and re-ran persisted ATR parity for EVR 1m, EVR 5m and CBOE 5m.
 - [x] API health is `OK`; mode is `decision-support-only`; order submission is `NOT IMPLEMENTED`.
 - [x] Alpaca is configured/validated on IEX. The latest captured provider-status evidence reported 8 validation bars. Massive is not configured.
-- [x] Latest ATR import retries were idempotent: zero new observations and zero corrections. Do not re-import solely to re-run parity.
+- [x] Earlier repeat imports were idempotent (zero new observations/corrections); the newer 2026-11-06 broad exports subsequently appended 2 EVR and 9 CBOE observations. Do not re-import identical files solely to re-run parity.
 - [x] ATR parity version `MCC-WILDER-ATR-PARITY-1.1` and full-history Wilder seed correction are present and running in the restarted local API.
 - [x] Walk-forward validator and hard orchestration gate are implemented. Runtime pass remains unproven.
 - [x] Main Dashboard is `frontend/index.html`. Do not use or recreate PrototypeIndex.
