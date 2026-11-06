@@ -62,9 +62,15 @@ The comparison endpoint requests the same window from both adapters, returns fir
 
 ## Explicit current limits
 
-These are first REST/history adapters, not a production market-data stack. An append-only local JSONL raw-bar store is implemented and wired to comparison/Morning Brief requests. WebSocket streaming, reconnect/backfill orchestration, scanner/movers, quote/spread coverage, news/catalysts, rate-limit coordination, provider licensing review, full pagination, and market-session-aware gap classification are not implemented. A successful HTTP request does not prove that the selected plan/feed is appropriate for live decisions.
+This is a research/decision-support market-data stack, not a consolidated, fully licensed production execution feed. An append-only local JSONL raw-bar store is implemented. Alpaca REST history/Daily retrieval and provider comparison are implemented. An optional Alpaca minute-bar WebSocket worker supports acknowledged subscriptions, reconnects, completed 1m bars and late corrections; the live assessment selects WebSocket 1m only when subscription, minimum 50 completed persisted bars, freshness, feed identity and source-transport provenance all pass. Otherwise it falls back to REST; 5m Permission remains REST-backed. This is completed-minute-bar streaming, not raw trades or NBBO quotes.
 
-The Morning Brief intentionally returns DATA NOT FOUND IN SOURCES / NOT CALCULATED for sectors, broad movers, catalysts, validated market regime, Red Zone qualification, and Boring Overnight until those sources and pipelines exist. No auto-trading or order submission exists.
+An optional historical polling collector is implemented for explicitly configured symbols and is disabled when its symbol configuration is empty. It polls 1m/5m history with overlap and persists idempotently. It is not the WebSocket worker, an Overnight event collector, or a market-wide scanner. Inspect `/api/market-data/collector/status` for enablement, cycles, watermarks and errors.
+
+The Alpaca SIP-based top-gainers/losers discovery poller, append-only event store and API are implemented, but the current account has repeatedly received HTTP 403 for recent SIP requests. IEX remains the usable diagnostic OHLCV feed; it is partial-exchange coverage and does not qualify consolidated liquidity, full-universe discovery or GTC_EXT target research. Do not retry SIP unless the operator reports a genuine entitlement change.
+
+Ticker-scoped Alpaca news retrieval, provisional keyword triage and an append-only human review store exist. They are not a validated catalyst classifier: no-news or incomplete coverage remains UNKNOWN, and the automated triage must not assert CLEAR. Quote/NBBO spread, order book, halt-state, complete market-wide universe, validated breadth/sector flow, provider licensing suitability and broker-position synchronization are not established by these components. A successful HTTP request or WebSocket subscription does not prove complete market coverage or decision readiness.
+
+The Morning Brief remains partial and may report DATA NOT FOUND IN SOURCES / NOT CALCULATED for validated sectors, broad-market breadth, catalyst clearance, market regime, Red Zone qualification, and Boring Overnight. No auto-trading or order submission exists.
 
 
 ## Raw bar observation store
