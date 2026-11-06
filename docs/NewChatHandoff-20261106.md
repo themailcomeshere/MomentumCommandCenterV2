@@ -1,3 +1,26 @@
+# EVIDENCE UPDATE — 2026-11-06 09:27 Arizona
+
+**Latest operator action:** ATR evidence exporter ran successfully. The ZIP was inspected and row-level analysis completed. This update supersedes the older "Next operator action" requesting the ZIP/export.
+
+- Exporter source SHA: `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
+- API health: `OK`; decision-support-only; order submission not implemented.
+- Alpaca: IEX, configured and validated; last validation returned 8 bars. Massive: not configured.
+- Results: EVR 1m `GAPS_PRESENT` (346 rows, 13 qualification-window gaps); EVR 5m `NOT_MATCH` (163 rows, 1 gap); CBOE 1m `NO_DATA`; CBOE 5m `NOT_MATCH` (165 rows, 3 qualification-window gaps).
+- Exact error metrics, full-export gap counts, recurrence check, independent Wilder recomputation and next steps: [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md).
+- The exported ATR recurrence is broadly consistent with Wilder across consecutive rows after accounting for four-decimal ATR rounding. Independent recomputation closely reproduces the 5m parity error. A different initial seed/prefetch state or gap/session handling remains a hypothesis, not a proven root cause.
+- The ZIP contains no provider OHLCV. Exact provider/TOS equality is still untested. It also contains no build/test transcript for the recorded SHA.
+
+**Do not** re-run the exporter or re-import identical CSVs. Do not relax tolerance or impute gaps. Keep numeric sell-limit output blocked.
+
+## Next operator action
+
+1. Export substantially longer continuous 5m V2.1 history for EVR and CBOE, including a long seed/prefetch runway before the latest 119-bar qualification window.
+2. Inspect every timestamp discontinuity in Thinkorswim and determine whether it is a legitimate no-trade interval or a missing export/study observation. Do not infer from elapsed time alone.
+3. Import only genuinely new/corrected observations and record import counts.
+4. Re-run parity and compare per-bar errors as earlier seed history is added. Preserve the 0.00005 tolerance.
+5. Separately capture provider 5m OHLCV for the same exact 119 timestamps and the exact prior RTH close when an entitled feed is available. Current IEX status does not establish SIP qualification.
+6. Keep the sell-limit gates closed until ATR MATCH, exact provider/TOS parity, SIP 20/20 GTC_EXT coverage, and a passing runtime walk-forward result are all independently evidenced.
+
 # 2026-11-06 — latest operator parity results and consolidated task status
 
 **Operator confirmed:** API restarted; Release build/tests passed at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`. API remains healthy in decision-support-only mode; order submission is not implemented. Alpaca effective feed is IEX, validated; Massive is not configured.
