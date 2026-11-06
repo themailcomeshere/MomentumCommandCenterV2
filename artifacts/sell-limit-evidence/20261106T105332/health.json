@@ -1,0 +1,7 @@
+﻿{
+    "service":  "MomentumCommandCenterV2.API",
+    "status":  "OK",
+    "mode":  "decision-support-only",
+    "orderSubmission":  "NOT IMPLEMENTED",
+    "timestampUtc":  "2026-11-06T17:53:32.1181547+00:00"
+}

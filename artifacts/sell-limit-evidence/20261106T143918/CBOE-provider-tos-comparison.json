@@ -1,0 +1,507 @@
+﻿{
+    "symbol":  "CBOE",
+    "configuredFeed":  "iex",
+    "qualificationFeedRequired":  "sip",
+    "comparisonMode":  "DIAGNOSTIC_ONLY",
+    "diagnosticOnlyReason":  "Effective provider feed is \u0027iex\u0027; IEX/other non-SIP comparisons cannot qualify the sell-limit gate.",
+    "feedIdentityMatch":  true,
+    "providerResponseFeed":  "iex",
+    "providerBarFeedMismatchCount":  0,
+    "mismatchBreakdown":  {
+                              "providerBarMissing":  10,
+                              "feed":  0,
+                              "open":  99,
+                              "high":  106,
+                              "low":  101,
+                              "close":  88,
+                              "volume":  109
+                          },
+    "tosObservationCount":  338,
+    "requestedWindowCount":  119,
+    "providerBarCount":  109,
+    "exactOhlcvMatchCount":  0,
+    "mismatchCount":  119,
+    "exactOhlcvMatch":  false,
+    "qualificationUsableFeed":  false,
+    "mismatches":  [
+                       {
+                           "timestampUtc":  "2026-11-04T17:55:00.0000000+00:00",
+                           "reason":  "open provider=340.27 tos=340.28; high provider=340.27 tos=340.4; close provider=339.92 tos=340.205; volume provider=384 tos=3875"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:00:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:05:00.0000000+00:00",
+                           "reason":  "open provider=340.215 tos=340.01; high provider=340.42 tos=340.59; low provider=340.215 tos=339.99; close provider=340.42 tos=340.59; volume provider=108 tos=2444"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:10:00.0000000+00:00",
+                           "reason":  "open provider=340.44 tos=340.49; high provider=340.44 tos=340.53; low provider=340.125 tos=340.02; close provider=340.125 tos=340.105; volume provider=181 tos=3423"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:15:00.0000000+00:00",
+                           "reason":  "open provider=339.77 tos=339.98; high provider=340.18 tos=340.45; low provider=339.77 tos=339.63; close provider=340.18 tos=340.45; volume provider=250 tos=3637"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:20:00.0000000+00:00",
+                           "reason":  "open provider=340.66 tos=340.485; high provider=340.66 tos=340.75; low provider=340.66 tos=340.24; close provider=340.66 tos=340.62; volume provider=45 tos=1110"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:25:00.0000000+00:00",
+                           "reason":  "high provider=341.23 tos=341.27; low provider=340.44 tos=340.41; close provider=341.22 tos=340.72; volume provider=1709 tos=9795"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:30:00.0000000+00:00",
+                           "reason":  "open provider=340.955 tos=340.72; high provider=341.51 tos=341.85; low provider=340.955 tos=340.72; close provider=341.51 tos=341.85; volume provider=415 tos=3203"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:35:00.0000000+00:00",
+                           "reason":  "open provider=341.68 tos=341.905; high provider=341.68 tos=341.905; low provider=341.68 tos=341.38; close provider=341.68 tos=341.605; volume provider=62 tos=1088"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:40:00.0000000+00:00",
+                           "reason":  "open provider=341.555 tos=341.52; high provider=341.92 tos=342.005; low provider=341.38 tos=341.14; close provider=341.38 tos=341.14; volume provider=433 tos=6238"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:45:00.0000000+00:00",
+                           "reason":  "open provider=341.8 tos=341.38; high provider=341.8 tos=341.89; low provider=341.57 tos=341.38; close provider=341.68 tos=341.52; volume provider=540 tos=4683"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:50:00.0000000+00:00",
+                           "reason":  "high provider=341.555 tos=342.09; close provider=341.555 tos=341.95; volume provider=48 tos=4754"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T18:55:00.0000000+00:00",
+                           "reason":  "open provider=341.83 tos=341.82; high provider=342.1 tos=342.2428; low provider=341.8 tos=341.75; close provider=342.1 tos=342.03; volume provider=524 tos=4042"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:00:00.0000000+00:00",
+                           "reason":  "open provider=341.5 tos=341.86; high provider=341.695 tos=341.94; low provider=341.44 tos=340.77; close provider=341.49 tos=340.77; volume provider=853 tos=8388"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:05:00.0000000+00:00",
+                           "reason":  "open provider=340.55 tos=340.85; high provider=340.55 tos=340.935; low provider=340.42 tos=340.24; volume provider=465 tos=6588"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:10:00.0000000+00:00",
+                           "reason":  "open provider=340.35 tos=340.34; high provider=340.48 tos=340.69; low provider=340.12 tos=340.11; close provider=340.36 tos=340.585; volume provider=1086 tos=5119"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:15:00.0000000+00:00",
+                           "reason":  "open provider=340.64 tos=340.28; high provider=340.935 tos=341.11; low provider=340.64 tos=340.28; close provider=340.935 tos=341.02; volume provider=313 tos=5467"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:20:00.0000000+00:00",
+                           "reason":  "open provider=341.2 tos=340.96; high provider=342.15 tos=342.19; low provider=341.2 tos=340.96; close provider=342.14 tos=342.1501; volume provider=687 tos=36489"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:25:00.0000000+00:00",
+                           "reason":  "open provider=342.05 tos=342.15; high provider=342.71 tos=342.9321; volume provider=834 tos=3823"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:30:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:35:00.0000000+00:00",
+                           "reason":  "open provider=341.91 tos=341.83; high provider=342.33 tos=342.34; low provider=341.91 tos=341.83; close provider=342.33 tos=342.075; volume provider=675 tos=4094"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:40:00.0000000+00:00",
+                           "reason":  "open provider=342.34 tos=342.4; high provider=343.195 tos=343.46; low provider=342.34 tos=342.16; close provider=343.15 tos=342.9501; volume provider=797 tos=14265"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:45:00.0000000+00:00",
+                           "reason":  "open provider=343.365 tos=342.93; high provider=343.365 tos=343.986; low provider=343.365 tos=342.93; close provider=343.365 tos=343.71; volume provider=85 tos=3316"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:50:00.0000000+00:00",
+                           "reason":  "open provider=344.07 tos=343.71; high provider=344.2 tos=344.385; low provider=344.07 tos=343.71; close provider=344.2 tos=343.93; volume provider=252 tos=5850"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T19:55:00.0000000+00:00",
+                           "reason":  "open provider=344.06 tos=343.94; high provider=344.06 tos=344.35; low provider=344.06 tos=343.94; close provider=344.06 tos=343.99; volume provider=240 tos=2647"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:00:00.0000000+00:00",
+                           "reason":  "open provider=343.97 tos=344.04; high provider=343.97 tos=344.125; low provider=343.97 tos=343.81; close provider=343.97 tos=344.1025; volume provider=100 tos=2094"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:05:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:10:00.0000000+00:00",
+                           "reason":  "open provider=344.17 tos=343.955; high provider=344.28 tos=344.305; low provider=344.17 tos=343.89; close provider=344.28 tos=344.305; volume provider=248 tos=2390"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:15:00.0000000+00:00",
+                           "reason":  "open provider=343.985 tos=344.37; high provider=344.64 tos=344.71; low provider=343.985 tos=343.93; close provider=344.51 tos=344.37; volume provider=1215 tos=9404"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:20:00.0000000+00:00",
+                           "reason":  "open provider=344.1 tos=344.675; high provider=344.21 tos=344.675; low provider=343.94 tos=343.9; close provider=344.21 tos=344.425; volume provider=357 tos=13167"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:25:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:30:00.0000000+00:00",
+                           "reason":  "open provider=344.155 tos=344.15; high provider=344.315 tos=344.53; low provider=344.155 tos=344.04; close provider=344.19 tos=344.38; volume provider=308 tos=4700"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:35:00.0000000+00:00",
+                           "reason":  "open provider=344.395 tos=344.375; high provider=344.395 tos=344.9; low provider=344.16 tos=343.97; close provider=344.16 tos=344.32; volume provider=571 tos=5587"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:40:00.0000000+00:00",
+                           "reason":  "open provider=344.18 tos=344.175; high provider=344.595 tos=344.63; low provider=344.05 tos=343.84; close provider=344.05 tos=344.085; volume provider=754 tos=6920"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:45:00.0000000+00:00",
+                           "reason":  "open provider=343.73 tos=343.84; high provider=343.825 tos=343.96; low provider=343.37 tos=343.29; close provider=343.37 tos=343.29; volume provider=843 tos=8447"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:50:00.0000000+00:00",
+                           "reason":  "open provider=343.24 tos=343.37; high provider=344.57 tos=344.575; low provider=342.62 tos=342.43; volume provider=2574 tos=19009"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T20:55:00.0000000+00:00",
+                           "reason":  "open provider=343.06 tos=343.03; high provider=346.745 tos=346.84; close provider=345.56 tos=346.02; volume provider=9636 tos=125567"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T21:00:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-04T23:40:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T14:30:00.0000000+00:00",
+                           "reason":  "open provider=351 tos=351.61; high provider=351.105 tos=352; low provider=347.77 tos=347.58; close provider=350.75 tos=350.755; volume provider=1368 tos=20316"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T14:35:00.0000000+00:00",
+                           "reason":  "open provider=349.64 tos=350.755; high provider=351.18 tos=351.54; low provider=349.64 tos=349.425; close provider=351.18 tos=351.17; volume provider=1070 tos=11467"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T14:40:00.0000000+00:00",
+                           "reason":  "open provider=351.135 tos=350.925; high provider=351.415 tos=351.99; low provider=350.09 tos=349.5975; close provider=350.61 tos=350.0004; volume provider=1847 tos=15122"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T14:45:00.0000000+00:00",
+                           "reason":  "open provider=350.77 tos=350.4; low provider=350.37 tos=350.02; volume provider=913 tos=16186"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T14:50:00.0000000+00:00",
+                           "reason":  "open provider=351.65 tos=351.66; high provider=351.97 tos=352.16; low provider=351.53 tos=351.09; close provider=351.97 tos=351.98; volume provider=322 tos=8197"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T14:55:00.0000000+00:00",
+                           "reason":  "high provider=354.3 tos=354.705; low provider=351.98 tos=351.54; close provider=353.68 tos=354.705; volume provider=1103 tos=11236"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:00:00.0000000+00:00",
+                           "reason":  "open provider=354.435 tos=354.37; high provider=355.245 tos=355.38; low provider=354.39 tos=354.37; close provider=354.53 tos=355.38; volume provider=893 tos=10326"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:05:00.0000000+00:00",
+                           "reason":  "open provider=355.16 tos=354.99; high provider=355.69 tos=355.9; low provider=354.825 tos=354.635; close provider=355.27 tos=355.34; volume provider=1823 tos=15554"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:10:00.0000000+00:00",
+                           "reason":  "open provider=355.265 tos=355.32; high provider=355.545 tos=355.7; low provider=354.9 tos=354.72; volume provider=559 tos=8361"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:15:00.0000000+00:00",
+                           "reason":  "open provider=355.29 tos=355.2; high provider=355.9 tos=355.9626; low provider=355.22 tos=354.85; volume provider=825 tos=7982"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:20:00.0000000+00:00",
+                           "reason":  "open provider=355.48 tos=355.485; high provider=355.775 tos=355.98; low provider=355.14 tos=354.98; close provider=355.32 tos=355.12; volume provider=895 tos=10440"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:25:00.0000000+00:00",
+                           "reason":  "open provider=354.75 tos=355.49; high provider=354.75 tos=355.49; low provider=354.62 tos=354.55; close provider=354.62 tos=354.99; volume provider=316 tos=7180"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:30:00.0000000+00:00",
+                           "reason":  "open provider=355.36 tos=354.44; high provider=355.36 tos=355.64; low provider=354.73 tos=354.44; close provider=354.975 tos=355.17; volume provider=541 tos=6040"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:35:00.0000000+00:00",
+                           "reason":  "open provider=354.66 tos=354.965; high provider=355.005 tos=355.05; low provider=354.65 tos=354.455; close provider=355.005 tos=354.53; volume provider=666 tos=7531"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:40:00.0000000+00:00",
+                           "reason":  "open provider=354.865 tos=354.995; high provider=355.37 tos=355.69; low provider=354.32 tos=354.07; volume provider=1841 tos=29195"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:45:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:50:00.0000000+00:00",
+                           "reason":  "open provider=354.36 tos=354.4564; high provider=354.7 tos=355; low provider=354.36 tos=354.02; close provider=354.47 tos=354.07; volume provider=399 tos=6919"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T15:55:00.0000000+00:00",
+                           "reason":  "open provider=354.6 tos=354.53; high provider=354.6 tos=355.23; low provider=353.62 tos=353.32; close provider=353.86 tos=353.32; volume provider=792 tos=8360"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:00:00.0000000+00:00",
+                           "reason":  "open provider=353.26 tos=353.32; high provider=353.26 tos=353.42; low provider=351.91 tos=351.82; close provider=351.91 tos=351.87; volume provider=833 tos=12289"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:05:00.0000000+00:00",
+                           "reason":  "open provider=351.705 tos=351.74; high provider=352 tos=352.175; low provider=351.705 tos=351.26; close provider=351.81 tos=351.32; volume provider=415 tos=3523"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:10:00.0000000+00:00",
+                           "reason":  "open provider=351.43 tos=351.715; high provider=351.43 tos=351.75; low provider=350.815 tos=350.49; close provider=350.815 tos=351.42; volume provider=408 tos=7853"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:15:00.0000000+00:00",
+                           "reason":  "open provider=350.915 tos=351.45; high provider=350.915 tos=351.45; close provider=347.09 tos=347.23; volume provider=1493 tos=24053"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:20:00.0000000+00:00",
+                           "reason":  "open provider=346.99 tos=347.565; high provider=347.3 tos=347.57; low provider=346.32 tos=346.31; close provider=346.32 tos=346.31; volume provider=1392 tos=9922"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:25:00.0000000+00:00",
+                           "reason":  "open provider=346.44 tos=346.545; low provider=345.43 tos=345.23; close provider=346.64 tos=346.54; volume provider=1840 tos=28773"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:30:00.0000000+00:00",
+                           "reason":  "open provider=346.15 tos=346.54; high provider=346.68 tos=347.12; low provider=345.42 tos=345.18; close provider=345.95 tos=345.955; volume provider=1320 tos=15716"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:35:00.0000000+00:00",
+                           "reason":  "open provider=345.995 tos=346; high provider=347.94 tos=348.25; close provider=347.72 tos=347.7375; volume provider=1386 tos=20171"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:40:00.0000000+00:00",
+                           "reason":  "open provider=347.73 tos=348; high provider=348.195 tos=348.72; low provider=346.895 tos=346.49; volume provider=1184 tos=19790"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:45:00.0000000+00:00",
+                           "reason":  "open provider=346.9 tos=346.895; high provider=347.665 tos=347.9; low provider=346.51 tos=346.21; close provider=347.375 tos=347.8; volume provider=1204 tos=9568"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:50:00.0000000+00:00",
+                           "reason":  "open provider=347.46 tos=347.61; high provider=348.25 tos=348.36; low provider=347.46 tos=346.67; close provider=348.25 tos=348.32; volume provider=647 tos=18138"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T16:55:00.0000000+00:00",
+                           "reason":  "open provider=348.15 tos=348.14; high provider=348.53 tos=348.67; low provider=347.9 tos=347.57; close provider=348.53 tos=348.16; volume provider=738 tos=4271"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:00:00.0000000+00:00",
+                           "reason":  "open provider=348.6 tos=348.61; high provider=348.6 tos=348.82; low provider=348.55 tos=348.15; volume provider=286 tos=2214"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:05:00.0000000+00:00",
+                           "reason":  "open provider=348.33 tos=348.575; high provider=348.8 tos=349.02; low provider=347.755 tos=347.405; close provider=347.755 tos=347.405; volume provider=789 tos=13066"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:10:00.0000000+00:00",
+                           "reason":  "open provider=347.52 tos=347.365; high provider=347.57 tos=348.1; low provider=347.265 tos=347.15; close provider=347.57 tos=347.4; volume provider=457 tos=3379"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:15:00.0000000+00:00",
+                           "reason":  "open provider=346.705 tos=347.92; high provider=347.055 tos=347.944; volume provider=109 tos=2440"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:20:00.0000000+00:00",
+                           "reason":  "open provider=347.135 tos=346.66; high provider=348.89 tos=350.565; low provider=347.135 tos=346.49; close provider=348.89 tos=350; volume provider=1079 tos=13146"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:25:00.0000000+00:00",
+                           "reason":  "open provider=349.92 tos=350.565; high provider=351.73 tos=351.975; low provider=349.65 tos=349.46; close provider=350.7 tos=350.04; volume provider=4116 tos=86108"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:30:00.0000000+00:00",
+                           "reason":  "open provider=350.66 tos=350.5; high provider=351.73 tos=352; low provider=350.53 tos=350.14; close provider=350.7 tos=350.51; volume provider=5763 tos=46268"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:35:00.0000000+00:00",
+                           "reason":  "open provider=350.17 tos=350.45; high provider=350.17 tos=350.45; low provider=349 tos=348.2778; close provider=349.3 tos=349.2; volume provider=1031 tos=10630"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:40:00.0000000+00:00",
+                           "reason":  "open provider=348.77 tos=348.99; high provider=348.77 tos=348.99; low provider=347.565 tos=346.935; close provider=347.565 tos=347.305; volume provider=2646 tos=15307"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:45:00.0000000+00:00",
+                           "reason":  "open provider=347.44 tos=347.305; high provider=348.06 tos=348.74; low provider=347.44 tos=346.71; close provider=348.06 tos=348.14; volume provider=208 tos=4984"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:50:00.0000000+00:00",
+                           "reason":  "high provider=348.36 tos=348.72; low provider=347.21 tos=347.06; close provider=347.21 tos=347.93; volume provider=102 tos=5070"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T17:55:00.0000000+00:00",
+                           "reason":  "open provider=348.23 tos=347.93; high provider=349.305 tos=349.9998; low provider=348.23 tos=347.795; volume provider=1056 tos=15595"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:00:00.0000000+00:00",
+                           "reason":  "open provider=348.25 tos=348.325; high provider=348.29 tos=348.52; low provider=348.075 tos=348; close provider=348.29 tos=348.06; volume provider=292 tos=4748"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:05:00.0000000+00:00",
+                           "reason":  "open provider=348.385 tos=348.295; high provider=348.775 tos=349.03; low provider=348.385 tos=348.295; close provider=348.775 tos=349.03; volume provider=298 tos=6036"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:10:00.0000000+00:00",
+                           "reason":  "open provider=348.96 tos=349.04; high provider=349.79 tos=349.865; low provider=348.52 tos=348.16; close provider=349.79 tos=349.745; volume provider=472 tos=5463"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:15:00.0000000+00:00",
+                           "reason":  "open provider=349.33 tos=349.745; high provider=349.33 tos=349.745; low provider=348.76 tos=348.67; close provider=348.76 tos=348.93; volume provider=153 tos=2436"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:20:00.0000000+00:00",
+                           "reason":  "open provider=348.93 tos=348.75; low provider=348.93 tos=348.59; volume provider=425 tos=5051"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:25:00.0000000+00:00",
+                           "reason":  "open provider=350.15 tos=350.02; high provider=350.15 tos=350.34; volume provider=505 tos=2501"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:30:00.0000000+00:00",
+                           "reason":  "open provider=350.09 tos=350.05; high provider=350.41 tos=350.465; low provider=349.9 tos=349.89; volume provider=572 tos=2545"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:35:00.0000000+00:00",
+                           "reason":  "open provider=350.11 tos=350.09; high provider=350.11 tos=350.61; low provider=350.11 tos=349.865; close provider=350.11 tos=350.14; volume provider=100 tos=866"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:40:00.0000000+00:00",
+                           "reason":  "open provider=350.125 tos=350.14; high provider=350.125 tos=350.14; low provider=349.165 tos=349; close provider=349.165 tos=349.265; volume provider=687 tos=4776"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:45:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:50:00.0000000+00:00",
+                           "reason":  "open provider=349.87 tos=349.16; high provider=350.29 tos=350.6; low provider=349.87 tos=349.15; close provider=350.165 tos=350.6; volume provider=440 tos=5197"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T18:55:00.0000000+00:00",
+                           "reason":  "open provider=350.33 tos=350.6; high provider=350.75 tos=350.77; low provider=349.91 tos=349.83; close provider=350.72 tos=350.46; volume provider=1645 tos=17392"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:00:00.0000000+00:00",
+                           "reason":  "open provider=350.54 tos=350.72; high provider=350.67 tos=350.94; low provider=350.19 tos=350.07; volume provider=759 tos=5326"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:05:00.0000000+00:00",
+                           "reason":  "high provider=351.315 tos=351.45; low provider=349.66 tos=349.59; close provider=351.2 tos=351.32; volume provider=2585 tos=19768"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:10:00.0000000+00:00",
+                           "reason":  "open provider=351.8 tos=351.335; high provider=351.8 tos=352.21; low provider=351.21 tos=350.79; close provider=351.27 tos=351.1075; volume provider=411 tos=7214"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:15:00.0000000+00:00",
+                           "reason":  "open provider=351.83 tos=351.09; high provider=351.83 tos=351.84; low provider=350.58 tos=350.52; volume provider=458 tos=3643"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:20:00.0000000+00:00",
+                           "reason":  "high provider=350.98 tos=351.27; low provider=350.56 tos=350.52; close provider=350.98 tos=350.56; volume provider=342 tos=4273"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:25:00.0000000+00:00",
+                           "reason":  "open provider=350.96 tos=350.87; high provider=351.17 tos=351.18; low provider=350.94 tos=350.51; close provider=351.1 tos=351.03; volume provider=344 tos=3172"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:30:00.0000000+00:00",
+                           "reason":  "open provider=351.66 tos=351.175; high provider=351.66 tos=351.7599; low provider=351.22 tos=350.84; close provider=351.22 tos=350.9; volume provider=171 tos=4229"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:35:00.0000000+00:00",
+                           "reason":  "open provider=351.14 tos=351.15; high provider=351.25 tos=351.29; low provider=351.01 tos=350.88; close provider=351.08 tos=351.25; volume provider=402 tos=3263"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:40:00.0000000+00:00",
+                           "reason":  "high provider=351.28 tos=351.3; low provider=350.275 tos=350.135; close provider=351.28 tos=351.25; volume provider=1619 tos=9777"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:45:00.0000000+00:00",
+                           "reason":  "open provider=351.2 tos=351.42; high provider=353.35 tos=353.5086; low provider=351.2 tos=351.04; close provider=353.35 tos=352.98; volume provider=1095 tos=10496"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:50:00.0000000+00:00",
+                           "reason":  "open provider=352.99 tos=352.98; high provider=353.63 tos=353.64; low provider=352.81 tos=352.51; close provider=352.81 tos=352.525; volume provider=1170 tos=16194"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T19:55:00.0000000+00:00",
+                           "reason":  "open provider=352.1 tos=352.525; high provider=352.15 tos=352.81; low provider=351.655 tos=351.57; volume provider=677 tos=14738"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:00:00.0000000+00:00",
+                           "reason":  "high provider=351.94 tos=352.05; low provider=351.27 tos=350.84; close provider=351.27 tos=352.02; volume provider=513 tos=8933"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:05:00.0000000+00:00",
+                           "reason":  "open provider=351.855 tos=352.07; high provider=352.6 tos=352.66; low provider=351.735 tos=351.56; close provider=352.01 tos=352; volume provider=971 tos=16124"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:10:00.0000000+00:00",
+                           "reason":  "open provider=352.18 tos=352; high provider=352.18 tos=352.52; low provider=350.8 tos=350.6905; close provider=351.885 tos=352.24; volume provider=804 tos=11315"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:15:00.0000000+00:00",
+                           "reason":  "open provider=352.155 tos=352.39; high provider=352.155 tos=352.39; low provider=351.82 tos=351.57; close provider=351.82 tos=352.06; volume provider=651 tos=7486"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:20:00.0000000+00:00",
+                           "reason":  "open provider=352.13 tos=352; high provider=352.375 tos=352.545; low provider=351.82 tos=351.67; close provider=351.82 tos=351.67; volume provider=1221 tos=13672"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:25:00.0000000+00:00",
+                           "reason":  "open provider=351.39 tos=351.59; high provider=351.97 tos=352.01; low provider=351.24 tos=351.23; volume provider=1788 tos=16969"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:30:00.0000000+00:00",
+                           "reason":  "high provider=351.845 tos=351.85; low provider=349.85 tos=349.415; volume provider=1652 tos=19413"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:35:00.0000000+00:00",
+                           "reason":  "open provider=350.26 tos=350.41; high provider=350.41 tos=350.56; low provider=350.07 tos=349.95; volume provider=1215 tos=11505"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:40:00.0000000+00:00",
+                           "reason":  "open provider=349.835 tos=350.28; high provider=349.99 tos=350.28; low provider=349.05 tos=348.85; close provider=349.14 tos=349.11; volume provider=1276 tos=21836"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:45:00.0000000+00:00",
+                           "reason":  "high provider=350.8 tos=350.92; low provider=348.78 tos=348.63; volume provider=2060 tos=18159"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:50:00.0000000+00:00",
+                           "reason":  "open provider=350.83 tos=350.8; high provider=352.04 tos=353.77; low provider=350.48 tos=350.16; close provider=351.705 tos=352.08; volume provider=2922 tos=39983"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T20:55:00.0000000+00:00",
+                           "reason":  "open provider=352.145 tos=352.67; high provider=353.45 tos=353.5; low provider=352.145 tos=351.97; close provider=352.66 tos=352.7; volume provider=10466 tos=127682"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T21:00:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       },
+                       {
+                           "timestampUtc":  "2026-11-05T21:05:00.0000000+00:00",
+                           "reason":  "PROVIDER_BAR_MISSING"
+                       }
+                   ],
+    "status":  "DIAGNOSTIC_MISMATCH_NON_SIP",
+    "firstTosTimestampUtc":  "2026-11-04T17:55:00.0000000+00:00",
+    "lastTosTimestampUtc":  "2026-11-05T21:05:00.0000000+00:00"
+}

@@ -1,0 +1,48 @@
+﻿[
+    {
+        "provider":  "Alpaca",
+        "configuredFeed":  "iex",
+        "configuredFeedSource":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+        "feedConfigurationSources":  [
+                                         {
+                                             "source":  "JsonConfigurationProvider for \u0027appsettings.json\u0027 (Optional)",
+                                             "value":  "iex"
+                                         },
+                                         {
+                                             "source":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                             "value":  "iex"
+                                         }
+                                     ],
+        "configured":  true,
+        "validated":  true,
+        "status":  "VALIDATED_DATA_RETURNED",
+        "lastSuccessfulDataValidationUtc":  "2026-11-06T21:38:59.089+00:00",
+        "lastSuccessfulDataValidationBarCount":  1292,
+        "capabilities":  [
+                             "Historical 1m/5m OHLCV bars",
+                             "REST with bounded pagination and transient retries",
+                             "Configured feed: iex",
+                             "Extended-hours bars included only when provider returns them for this feed/entitlement",
+                             "Scanner/movers discovery still depends on configured scanner source"
+                         ],
+        "credentialLocation":  "server environment / user secrets; never frontend"
+    },
+    {
+        "provider":  "Massive",
+        "configuredFeed":  null,
+        "configuredFeedSource":  null,
+        "feedConfigurationSources":  null,
+        "configured":  false,
+        "validated":  false,
+        "status":  "NOT_CONFIGURED",
+        "lastSuccessfulDataValidationUtc":  null,
+        "lastSuccessfulDataValidationBarCount":  0,
+        "capabilities":  [
+                             "Historical 1m/5m OHLCV aggregates",
+                             "REST only; no websocket yet",
+                             "Scanner/movers endpoint not implemented",
+                             "Plan/endpoint entitlements must be verified"
+                         ],
+        "credentialLocation":  "server environment / user secrets; never frontend"
+    }
+]

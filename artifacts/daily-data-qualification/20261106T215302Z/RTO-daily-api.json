@@ -1,0 +1,229 @@
+﻿{
+    "symbol":  "RTO",
+    "provider":  "Alpaca",
+    "feed":  "iex",
+    "adjustment":  "all (split/dividend adjusted)",
+    "retrievedAtUtc":  "2026-11-06T21:53:02.7080781+00:00",
+    "latestCompletedSessionTimestampUtc":  "2026-11-06T05:00:00+00:00",
+    "price":  null,
+    "sma20":  null,
+    "averageDailyVolume20":  null,
+    "observedClose":  23.615,
+    "observedSma20":  22.31175,
+    "observedAverageDailyVolume20":  134700.5,
+    "validSessionCount":  20,
+    "availableCompletedSessionCount":  44,
+    "dataFresh":  true,
+    "completeness":  "COMPLETE_20_EXPECTED_SESSIONS",
+    "feedCoverage":  "IEX_PARTIAL",
+    "qualificationUsable":  false,
+    "note":  "Metrics use the exact latest 20 expected sessions from MCC_US_EQUITIES_CALENDAR_V2. Missing expected sessions are not backfilled with older sessions. Current session is included only after its scheduled regular close (including early closes). adjustment=all requests split/dividend-adjusted bars. IEX is partial-exchange coverage and is diagnostic only; qualification fields are null unless feed=sip. SIP feed entitlement, source coverage and adjustment parity still require runtime validation.",
+    "latestExpectedSessionDate":  "2026-11-06",
+    "expectedSessionDates":  [
+                                 "2026-10-12",
+                                 "2026-10-13",
+                                 "2026-10-14",
+                                 "2026-10-15",
+                                 "2026-10-16",
+                                 "2026-10-19",
+                                 "2026-10-20",
+                                 "2026-10-21",
+                                 "2026-10-22",
+                                 "2026-10-23",
+                                 "2026-10-26",
+                                 "2026-10-27",
+                                 "2026-10-28",
+                                 "2026-10-29",
+                                 "2026-10-30",
+                                 "2026-11-02",
+                                 "2026-11-03",
+                                 "2026-11-04",
+                                 "2026-11-05",
+                                 "2026-11-06"
+                             ],
+    "missingSessionDates":  [
+
+                            ],
+    "sessions":  [
+                     {
+                         "sessionDate":  "2026-10-12",
+                         "timestampUtc":  "2026-10-12T04:00:00+00:00",
+                         "open":  20.42,
+                         "high":  20.45,
+                         "low":  20.24,
+                         "close":  20.25,
+                         "volume":  92460
+                     },
+                     {
+                         "sessionDate":  "2026-10-13",
+                         "timestampUtc":  "2026-10-13T04:00:00+00:00",
+                         "open":  20.305,
+                         "high":  20.43,
+                         "low":  20.14,
+                         "close":  20.37,
+                         "volume":  95011
+                     },
+                     {
+                         "sessionDate":  "2026-10-14",
+                         "timestampUtc":  "2026-10-14T04:00:00+00:00",
+                         "open":  20.36,
+                         "high":  20.41,
+                         "low":  20.17,
+                         "close":  20.24,
+                         "volume":  83612
+                     },
+                     {
+                         "sessionDate":  "2026-10-15",
+                         "timestampUtc":  "2026-10-15T04:00:00+00:00",
+                         "open":  20.64,
+                         "high":  20.85,
+                         "low":  20.59,
+                         "close":  20.82,
+                         "volume":  98273
+                     },
+                     {
+                         "sessionDate":  "2026-10-16",
+                         "timestampUtc":  "2026-10-16T04:00:00+00:00",
+                         "open":  21.1,
+                         "high":  21.18,
+                         "low":  20.975,
+                         "close":  21.1,
+                         "volume":  180141
+                     },
+                     {
+                         "sessionDate":  "2026-10-19",
+                         "timestampUtc":  "2026-10-19T04:00:00+00:00",
+                         "open":  20.83,
+                         "high":  21.275,
+                         "low":  20.8,
+                         "close":  21.2,
+                         "volume":  232512
+                     },
+                     {
+                         "sessionDate":  "2026-10-20",
+                         "timestampUtc":  "2026-10-20T04:00:00+00:00",
+                         "open":  21.335,
+                         "high":  21.39,
+                         "low":  21.14,
+                         "close":  21.2,
+                         "volume":  153906
+                     },
+                     {
+                         "sessionDate":  "2026-10-21",
+                         "timestampUtc":  "2026-10-21T04:00:00+00:00",
+                         "open":  21.15,
+                         "high":  21.24,
+                         "low":  20.94,
+                         "close":  21.04,
+                         "volume":  126052
+                     },
+                     {
+                         "sessionDate":  "2026-10-22",
+                         "timestampUtc":  "2026-10-22T04:00:00+00:00",
+                         "open":  22.36,
+                         "high":  22.98,
+                         "low":  22.3,
+                         "close":  22.88,
+                         "volume":  362185
+                     },
+                     {
+                         "sessionDate":  "2026-10-23",
+                         "timestampUtc":  "2026-10-23T04:00:00+00:00",
+                         "open":  22.895,
+                         "high":  23.02,
+                         "low":  22.475,
+                         "close":  22.77,
+                         "volume":  192378
+                     },
+                     {
+                         "sessionDate":  "2026-10-26",
+                         "timestampUtc":  "2026-10-26T04:00:00+00:00",
+                         "open":  22.795,
+                         "high":  22.875,
+                         "low":  22.56,
+                         "close":  22.6,
+                         "volume":  91273
+                     },
+                     {
+                         "sessionDate":  "2026-10-27",
+                         "timestampUtc":  "2026-10-27T04:00:00+00:00",
+                         "open":  23,
+                         "high":  23.02,
+                         "low":  22.6,
+                         "close":  22.89,
+                         "volume":  193477
+                     },
+                     {
+                         "sessionDate":  "2026-10-28",
+                         "timestampUtc":  "2026-10-28T04:00:00+00:00",
+                         "open":  22.84,
+                         "high":  22.895,
+                         "low":  22.6,
+                         "close":  22.79,
+                         "volume":  151071
+                     },
+                     {
+                         "sessionDate":  "2026-10-29",
+                         "timestampUtc":  "2026-10-29T04:00:00+00:00",
+                         "open":  22.93,
+                         "high":  23.28,
+                         "low":  22.855,
+                         "close":  23.27,
+                         "volume":  80233
+                     },
+                     {
+                         "sessionDate":  "2026-10-30",
+                         "timestampUtc":  "2026-10-30T04:00:00+00:00",
+                         "open":  23.45,
+                         "high":  23.58,
+                         "low":  23.255,
+                         "close":  23.325,
+                         "volume":  84643
+                     },
+                     {
+                         "sessionDate":  "2026-11-02",
+                         "timestampUtc":  "2026-11-02T05:00:00+00:00",
+                         "open":  23.74,
+                         "high":  24.095,
+                         "low":  23.66,
+                         "close":  24.06,
+                         "volume":  100128
+                     },
+                     {
+                         "sessionDate":  "2026-11-03",
+                         "timestampUtc":  "2026-11-03T05:00:00+00:00",
+                         "open":  23.765,
+                         "high":  23.9,
+                         "low":  23.56,
+                         "close":  23.565,
+                         "volume":  99699
+                     },
+                     {
+                         "sessionDate":  "2026-11-04",
+                         "timestampUtc":  "2026-11-04T05:00:00+00:00",
+                         "open":  24.08,
+                         "high":  24.315,
+                         "low":  23.985,
+                         "close":  24.17,
+                         "volume":  95006
+                     },
+                     {
+                         "sessionDate":  "2026-11-05",
+                         "timestampUtc":  "2026-11-05T05:00:00+00:00",
+                         "open":  24.16,
+                         "high":  24.45,
+                         "low":  23.9,
+                         "close":  24.08,
+                         "volume":  103986
+                     },
+                     {
+                         "sessionDate":  "2026-11-06",
+                         "timestampUtc":  "2026-11-06T05:00:00+00:00",
+                         "open":  23.345,
+                         "high":  23.705,
+                         "low":  23.345,
+                         "close":  23.615,
+                         "volume":  77964
+                     }
+                 ]
+}

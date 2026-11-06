@@ -1,0 +1,32 @@
+﻿[
+    {
+        "symbol":  "EVR",
+        "parityStatus":  "GAPS_PRESENT",
+        "parityMeanAbsoluteError":  0.0000294330206093993971654557,
+        "parityMaximumAbsoluteError":  0.0000495349247567752940205113,
+        "parityGapCount":  3,
+        "providerComparisonStatus":  "DIAGNOSTIC_MISMATCH_NON_SIP",
+        "exactProviderTosOhlcvMatch":  false,
+        "feedIdentityMatch":  true,
+        "providerResponseFeed":  "iex",
+        "effectiveFeed":  "iex",
+        "sipCaptureStatus":  "SKIPPED_NOT_CONFIGURED",
+        "walkForwardStatus":  "NOT_RUN",
+        "sellLimitStatus":  "NOT_RUN"
+    },
+    {
+        "symbol":  "CBOE",
+        "parityStatus":  "GAPS_PRESENT",
+        "parityMeanAbsoluteError":  0.0000203865947752491599540927,
+        "parityMaximumAbsoluteError":  0.0000426076307464691409374068,
+        "parityGapCount":  1,
+        "providerComparisonStatus":  "DIAGNOSTIC_MISMATCH_NON_SIP",
+        "exactProviderTosOhlcvMatch":  false,
+        "feedIdentityMatch":  true,
+        "providerResponseFeed":  "iex",
+        "effectiveFeed":  "iex",
+        "sipCaptureStatus":  "SKIPPED_NOT_CONFIGURED",
+        "walkForwardStatus":  "NOT_RUN",
+        "sellLimitStatus":  "NOT_RUN"
+    }
+]

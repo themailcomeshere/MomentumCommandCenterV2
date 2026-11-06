@@ -1,0 +1,31 @@
+﻿{
+    "status":  "GAPS_PRESENT",
+    "comparisonVersion":  "MCC-WILDER-ATR-PARITY-1.1",
+    "symbol":  "CBOE",
+    "timeframe":  "5m",
+    "atrPeriod":  14,
+    "warmupBars":  99,
+    "minimumComparisonBars":  20,
+    "tolerance":  0.00005,
+    "sourceObservationCount":  338,
+    "comparedBarCount":  20,
+    "timestampGapCount":  1,
+    "meanAbsoluteError":  0.0000203865947752491599540927,
+    "maximumAbsoluteError":  0.0000426076307464691409374068,
+    "p90AbsoluteError":  0.0000405859685817774790974001,
+    "firstComparedAtUtc":  "2026-11-05T19:30:00+00:00",
+    "lastComparedAtUtc":  "2026-11-05T21:05:00+00:00",
+    "meanRelativeErrorPct":  0.0015723630076014343497312845,
+    "metadata":  {
+                     "sourceFileName":  "StrategyReports_CBOE_10192026_to_11052026_5M_ATR.csv",
+                     "studyVersion":  "MCC_OHLCV_ATR_V2.1",
+                     "atrPeriod":  14,
+                     "atrAverageType":  "Wilder",
+                     "chartTimezone":  "America/Phoenix",
+                     "extendedHours":  true,
+                     "corporateActionAdjustment":  true,
+                     "importBatchId":  "9bae456a415b44a98aba2a51fc43408e",
+                     "importedAtUtc":  "2026-11-06T17:52:26.2932427+00:00"
+                 },
+    "explanation":  "ATR values are within numeric tolerance, but one or more intraday source timestamps are missing within a New York session date. Wilder recurrence across missing bars cannot be certified; no gap is imputed and parity is not MATCH."
+}
