@@ -114,7 +114,6 @@ foreach ($symbolValue in $Symbols) {
     $providerComparison = [ordered]@{
         symbol = $symbol
         configuredFeed = $effectiveFeed
-        qualificationFeed = "sip"
         qualificationFeedRequired = "sip"
         comparisonMode = $comparisonMode
         diagnosticOnlyReason = $diagnosticOnlyReason
