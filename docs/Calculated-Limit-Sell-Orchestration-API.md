@@ -77,3 +77,22 @@ The endpoint remains intentionally strict. SIP HTTP 403 entitlement denial, IEX 
 - Preserve the fixed 0.00005 tolerance, full-history Wilder seed, and fail-closed gap policy. Do not infer that gaps are no-trade intervals without independent evidence.
 
 See `docs/Master-To-Do.md` and `docs/Validation/ATR-V2-Parity-Investigation-20261105.md` for the detailed current operator checklist and exact PowerShell parity queries.
+
+
+## 2026-11-06 — latest local parity recheck
+
+The operator restarted the API and supplied these persisted results:
+
+| Symbol/timeframe | Status | Source observations | Compared bars | Window gaps | Mean abs error | Max abs error |
+|---|---|---:|---:|---:|---:|---:|
+| EVR 1m | `GAPS_PRESENT` | 346 | 20 | 13 | 0.0000260340 | 0.0000466859 |
+| EVR 5m | `NOT_MATCH` | 163 | 20 | 1 | 0.0010467166 | 0.0019357360 |
+| CBOE 5m | `NOT_MATCH` | 165 | 20 | 3 | 0.0005274676 | 0.0009650641 |
+
+The service version is `MCC-WILDER-ATR-PARITY-1.1`; warm-up is 99, comparison count is 20, and tolerance remains 0.00005. EVR 1m's numerical error is within tolerance but its missing timestamps prevent MATCH. EVR 5m and CBOE 5m exceed numeric tolerance. The API compares imported TOS OHLCV against imported TOS ATR; this is not provider-feed parity.
+
+The root cause of either 5m numeric mismatch is not established. Obtain row-level source evidence using `scripts/validation/Export-AtrParityEvidence.ps1`. Do not re-import identical CSVs, relax tolerance, impute gaps, or enable numeric sell-limit output.
+
+Current provider state: Alpaca configured/validated on IEX; Massive not configured. The API is decision-support-only and order submission is NOT IMPLEMENTED. SIP qualification remains blocked pending confirmed entitlement.
+
+The active, deduplicated task list is `docs/Master-To-Do.md`; full acceptance criteria and dependencies are in `docs/Active-Engineering-Backlog-20261106.md`. Historical checklist entries are preserved in `docs/archive/Master-To-Do-History-20261106.md`.
