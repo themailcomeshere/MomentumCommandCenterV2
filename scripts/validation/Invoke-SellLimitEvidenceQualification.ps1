@@ -56,6 +56,32 @@ $effectiveFeed = ([string]$alpaca.configuredFeed).Trim().ToLowerInvariant()
 Write-Host "API: $($health.status); Alpaca feed: $effectiveFeed; provider validated: $($alpaca.validated)"
 Write-Host "Evidence output: $outputDirectory"
 
+# Once the operator has explicitly switched the effective configuration to SIP,
+# perform one small SPY 1m smoke request before any symbol-level parity or 40-session capture.
+if ($effectiveFeed -eq "sip") {
+    $smokeTo = [DateTimeOffset]::UtcNow
+    $smokeFrom = $smokeTo.AddDays(-7)
+    $smokeUri = "$BaseUri/api/market-data/bars?symbol=SPY&timeframe=1m&from=$(Get-UtcQueryValue -Value $smokeFrom)&to=$(Get-UtcQueryValue -Value $smokeTo)&providerName=Alpaca"
+    try {
+        $smoke = Invoke-RestMethod -Uri $smokeUri -TimeoutSec 60
+        Save-Json -Path (Join-Path $outputDirectory "sip-spy-smoke.json") -Value $smoke
+        if ([string]$smoke.feed -ne "sip" -or [int]$smoke.barCount -lt 1) {
+            throw "SPY SIP smoke did not return at least one bar from the SIP feed. Returned feed='$($smoke.feed)', bars=$($smoke.barCount)."
+        }
+        Write-Host "SPY SIP smoke PASS: $($smoke.barCount) 1m bars from feed '$($smoke.feed)'."
+    }
+    catch {
+        Save-Json -Path (Join-Path $outputDirectory "sip-spy-smoke-error.json") -Value ([pscustomobject]@{
+            error = $_.Exception.Message
+            note = "No 40-session capture was attempted because the preliminary SPY SIP smoke test did not pass."
+        })
+        throw "SIP smoke test failed. No 40-session capture was attempted. $($_.Exception.Message)"
+    }
+}
+else {
+    Write-Warning "Effective feed is '$effectiveFeed'. SIP smoke and 40-session qualification will be skipped; provider comparison remains diagnostic only."
+}
+
 $summary = [System.Collections.Generic.List[object]]::new()
 
 foreach ($symbolValue in $Symbols) {
