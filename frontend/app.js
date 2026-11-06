@@ -398,6 +398,48 @@ async function fetchOvernightTopFourEvidence(){
  if(status)status.textContent="Live evidence fetched for "+results.length+" candidates: "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. Only this selected group of four was queried; other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
 }
 
+
+async function fetchDailyDataAudit(){
+ const input=$("dailyAuditSymbols"),button=$("dailyAuditRefresh"),status=$("dailyAuditStatus"),body=$("dailyAuditRows");
+ if(!input||!body)return;
+ const symbols=[...new Set(input.value.split(",").map(x=>x.trim().toUpperCase()).filter(x=>/^[A-Z0-9.-]{1,8}$/.test(x)))];
+ if(!symbols.length){if(status)status.textContent="Enter at least one valid ticker.";return;}
+ if(button)button.disabled=true;
+ if(status)status.textContent="Requesting Daily bars and recalculating 20-session metrics for "+symbols.join(", ")+"…";
+ const results=await Promise.all(symbols.map(async symbol=>{
+  try{
+   const response=await fetch("/api/market-data/daily?symbol="+encodeURIComponent(symbol),{cache:"no-store",headers:{Accept:"application/json"}});
+   const payload=await response.json();
+   if(!response.ok)throw new Error(payload.detail||payload.title||payload.error||("HTTP "+response.status));
+   return {symbol,payload,error:null};
+  }catch(error){return {symbol,payload:null,error:error.message};}
+ }));
+ if(button)button.disabled=false;
+ const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined||value===""?"DATA?":String(value);return td;};
+ const fmt=(value,digits=4)=>value===null||value===undefined||!Number.isFinite(Number(value))?"DATA?":Number(value).toLocaleString(undefined,{maximumFractionDigits:digits});
+ body.replaceChildren(...results.map(result=>{
+  const tr=document.createElement("tr");
+  if(result.error){
+   tr.append(cell(result.symbol),cell("ERROR · "+result.error),cell(null),cell(null),cell("DATA? / 20"),cell(null),cell(null),cell(null),cell("UNKNOWN"),cell("DATA?"),cell(null));
+   tr.className="qualification-pending";return tr;
+  }
+  const d=result.payload||{},complete=d.validSessionCount===20&&Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length===0;
+  const feedLabel=(d.provider||"UNKNOWN")+" / "+(d.feed||"UNKNOWN");
+  const latest=d.latestExpectedSessionDate||d.latestCompletedSessionTimestampUtc?.slice(0,10)||null;
+  const sessionLabel=(d.validSessionCount??0)+"/20";
+  const missing=Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length?d.missingSessionDates.join(", "):complete?"NONE":"UNKNOWN";
+  const fresh=d.dataFresh===true?"FRESH":d.dataFresh===false?"STALE / LATEST MISSING":"UNKNOWN";
+  const qualified=d.qualificationUsable===true?"QUALIFICATION USABLE":"DATA? · "+(d.feedCoverage||d.completeness||"INCOMPLETE");
+  tr.append(cell(result.symbol),cell(feedLabel),cell(d.adjustment),cell(latest),cell(sessionLabel),cell(fmt(d.observedClose)),cell(fmt(d.observedSma20)),cell(fmt(d.observedAverageDailyVolume20,0)),cell(fresh),cell(qualified),cell(missing));
+  tr.className=d.qualificationUsable===true?"qualification-pending":"qualification-blocked";
+  return tr;
+ }));
+ const errors=results.filter(x=>x.error).length;
+ const passes=results.filter(x=>x.payload?.qualificationUsable===true).length;
+ if(status)status.textContent="Daily API checked "+results.length+" symbol(s): "+passes+" qualification-usable, "+(results.length-passes-errors)+" returned but DATA? / diagnostic-only, "+errors+" API errors. Values shown as observed source metrics; no independent-source parity is implied.";
+}
+$("dailyAuditRefresh")?.addEventListener("click",()=>void fetchDailyDataAudit());
+
 function renderCatalystHumanReviewQueue(){
  const host=$("catalystReviewQueue"),count=$("catalystReviewQueueCount");if(!host)return;
  const rows=[];
