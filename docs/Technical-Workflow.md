@@ -233,3 +233,33 @@ After the API is running from the intended local build, run:
 The script calls `/api/health`, `/api/providers/status`, `/api/strategy-report/atr-parity` and `/api/strategy-report/atr-observations` for EVR and CBOE at 1m and 5m. It saves the aggregate parity responses and full persisted Thinkorswim observation rows as separate JSON files, plus a manifest and SHA-256 hashes, under `artifacts/atr-parity-evidence/<timestamp>/`.
 
 Zip the generated timestamp folder when sharing evidence. Do not include credentials. The observation files contain TOS-imported OHLCV/ATR and provenance; they do not contain provider bars and cannot by themselves prove provider/TOS OHLCV equality. The script does not infer why a timestamp is missing or calculate broker fills.
+
+
+## G. PowerShell browser and market-session diagnostics
+
+Use the dedicated PowerShell scripts for these technical acceptance checks; do not substitute manual DevTools copy/paste unless the script cannot run.
+
+### Browser console/network and screenshot
+
+```powershell
+.\scripts\validation\Capture-DashboardBrowserDiagnostics.ps1 -BaseUri "http://localhost:53360/" -CaptureSeconds 120
+```
+
+The script attaches to or launches an isolated Edge CDP session, captures browser console/uncaught exceptions, sanitized network request/response/failure metadata, and a screenshot. During capture, interact with the main `frontend/index.html` Dashboard. It does not collect cookies, request headers, response bodies, or query values.
+
+### Regular-session WebSocket and collector
+
+```powershell
+.\scripts\validation\Test-RegularSessionStreamCollector.ps1 `
+  -BaseUri "http://localhost:53360" `
+  -Symbols SPY,RKLX,ASTX,XRPN `
+  -PollIntervalSeconds 15 `
+  -DurationMinutes 5 `
+  -ConfirmRegularSession
+```
+
+Run during a confirmed regular session. The script checks weekday and 09:30–16:00 ET wall-clock bounds but cannot independently identify exchange holidays or early closes. It polls health, provider, stream and collector status without changing configuration. Review per-symbol bar-count and last-bar timestamp advancement, global received/persisted counters, collector cycles/watermarks/errors, and post-capture assessment provenance. A `SUBSCRIBED` state alone is not a delivery pass.
+
+Detailed criteria: [Browser and Stream Collector Acceptance](Validation/Browser-and-Stream-Collector-Acceptance-20261106.md).
+
+**Feed restriction:** use the current IEX configuration for diagnostic plumbing. Do not retry SIP or request the operator to reconfigure it; repeated HTTP 403 entitlement denial is already established. SIP-dependent qualification remains parked unless entitlement materially changes.
