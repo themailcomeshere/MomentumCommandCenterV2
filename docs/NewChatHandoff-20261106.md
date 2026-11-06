@@ -1,90 +1,147 @@
-# CURRENT HANDOFF — 2026-11-06, expanded ATR + provider qualification evidence
+# CURRENT HANDOFF — 2026-11-06, Daily-data qualification implementation + latest ATR evidence
 
 **Repository:** `themailcomeshere/MomentumCommandCenterV2`  
 **Branch:** `feature/opportunity-quality-classification`  
 **Dashboard:** `frontend/index.html`  
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
 
-## Latest operator evidence — 2026-11-06 10:53 Arizona
+## Latest operator evidence — 2026-11-06, approximately 14:39 Arizona
 
-Evidence ZIP: `20261106T105332.zip`. API health was `OK`. Alpaca effective feed was `iex`; no SIP request was made. The qualification runner correctly skipped SIP smoke, 40-session capture and sell-limit calculation.
+### ATR imports
 
-### Imports and parity
+The user re-imported the same expanded exports:
+- CBOE: 338 parsed observations; 0 appended, 338 identical skipped, 0 corrections; 18 full-import gaps.
+- EVR: 327 parsed observations; 0 appended, 327 identical skipped, 0 corrections; 5 full-import gaps.
+- Both exports identify V2.1, ATR14 Wilder, Phoenix timezone, extended hours ON and corporate-action adjustment ON.
+- Actual parsed first timestamps remain November 2, not October 19, despite the filenames.
 
-| Series | Parsed/persisted observations | Appended | Identical skipped | Import gaps | Parity | Compared bars | 119-window gaps | Mean absolute error | Max absolute error |
-|---|---:|---:|---:|---:|---|---:|---:|---:|---:|
-| EVR 5m | 327 | 2 | 325 | 5 | `GAPS_PRESENT` | 20 | 3 | 0.0000294330 | 0.0000495349 |
-| CBOE 5m | 338 | 9 | 329 | 18 | `GAPS_PRESENT` | 20 | 1 | 0.0000203866 | 0.0000426076 |
+The imports are idempotent. Re-importing these unchanged files does not repair timestamp gaps.
 
-Both numeric ATR comparisons are within 0.00005 tolerance. Neither is a parity MATCH because gaps remain in the latest 119-observation window. No gaps were imputed. The CSV filenames say October 19–November 5, but actual parsed observations start November 2; the filenames do not prove coverage back to October 19.
+### Latest ATR qualification script
 
-### Provider/TOS comparison
+API health: `OK`; Alpaca effective feed: `iex`; provider validated: true.
 
-| Measure | EVR | CBOE |
-|---|---:|---:|
-| TOS timestamps requested | 119 | 119 |
-| IEX provider bars returned | 104 | 109 |
-| Missing provider bars | 15 | 10 |
-| Exact OHLCV rows | 0 | 0 |
-| Response feed | `iex` | `iex` |
+The revised qualification runner reports:
+- EVR parity: `GAPS_PRESENT`; MAE 0.0000294330206; max error 0.0000495349248; 3 qualification-window gaps.
+- CBOE parity: `GAPS_PRESENT`; MAE 0.0000203865948; max error 0.0000426076307; 1 qualification-window gap.
+- Provider comparison: `DIAGNOSTIC_MISMATCH_NON_SIP` for both symbols.
+- `feedIdentityMatch=true` for both symbols.
+- `exactProviderTosOhlcvMatch=false` for both symbols.
+- SIP smoke, 40-session capture and sell-limit qualification were skipped because the effective feed was IEX.
 
-Every returned provider bar also identified IEX. This is diagnostic only. It establishes that IEX did not exactly match the imported TOS series; it does not establish which source is wrong or predict SIP results. Exact field counts and row-level mismatches are in [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md).
+No numeric sell limit is authorized. Do not interpret IEX mismatch as proof which data source is wrong or as a prediction of SIP results.
 
-## Engineering changes since previous handoff
+## Daily data — code and independent reference work completed
 
-- Updated V2.1 ThinkScript source `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt` to export all available chart bars within the selected date range; removed the 07:00–19:59 ET export filter. It has not been compiled/run in Thinkorswim.
-- Added `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1` in the prior update. It preflights health/provider status, compares exact latest 119 timestamps and only attempts SIP qualification when effective feed is SIP.
-- Hardened that runner in commit `fc13d6b3199cf9fbbc8a9a4059b1fe6567fb1327`: explicit diagnostic/qualification mode, separate configured/response/row feed identity, per-field mismatch counts, and distinct non-SIP diagnostic status. This edit has not been executed in local PowerShell.
-- Added [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md), updated [Master-To-Do.md](Master-To-Do.md) and [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md).
-- GitHub Actions `build-and-test` passed at `d00dbd61ede861f6a9924165377a17e9d8001022` for the earlier runner/study source. It does not validate the later PowerShell edit or ThinkScript compile.
+### Existing implementation review
 
-## Current qualification gates
+The Daily API is `GET /api/market-data/daily?symbol=RTO` or `EVR`. It requests Alpaca `1Day` bars with `adjustment=all`, calculates exact latest 20 expected completed US-equity sessions and withholds qualification metrics unless the feed is SIP and the history is complete/fresh.
 
-| Gate | Status |
-|---|---|
-| EVR 5m ATR parity MATCH | BLOCKED — 3 gaps in 119-window |
-| CBOE 5m ATR parity MATCH | BLOCKED — 1 gap in 119-window |
-| Continuous 119-bar TOS history | BLOCKED |
-| Exact provider/TOS 5m OHLCV | NOT ESTABLISHED — IEX diagnostic 0/119 for both |
-| Exact prior regular-session close from same qualified feed | NOT CAPTURED |
-| SIP entitlement | NOT CONFIRMED; effective feed IEX |
-| 40/40 SIP GTC_EXT sessions | NOT CAPTURED |
-| Runtime 20-train / 20-unseen-test walk-forward PASS | NOT PROVEN |
+The previous implementation had an empty-response defect: a valid response with zero bars could call `Max()` on an empty collection while calculating freshness. This is fixed.
 
-No numeric sell limit is authorized. No broker order or fill integration exists. OHLCV touches are not fills.
+### Engineering changes committed
 
-## Next operator steps — in order
+- Daily API now returns `latestExpectedSessionDate`, ordered `expectedSessionDates`, `missingSessionDates` and all returned `sessions` with date, timestamp, OHLC and volume.
+- Empty history now returns incomplete/fail-closed metrics rather than throwing.
+- Added unit tests for complete 20-session calculations, session-level provenance, incomplete IEX data and empty responses.
+- Added a dedicated **Daily data audit** panel to the main Dashboard. It defaults to RTO and EVR and displays provider/feed, adjustment, latest expected session, retrieval timestamp, observed close, SMA20, average volume, freshness, qualification status and missing dates.
+- Added `scripts/validation/Test-DailyMarketDataQualification.ps1` to fetch RTO/EVR API responses, save raw JSON, recalculate close/SMA20/average volume from returned session rows, check SIP fail-closed behavior and compare against independent CSVs.
+- Added independent reference CSVs:
+  - `data/validation/daily-reference-20261106/RTO.csv`
+  - `data/validation/daily-reference-20261106/EVR.csv`
+- Added [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md) with the source analysis, calculation baselines, command and acceptance requirements.
 
-1. Pull `feature/opportunity-quality-classification`; inspect the latest PowerShell runner diff. Run Release build/tests against the exact pulled source before restarting the local API.
-2. In Thinkorswim, replace/compile the study using `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt`. Confirm 5m chart and study aggregation, ATR14 Wilder, Phoenix timezone, extended hours ON, corporate-action adjustment ON, `chart=MATCH`, and full-history export enabled.
-3. Choose a date range that actually produces at least 99 earlier completed 5m bars before the latest 119-bar qualification window. Export EVR and CBOE with all available premarket, RTH and after-hours bars. Do not filter by time of day. Preserve embedded epoch timestamps.
-4. Confirm actual first/last observation timestamps and all gaps; do not rely on filename dates. Import each CSV once and record parsed/appended/identical/correction counts and per-observation provenance.
-5. Re-run EVR/CBOE 5m parity with unchanged 0.00005 tolerance. Inspect each remaining gap in TOS/source data. Do not synthesize zero-volume bars or interpolate.
-6. Run `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1`. Verify `comparisonMode`, `configuredFeed`, `providerResponseFeed`, `feedIdentityMatch`, `providerBarFeedMismatchCount` and `mismatchBreakdown`. While effective feed is IEX, all comparisons are diagnostic-only and SIP work must be skipped.
-7. Obtain SIP entitlement/access through the provider account. Do not retry SIP until entitlement has changed. Then configure effective feed SIP, restart API, verify `/api/providers/status`, and run one recent SPY 1m SIP smoke request.
-8. After SIP smoke passes, capture and independently audit 40 complete GTC_EXT sessions: 20 chronological training plus 20 later unseen test; each requires 780 exact 1m bar starts (07:00–19:59 ET) and the exact previous regular-session close.
-9. Run the sell-limit endpoint only after the source-qualified 40 sessions exist. Preserve training/test metrics, exclusions, exact provider/feed provenance and all gate results.
+### Independent source baseline
 
-## Other unfinished workstreams
+Source: Stock Analysis historical data, which identifies S&P Global Market Intelligence as its underlying data source. Twenty sessions from 2026-10-12 through 2026-11-06.
 
-- Daily data: RTO/EVR 20-completed-session close/SMA20/average-volume parity and runtime/UI provenance are not validated.
-- Catalyst: representative article collection, human adjudication, double-review agreement, chronological holdout precision/recall and source coverage remain outstanding. Automated keyword triage must not claim CLEAR.
-- Opportunity Quality: refresh scanner field-availability denominators (296 unavailable custom-expression rows is stale historical audit), define candidate-pool completeness, then validate full-pool ranking/calibration and rank stability. Provisional score bands remain diagnostic.
-- V3 Boring Overnight column: separate planned deliverable; implement from its data contract, preserve READY/WATCH/BLOCKED/DATA? and hard gates; do not conflate with MCC Opportunity Quality.
-- Overnight boundary: resolve missing exact 09:30 opens and decide official auction print versus first eligible observed trade. A 1m bar Open is only a proxy.
-- Thinkorswim authority/EOD: compile current 5m/1m studies, validate 5m authority and 1m timing-only role, replay state labels, and test exact Arizona EOD cutoff.
-- WebSocket/collector: capture regular-session per-symbol deltas and test restart, sleep/wake, outage, auth failure, duplicate/replay and session-boundary recovery.
-- Dashboard: perform full main-index browser acceptance, console/network review, responsive checks, and measured load/Fetch & Analyze timing against a captured baseline.
-- P2: define actual broker execution reconciliation from broker order/fill records; Schwab read-only remains blocked on approval/OAuth; provider licensing/coverage and packaging/startup/backup remain unresolved.
+| Symbol | 2026-11-06 close | Independent SMA20 | Independent ADV20 |
+|---|---:|---:|---:|
+| RTO | 23.63 | 22.3130 | 1,616,207.4 |
+| EVR | 284.47 | 272.2235 | 643,488.4 |
 
-See [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md) for acceptance criteria and [Runtime Acceptance Runbook](Runtime-Acceptance-Runbook.md) for evidence capture procedures.
+These are independent reference calculations, not live MCC API values.
+
+Stock Analysis discloses split-adjusted history, whereas Alpaca requests split/dividend adjustment. The known EVR ex-dividend dates (2026-08-28 and next 2026-11-27) and RTO ex-dividend date (2026-08-13) fall outside this sample window. The qualification runner requires the explicit `-ConfirmWindowAdjustmentEquivalence` switch before it compares these split-adjusted CSVs with Alpaca's all-adjusted series. Revalidate corporate actions before reusing that switch for a different window.
+
+### Daily runtime status
+
+<badge color="warning">NOT YET LIVE-VERIFIED</badge>
+
+The local API was not accessible from this session. No actual RTO/EVR API payload, local Dashboard screenshot, or exact API-to-reference comparison is available yet. Data not found in sources for the current local Daily responses.
+
+## Next operator steps — execute in order
+
+### 1. Pull, build and restart
+
+```powershell
+git switch feature/opportunity-quality-classification
+git pull --ff-only origin feature/opportunity-quality-classification
+dotnet test .\MomentumCommandCenterV2.sln -c Release
+```
+
+Use the repository's actual solution path if it differs. Record `git rev-parse HEAD`, then restart the API using the built source.
+
+### 2. Run the RTO/EVR Daily qualification script
+
+```powershell
+.\scripts\validation\Test-DailyMarketDataQualification.ps1 `
+  -BaseUri "http://localhost:53360" `
+  -Symbols RTO,EVR `
+  -ReferenceDirectory ".\data\validation\daily-reference-20261106" `
+  -ReferenceProvider "Stock Analysis / S&P Global Market Intelligence" `
+  -ReferenceAdjustment "split-adjusted" `
+  -ConfirmWindowAdjustmentEquivalence
+```
+
+Inspect `artifacts/daily-data-qualification/<timestamp>/`:
+- `RTO-daily-api.json`, `EVR-daily-api.json`
+- `RTO-summary.json`, `EVR-summary.json`
+- `daily-qualification-summary.json`
+- copied independent reference CSVs.
+
+Acceptance requires:
+- Exactly 20 distinct expected sessions in ascending order.
+- No missing expected sessions.
+- Latest expected session present and fresh.
+- API observed close, SMA20 and ADV20 exactly reconcile to recalculation from the 20 returned rows.
+- Independent date coverage matches exactly.
+- OHLC prices within $0.0001 and volume exact against the reference CSV.
+- Feed identity and adjustment basis recorded.
+- IEX may pass diagnostic arithmetic/reference comparison but must have `qualificationUsable=false` and null qualification price/SMA/ADV fields.
+- SIP is not presumed available. Preserve 401/403/provider errors; do not switch feeds silently.
+
+### 3. Verify the main Dashboard
+
+Open `http://localhost:53360/`, switch to Boring Overnight, and click **Validate Daily data** in the Daily data audit panel.
+
+Confirm the Dashboard shows the same RTO/EVR values and provenance as the saved JSON:
+- Alpaca / effective feed.
+- `all (split/dividend adjusted)`.
+- Latest expected session and retrieval UTC timestamp.
+- 20/20 sessions and no missing dates.
+- Observed close, SMA20 and ADV20.
+- Freshness.
+- DATA? / IEX diagnostic if the feed is not SIP.
+
+Capture a screenshot. The existing Overnight Qualification decision must remain DATA? when Daily feed/history is not qualifying; Final READY must remain zero while other gates are unvalidated.
+
+### 4. Resume ATR qualification
+
+The latest re-imports appended nothing. Do not keep re-importing the same CSVs. Compile/run the corrected V2.1 ThinkScript, investigate the 3 EVR and 1 CBOE qualification-window gaps, obtain continuous 119-bar windows and rerun parity. Only after TOS parity is continuous should provider/TOS comparison be treated as meaningful. SIP entitlement remains an external blocker.
+
+### 5. Remaining P1 workstreams
+
+Catalyst human-label/holdout validation; Opportunity Quality full-pool field-availability and ranking validation; separate V3 Boring Overnight column; exact 09:30 opening-print policy; Thinkorswim 5m/1m authority and EOD acceptance; regular-session WebSocket/collector recovery; and full main Dashboard browser acceptance remain open. See [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md).
 
 ## [Uncertainties]
 
-- Remaining TOS gaps may be legitimate no-trade intervals or export omissions; the supplied CSV cannot classify them.
-- IEX/TOS differences do not establish which source is wrong or predict SIP results.
-- Latest ThinkScript and PowerShell edits are not validated in their target runtimes.
-- SIP entitlement, 40-session completeness, exact prior close, runtime walk-forward PASS, browser acceptance, regular-session stream recovery and actual broker fills remain unverified.
+- Actual local Daily API results and Dashboard rendering have not been captured in this session.
+- Public reference source is split-adjusted; the all-adjusted equivalence is window-specific and depends on complete corporate-action history.
+- Exact independent Daily OHLCV parity and SIP qualification are unverified.
+- EVR/CBOE ATR timestamp gaps remain unresolved; IEX mismatch is diagnostic only.
+- The latest PowerShell script and C# changes still require local execution; CI status for the newest commits is not yet established.
+
 ---
 
 # Historical evidence snapshot — 2026-11-06 09:27 Arizona
