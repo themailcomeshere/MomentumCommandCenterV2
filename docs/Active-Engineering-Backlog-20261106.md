@@ -94,13 +94,9 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 **Current state:** Alpaca is effectively IEX. The operator has repeatedly confirmed recent SIP requests return HTTP 403. Treat this as an established external blocker; no further SIP requests, configuration changes, smoke tests, or captures are planned unless the operator independently reports a genuine entitlement change. The runner's SIP preflight remains a code safety guard, not an instruction to try SIP again.
 
-**Missing work after entitlement changes**
-1. User confirms SIP entitlement is active.
-2. PARKED — do not configure or request SIP. Resume only if the operator reports an actual entitlement change; then review the provider workflow before any request.
-3. Test one recent SIP SPY request before any long capture.
-4. Capture 40 complete sell sessions: 20 chronological training + 20 later unseen test sessions.
-5. Each session requires all 780 exact 1m bar-start timestamps from 07:00 through 19:59 ET and the exact previous regular-session close.
-6. Independently read back persisted observations and verify provider/feed/timeframe/timestamps and content.
+**Parked dependency — no operator action requested**
+- The operator has repeatedly confirmed recent SIP requests return HTTP 403. Do not ask for another entitlement check, reconfigure the feed, run a smoke request, or initiate a capture.
+- Only if the operator independently reports a genuine entitlement change should this workstream be reopened under a new explicit instruction. The technical contract remains 40 complete sell sessions (20 training + 20 unseen test), each with 780 exact 1m bar-start timestamps from 07:00 through 19:59 ET and the exact previous regular-session close, followed by persisted-source read-back and feed/provenance verification.
 
 **Acceptance:** 40/40 complete windows, exact close boundaries, SIP source, no nearest-bar substitution or imputation. IEX remains diagnostic only.
 
@@ -108,7 +104,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 **Implementation status:** implemented in `BoringOvernightWalkForwardValidator`; the sell-limit orchestrator has a hard `WALK_FORWARD_VALIDATION` gate. Old audit text saying this was not implemented is stale.
 
-**Missing work:** the new qualification runner will call the sell-limit endpoint only after effective SIP configuration and a 40-session capture attempt. Run it only after 40 complete, eligible, source-qualified windows exist. Preserve 20 training then 20 later unseen test sessions. Verify 100% coverage, positive training target, test target-touch rate >= training empirical rate, and test maximum adverse excursion <= training adverse-excursion P95 bound. The target quantile is selected from training only.
+**Missing work:** runtime qualification is blocked until 40 complete, eligible, source-qualified windows exist. No SIP capture is currently planned because of the repeated HTTP 403 entitlement denial. If a valid source-qualified 40-session dataset becomes available later, preserve 20 training then 20 later unseen test sessions. Verify 100% coverage, positive training target, test target-touch rate >= training empirical rate, and test maximum adverse excursion <= training adverse-excursion P95 bound. The target quantile is selected from training only.
 
 **Acceptance:** persist/report complete train/test counts, quantile, target, touch counts/rates, adverse-excursion statistics, exclusions and source IDs. A passing validator does not imply an actual fill or independently authorize an order.
 
