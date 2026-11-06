@@ -14,40 +14,9 @@
 
 ## Next operator action
 
-1. Export substantially longer continuous 5m V2.1 history for EVR and CBOE, including a long seed/prefetch runway before the latest 119-bar qualification window.
-2. Inspect every timestamp discontinuity in Thinkorswim and determine whether it is a legitimate no-trade interval or a missing export/study observation. Do not infer from elapsed time alone.
-3. Import only genuinely new/corrected observations and record import counts.
-4. Re-run parity and compare per-bar errors as earlier seed history is added. Preserve the 0.00005 tolerance.
-5. Separately capture provider 5m OHLCV for the same exact 119 timestamps and the exact prior RTH close when an entitled feed is available. Current IEX status does not establish SIP qualification.
-6. Keep the sell-limit gates closed until ATR MATCH, exact provider/TOS parity, SIP 20/20 GTC_EXT coverage, and a passing runtime walk-forward result are all independently evidenced.
+The ATR evidence archive has been received and analyzed. The previous request to run `Export-AtrParityEvidence.ps1` and provide its ZIP is complete and superseded.
 
-# 2026-11-06 — latest operator parity results and consolidated task status
-
-**Operator confirmed:** API restarted; Release build/tests passed at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`. API remains healthy in decision-support-only mode; order submission is not implemented. Alpaca effective feed is IEX, validated; Massive is not configured.
-
-## Latest parity responses
-
-| Series | Status | Source observations | Compared bars | Gaps in 119-bar window | Mean absolute error | Maximum absolute error |
-|---|---|---:|---:|---:|---:|---:|
-| EVR 1m | `GAPS_PRESENT` | 346 | 20 | 13 | 0.00002603400795 | 0.00004668593564 |
-| EVR 5m | `NOT_MATCH` | 163 | 20 | 1 | 0.00104671656564 | 0.00193573596950 |
-| CBOE 5m | `NOT_MATCH` | 165 | 20 | 3 | 0.00052746764259 | 0.00096506405381 |
-
-All three responses report parity version `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, 99 warm-up bars, 20 comparison bars, and fixed tolerance 0.00005. EVR 1m numeric errors are within tolerance, but the 13 gaps block MATCH. EVR 5m and CBOE 5m fail numeric tolerance; CBOE also has three gaps in the comparison window.
-
-These calculations compare the server Wilder ATR to TOS-exported ATR on the imported TOS OHLCV. They do not diagnose provider-feed differences. The 5m mismatch root cause is not established. Do not relax tolerance, impute gaps or enable numeric sell-limit output.
-
-## Reconciled active work
-
-The former 310 unchecked historical boxes are now consolidated into one active checklist and one detailed backlog. The old checklist is preserved at `docs/archive/Master-To-Do-History-20261106.md`. The active list is `docs/Master-To-Do.md`; detailed acceptance criteria are in `docs/Active-Engineering-Backlog-20261106.md`.
-
-The walk-forward validator is implemented; only runtime qualification against 40 complete eligible sessions remains. Daily bars, catalyst keyword triage, Opportunity Quality diagnostic assessment, collector/stream scripts and the sell-limit evidence orchestrator have existing code, but their remaining source-validation, calibration or runtime acceptance is explicitly tracked in the active backlog.
-
-## Next operator action
-
-Run `.scripts\validation\Export-AtrParityEvidence.ps1` from the repository root. Provide the generated output folder (or ZIP). It captures raw persisted TOS observation rows and aggregate parity for EVR/CBOE 1m/5m, health/provider status, local Git SHA where available, manifest and hashes. Use these row-level values to diagnose the numeric mismatch. No CSV re-import is needed.
-
-Then compile/export corrected continuous V2.1 5m TOS history with at least 119 completed bars and resolve the unexplained gaps. SIP qualification remains paused until actual entitlement changes.
+Follow the ordered instructions in [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md): obtain materially longer EVR/CBOE 5m TOS history, resolve gaps from source evidence, test the seed/prefetch hypothesis, then separately capture provider OHLCV when entitled.
 
 See `docs/Master-To-Do.md`, `docs/Active-Engineering-Backlog-20261106.md` and `docs/Runtime-Acceptance-Runbook.md`.
 
