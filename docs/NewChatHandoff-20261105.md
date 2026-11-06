@@ -1,3 +1,7 @@
+> **Superseded:** Current project state and operator instructions are maintained in [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md). This November 5 file is retained as historical context; do not use its older ATR parity, walk-forward implementation, or runtime-status statements as current.
+
+---
+
 ## 2026-11-05 Arizona — Wilder ATR parity seed correction
 
 - [x] Investigated the imported EVR 1m API result (`NOT_MATCH`, mean 0.000029, max 0.000061). The endpoint was trimming the source to the latest 119 bars before calculating Wilder ATR. That re-seeded the recursive ATR at the start of the 119-bar window rather than carrying the full chart-history seed forward.
