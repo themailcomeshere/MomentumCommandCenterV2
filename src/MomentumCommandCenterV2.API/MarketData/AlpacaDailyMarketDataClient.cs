@@ -85,12 +85,24 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         var latest = completedBySession.TryGetValue(latestExpected, out var latestBar) ? latestBar : null;
         var complete = present.Length == 20;
         var latestTimestamp = latest?.TimestampUtc;
-        var fresh = latest is not null && latestExpected == completedBySession.Keys.Max() &&
-            latestTimestamp <= nowUtc && nowUtc - latestTimestamp <= TimeSpan.FromDays(5);
-        var observedSma20 = complete ? expectedDates.Average(date => completedBySession[date].Close) : (double?)null;
-        var observedAverageVolume20 = complete ? expectedDates.Average(date => (double)completedBySession[date].Volume) : (double?)null;
+        // The requested latest expected session must itself be present. Avoid Max() on
+        // an empty collection: a valid empty provider response is DATA?, not an API 500.
+        var fresh = latest is not null && latestTimestamp <= nowUtc &&
+            nowUtc - latestTimestamp <= TimeSpan.FromDays(5);
+        var observedSma20 = complete ? expectedDates.Average(date => completedBySession[date].Bar.Close) : (double?)null;
+        var observedAverageVolume20 = complete ? expectedDates.Average(date => (double)completedBySession[date].Bar.Volume) : (double?)null;
         var consolidatedFeed = _feed.Equals("sip", StringComparison.OrdinalIgnoreCase);
         var qualificationUsable = complete && fresh && consolidatedFeed;
+        var sessionObservations = expectedDates
+            .Where(completedBySession.ContainsKey)
+            .Select(date =>
+            {
+                var item = completedBySession[date];
+                return new DailySessionObservation(date, item.Bar.TimestampUtc, item.Bar.Open,
+                    item.Bar.High, item.Bar.Low, item.Bar.Close, item.Bar.Volume);
+            })
+            .ToArray();
+        var missingSessionDates = expectedDates.Where(date => !completedBySession.ContainsKey(date)).ToArray();
 
         // IEX is a partial-exchange feed. Its price/volume bars must not be passed into
         // the Boring Overnight price/SMA/market-wide liquidity gates as consolidated values.
@@ -101,10 +113,11 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
             consolidatedFeed ? observedAverageVolume20 : null,
             latest?.Close, observedSma20, observedAverageVolume20,
             present.Length, completedBySession.Count, fresh,
-            complete ? "COMPLETE_20_EXPECTED_SESSIONS" : "INCOMPLETE_EXPECTED_SESSIONS",
+            complete ? "COMPLETE_20_EXPECTED_SESSIONS" : "INCOMPLETE_20_EXPECTED_SESSIONS",
             consolidatedFeed ? "CONSOLIDATED_SIP" : "IEX_PARTIAL",
             qualificationUsable,
-            $"Metrics use the exact latest 20 expected sessions from {UsEquitiesSessionCalendar.Version}. Missing expected sessions are not backfilled with older sessions. Current session is included only after its scheduled regular close (including early closes). adjustment=all requests split/dividend-adjusted bars. IEX is partial-exchange coverage and is diagnostic only; qualification fields are null unless feed=sip. SIP feed entitlement, source coverage and adjustment parity still require runtime validation.");
+            $"Metrics use the exact latest 20 expected sessions from {UsEquitiesSessionCalendar.Version}. Missing expected sessions are not backfilled with older sessions. Current session is included only after its scheduled regular close (including early closes). adjustment=all requests split/dividend-adjusted bars. IEX is partial-exchange coverage and is diagnostic only; qualification fields are null unless feed=sip. SIP feed entitlement, source coverage and adjustment parity still require runtime validation.",
+            latestExpected, expectedDates, missingSessionDates, sessionObservations);
     }
 
     private sealed record DailyBar(DateTimeOffset TimestampUtc, double Open, double High, double Low, double Close, long Volume);
@@ -129,4 +142,17 @@ public sealed record DailyMarketMetrics(
     string Completeness,
     string FeedCoverage,
     bool QualificationUsable,
-    string Note);
+    string Note,
+    DateOnly LatestExpectedSessionDate,
+    IReadOnlyList<DateOnly> ExpectedSessionDates,
+    IReadOnlyList<DateOnly> MissingSessionDates,
+    IReadOnlyList<DailySessionObservation> Sessions);
+
+public sealed record DailySessionObservation(
+    DateOnly SessionDate,
+    DateTimeOffset TimestampUtc,
+    double Open,
+    double High,
+    double Low,
+    double Close,
+    long Volume);
