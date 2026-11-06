@@ -54,7 +54,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 ## Remaining engineering and acceptance — P1
 
 - [x] Hardened Daily API: empty history returns incomplete data instead of throwing; response now includes the exact 20 expected dates, missing dates and session-level OHLCV rows.
-- [x] Added RTO/EVR Dashboard Daily audit with provider/feed, adjustment, latest session, retrieval timestamp, close, SMA20, average volume, freshness and missing-session provenance.
+- [x] Added the selectable-symbol **Daily data audit** panel with provider/feed, adjustment, latest session, retrieval timestamp, close, SMA20, average volume, freshness and missing-session provenance; operator verified RTO, EVR and CBOE.
 - [x] Added Daily qualification runner and 20-session independent Stock Analysis / S&P Global reference CSVs for RTO and EVR (2026-10-12 through 2026-11-06).
 - [x] Run `scripts/validation/Test-DailyMarketDataQualification.ps1`; evidence `artifacts/daily-data-qualification/20261106T215302Z` confirms 20/20 sessions, zero missing, freshness and internal arithmetic for RTO/EVR.
 - [x] Confirm fail-closed behavior: IEX produces `DATA? · IEX_PARTIAL` and null qualification metrics for both symbols.
