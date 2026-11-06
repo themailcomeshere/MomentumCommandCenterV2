@@ -62,7 +62,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 Pull the latest branch and compile the revised Thinkorswim V2.1 study at [MCC_OHLCV_ATR_V2.txt](Charts/Flexible%20Grid/OHLCV/MCC_OHLCV_ATR_V2.txt). The export predicate now emits every available chart bar in the selected date range; the previous 07:00–19:59 ET filter omitted bars that still influenced TOS Wilder ATR.
 
-Re-export EVR and CBOE 5m with extended hours ON and a sufficiently early start date, including premarket, regular-session and after-hours bars. Import once, then re-run parity. Do not change tolerance or impute missing bars.
+Re-export EVR and CBOE 5m with extended hours ON and a sufficiently early start date, including premarket, regular-session and after-hours bars. Import once, then re-run parity. Do not change tolerance or impute missing bars. After import, run `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1` to capture the exact provider/TOS 119-bar comparison on the currently configured feed. It will skip SIP capture unless `/api/providers/status` confirms effective feed `sip`.
 
 See [ATR export coverage diagnosis](Validation/ATR-Export-Coverage-Fix-20261106.md) for the exact recurrence break, updated study logic, and gate-by-gate status.
 
