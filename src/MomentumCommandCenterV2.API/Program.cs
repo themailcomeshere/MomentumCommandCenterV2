@@ -103,7 +103,20 @@ if (Directory.Exists(frontendPath))
 {
     var frontendProvider = new PhysicalFileProvider(frontendPath);
     app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = frontendProvider });
-    app.UseStaticFiles(new StaticFileOptions { FileProvider = frontendProvider });
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = frontendProvider,
+        OnPrepareResponse = context =>
+        {
+            var fileName = context.File.Name;
+            if (string.Equals(fileName, "index.html", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fileName, "app.js", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+                context.Context.Response.Headers.Pragma = "no-cache";
+            }
+        }
+    });
 }
 
 app.MapGet("/api/health", () => Results.Ok(new
