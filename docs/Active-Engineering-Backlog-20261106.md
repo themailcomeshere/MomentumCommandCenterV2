@@ -30,7 +30,7 @@ This document consolidates the distinct unfinished workstreams and defines what 
 | EVR 5m | `NOT_MATCH` | 163 | 20 | 1 | 0.0010467166 | 0.0019357350 |
 | CBOE 5m | `NOT_MATCH` | 165 | 20 | 3 | 0.0005274676 | 0.0009650641 |
 
-All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00005, 99 warm-up bars, 20 comparison bars, and study `MCC_OHLCV_ATR_V2.1`. The 1m numeric errors are within tolerance but its gaps prevent MATCH. Both 5m series fail numeric tolerance; CBOE also has gaps. These results compare the server ATR to the imported TOS ATR on the imported TOS OHLCV. They do not establish provider-feed equality.
+All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00005, 99 warm-up bars, 20 comparison bars, and study `MCC_OHLCV_ATR_V2.1`. The 1m numeric errors are within tolerance but its gaps prevent MATCH. Both 5m series fail numeric tolerance; CBOE also has gaps. These results compare the server ATR to the imported TOS ATR on the imported TOS OHLCV. They do not establish provider-feed equality. The successful 2026-11-06 evidence export and row-level recurrence analysis are documented in [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md).
 
 ## P0 — ATR correctness and sell-limit qualification
 
@@ -236,14 +236,15 @@ Before selecting technology, decide target OS, installer/update strategy, API li
 
 ## Immediate execution order
 
-1. Run [Export-AtrParityEvidence.ps1](../scripts/validation/Export-AtrParityEvidence.ps1) and provide its output folder/archive. This gives row-level TOS inputs for diagnosing EVR/CBOE 5m mismatch.
-2. In Thinkorswim, compile the current V2.1 study and export a corrected, continuous 5m sample with at least 119 completed observations. Include exact payload epochs and TOS ATR output.
-3. Resolve the 13 EVR 1m gaps or preserve 1m parity as blocked.
-4. Confirm SIP entitlement only when account access changes; then perform one-symbol SPY SIP smoke test before any 40-session capture.
-5. Complete provider/TOS 119-bar equality and exact reference-close checks.
-6. Run the 40-session walk-forward validator after qualified history exists.
-7. Perform main Dashboard browser acceptance and regular-session WebSocket/collector acceptance.
-8. Proceed to catalyst/Opportunity Quality calibration, official opening print, actual execution reconciliation and V3 Boring Overnight column as their dependencies and evidence become available.
+1. Obtain substantially longer EVR and CBOE 5m V2.1 Thinkorswim exports, including a long prefetch/seed runway before the latest 119-bar qualification window. The evidence ZIP is already received; do not run the exporter again or re-import identical CSVs.
+2. Inspect each timestamp discontinuity in Thinkorswim/source evidence and classify it only when supported as a legitimate no-trade interval or an export/study omission. Do not impute.
+3. Import only genuinely new/corrected rows, record append/identical/correction counts, and rerun parity with the existing 0.00005 tolerance.
+4. Compare per-bar server/TOS ATR as earlier history is added; verify Wilder seed, first true-range handling, recurrence, ordering, session boundaries and gap behavior. The seed/prefetch explanation remains a hypothesis until proven.
+5. Capture provider 5m OHLCV independently for the exact same 119 timestamps and the exact prior RTH close when an entitled feed is available. The current IEX export does not establish SIP qualification.
+6. Resolve EVR 1m's 13 qualification-window gaps or preserve its blocked status.
+7. After SIP entitlement is confirmed, run the SPY SIP smoke test, then capture and audit 40 exact GTC_EXT sessions and run the implemented 20-train/20-unseen-test walk-forward validator.
+8. Perform main Dashboard browser acceptance and regular-session WebSocket/collector acceptance.
+9. Proceed to catalyst/Opportunity Quality calibration, official opening print, actual execution reconciliation and V3 Boring Overnight column as their dependencies and evidence become available.
 
 ## [Uncertainties]
 
