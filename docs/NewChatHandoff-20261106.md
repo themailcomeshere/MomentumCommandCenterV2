@@ -1,3 +1,39 @@
+# 2026-11-06 — latest operator parity results and consolidated task status
+
+**Operator confirmed:** API restarted; Release build/tests passed at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`. API remains healthy in decision-support-only mode; order submission is not implemented. Alpaca effective feed is IEX, validated; Massive is not configured.
+
+## Latest parity responses
+
+| Series | Status | Source observations | Compared bars | Gaps in 119-bar window | Mean absolute error | Maximum absolute error |
+|---|---|---:|---:|---:|---:|---:|
+| EVR 1m | `GAPS_PRESENT` | 346 | 20 | 13 | 0.00002603400795 | 0.00004668593564 |
+| EVR 5m | `NOT_MATCH` | 163 | 20 | 1 | 0.00104671656564 | 0.00193573596950 |
+| CBOE 5m | `NOT_MATCH` | 165 | 20 | 3 | 0.00052746764259 | 0.00096506405381 |
+
+All three responses report parity version `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, 99 warm-up bars, 20 comparison bars, and fixed tolerance 0.00005. EVR 1m numeric errors are within tolerance, but the 13 gaps block MATCH. EVR 5m and CBOE 5m fail numeric tolerance; CBOE also has three gaps in the comparison window.
+
+These calculations compare the server Wilder ATR to TOS-exported ATR on the imported TOS OHLCV. They do not diagnose provider-feed differences. The 5m mismatch root cause is not established. Do not relax tolerance, impute gaps or enable numeric sell-limit output.
+
+## Reconciled active work
+
+The former 310 unchecked historical boxes are now consolidated into one active checklist and one detailed backlog. The old checklist is preserved at `docs/archive/Master-To-Do-History-20261106.md`. The active list is `docs/Master-To-Do.md`; detailed acceptance criteria are in `docs/Active-Engineering-Backlog-20261106.md`.
+
+The walk-forward validator is implemented; only runtime qualification against 40 complete eligible sessions remains. Daily bars, catalyst keyword triage, Opportunity Quality diagnostic assessment, collector/stream scripts and the sell-limit evidence orchestrator have existing code, but their remaining source-validation, calibration or runtime acceptance is explicitly tracked in the active backlog.
+
+## Next operator action
+
+Run `.scripts\validation\Export-AtrParityEvidence.ps1` from the repository root. Provide the generated output folder (or ZIP). It captures raw persisted TOS observation rows and aggregate parity for EVR/CBOE 1m/5m, health/provider status, local Git SHA where available, manifest and hashes. Use these row-level values to diagnose the numeric mismatch. No CSV re-import is needed.
+
+Then compile/export corrected continuous V2.1 5m TOS history with at least 119 completed bars and resolve the unexplained gaps. SIP qualification remains paused until actual entitlement changes.
+
+See `docs/Master-To-Do.md`, `docs/Active-Engineering-Backlog-20261106.md` and `docs/Runtime-Acceptance-Runbook.md`.
+
+[Uncertainties]
+- Numeric mismatch root causes and gap causes remain unknown.
+- SIP entitlement, 40/40 history, walk-forward runtime pass, browser acceptance, provider/TOS equality and broker execution reconciliation remain unverified.
+
+---
+
 # OPERATOR VALIDATION UPDATE — 2026-11-06
 
 **Branch:** `feature/opportunity-quality-classification`  
