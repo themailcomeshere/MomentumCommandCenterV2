@@ -77,10 +77,10 @@ foreach ($url in $parity) {
 - [x] Updated `ThinkorswimAtrParityService` to calculate Wilder ATR from all imported observations while applying the requested 119-bar (99 warm-up + 20 comparison) window only to the comparison slice and timestamp-gap qualification.
 - [x] Updated `/api/strategy-report/atr-parity` to pass full history to the service. Timestamp gaps are counted only inside the latest requested comparison window; missing bars remain un-imputed.
 - [x] Bumped parity implementation version to `MCC-WILDER-ATR-PARITY-1.1` and added a regression test proving the full-history seed is used while only the latest 20 bars are compared.
-- [ ] Local API/browser re-test is still required. Expected diagnostic for the imported EVR 1m sample, if the stored series is unchanged: numeric values within tolerance but 13 gaps in latest 119, therefore `GAPS_PRESENT`, not `MATCH`. EVR 5m remains `INSUFFICIENT_WARMUP` with 81/82 observations.
+- [x] Local API parity re-test completed 2026-11-06. Latest results: EVR 1m `GAPS_PRESENT` (13 gaps in the 119-bar window); EVR 5m `NOT_MATCH` (163 observations, one window gap); CBOE 5m `NOT_MATCH` (165 observations, three window gaps). Browser acceptance is tracked separately in `docs/Active-Engineering-Backlog-20261106.md`.
 
-[Uncertainties]
-The correction is committed but CI and local API response have not yet been verified. The 13 gaps in the 1m comparison window still prevent a parity MATCH, even if numeric ATR errors are within rounding tolerance.
+[Historical uncertainty note as of 2026-11-05]
+At the time this section was written, CI and local API verification had not yet been supplied. Both have since been reported/presented; see the 2026-11-06 section at the top. The 13 gaps in the EVR 1m comparison window still prevent a parity MATCH.
 
 ---
 
