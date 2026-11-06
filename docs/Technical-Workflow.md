@@ -7,7 +7,7 @@
 1. **This document** — the normal sequence for updating, building, restarting, and smoke-testing a new MCC version.
 2. **`Runtime-Acceptance-Runbook.md`** — authoritative detailed runtime acceptance criteria, scripts, evidence files, and failure handling.
 3. **Feature-specific runbooks** — use only when that feature changed or is being certified (for example WebSocket delivery, Boring Overnight history, provider/feed comparison, or Schwab integration).
-4. **`Master-To-Do.md` and `NewChatHandoff.md`** — status and open work, not substitutes for test procedures.
+4. **`Master-To-Do.md` and `NewChatHandoff-20261106.md`** — current status and open work, not substitutes for test procedures.
 
 **You do not need to execute every section of the Runtime Acceptance Runbook after every commit.** Run the standard update/build/API smoke test below every time. Run deeper acceptance only for changed functionality, a scheduled certification, or when a smoke test exposes a problem.
 
@@ -120,12 +120,12 @@ This is Alpaca's SIP-based top-50 gainers/losers discovery source. It is not the
 
 ## E. Browser acceptance
 
-1. Open `http://localhost:53360/prototypeIndex.html`.
+1. Open `http://localhost:53360/` (the root page served from `frontend/index.html`).
 2. Hard-refresh (`Ctrl+F5`) after frontend changes.
 3. Confirm the header, System Readiness, market-session clock, workspace dock, Main Chart, and Red Zone render without horizontal overflow.
 4. Confirm the completed 1M timestamp says when the candle closed; the bar-start time is separately identified.
 5. Confirm Red Zone refreshes after scanner group changes/imports and that card market assessments refresh automatically. The browser refreshes card assessments every 15 seconds. Alpaca live discoveries refresh every 30 seconds when the Alpaca live-discovery group is selected.
-6. Remember: the prototype and production pages share `app.js`; they have separate HTML/CSS layout. A Thinkorswim scan is not automatically imported into MCC.
+6. The root page is the only supported Dashboard entry point. Do not use or recreate `prototypeIndex.html`. A Thinkorswim scan is not automatically imported into MCC.
 
 ## F. Market-hours delivery test — only when needed
 
