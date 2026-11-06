@@ -1112,6 +1112,52 @@ $("exclusionForm")?.addEventListener("submit", async event => {
   await refreshExclusions();
  } catch (e) { status.textContent = "Could not add exclusion: " + e.message; }
 });
+// Restore the ATR provenance controls when an older/mismatched Dashboard HTML
+// document is paired with this newer script. These defaults are the operator's
+// confirmed V2.1 chart settings; controls remain editable when present.
+(function ensureAtrImportControls() {
+ const form = $("strategyReportForm");
+ if (!form) return;
+ const ids = ["atrImportPeriod", "atrImportAverage", "atrImportTimezone", "atrImportExtendedHours", "atrImportAdjustment"];
+ if (ids.every(id => $(id))) return;
+ let fieldset = form.querySelector("fieldset.atr-import-metadata");
+ if (!fieldset) {
+  fieldset = document.createElement("fieldset");
+  fieldset.className = "atr-import-metadata";
+  const legend = document.createElement("legend");
+  legend.textContent = "ATR V2 chart provenance";
+  fieldset.append(legend);
+  const submit = form.querySelector('button[type="submit"]');
+  form.insertBefore(fieldset, submit || null);
+ }
+ const addField = (id, labelText, type, value) => {
+  if ($(id)) return;
+  const label = document.createElement("label");
+  label.htmlFor = id;
+  if (type === "checkbox") {
+   const input = document.createElement("input");
+   input.id = id; input.type = type; input.checked = true;
+   label.append(input, document.createTextNode(" " + labelText));
+  } else if (type === "select") {
+   const select = document.createElement("select"); select.id = id;
+   const option = document.createElement("option");
+   option.value = "Wilder"; option.textContent = "Wilder"; option.selected = true;
+   select.append(option); label.append(labelText + " ", select);
+  } else {
+   const input = document.createElement("input");
+   input.id = id; input.type = type; input.value = value; input.required = true;
+   if (type === "number") { input.min = "1"; input.max = "200"; }
+   label.append(labelText + " ", input);
+  }
+  fieldset.append(label);
+ };
+ addField("atrImportPeriod", "ATR length", "number", "14");
+ addField("atrImportAverage", "Average type", "select", "Wilder");
+ addField("atrImportTimezone", "Chart timezone", "text", "America/Phoenix");
+ addField("atrImportExtendedHours", "Extended hours ON", "checkbox");
+ addField("atrImportAdjustment", "Corporate-action adjustment ON", "checkbox");
+})();
+
 $("strategyReportForm")?.addEventListener("submit", async event => {
  event.preventDefault();
  const file = $("strategyReportFile").files?.[0];
