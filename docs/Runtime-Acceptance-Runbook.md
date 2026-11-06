@@ -144,6 +144,41 @@ $result.boundaryCoverageAudit | Format-Table boundaryType, expectedTimestampUtc,
 **Acceptance evidence:** both raw responses, exact branch/API SHA, local feed configuration, returned feed field, request time, exact boundary audit, and any provider HTTP/status error. No threshold tuning until all 20 pairs are exact and the broader validation requirements are met.
 
 ---
+## 1F. Daily market-data qualification — RTO and EVR
+
+Use `scripts/validation/Test-DailyMarketDataQualification.ps1` after pulling and building the latest feature branch. The script requests `/api/market-data/daily` for RTO and EVR, stores the complete API payload, independently recalculates close/SMA20/average volume from the 20 returned session rows, checks freshness/feed fail-closed behavior, and compares all dates/OHLCV to the checked-in reference CSVs.
+
+Reference files:
+- `data/validation/daily-reference-20261106/RTO.csv`
+- `data/validation/daily-reference-20261106/EVR.csv`
+
+The reference is Stock Analysis / S&P Global Market Intelligence split-adjusted history for 2026-10-12 through 2026-11-06. Alpaca's Daily endpoint requests `adjustment=all`. The script only permits this comparison when explicitly passed `-ConfirmWindowAdjustmentEquivalence`; this equivalence is window-specific and must be rechecked against corporate actions before using a different period.
+
+Run:
+
+```powershell
+.\scripts\validation\Test-DailyMarketDataQualification.ps1 `
+  -BaseUri "http://localhost:53360" `
+  -Symbols RTO,EVR `
+  -ReferenceDirectory ".\data\validation\daily-reference-20261106" `
+  -ReferenceProvider "Stock Analysis / S&P Global Market Intelligence" `
+  -ReferenceAdjustment "split-adjusted" `
+  -ConfirmWindowAdjustmentEquivalence
+```
+
+Acceptance:
+- Exactly 20 distinct ordered expected sessions and no missing dates.
+- Latest expected session is present and fresh.
+- API observed close, SMA20 and average daily volume recalculate exactly from the 20 returned sessions.
+- Independent session dates match; OHLC prices differ by no more than $0.0001; volume matches exactly.
+- Provider, feed, adjustment, retrieved time and latest session are present in the evidence.
+- IEX may be used for diagnostic comparison only. It must return `qualificationUsable=false` and null qualification price/SMA20/average-volume fields.
+- SIP is required before Daily metrics can satisfy qualification gates. Preserve provider errors and never silently switch feeds.
+
+Evidence is saved under `artifacts/daily-data-qualification/<timestamp>/`. Open the main Dashboard, switch to Boring Overnight, click **Validate Daily data**, and verify that the RTO/EVR rows exactly match the saved API JSON. Capture a screenshot. Missing/stale/incomplete/non-SIP data must remain DATA? and cannot produce READY.
+
+See [Daily Data Qualification](Validation/Daily-Data-Qualification-20261106.md) for the current independent baseline and source/adjustment discussion.
+
 ## 2. Browser acceptance
 
 Run against the user's API-hosted dashboard after pulling the target commit and hard-refreshing. Capture screenshots and browser console output.
