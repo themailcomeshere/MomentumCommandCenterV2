@@ -91,7 +91,7 @@ All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00
 
 ### P0.5 SIP and 40-session GTC_EXT history
 
-**Current state:** Alpaca is effectively IEX. Prior SIP recent-history access returned HTTP 403 entitlement denial. Do not retry until entitlement/access changes. The qualification runner automatically skips the 40-session SIP capture and sell-limit call unless `/api/providers/status` reports effective feed `sip`.
+**Current state:** Alpaca is effectively IEX. Prior SIP recent-history access returned HTTP 403 entitlement denial. Do not retry until entitlement/access changes. The qualification runner automatically skips SIP work unless `/api/providers/status` reports effective feed `sip`; when SIP is configured, it first requires a successful recent SPY 1m SIP smoke response before attempting 40-session capture.
 
 **Missing work after entitlement changes**
 1. User confirms SIP entitlement is active.
