@@ -104,13 +104,20 @@ foreach ($symbolValue in $Symbols) {
         Where-Object { $_.metadata.studyVersion -eq "MCC_OHLCV_ATR_V2.1" } |
         Sort-Object { [DateTimeOffset]::Parse($_.observation.sourceTimestampUtc).UtcDateTime.Ticks })
 
+    $comparisonMode = "DIAGNOSTIC_ONLY"
+    $diagnosticOnlyReason = "Effective provider feed is '$effectiveFeed'; IEX/other non-SIP comparisons cannot qualify the sell-limit gate."
+    if ($effectiveFeed -eq "sip") {
+        $comparisonMode = "QUALIFICATION_CANDIDATE"
+        $diagnosticOnlyReason = $null
+    }
+
     $providerComparison = [ordered]@{
         symbol = $symbol
         configuredFeed = $effectiveFeed
         qualificationFeed = "sip"
         qualificationFeedRequired = "sip"
-        comparisonMode = if ($effectiveFeed -eq "sip") { "QUALIFICATION_CANDIDATE" } else { "DIAGNOSTIC_ONLY" }
-        diagnosticOnlyReason = if ($effectiveFeed -eq "sip") { $null } else { "Effective provider feed is '$effectiveFeed'; IEX/other non-SIP comparisons cannot qualify the sell-limit gate." }
+        comparisonMode = $comparisonMode
+        diagnosticOnlyReason = $diagnosticOnlyReason
         feedIdentityMatch = $false
         providerResponseFeed = $null
         providerBarFeedMismatchCount = 0
@@ -221,10 +228,11 @@ foreach ($symbolValue in $Symbols) {
             $providerComparison.diagnosticOnlyReason = "Configured feed, response feed, or one or more row-level feed identities do not agree."
         }
         elseif (-not $providerComparison.qualificationUsableFeed) {
-            $providerComparison.status = if ($providerComparison.exactOhlcvMatch) {
-                "EXACT_MATCH_DIAGNOSTIC_ONLY_NON_SIP"
-            } else {
-                "DIAGNOSTIC_MISMATCH_NON_SIP"
+            if ($providerComparison.exactOhlcvMatch) {
+                $providerComparison.status = "EXACT_MATCH_DIAGNOSTIC_ONLY_NON_SIP"
+            }
+            else {
+                $providerComparison.status = "DIAGNOSTIC_MISMATCH_NON_SIP"
             }
         }
         elseif ($providerComparison.exactOhlcvMatch) {
