@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-06  
+**Updated:** 2026-11-06 (operator Daily panel evidence + browser/stream scripts)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
 **Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
@@ -9,7 +9,8 @@
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
 **Latest provider/sell-limit evidence:** [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md)  
 **Daily data qualification:** [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md)  
-**Earlier evidence archive:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)
+**Earlier evidence archive:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)  
+**Browser/stream acceptance:** [Browser-and-Stream-Collector-Acceptance-20261106.md](Validation/Browser-and-Stream-Collector-Acceptance-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
 
@@ -43,8 +44,8 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [ ] Obtain 119 continuous completed 5m observations for each required symbol, plus at least 99 earlier warm-up bars. Investigate every gap against source/chart evidence; never impute.
 - [ ] Resolve EVR 1m's 13 gaps in its prior 119-observation window or retain `GAPS_PRESENT`; 1m does not replace the independent 5m gate.
 - [ ] Prove exact provider/TOS 5m OHLCV equality over all 119 timestamps and capture the exact previous RTH close from the same provider/feed. Latest IEX diagnostic returned 0/119 exact rows for EVR and CBOE; it does not establish SIP behavior.
-- [ ] Keep SIP qualification blocked until account entitlement changes. Current effective feed is IEX; this run made no SIP request.
-- [ ] After SIP access is confirmed, capture 40/40 exact SIP GTC_EXT sessions (20 chronological training + 20 unseen test; 780 exact minute bars/session plus exact prior close).
+- [x] Confirmed repeated recent-SIP HTTP 403 entitlement denial; current effective feed remains IEX. Park SIP-dependent work. Do not ask the operator to retry SIP, reconfigure it, or repeat SIP smoke/capture requests. Resume only if the operator independently reports an actual entitlement change.
+- [ ] 40-session GTC_EXT qualification is PARKED behind the known SIP entitlement blocker; no further SIP requests. If access genuinely changes later, the contract remains 40 complete sessions (20 training + 20 unseen test; 780 exact minute bars/session plus exact prior close).
 - [ ] Run the implemented walk-forward validator on qualified 40-session history and record all train/test metrics. Runtime PASS is unproven.
 - [ ] Keep numeric sell-limit output fail-closed until every independent gate passes.
 
@@ -62,8 +63,8 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [ ] Implement the separate V3 Boring Overnight Thinkorswim watchlist column from its design specification; MCC Opportunity Quality is not that feature.
 - [ ] Resolve exact 09:30 next-session opens and define official auction print versus first observed eligible trade. A 1m bar Open is only a proxy.
 - [ ] Compile and validate Thinkorswim 5m/1m authority, matched-state replay, and exact Arizona EOD cutoff behavior.
-- [ ] Complete regular-session WebSocket/collector delivery and recovery acceptance using per-symbol completed/persisted bar deltas and freshness/provenance.
-- [ ] Complete browser acceptance on the main Dashboard: import/parity, Red Zone, exclusions, Morning Brief, replay, sell-limit gate explanations, responsive layout and console/network health.
+- [ ] Run `scripts/validation/Test-RegularSessionStreamCollector.ps1` during a confirmed regular session. Verify per-symbol acknowledged subscriptions, completed-bar count/lastBarUtc advancement, global received/persisted deltas, collector cycles/watermarks/errors, and post-capture assessment provenance.
+- [ ] Complete full browser acceptance on the main Dashboard: import/parity, Red Zone, exclusions, Morning Brief, replay, sell-limit gate explanations, responsive layout and CDP console/network health. Daily data audit UI behavior is now user-verified; this is not full Dashboard acceptance.
 - [ ] Measure Dashboard load and Fetch & Analyze latency with Network/HAR evidence; no unmeasured performance claims.
 
 ## External dependencies — P2
@@ -75,13 +76,13 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Immediate execution order
 
-1. Daily qualification has been run. Do not repeat unchanged on IEX. Confirm SIP entitlement externally before any consolidated Daily re-test; prior HTTP 403 remains a hard stop. Continue with the ATR/TOS sequence below.
+1. Do not repeat the same IEX Daily comparison and do not retry SIP. The user has confirmed the SIP HTTP 403 multiple times. Daily audit UI was verified for RTO/EVR/CBOE; independent parity remains unresolved (RTO/EVR failed, CBOE reference absent).
 2. Compile the revised Thinkorswim V2.1 study. Set 5m chart/study aggregation, ATR14 Wilder, Phoenix timezone, extended hours ON, corporate-action adjustment ON, and a date range that actually supplies at least 99 warm-up bars before the latest 119-bar window.
-3. Export EVR and CBOE with all available premarket, RTH and after-hours chart bars. Confirm embedded epoch timestamps; do not use Strategy Report order-event timestamps.
+3. Do not re-upload or re-import the already committed EVR/CBOE ScannerExports. The persisted 327 EVR and 338 CBOE observations and source CSVs are already available. Inspect those first. Only after the revised study is compiled and a specific export defect is demonstrated should a genuinely new, corrected export be requested; never ask for the same files again.
 4. Import once, inspect append/identical/correction counts and per-row provenance, then rerun parity. Do not relax 0.00005 tolerance or impute.
 5. Inspect every remaining gap in TOS. If a bar is legitimately absent, record the source/session rule and ensure parity's continuity contract handles that rule explicitly; otherwise correct the export and re-import.
 6. Run the updated `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1`. Verify its new feed-identity and mismatch-breakdown fields. With IEX it must remain diagnostic-only and skip SIP/40-session work.
-7. Obtain/confirm SIP entitlement outside MCC. Only after that, configure SIP, restart, verify effective feed, run one recent SPY SIP smoke request, and then capture/audit 40 GTC_EXT sessions.
+7. Keep SIP-dependent work parked. No further SIP request, configuration change, smoke test, or GTC_EXT capture is planned unless the operator explicitly reports that Alpaca entitlement has changed.
 8. Complete the 20-train/20-unseen-test walk-forward runtime validation. Preserve every exclusion and metric; no numeric sell limit before all gates pass.
 
 The latest provider comparison and detailed evidence interpretation are in [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md).
@@ -107,6 +108,22 @@ The current Daily task is no longer “script not run”; it is “script run, i
 - [x] Confirmed maximum absolute recurrence residual 0.0000928571 for both, consistent with four-decimal ATR rounding; no residual exceeded 0.0002.
 - [ ] Resolve the remaining parity timestamp-gap groups (EVR 3, CBOE 1) against actual TOS chart bars and documented ETH/no-trade session behavior. Do not remove the gap gate or synthesize bars without that evidence.
 - [ ] Compile revised V2.1 ThinkScript in TOS and capture a fresh broad export.
+
+
+
+## Operator browser/runtime update — 2026-11-06
+
+- [x] Main Dashboard confirmed; use `frontend/index.html` only. `prototypeIndex.html` is not an alternate acceptance target.
+- [x] Visible section label confirmed as **Daily data audit**.
+- [x] Operator ran Daily audit for RTO,EVR,CBOE: 3 checked, 0 API errors, 0 qualification-usable, 3 diagnostic-only; all 20/20, zero missing, FRESH, IEX_PARTIAL / DATA?.
+- [x] Clarified Overnight fail-closed semantics: historical scanner PASS is only shortlist evidence; unknown/missing/stale price, liquidity, catalyst, session, exclusion or chart gates cannot become PASS/READY. Unknown catalyst is not CLEAR; Final READY stays unavailable until all required gates pass.
+- [x] Added `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1` for CDP console/network capture and Dashboard screenshot.
+- [x] Added `scripts/validation/Test-RegularSessionStreamCollector.ps1` for 5-minute, 15-second polling of API health, provider, WebSocket stream and historical collector status during regular hours.
+- [ ] Run both PowerShell scripts and commit their timestamped evidence directories.
+- [ ] Full Dashboard browser acceptance remains open beyond the verified Daily audit panel.
+- [ ] Regular-session WebSocket delivery and collector progress remain unverified until the new script is run.
+
+**SIP policy:** the repeated HTTP 403 is accepted as a known external blocker. Do not ask for or initiate another SIP request. Keep SIP-dependent qualification parked unless the operator independently reports changed entitlement.
 
 ## [Uncertainties]
 
