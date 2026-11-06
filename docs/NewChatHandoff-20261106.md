@@ -26,7 +26,7 @@ All V2.1 imports report ATR(14) Wilder, Phoenix timezone, extended hours ON and 
 - **This ThinkScript source has not yet been compiled or run in Thinkorswim.** Do not treat the study correction as runtime-verified.
 - GitHub Actions `build-and-test` passed for pre-study-update head `b379c7b76a1c9b61454719861741d253720ba7da`. The subsequent changes are the ThinkScript source and documentation; there are no C# application-code changes in this update.
 
-Full row-level analysis and exact procedure: [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md).
+Full row-level analysis and exact procedure: [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md). Added [Invoke-SellLimitEvidenceQualification.ps1](../scripts/validation/Invoke-SellLimitEvidenceQualification.ps1) to compare provider/TOS OHLCV on the exact latest 119 timestamps and, only when effective feed is SIP, capture 40 GTC_EXT sessions and report all sell-limit gates. It has not been executed against the local API.
 
 ## Current sell-limit gate status
 
@@ -49,7 +49,7 @@ No local API or user account credentials are available through repository access
 3. Export EVR and CBOE 5m over the same sufficiently broad date range, with extended hours ON and all available premarket, regular-session and after-hours bars. Include at least 99 earlier completed bars before the latest 119-bar qualification window.
 4. Import each export once and report appended/identical/correction counts.
 5. Re-run EVR/CBOE 5m parity. Do not change 0.00005 tolerance or impute bars.
-6. After 119-bar TOS continuity and ATR MATCH, capture exact provider 5m bars for those timestamps and verify OHLCV equality plus the exact prior RTH close.
+6. Run `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1`. It captures the provider bars for the exact latest 119 TOS timestamps using the configured feed and reports exact OHLCV equality. An IEX match is diagnostic only; it cannot satisfy the SIP gate.
 7. Only after SIP entitlement/access is confirmed, configure SIP and verify the effective feed. Run one recent SPY SIP smoke request. Then capture 40 complete GTC_EXT sessions for the target symbol and audit 780 exact 1m timestamps plus the exact previous close for each session.
 8. Run `POST /api/boring-overnight/sell-limit` with the target symbol, provider Alpaca, feed sip, and target quantile 75. Preserve every gate and walk-forward metric. A BLOCKED response is expected until all prerequisites pass.
 
