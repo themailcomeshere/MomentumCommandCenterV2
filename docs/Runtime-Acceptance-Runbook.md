@@ -437,11 +437,11 @@ During the capture, exercise the main Dashboard and review the generated screens
   -BaseUri "http://localhost:53360" `
   -Symbols SPY,RKLX,ASTX,XRPN `
   -PollIntervalSeconds 15 `
-  -DurationMinutes 5 `
+  -DurationMinutes 10 `
   -ConfirmRegularSession
 ```
 
-Run during an actual regular session with the main Dashboard loaded and the expected symbols subscribed. The script samples API health, provider, stream and collector status every 15 seconds for five minutes. It records per-symbol subscription/bar-count/lastBarUtc deltas, global received/persisted deltas, collector cycle/watermark/error details, and post-capture live assessments.
+Run during an actual regular session with the main Dashboard loaded and the expected symbols subscribed. The script samples API health, provider, stream and collector status every 15 seconds for ten minutes (default). It records per-symbol subscription/bar-count/lastBarUtc deltas, global received/persisted deltas, collector cycle/watermark/error details, and post-capture live assessments.
 
 A WebSocket delivery pass requires acknowledged subscription AND per-symbol completed-bar count and lastBarUtc advancement during the RTH window. Global received/persisted counters should advance. A symbol with no eligible IEX print may remain static; compare against SPY and other symbols rather than declaring a global failure. A WebSocket-backed 1M assessment additionally needs at least 50 completed persisted WebSocket bars, freshness, feed identity and `ALPACA_WEBSOCKET_LATEST_BAR` provenance. 5M remains REST-backed.
 
