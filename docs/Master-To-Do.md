@@ -5,7 +5,8 @@
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
 **Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
-**Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)
+**Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
+**Latest ATR evidence analysis:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
 
@@ -20,6 +21,8 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Walk-forward validator and hard orchestration gate are implemented. Runtime pass remains unproven.
 - [x] Main Dashboard is `frontend/index.html`. Do not use or recreate PrototypeIndex.
 - [x] Supporting documentation, legacy handoffs and audit files were reconciled; a repeatable ATR evidence-export script was added.
+- [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
+- [x] Row-level TOS Wilder recurrence and independent last-20 recomputation were analyzed; results and limitations are documented in the ATR evidence analysis.
 
 ## Current blockers — P0
 
