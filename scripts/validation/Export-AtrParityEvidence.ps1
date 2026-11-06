@@ -41,9 +41,22 @@ if ($health.status -and $health.status -ne "OK") {
     throw "MCC API responded at $BaseUri but health status is '$($health.status)', not 'OK'. No evidence files were collected."
 }
 
+# Resolve output paths from the repository root, never from PowerShell's
+# current directory (which may be C:\Windows\System32).
+$repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+if ([System.IO.Path]::IsPathRooted($OutputRoot)) {
+    $resolvedOutputRoot = [System.IO.Path]::GetFullPath($OutputRoot)
+}
+else {
+    $resolvedOutputRoot = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot $OutputRoot))
+}
+
 $stamp = (Get-Date).ToString("yyyyMMddTHHmmss")
-$outputDirectory = Join-Path $OutputRoot $stamp
-New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+$outputDirectory = Join-Path $resolvedOutputRoot $stamp
+New-Item -ItemType Directory -Path $outputDirectory -Force -ErrorAction Stop | Out-Null
+if (-not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
+    throw "Failed to create ATR evidence output directory: $outputDirectory"
+}
 
 function Save-Json {
     param([string]$Path, [object]$Value)
@@ -57,7 +70,7 @@ function Save-Json {
 
 $localSha = $null
 try {
-    $localSha = (git rev-parse HEAD 2>$null | Out-String).Trim()
+    $localSha = (git -C $repositoryRoot rev-parse HEAD 2>$null | Out-String).Trim()
     if ([string]::IsNullOrWhiteSpace($localSha)) { $localSha = $null }
 }
 catch { $localSha = $null }
