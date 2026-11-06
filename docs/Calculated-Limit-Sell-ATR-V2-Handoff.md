@@ -1,3 +1,32 @@
+## November 5, 2026 — follow-up: missing controls and V2.2 export
+
+### Import-control failure diagnosis and correction
+The current source `frontend/index.html` contains all five metadata controls, but the operator's running page reports all five missing while running the current import JavaScript. This indicates a runtime page/asset generation mismatch; the exact routing/cache cause is not proven. The previous null-guard only made the mismatch explicit and did not repair it.
+
+A new defensive bootstrap in `frontend/app.js` now recreates any missing controls before registering the StrategyReport submit handler. It uses the operator's previously confirmed settings: ATR 14, Wilder, America/Phoenix, extended hours ON, corporate-action adjustment ON. Existing controls remain intact. The script cache key is now `20261105-atr-import-control-recovery-v3`. After pulling and restarting, the operator should see the controls; retry both imports. This change is not yet browser-verified.
+
+### EVR 5m V2.2 audit
+File: `data/ScannerExports/StrategyReports_EVR_11042026_5M_ATR_v2_2.csv`.
+- 82 embedded V2.1 observations.
+- First source epoch: 2026-11-04 14:05Z = 09:05 ET / 07:05 Arizona.
+- Last source epoch: 2026-11-04 21:00Z = 16:00 ET / 14:00 Arizona.
+- One 15-minute gap: 09:15–09:30 ET.
+- One payload is timestamped exactly 16:00 ET; no source payload follows it through the configured 19:59 ET cutoff.
+- The embedded source epoch is the source-bar timestamp. StrategyReport Work Time and order-event Date/Time are not substitutes for source-bar coverage.
+
+82 bars cannot satisfy the 119-observation 5m validation requirement (99 warm-up + 20 comparison bars). Parity and continuous warm-up remain unverified.
+
+### Operator actions
+1. Pull latest feature branch, run `.scripts\Get-Latest-And-Test.ps1`, restart API.
+2. Hard-refresh Dashboard and confirm all five ATR metadata controls appear.
+3. Retry Nov 3 1m and 5m V2.1 imports; send complete import summaries and parity results.
+4. Export another 5m report and verify payload epochs continue beyond 16:00 ET toward 19:55 ET.
+5. Investigate 09:15–09:30 ET gap; do not interpolate.
+6. No SIP retry; prior HTTP 403 remains an external entitlement block.
+
+
+---
+
 ## November 5, 2026 — latest import, after-hours, and walk-forward engineering update
 
 ### StrategyReport import crash
