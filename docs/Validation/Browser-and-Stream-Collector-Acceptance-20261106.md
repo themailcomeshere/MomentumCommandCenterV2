@@ -91,6 +91,7 @@ Before running:
 2. Confirm `/api/health` is OK and `/api/providers/status` identifies the actual feed. Do not attempt SIP.
 3. Confirm the stream is enabled and the expected symbols are acknowledged in `subscribedSymbols`. If the Dashboard dynamically subscribes symbols, load the symbols in the Dashboard first.
 4. Check `/api/market-data/collector/status` for whether the historical collector is enabled and which symbols it polls. The historical collector is separate from the WebSocket stream.
+5. The script records `intervalSeconds`. Its default 10-minute window should cover multiple common polling intervals; if the configured collector interval exceeds 300 seconds, increase `-DurationMinutes` to at least twice that interval (rounded up to minutes) so a cycle can be observed.
 
 Acceptance:
 - WebSocket subscription acknowledgement is necessary but not sufficient.
