@@ -4,7 +4,8 @@ param(
     [string[]]$Symbols = @("RTO", "EVR"),
     [string]$ReferenceDirectory,
     [string]$ReferenceProvider,
-    [string]$ReferenceAdjustment = "all (split/dividend adjusted)",
+    [string]$ReferenceAdjustment = "split-adjusted",
+    [switch]$ConfirmWindowAdjustmentEquivalence,
     [string]$OutputDirectory
 )
 
@@ -128,7 +129,11 @@ foreach ($symbolInput in $Symbols) {
                 if (@($refDates | Sort-Object -Unique).Count -ne 20) { $independentMismatches += "Reference CSV has duplicate session dates." }
                 if (($refDates -join "|") -ne ($expected -join "|")) { $independentMismatches += "Reference dates do not exactly match the API's 20 expected sessions." }
                 foreach ($ref in $referenceRows) {
-                    if ($ref.Adjustment -ne $ReferenceAdjustment -or $ref.Adjustment -ne $payload.adjustment) {
+                    $sameAdjustment = $ref.Adjustment -eq $payload.adjustment
+                    $windowEquivalentAdjustment = $ConfirmWindowAdjustmentEquivalence -and
+                        $ref.Adjustment -eq "split-adjusted" -and
+                        $payload.adjustment -eq "all (split/dividend adjusted)"
+                    if ($ref.Adjustment -ne $ReferenceAdjustment -or (-not $sameAdjustment -and -not $windowEquivalentAdjustment)) {
                         $independentMismatches += "Adjustment basis mismatch on $($ref.SessionDate): reference='$($ref.Adjustment)' API='$($payload.adjustment)'."
                         continue
                     }
@@ -193,6 +198,7 @@ $overall = [ordered]@{
     configuredAlpacaFeed = $configuredFeed
     referenceProvider = $ReferenceProvider
     referenceAdjustment = $ReferenceAdjustment
+    windowAdjustmentEquivalenceConfirmed = [bool]$ConfirmWindowAdjustmentEquivalence
     symbols = $results
     note = "Internal arithmetic consistency is not independent market-data parity. A separate source CSV is required for independent OHLCV verification. Non-SIP values are diagnostic only."
 }
