@@ -1,9 +1,53 @@
-# CURRENT HANDOFF — 2026-11-06, Daily-data qualification implementation + latest ATR evidence
+# CURRENT HANDOFF — 2026-11-06, Daily qualification failure + ATR recurrence audit
 
 **Repository:** `themailcomeshere/MomentumCommandCenterV2`  
 **Branch:** `feature/opportunity-quality-classification`  
 **Dashboard:** `frontend/index.html`  
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
+
+# OPERATOR UPDATE — 2026-11-06, Daily run and ATR gap follow-up
+
+## Daily qualification evidence now received
+
+Evidence is committed at `artifacts/daily-data-qualification/20261106T215302Z/` on `feature/opportunity-quality-classification`.
+
+- RTO and EVR each returned exactly 20/20 expected sessions, zero missing dates and fresh latest sessions.
+- API internal calculations reconcile exactly to the returned session rows.
+- Independent comparison FAILED for both: multiple OHLC values differ and all 20 daily volume values mismatch the Stock Analysis / S&P Global reference.
+- Feed is Alpaca IEX; adjustment is `all (split/dividend adjusted)`; response coverage is `IEX_PARTIAL`.
+- API correctly sets `qualificationUsable=false`, leaves qualification metrics null and remains DATA?. This is correct fail-closed behavior.
+- IEX partial venue coverage is consistent with the much lower observed volume than consolidated reference volume. Do not treat the IEX ADV as qualified liquidity. Obtain/verify SIP entitlement before repeating consolidated parity. A previous HTTP 403 remains a hard stop until entitlement changes.
+- Dashboard screenshot/browser acceptance was not included. Data not found in sources.
+
+| Symbol | API close | API SMA20 | API ADV20 | Independent close | Independent SMA20 | Independent ADV20 |
+|---|---:|---:|---:|---:|---:|---:|
+| RTO | 23.615 | 22.31175 | 134,700.5 | 23.63 | 22.3130 | 1,616,207.4 |
+| EVR | 284.600 | 272.18775 | 50,448.1 | 284.47 | 272.2235 | 643,488.4 |
+
+## ATR status and precise next diagnostic
+
+Latest committed parity remains EVR 5m `GAPS_PRESENT` (3 gap groups in its qualification window, MAE 0.0000294330, max 0.0000495349) and CBOE 5m `GAPS_PRESENT` (1 gap group, MAE 0.0000203866, max 0.0000426076). Numeric error is within tolerance; continuity is not certified.
+
+The latest 119-observation windows in `artifacts/sell-limit-evidence/20261106T143918/` were inspected. EVR has same-date discontinuities including 2026-11-05 05:00Z→05:10Z, 05:10Z→14:05Z, and 14:05Z→14:30Z; CBOE has 2026-11-04 21:00Z→23:40Z. Some are outside the intended sell window or cross non-trading periods. A gap count alone does not establish missing eligible bars. Check the parity gap policy against the documented chart-session contract before changing it.
+
+The revised V2.1 ThinkScript removes the old 07:00–19:59 ET export filter, but compile/fresh-export evidence is still absent. Compile it in TOS and produce broad EVR/CBOE exports with all available ETH/RTH bars. Preserve epoch timestamps and inspect the actual source bars around each discontinuity. Do not synthesize bars or change tolerance.
+
+
+### New recurrence audit result
+
+The latest committed EVR/CBOE observation JSON was independently recalculated across every adjacent pair using the Wilder formula. EVR: 326 pairs, maximum absolute residual 0.0000928571, mean 0.0000329316. CBOE: 337 pairs, maximum 0.0000928571, mean 0.0000326198. No residual exceeded 0.0002; these residuals are consistent with four-decimal ATR rounding. The previous large EVR recurrence discontinuity is not present in the latest persisted series. This is not an ATR parity pass: EVR still reports 3 timestamp-gap groups and CBOE 1 in the latest 119-observation window. Inspect TOS chart bars and validate the gap policy against actual extended-hours/no-trade behavior before changing the gate. Detailed audit: `docs/Validation/ATR-Export-Coverage-Fix-20261106.md`.
+
+## Next operator sequence
+
+1. Do not repeat the IEX Daily run unchanged; it will not produce consolidated liquidity parity. Confirm SIP entitlement externally first. If entitlement is still denied, leave Daily DATA? and continue unrelated engineering.
+2. For ATR, compile the committed V2.1 source in Thinkorswim and confirm aggregation=5m, ATR14 Wilder, Phoenix timezone, ETH ON and adjustment ON.
+3. Set a date range with at least 99 completed warm-up bars before the final 119 comparison observations. Export all available chart bars; do not filter by time of day.
+4. Before importing, inspect epoch timestamps and chart bars around the listed discontinuities. Distinguish genuine absent bars/no-trade periods from export omissions; retain evidence for every decision.
+5. Import each corrected CSV once, record appended/identical/correction counts, and rerun parity. Require continuous expected coverage under the explicit session contract and max error <=0.00005. Keep unresolved gaps blocked.
+6. After ATR MATCH, proceed separately to SIP provider/TOS equality, exact previous RTH close, 40 complete GTC_EXT sessions, and 20-train/20-unseen-test walk-forward.
+7. Dashboard screenshot/browser acceptance remains open. Other P1 workstreams remain outstanding: catalyst validation, Opportunity Quality full-pool ranking, V3 Boring Overnight column, overnight boundary, TOS authority/EOD, WebSocket/collector acceptance and full Dashboard browser acceptance.
+
+---
 
 ## Latest operator evidence — 2026-11-06, approximately 14:39 Arizona
 
@@ -367,47 +411,3 @@ After build and API restart:
 - The currently running local API SHA is not present in the supplied responses.
 - No passing walk-forward runtime result, 20/20 SIP qualification result, or browser acceptance evidence has been supplied.
 - No actual broker execution ledger has been supplied; fills cannot be inferred from OHLCV.
-
-
-# OPERATOR UPDATE — 2026-11-06, Daily run and ATR gap follow-up
-
-## Daily qualification evidence now received
-
-Evidence is committed at `artifacts/daily-data-qualification/20261106T215302Z/` on `feature/opportunity-quality-classification`.
-
-- RTO and EVR each returned exactly 20/20 expected sessions, zero missing dates and fresh latest sessions.
-- API internal calculations reconcile exactly to the returned session rows.
-- Independent comparison FAILED for both: multiple OHLC values differ and all 20 daily volume values mismatch the Stock Analysis / S&P Global reference.
-- Feed is Alpaca IEX; adjustment is `all (split/dividend adjusted)`; response coverage is `IEX_PARTIAL`.
-- API correctly sets `qualificationUsable=false`, leaves qualification metrics null and remains DATA?. This is correct fail-closed behavior.
-- IEX partial venue coverage is consistent with the much lower observed volume than consolidated reference volume. Do not treat the IEX ADV as qualified liquidity. Obtain/verify SIP entitlement before repeating consolidated parity. A previous HTTP 403 remains a hard stop until entitlement changes.
-- Dashboard screenshot/browser acceptance was not included. Data not found in sources.
-
-| Symbol | API close | API SMA20 | API ADV20 | Independent close | Independent SMA20 | Independent ADV20 |
-|---|---:|---:|---:|---:|---:|---:|
-| RTO | 23.615 | 22.31175 | 134,700.5 | 23.63 | 22.3130 | 1,616,207.4 |
-| EVR | 284.600 | 272.18775 | 50,448.1 | 284.47 | 272.2235 | 643,488.4 |
-
-## ATR status and precise next diagnostic
-
-Latest committed parity remains EVR 5m `GAPS_PRESENT` (3 gap groups in its qualification window, MAE 0.0000294330, max 0.0000495349) and CBOE 5m `GAPS_PRESENT` (1 gap group, MAE 0.0000203866, max 0.0000426076). Numeric error is within tolerance; continuity is not certified.
-
-The latest 119-observation windows in `artifacts/sell-limit-evidence/20261106T143918/` were inspected. EVR has same-date discontinuities including 2026-11-05 05:00Z→05:10Z, 05:10Z→14:05Z, and 14:05Z→14:30Z; CBOE has 2026-11-04 21:00Z→23:40Z. Some are outside the intended sell window or cross non-trading periods. A gap count alone does not establish missing eligible bars. Check the parity gap policy against the documented chart-session contract before changing it.
-
-The revised V2.1 ThinkScript removes the old 07:00–19:59 ET export filter, but compile/fresh-export evidence is still absent. Compile it in TOS and produce broad EVR/CBOE exports with all available ETH/RTH bars. Preserve epoch timestamps and inspect the actual source bars around each discontinuity. Do not synthesize bars or change tolerance.
-
-
-### New recurrence audit result
-
-The latest committed EVR/CBOE observation JSON was independently recalculated across every adjacent pair using the Wilder formula. EVR: 326 pairs, maximum absolute residual 0.0000928571, mean 0.0000329316. CBOE: 337 pairs, maximum 0.0000928571, mean 0.0000326198. No residual exceeded 0.0002; these residuals are consistent with four-decimal ATR rounding. The previous large EVR recurrence discontinuity is not present in the latest persisted series. This is not an ATR parity pass: EVR still reports 3 timestamp-gap groups and CBOE 1 in the latest 119-observation window. Inspect TOS chart bars and validate the gap policy against actual extended-hours/no-trade behavior before changing the gate. Detailed audit: `docs/Validation/ATR-Export-Coverage-Fix-20261106.md`.
-
-## Next operator sequence
-
-1. Do not repeat the IEX Daily run unchanged; it will not produce consolidated liquidity parity. Confirm SIP entitlement externally first. If entitlement is still denied, leave Daily DATA? and continue unrelated engineering.
-2. For ATR, compile the committed V2.1 source in Thinkorswim and confirm aggregation=5m, ATR14 Wilder, Phoenix timezone, ETH ON and adjustment ON.
-3. Set a date range with at least 99 completed warm-up bars before the final 119 comparison observations. Export all available chart bars; do not filter by time of day.
-4. Before importing, inspect epoch timestamps and chart bars around the listed discontinuities. Distinguish genuine absent bars/no-trade periods from export omissions; retain evidence for every decision.
-5. Import each corrected CSV once, record appended/identical/correction counts, and rerun parity. Require continuous expected coverage under the explicit session contract and max error <=0.00005. Keep unresolved gaps blocked.
-6. After ATR MATCH, proceed separately to SIP provider/TOS equality, exact previous RTH close, 40 complete GTC_EXT sessions, and 20-train/20-unseen-test walk-forward.
-7. Dashboard screenshot/browser acceptance remains open. Other P1 workstreams remain outstanding: catalyst validation, Opportunity Quality full-pool ranking, V3 Boring Overnight column, overnight boundary, TOS authority/EOD, WebSocket/collector acceptance and full Dashboard browser acceptance.
-
