@@ -82,6 +82,10 @@ foreach ($symbolInput in $Symbols) {
     }
 
     $feed = [string]$payload.feed
+    if ($payload.provider -ne "Alpaca") { $internalErrors += "Unexpected Daily provider '$($payload.provider)'." }
+    if ($feed -ne $configuredFeed) { $internalErrors += "Daily response feed '$feed' does not match configured provider feed '$configuredFeed'." }
+    if ([string]::IsNullOrWhiteSpace([string]$payload.retrievedAtUtc)) { $internalErrors += "retrievedAtUtc is missing." }
+    if ($null -eq $payload.latestCompletedSessionTimestampUtc) { $internalErrors += "Latest completed session timestamp is missing." }
     if ($feed -eq "sip") {
         if ($payload.qualificationUsable -ne $true) { $internalErrors += "SIP feed but qualificationUsable is not true despite a complete/fresh 20-session response." }
         foreach ($pair in @(
