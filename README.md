@@ -114,7 +114,7 @@ Current importer fix commit: `b05c63713452cbbbb5632a87c639f655ad027e73`. GitHub 
 - RTO follow-up evidence remains IEX, not SIP; 38/40 exact boundaries, with October 14 and October 21 open bars missing. Repeat only after observed SIP feed is confirmed.
 - Detailed record: [Live Extension and Feed Diagnostics](docs/Validation/Live-Extension-and-Feed-Diagnostics-20261102.md).
 
-# Momentum Command Center V3
+## Product overview
 
 **Repository:** `MomentumCommandCenterV2`  
 **Runtime:** .NET 8 / ASP.NET Core  
