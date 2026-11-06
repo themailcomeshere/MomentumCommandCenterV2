@@ -6,7 +6,7 @@ namespace MomentumCommandCenterV2.API.StrategyReports;
 /// </summary>
 public static class ThinkorswimAtrParityService
 {
-    public const string Version = "MCC-WILDER-ATR-PARITY-1.0";
+    public const string Version = "MCC-WILDER-ATR-PARITY-1.1";
     public const int DefaultWarmupBars = 99;
     public const int MinimumComparisonBars = 20;
     // TOS V2 payloads export ATR to at most four decimal places; this is half one unit of that precision.
@@ -14,11 +14,14 @@ public static class ThinkorswimAtrParityService
 
     public static ThinkorswimAtrParityResult Compare(
         IReadOnlyList<ThinkorswimAtrStoredObservation> stored,
-        int warmupBars = DefaultWarmupBars)
+        int warmupBars = DefaultWarmupBars,
+        int? comparisonWindowBars = null)
     {
         ArgumentNullException.ThrowIfNull(stored);
         if (warmupBars < 15 || warmupBars > 5000)
             throw new ArgumentOutOfRangeException(nameof(warmupBars), "Warm-up bars must be between 15 and 5000.");
+        if (comparisonWindowBars is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(comparisonWindowBars), "Comparison window must be greater than zero when specified.");
         if (stored.Count == 0)
             return Empty("No persisted Thinkorswim ATR observations were found.");
 
@@ -74,19 +77,25 @@ public static class ThinkorswimAtrParityService
             "4h" => TimeSpan.FromHours(4),
             _ => TimeSpan.Zero
         };
-        var gaps = interval == TimeSpan.Zero ? 0 : rows.Zip(rows.Skip(1), (left, right) =>
+        // Calculate Wilder ATR from the complete imported history so the seed matches the
+        // chart's continuing series. The requested window controls only the burn-in/comparison
+        // slice and timestamp-gap qualification, not the ATR seed.
+        var availableWindowBars = Math.Min(rows.Length, comparisonWindowBars ?? rows.Length);
+        var windowStartIndex = rows.Length - availableWindowBars;
+        var gaps = interval == TimeSpan.Zero ? 0 : rows.Skip(windowStartIndex).Zip(rows.Skip(windowStartIndex + 1), (left, right) =>
                 AtrTimestampGapDetector.IsUnexpectedGap(left.SourceTimestampUtc, right.SourceTimestampUtc, interval))
             .Count(isGap => isGap);
 
-        if (rows.Length <= warmupBars)
+        if (availableWindowBars <= warmupBars)
             return new ThinkorswimAtrParityResult(
                 "INSUFFICIENT_WARMUP", Version, rows[0].Symbol, rows[0].Timeframe, period,
                 warmupBars, MinimumComparisonBars, ExportRoundingTolerance, rows.Length, 0, gaps,
                 null, null, null, null, null, null, first,
-                $"Only {rows.Length} observations are available; {warmupBars} warm-up observations are required before comparing completed-bar ATR. Export more history before the comparison window.");
+                $"Only {availableWindowBars} observations are available in the comparison window; {warmupBars} warm-up observations are required before comparing completed-bar ATR. Full imported history contains {rows.Length} observations.");
 
+        var comparisonStartIndex = windowStartIndex + warmupBars;
         var errors = new List<(DateTimeOffset Timestamp, decimal Absolute, decimal RelativePct)>();
-        for (var i = Math.Max(warmupBars, period); i < rows.Length; i++)
+        for (var i = Math.Max(comparisonStartIndex, period); i < rows.Length; i++)
         {
             if (calculated[i] is not { } calculatedAtr) continue;
             var absolute = Math.Abs(calculatedAtr - rows[i].Atr);
