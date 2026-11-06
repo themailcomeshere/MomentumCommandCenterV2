@@ -1,3 +1,7 @@
+> **Superseded on 2026-11-06:** Use [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md) for current project state and operator actions. This file is retained as historical/design context; do not treat its older unchecked items or implementation-status statements as current.
+>
+> ---
+>
 # V3 implementation backlog — executable scaffolding
 
 **Updated:** 2026-10-27  
