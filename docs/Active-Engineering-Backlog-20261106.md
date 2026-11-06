@@ -122,7 +122,7 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 
 **Detailed procedure and independent reference sample:** [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md).  
 
-**Implementation status:** Alpaca Daily `1Day` client and exact 20-session calculator exist. The implementation has now been hardened for empty responses and exposes every session row plus the expected/missing session dates. The main Dashboard has a dedicated RTO/EVR Daily audit panel. A PowerShell evidence runner and independent 20-session reference CSVs are committed. This is implementation completion, not live acceptance: no local API payload or Dashboard screenshot has yet been captured in this session.
+**Implementation status:** API, tests, Dashboard panel, PowerShell evidence runner and independent 20-session reference CSVs are committed. Operator executed the runner on 2026-11-06; both symbols passed internal consistency, coverage (20/20), freshness and zero-missing checks, but failed independent OHLCV parity. Effective feed was IEX and API correctly withheld qualification metrics (`DATA? · IEX_PARTIAL`). Dashboard screenshot/browser parity remains outstanding.
 
 **Completed engineering**
 - [x] Fixed empty Daily history handling so zero bars return incomplete DATA? metrics rather than throwing on an empty-session `Max()`.
@@ -132,6 +132,9 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 - [x] Added `scripts/validation/Test-DailyMarketDataQualification.ps1` to save raw responses, recalculate metrics, enforce feed fail-closed behavior and compare independent OHLCV.
 - [x] Added `data/validation/daily-reference-20261106/{RTO,EVR}.csv`: 20 sessions from 2026-10-12 through 2026-11-06, sourced from Stock Analysis / S&P Global Market Intelligence.
 - [x] Independently recalculated the reference baselines: RTO close 23.63, SMA20 22.3130, ADV20 1,616,207.4; EVR close 284.47, SMA20 272.2235, ADV20 643,488.4.
+- [x] Executed live qualification run `20261106T215302Z`; exact 20-session coverage, freshness, zero missing dates and internal arithmetic passed for both symbols.
+- [x] Confirmed fail-closed IEX behavior: both API responses report `IEX_PARTIAL`, `qualificationUsable=false`, and null qualification fields.
+- [x] Recorded independent parity failure: both symbols have OHLC differences and all 20 daily volume rows differ from consolidated reference; raw evidence is committed.
 
 **Adjustment note:** reference pages disclose split-adjusted history, while Alpaca requests `adjustment=all`. For this sample the known EVR ex-dates (2026-08-28 and next 2026-11-27) and RTO ex-date (2026-08-13) are outside the 20-session window. The runner therefore requires the explicit `-ConfirmWindowAdjustmentEquivalence` switch before comparing split-adjusted reference rows to the all-adjusted API. Recheck corporate actions before reusing this switch for any other date range.
 
