@@ -1,5 +1,7 @@
 # ATR Evidence Export Analysis — 2026-11-06
 
+> **Superseded for current 5m parity status:** the expanded EVR/CBOE exports imported on 2026-11-06 are analyzed in [ATR-Export-Coverage-Fix-20261106.md](ATR-Export-Coverage-Fix-20261106.md). This earlier document remains the analysis of the first evidence ZIP only.
+
 **Evidence archive:** operator upload `20261106T092720.zip`  
 **Captured local time:** 2026-11-06 09:27:21 America/Phoenix  
 **Captured UTC:** 2026-11-06 16:27:21Z  
