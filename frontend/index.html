@@ -1,54 +1,496 @@
 <!doctype html>
 <html lang="en" id="mcc-static-0001-html">
-<head id="mcc-static-0002-head"><meta charset="utf-8" id="mcc-static-0003-meta"><meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta"><title id="mcc-static-0005-title">Momentum Command Center — Workbench</title><link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link"><link rel="stylesheet" href="./styles.css?v=20261102-main-chart-layout-v2" id="mcc-static-0007-link"></head>
-<body id="mcc-static-0008-body">
+<head id="mcc-static-0002-head"><meta charset="utf-8" id="mcc-static-0003-meta"><meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta"><title id="mcc-static-0005-title">Momentum Command Center — Workbench</title><link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link"><link rel="stylesheet" href="./styles.css?v=20261102-main-chart-layout-v2" id="mcc-static-0007-link"><style id="prototype-layout-styles">
+        /* Main Dashboard layout migrated from PrototypeIndex. */
+        .prototype-page .prototype-dock {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 104px;
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+            background: rgba(9,16,29,.97);
+            border-right: 1px solid var(--line);
+            box-shadow: 8px 0 24px #0003
+        }
+
+        .prototype-page .prototype-symbol-control {
+            width: 100%;
+            display: grid;
+            gap: 6px
+        }
+
+            .prototype-page .prototype-symbol-control label {
+                font-size: 9px;
+                letter-spacing: .14em;
+                font-weight: 800;
+                color: var(--muted)
+            }
+
+            .prototype-page .prototype-symbol-control input {
+                width: 100%;
+                min-width: 0;
+                text-align: center;
+                font-size: 15px;
+                font-weight: 800;
+                letter-spacing: .04em;
+                padding: 9px 4px;
+                text-transform: uppercase
+            }
+
+        .prototype-page .prototype-workspace-control {
+            margin: auto 0;
+            display: grid;
+            grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+            align-items: center;
+            justify-items: center;
+            gap: 8px;
+            min-height: 300px;
+            width: 100%
+        }
+
+        .prototype-page .prototype-workspace-label {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 10px;
+            font-weight: 850;
+            letter-spacing: .16em;
+            color: var(--muted);
+            white-space: nowrap
+        }
+
+        .prototype-page .prototype-workspace-label-left {
+            transform: rotate(180deg)
+        }
+
+        .prototype-page .prototype-workspace-label-right {
+            transform: none
+        }
+
+        .prototype-page .prototype-workspace-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 7px
+        }
+
+        .prototype-page .prototype-workspace-caption {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .16em;
+            color: var(--blue);
+            text-align: center
+        }
+
+        .prototype-page .prototype-switch-label {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 76px;
+            cursor: pointer
+        }
+
+            .prototype-page .prototype-switch-label input {
+                position: absolute;
+                opacity: 0;
+                width: 1px;
+                height: 1px
+            }
+
+        .prototype-page .prototype-switch-track {
+            position: relative;
+            width: 28px;
+            height: 66px;
+            border-radius: 999px;
+            border: 1px solid #46617f;
+            background: #101d31;
+            transition: background .18s,border-color .18s
+        }
+
+            .prototype-page .prototype-switch-track:after {
+                content: "";
+                position: absolute;
+                left: 4px;
+                top: 4px;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #9db1ca;
+                transition: transform .18s,background .18s
+            }
+
+        .prototype-page .prototype-switch-label input:checked + .prototype-switch-track {
+            background: #244b42;
+            border-color: var(--green)
+        }
+
+            .prototype-page .prototype-switch-label input:checked + .prototype-switch-track:after {
+                transform: translateY(38px);
+                background: var(--green)
+            }
+
+        .prototype-page .prototype-switch-label input:focus-visible + .prototype-switch-track {
+            outline: 2px solid var(--blue);
+            outline-offset: 3px
+        }
+
+        .prototype-page
+        #prototype-workspace-state {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .1em;
+            color: var(--blue);
+            text-align: center;
+            min-height: 0
+        }
+
+        .prototype-page .prototype-mode-source {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            white-space: nowrap;
+            clip-path: inset(50%)
+        }
+
+        .prototype-page .prototype-reset {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 10px;
+            padding: 9px 6px
+        }
+
+        .prototype-page #opportunity-status {
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            grid-template-rows: repeat(3,minmax(96px,1fr));
+            min-width: 0
+        }
+
+        .prototype-page #opportunity-status > .metric {
+            min-width: 0
+        }
+
+        @media(max-width:1100px) {
+            .prototype-page #opportunity-status {
+                grid-template-columns: repeat(2,minmax(0,1fr));
+                grid-template-rows: none
+            }
+        }
+
+        @media(max-width:650px) {
+            .prototype-page #opportunity-status {
+                grid-template-columns: repeat(2,minmax(0,1fr))
+            }
+        }
+
+        .prototype-page .topbar {
+            margin-left: 104px;
+            width: calc(100% - 104px);
+            padding: 14px 22px;
+            align-items: flex-start
+        }
+
+        .prototype-page .topbar-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+            flex: 1
+        }
+
+        .prototype-page .topbar-brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap
+        }
+
+        .prototype-page .topbar-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .prototype-page .topbar-readiness {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 7px;
+            min-width: 300px;
+            max-width: 480px
+        }
+
+        .prototype-page .market-session-clock {
+            align-self: flex-end;
+            text-align: right;
+            margin: 0 0 2px
+        }
+        .prototype-page .market-session-overnight {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2px 10px;
+            margin-top: 5px;
+            font-size: 11px;
+            color: var(--muted, #8b95a5);
+        }
+        .prototype-page .market-session-overnight strong {
+            color: var(--text, #e8edf4);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .prototype-page .topbar-readiness-heading {
+            margin-bottom: 0
+        }
+
+        .prototype-page .readiness-grid {
+            display: grid;
+            grid-template-columns: repeat(2,minmax(0,1fr));
+            gap: 7px
+        }
+
+            .prototype-page .readiness-grid > div {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                column-gap: 7px;
+                align-items: center;
+                padding: 6px 8px;
+                border: 1px solid var(--line);
+                border-radius: 9px;
+                min-width: 0
+            }
+
+                .prototype-page .readiness-grid > div > span:last-child {
+                    grid-column: 2;
+                    font-size: 10px;
+                    color: var(--muted)
+                }
+
+        .prototype-page #prototype-transport-readiness {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3px
+        }
+
+            .prototype-page #prototype-transport-readiness .demo-flag {
+                padding: 0;
+                border: 0;
+                border-radius: 0;
+                white-space: normal
+            }
+
+            .prototype-page #prototype-transport-readiness strong {
+                font-size: 10px
+            }
+
+        .prototype-page main {
+            margin: 18px 0 24px 104px;
+            padding: 0 18px
+        }
+
+        .prototype-page .topbar-tools .chip {
+            padding: 6px 9px
+        }
+
+        @media(max-width:900px) {
+            .prototype-page .topbar {
+                flex-direction: column
+            }
+
+            .prototype-page .topbar-layout {
+                width: 100%
+            }
+
+            .prototype-page .topbar-readiness {
+                max-width: none;
+                width: 100%
+            }
+
+            .prototype-page .topbar-brand {
+                align-items: flex-start
+            }
+
+            .prototype-page .topbar-tools {
+                width: 100%
+            }
+        }
+
+        @media(max-width:620px) {
+            .prototype-page .prototype-dock {
+                width: 78px;
+                padding: 10px 7px
+            }
+
+            .prototype-page .topbar {
+                margin-left: 78px;
+                width: calc(100% - 78px);
+                padding: 12px
+            }
+
+            .prototype-page main {
+                margin-left: 78px;
+                padding: 0 10px
+            }
+
+            .prototype-page .readiness-grid {
+                grid-template-columns: 1fr
+            }
+
+            .prototype-page .market-session-clock {
+                align-self: flex-start;
+                text-align: left
+            }
+        }
+    
+/* Prototype header mirrors production: brand and readiness are sibling columns. */
+.prototype-page .topbar-layout{
+ display:grid;
+ grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
+ align-items:start;
+ gap:16px;
+ width:100%;
+ min-width:0;
+ flex:1;
+}
+.prototype-page .topbar-brand{
+ display:flex;
+ flex-direction:row;
+ flex-wrap:wrap;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px 16px;
+ min-width:0;
+}
+.prototype-page .topbar-tools{display:flex;align-items:center;gap:8px;flex:1 0 100%;flex-wrap:wrap;min-width:0}
+.prototype-page .topbar-readiness{min-width:0;width:100%;max-width:none;align-self:start}
+.prototype-page .market-session-clock{align-self:center;text-align:right;margin:0 0 2px auto}
+.prototype-page #prototype-transport-readiness .demo-flag{
+ display:flex;
+ align-items:center;
+ justify-content:flex-start;
+ gap:7px;
+ min-width:0;
+ max-width:100%;
+ white-space:normal;
+}
+.prototype-page #prototype-transport-readiness #marketTransportLabel{
+ display:inline;
+ width:auto;
+ height:auto;
+ margin:0;
+ padding:0;
+ border-radius:0;
+ color:var(--muted);
+ background:transparent;
+ white-space:normal;
+ overflow-wrap:normal;
+ word-break:normal;
+ line-height:1.25;
+}
+@media(max-width:900px){
+ .prototype-page .topbar-layout{grid-template-columns:minmax(0,1fr);width:100%}
+ .prototype-page .topbar-brand{align-items:flex-start}
+ .prototype-page .topbar-tools{width:100%}
+ .prototype-page .topbar-readiness{width:100%;max-width:none}
+ .prototype-page .market-session-clock{align-self:flex-start;text-align:left}
+}
+</style>
+</head>
+<body id="mcc-static-0008-body" class="prototype-page">
+<aside class="prototype-dock" id="prototype-dock" aria-label="Workspace and focused symbol">
+        <div class="prototype-symbol-control" id="prototype-symbol-control">
+            <label for="symbol" id="prototype-symbol-label">SYMBOL</label>
+            <input id="symbol" type="text" value="SPY" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Focused symbol">
+        </div>
+        <div class="prototype-workspace-control" id="prototype-workspace-control">
+
+            <div class="prototype-workspace-copy" id="prototype-workspace-copy">
+                <span class="prototype-workspace-label" id="prototype-intraday-label">INTRADAY MOMENTUM</span>
+                <label class="prototype-switch-label" for="workspaceModeToggle" id="prototype-switch-label">
+                    <input id="workspaceModeToggle" type="checkbox" aria-label="Switch to Boring Overnight workspace">
+                    <span class="prototype-switch-track" id="prototype-switch-track"></span>
+                </label>
+                <span class="prototype-workspace-label" id="prototype-workspace-label">BORING OVERNIGHT</span>
+            </div>
+            <span class="prototype-workspace-caption" id="prototype-workspace-state">WORKSPACE</span>
+        </div>
+        <select id="mode" class="prototype-mode-source" aria-hidden="true" tabindex="-1">
+            <option value="momentum" id="prototype-mode-momentum">Intraday Momentum</option>
+            <option value="overnight" id="prototype-mode-overnight">Boring Overnight</option>
+        </select>
+        <button id="openQuickStart" class="prototype-quick-start" type="button">Quick Start</button><button id="reset" class="prototype-reset" type="button">Reset</button>
+    </aside>
 <header class="topbar" id="mcc-header">
- <div class="topbar-layout" id="mcc-static-0009-div">
-  <div class="topbar-brand" id="mcc-static-0010-div">
-   <div class="topbar-title-row" id="mcc-static-0011-div"><div><div class="eyebrow" id="mcc-static-0012-div">RESEARCH WORKBENCH</div><h1 id="mcc-static-0013-h1">Momentum Command Center</h1></div><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button></div>
-   <div class="topbar-tools" id="mcc-static-0014-div"><div class="demo-flag" id="mcc-static-0015-div"><span id="mcc-static-0016-span"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div></div>
-   <div id="marketSessionClock" class="market-session-clock" aria-live="polite">
-    <span id="marketSessionLabel">Market session</span>
-    <strong id="marketSessionCountdown">Loading…</strong>
-    <small id="marketSessionDetail">America/New_York · calendar loading</small>
-    <div class="market-session-overnight">
-     <span id="overnightEvaluationLabel">Overnight candidate evaluation begins in</span>
-     <strong id="overnightEvaluationCountdown">Loading…</strong>
-     <span>Time remaining to buy Overnight candidate</span>
-     <strong id="overnightBuyCountdown">Loading…</strong>
-    </div>
-   </div>
-   <section id="workspace-toolbar" class="toolbar panel"><div id="mcc-static-0017-div"><label for="mode" id="mcc-static-0018-label">Workspace</label><select id="mode"><option value="momentum" id="mcc-static-0019-option">Intraday Momentum</option><option value="overnight" id="mcc-static-0020-option">Boring Overnight</option></select></div><div id="mcc-static-0021-div"><label for="symbol" id="mcc-static-0022-label">Symbol</label><select id="symbol"><option selected id="mcc-static-0023-option">SPY</option><option id="mcc-static-0024-option">RKLX</option><option id="mcc-static-0025-option">ASTX</option><option id="mcc-static-0026-option">XRPN</option><option id="mcc-static-0027-option">MNSB</option><option id="mcc-static-0028-option">DEMO</option></select></div><button id="reset">Reset workspace</button></section>
-  </div>
-  <details class="topbar-readiness" id="system-readiness" aria-label="System readiness">
-   <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></summary>
-   <div class="readiness-grid" id="mcc-static-0032-div"><div class="readiness-runtime"><strong>WebSocket</strong><span id="streamStatus" class="chip">WS minute bars: checking…</span></div>
-    <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
-    <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
-    <div id="mcc-static-0041-div"><span class="readiness-dot demo" id="mcc-static-0042-span"></span><strong id="mcc-static-0043-strong">Live scanner</strong><span id="mcc-static-0044-span">Top movers · SIP entitlement required</span></div>
-    <div id="mcc-static-0045-div"><span class="readiness-dot blocked" id="mcc-static-0046-span"></span><strong id="mcc-static-0047-strong">Trade execution</strong><span id="mcc-static-0048-span">Not implemented</span></div>
-   </div>
-  </details>
- </div>
- 
-</header>
+        <div class="topbar-layout" id="mcc-static-0009-div">
+            <div class="topbar-brand" id="mcc-static-0010-div">
+                <div class="topbar-title-row" id="mcc-static-0011-div"><h1 id="mcc-static-0013-h1">Momentum Command Center</h1><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button></div>
+                <div id="marketSessionClock" class="market-session-clock" aria-live="polite">
+                    <span id="marketSessionLabel">Market session</span>
+                    <strong id="marketSessionCountdown">Loading…</strong>
+                    <small id="marketSessionDetail">America/New_York · calendar loading</small>
+                    <div class="market-session-overnight">
+                        <span id="overnightEvaluationLabel">Overnight candidate evaluation begins in</span>
+                        <strong id="overnightEvaluationCountdown">Loading…</strong>
+                        <span>Time remaining to buy Overnight candidate</span>
+                        <strong id="overnightBuyCountdown">Loading…</strong>
+                    </div>
+                </div>
+                <div class="topbar-tools" id="mcc-static-0014-div"></div>
+            </div>
+            <details class="topbar-readiness" id="system-readiness" aria-label="System readiness">
+                <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></summary>
+                <div class="readiness-grid" id="mcc-static-0032-div"><div class="readiness-runtime"><strong>WebSocket</strong><span id="streamStatus" class="chip">WS minute bars: checking…</span></div><div class="readiness-runtime"><strong>Build</strong><span id="prototype-page-badge" class="chip">MAIN INDEX · ACTIVE</span></div>
+                    <div id="prototype-transport-readiness" class="readiness-item"><div class="demo-flag" id="prototype-demo-flag"><span id="prototype-transport-dot"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div><strong id="prototype-transport-title">Data transport</strong></div>
+                    <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
+                    <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
+                    <div id="mcc-static-0041-div"><span class="readiness-dot demo" id="mcc-static-0042-span"></span><strong id="mcc-static-0043-strong">Live scanner</strong><span id="mcc-static-0044-span">Top movers · SIP entitlement required</span></div>
+                    <div id="mcc-static-0045-div"><span class="readiness-dot blocked" id="mcc-static-0046-span"></span><strong id="mcc-static-0047-strong">Trade execution</strong><span id="mcc-static-0048-span">Not implemented</span></div>
+                </div>
+            </details>
+        </div>
+    </header>
 <main id="mcc-static-0049-main">
 
 <section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
- <div class="main-chart-header" id="mcc-static-0050-div">
-  <div class="section-heading" id="mcc-static-0051-div">
-   <div id="mcc-static-0052-div"><div class="eyebrow" id="mcc-static-0053-div">FOCUSED SYMBOL · API-BACKED</div><h2 id="mainChartTitle">Main Chart</h2><p class="muted" id="mcc-static-0054-p">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p></div>
-   <span id="mainChartSymbol" class="focus-symbol-chip">SPY</span>
-  </div>
- </div>
- <div class="focus-chart-layout" id="mcc-static-0055-div">
-  <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted" id="mcc-static-0056-p">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
-  <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
-   <article class="panel hero-card" id="mcc-static-0057-article"><div class="eyebrow" id="mcc-static-0058-div">OPPORTUNITY CLASSIFICATION</div><div id="classification" class="classification boring">READY — BORING</div><p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p><div class="chips" id="mcc-static-0059-div"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div></article>
-   <article class="panel metric" id="mcc-static-0060-article"><div class="eyebrow" id="mcc-static-0061-div">LAST PRICE</div><strong id="price">Loading…</strong><small id="mcc-static-0062-small">Latest completed 1M bar</small></article>
-   <article class="panel metric" id="mcc-static-0063-article"><div class="eyebrow" id="mcc-static-0064-div">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small id="mcc-static-0065-small">5M same-time-of-day RVOL</small></article>
-   <article class="panel metric" id="mcc-static-0066-article"><div class="eyebrow" id="mcc-static-0067-div">ATR EXTENSION</div><strong id="extension">Loading…</strong><small id="mcc-static-0068-small">1M close vs EMA9 in ATR units</small></article>
-  </section>
+            <div class="main-chart-header" id="mcc-static-0050-div">
+                <div id="mainChartSymbol" class="focus-symbol-chip">SPY</div>
+                <div class="main-chart-heading" id="mcc-static-0051-div">
+                    <div class="eyebrow" id="mcc-static-0053-div">FOCUSED SYMBOL · API-BACKED</div>
+                    <h2 id="mainChartTitle">Main Chart</h2>
+                    <p class="muted" id="mcc-static-0054-p">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p>
+                </div>
+                <article class="panel hero-card main-chart-classification" id="mcc-static-0057-article">
+                    <div class="eyebrow" id="mcc-static-0058-div">LIVE OPPORTUNITY CLASSIFICATION</div>
+                    <div id="classification" class="classification boring">READY — BORING</div>
+                    <p id="headline">Technically eligible does not necessarily mean a high-opportunity trade.</p>
+                    <div class="chips" id="mcc-static-0059-div"><span id="eligibility" class="chip">Eligibility: PASS (demo)</span><span id="freshness" class="chip">Data: SIMULATED</span></div>
+                </article>
+            </div>
+            <div class="focus-chart-layout" id="mcc-static-0055-div">
+                <div id="focusPriceChart" class="focus-price-chart" aria-live="polite"><p class="muted" id="mcc-static-0056-p">Select a symbol to load its 1-minute price line from Alpaca.</p></div>
+                <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
+                    <article class="panel metric" id="mcc-static-0060-article"><div class="eyebrow" id="mcc-static-0061-div">1M CLOSE</div><strong id="price">Loading…</strong><small id="mcc-static-0062-small">Latest completed 1M bar close · current minute excluded</small><small id="oneMinuteTimestamp">Completed bar timestamp: loading…</small></article>
+                    <article class="panel metric" id="mcc-static-0063-article"><div class="eyebrow" id="mcc-static-0064-div">DAILY VWAP</div><strong id="dailyVwap">Loading…</strong><small id="mcc-static-0065-small">Current regular-session VWAP</small></article>
+                    <article class="panel metric" id="mcc-static-0066-article"><div class="eyebrow" id="mcc-static-0067-div">ATR14</div><strong id="atr14">Loading…</strong><small id="mcc-static-0068-small">1M simple average True Range · 14 bars</small></article>
+                    <article class="panel metric" id="mcc-static-0069-article"><div class="eyebrow" id="mcc-static-0070-div">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small id="mcc-static-0071-small">5M same-time-of-day RVOL</small></article>
+                    <article class="panel metric" id="mcc-static-0072-article"><div class="eyebrow" id="mcc-static-0073-div">ATR EXTENSION</div><strong id="extension">Loading…</strong><small id="mcc-static-0074-small">1M |close − Daily VWAP| / ATR14</small></article>
+                    <article class="panel metric metric-pending" id="mcc-metric-pending"><div class="eyebrow">ADDITIONAL METRIC</div><strong>—</strong><small>TBD · intentionally unassigned</small></article>
+                </section>
+            </div>
+        </section>
  </div>
 </section>
 
@@ -293,4 +735,5 @@
             </ol>
             <p class="notice" id="mcc-static-0452-p">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
 </dialog>
-<footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261105-atr-import-control-recovery-v3" id="mcc-static-0454-script"></script></body></html>
+<footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261105-atr-import-control-recovery-v3" id="mcc-static-0454-script"></script><script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
+</body></html>
