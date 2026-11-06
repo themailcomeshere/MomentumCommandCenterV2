@@ -414,3 +414,39 @@ Do not conflate these tests:
 3. **20-session RTO boundary audit:** historical prior-close / next-open coverage. The reviewed IEX result is 37/40 exact; three next-session opens remain missing. Keep the missing observations explicit and do not impute nearest bars.
 4. **Live WebSocket delivery:** separate five-minute regular-session before/after stream test. No-advance symbols require source/feed/eligible-print investigation; they do not change the historical RTO audit result.
 
+
+
+## 1D. Browser diagnostics and regular-session WebSocket/collector acceptance — 2026-11-06
+
+The operator has already verified the visible **Daily data audit** panel on the main Dashboard for RTO,EVR,CBOE. It returned 3 rows, 0 API errors, 0 qualification-usable, all diagnostic-only / DATA? / IEX_PARTIAL, with 20/20 sessions, zero missing, and FRESH. This is a panel/fail-closed UI check, not independent OHLCV parity or full Dashboard acceptance.
+
+Use [Browser-and-Stream-Collector-Acceptance-20261106.md](Validation/Browser-and-Stream-Collector-Acceptance-20261106.md) as the detailed procedure.
+
+### Capture browser console/network
+
+```powershell
+.\scripts\validation\Capture-DashboardBrowserDiagnostics.ps1 -BaseUri "http://localhost:53360/" -CaptureSeconds 120
+```
+
+During the capture, exercise the main Dashboard and review the generated screenshot, `browser-console.json`, `browser-network.json`, and manifest. Investigate uncaught exceptions, console errors, failed requests and unexpected API 4xx/5xx responses. The script sanitizes URLs and does not capture headers, cookies, response bodies, credentials or query values.
+
+### Capture WebSocket and collector behavior during RTH
+
+```powershell
+.\scripts\validation\Test-RegularSessionStreamCollector.ps1 `
+  -BaseUri "http://localhost:53360" `
+  -Symbols SPY,RKLX,ASTX,XRPN `
+  -PollIntervalSeconds 15 `
+  -DurationMinutes 5 `
+  -ConfirmRegularSession
+```
+
+Run during an actual regular session with the main Dashboard loaded and the expected symbols subscribed. The script samples API health, provider, stream and collector status every 15 seconds for five minutes. It records per-symbol subscription/bar-count/lastBarUtc deltas, global received/persisted deltas, collector cycle/watermark/error details, and post-capture live assessments.
+
+A WebSocket delivery pass requires acknowledged subscription AND per-symbol completed-bar count and lastBarUtc advancement during the RTH window. Global received/persisted counters should advance. A symbol with no eligible IEX print may remain static; compare against SPY and other symbols rather than declaring a global failure. A WebSocket-backed 1M assessment additionally needs at least 50 completed persisted WebSocket bars, freshness, feed identity and `ALPACA_WEBSOCKET_LATEST_BAR` provenance. 5M remains REST-backed.
+
+The historical collector is a separate poller. It must be enabled/configured; inspect cycle and watermark advancement plus errors. Disabled means NOT TESTED, not PASS. Do not confuse collector polling with WebSocket delivery or market-wide scanner discovery.
+
+### SIP request policy
+
+Recent Alpaca SIP requests have repeatedly returned HTTP 403 for this account. This is a known external entitlement blocker. Do not retry SIP, reconfigure the feed, run a SIP smoke test, or request another SIP capture. Keep SIP-dependent Daily qualification, consolidated parity, movers and GTC_EXT sell-limit qualification parked unless the operator independently reports an actual entitlement change.
