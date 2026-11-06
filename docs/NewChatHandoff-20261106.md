@@ -1,4 +1,70 @@
-# EVIDENCE UPDATE — 2026-11-06 09:27 Arizona
+# CURRENT HANDOFF — 2026-11-06, expanded 5m ATR evidence
+
+**Repository:** `themailcomeshere/MomentumCommandCenterV2`  
+**Branch:** `feature/opportunity-quality-classification`  
+**Dashboard:** `frontend/index.html`  
+**Order submission:** NOT IMPLEMENTED; decision-support-only.
+
+## Latest operator imports and parity
+
+| Series | Persisted observations | Import appended | Identical skipped | Import gaps | Latest parity | Compared bars | Window gaps | Mean absolute error | Maximum absolute error |
+|---|---:|---:|---:|---:|---|---:|---:|---:|---:|
+| EVR 5m | 325 | 162 | 163 | 3 | `NOT_MATCH` | 20 | 1 | 0.0366528495 | 0.0677729555 |
+| CBOE 5m | 329 | 164 | 165 | 10 | `GAPS_PRESENT` | 20 | 1 | 0.0000200950 | 0.0000436336 |
+| EVR 1m | 346 | — | — | — | `GAPS_PRESENT` | 20 | 13 | 0.0000260340 | 0.0000466859 |
+| CBOE 1m | 0 | — | — | — | `NO_DATA` | 0 | 0 | — | — |
+
+All V2.1 imports report ATR(14) Wilder, Phoenix timezone, extended hours ON and corporate-action adjustment ON. Tolerance remains 0.00005.
+
+## Diagnosis and implementation
+
+- The expanded CSVs were parsed and independently checked for Wilder recurrence.
+- EVR's large divergence is localized to 2026-11-05T14:05Z after a 17h05m gap. Previous exported ATR was 0.6977; current TOS ATR is 6.1914. The server recurrence from the previous exported close yields about 0.8243; residual is +5.3671071. Consecutive exported rows after this transition return to four-decimal rounding-scale recurrence residuals. The final 20 ATR error decays from 0.06777296 to 0.01657418.
+- CBOE also has large recurrence residuals at long gaps, but its latest 20 numeric comparisons are within tolerance. One gap in the latest 119 observations keeps it at `GAPS_PRESENT`.
+- Root design issue identified: the V2.1 study computed Wilder ATR over every host-chart bar, but the former export predicate filtered payload rows to 07:00–19:59 ET. Bars outside that time window could update ATR without being exported, leaving the server unable to reproduce the TOS state.
+- Updated `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt` to export every available chart bar within the selected date range; removed the time-of-day filter. The payload version and Wilder formula are unchanged.
+- **This ThinkScript source has not yet been compiled or run in Thinkorswim.** Do not treat the study correction as runtime-verified.
+- GitHub Actions `build-and-test` passed for pre-study-update head `b379c7b76a1c9b61454719861741d253720ba7da`. The subsequent changes are the ThinkScript source and documentation; there are no C# application-code changes in this update.
+
+Full row-level analysis and exact procedure: [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md).
+
+## Current sell-limit gate status
+
+| Gate | Status |
+|---|---|
+| ATR parity MATCH | BLOCKED |
+| Continuous 119-bar TOS history | BLOCKED |
+| Exact provider/TOS 5m OHLCV equality | NOT VERIFIED |
+| Exact prior regular-session close | NOT VERIFIED |
+| SIP entitlement | NOT CONFIRMED; prior HTTP 403 |
+| 20/20 complete SIP GTC_EXT sessions | NOT CAPTURED |
+| 20-train / 20-unseen-test walk-forward runtime PASS | NOT QUALIFIED; implementation exists |
+
+No local API or user account credentials are available through repository access. I did not attempt SIP again because the last known account result was HTTP 403 and no entitlement change was reported. The existing walk-forward tests use synthetic fixtures; they do not replace 40 real, complete SIP sessions. No numeric sell limit is authorized.
+
+## Next operator action
+
+1. Pull the latest feature branch.
+2. Replace/compile the Thinkorswim study using the revised source file. Confirm `chart=MATCH` and full chart-history export enabled.
+3. Export EVR and CBOE 5m over the same sufficiently broad date range, with extended hours ON and all available premarket, regular-session and after-hours bars. Include at least 99 earlier completed bars before the latest 119-bar qualification window.
+4. Import each export once and report appended/identical/correction counts.
+5. Re-run EVR/CBOE 5m parity. Do not change 0.00005 tolerance or impute bars.
+6. After 119-bar TOS continuity and ATR MATCH, capture exact provider 5m bars for those timestamps and verify OHLCV equality plus the exact prior RTH close.
+7. Only after SIP entitlement/access is confirmed, configure SIP and verify the effective feed. Run one recent SPY SIP smoke request. Then capture 40 complete GTC_EXT sessions for the target symbol and audit 780 exact 1m timestamps plus the exact previous close for each session.
+8. Run `POST /api/boring-overnight/sell-limit` with the target symbol, provider Alpaca, feed sip, and target quantile 75. Preserve every gate and walk-forward metric. A BLOCKED response is expected until all prerequisites pass.
+
+See [Master-To-Do](Master-To-Do.md), [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md), and [ATR export coverage diagnosis](Validation/ATR-Export-Coverage-Fix-20261106.md).
+
+## [Uncertainties]
+
+- The exact missing chart bars at the EVR/CBOE transitions are absent from the supplied CSVs; the recurrence break is established, but individual omitted bars are not.
+- The revised ThinkScript has not yet been compiled or validated in Thinkorswim.
+- Provider/TOS equality, exact reference close, SIP entitlement, 40-session completeness and runtime walk-forward PASS are not evidenced.
+- No broker fill or execution integration exists.
+
+---
+
+# Historical evidence snapshot — 2026-11-06 09:27 Arizona
 
 **Latest operator action:** ATR evidence exporter ran successfully. The ZIP was inspected and row-level analysis completed. This update supersedes the older "Next operator action" requesting the ZIP/export.
 
