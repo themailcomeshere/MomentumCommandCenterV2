@@ -101,7 +101,35 @@ This is a source-file change only. It has **not** been compiled in Thinkorswim o
 
 The current API's Alpaca IEX validation is not a substitute for SIP entitlement or consolidated coverage. No local API process or user credentials are accessible from this repository update, so no provider capture, SIP entitlement test, 40-session capture, or runtime sell-limit calculation was executed here.
 
-## 7. [Uncertainties]
+## 7. Repeatable local qualification runner
+
+Added `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1`.
+
+Run from the repository root after importing the revised TOS exports:
+
+```powershell
+.\scripts\validation\Invoke-SellLimitEvidenceQualification.ps1
+```
+
+The runner:
+
+- Preflights API health and Alpaca provider configuration.
+- Queries 5m ATR parity and persisted TOS observations for EVR and CBOE.
+- Requests provider 5m bars for the exact latest 119 TOS timestamps using the currently effective Alpaca feed.
+- Compares provider/TOS OHLCV exactly and saves row-level mismatches.
+- If and only if the API reports effective Alpaca feed `sip`, captures and audits 40 GTC_EXT sessions and calls the fail-closed sell-limit endpoint to report all gates and walk-forward metrics.
+- If the effective feed is IEX or another non-SIP feed, it performs only the diagnostic provider comparison and explicitly skips SIP capture and sell-limit qualification. It never attempts to request SIP against an IEX configuration.
+- Saves JSON evidence under `artifacts/sell-limit-evidence/<timestamp>/` relative to the repository root.
+
+Optional parameters:
+
+```powershell
+.\scripts\validation\Invoke-SellLimitEvidenceQualification.ps1 -Symbols EVR -TargetQuantilePct 75
+```
+
+The script has been committed but has **not** been executed against the user's local API or PowerShell runtime in this session. Inspect its generated feed identity and exact OHLCV comparison results; a matching IEX comparison remains diagnostic only.
+
+## 8. [Uncertainties]
 
 - The exact bars omitted from the old time-filtered Strategy Report are unavailable in the supplied CSVs. The study predicate proves that time-filtered export could omit bars used by ATR; the row-level EVR recurrence jump localizes the state break but cannot enumerate the omitted bars.
 - The revised ThinkScript has not yet been compiled or run in Thinkorswim.
