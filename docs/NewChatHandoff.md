@@ -1,3 +1,7 @@
+> **Superseded on 2026-11-06:** Use [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md) for current project state and operator actions. This file is retained as historical/design context; do not treat its older unchecked items or implementation-status statements as current.
+>
+> ---
+>
 # New Chat Handoff — November 4, 2026
 
 **Working branch:** `feature/opportunity-quality-classification`  
