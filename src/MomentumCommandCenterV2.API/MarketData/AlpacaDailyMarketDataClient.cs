@@ -87,8 +87,8 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         var latestTimestamp = latest?.Bar.TimestampUtc;
         // The requested latest expected session must itself be present. Avoid Max() on
         // an empty collection: a valid empty provider response is DATA?, not an API 500.
-        var fresh = latest is not null && latestTimestamp <= nowUtc &&
-            nowUtc - latestTimestamp <= TimeSpan.FromDays(5);
+        var fresh = latest is not null && latest.Bar.TimestampUtc <= nowUtc &&
+            nowUtc - latest.Bar.TimestampUtc <= TimeSpan.FromDays(5);
         var observedSma20 = complete ? expectedDates.Average(date => completedBySession[date].Bar.Close) : (double?)null;
         var observedAverageVolume20 = complete ? expectedDates.Average(date => (double)completedBySession[date].Bar.Volume) : (double?)null;
         var consolidatedFeed = _feed.Equals("sip", StringComparison.OrdinalIgnoreCase);
