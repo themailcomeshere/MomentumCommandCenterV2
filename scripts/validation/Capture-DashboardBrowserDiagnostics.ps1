@@ -46,8 +46,8 @@ if (-not $debugReady) {
     $edge = Get-EdgePath
     $profile = Join-Path $env:TEMP "MCC-CDP-$stamp"
     New-Item -ItemType Directory -Force -Path $profile | Out-Null
-    $args = @("--remote-debugging-port=$DebugPort","--user-data-dir=`"$profile`"","--no-first-run","--disable-default-apps",$BaseUri)
-    Start-Process -FilePath $edge -ArgumentList $args | Out-Null
+    $edgeArguments = @("--remote-debugging-port=$DebugPort","--user-data-dir=`"$profile`"","--no-first-run","--disable-default-apps",$BaseUri)
+    Start-Process -FilePath $edge -ArgumentList $edgeArguments | Out-Null
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds(30)
     do {
         Start-Sleep -Milliseconds 500
