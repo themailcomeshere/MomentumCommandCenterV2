@@ -79,7 +79,7 @@ All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00
 
 ### P0.4 Provider/TOS bar parity and reference close
 
-**Current state:** Independent orchestration gates exist; current IEX feed and supplied TOS exports do not establish equality.
+**Current state:** Independent orchestration gates exist. The new `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1` captures provider 5m bars for the exact latest 119 TOS timestamps and reports exact OHLCV differences on the currently configured feed. IEX results are diagnostic only; SIP remains required for qualification. The runner has not yet been executed locally.
 
 **Missing work**
 - Capture the same symbol, 5m aggregation, completed-bar timestamps, session scope and adjustment basis from the configured provider and TOS.
@@ -91,7 +91,7 @@ All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00
 
 ### P0.5 SIP and 40-session GTC_EXT history
 
-**Current state:** Alpaca is effectively IEX. Prior SIP recent-history access returned HTTP 403 entitlement denial. Do not retry until entitlement/access changes.
+**Current state:** Alpaca is effectively IEX. Prior SIP recent-history access returned HTTP 403 entitlement denial. Do not retry until entitlement/access changes. The qualification runner automatically skips the 40-session SIP capture and sell-limit call unless `/api/providers/status` reports effective feed `sip`.
 
 **Missing work after entitlement changes**
 1. User confirms SIP entitlement is active.
@@ -107,7 +107,7 @@ All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00
 
 **Implementation status:** implemented in `BoringOvernightWalkForwardValidator`; the sell-limit orchestrator has a hard `WALK_FORWARD_VALIDATION` gate. Old audit text saying this was not implemented is stale.
 
-**Missing work:** run it only after 40 complete, eligible, source-qualified windows exist. Preserve 20 training then 20 later unseen test sessions. Verify 100% coverage, positive training target, test target-touch rate >= training empirical rate, and test maximum adverse excursion <= training adverse-excursion P95 bound. The target quantile is selected from training only.
+**Missing work:** the new qualification runner will call the sell-limit endpoint only after effective SIP configuration and a 40-session capture attempt. Run it only after 40 complete, eligible, source-qualified windows exist. Preserve 20 training then 20 later unseen test sessions. Verify 100% coverage, positive training target, test target-touch rate >= training empirical rate, and test maximum adverse excursion <= training adverse-excursion P95 bound. The target quantile is selected from training only.
 
 **Acceptance:** persist/report complete train/test counts, quantile, target, touch counts/rates, adverse-excursion statistics, exclusions and source IDs. A passing validator does not imply an actual fill or independently authorize an order.
 
