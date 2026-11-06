@@ -154,7 +154,7 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 
 **Scripts added:**
 - `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1` — Chromium CDP capture of console errors, uncaught exceptions, sanitized network request/response/failure events, and a screenshot.
-- `scripts/validation/Test-RegularSessionStreamCollector.ps1` — 5-minute / 15-second read-only capture of health, provider, stream and collector status, plus per-symbol bar/timestamp deltas and post-capture live assessments.
+- `scripts/validation/Test-RegularSessionStreamCollector.ps1` — 10-minute / 15-second read-only capture of health, provider, stream and collector status, plus per-symbol bar/timestamp deltas and post-capture live assessments.
 
 **Still open:** both scripts require operator execution against the local API/browser. The collector may be disabled; if so, report NOT TESTED/disabled rather than treating it as a pass. WebSocket `SUBSCRIBED` alone is not delivery proof. Full Dashboard browser acceptance remains open after the Daily panel check.
 
