@@ -25,7 +25,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Main Dashboard is `frontend/index.html`. Do not use or recreate PrototypeIndex.
 - [x] Supporting documentation, legacy handoffs and audit files were reconciled; a repeatable ATR evidence-export script was added.
 - [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
-- [x] Row-level recurrence was analyzed for the expanded EVR/CBOE 5m exports; the EVR mismatch is localized to a recurrence discontinuity across a long source-history gap.
+- [x] Latest persisted EVR/CBOE 5m observations were independently rechecked across 663 adjacent pairs; maximum Wilder recurrence residual is 0.0000928571 for both, consistent with four-decimal rounding. No large recurrence discontinuity remains in this import.
 - [x] Identified and corrected the V2.1 study's export predicate: ATR was calculated on all chart bars while the Strategy Report omitted bars outside 07:00–19:59 ET. The study source now exports every available chart bar in the selected date range.
 - [x] GitHub Actions `build-and-test` passed on commit `d00dbd61ede861f6a9924165377a17e9d8001022`, including the original qualification runner/study source state. It does not validate subsequent runner edits, Thinkorswim compilation, or local PowerShell execution.
 - [x] Reviewed operator evidence ZIP `20261106T105332.zip`: API healthy; effective Alpaca feed IEX; no SIP request or 40-session capture occurred.
@@ -75,7 +75,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Immediate execution order
 
-1. Pull `feature/opportunity-quality-classification` and run the local Release build/tests before restarting the API. Then run the Daily qualification script for RTO/EVR before proceeding with the ATR/TOS sequence.
+1. Daily qualification has been run. Do not repeat unchanged on IEX. Confirm SIP entitlement externally before any consolidated Daily re-test; prior HTTP 403 remains a hard stop. Continue with the ATR/TOS sequence below.
 2. Compile the revised Thinkorswim V2.1 study. Set 5m chart/study aggregation, ATR14 Wilder, Phoenix timezone, extended hours ON, corporate-action adjustment ON, and a date range that actually supplies at least 99 warm-up bars before the latest 119-bar window.
 3. Export EVR and CBOE with all available premarket, RTH and after-hours chart bars. Confirm embedded epoch timestamps; do not use Strategy Report order-event timestamps.
 4. Import once, inspect append/identical/correction counts and per-row provenance, then rerun parity. Do not relax 0.00005 tolerance or impute.
@@ -98,6 +98,15 @@ The latest provider comparison and detailed evidence interpretation are in [Sell
 - [ ] Re-run Daily qualification after verified SIP configuration; require independent OHLCV parity and capture Dashboard screenshot.
 
 The current Daily task is no longer “script not run”; it is “script run, independent parity failed, SIP/source qualification outstanding.” See [Daily data qualification](Validation/Daily-Data-Qualification-20261106.md).
+
+
+
+## ATR recurrence follow-up — 2026-11-06
+
+- [x] Independently recomputed Wilder recurrence across all adjacent persisted observations: 326 EVR pairs and 337 CBOE pairs.
+- [x] Confirmed maximum absolute recurrence residual 0.0000928571 for both, consistent with four-decimal ATR rounding; no residual exceeded 0.0002.
+- [ ] Resolve the remaining parity timestamp-gap groups (EVR 3, CBOE 1) against actual TOS chart bars and documented ETH/no-trade session behavior. Do not remove the gap gate or synthesize bars without that evidence.
+- [ ] Compile revised V2.1 ThinkScript in TOS and capture a fresh broad export.
 
 ## [Uncertainties]
 
