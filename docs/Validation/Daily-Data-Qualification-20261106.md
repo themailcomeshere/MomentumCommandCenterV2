@@ -124,3 +124,45 @@ Save a screenshot and the script's complete evidence folder. The browser panel a
 - Independent reference data is sourced from S&P Global Market Intelligence as presented by Stock Analysis; its disclosed historical adjustment basis is split-adjusted, not explicitly dividend-adjusted.
 - Window adjustment equivalence relies on the published corporate-action dates and must be rechecked for a different 20-session window.
 - Exact API/reference OHLCV parity, SIP qualification and browser acceptance remain unverified until the operator runs the script and Dashboard.
+
+
+---
+
+## Runtime evidence update — 2026-11-06 21:53 UTC
+
+**Evidence directory:** `artifacts/daily-data-qualification/20261106T215302Z/`  
+**Run status:** internal consistency PASS for both symbols; independent-source comparison FAIL for both.  
+**API health:** OK; decision-support-only; order submission NOT IMPLEMENTED.  
+**Configured and returned feed:** Alpaca IEX.  
+**Adjustment:** `all (split/dividend adjusted)`.  
+**Expected/returned sessions:** 20/20 for each; zero missing; latest expected date 2026-11-06; fresh at retrieval.
+
+| Symbol | API close | API SMA20 | API ADV20 | Independent close | Independent SMA20 | Independent ADV20 | Result |
+|---|---:|---:|---:|---:|---:|---:|---|
+| RTO | 23.615 | 22.31175 | 134,700.5 | 23.63 | 22.3130 | 1,616,207.4 | FAIL |
+| EVR | 284.600 | 272.18775 | 50,448.1 | 284.47 | 272.2235 | 643,488.4 | FAIL |
+
+The script's row-level diagnostics report multiple OHLC mismatches and volume mismatches on all 20 sessions for both symbols. The API's observed metrics exactly recalculate from its own 20 session rows, so this is not an internal arithmetic defect. It is an external source-parity failure.
+
+**Interpretation:** the observed volume scale is consistent with IEX partial-exchange coverage being compared with the independent source's consolidated volume. The price differences are also consistent with different trade coverage; this evidence does not identify which individual print is authoritative. Keep IEX Daily values diagnostic-only. Do not use the volume values for qualified liquidity, and do not relax tolerances or overwrite the independent CSVs to make the run pass.
+
+The source adjustment labels differ (Alpaca `all`, reference `split-adjusted`). The corporate-action checks documented above place known ex-dividend dates outside this sample window, but this does not convert the IEX series into consolidated data or explain the large volume mismatch.
+
+### Acceptance status
+
+- [x] Daily qualification script executed and evidence committed.
+- [x] Exact 20 expected dates, zero missing dates and freshness confirmed.
+- [x] API observed close/SMA20/ADV20 internally reconciled to returned session rows.
+- [x] Fail-closed behavior confirmed: qualification fields are null and status is DATA? / IEX_PARTIAL.
+- [ ] Independent OHLCV parity — FAILED; requires a consolidated, entitlement-authorized source comparison.
+- [ ] SIP entitlement/feed identity and consolidated Daily parity — not established.
+- [ ] Main Dashboard screenshot/browser comparison — not supplied; Data not found in sources.
+
+Raw evidence is authoritative for this run: `RTO-daily-api.json`, `EVR-daily-api.json`, both summary JSON files, and `daily-qualification-summary.json` in the evidence directory.
+
+## [Uncertainties]
+
+- IEX partial coverage is the likely explanation for the volume-scale difference, but the evidence does not establish exact venue-level composition for each session.
+- OHLC discrepancies cannot be assigned to an incorrect source without an independently authorized consolidated reference.
+- Split-only versus all-adjusted equivalence is sample-window-specific and must be rechecked for any later period.
+- SIP access and Dashboard browser acceptance remain unverified.
