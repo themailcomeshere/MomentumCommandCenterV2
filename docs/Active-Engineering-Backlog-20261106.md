@@ -42,7 +42,7 @@ All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00
 - Export the persisted TOS ATR observations, including exact timestamp, OHLCV, volume, ATR and import provenance.
 - Independently recompute True Range and Wilder ATR from the exact same ordered OHLCV rows.
 - Compare per-bar calculated ATR versus exported ATR, not just aggregate error.
-- Verify first-bar/seed convention, previous-close alignment, recurrence, bar timestamp convention, completed-bar selection, aggregation, session scope, chart adjustment, and whether TOS had more prefetch history than the imported payload.
+- Verify first-bar/seed convention, previous-close alignment, recurrence, bar timestamp convention, completed-bar selection, aggregation, session scope, chart adjustment, and whether TOS had more prefetch history than the imported payload. **Priority hypothesis to test, not a conclusion:** both 5m imports contain only 163/165 observations, while the 1m import contains 346; TOS computes Wilder ATR with ThinkScript prefetch on chart history that may extend before the first exported payload row. A different initial ATR state may therefore persist into the comparison window. Re-export substantially more 5m history before the latest 119-bar qualification window and see whether per-bar error decays/converges. Do not change the algorithm or tolerance until this is tested against the exact rows.
 - Keep symbol/timeframe/import provenance isolated. Reject mixed or duplicate observations.
 - Do not change the 0.00005 precision-derived tolerance to make a failing sample pass.
 
@@ -61,7 +61,7 @@ All responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00
 **Missing work**
 - Compile the exact committed V2.1 ThinkScript in Thinkorswim.
 - Set the chart aggregation and study aggregation to 5m; ATR length 14; Wilder; Phoenix chart timezone; extended hours ON; corporate-action adjustment ON.
-- Load sufficient chart history for the full ATR prefetch/seed context and export at least 119 consecutive completed 5m observations in the relevant qualification window.
+- Load sufficient chart history for the full ATR prefetch/seed context. Export materially more than the 119-bar qualification window so the server has earlier source history with which to reproduce the TOS Wilder state; preserve at least 119 consecutive completed 5m observations in the latest qualification window. The 119 observations are 99 warm-up + 20 comparison bars, not proof that the initial seed context is identical.
 - Confirm embedded Unix-millisecond source epochs, not Strategy Report Date/Time or Work Time.
 - Determine from the chart/source whether every timestamp gap is a no-trade interval or an export/study omission. Never synthesize a bar.
 
