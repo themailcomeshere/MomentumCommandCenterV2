@@ -102,7 +102,7 @@ foreach ($symbolValue in $Symbols) {
 
     $series = @($observationResponse.observations |
         Where-Object { $_.metadata.studyVersion -eq "MCC_OHLCV_ATR_V2.1" } |
-        Sort-Object { [DateTimeOffset]::Parse($_.observation.sourceTimestampUtc).UtcTicks })
+        Sort-Object { [DateTimeOffset]::Parse($_.observation.sourceTimestampUtc).UtcDateTime.Ticks })
 
     $providerComparison = [ordered]@{
         symbol = $symbol
