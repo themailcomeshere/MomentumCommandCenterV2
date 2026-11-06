@@ -632,6 +632,20 @@
   <div id="catalystReviewQueue" class="catalyst-review-queue"><p class="muted small">Fetch Daily + catalyst evidence to load articles for human review.</p></div>
   <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
  </section>
+ <section class="panel daily-data-audit" aria-label="Daily market data audit">
+  <div class="section-heading"><div><h3>Daily data audit</h3><p class="muted small">Direct API check for RTO and EVR. Observed metrics remain diagnostic unless the source is complete, fresh and consolidated SIP.</p></div></div>
+  <div class="watchlist-form">
+   <label for="dailyAuditSymbols">Symbols</label><input id="dailyAuditSymbols" value="RTO,EVR" maxlength="80" aria-label="Daily audit symbols">
+   <button id="dailyAuditRefresh" type="button" class="quiet-button">Validate Daily data</button>
+  </div>
+  <p id="dailyAuditStatus" class="muted small" role="status">Not yet queried. This audit does not assume that Alpaca IEX is consolidated market data.</p>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Symbol</th><th>Source / feed</th><th>Adjustment</th><th>Latest session</th><th>Sessions</th><th>Observed close</th><th>Observed SMA20</th><th>Observed 20D avg vol</th><th>Freshness</th><th>Qualification</th><th>Missing sessions</th></tr></thead>
+    <tbody id="dailyAuditRows"><tr><td colspan="11">Daily API has not been queried.</td></tr></tbody>
+   </table>
+  </div>
+ </section>
  <div class="table-wrap overnight-qualification-table">
   <table>
    <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON</th><th>5D ON</th><th>Current ON</th><th>Above 20 SMA</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
