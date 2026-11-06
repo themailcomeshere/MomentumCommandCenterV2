@@ -166,3 +166,23 @@ The parity endpoint still reports EVR `GAPS_PRESENT` (3 gap groups) and CBOE `GA
 Do not remove the gap gate merely because the Wilder recurrence reconciles. Next, inspect the exact TOS chart at each interval and document the chart's actual bar-presence rule (including extended-hours session bounds and no-trade behavior). Then compare the parity service's gap-counting rule to that contract. If a timestamp is legitimately absent because no chart bar exists, the validator may need an explicit, testable session-aware continuity policy; if a chart bar exists but the export omitted it, correct the export. Never synthesize a zero-volume bar.
 
 **Current result remains blocked:** numeric ATR errors for the final 20 comparisons are within 0.00005, but status is still `GAPS_PRESENT`. TOS compilation of the revised source and a fresh broad export also remain unverified.
+
+
+---
+
+## Session-boundary gap-detector correction — 2026-11-06
+
+Inspection of the already committed 327 EVR / 338 CBOE persisted observations exposed a false-positive case in `AtrTimestampGapDetector`: it ignored cross-New-York-date gaps but treated every same-date gap as an intraday omission. That incorrectly classified a 5-minute interval from 00:00 to 00:10 ET as missing chart data even though it is wholly inside the scheduled 20:00–04:00 ET closure.
+
+The detector now counts a same-New-York-date gap only when the missing interval overlaps the configured equity extended-hours chart session, 04:00–20:00 ET. It still:
+- ignores a gap wholly inside the 20:00–04:00 ET scheduled closure;
+- counts gaps that overlap premarket (for example 00:10 ET to 09:05 ET, which crosses into the 04:00–09:05 premarket interval);
+- counts gaps during after-hours (for example 16:00 ET to 18:40 ET);
+- does not synthesize or impute bars;
+- leaves cross-date/session completeness as a separate qualification requirement.
+
+Three regression tests were added for the after-midnight closure, a gap crossing into premarket, and an after-hours gap.
+
+**Expected effect on the latest persisted 119-bar parity window:** EVR's 00:00–00:10 ET false-positive gap should no longer count; the 00:10–09:05 ET premarket-overlapping gap and 09:05–09:30 ET gap remain. CBOE's 16:00–18:40 ET after-hours gap remains. Thus this correction is not expected to make either series MATCH; it only removes a known scheduled-closure false positive. The API has not yet been rebuilt/restarted and parity has not yet been re-read with this code.
+
+**Important limitation:** whether a gap overlapping an open ETH session represents omitted export rows or a period with no chart bars/trades still requires chart/source evidence. Do not weaken the remaining gap gate based on recurrence consistency alone. No new ScannerExport is required to evaluate this detector correction; use the already persisted observations.
