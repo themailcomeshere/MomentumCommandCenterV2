@@ -3,7 +3,7 @@
 ### Import-control failure diagnosis and correction
 The current source `frontend/index.html` contains all five metadata controls, but the operator's running page reports all five missing while running the current import JavaScript. This indicates a runtime page/asset generation mismatch; the exact routing/cache cause is not proven. The previous null-guard only made the mismatch explicit and did not repair it.
 
-A new defensive bootstrap in `frontend/app.js` now recreates any missing controls before registering the StrategyReport submit handler. It uses the operator's previously confirmed settings: ATR 14, Wilder, America/Phoenix, extended hours ON, corporate-action adjustment ON. Existing controls remain intact. The script cache key is now `20261105-atr-import-control-recovery-v3`. After pulling and restarting, the operator should see the controls; retry both imports. This change is not yet browser-verified.
+A new defensive bootstrap in `frontend/app.js` now recreates any missing controls before registering the StrategyReport submit handler. API static-file middleware also sends no-store/no-cache headers for `index.html` and `app.js` to prevent mixed cached generations. It uses the operator's previously confirmed settings: ATR 14, Wilder, America/Phoenix, extended hours ON, corporate-action adjustment ON. Existing controls remain intact. The script cache key is now `20261105-atr-import-control-recovery-v3`. After pulling and restarting, the operator should see the controls; retry both imports. This change is not yet browser-verified.
 
 ### EVR 5m V2.2 audit
 File: `data/ScannerExports/StrategyReports_EVR_11042026_5M_ATR_v2_2.csv`.
