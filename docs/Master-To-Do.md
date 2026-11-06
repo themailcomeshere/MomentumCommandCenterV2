@@ -7,6 +7,7 @@
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
+**Latest provider/sell-limit evidence:** [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md)  
 **Earlier evidence archive:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
@@ -25,19 +26,26 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
 - [x] Row-level recurrence was analyzed for the expanded EVR/CBOE 5m exports; the EVR mismatch is localized to a recurrence discontinuity across a long source-history gap.
 - [x] Identified and corrected the V2.1 study's export predicate: ATR was calculated on all chart bars while the Strategy Report omitted bars outside 07:00–19:59 ET. The study source now exports every available chart bar in the selected date range.
-- [x] GitHub Actions `build-and-test` passed on commit `d00dbd61ede861f6a9924165377a17e9d8001022`, including the current script/study source state. This validates repository .NET build/tests, not Thinkorswim compilation or PowerShell runner execution.
+- [x] GitHub Actions `build-and-test` passed on commit `d00dbd61ede861f6a9924165377a17e9d8001022`, including the original qualification runner/study source state. It does not validate subsequent runner edits, Thinkorswim compilation, or local PowerShell execution.
+- [x] Reviewed operator evidence ZIP `20261106T105332.zip`: API healthy; effective Alpaca feed IEX; no SIP request or 40-session capture occurred.
+- [x] Latest imports persisted 327 EVR and 338 CBOE 5m observations; 2 EVR and 9 CBOE rows appended, with no corrections.
+- [x] Latest EVR/CBOE 5m numeric ATR errors are within 0.00005, but parity remains `GAPS_PRESENT` (3 EVR and 1 CBOE gap in the 119-observation qualification window).
+- [x] Analyzed row-level IEX/TOS comparison: 0/119 exact OHLCV rows for each symbol; IEX returned 104 EVR and 109 CBOE bars. These results are diagnostic only, not SIP qualification.
+- [x] Updated qualification runner to report comparison mode, configured/response/row-level feed identity, and per-field mismatch counts. This runner edit has not yet been executed locally.
+- [x] Added [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md) with import provenance, parity, IEX comparison and gate interpretation.
 
 ## Current blockers — P0
 
-- [ ] EVR 5m remains `NOT_MATCH`: 325 observations, 1 gap in the 119-bar window, mean absolute error 0.0366528495 and maximum 0.0677729555. Row-level recurrence localizes the large divergence to 2026-11-05T14:05Z after a 17h05m source-history gap. Re-export all chart bars using the corrected study, then re-run parity.
-- [ ] CBOE 5m is now numerically within tolerance (mean absolute error 0.0000200950; max 0.0000436336), but remains `GAPS_PRESENT` with 1 gap in the 119-bar window. It is not a MATCH.
-- [ ] Compile the revised V2.1 ThinkScript in TOS and export all available chart bars (premarket, RTH and after-hours) within the selected date range. Do not filter export rows by time of day.
-- [ ] Obtain at least 119 continuous completed 5m observations in the latest qualification window, with sufficient earlier history for 99 warm-up bars; no unexplained gaps may be imputed.
-- [ ] Resolve EVR 1m's 13 gaps in the 119-observation comparison window or retain `GAPS_PRESENT`.
-- [ ] Prove exact provider/TOS 5m OHLCV equality over the full 119-bar window and exact same-provider/feed prior RTH close.
-- [ ] Keep SIP GTC_EXT qualification blocked until entitlement changes. Current effective feed is IEX; prior SIP access returned HTTP 403.
-- [ ] After SIP access is confirmed, capture 40/40 exact GTC_EXT sessions (20 train + 20 unseen test; 780 exact minute bars/session plus exact prior close).
-- [ ] Run the implemented walk-forward validator on qualified 40-session history and record all train/test metrics. No numeric sell limit until every independent gate passes.
+- [ ] Compile the revised V2.1 ThinkScript in Thinkorswim and export full chart history. The revised source removes the 07:00–19:59 ET export filter, but TOS compilation/run is not yet evidenced.
+- [ ] Resolve EVR 5m parity: latest status `GAPS_PRESENT`, 3 gaps in the 119-observation window; MAE 0.0000294330, max 0.0000495349. Numeric values are within tolerance, but continuity is not certified.
+- [ ] Resolve CBOE 5m parity: latest status `GAPS_PRESENT`, 1 gap in the 119-observation window; MAE 0.0000203866, max 0.0000426076. Numeric values are within tolerance, but continuity is not certified.
+- [ ] Obtain 119 continuous completed 5m observations for each required symbol, plus at least 99 earlier warm-up bars. Investigate every gap against source/chart evidence; never impute.
+- [ ] Resolve EVR 1m's 13 gaps in its prior 119-observation window or retain `GAPS_PRESENT`; 1m does not replace the independent 5m gate.
+- [ ] Prove exact provider/TOS 5m OHLCV equality over all 119 timestamps and capture the exact previous RTH close from the same provider/feed. Latest IEX diagnostic returned 0/119 exact rows for EVR and CBOE; it does not establish SIP behavior.
+- [ ] Keep SIP qualification blocked until account entitlement changes. Current effective feed is IEX; this run made no SIP request.
+- [ ] After SIP access is confirmed, capture 40/40 exact SIP GTC_EXT sessions (20 chronological training + 20 unseen test; 780 exact minute bars/session plus exact prior close).
+- [ ] Run the implemented walk-forward validator on qualified 40-session history and record all train/test metrics. Runtime PASS is unproven.
+- [ ] Keep numeric sell-limit output fail-closed until every independent gate passes.
 
 ## Remaining engineering and acceptance — P1
 
@@ -58,18 +66,24 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [ ] Confirm provider entitlement, scanner universe coverage, licensing, rate limits and retention before production-source selection.
 - [ ] Define packaging/startup, local data backup/restore, API lifecycle and unattended collector recovery before choosing installer technology.
 
-## Immediate next action
+## Immediate execution order
 
-Pull the latest branch and compile the revised Thinkorswim V2.1 study at [MCC_OHLCV_ATR_V2.txt](Charts/Flexible%20Grid/OHLCV/MCC_OHLCV_ATR_V2.txt). The export predicate now emits every available chart bar in the selected date range; the previous 07:00–19:59 ET filter omitted bars that still influenced TOS Wilder ATR.
+1. Pull `feature/opportunity-quality-classification` and run the local Release build/tests before restarting the API.
+2. Compile the revised Thinkorswim V2.1 study. Set 5m chart/study aggregation, ATR14 Wilder, Phoenix timezone, extended hours ON, corporate-action adjustment ON, and a date range that actually supplies at least 99 warm-up bars before the latest 119-bar window.
+3. Export EVR and CBOE with all available premarket, RTH and after-hours chart bars. Confirm embedded epoch timestamps; do not use Strategy Report order-event timestamps.
+4. Import once, inspect append/identical/correction counts and per-row provenance, then rerun parity. Do not relax 0.00005 tolerance or impute.
+5. Inspect every remaining gap in TOS. If a bar is legitimately absent, record the source/session rule and ensure parity's continuity contract handles that rule explicitly; otherwise correct the export and re-import.
+6. Run the updated `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1`. Verify its new feed-identity and mismatch-breakdown fields. With IEX it must remain diagnostic-only and skip SIP/40-session work.
+7. Obtain/confirm SIP entitlement outside MCC. Only after that, configure SIP, restart, verify effective feed, run one recent SPY SIP smoke request, and then capture/audit 40 GTC_EXT sessions.
+8. Complete the 20-train/20-unseen-test walk-forward runtime validation. Preserve every exclusion and metric; no numeric sell limit before all gates pass.
 
-Re-export EVR and CBOE 5m with extended hours ON and a sufficiently early start date, including premarket, regular-session and after-hours bars. Import once, then re-run parity. Do not change tolerance or impute missing bars. After import, run `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1` to capture the exact provider/TOS 119-bar comparison on the currently configured feed. It will skip SIP capture unless `/api/providers/status` confirms effective feed `sip`.
-
-See [ATR export coverage diagnosis](Validation/ATR-Export-Coverage-Fix-20261106.md) for the exact recurrence break, updated study logic, and gate-by-gate status.
+The latest provider comparison and detailed evidence interpretation are in [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md).
 
 ## [Uncertainties]
 
-- The EVR recurrence discontinuity is localized to a long source-history gap; the exact omitted chart bars are not in the supplied CSV. The revised study has not yet been compiled/run.
-- SIP entitlement and 40/40 GTC_EXT coverage remain unverified.
-- Walk-forward runtime pass, provider/TOS equality, browser acceptance and regular-session WebSocket recovery remain unverified.
+- Remaining TOS timestamp gaps may be legitimate no-trade intervals or export omissions; supplied CSVs cannot classify them.
+- IEX/TOS OHLCV differences do not establish which source is wrong and do not predict SIP results.
+- The revised ThinkScript and latest PowerShell runner edit have not been compiled/executed in their target runtimes.
+- SIP entitlement, 40/40 GTC_EXT coverage, walk-forward runtime pass, exact prior close, browser acceptance and regular-session WebSocket recovery remain unverified.
 - Scanner full-pool missing-field count must be refreshed; 296 was the last recorded audit result.
 - No actual broker execution ledger or broker-fill integration is verified.
