@@ -1,5 +1,8 @@
 # ATR Export Coverage Diagnosis and V2.1 Study Correction — 2026-11-06
 
+> **Follow-up evidence:** The 2026-11-06 10:53 Arizona imports and IEX provider/TOS comparison supersede the import/parity/provider status described below. Current counts, remaining gaps, IEX-only diagnostics and gate status are recorded in [Sell-Limit-Evidence-Analysis-20261106.md](Sell-Limit-Evidence-Analysis-20261106.md). The revised ThinkScript still requires Thinkorswim compilation and a fresh export.
+
+
 **Branch:** `feature/opportunity-quality-classification`  
 **New source exports:**  
 - `data/ScannerExports/StrategyReports_EVR_11022026_to_11052026_5M_ATR.csv`
