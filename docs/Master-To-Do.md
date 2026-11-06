@@ -120,7 +120,7 @@ The current Daily task is no longer “script not run”; it is “script run, i
 - [x] Operator ran Daily audit for RTO,EVR,CBOE: 3 checked, 0 API errors, 0 qualification-usable, 3 diagnostic-only; all 20/20, zero missing, FRESH, IEX_PARTIAL / DATA?.
 - [x] Clarified Overnight fail-closed semantics: historical scanner PASS is only shortlist evidence; unknown/missing/stale price, liquidity, catalyst, session, exclusion or chart gates cannot become PASS/READY. Unknown catalyst is not CLEAR; Final READY stays unavailable until all required gates pass.
 - [x] Added `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1` for CDP console/network capture and Dashboard screenshot.
-- [x] Added `scripts/validation/Test-RegularSessionStreamCollector.ps1` for 5-minute, 15-second polling of API health, provider, WebSocket stream and historical collector status during regular hours.
+- [x] Added `scripts/validation/Test-RegularSessionStreamCollector.ps1` for 10-minute, 15-second polling of API health, provider, WebSocket stream and historical collector status during regular hours.
 - [ ] Run both PowerShell scripts and commit their timestamped evidence directories.
 - [ ] Full Dashboard browser acceptance remains open beyond the verified Daily audit panel.
 - [ ] Regular-session WebSocket delivery and collector progress remain unverified until the new script is run.
