@@ -1,3 +1,62 @@
+# OPERATOR VALIDATION UPDATE — 2026-11-06
+
+**Branch:** `feature/opportunity-quality-classification`  
+**Verified local source SHA:** `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`  
+**Release build + tests:** PASS  
+**API:** `OK`, mode `decision-support-only`; order submission `NOT IMPLEMENTED`.  
+**Effective market-data feed:** Alpaca `iex`, validated. Massive is not configured.
+
+## Latest ATR import evidence (imports were idempotent)
+
+| Imported file | Symbol / timeframe | Parsed observations | Appended | Identical skipped | Corrections | Source timestamp gaps |
+|---|---|---:|---:|---:|---:|---:|
+| `StrategyReports_EVR_11032026_1M_ATR_v2_1.csv` | EVR / 1m | 346 | 0 | 346 | 0 | 48 |
+| `StrategyReports_EVR_11042026_5M_ATR_v2_1.csv` | EVR / 5m | 82 | 0 | 82 | 0 | 1 |
+| `StrategyReports_CBOE_11032026_5M_ATR.csv` | CBOE / 5m | 85 | 0 | 85 | 0 | 5 |
+| `StrategyReports_CBOE_11032026_to_11042026_5M_ATR.csv` | CBOE / 5m | 165 | 0 | 165 | 0 | 6 |
+
+All four imports identify `MCC_OHLCV_ATR_V2.1`, ATR(14) Wilder, `America/Phoenix`, extended hours ON and corporate-action adjustment ON. All returned `appendedCount=0`, `correctionCount=0`; therefore these uploads did not change the persisted observations.
+
+### Interpretation and current blockers
+
+- **EVR 1m:** 346 observations cover 2026-11-03 14:04–20:58 UTC, but the full export reports 48 gaps. Prior parity evidence showed 13 gaps in the 119-observation comparison window and numeric error within tolerance; that result was `GAPS_PRESENT`, not `MATCH`. The latest import is idempotent, but parity must be queried again against the persisted store before treating that as current runtime evidence.
+- **EVR 5m:** The new 82-observation export spans 2026-11-04 14:05–21:00 UTC and has one 10-minute gap (14:20 expected, 14:30 actual UTC). It does not supply 119 consecutive bars. Its import did not add observations. The prior persisted parity result was `NOT_MATCH`; re-query it.
+- **CBOE 5m:** The 85-observation file has five gaps; the 165-observation two-day file has six gaps. The two-day file includes a 3h20m discontinuity from 21:25 UTC Nov 3 to 00:45 UTC Nov 4, plus multiple 15–25 minute gaps. Neither total observation count nor a two-day span establishes a continuous 119-bar qualification window. The imports did not add observations.
+- **Feed:** Alpaca is currently IEX, not SIP. The API reports one successful validation bar, which establishes connectivity only—not extended-hours completeness, SIP entitlement, or sell-window qualification. Massive remains unconfigured.
+- **Build:** Release build/tests passed against the verified source SHA. The API health response does not expose the running process's Git SHA, so it does not independently prove which binary is currently running.
+- Do not infer that a timestamp gap is a no-trade interval. No gaps may be imputed, tolerance must not be relaxed, and no numeric sell limit is authorized.
+
+## Next operator verification
+
+After restarting the API from the just-built source, run the following parity queries (no re-import is needed):
+
+```powershell
+$base = "http://localhost:53360"
+$parity = @(
+    "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=1m",
+    "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m",
+    "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m"
+)
+foreach ($url in $parity) {
+    "`n===== $url ====="
+    Invoke-RestMethod $url | ConvertTo-Json -Depth 20
+}
+```
+
+Capture each full response, including status, parity version, sourceObservationCount, comparedBarCount, timestampGapCount, mean/maximum/p90 error, first/last compared timestamps, and provenance. The endpoint defaults to 99 warm-up bars plus 20 compared bars (119 total), seeds Wilder ATR from full imported history, and does not impute gaps.
+
+Then investigate EVR 5m/CBOE 5m numeric mismatches using exact timestamp-matched imported OHLCV and ATR values: verify true range, prior close, full-history Wilder seed/recurrence, chronological order, symbol/timeframe isolation, session boundary treatment and export rounding. Establish whether missing timestamps are no-trade intervals or missing chart/export observations from independent source evidence.
+
+Do not change the IEX configuration to SIP or attempt another SIP capture until SIP entitlement/access is confirmed. After access is confirmed, the sell-limit qualification still requires complete 20/20 SIP GTC_EXT sessions, exact prior RTH closes, all ATR/provider parity gates, fresh completed 5m ATR and a passing 20-session train + 20-session unseen-test walk-forward result.
+
+[Uncertainties]
+- Fresh parity responses after these four idempotent imports have not yet been supplied.
+- The cause of the gaps and numeric mismatches is not established.
+- SIP entitlement remains unconfirmed; prior SIP denial was HTTP 403.
+- The API health response does not identify the running process SHA.
+- Runtime walk-forward pass, browser acceptance and actual broker-fill reconciliation remain unverified.
+
+---
 # CURRENT STATUS — latest operator-supplied ATR parity evidence
 
 **Status: release/qualification remains blocked.** This section is the current status authority and supersedes older ATR counts and stale implementation-status statements in the historical log below. Historical entries are retained for audit; do not interpret them as current state.
