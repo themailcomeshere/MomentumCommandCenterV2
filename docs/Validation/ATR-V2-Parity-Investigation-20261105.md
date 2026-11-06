@@ -1,3 +1,39 @@
+# 2026-11-06 — operator validation and re-import evidence
+
+- [x] Operator reports Release build and tests PASS at source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`. GitHub branch tree HEAD independently resolves to the same SHA.
+- [x] API health reports `OK`, `decision-support-only`, and `orderSubmission=NOT IMPLEMENTED`.
+- [x] Provider status confirms Alpaca `iex` configured and validated, with one successful validation bar. Massive is not configured. This is connectivity evidence only; it is not proof of SIP entitlement or full extended-hours coverage.
+- [x] EVR 1m import: 346 observations, 0 appended, 346 identical skipped, 0 corrections; 48 gaps across the full export.
+- [x] EVR 5m import: 82 observations, 0 appended, 82 identical skipped, 0 corrections; one 10-minute gap.
+- [x] CBOE 5m single-day import: 85 observations, 0 appended, 85 identical skipped, 0 corrections; five gaps.
+- [x] CBOE 5m two-day import: 165 observations, 0 appended, 165 identical skipped, 0 corrections; six gaps, including a 3h20m discontinuity.
+- [ ] Re-query persisted parity for EVR/1m, EVR/5m and CBOE/5m after restarting the API from this Release build. Imports were idempotent; do not upload the CSVs again.
+- [ ] Diagnose numeric mismatches using exact timestamp-matched source OHLCV/ATR rows and the full-history Wilder seed, true range, prior close, recurrence, ordering and session boundaries.
+- [ ] Establish whether each gap represents a genuine no-trade interval or a missing chart/export observation. Do not infer; do not impute.
+
+The latest import responses do not themselves contain fresh parity results. Previous parity results remain diagnostic context only until the endpoint is queried again. See the current handoff `docs/NewChatHandoff-20261106.md`.
+
+## Exact parity recheck
+
+```powershell
+$base = "http://localhost:53360"
+$parity = @(
+    "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=1m",
+    "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m",
+    "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m"
+)
+foreach ($url in $parity) {
+    "`n===== $url ====="
+    Invoke-RestMethod $url | ConvertTo-Json -Depth 20
+}
+```
+
+[Uncertainties]
+- Fresh parity output is not present in the latest operator evidence.
+- Numeric mismatch root causes and the meaning of missing timestamps remain undetermined.
+- SIP entitlement, 20/20 session qualification, runtime walk-forward pass, browser acceptance and broker execution reconciliation remain unverified.
+
+---
 ## 2026-11-05 Arizona — Wilder ATR parity seed correction
 
 - [x] Investigated the imported EVR 1m API result (`NOT_MATCH`, mean 0.000029, max 0.000061). The endpoint was trimming the source to the latest 119 bars before calculating Wilder ATR. That re-seeded the recursive ATR at the start of the 119-bar window rather than carrying the full chart-history seed forward.
