@@ -1,0 +1,31 @@
+{
+    "status":  "NOT_MATCH",
+    "comparisonVersion":  "MCC-WILDER-ATR-PARITY-1.1",
+    "symbol":  "EVR",
+    "timeframe":  "5m",
+    "atrPeriod":  14,
+    "warmupBars":  99,
+    "minimumComparisonBars":  20,
+    "tolerance":  0.00005,
+    "sourceObservationCount":  163,
+    "comparedBarCount":  20,
+    "timestampGapCount":  1,
+    "meanAbsoluteError":  0.0010467165656351600121000177,
+    "maximumAbsoluteError":  0.0019357359694955728793776904,
+    "p90AbsoluteError":  0.0016991805043099582480348453,
+    "firstComparedAtUtc":  "2026-11-04T19:25:00+00:00",
+    "lastComparedAtUtc":  "2026-11-04T21:00:00+00:00",
+    "meanRelativeErrorPct":  0.1522082270079309165722198450,
+    "metadata":  {
+                     "sourceFileName":  "StrategyReports_EVR_11032026_5M_ATR_v2_1.csv",
+                     "studyVersion":  "MCC_OHLCV_ATR_V2.1",
+                     "atrPeriod":  14,
+                     "atrAverageType":  "Wilder",
+                     "chartTimezone":  "America/Phoenix",
+                     "extendedHours":  true,
+                     "corporateActionAdjustment":  true,
+                     "importBatchId":  "693b2384f0894fe39edf72e5963dbd31",
+                     "importedAtUtc":  "2026-11-06T02:55:50.3917273+00:00"
+                 },
+    "explanation":  "Server Wilder ATR does not match the exported Thinkorswim ATR within the four-decimal export rounding bound. Numeric sell-limit orchestration must remain blocked. This comparison uses the imported TOS OHLCV bars and does not diagnose provider-feed differences."
+}

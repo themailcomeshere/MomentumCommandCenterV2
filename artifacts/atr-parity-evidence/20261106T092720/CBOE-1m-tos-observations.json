@@ -1,0 +1,7 @@
+{
+    "count":  0,
+    "observations":  [
+
+                     ],
+    "interpretation":  "Latest append-only Thinkorswim ATR observations, kept separate from provider OHLCV. Source chart settings and import provenance are included on every observation."
+}

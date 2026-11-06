@@ -1,0 +1,113 @@
+{
+    "CapturedAtUtc":  "2026-11-06T16:27:21.0410756+00:00",
+    "CapturedAtLocal":  "2026-11-06T09:27:21.0441197-07:00",
+    "BaseUri":  "http://localhost:53360",
+    "LocalGitSha":  "9dd2c224d8f1373c7935eb3f94ed5fddea837e5f",
+    "ApiHealth":  {
+                      "service":  "MomentumCommandCenterV2.API",
+                      "status":  "OK",
+                      "mode":  "decision-support-only",
+                      "orderSubmission":  "NOT IMPLEMENTED",
+                      "timestampUtc":  "2026-11-06T16:27:20.7109008+00:00"
+                  },
+    "ProviderStatus":  {
+                           "value":  [
+                                         {
+                                             "provider":  "Alpaca",
+                                             "configuredFeed":  "iex",
+                                             "configuredFeedSource":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                             "feedConfigurationSources":  [
+                                                                              {
+                                                                                  "source":  "JsonConfigurationProvider for \u0027appsettings.json\u0027 (Optional)",
+                                                                                  "value":  "iex"
+                                                                              },
+                                                                              {
+                                                                                  "source":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                                                                  "value":  "iex"
+                                                                              }
+                                                                          ],
+                                             "configured":  true,
+                                             "validated":  true,
+                                             "status":  "VALIDATED_DATA_RETURNED",
+                                             "lastSuccessfulDataValidationUtc":  "2026-11-06T16:27:12.139+00:00",
+                                             "lastSuccessfulDataValidationBarCount":  8,
+                                             "capabilities":  [
+                                                                  "Historical 1m/5m OHLCV bars",
+                                                                  "REST with bounded pagination and transient retries",
+                                                                  "Configured feed: iex",
+                                                                  "Extended-hours bars included only when provider returns them for this feed/entitlement",
+                                                                  "Scanner/movers discovery still depends on configured scanner source"
+                                                              ],
+                                             "credentialLocation":  "server environment / user secrets; never frontend"
+                                         },
+                                         {
+                                             "provider":  "Massive",
+                                             "configuredFeed":  null,
+                                             "configuredFeedSource":  null,
+                                             "feedConfigurationSources":  null,
+                                             "configured":  false,
+                                             "validated":  false,
+                                             "status":  "NOT_CONFIGURED",
+                                             "lastSuccessfulDataValidationUtc":  null,
+                                             "lastSuccessfulDataValidationBarCount":  0,
+                                             "capabilities":  [
+                                                                  "Historical 1m/5m OHLCV aggregates",
+                                                                  "REST only; no websocket yet",
+                                                                  "Scanner/movers endpoint not implemented",
+                                                                  "Plan/endpoint entitlements must be verified"
+                                                              ],
+                                             "credentialLocation":  "server environment / user secrets; never frontend"
+                                         }
+                                     ],
+                           "Count":  2
+                       },
+    "WarmupBars":  99,
+    "ComparisonWindowBars":  119,
+    "Queries":  [
+                    {
+                        "Symbol":  "EVR",
+                        "Timeframe":  "1m",
+                        "ParityUri":  "http://localhost:53360/api/strategy-report/atr-parity?symbol=EVR\u0026timeframe=1m\u0026warmupBars=99\u0026windowBars=119",
+                        "ObservationsUri":  "http://localhost:53360/api/strategy-report/atr-observations?symbol=EVR\u0026timeframe=1m\u0026limit=10000",
+                        "ParityStatus":  "GAPS_PRESENT",
+                        "SourceObservationCount":  346,
+                        "ComparedBarCount":  20,
+                        "TimestampGapCount":  13,
+                        "ObservationRowsReturned":  346
+                    },
+                    {
+                        "Symbol":  "EVR",
+                        "Timeframe":  "5m",
+                        "ParityUri":  "http://localhost:53360/api/strategy-report/atr-parity?symbol=EVR\u0026timeframe=5m\u0026warmupBars=99\u0026windowBars=119",
+                        "ObservationsUri":  "http://localhost:53360/api/strategy-report/atr-observations?symbol=EVR\u0026timeframe=5m\u0026limit=10000",
+                        "ParityStatus":  "NOT_MATCH",
+                        "SourceObservationCount":  163,
+                        "ComparedBarCount":  20,
+                        "TimestampGapCount":  1,
+                        "ObservationRowsReturned":  163
+                    },
+                    {
+                        "Symbol":  "CBOE",
+                        "Timeframe":  "1m",
+                        "ParityUri":  "http://localhost:53360/api/strategy-report/atr-parity?symbol=CBOE\u0026timeframe=1m\u0026warmupBars=99\u0026windowBars=119",
+                        "ObservationsUri":  "http://localhost:53360/api/strategy-report/atr-observations?symbol=CBOE\u0026timeframe=1m\u0026limit=10000",
+                        "ParityStatus":  "NO_DATA",
+                        "SourceObservationCount":  0,
+                        "ComparedBarCount":  0,
+                        "TimestampGapCount":  0,
+                        "ObservationRowsReturned":  0
+                    },
+                    {
+                        "Symbol":  "CBOE",
+                        "Timeframe":  "5m",
+                        "ParityUri":  "http://localhost:53360/api/strategy-report/atr-parity?symbol=CBOE\u0026timeframe=5m\u0026warmupBars=99\u0026windowBars=119",
+                        "ObservationsUri":  "http://localhost:53360/api/strategy-report/atr-observations?symbol=CBOE\u0026timeframe=5m\u0026limit=10000",
+                        "ParityStatus":  "NOT_MATCH",
+                        "SourceObservationCount":  165,
+                        "ComparedBarCount":  20,
+                        "TimestampGapCount":  3,
+                        "ObservationRowsReturned":  165
+                    }
+                ],
+    "ImportantBoundary":  "TOS ATR observations and parity are exported separately from provider OHLCV. This script does not prove provider/TOS bar equality, classify missing timestamps, or infer broker fills."
+}

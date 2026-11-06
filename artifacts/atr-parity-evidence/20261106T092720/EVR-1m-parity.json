@@ -1,0 +1,31 @@
+{
+    "status":  "GAPS_PRESENT",
+    "comparisonVersion":  "MCC-WILDER-ATR-PARITY-1.1",
+    "symbol":  "EVR",
+    "timeframe":  "1m",
+    "atrPeriod":  14,
+    "warmupBars":  99,
+    "minimumComparisonBars":  20,
+    "tolerance":  0.00005,
+    "sourceObservationCount":  346,
+    "comparedBarCount":  20,
+    "timestampGapCount":  13,
+    "meanAbsoluteError":  0.0000260340079546151371189166,
+    "maximumAbsoluteError":  0.0000466859356441646893968986,
+    "p90AbsoluteError":  0.0000422323205380501015461932,
+    "firstComparedAtUtc":  "2026-11-03T20:39:00+00:00",
+    "lastComparedAtUtc":  "2026-11-03T20:58:00+00:00",
+    "meanRelativeErrorPct":  0.0111809563296678897287859370,
+    "metadata":  {
+                     "sourceFileName":  "StrategyReports_EVR_11032026_1M_ATR_v2_1.csv",
+                     "studyVersion":  "MCC_OHLCV_ATR_V2.1",
+                     "atrPeriod":  14,
+                     "atrAverageType":  "Wilder",
+                     "chartTimezone":  "America/Phoenix",
+                     "extendedHours":  true,
+                     "corporateActionAdjustment":  true,
+                     "importBatchId":  "36d9ac21291a41cbad56450e3e8dc785",
+                     "importedAtUtc":  "2026-11-06T02:57:51.0340046+00:00"
+                 },
+    "explanation":  "ATR values are within numeric tolerance, but one or more intraday source timestamps are missing within a New York session date. Wilder recurrence across missing bars cannot be certified; no gap is imputed and parity is not MATCH."
+}

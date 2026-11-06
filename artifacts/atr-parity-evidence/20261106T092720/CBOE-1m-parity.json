@@ -1,0 +1,21 @@
+{
+    "status":  "NO_DATA",
+    "comparisonVersion":  "MCC-WILDER-ATR-PARITY-1.1",
+    "symbol":  null,
+    "timeframe":  null,
+    "atrPeriod":  null,
+    "warmupBars":  99,
+    "minimumComparisonBars":  20,
+    "tolerance":  0.00005,
+    "sourceObservationCount":  0,
+    "comparedBarCount":  0,
+    "timestampGapCount":  0,
+    "meanAbsoluteError":  null,
+    "maximumAbsoluteError":  null,
+    "p90AbsoluteError":  null,
+    "firstComparedAtUtc":  null,
+    "lastComparedAtUtc":  null,
+    "meanRelativeErrorPct":  null,
+    "metadata":  null,
+    "explanation":  "No persisted Thinkorswim ATR observations were found."
+}
