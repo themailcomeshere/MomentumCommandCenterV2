@@ -51,6 +51,13 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Equal("COMPLETE_20_EXPECTED_SESSIONS", result.Completeness);
         Assert.Equal("CONSOLIDATED_SIP", result.FeedCoverage);
         Assert.True(result.QualificationUsable);
+        Assert.Equal(20, result.Sessions.Count);
+        Assert.Empty(result.MissingSessionDates);
+        Assert.Equal(dates, result.ExpectedSessionDates);
+        Assert.Equal(dates[^1], result.LatestExpectedSessionDate);
+        Assert.Equal(120d, result.ObservedClose);
+        Assert.Equal(110.5d, result.ObservedSma20);
+        Assert.Equal(1010.5d, result.ObservedAverageDailyVolume20);
         Assert.Contains("timeframe=1Day", handler.Request!.RequestUri!.ToString());
         Assert.Contains("adjustment=all", handler.Request.RequestUri.ToString());
         Assert.Contains("feed=sip", handler.Request.RequestUri.ToString());
@@ -83,7 +90,40 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Equal(10.5d, result.ObservedClose);
         Assert.Equal("IEX_PARTIAL", result.FeedCoverage);
         Assert.False(result.QualificationUsable);
-        Assert.Equal("INCOMPLETE_EXPECTED_SESSIONS", result.Completeness);
+        Assert.Equal("INCOMPLETE_20_EXPECTED_SESSIONS", result.Completeness);
+        Assert.Equal(20, result.ExpectedSessionDates.Count);
+        Assert.Equal(19, result.MissingSessionDates.Count);
+        Assert.Single(result.Sessions);
+    }
+
+
+    [Fact]
+    public async Task GetMetricsAsync_EmptyBarsReturnsIncompleteDataInsteadOfThrowing()
+    {
+        using var http = new HttpClient(new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"bars":[]}""")
+        })) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "key",
+            ["MarketData:Alpaca:ApiSecret"] = "secret",
+            ["MarketData:Alpaca:Feed"] = "sip"
+        }).Build();
+        var client = new AlpacaDailyMarketDataClient(http, config);
+
+        var result = await client.GetMetricsAsync("RTO",
+            new DateTimeOffset(2026, 11, 6, 22, 0, 0, TimeSpan.Zero), CancellationToken.None);
+
+        Assert.Equal(0, result.ValidSessionCount);
+        Assert.Empty(result.Sessions);
+        Assert.Equal(20, result.ExpectedSessionDates.Count);
+        Assert.Equal(20, result.MissingSessionDates.Count);
+        Assert.False(result.DataFresh);
+        Assert.False(result.QualificationUsable);
+        Assert.Null(result.Price);
+        Assert.Null(result.Sma20);
+        Assert.Null(result.AverageDailyVolume20);
     }
 
     private sealed class RecordingHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory) : HttpMessageHandler
