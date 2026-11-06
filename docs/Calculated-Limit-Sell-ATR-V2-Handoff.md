@@ -1,3 +1,33 @@
+## 2026-11-05 Arizona — Main Dashboard promotion and ATR import verification
+
+### Main Dashboard is now authoritative
+- [x] Migrated the approved PrototypeIndex UI into `frontend/index.html`: fixed left symbol/workspace dock, Intraday Momentum ↔ Boring Overnight vertical switch, responsive top bar/readiness layout, integrated opportunity classification card, completed 1M close timestamp, Daily VWAP, ATR14, RVOL and ATR-extension metrics.
+- [x] Preserved main-index-only features during the migration, including all five StrategyReport ATR provenance controls, calculated sell-limit evidence controls, current Quick Start content, current Morning Brief, and the cache-busted `app.js?v=20261105-atr-import-control-recovery-v3` reference.
+- [x] Added the workspace-toggle bridge so the vertical switch drives the existing `#mode` state. The symbol field continues to drive the existing `#symbol` state.
+- [x] Removed duplicate static element IDs introduced by the prototype chart metric markup.
+- [x] Removed `frontend/prototypeIndex.html`. Do not test or develop against a second HTML entry point. `frontend/index.html` is the only Dashboard page for all future UI work and acceptance testing.
+
+### Operator-confirmed ATR import results
+- [x] EVR 1m Nov 3 V2.1: 346 observations appended; 48 timestamp gaps overall; parity `NOT_MATCH`; 20 matched timestamps; mean absolute error 0.000029; max absolute error 0.000061. The max exceeds the 0.00005 tolerance, so 1m parity is not certified.
+- [x] EVR 5m Nov 3 V2.1: 81 observations appended; one 5-minute gap; `INSUFFICIENT_WARMUP` because 99 warm-up observations are required before the 20-bar comparison.
+- [x] EVR 5m Nov 4 V2.2: 82 observations recognized as identical; 0 appended, 82 identical skipped, 0 corrections. This is correct idempotent import behavior, not a missing import. It remains below the 119 observations required for the 99+20 validation window.
+- [x] Gaps remain explicit; no bars were synthesized. Numeric sell-limit output remains withheld.
+
+### Next work / operator acceptance
+1. Pull `feature/opportunity-quality-classification`, run `.\\scripts\\Get-Latest-And-Test.ps1`, restart the API, then use only the root Dashboard page (`/`, served from `frontend/index.html`).
+2. Confirm the left dock, vertical workspace switch, editable focused-symbol field, redesigned readiness header, and six opportunity metrics render. Test both workspaces and Reset.
+3. Confirm all five ATR import controls remain visible and the two previously imported Nov 3 reports remain persisted; do not re-import unless deliberately testing idempotency.
+4. Export at least 119 consecutive 5m V2.1 observations for EVR (99 warm-up + 20 comparisons), with no intraday gaps in the latest parity window. Inspect embedded payload epochs, including any after-hours bars.
+5. Investigate the 1m parity error and source gaps. Do not relax the 0.00005 tolerance or interpolate missing bars to force a match.
+6. Continue provider/TOS OHLCV parity, full-session coverage, 20/20 SIP GTC_EXT qualification (only after entitlement changes), walk-forward runtime validation, and actual broker-fill reconciliation.
+
+[Uncertainties]
+- The new main-index layout is committed but still requires browser/runtime acceptance on the operator's local API host.
+- The 1m parity discrepancy's cause is not diagnosed by this import response; provider-feed differences are not tested by the current TOS-import parity comparison.
+- The cause of the 1m and 5m source timestamp gaps is unknown. No interpolation is permitted.
+
+---
+
 ## November 5, 2026 — follow-up: missing controls and V2.2 export
 
 ### Import-control failure diagnosis and correction
