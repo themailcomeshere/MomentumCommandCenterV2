@@ -42,7 +42,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 **Missing work**
 - [x] Parse the expanded EVR/CBOE exports and recompute row-level Wilder recurrence from exact payload OHLCV.
-- [x] Localize EVR's large recurrence break: 2026-11-05T14:05Z, immediately after a 17h05m gap; recurrence residual +5.3671071. Subsequent consecutive rows return to rounding-scale residuals.
+- [x] Re-audit the latest persisted EVR/CBOE observation sequences: all 326 EVR and 337 CBOE adjacent-pair Wilder recurrence checks have maximum absolute residual 0.0000928571, consistent with four-decimal ATR rounding; no residual exceeds 0.0002. This supersedes the earlier large EVR residual diagnosis for the older import.
 - [x] Identify the export predicate mismatch: ATR calculation uses every host-chart bar, but the former Strategy Report predicate omitted rows outside 07:00–19:59 ET.
 - [x] Update the V2.1 ThinkScript source to export all available chart bars in the selected date range; retain date filtering only.
 - Compile the revised study in Thinkorswim and verify its full-history export includes premarket, RTH and after-hours bars.
@@ -61,7 +61,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 ### P0.2 Obtain continuous corrected 5m ATR history
 
-**Current state:** Latest imports contain 327 EVR and 338 CBOE 5m observations. The import files report 5 EVR and 18 CBOE timestamp gaps overall; parity reports 3 EVR and 1 CBOE gap in the latest 119-observation window. The revised full-chart export source is committed but not yet compiled or run in Thinkorswim.
+**Current state:** Latest persisted history contains 327 EVR and 338 CBOE 5m observations. Final-20 numeric ATR errors are within 0.00005. A fresh recurrence audit across all adjacent persisted pairs found no large residuals (maximum 0.0000928571 for both symbols, consistent with four-decimal ATR rounding). Nevertheless parity reports 3 EVR and 1 CBOE timestamp-gap groups in the latest 119-observation window. Whether these are missing expected chart bars or legitimate no-trade/out-of-session intervals is unresolved. Revised full-chart export source is committed but TOS compilation/fresh-export evidence is absent.
 
 **Missing work**
 - Compile the revised exact V2.1 ThinkScript in Thinkorswim. It now exports all available chart bars within the selected date range and no longer filters payloads by time of day.
