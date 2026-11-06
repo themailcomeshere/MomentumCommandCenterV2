@@ -107,7 +107,10 @@ $assessments = foreach ($symbol in $Symbols) {
     catch { [pscustomobject]@{ symbol=$symbol; status="ERROR"; error=$_.Exception.Message } }
 }
 Save-Json "live-assessments-after.json" @($assessments)
+$sourceCommit = $null
+try { $repoRootForGit = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path; $sourceCommit = (& git -C $repoRootForGit rev-parse HEAD 2>$null).Trim() } catch {}
 $manifest = [ordered]@{
+    sourceCommit = $sourceCommit
     capturedAtUtc = [DateTimeOffset]::UtcNow.ToString("o")
     baseUri = $BaseUri
     initialEasternTime = $nowEastern.ToString("o")
