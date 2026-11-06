@@ -13,6 +13,34 @@ if ($WarmupBars -lt 15 -or $WindowBars -le $WarmupBars) {
     throw "WarmupBars must be >= 15 and WindowBars must exceed WarmupBars."
 }
 
+# Verify the API before creating an evidence directory. A connection failure here
+# means the API is stopped or BaseUri does not match its active HTTP listener.
+try {
+    $health = Invoke-RestMethod -Uri "$BaseUri/api/health" -Method Get -TimeoutSec 10 -ErrorAction Stop
+}
+catch {
+    $detail = $_.Exception.Message
+    throw @"
+Cannot reach the MCC API health endpoint: $BaseUri/api/health
+Reason: $detail
+
+Start the API from the repository root in a separate PowerShell window:
+  dotnet run --project .\src\MomentumCommandCenterV2.API\MomentumCommandCenterV2.API.csproj --launch-profile MomentumCommandCenterV2.API
+
+Keep that window running, then verify in this window:
+  Invoke-RestMethod 'http://localhost:53360/api/health' | ConvertTo-Json -Depth 8
+
+The launch profile uses HTTP http://localhost:53360 and HTTPS https://localhost:53359.
+Use the matching scheme and port. If your API is listening elsewhere, rerun this script
+with -BaseUri 'http://localhost:<actual-http-port>'.
+No evidence files were collected.
+"@
+}
+
+if ($health.status -and $health.status -ne "OK") {
+    throw "MCC API responded at $BaseUri but health status is '$($health.status)', not 'OK'. No evidence files were collected."
+}
+
 $stamp = (Get-Date).ToString("yyyyMMddTHHmmss")
 $outputDirectory = Join-Path $OutputRoot $stamp
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
@@ -34,7 +62,6 @@ try {
 }
 catch { $localSha = $null }
 
-$health = Invoke-RestMethod "$BaseUri/api/health"
 Save-Json (Join-Path $outputDirectory "health.json") $health
 
 $providers = Invoke-RestMethod "$BaseUri/api/providers/status"
