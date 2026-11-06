@@ -24,7 +24,7 @@ All V2.1 imports report ATR(14) Wilder, Phoenix timezone, extended hours ON and 
 - Root design issue identified: the V2.1 study computed Wilder ATR over every host-chart bar, but the former export predicate filtered payload rows to 07:00–19:59 ET. Bars outside that time window could update ATR without being exported, leaving the server unable to reproduce the TOS state.
 - Updated `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt` to export every available chart bar within the selected date range; removed the time-of-day filter. The payload version and Wilder formula are unchanged.
 - **This ThinkScript source has not yet been compiled or run in Thinkorswim.** Do not treat the study correction as runtime-verified.
-- GitHub Actions `build-and-test` passed at commit `909f17037fdddb03430b9824ba42b9dc08132581`. The branch subsequently received documentation-only commit `1d0ad97ab89c8a096aec17ee738395fcf6a5e446`; there are no C# application-code changes after the passing CI run. CI does not compile ThinkScript or execute the PowerShell runner.
+- GitHub Actions `build-and-test` passed at commit `d00dbd61ede861f6a9924165377a17e9d8001022`. CI validates the repository .NET build/tests; it does not compile ThinkScript or execute the PowerShell runner.
 
 Full row-level analysis and exact procedure: [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md). Added [Invoke-SellLimitEvidenceQualification.ps1](../scripts/validation/Invoke-SellLimitEvidenceQualification.ps1) to compare provider/TOS OHLCV on the exact latest 119 timestamps and, only when effective feed is SIP, first smoke-test recent SPY 1m SIP data, then capture 40 GTC_EXT sessions and report all sell-limit gates. It has not been executed against the local API.
 
