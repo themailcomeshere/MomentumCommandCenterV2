@@ -19,9 +19,17 @@
 # - Load sufficient history: at least 99 consecutive completed source bars
 #   before the first comparison bar (98 Wilder prefetch bars + comparison bar).
 # - Match chart extended-hours and corporate-action adjustment settings to MCC.
-# - The time-window functions below use the EST/Eastern clock, not the chart's
-#   displayed Phoenix timezone. The default 07:00–20:00 ET window spans the
-#   Overnight sell-window research interval and includes after-hours bars.
+# - ATR is calculated on EVERY bar present in the host chart. Therefore the
+#   export must also include EVERY bar used by that calculation. Do not filter
+#   payload rows by time of day: doing so drops premarket/after-hours bars that
+#   update Wilder ATR and creates an unreproducible state jump at the next
+#   exported bar.
+# - Set the chart's extended-hours display ON. The date range below limits the
+#   export only by calendar date; all available chart bars within those dates
+#   are exported. Choose a start date far enough ahead of the comparison window
+#   to provide at least 99 earlier completed bars.
+# - Filter to the strategy's eligible 07:00–19:59 ET window downstream, after
+#   ATR parity has been calculated on the complete chart-bar sequence.
 # - Export the Strategy Report and preserve full order names/precision.
 #
 # V2 payload:
@@ -36,8 +44,6 @@ declare upper;
 
 input startDate = 20261019;
 input endDate = 20261019;
-input startTime = 0700;
-input endTime = 1959;
 input chartAggregation = AggregationPeriod.FIVE_MIN;
 input atrLength = 14;
 
@@ -52,13 +58,6 @@ def aggregationIsSupported =
 
 def sourceDate = GetYYYYMMDD()[1];
 def sourceInDateRange = sourceDate >= startDate and sourceDate <= endDate;
-def secondsFromStart = SecondsFromTime(startTime);
-def secondsTillEnd = SecondsTillTime(endTime);
-def sourceInConfiguredWindow =
-    if startTime <= endTime
-    then secondsFromStart[1] >= 0 and secondsTillEnd[1] >= 0
-    else secondsFromStart[1] >= 0 or secondsTillEnd[1] >= 0;
-
 def sourceTimestamp = GetTime()[1];
 def sourceOpen = open[1];
 def sourceHigh = high[1];
@@ -70,9 +69,12 @@ def trueRange = TrueRange(high, close, low);
 def atrSeries = MovingAverage(AverageType.WILDERS, trueRange, atrLength);
 def sourceAtr = atrSeries[1];
 
+# Export all chart bars in the selected date range. ATR uses the unfiltered
+# host-chart TrueRange series, so applying a time-of-day export filter here
+# would omit bars that still affect the Wilder recurrence.
 def exportBar = BarNumber() > 2 and aggregationIsSupported
     and chartAggregationMatches
-    and sourceInDateRange and sourceInConfiguredWindow
+    and sourceInDateRange
     and !IsNaN(sourceAtr);
 
 plot MCCExportMarker = if exportBar then low else Double.NaN;
@@ -94,7 +96,7 @@ AddLabel(yes,
     if aggregationIsSupported and chartAggregationMatches then Color.CYAN else Color.RED);
 AddLabel(yes,
     if aggregationIsSupported and chartAggregationMatches
-    then "Export enabled — record ETH/adjustment settings separately"
+    then "Full chart-history export enabled — record ETH/adjustment settings"
     else "EXPORT BLOCKED — select a supported aggregation and match the chart",
     if aggregationIsSupported and chartAggregationMatches then Color.YELLOW else Color.RED);
 
@@ -125,7 +127,11 @@ AddOrder(OrderType.SELL_TO_CLOSE, exportBar,
 # 1. Compile in Thinkorswim for each selected aggregation.
 # 2. Set chartAggregation input AND chart aggregation control to same period.
 # 3. Confirm the label shows chart=MATCH and export is enabled.
-# 4. Load >=99 consecutive completed bars before first comparison bar.
-# 5. Compare >=20 consecutive exported bars with chart OHLCV and ATR plot.
-# 6. Record chart timezone, ETH, adjustment, ATR length and average type.
-# 7. Missing source timestamps remain gaps; never interpolate them.
+# 4. Set a sufficiently early startDate to include >=99 completed bars before
+#    the first comparison bar. Do not restrict export by time of day.
+# 5. Confirm premarket, regular-session and after-hours chart bars are exported
+#    throughout the selected date range.
+# 6. Compare >=20 consecutive exported bars with chart OHLCV and ATR plot.
+# 7. Record chart timezone, ETH, adjustment, ATR length and average type.
+# 8. Missing source timestamps remain gaps; never interpolate them.
+# 9. Apply the 07:00–19:59 ET sell-window filter only after ATR parity.
