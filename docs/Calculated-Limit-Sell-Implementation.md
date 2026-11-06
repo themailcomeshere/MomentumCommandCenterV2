@@ -1,3 +1,18 @@
+## 2026-11-05 Arizona — latest import evidence and Dashboard entry point
+
+- The sole Dashboard entry point is now `frontend/index.html`; `frontend/prototypeIndex.html` was removed after its approved layout was migrated. UI implementation and browser acceptance must use the local API root URL `/`.
+- The main page now includes the fixed symbol/workspace dock, vertical workspace toggle, responsive readiness header, integrated classification card, completed 1M close timestamp, Daily VWAP, ATR14, RVOL and ATR-extension metrics. The toggle is bridged to the existing `#mode` state.
+- The migration explicitly retained all five ATR import provenance controls and the calculated sell-limit evidence controls from the newer main page. The active app.js cache key remains `20261105-atr-import-control-recovery-v3`.
+- Operator import result: EVR 1m Nov 3 V2.1 = 346 appended, 48 timestamp gaps, 20 matched timestamps, mean absolute error 0.000029, max 0.000061, `NOT_MATCH`. The max exceeds the 0.00005 tolerance.
+- Operator import result: EVR 5m Nov 3 V2.1 = 81 appended, one 5-minute gap, `INSUFFICIENT_WARMUP` (99 observations required before 20 comparisons).
+- EVR 5m Nov 4 V2.2 = 82 identical skipped, 0 appended, 0 corrections. Idempotent re-import confirmed; no additional history was added.
+- Missing bars are not imputed. Numeric sell-limit output remains withheld pending continuous ATR warm-up/parity and all independent gates.
+
+[Uncertainties]
+The local browser has not yet accepted the migrated page. The cause of the 1m parity error and the timestamp gaps is not diagnosed by the import summary; no tolerance relaxation or gap interpolation is justified.
+
+---
+
 ## November 5 follow-up — import-control recovery and updated export evidence
 
 - Current checked-in HTML contains the five ATR provenance controls; operator's running DOM reports all five missing. Root cause of the runtime mismatch is not yet identified.
