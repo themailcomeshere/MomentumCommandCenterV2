@@ -117,8 +117,8 @@ The runner:
 - Queries 5m ATR parity and persisted TOS observations for EVR and CBOE.
 - Requests provider 5m bars for the exact latest 119 TOS timestamps using the currently effective Alpaca feed.
 - Compares provider/TOS OHLCV exactly and saves row-level mismatches.
-- If and only if the API reports effective Alpaca feed `sip`, captures and audits 40 GTC_EXT sessions and calls the fail-closed sell-limit endpoint to report all gates and walk-forward metrics.
-- If the effective feed is IEX or another non-SIP feed, it performs only the diagnostic provider comparison and explicitly skips SIP capture and sell-limit qualification. It never attempts to request SIP against an IEX configuration.
+- If and only if the API reports effective Alpaca feed `sip`, first performs a small recent SPY 1m SIP smoke request. Only after that returns SIP bars does it capture/audit 40 GTC_EXT sessions and call the fail-closed sell-limit endpoint to report all gates and walk-forward metrics.
+- If the effective feed is IEX or another non-SIP feed, it performs only the diagnostic provider comparison and explicitly skips the SIP smoke, 40-session capture and sell-limit qualification. It never attempts to request SIP against an IEX configuration.
 - Saves JSON evidence under `artifacts/sell-limit-evidence/<timestamp>/` relative to the repository root.
 
 Optional parameters:
