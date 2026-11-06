@@ -1,4 +1,4 @@
-# Daily Market-Data Qualification — RTO and EVR — 2026-11-06
+# Daily Market-Data Qualification — RTO, EVR, and CBOE — 2026-11-06
 
 **Branch:** `feature/opportunity-quality-classification`  
 **API endpoint:** `GET /api/market-data/daily?symbol={RTO|EVR}`  
@@ -20,7 +20,7 @@ The Daily response now exposes:
 
 This makes the API independently auditable: an operator can recalculate the 20-session close average and volume average from the actual returned rows instead of trusting aggregate fields.
 
-The Dashboard now has a dedicated RTO/EVR Daily audit panel. It displays provider/feed, adjustment, latest expected session, API retrieval timestamp, observed close, observed SMA20, observed 20-session average volume, freshness, qualification status and missing session dates. IEX observations are visibly diagnostic; they do not become SIP qualification values.
+The Dashboard now has a dedicated Daily data audit panel. The operator has verified the visible panel with RTO, EVR, and CBOE selected. It displays provider/feed, adjustment, latest expected session, API retrieval timestamp, observed close, observed SMA20, observed 20-session average volume, freshness, qualification status and missing session dates. IEX observations are visibly diagnostic; they do not become SIP qualification values.
 
 Tests were extended to cover session-level payloads, exact expected/missing session dates, arithmetic, IEX qualification suppression, and a zero-bars response. These are synthetic unit tests, not live-provider acceptance.
 
@@ -166,3 +166,25 @@ Raw evidence is authoritative for this run: `RTO-daily-api.json`, `EVR-daily-api
 - OHLC discrepancies cannot be assigned to an incorrect source without an independently authorized consolidated reference.
 - Split-only versus all-adjusted equivalence is sample-window-specific and must be rechecked for any later period.
 - SIP access and Dashboard browser acceptance remain unverified.
+
+
+## Dashboard runtime verification — operator supplied 2026-11-06 22:34 UTC
+
+The operator reports the main Dashboard's visible **Daily data audit** panel was run for `RTO,EVR,CBOE`. It reported: `Daily API checked 3 symbol(s): 0 qualification-usable, 3 returned but DATA? / diagnostic-only, 0 API errors.` All three rows show 20/20 sessions, no missing sessions, FRESH, Alpaca/IEX, adjustment `all (split/dividend adjusted)`, and `DATA? · IEX_PARTIAL`.
+
+| Symbol | Observed close | Observed SMA20 | Observed 20D average volume | Retrieved UTC |
+|---|---:|---:|---:|---|
+| RTO | 23.615 | 22.3118 | 134,701 | 2026-11-06T22:34:05.8019414Z |
+| EVR | 284.600 | 272.1878 | 50,448 | 2026-11-06T22:34:05.8019414Z |
+| CBOE | 353.280 | 325.0030 | 76,734 | 2026-11-06T22:34:05.8019414Z |
+
+This verifies the user-visible audit workflow and its IEX fail-closed display for all three symbols. It does not establish independent-source parity. RTO/EVR independent comparisons already failed against the committed Stock Analysis / S&P Global reference CSVs. A CBOE independent Daily reference and comparison are absent: **Data not found in sources.** No screenshot or browser console/network capture was included in the supplied text.
+
+**SIP handling:** The user has repeatedly confirmed that recent Alpaca SIP access returns HTTP 403. This is a known external entitlement blocker. Do not ask the user to retry SIP, reconfigure to SIP, or repeat any SIP smoke/capture workflow. Keep all SIP-dependent qualification tasks parked until the user independently reports a real entitlement change.
+
+### Acceptance update
+- [x] Operator verified the visible **Daily data audit** panel for RTO, EVR, and CBOE; 3 returned, 0 API errors, 0 qualification-usable, all remain DATA? / diagnostic-only.
+- [x] Confirmed all three display 20/20 sessions, zero missing, FRESH, IEX, and IEX_PARTIAL.
+- [ ] Independent RTO/EVR OHLCV parity remains FAILED; do not rerun unchanged.
+- [ ] CBOE independent Daily reference/parity — Data not found in sources.
+- [ ] CDP browser screenshot and console/network evidence — use [Browser and Stream Collector Acceptance](Browser-and-Stream-Collector-Acceptance-20261106.md).
