@@ -1,3 +1,9 @@
+> **2026-11-06 implementation status:** This is a separate V3 Thinkorswim deliverable, not the MCC Opportunity Quality assessor. The C# diagnostic assessor and market-metrics adapter exist, but their thresholds/proxy metrics are provisional. The Boring Overnight watchlist column and optional companion chart study described below remain planned and are not implemented. Track execution in [Active-Engineering-Backlog-20261106.md](../../Active-Engineering-Backlog-20261106.md); do not duplicate its queue here.
+>
+> **Scope boundary:** The main MCC Dashboard is `frontend/index.html`; this document concerns a Thinkorswim watchlist/chart artifact and does not authorize broker order routing.
+>
+> ---
+>
 # Momentum Command Center V3 — Boring Overnight Decision Column / Chart Study TODO
 
 **Status:** Planned — not implemented or validated yet  
