@@ -5,6 +5,67 @@
 **Dashboard:** `frontend/index.html`  
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
 
+# LATEST OPERATOR UPDATE — 2026-11-06, Daily audit UI and PowerShell acceptance
+
+## Corrections to the previous action plan
+
+- **Do not ask for the same EVR/CBOE ScannerExports again.** The committed V2.1 CSVs and persisted observations are already present in GitHub. The 327 EVR and 338 CBOE observations have been imported and analyzed; repeat imports were idempotent. The latest Wilder recurrence audit covers 326 EVR and 337 CBOE adjacent pairs and is rounding-consistent. Re-uploading the same exports adds no evidence. Only a demonstrably new/corrected export after the revised ThinkScript is compiled could be relevant; do not request it preemptively.
+- **Do not retry SIP.** The operator has confirmed multiple times that recent Alpaca SIP access is denied (HTTP 403). Treat this as an established external entitlement blocker. No further SIP smoke request, feed reconfiguration, or GTC_EXT capture should be requested or initiated unless the operator independently reports an actual entitlement change.
+- The visible Dashboard section is named **Daily data audit**. The operator has verified it on the main index with symbols RTO,EVR,CBOE.
+
+## Daily audit browser evidence
+
+User-reported result: 3 symbols checked; 0 qualification-usable; 3 returned diagnostic-only / DATA?; 0 API errors. All 3 show 20/20 sessions, zero missing, FRESH, Alpaca/IEX, and `DATA? · IEX_PARTIAL`.
+
+| Symbol | Close | SMA20 | Average volume |
+|---|---:|---:|---:|
+| RTO | 23.615 | 22.3118 | 134,701 |
+| EVR | 284.600 | 272.1878 | 50,448 |
+| CBOE | 353.280 | 325.0030 | 76,734 |
+
+RTO/EVR independent OHLCV comparison previously failed against the committed Stock Analysis / S&P Global references. Do not rerun unchanged. CBOE independent reference/parity is absent: Data not found in sources. The UI result is a successful panel/display/fail-closed check, not independent data qualification.
+
+## Meaning of Overnight fail-closed
+
+The Daily data audit is not the Boring Overnight decision. Imported scanner historical PASS is shortlist evidence only. The candidate still needs current price, Daily liquidity, exclusion status, complete overnight-session history, catalyst evidence, and current 5M/1M state. Missing/stale/unknown required inputs remain DATA? / UNKNOWN; unknown catalyst is not CLEAR; a known hard failure remains BLOCKED. A high scanner score or technical signal cannot override those gates. READY must remain unavailable until every required gate is affirmatively satisfied. The live per-candidate panel output has not yet been captured in this turn.
+
+## New PowerShell evidence scripts
+
+1. Browser diagnostics: `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1`. Uses Edge CDP to capture console/uncaught exceptions, sanitized network request/response/failure events, and screenshot. Command:
+
+```powershell
+.\scripts\validation\Capture-DashboardBrowserDiagnostics.ps1 -BaseUri "http://localhost:53360/" -CaptureSeconds 120
+```
+
+During capture, interact with the main Dashboard and inspect Daily data audit, Boring Overnight qualification, Red Zone, Morning Brief, and sell-limit gate explanations. It writes to `artifacts/browser-diagnostics/<timestamp>/`.
+
+2. Regular-session stream/collector: `scripts/validation/Test-RegularSessionStreamCollector.ps1`. Read-only polling every 15 seconds for five minutes; it does not alter feed settings. Command:
+
+```powershell
+.\scripts\validation\Test-RegularSessionStreamCollector.ps1 -BaseUri "http://localhost:53360" -Symbols SPY,RKLX,ASTX,XRPN -PollIntervalSeconds 15 -DurationMinutes 5 -ConfirmRegularSession
+```
+
+Run during an actual RTH session (script checks weekday and 09:30–16:00 ET bounds; operator must still confirm holiday/early-close calendar). A WebSocket subscription acknowledgement alone is not a pass. Require per-symbol completed-bar count and lastBarUtc advancement, global received/persisted deltas, and fresh assessment provenance. Collector is a separate historical poller; if disabled, report NOT TESTED/disabled.
+
+Detailed instructions and acceptance criteria: `docs/Validation/Browser-and-Stream-Collector-Acceptance-20261106.md`.
+
+## Current work status
+
+- [x] Daily data audit panel user-verified for RTO/EVR/CBOE, fail-closed on IEX.
+- [x] Added PowerShell CDP browser diagnostics script.
+- [x] Added PowerShell regular-session stream/collector capture script.
+- [ ] Run both scripts and commit their evidence folders.
+- [ ] Complete full main Dashboard browser acceptance.
+- [ ] Complete regular-session WebSocket delivery and collector runtime acceptance.
+- [ ] Catalyst human-label/holdout validation.
+- [ ] Opportunity Quality full-pool ranking.
+- [ ] V3 Boring Overnight column.
+- [ ] Overnight boundary / official 09:30 auction-print validation.
+- [ ] Thinkorswim authority/EOD matched-state acceptance.
+- [ ] 40-session walk-forward runtime qualification is blocked by incomplete eligible GTC_EXT source data and the known SIP entitlement issue; validator implementation already exists. Do not request a SIP attempt.
+
+
+
 # OPERATOR UPDATE — 2026-11-06, Daily run and ATR gap follow-up
 
 ## Daily qualification evidence now received
