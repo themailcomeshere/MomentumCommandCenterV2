@@ -254,7 +254,7 @@ The script attaches to or launches an isolated Edge CDP session, captures browse
   -BaseUri "http://localhost:53360" `
   -Symbols SPY,RKLX,ASTX,XRPN `
   -PollIntervalSeconds 15 `
-  -DurationMinutes 5 `
+  -DurationMinutes 10 `
   -ConfirmRegularSession
 ```
 
