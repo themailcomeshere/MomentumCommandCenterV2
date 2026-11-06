@@ -88,10 +88,12 @@ foreach ($symbolInput in $Symbols) {
             @{ Field = "sma20"; Observed = "observedSma20" },
             @{ Field = "averageDailyVolume20"; Observed = "observedAverageDailyVolume20" }
         )) {
-            if ($null -eq $payload.($pair.Field) -or $null -eq $payload.($pair.Observed)) {
+            $qualificationValue = $payload.PSObject.Properties[$pair.Field].Value
+            $observedValue = $payload.PSObject.Properties[$pair.Observed].Value
+            if ($null -eq $qualificationValue -or $null -eq $observedValue) {
                 $internalErrors += "$($pair.Field) qualification value is null on SIP."
             } else {
-                try { Assert-Near ([double]$payload.($pair.Field)) ([double]$payload.($pair.Observed)) 0.00000001 $pair.Field }
+                try { Assert-Near ([double]$qualificationValue) ([double]$observedValue) 0.00000001 $pair.Field }
                 catch { $internalErrors += $_.Exception.Message }
             }
         }
@@ -110,7 +112,8 @@ foreach ($symbolInput in $Symbols) {
         if ([string]::IsNullOrWhiteSpace($ReferenceProvider)) {
             $independentMismatches += "ReferenceProvider is required to identify the independent source."
         } else {
-            $referenceRows = @(Import-Csv -Path $referencePath)
+            Copy-Item -LiteralPath $referencePath -Destination (Join-Path $OutputDirectory "$symbol-independent-reference.csv") -Force
+        $referenceRows = @(Import-Csv -Path $referencePath)
             $requiredColumns = @("SessionDate","Open","High","Low","Close","Volume","Adjustment")
             if ($referenceRows.Count -ne 20) { $independentMismatches += "Reference CSV has $($referenceRows.Count) rows, expected 20." }
             if ($referenceRows.Count -gt 0) {
@@ -133,7 +136,9 @@ foreach ($symbolInput in $Symbols) {
                     if (-not $apiRow) { $independentMismatches += "No API session for reference date $($ref.SessionDate)."; continue }
                     foreach ($field in @("Open","High","Low","Close")) {
                         try {
-                            Assert-Near ([double]$apiRow.($field.ToLowerInvariant())) ([double]$ref.$field) 0.0001 "$symbol $($ref.SessionDate) $field"
+                            $apiValue = $apiRow.PSObject.Properties[$field.ToLowerInvariant()].Value
+                            $referenceValue = $ref.PSObject.Properties[$field].Value
+                            Assert-Near ([double]$apiValue) ([double]$referenceValue) 0.0001 "$symbol $($ref.SessionDate) $field"
                         } catch { $independentMismatches += $_.Exception.Message }
                     }
                     if ([long]$apiRow.volume -ne [long]$ref.Volume) {
