@@ -92,11 +92,11 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 ### P0.5 SIP and 40-session GTC_EXT history
 
-**Current state:** Alpaca is effectively IEX. Prior SIP recent-history access returned HTTP 403 entitlement denial. Do not retry until entitlement/access changes. The qualification runner automatically skips SIP work unless `/api/providers/status` reports effective feed `sip`; when SIP is configured, it first requires a successful recent SPY 1m SIP smoke response before attempting 40-session capture.
+**Current state:** Alpaca is effectively IEX. The operator has repeatedly confirmed recent SIP requests return HTTP 403. Treat this as an established external blocker; no further SIP requests, configuration changes, smoke tests, or captures are planned unless the operator independently reports a genuine entitlement change. The runner's SIP preflight remains a code safety guard, not an instruction to try SIP again.
 
 **Missing work after entitlement changes**
 1. User confirms SIP entitlement is active.
-2. Configure effective `MarketData:Alpaca:Feed=sip` (inspect secrets and environment overrides), restart API, and verify provider status reports SIP.
+2. PARKED — do not configure or request SIP. Resume only if the operator reports an actual entitlement change; then review the provider workflow before any request.
 3. Test one recent SIP SPY request before any long capture.
 4. Capture 40 complete sell sessions: 20 chronological training + 20 later unseen test sessions.
 5. Each session requires all 780 exact 1m bar-start timestamps from 07:00 through 19:59 ET and the exact previous regular-session close.
@@ -142,7 +142,7 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 - Run Release build/tests against the exact latest code-bearing branch source (the current updates are documentation/evidence only; prior operator-reported PASS was at SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`).
 - Do not repeat the same IEX qualification run; the 2026-11-06 run already passed internal 20-session checks and failed independent consolidated OHLCV parity.
 - SIP entitlement is a known external blocker after repeated HTTP 403 responses. No further operator action or SIP request is planned; park this gate unless the operator independently reports a genuine entitlement change.
-- Re-run `scripts/validation/Test-DailyMarketDataQualification.ps1` for RTO/EVR only after effective SIP is verified. Require exact 20 sessions, no missing dates, freshness, internal arithmetic and independent OHLCV parity; preserve all mismatch/error details.
+- Keep the current IEX results diagnostic-only. Do not repeat the unchanged Daily run. RTO/EVR independent parity already failed; CBOE's independent reference is absent. Any future independent validation requires a different source/feed with known coverage, not another identical IEX run.
 - Click the Dashboard Daily audit button and verify the UI matches the saved API evidence exactly; capture a screenshot.
 - Verify evaluator/snapshot behavior remains DATA? whenever feed is non-SIP, history is incomplete/stale, or any required metric is missing.
 
