@@ -56,15 +56,11 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Immediate next action
 
-Run:
+The ATR evidence ZIP has been received and analyzed. Do **not** run the exporter again or re-import the same CSVs.
 
-```powershell
-.scriptsalidationExport-AtrParityEvidence.ps1
-```
+Next, obtain materially longer 5m Thinkorswim V2.1 history for EVR and CBOE, with enough earlier observations to test the Wilder seed/prefetch hypothesis and at least 119 completed bars in the latest qualification window. Resolve timestamp discontinuities from chart/source evidence; do not impute them. Then import only new/corrected rows and rerun parity.
 
-The script saves health/provider status, EVR/CBOE 1m/5m parity responses, full persisted TOS observation rows, local Git SHA when available, manifest and SHA-256 hashes under `artifacts/atr-parity-evidence/<timestamp>/`. Zip that output folder and provide it. This is the next required evidence to diagnose the 5m numeric mismatches. It does not include provider OHLCV or establish provider/TOS equality.
-
-Then follow [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md) in priority order.
+See [ATR evidence analysis](Validation/ATR-Evidence-Export-Analysis-20261106.md) for exact observed values, recurrence calculations, limitations and ordered operator steps. Provider/TOS equality still requires a separate provider-OHLCV capture.
 
 ## [Uncertainties]
 
