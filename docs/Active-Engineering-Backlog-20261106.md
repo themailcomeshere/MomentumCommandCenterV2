@@ -120,16 +120,29 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 
 ### P1.1 Daily market data and liquidity
 
-**Implementation status:** separate Alpaca Daily client and completed-session 20-day metric calculation exist. Runtime/provider parity and operator acceptance remain outstanding.
+**Implementation status:** Alpaca Daily `1Day` client and exact 20-session calculator exist. The implementation has now been hardened for empty responses and exposes every session row plus the expected/missing session dates. The main Dashboard has a dedicated RTO/EVR Daily audit panel. A PowerShell evidence runner and independent 20-session reference CSVs are committed. This is implementation completion, not live acceptance: no local API payload or Dashboard screenshot has yet been captured in this session.
 
-**Missing work**
-- Smoke-test Daily responses for RTO and EVR; preserve full metadata and any 401/403 errors.
-- Compare latest completed Daily close, SMA20 and 20-session average volume with an independent source on the same adjustment basis.
-- Confirm exactly 20 expected completed sessions; missing/duplicate/stale/current-partial dates must suppress qualification fields.
-- Confirm IEX Daily results remain diagnostic and cannot satisfy SIP qualification.
-- Verify Daily values and provenance in evaluator/snapshot/UI.
+**Completed engineering**
+- [x] Fixed empty Daily history handling so zero bars return incomplete DATA? metrics rather than throwing on an empty-session `Max()`.
+- [x] Added `latestExpectedSessionDate`, ordered `expectedSessionDates`, `missingSessionDates` and `sessions` (session date, source timestamp, OHLCV) to the Daily API response.
+- [x] Added unit coverage for 20 complete sessions, exact date lists, independently recalculated close/SMA20/average volume, incomplete IEX data and empty provider history.
+- [x] Added Dashboard RTO/EVR Daily audit showing provider/feed, adjustment, latest expected session, API retrieval timestamp, observed close, SMA20, average volume, freshness, qualification and missing dates.
+- [x] Added `scripts/validation/Test-DailyMarketDataQualification.ps1` to save raw responses, recalculate metrics, enforce feed fail-closed behavior and compare independent OHLCV.
+- [x] Added `data/validation/daily-reference-20261106/{RTO,EVR}.csv`: 20 sessions from 2026-10-12 through 2026-11-06, sourced from Stock Analysis / S&P Global Market Intelligence.
+- [x] Independently recalculated the reference baselines: RTO close 23.63, SMA20 22.3130, ADV20 1,616,207.4; EVR close 284.47, SMA20 272.2235, ADV20 643,488.4.
 
-**Acceptance:** exact 20-session coverage and adjustment parity; incomplete data yields DATA?/UNKNOWN, never READY.
+**Adjustment note:** reference pages disclose split-adjusted history, while Alpaca requests `adjustment=all`. For this sample the known EVR ex-dates (2026-08-28 and next 2026-11-27) and RTO ex-date (2026-08-13) are outside the 20-session window. The runner therefore requires the explicit `-ConfirmWindowAdjustmentEquivalence` switch before comparing split-adjusted reference rows to the all-adjusted API. Recheck corporate actions before reusing this switch for any other date range.
+
+**Remaining operator/runtime work**
+- Run the Release build/tests against the exact latest branch source.
+- Run `scripts/validation/Test-DailyMarketDataQualification.ps1` against the local API for RTO and EVR.
+- Require exactly 20 distinct expected sessions, no missing dates, latest session fresh, and API aggregates equal to recalculation from the returned session rows.
+- Compare all 20 dates and OHLC rows to the independent reference within $0.0001; require exact volume. Preserve any mismatches, provider errors or 401/403 responses.
+- Confirm current configured/effective feed. IEX may be compared diagnostically but cannot set `qualificationUsable=true` or populate qualification price/SMA/ADV.
+- Click the Dashboard Daily audit button and verify the UI matches the saved API evidence exactly.
+- Verify evaluator/snapshot behavior remains DATA? whenever feed is non-SIP, history is incomplete/stale, or any required metric is missing.
+
+**Acceptance:** internal arithmetic consistency AND independent 20-session OHLCV parity; same adjustment basis (or explicitly evidenced window-equivalent basis); source/feed/retrieval timestamp visible; SIP and freshness gates pass before metrics may be used for qualification; incomplete/stale/non-SIP data yields DATA?/UNKNOWN and never READY.
 
 ### P1.2 Catalyst classification
 
