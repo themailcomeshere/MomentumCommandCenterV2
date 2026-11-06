@@ -32,7 +32,7 @@ The local exclusion API returned 56 entries in the user's test. The feature-bran
 - The 2026-11-03 12:00 PM Arizona RTO screenshot is daytime 1M/5M evidence, not the 3:55 PM EOD cutoff test. It shows 5M Permission NO / neutral structure and 1M WAIT; repeated PREPARE TO SELL labels are not GET OUT.
 - The prior 248-row count is withdrawn as an acceptance target. Validate that every row in the current export is imported and rendered.
 
-See `docs/NewChatHandoff.md` for the exact operator sequence and `docs/Master-To-Do.md` for current open items.
+See `docs/NewChatHandoff-20261106.md` for the exact operator sequence and `docs/Master-To-Do.md` for current open items.
 
 ---
 
@@ -71,7 +71,7 @@ Current importer fix commit: `b05c63713452cbbbb5632a87c639f655ad027e73`. GitHub 
 - Red Zone now re-renders immediately after scanner CSV import. Live 1M/5M card assessments refresh every 15 seconds; Alpaca live discoveries refresh every 30 seconds only when that group is selected.
 - Thinkorswim Overnight scan is not automatically connected to MCC; CSV export/import is the current handoff. Alpaca top-gainers/losers discovery is a separate SIP-based source and the user's current subscription denied recent SIP requests.
 - Prototype header repaired: System Readiness is a sibling of topbar-brand and marketTransportLabel wraps at word boundaries.
-- Active checklist: [Master To-Do](docs/Master-To-Do.md) · [Handoff](docs/NewChatHandoff.md) · [Active Work Checklist](docs/Active-Work-Checklist-20261102.md).
+- Active checklist: [Master To-Do](docs/Master-To-Do.md) · [Handoff](docs/NewChatHandoff-20261106.md) · [Active Work Checklist](docs/Active-Work-Checklist-20261102.md).
 
 ---
 ## November 2 follow-up — current feed, timestamp, and broker integration status
@@ -83,7 +83,7 @@ Current importer fix commit: `b05c63713452cbbbb5632a87c639f655ad027e73`. GitHub 
 - User reports Schwab Trader API — Individual approval. App creation, Accounts and Trading Production attachment, callback URL, app-level Ready status, OAuth and read-only position sync remain to be done. No order-writing integration is in scope.
 - Release build and 179/179 tests passed on head `83cd9780daa9f8e94628e8d24f4bc6ab4b03c415` in [Actions run 41514111035](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41514111035). Subsequent documentation-only commits are included in the next branch-head workflow.
 - The RTO audit is exact 40-boundary coverage across 20 valid sessions. Prior 38/40 result was IEX, with missing 2026-10-14 13:30Z and 2026-10-21 13:30Z opens. SIP comparison is blocked by the explicit Alpaca 403.
-- Current work tracking: [Active Work Checklist](docs/Active-Work-Checklist-20261102.md), [Master To-Do](docs/Master-To-Do.md), [New Chat Handoff](docs/NewChatHandoff.md).
+- Current work tracking: [Active Work Checklist](docs/Active-Work-Checklist-20261102.md), [Master To-Do](docs/Master-To-Do.md), [New Chat Handoff](docs/NewChatHandoff-20261106.md).
 - Timestamp diagnosis: [Live 1-Minute Bar Timestamp and Latency](docs/Validation/Live-Bar-Timestamp-Latency-20261102.md). Schwab plan: [Thinkorswim / Schwab Integration Plan](docs/Thinkorswim-Schwab-Integration-Plan.md).
 
 ---
@@ -243,7 +243,7 @@ GitHub Actions run **792** passed for the Morning Brief snapshot and source-wate
 ## Project control
 
 - Canonical checklist: [docs/Master-To-Do.md](docs/Master-To-Do.md)
-- Current continuation handoff: [docs/NewChatHandoff.md](docs/NewChatHandoff.md)
+- Current continuation handoff: [docs/NewChatHandoff-20261106.md](docs/NewChatHandoff-20261106.md)
 - Market-data runtime evidence: [docs/MarketData-ChatTests-20261030.md](docs/MarketData-ChatTests-20261030.md)
 - Runtime acceptance runbook: [docs/Runtime-Acceptance-Runbook.md](docs/Runtime-Acceptance-Runbook.md)
 - User guide: [docs/User-Manual.md](docs/User-Manual.md)
