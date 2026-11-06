@@ -73,7 +73,7 @@ Acceptance review:
 
 PowerShell script: `scripts/validation/Test-RegularSessionStreamCollector.ps1`
 
-This is a read-only polling/evidence script. It does not change feed configuration, create subscriptions, refresh historical bars, or mutate collector settings. It polls API health, provider status, WebSocket stream status, and historical collector status every 15 seconds for five minutes. It saves all snapshots, per-symbol bar-count/timestamp deltas, collector cycle/watermark deltas, and post-capture live assessments.
+This is a read-only polling/evidence script. It does not change feed configuration, create subscriptions, refresh historical bars, or mutate collector settings. It polls API health, provider status, WebSocket stream status, and historical collector status every 15 seconds for ten minutes. It saves all snapshots, per-symbol bar-count/timestamp deltas, collector cycle/watermark deltas, and post-capture live assessments.
 
 Run only during an actual US-equity regular session. The script checks weekday and 09:30–16:00 ET wall-clock bounds, but it cannot independently know exchange holidays or early closes; the operator must confirm the market is open.
 
@@ -82,7 +82,7 @@ Run only during an actual US-equity regular session. The script checks weekday a
   -BaseUri "http://localhost:53360" `
   -Symbols SPY,RKLX,ASTX,XRPN `
   -PollIntervalSeconds 15 `
-  -DurationMinutes 5 `
+  -DurationMinutes 10 `
   -ConfirmRegularSession
 ```
 
