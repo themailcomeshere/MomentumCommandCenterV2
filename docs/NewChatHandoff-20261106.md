@@ -34,7 +34,7 @@ Every returned provider bar also identified IEX. This is diagnostic only. It est
 
 - Updated V2.1 ThinkScript source `docs/Charts/Flexible Grid/OHLCV/MCC_OHLCV_ATR_V2.txt` to export all available chart bars within the selected date range; removed the 07:00–19:59 ET export filter. It has not been compiled/run in Thinkorswim.
 - Added `scripts/validation/Invoke-SellLimitEvidenceQualification.ps1` in the prior update. It preflights health/provider status, compares exact latest 119 timestamps and only attempts SIP qualification when effective feed is SIP.
-- Hardened that runner in commit `2d3d4caaa63760638bda66d32b13a7de557bb3bd`: explicit diagnostic/qualification mode, separate configured/response/row feed identity, per-field mismatch counts, and distinct non-SIP diagnostic status. This edit has not been executed in local PowerShell.
+- Hardened that runner in commit `fc13d6b3199cf9fbbc8a9a4059b1fe6567fb1327`: explicit diagnostic/qualification mode, separate configured/response/row feed identity, per-field mismatch counts, and distinct non-SIP diagnostic status. This edit has not been executed in local PowerShell.
 - Added [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md), updated [Master-To-Do.md](Master-To-Do.md) and [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md).
 - GitHub Actions `build-and-test` passed at `d00dbd61ede861f6a9924165377a17e9d8001022` for the earlier runner/study source. It does not validate the later PowerShell edit or ThinkScript compile.
 
