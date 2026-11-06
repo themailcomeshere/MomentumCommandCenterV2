@@ -17,7 +17,7 @@ This document consolidates the distinct unfinished workstreams and defines what 
 - Release build and tests: operator-reported PASS at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`.
 - GitHub Actions `build-and-test`: PASS at commit `909f17037fdddb03430b9824ba42b9dc08132581`; a later docs-only commit updated the checklist/handoff. Thinkorswim study compilation and local PowerShell runner execution remain unverified.
 - API health: `OK`; mode `decision-support-only`; order submission `NOT IMPLEMENTED`.
-- Alpaca: configured and validated on IEX; one validation bar returned. This is connectivity evidence, not SIP or full-history qualification.
+- Alpaca: configured and validated on IEX; latest captured provider-status evidence reported 8 validation bars. This is connectivity evidence, not SIP or full-history qualification.
 - Massive: not configured.
 - Main Dashboard is the only supported Dashboard entry point; do not recreate/use PrototypeIndex.
 - ATR import persistence is separate and append-only. Latest repeated imports were idempotent (0 appended, 0 corrections).
