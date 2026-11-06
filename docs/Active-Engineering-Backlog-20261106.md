@@ -15,7 +15,7 @@ This document consolidates the distinct unfinished workstreams and defines what 
 ### Verified current checkpoint
 
 - Release build and tests: operator-reported PASS at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`.
-- GitHub Actions `build-and-test`: PASS at commit `d00dbd61ede861f6a9924165377a17e9d8001022`. The qualification runner was subsequently hardened in commit `2d3d4caaa63760638bda66d32b13a7de557bb3bd`; that PowerShell edit has not yet been executed locally.
+- GitHub Actions `build-and-test`: PASS at commit `d00dbd61ede861f6a9924165377a17e9d8001022`. The qualification runner was subsequently hardened in commit `fc13d6b3199cf9fbbc8a9a4059b1fe6567fb1327`; that PowerShell edit has not yet been executed locally.
 - API health in the 2026-11-06 10:53 Arizona capture: `OK`; mode `decision-support-only`; order submission `NOT IMPLEMENTED`.
 - Alpaca: effective feed `iex`; provider validated. The capture returned IEX bars only; no SIP request was made. This is diagnostic connectivity, not qualification.
 - Massive: not configured.
