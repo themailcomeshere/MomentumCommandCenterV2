@@ -71,6 +71,48 @@ public sealed class StrategyReportAtrV2Tests
     }
 
     [Fact]
+    public void DoesNotCountSameDateGapWhollyInsideScheduledOvernightClosure()
+    {
+        var midnight = DateTimeOffset.Parse("2026-11-05T05:00:00Z").ToUnixTimeMilliseconds(); // 00:00 ET
+        var afterMidnight = DateTimeOffset.Parse("2026-11-05T05:10:00Z").ToUnixTimeMilliseconds(); // 00:10 ET
+        var report = $"Strategy report\\nSymbol: EVR\\nId;Strategy;Side;\\n" +
+            $"1;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{midnight}|10|11|9|10.5|100|0.25);Buy to Open;\\n" +
+            $"2;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{afterMidnight}|10.5|11|10|10.8|200|0.30);Buy to Open;\\n";
+
+        var result = StrategyReportAtrV2Parser.Parse(report);
+
+        Assert.Equal(0, result.GapCount);
+    }
+
+    [Fact]
+    public void CountsSameDateGapThatCrossesIntoPremarketSession()
+    {
+        var afterMidnight = DateTimeOffset.Parse("2026-11-05T05:10:00Z").ToUnixTimeMilliseconds(); // 00:10 ET
+        var premarketBar = DateTimeOffset.Parse("2026-11-05T14:05:00Z").ToUnixTimeMilliseconds(); // 09:05 ET
+        var report = $"Strategy report\\nSymbol: EVR\\nId;Strategy;Side;\\n" +
+            $"1;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{afterMidnight}|10|11|9|10.5|100|0.25);Buy to Open;\\n" +
+            $"2;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{premarketBar}|10.5|11|10|10.8|200|0.30);Buy to Open;\\n";
+
+        var result = StrategyReportAtrV2Parser.Parse(report);
+
+        Assert.Equal(1, result.GapCount);
+    }
+
+    [Fact]
+    public void CountsGapWithinAfterHoursSession()
+    {
+        var afterHoursStart = DateTimeOffset.Parse("2026-11-04T21:00:00Z").ToUnixTimeMilliseconds(); // 16:00 ET
+        var afterHoursLater = DateTimeOffset.Parse("2026-11-04T23:40:00Z").ToUnixTimeMilliseconds(); // 18:40 ET
+        var report = $"Strategy report\\nSymbol: EVR\\nId;Strategy;Side;\\n" +
+            $"1;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{afterHoursStart}|10|11|9|10.5|100|0.25);Buy to Open;\\n" +
+            $"2;MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{afterHoursLater}|10.5|11|10|10.8|200|0.30);Buy to Open;\\n";
+
+        var result = StrategyReportAtrV2Parser.Parse(report);
+
+        Assert.Equal(1, result.GapCount);
+    }
+
+    [Fact]
     public void DetectsCorrectedV21PayloadVersion()
     {
         const string report = "Strategy report\nSymbol: EVR\nId;Strategy;Side;\n" +
