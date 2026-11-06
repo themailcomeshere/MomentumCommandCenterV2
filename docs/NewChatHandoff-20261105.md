@@ -1,3 +1,16 @@
+# Handoff update — November 5, 2026: ATR control recovery and V2.2
+
+- The current source HTML has all five ATR metadata controls, but the operator's running page reports all five missing. The exact static-file/cache cause is not proven.
+- New defensive bootstrap in `frontend/app.js` dynamically recreates missing controls before the submit handler runs. Defaults match the operator's confirmed study settings: ATR 14 / Wilder / America-Phoenix / ETH ON / corporate-action adjustment ON. Existing controls are preserved. Cache key bumped to `20261105-atr-import-control-recovery-v3`.
+- New report `StrategyReports_EVR_11042026_5M_ATR_v2_2.csv`: 82 source observations from 09:05 ET to 16:00 ET; one 15-minute gap 09:15–09:30 ET; one source timestamp at 16:00 ET, none later. This does not establish sustained after-hours coverage.
+- 82 bars are below the 119 required for a 99-bar warm-up plus 20 ATR comparisons. No 5m parity certification yet.
+- Next: pull branch, run local test script, restart API, hard-refresh, confirm controls appear, retry both Nov 3 imports, export a new 5m report, inspect embedded source epochs for bars after 16:00 ET.
+- Do not retry SIP while prior HTTP 403 entitlement failure remains.
+- Walk-forward is 20 train + 20 unseen test; theoretical OHLCV touches are not broker fills.
+
+
+---
+
 # Handoff update — November 5, 2026 (StrategyReport import, after-hours window, walk-forward)
 
 **Branch:** `feature/opportunity-quality-classification`
