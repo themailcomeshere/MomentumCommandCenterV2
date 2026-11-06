@@ -49,7 +49,11 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Remaining engineering and acceptance — P1
 
-- [ ] Complete Daily data source/adjustment parity and operator smoke tests for RTO/EVR; incomplete sessions remain DATA?.
+- [x] Hardened Daily API: empty history returns incomplete data instead of throwing; response now includes the exact 20 expected dates, missing dates and session-level OHLCV rows.
+- [x] Added RTO/EVR Dashboard Daily audit with provider/feed, adjustment, latest session, retrieval timestamp, close, SMA20, average volume, freshness and missing-session provenance.
+- [x] Added Daily qualification runner and 20-session independent Stock Analysis / S&P Global reference CSVs for RTO and EVR (2026-10-12 through 2026-11-06).
+- [ ] Run `scripts/validation/Test-DailyMarketDataQualification.ps1`; verify exact 20-session API coverage and independently compare all OHLCV rows. Local API response data not yet captured in this session.
+- [ ] Verify the Dashboard audit panel against the same API evidence. IEX remains diagnostic-only; incomplete/stale data or non-SIP feed must remain DATA?, never READY.
 - [ ] Build and validate human-adjudicated catalyst labels and holdout precision/recall; keyword triage must never claim CLEAR.
 - [ ] Implement/validate a full-pool Opportunity Quality ranker; scanner custom-expression missingness, calibration and rank stability remain unresolved.
 - [ ] Implement the separate V3 Boring Overnight Thinkorswim watchlist column from its design specification; MCC Opportunity Quality is not that feature.
@@ -68,7 +72,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Immediate execution order
 
-1. Pull `feature/opportunity-quality-classification` and run the local Release build/tests before restarting the API.
+1. Pull `feature/opportunity-quality-classification` and run the local Release build/tests before restarting the API. Then run the Daily qualification script for RTO/EVR before proceeding with the ATR/TOS sequence.
 2. Compile the revised Thinkorswim V2.1 study. Set 5m chart/study aggregation, ATR14 Wilder, Phoenix timezone, extended hours ON, corporate-action adjustment ON, and a date range that actually supplies at least 99 warm-up bars before the latest 119-bar window.
 3. Export EVR and CBOE with all available premarket, RTH and after-hours chart bars. Confirm embedded epoch timestamps; do not use Strategy Report order-event timestamps.
 4. Import once, inspect append/identical/correction counts and per-row provenance, then rerun parity. Do not relax 0.00005 tolerance or impute.
