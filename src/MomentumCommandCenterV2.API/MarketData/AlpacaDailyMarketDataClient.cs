@@ -108,10 +108,10 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         // the Boring Overnight price/SMA/market-wide liquidity gates as consolidated values.
         return new DailyMarketMetrics(
             symbol.ToUpperInvariant(), "Alpaca", _feed, "all (split/dividend adjusted)",
-            nowUtc, latestTimestamp, consolidatedFeed ? latest?.Close : null,
+            nowUtc, latestTimestamp, consolidatedFeed ? latest?.Bar.Close : null,
             consolidatedFeed ? observedSma20 : null,
             consolidatedFeed ? observedAverageVolume20 : null,
-            latest?.Close, observedSma20, observedAverageVolume20,
+            latest?.Bar.Close, observedSma20, observedAverageVolume20,
             present.Length, completedBySession.Count, fresh,
             complete ? "COMPLETE_20_EXPECTED_SESSIONS" : "INCOMPLETE_20_EXPECTED_SESSIONS",
             consolidatedFeed ? "CONSOLIDATED_SIP" : "IEX_PARTIAL",
