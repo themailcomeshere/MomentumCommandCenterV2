@@ -220,3 +220,16 @@ Alpaca HTTP 403 with `subscription does not permit querying recent SIP data` is 
 Only then run exact EVR close/open recovery and the GTC_EXT 20-session capture. A complete GTC_EXT sample requires 20/20 sessions, each with the exact prior close and all 780 one-minute bars from 07:00 through 19:59 ET. Missing timestamps remain missing.
 
 The sell-limit calculator is fail-closed: no numeric limit until complete SIP windows and independently matched ATR parity are available. MCC's Wilder ATR implementation is not yet proven equivalent to the installed Thinkorswim study. A matched fixture must use identical symbol, completed timestamp, timeframe, session scope, adjustment and study settings. The integrated calculation API and out-of-sample walk-forward validation remain open. A historical bar high touch is not an actual fill.
+
+
+## ATR parity evidence export (2026-11-06)
+
+After the API is running from the intended local build, run:
+
+```powershell
+.\scripts\validation\Export-AtrParityEvidence.ps1
+```
+
+The script calls `/api/health`, `/api/providers/status`, `/api/strategy-report/atr-parity` and `/api/strategy-report/atr-observations` for EVR and CBOE at 1m and 5m. It saves the aggregate parity responses and full persisted Thinkorswim observation rows as separate JSON files, plus a manifest and SHA-256 hashes, under `artifacts/atr-parity-evidence/<timestamp>/`.
+
+Zip the generated timestamp folder when sharing evidence. Do not include credentials. The observation files contain TOS-imported OHLCV/ATR and provenance; they do not contain provider bars and cannot by themselves prove provider/TOS OHLCV equality. The script does not infer why a timestamp is missing or calculate broker fills.
