@@ -1,3 +1,13 @@
+## November 5 follow-up — import-control recovery and updated export evidence
+
+- Current checked-in HTML contains the five ATR provenance controls; operator's running DOM reports all five missing. Root cause of the runtime mismatch is not yet identified.
+- Frontend now creates missing controls at runtime with confirmed settings (14, Wilder, America/Phoenix, ETH ON, corporate-action adjustment ON) before the import handler runs. Cache key is bumped. Requires local restart/browser acceptance.
+- V2.2 5m export contains 82 source observations, 09:05–16:00 ET, one 15-minute gap, and no payload later than 16:00 ET. This is insufficient for 119-bar parity validation and does not prove consistent after-hours data.
+- Re-import the Nov 3 reports after local pull/restart; then export a longer 5m report and inspect embedded source timestamps. Do not infer source-bar coverage from StrategyReport Work Time or order-event timestamps.
+
+
+---
+
 ## 2026-11-05 current implementation status — supersedes the earlier planning status below
 
 **Status:** ATR V2 ingestion/parity and sell-limit orchestration API/UI exist. Chronological walk-forward validation is now implemented in code, but CI and operator runtime acceptance are pending. The numeric limit remains fail-closed behind all independent evidence gates.
