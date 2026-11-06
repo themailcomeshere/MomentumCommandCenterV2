@@ -3,7 +3,7 @@ param(
     [string]$BaseUri = "http://localhost:53360",
     [string[]]$Symbols = @("SPY", "RKLX", "ASTX", "XRPN"),
     [ValidateRange(5, 60)][int]$PollIntervalSeconds = 15,
-    [ValidateRange(2, 30)][int]$DurationMinutes = 5,
+    [ValidateRange(2, 30)][int]$DurationMinutes = 10,
     [switch]$ConfirmRegularSession,
     [string]$OutputDirectory = ""
 )
@@ -125,6 +125,7 @@ $manifest = [ordered]@{
     streamFeedAtEnd = $streamEnd.feed
     streamReceivedBarsDelta = (Get-Counter $streamEnd "receivedBars") - (Get-Counter $streamStart "receivedBars")
     streamPersistedBarsDelta = (Get-Counter $streamEnd "persistedBars") - (Get-Counter $streamStart "persistedBars")
+    collectorIntervalSeconds = Get-PropertyValue $collectorEnd "intervalSeconds"
     collectorCyclesDelta = $collectorDelta.cyclesDelta
     note = "SUBSCRIBED is acknowledgement only. Per-symbol delivery requires acknowledged subscription plus advancing completed-bar count and lastBarUtc during this RTH window. Collector acceptance separately requires enabled state, advancing cycles/watermarks and no unexplained errors. Sparse IEX symbols are not automatically global stream failures."
 }
@@ -133,5 +134,5 @@ Write-Host ""
 Write-Host "Evidence saved to: $OutputDirectory"
 Write-Host "Stream state: $($streamStart.state) -> $($streamEnd.state); feed: $($streamStart.feed) -> $($streamEnd.feed)"
 $perSymbol | Format-Table -AutoSize
-Write-Host "Collector cycles: $($collectorDelta.cyclesStart) -> $($collectorDelta.cyclesEnd); delta=$($collectorDelta.cyclesDelta); enabled=$($collectorDelta.enabledAtEnd)"
+Write-Host "Collector cycles: $($collectorDelta.cyclesStart) -> $($collectorDelta.cyclesEnd); delta=$($collectorDelta.cyclesDelta); enabled=$($collectorDelta.enabledAtEnd); intervalSeconds=$(Get-PropertyValue $collectorEnd 'intervalSeconds')"
 Write-Host "Do not call this a pass unless subscription, completed-bar advancement, timestamp advancement and persistence evidence satisfy the runbook."
