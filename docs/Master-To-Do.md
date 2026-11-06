@@ -19,7 +19,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] ATR parity version `MCC-WILDER-ATR-PARITY-1.1` and full-history Wilder seed correction are present and running in the restarted local API.
 - [x] Walk-forward validator and hard orchestration gate are implemented. Runtime pass remains unproven.
 - [x] Main Dashboard is `frontend/index.html`. Do not use or recreate PrototypeIndex.
-- [x] Four supporting docs were reconciled and a repeatable ATR evidence-export script was added.
+- [x] Supporting documentation, legacy handoffs and audit files were reconciled; a repeatable ATR evidence-export script was added.
 
 ## Current blockers — P0
 
