@@ -108,6 +108,13 @@ foreach ($symbolValue in $Symbols) {
         symbol = $symbol
         configuredFeed = $effectiveFeed
         qualificationFeed = "sip"
+        qualificationFeedRequired = "sip"
+        comparisonMode = if ($effectiveFeed -eq "sip") { "QUALIFICATION_CANDIDATE" } else { "DIAGNOSTIC_ONLY" }
+        diagnosticOnlyReason = if ($effectiveFeed -eq "sip") { $null } else { "Effective provider feed is '$effectiveFeed'; IEX/other non-SIP comparisons cannot qualify the sell-limit gate." }
+        feedIdentityMatch = $false
+        providerResponseFeed = $null
+        providerBarFeedMismatchCount = 0
+        mismatchBreakdown = @{}
         tosObservationCount = $series.Count
         requestedWindowCount = 0
         providerBarCount = 0
@@ -139,10 +146,21 @@ foreach ($symbolValue in $Symbols) {
 
         $mismatches = [System.Collections.Generic.List[object]]::new()
         $matches = 0
+        $providerBarFeedMismatchCount = 0
+        $mismatchBreakdown = [ordered]@{
+            providerBarMissing = 0
+            feed = 0
+            open = 0
+            high = 0
+            low = 0
+            close = 0
+            volume = 0
+        }
         foreach ($stored in $window) {
             $tos = $stored.observation
             $key = [DateTimeOffset]::Parse($tos.sourceTimestampUtc).ToUniversalTime().ToString("o")
             if (-not $providerByTimestamp.ContainsKey($key)) {
+                $mismatchBreakdown.providerBarMissing++
                 $mismatches.Add([pscustomobject]@{ timestampUtc = $key; reason = "PROVIDER_BAR_MISSING" })
                 continue
             }
@@ -150,12 +168,19 @@ foreach ($symbolValue in $Symbols) {
             $providerBar = $providerByTimestamp[$key]
             $fields = @("open", "high", "low", "close")
             $differences = @()
+            if ([string]$providerBar.feed -ne $effectiveFeed) {
+                $providerBarFeedMismatchCount++
+                $mismatchBreakdown.feed++
+                $differences += "feed provider=$($providerBar.feed) expected=$effectiveFeed"
+            }
             foreach ($field in $fields) {
                 if ([decimal]$providerBar.$field -ne [decimal]$tos.$field) {
+                    $mismatchBreakdown[$field]++
                     $differences += "$field provider=$($providerBar.$field) tos=$($tos.$field)"
                 }
             }
             if ([decimal]$providerBar.volume -ne [decimal]$tos.volume) {
+                $mismatchBreakdown.volume++
                 $differences += "volume provider=$($providerBar.volume) tos=$($tos.volume)"
             }
 
@@ -178,17 +203,35 @@ foreach ($symbolValue in $Symbols) {
         $providerComparison.mismatches = @($mismatches)
         $providerComparison.firstTosTimestampUtc = $firstTimestamp.ToString("o")
         $providerComparison.lastTosTimestampUtc = $lastTimestamp.ToString("o")
-        $providerComparison.providerResponseFeed = $providerResponse.feed
-        $providerComparison.qualificationUsableFeed = ($effectiveFeed -eq "sip" -and [string]$providerResponse.feed -eq "sip")
+        $providerComparison.providerResponseFeed = [string]$providerResponse.feed
+        $providerComparison.providerBarFeedMismatchCount = $providerBarFeedMismatchCount
+        $providerComparison.feedIdentityMatch = (
+            $effectiveFeed -eq [string]$providerResponse.feed -and
+            $providerBarFeedMismatchCount -eq 0
+        )
+        $providerComparison.mismatchBreakdown = $mismatchBreakdown
+        $providerComparison.qualificationUsableFeed = (
+            $effectiveFeed -eq "sip" -and
+            [string]$providerResponse.feed -eq "sip" -and
+            $providerBarFeedMismatchCount -eq 0
+        )
 
-        if ($providerComparison.exactOhlcvMatch -and $providerComparison.qualificationUsableFeed) {
-            $providerComparison.status = "EXACT_SIP_MATCH"
+        if (-not $providerComparison.feedIdentityMatch) {
+            $providerComparison.status = "FEED_IDENTITY_MISMATCH_BLOCKED"
+            $providerComparison.diagnosticOnlyReason = "Configured feed, response feed, or one or more row-level feed identities do not agree."
+        }
+        elseif (-not $providerComparison.qualificationUsableFeed) {
+            $providerComparison.status = if ($providerComparison.exactOhlcvMatch) {
+                "EXACT_MATCH_DIAGNOSTIC_ONLY_NON_SIP"
+            } else {
+                "DIAGNOSTIC_MISMATCH_NON_SIP"
+            }
         }
         elseif ($providerComparison.exactOhlcvMatch) {
-            $providerComparison.status = "EXACT_MATCH_DIAGNOSTIC_ONLY_NON_SIP"
+            $providerComparison.status = "EXACT_SIP_MATCH"
         }
         else {
-            $providerComparison.status = "MISMATCH_OR_MISSING_PROVIDER_BARS"
+            $providerComparison.status = "SIP_MISMATCH_OR_MISSING_PROVIDER_BARS"
         }
     }
 
@@ -202,6 +245,8 @@ foreach ($symbolValue in $Symbols) {
         parityGapCount = $parity.timestampGapCount
         providerComparisonStatus = $providerComparison.status
         exactProviderTosOhlcvMatch = $providerComparison.exactOhlcvMatch
+        feedIdentityMatch = $providerComparison.feedIdentityMatch
+        providerResponseFeed = $providerComparison.providerResponseFeed
         effectiveFeed = $effectiveFeed
         sipCaptureStatus = "SKIPPED_NOT_CONFIGURED"
         walkForwardStatus = "NOT_RUN"
