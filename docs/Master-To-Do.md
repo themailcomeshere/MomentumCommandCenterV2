@@ -6,7 +6,8 @@
 **Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
-**Latest ATR evidence analysis:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)
+**Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
+**Earlier evidence archive:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
 
@@ -22,13 +23,16 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Main Dashboard is `frontend/index.html`. Do not use or recreate PrototypeIndex.
 - [x] Supporting documentation, legacy handoffs and audit files were reconciled; a repeatable ATR evidence-export script was added.
 - [x] Operator successfully ran the exporter; ZIP captured health/provider status, all four parity endpoints, persisted TOS observations, manifest and SHA-256 hashes at source SHA `9dd2c224d8f1373c7935eb3f94ed5fddea837e5f`.
-- [x] Row-level TOS Wilder recurrence and independent last-20 recomputation were analyzed; results and limitations are documented in the ATR evidence analysis.
+- [x] Row-level recurrence was analyzed for the expanded EVR/CBOE 5m exports; the EVR mismatch is localized to a recurrence discontinuity across a long source-history gap.
+- [x] Identified and corrected the V2.1 study's export predicate: ATR was calculated on all chart bars while the Strategy Report omitted bars outside 07:00–19:59 ET. The study source now exports every available chart bar in the selected date range.
+- [x] GitHub Actions `build-and-test` passed on the pre-study-update branch head `b379c7b76a1c9b61454719861741d253720ba7da`; the subsequent change is ThinkScript documentation/source and has not been compiled in Thinkorswim.
 
 ## Current blockers — P0
 
-- [ ] Diagnose EVR 5m `NOT_MATCH` (mean absolute error 0.0010467166; max 0.0019357350) from exact persisted OHLCV/ATR rows. Root cause is unknown.
-- [ ] Diagnose CBOE 5m `NOT_MATCH` (mean absolute error 0.0005274676; max 0.0009650641) from exact persisted OHLCV/ATR rows. Root cause is unknown.
-- [ ] Obtain corrected, continuous V2.1 5m TOS history with at least 119 completed observations in the qualification window and no unexplained gaps.
+- [ ] EVR 5m remains `NOT_MATCH`: 325 observations, 1 gap in the 119-bar window, mean absolute error 0.0366528495 and maximum 0.0677729555. Row-level recurrence localizes the large divergence to 2026-11-05T14:05Z after a 17h05m source-history gap. Re-export all chart bars using the corrected study, then re-run parity.
+- [ ] CBOE 5m is now numerically within tolerance (mean absolute error 0.0000200950; max 0.0000436336), but remains `GAPS_PRESENT` with 1 gap in the 119-bar window. It is not a MATCH.
+- [ ] Compile the revised V2.1 ThinkScript in TOS and export all available chart bars (premarket, RTH and after-hours) within the selected date range. Do not filter export rows by time of day.
+- [ ] Obtain at least 119 continuous completed 5m observations in the latest qualification window, with sufficient earlier history for 99 warm-up bars; no unexplained gaps may be imputed.
 - [ ] Resolve EVR 1m's 13 gaps in the 119-observation comparison window or retain `GAPS_PRESENT`.
 - [ ] Prove exact provider/TOS 5m OHLCV equality over the full 119-bar window and exact same-provider/feed prior RTH close.
 - [ ] Keep SIP GTC_EXT qualification blocked until entitlement changes. Current effective feed is IEX; prior SIP access returned HTTP 403.
@@ -56,15 +60,15 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 ## Immediate next action
 
-The ATR evidence ZIP has been received and analyzed. Do **not** run the exporter again or re-import the same CSVs.
+Pull the latest branch and compile the revised Thinkorswim V2.1 study at [MCC_OHLCV_ATR_V2.txt](Charts/Flexible%20Grid/OHLCV/MCC_OHLCV_ATR_V2.txt). The export predicate now emits every available chart bar in the selected date range; the previous 07:00–19:59 ET filter omitted bars that still influenced TOS Wilder ATR.
 
-Next, obtain materially longer 5m Thinkorswim V2.1 history for EVR and CBOE, with enough earlier observations to test the Wilder seed/prefetch hypothesis and at least 119 completed bars in the latest qualification window. Resolve timestamp discontinuities from chart/source evidence; do not impute them. Then import only new/corrected rows and rerun parity.
+Re-export EVR and CBOE 5m with extended hours ON and a sufficiently early start date, including premarket, regular-session and after-hours bars. Import once, then re-run parity. Do not change tolerance or impute missing bars.
 
-See [ATR evidence analysis](Validation/ATR-Evidence-Export-Analysis-20261106.md) for exact observed values, recurrence calculations, limitations and ordered operator steps. Provider/TOS equality still requires a separate provider-OHLCV capture.
+See [ATR export coverage diagnosis](Validation/ATR-Export-Coverage-Fix-20261106.md) for the exact recurrence break, updated study logic, and gate-by-gate status.
 
 ## [Uncertainties]
 
-- Numeric mismatch root causes and the meaning of missing TOS timestamps are not established.
+- The EVR recurrence discontinuity is localized to a long source-history gap; the exact omitted chart bars are not in the supplied CSV. The revised study has not yet been compiled/run.
 - SIP entitlement and 40/40 GTC_EXT coverage remain unverified.
 - Walk-forward runtime pass, provider/TOS equality, browser acceptance and regular-session WebSocket recovery remain unverified.
 - Scanner full-pool missing-field count must be refreshed; 296 was the last recorded audit result.
