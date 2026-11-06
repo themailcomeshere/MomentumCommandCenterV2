@@ -1,3 +1,17 @@
+## 2026-11-05 Arizona — Wilder ATR parity seed correction
+
+- [x] Investigated the imported EVR 1m API result (`NOT_MATCH`, mean 0.000029, max 0.000061). The endpoint was trimming the source to the latest 119 bars before calculating Wilder ATR. That re-seeded the recursive ATR at the start of the 119-bar window rather than carrying the full chart-history seed forward.
+- [x] Reproduced the exact API values from the committed 346-row EVR 1m V2.1 export: full-history calculation compared on the latest 20 gives mean absolute error 0.000026034 / max 0.000046686; a fresh seed from only the latest 119 gives 0.000028985 / 0.000060665, matching the operator's reported 0.000029 / 0.000061 after rounding.
+- [x] Updated `ThinkorswimAtrParityService` to calculate Wilder ATR from all imported observations while applying the requested 119-bar (99 warm-up + 20 comparison) window only to the comparison slice and timestamp-gap qualification.
+- [x] Updated `/api/strategy-report/atr-parity` to pass full history to the service. Timestamp gaps are counted only inside the latest requested comparison window; missing bars remain un-imputed.
+- [x] Bumped parity implementation version to `MCC-WILDER-ATR-PARITY-1.1` and added a regression test proving the full-history seed is used while only the latest 20 bars are compared.
+- [ ] Local API/browser re-test is still required. Expected diagnostic for the imported EVR 1m sample, if the stored series is unchanged: numeric values within tolerance but 13 gaps in latest 119, therefore `GAPS_PRESENT`, not `MATCH`. EVR 5m remains `INSUFFICIENT_WARMUP` with 81/82 observations.
+
+[Uncertainties]
+The correction is committed but CI and local API response have not yet been verified. The 13 gaps in the 1m comparison window still prevent a parity MATCH, even if numeric ATR errors are within rounding tolerance.
+
+---
+
 ## 2026-11-05 Arizona — latest import evidence and Dashboard entry point
 
 - The sole Dashboard entry point is now `frontend/index.html`; `frontend/prototypeIndex.html` was removed after its approved layout was migrated. UI implementation and browser acceptance must use the local API root URL `/`.
