@@ -100,7 +100,7 @@ The latest committed EVR/CBOE observation JSON was independently recalculated ac
 
 ## Next operator sequence
 
-1. Do not repeat the IEX Daily run unchanged; it will not produce consolidated liquidity parity. Confirm SIP entitlement externally first. If entitlement is still denied, leave Daily DATA? and continue unrelated engineering.
+1. Do not repeat the IEX Daily run unchanged and do not request another SIP attempt. The repeated HTTP 403 is an established external blocker. Leave Daily DATA? and continue unrelated engineering; resume SIP-dependent work only if the operator independently reports a real entitlement change.
 2. For ATR, compile the committed V2.1 source in Thinkorswim and confirm aggregation=5m, ATR14 Wilder, Phoenix timezone, ETH ON and adjustment ON.
 3. Set a date range with at least 99 completed warm-up bars before the final 119 comparison observations. Export all available chart bars; do not filter by time of day.
 4. Before importing, inspect epoch timestamps and chart bars around the listed discontinuities. Distinguish genuine absent bars/no-trade periods from export omissions; retain evidence for every decision.
