@@ -1,3 +1,29 @@
+## 2026-11-05 — ATR import-control recovery and V2.2 after-hours export audit
+
+### Completed
+- [x] Confirmed the committed `frontend/index.html` contains all five ATR metadata controls. The operator's running DOM nevertheless reports all five absent while the current import handler is executing. This is a page/asset generation mismatch, not a missing control definition in the current source HTML.
+- [x] Added a runtime recovery bootstrap to `frontend/app.js`: if the StrategyReport form exists but any ATR metadata control is absent, it creates the missing controls before the submit handler is registered. Defaults use the operator's already-confirmed V2.1 settings: ATR 14, Wilder, America/Phoenix, extended hours ON, corporate-action adjustment ON. Existing controls remain editable and are not overwritten.
+- [x] Bumped the Dashboard app.js cache key to `20261105-atr-import-control-recovery-v3`.
+- [x] Audited `StrategyReports_EVR_11042026_5M_ATR_v2_2.csv`: 82 payload observations; first source bar 2026-11-04 14:05Z (09:05 ET / 07:05 AZ); last 2026-11-04 21:00Z (16:00 ET / 14:00 AZ).
+- [x] Found one 15-minute source timestamp gap, 09:15–09:30 ET. The report has one source bar timestamped exactly 16:00 ET, but no later source bars (16:05–19:55 ET). Thus the export does not yet demonstrate consistent extended-hours OHLCV coverage.
+- [x] Confirmed 82 observations are insufficient for the required 119-observation 5m parity window (99 warm-up + 20 comparison bars). No 5m ATR parity certification or 99-bar continuous warm-up is possible from this file.
+- [x] Kept the Nov 4 v2.2 payload epoch as the authoritative source-bar timestamp. The StrategyReport Work Time and order-event Date/Time fields are not substitutes for the embedded source epoch.
+
+### Still open / operator verification
+- [ ] Pull latest branch and run `.scripts\Get-Latest-And-Test.ps1`; check the frontend syntax and all tests.
+- [ ] Restart the API and hard-refresh Dashboard. Confirm the five ATR controls now appear. The runtime bootstrap should restore them even if the HTML is stale.
+- [ ] Retry Nov 3 1m and 5m V2.1 imports. Send both full import summaries and server parity results.
+- [ ] Export another EVR 5m report with the updated study and verify source epochs after 16:00 ET. Confirm actual 5-minute observations through the intended 19:55 ET cutoff. If absent, investigate Thinkorswim chart ETH display, loaded chart history, study inputs, and source trade availability; do not infer continuous coverage from Work Time.
+- [ ] Investigate the 09:15–09:30 ET gap in v2.2.
+- [ ] Continue only after import and ATR evidence is visible: 119-bar continuous parity window, 99 consecutive warm-up bars, and exact provider/TOS OHLCV match.
+- [ ] Keep SIP GTC_EXT separate; prior SIP HTTP 403 remains unchanged. Do not retry until entitlement changes.
+- [ ] Walk-forward validation remains 20 training + 20 unseen test sessions and is not itself sufficient to publish a limit. Actual broker fills remain a separate source.
+
+### [Uncertainties]
+The exact reason the operator's running DOM omitted all five controls is not established. The runtime bootstrap is a defensive recovery rather than proof of the underlying static-file routing/cache cause. The single 16:00 ET payload bar is the only post-regular-session boundary observation in v2.2; whether additional eligible bars were available from Thinkorswim is not established by this CSV.
+
+---
+
 ## 2026-11-05 — StrategyReport import crash, extended-hours export window, and walk-forward engine
 
 ### Completed in this engineering pass
