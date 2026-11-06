@@ -1,6 +1,7 @@
 ## 2026-11-05 — ATR import-control recovery and V2.2 after-hours export audit
 
 ### Completed
+- [x] Added no-store/no-cache response headers for Dashboard `index.html` and `app.js` in API static-file middleware to prevent mixing stale HTML with newer JavaScript.
 - [x] Confirmed the committed `frontend/index.html` contains all five ATR metadata controls. The operator's running DOM nevertheless reports all five absent while the current import handler is executing. This is a page/asset generation mismatch, not a missing control definition in the current source HTML.
 - [x] Added a runtime recovery bootstrap to `frontend/app.js`: if the StrategyReport form exists but any ATR metadata control is absent, it creates the missing controls before the submit handler is registered. Defaults use the operator's already-confirmed V2.1 settings: ATR 14, Wilder, America/Phoenix, extended hours ON, corporate-action adjustment ON. Existing controls remain editable and are not overwritten.
 - [x] Bumped the Dashboard app.js cache key to `20261105-atr-import-control-recovery-v3`.
