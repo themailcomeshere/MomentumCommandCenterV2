@@ -1,3 +1,59 @@
+# CURRENT STATUS — latest operator-supplied ATR parity evidence
+
+**Status: release/qualification remains blocked.** This section is the current status authority and supersedes older ATR counts and stale implementation-status statements in the historical log below. Historical entries are retained for audit; do not interpret them as current state.
+
+## ATR parity — latest API responses
+
+| Symbol | Timeframe | Status | Observations | Compared | Gaps | Mean absolute error | Maximum absolute error |
+|---|---:|---|---:|---:|---:|---:|---:|
+| EVR | 1m | `GAPS_PRESENT` | 346 | 20 | 13 in comparison window | 0.000026034 | 0.000046686 |
+| EVR | 5m | `NOT_MATCH` | 163 | 20 | 1 | 0.001046717 | 0.001935736 |
+| CBOE | 5m | `NOT_MATCH` | 165 | 20 | 6 | 0.000527 | 0.000965 |
+
+- EVR 1m's compared numeric values are within the 0.00005 tolerance, but the 13 missing timestamps in the latest 119-bar qualification window prevent certification. No gaps are imputed.
+- EVR 5m exceeds numeric tolerance despite only one reported timestamp gap. This is an algorithm/data discrepancy to diagnose; do not relax tolerance.
+- CBOE 5m exceeds numeric tolerance and has six timestamp gaps. The import appended 85 records, skipped 80 identical records and made zero corrections.
+- All three results use parity implementation `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, Phoenix chart timezone, extended hours ON and corporate-action adjustment ON. Their imported payloads identify study `MCC_OHLCV_ATR_V2.1`.
+- EVR 5m and CBOE 5m have enough total observations to exceed 119, but the current comparison windows are not qualified: one has numeric mismatch and gaps; the other has numeric mismatch and multiple gaps. Total count alone is not a pass.
+- The imported reports are already persisted. Do not re-import them merely to re-run parity; use the parity endpoint against stored observations.
+
+## Current implementation state
+
+- [x] Full-history Wilder ATR seeding is implemented in `ThinkorswimAtrParityService`; the latest 119 bars define the warm-up/comparison qualification window, not a new ATR seed. Version: `MCC-WILDER-ATR-PARITY-1.1`.
+- [x] Walk-forward validator is implemented: earliest 20 complete chronological sessions train the target; the next 20 unseen sessions test it. The sell-window history service retains 40 sessions and session lows/highs; the orchestrator has a hard `WALK_FORWARD_VALIDATION` gate.
+- [x] Main Dashboard authority is `frontend/index.html`; `frontend/prototypeIndex.html` was removed. Do not revive or use a PrototypeIndex page.
+- [x] ATR import-control recovery and static no-cache handling are committed.
+- [ ] **Operator/local API verification of the full-history Wilder correction remains open.** The supplied latest API responses show the reported parity outputs, but they do not by themselves prove which local code SHA is running. Record local SHA and test output.
+- [ ] **Walk-forward runtime/evidence verification remains open.** Implementation is not the same as a passing 20/20 evidence result. Do not describe the gate as NOT IMPLEMENTED; it is implemented and must be exercised against qualifying persisted data.
+- [ ] Corrected EVR 5m ATR parity and CBOE 5m ATR parity remain unresolved.
+- [ ] 119-observation continuous, gap-free 5m window and exact provider/TOS OHLCV equality remain required independent gates.
+- [ ] EVR 1m timestamp continuity remains unresolved; numeric agreement alone is insufficient.
+- [ ] SIP GTC_EXT qualification remains blocked by the previously reported Alpaca SIP HTTP 403 entitlement denial. Do not repeat SIP requests unless the operator confirms entitlement/access changed.
+- [ ] Local Dashboard/browser acceptance on `/` remains unconfirmed.
+- [ ] Actual broker execution reconciliation remains unimplemented/unverified; never infer fills from OHLCV bar touches.
+
+## Next engineering sequence
+
+1. Verify the local running API is built from the current feature-branch SHA and run the complete Release build/test script.
+2. Re-run parity against already-persisted EVR 1m, EVR 5m and CBOE 5m observations; capture complete JSON, including source count, comparison count, gaps, errors, implementation version and import metadata. No re-import is needed.
+3. Diagnose EVR 5m and CBOE 5m numeric errors by reproducing Wilder true range, seed and recurrence from the exact imported payload, then compare the same 20 timestamps. Check symbol/timeframe ordering, session transitions, source epoch alignment, and whether the persisted OHLC inputs correspond to the ATR observations. Do not change tolerance or fill gaps.
+4. For EVR 5m, obtain a corrected V2.1 export with at least 119 consecutive completed observations in the latest qualification window and no intraday gaps. Inspect embedded source epochs and the intended after-hours coverage; do not use StrategyReport Work Time as a bar timestamp.
+5. For EVR 1m, obtain/resolve the 13 missing timestamps in the latest 119-bar window, or preserve the result as blocked if source bars cannot be established.
+6. For CBOE 5m, inspect the six supplied gap samples and determine whether the omissions are no-trade intervals or export/study omissions. Do not synthesize bars. Re-export only after the cause/settings are understood.
+7. Verify provider/TOS 5m OHLCV equality across all 119 timestamps and exact same-provider/feed reference close.
+8. Exercise the implemented 40-session walk-forward validator and inspect the gate response. It requires 20 complete training sessions followed by 20 complete unseen test sessions; 100% coverage; positive training target; test touch rate at least the training empirical rate; and test maximum adverse excursion no greater than training adverse-excursion P95.
+9. Continue SIP qualification only after confirmed entitlement change and a successful small SIP request. Then obtain 20/20 complete 07:00–19:59 ET GTC_EXT windows plus exact prior regular-session closes.
+10. Complete local browser acceptance against `http://localhost:53360/` (root page backed by `frontend/index.html`) after build/restart. Verify the five ATR provenance controls and import/parity UI.
+11. Keep numeric sell-limit output blocked until every independent gate passes. Broker fills, fees, quantities and timestamps require a separate actual-execution source.
+
+[Uncertainties]
+- The supplied parity outputs do not identify the root cause of either 5m numeric mismatch.
+- Timestamp gaps may represent no eligible trades or missing chart/export observations; the supplied payloads do not prove which.
+- The exact local API commit currently serving the operator's endpoints is not included in the supplied responses.
+- The operator has not supplied a passing 40-session walk-forward runtime result, 20/20 SIP history result, or local browser acceptance evidence.
+
+---
+
 ## 2026-11-05 Arizona — Wilder ATR parity seed correction
 
 - [x] Investigated the imported EVR 1m API result (`NOT_MATCH`, mean 0.000029, max 0.000061). The endpoint was trimming the source to the latest 119 bars before calculating Wilder ATR. That re-seeded the recursive ATR at the start of the 119-bar window rather than carrying the full chart-history seed forward.
