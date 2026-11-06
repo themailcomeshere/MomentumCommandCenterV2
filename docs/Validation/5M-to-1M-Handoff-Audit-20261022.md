@@ -1,3 +1,7 @@
+> **Historical audit — 2026-11-06:** The active execution checklist is [Master-To-Do.md](../Master-To-Do.md), with current detailed acceptance criteria in [Active-Engineering-Backlog-20261106.md](../Active-Engineering-Backlog-20261106.md) and operator status in [NewChatHandoff-20261106.md](../NewChatHandoff-20261106.md). This file is retained as historical source reconciliation; do not treat its unchecked items as a current work queue.
+>
+> ---
+>
 # 5M → 1M Handoff Source Audit
 
 **Date:** 2026-10-22 (Arizona time)  
