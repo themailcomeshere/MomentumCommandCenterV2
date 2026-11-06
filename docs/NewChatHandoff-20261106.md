@@ -45,7 +45,7 @@ The previous implementation had an empty-response defect: a valid response with 
 - Empty history now returns incomplete/fail-closed metrics rather than throwing.
 - Added unit tests for complete 20-session calculations, session-level provenance, incomplete IEX data and empty responses.
 - Added a dedicated **Daily data audit** panel to the main Dashboard. It defaults to RTO and EVR and displays provider/feed, adjustment, latest expected session, retrieval timestamp, observed close, SMA20, average volume, freshness, qualification status and missing dates.
-- Added `scripts/validation/Test-DailyMarketDataQualification.ps1` to fetch RTO/EVR API responses, save raw JSON, recalculate close/SMA20/average volume from returned session rows, check SIP fail-closed behavior and compare against independent CSVs.
+- Added `scripts/validation/Test-DailyMarketDataQualification.ps1` to fetch RTO/EVR API responses, save raw JSON, recalculate close/SMA20/average volume from returned session rows, enforce configured/response feed identity and SIP fail-closed behavior, and compare against independent CSVs. The split-only/all-adjusted equivalence switch is hard-restricted to the verified 2026-10-12 through 2026-11-06 sample.
 - Added independent reference CSVs:
   - `data/validation/daily-reference-20261106/RTO.csv`
   - `data/validation/daily-reference-20261106/EVR.csv`
@@ -140,7 +140,7 @@ Catalyst human-label/holdout validation; Opportunity Quality full-pool field-ava
 - Public reference source is split-adjusted; the all-adjusted equivalence is window-specific and depends on complete corporate-action history.
 - Exact independent Daily OHLCV parity and SIP qualification are unverified.
 - EVR/CBOE ATR timestamp gaps remain unresolved; IEX mismatch is diagnostic only.
-- The latest PowerShell script and C# changes still require local execution; CI status for the newest commits is not yet established.
+- The latest PowerShell script and C# changes still require local execution; CI status for the newest commits is not yet established. Latest code commit: `f079cc6b4f8d0cf52adddf18da491a84a0bd0d7c`.
 
 ---
 
