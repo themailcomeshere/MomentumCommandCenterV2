@@ -138,3 +138,31 @@ The script has been committed but has **not** been executed against the user's l
 - The revised ThinkScript has not yet been compiled or run in Thinkorswim.
 - No provider/TOS bar equality, prior-close equality, SIP entitlement, 40-session completeness, or runtime walk-forward PASS is evidenced.
 - No broker execution/fill integration exists; OHLCV touches are not fills.
+
+
+---
+
+## Follow-up recurrence audit — latest persisted evidence, 2026-11-06
+
+Raw input: `artifacts/sell-limit-evidence/20261106T143918/EVR-tos-observations.json` and `CBOE-tos-observations.json`.
+
+I independently recalculated the Wilder recurrence across every adjacent persisted observation, including pairs separated by timestamp gaps, using the exported previous close and current OHLC:
+
+`TR[t] = max(high-low, abs(high-previousClose), abs(low-previousClose))`
+
+`ATR[t] = (13 * ATR[t-1] + TR[t]) / 14`
+
+| Series | Adjacent pairs | Maximum absolute recurrence residual | Mean absolute recurrence residual | Residuals > 0.0002 |
+|---|---:|---:|---:|---:|
+| EVR 5m | 326 | 0.0000928571 | 0.0000329316 | 0 |
+| CBOE 5m | 337 | 0.0000928571 | 0.0000326198 | 0 |
+
+Both maxima are consistent with four-decimal ATR export rounding. No large recurrence discontinuity remains in the latest persisted observation sequences. This supersedes the earlier EVR recurrence-break diagnosis for the older import: the additional persisted rows now bridge the previously observed state transition sufficiently for the recurrence to reconcile.
+
+### What remains unresolved
+
+The parity endpoint still reports EVR `GAPS_PRESENT` (3 gap groups) and CBOE `GAPS_PRESENT` (1 gap group) in the latest 119-observation qualification windows. The raw intervals include EVR 2026-11-05 05:00Z→05:10Z, 05:10Z→14:05Z, and 14:05Z→14:30Z; CBOE 2026-11-04 21:00Z→23:40Z. Some intervals may be outside regular/eligible trading windows or may be legitimate no-trade periods. The available export alone does not establish whether a missing 5-minute bar was expected from the TOS chart/session contract.
+
+Do not remove the gap gate merely because the Wilder recurrence reconciles. Next, inspect the exact TOS chart at each interval and document the chart's actual bar-presence rule (including extended-hours session bounds and no-trade behavior). Then compare the parity service's gap-counting rule to that contract. If a timestamp is legitimately absent because no chart bar exists, the validator may need an explicit, testable session-aware continuity policy; if a chart bar exists but the export omitted it, correct the export. Never synthesize a zero-volume bar.
+
+**Current result remains blocked:** numeric ATR errors for the final 20 comparisons are within 0.00005, but status is still `GAPS_PRESENT`. TOS compilation of the revised source and a fresh broad export also remain unverified.
