@@ -10,6 +10,8 @@
 - [x] Confirmed 82 observations are insufficient for the required 119-observation 5m parity window (99 warm-up + 20 comparison bars). No 5m ATR parity certification or 99-bar continuous warm-up is possible from this file.
 - [x] Kept the Nov 4 v2.2 payload epoch as the authoritative source-bar timestamp. The StrategyReport Work Time and order-event Date/Time fields are not substitutes for the embedded source epoch.
 
+- [x] CI passed for the runtime control recovery and static-file cache fix: frontend JavaScript syntax passed, API build succeeded, and 231/231 tests passed in [Actions run 42147561770](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42147561770).
+
 ### Still open / operator verification
 - [ ] Pull latest branch and run `.scripts\Get-Latest-And-Test.ps1`; check the frontend syntax and all tests.
 - [ ] Restart the API and hard-refresh Dashboard. Confirm the five ATR controls now appear. The runtime bootstrap should restore them even if the HTML is stale.
