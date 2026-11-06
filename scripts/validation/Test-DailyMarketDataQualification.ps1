@@ -47,6 +47,10 @@ foreach ($symbolInput in $Symbols) {
     $internalErrors = @()
 
     if ($expected.Count -ne 20) { $internalErrors += "ExpectedSessionDates count is $($expected.Count), not 20." }
+    if ($ConfirmWindowAdjustmentEquivalence -and
+        (($expected.Count -ne 20) -or $expected[0] -ne "2026-10-12" -or $expected[-1] -ne "2026-11-06")) {
+        $internalErrors += "The split-only/all-adjusted equivalence switch is authorized only for the 2026-10-12 through 2026-11-06 20-session sample."
+    }
     if ($sessions.Count -ne 20) { $internalErrors += "Returned session count is $($sessions.Count), not 20." }
     if ($missing.Count -ne 0) { $internalErrors += "Missing expected sessions: $($missing -join ', ')." }
     if ($distinctDates.Count -ne 20) { $internalErrors += "Session dates are not 20 distinct dates." }
