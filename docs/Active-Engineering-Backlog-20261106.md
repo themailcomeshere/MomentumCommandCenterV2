@@ -120,6 +120,8 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 
 ### P1.1 Daily market data and liquidity
 
+**Detailed procedure and independent reference sample:** [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md).  
+
 **Implementation status:** Alpaca Daily `1Day` client and exact 20-session calculator exist. The implementation has now been hardened for empty responses and exposes every session row plus the expected/missing session dates. The main Dashboard has a dedicated RTO/EVR Daily audit panel. A PowerShell evidence runner and independent 20-session reference CSVs are committed. This is implementation completion, not live acceptance: no local API payload or Dashboard screenshot has yet been captured in this session.
 
 **Completed engineering**
