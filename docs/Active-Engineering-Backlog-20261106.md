@@ -61,7 +61,7 @@ The latest IEX provider comparison requested 119 timestamps per symbol, returned
 
 ### P0.2 Obtain continuous corrected 5m ATR history
 
-**Current state:** Latest persisted history contains 327 EVR and 338 CBOE 5m observations. Final-20 numeric ATR errors are within 0.00005. A fresh recurrence audit across all adjacent persisted pairs found no large residuals (maximum 0.0000928571 for both symbols, consistent with four-decimal ATR rounding). Nevertheless parity reports 3 EVR and 1 CBOE timestamp-gap groups in the latest 119-observation window. Whether these are missing expected chart bars or legitimate no-trade/out-of-session intervals is unresolved. Revised full-chart export source is committed but TOS compilation/fresh-export evidence is absent.
+**Current state:** Latest persisted history contains 327 EVR and 338 CBOE 5m observations. These are already committed and available; do not request or re-import the same ScannerExports. Final-20 numeric ATR errors are within 0.00005. A fresh recurrence audit across all adjacent persisted pairs found no large residuals (maximum 0.0000928571 for both symbols, consistent with four-decimal ATR rounding). Nevertheless parity reports 3 EVR and 1 CBOE timestamp-gap groups in the latest 119-observation window. Whether these are missing expected chart bars or legitimate no-trade/out-of-session intervals is unresolved. Revised full-chart export source is committed but TOS compilation/fresh-export evidence is absent.
 
 **Missing work**
 - Compile the revised exact V2.1 ThinkScript in Thinkorswim. It now exports all available chart bars within the selected date range and no longer filters payloads by time of day.
@@ -147,6 +147,18 @@ Keep numeric output blocked until P0.1–P0.6 and all existing orchestration gat
 - Verify evaluator/snapshot behavior remains DATA? whenever feed is non-SIP, history is incomplete/stale, or any required metric is missing.
 
 **Acceptance:** internal arithmetic consistency AND independent 20-session OHLCV parity; same adjustment basis (or explicitly evidenced window-equivalent basis); source/feed/retrieval timestamp visible; SIP and freshness gates pass before metrics may be used for qualification; incomplete/stale/non-SIP data yields DATA?/UNKNOWN and never READY.
+
+
+
+### P1 runtime acceptance — Dashboard, WebSocket, and collector
+
+**Operator confirmed:** main Dashboard is the only target; the visible panel label is **Daily data audit**. RTO/EVR/CBOE audit returned 3 rows, no API errors, no qualification-usable rows; all remain IEX_PARTIAL / DATA? despite 20/20 fresh sessions. This is the expected fail-closed display, not a Daily qualification pass.
+
+**Scripts added:**
+- `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1` — Chromium CDP capture of console errors, uncaught exceptions, sanitized network request/response/failure events, and a screenshot.
+- `scripts/validation/Test-RegularSessionStreamCollector.ps1` — 5-minute / 15-second read-only capture of health, provider, stream and collector status, plus per-symbol bar/timestamp deltas and post-capture live assessments.
+
+**Still open:** both scripts require operator execution against the local API/browser. The collector may be disabled; if so, report NOT TESTED/disabled rather than treating it as a pass. WebSocket `SUBSCRIBED` alone is not delivery proof. Full Dashboard browser acceptance remains open after the Daily panel check.
 
 ### P1.2 Catalyst classification
 
