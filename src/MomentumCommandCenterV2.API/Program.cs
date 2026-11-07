@@ -1141,6 +1141,24 @@ app.MapPost("/api/boring-overnight/evaluate", async (MomentumCommandCenterV2.API
     return operation;
 });
 
+app.MapGet("/api/market-data/catalyst-reviews/validation", async (
+    CatalystHumanReviewStore reviewStore,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var records = await reviewStore.GetLatestAsync(null, 500, ct);
+        return Results.Ok(CatalystHumanReviewValidation.Evaluate(records));
+    }
+    catch (InvalidDataException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
+})
+.WithName("GetCatalystHumanReviewValidation")
+.WithSummary("Measure fixed catalyst triage against chronological human-label holdout")
+.WithDescription("Reads up to the latest 500 append-only human reviews. Only unique, non-conflicting reviews with a saved RISK/MATERIAL/UNCLASSIFIED prediction and a MATERIAL_RISK/MATERIAL_EVENT/NON_MATERIAL/IRRELEVANT human label are eligible. The later 20% is a chronological holdout. This reports descriptive metrics only; it does not train the classifier or produce catalyst clearance.");
+
 app.MapPost("/api/market-data/catalyst-reviews", async (
     CatalystHumanReviewInput input,
     CatalystHumanReviewStore reviewStore,
