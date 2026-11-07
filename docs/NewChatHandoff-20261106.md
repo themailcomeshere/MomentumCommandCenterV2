@@ -22,7 +22,7 @@ Latest parity response from the operator:
 
 CI passed for the detector + test commit `028796bb4915ab8b118f7f5550eb8acd425aa250`: Release build, zero warnings/errors, 239/239 tests. Later commits add catalyst validation, Overnight provenance, and Opportunity Quality pool ranking; check exact latest branch-head CI before pulling.
 
-Full analysis: `docs/Validation/ATR-Gap-Session-Slot-Analysis-20261107.md`.
+Full analysis: `docs/Validation/ATR-Gap-Session-Slot-Analysis-20261107.md`. Catalyst and ranking API details: `docs/Validation/Catalyst-and-Opportunity-Quality-Validation-20261107.md`.
 
 ## Additional feature implementation in this continuation
 
@@ -41,7 +41,7 @@ The history result now explicitly labels the next-session reference as `ONE_MINU
 - New endpoint: `GET /api/market-data/opportunity-quality/rank?symbols=EVR,CBOE,...`.
 - Accepts 1–50 unique explicit symbols; concurrency is capped at four; returns every candidate including DATA? / BLOCKED.
 - Diagnostic ordering uses existing classification, then raw 5M RVOL, 30-bar 1M range/ATR and prior-high distance. It does not invent a weighted score/probability.
-- This is not market-wide discovery and is not yet wired into a Dashboard control. Full UI integration, pool paging/bounds, and historical calibration remain open.
+- Main Dashboard now has **Rank quality pool · top 50** in the Red Zone controls. It ranks the top 50 imported scanner-score candidates and renders diagnostic classification/metrics/reasons. This is a disclosed prefilter, not the full imported list when more than 50 rows exist. Operator click-through/runtime acceptance and exact latest-head CI remain open. Pool paging/bounds and historical calibration remain open.
 
 ## Source audit: 1M / 5M authority and EOD
 
