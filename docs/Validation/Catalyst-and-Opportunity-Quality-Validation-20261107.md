@@ -79,7 +79,7 @@ Invoke-RestMethod "$base/api/market-data/opportunity-quality/rank?symbols=EVR,CB
 
 ## 3. Runtime acceptance
 
-Code-level tests cover the rank ordering and catalyst confusion-matrix calculation. GitHub Actions passed on code commit `5372a00cc02dbbb9ab9006d1d6abb17ad00a005e`: Release build, 0 warnings/errors, 243/243 tests. Dashboard syntax was included in the workflow. Later documentation/UI changes require checking the exact latest branch-head workflow.
+Code-level tests cover the rank ordering and catalyst confusion-matrix calculation. GitHub Actions passed on code commit `5372a00cc02dbbb9ab9006d1d6abb17ad00a005e` and main Dashboard integration commit `69c1b39562b62dc30e4a43b1a6227438120c31b2`: frontend JavaScript syntax PASS, Release build, 0 warnings/errors, 243/243 tests. Later documentation-only commits still require checking the exact latest branch-head workflow.
 
 Local API runtime, browser rendering, provider request behavior and human-label metrics must still be observed on the operator's machine.
 
