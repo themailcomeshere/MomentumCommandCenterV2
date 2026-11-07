@@ -214,6 +214,39 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal(start.AddMinutes(110), gap.ExpectedNextBarAtUtc);
         Assert.Equal(1, gap.MissingIntervalCount);
         Assert.Equal(TimeSpan.FromMinutes(1), gap.GapDuration);
+        Assert.Equal(start.AddMinutes(110), gap.FirstExpectedMissingBarAtUtc);
+        Assert.Equal(start.AddMinutes(110), gap.LastExpectedMissingBarAtUtc);
+    }
+
+    [Theory]
+    [InlineData("2026-11-05T05:10:00Z", "2026-11-05T14:05:00Z", 61, "2026-11-05T09:00:00Z", "2026-11-05T14:00:00Z")]
+    [InlineData("2026-11-05T14:05:00Z", "2026-11-05T14:30:00Z", 4, "2026-11-05T14:10:00Z", "2026-11-05T14:25:00Z")]
+    [InlineData("2026-11-04T21:00:00Z", "2026-11-04T23:40:00Z", 31, "2026-11-04T21:05:00Z", "2026-11-04T23:35:00Z")]
+    public void CountsOnlyExpectedEthSlotsAndExcludesScheduledOvernightClosure(
+        string previousText,
+        string currentText,
+        int expectedMissingCount,
+        string firstMissingText,
+        string lastMissingText)
+    {
+        var metadata = Metadata();
+        var previous = DateTimeOffset.Parse(previousText);
+        var current = DateTimeOffset.Parse(currentText);
+        var timestamps = new[] { previous, current }
+            .Concat(Enumerable.Range(0, 128).Select(index => current.AddMinutes(5 * (index + 1))))
+            .ToArray();
+        var observations = timestamps.Select((timestamp, index) => new StrategyReportAtrObservation(
+            index.ToString(), "EVR", "5m", timestamp, 100m, 101m, 99m, 100m, 1000m, 2m)).ToArray();
+        var stored = observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored, warmupBars: 15, comparisonWindowBars: 130);
+
+        Assert.Equal("GAPS_PRESENT", result.Status);
+        var gap = Assert.Single(result.TimestampGaps!);
+        Assert.Equal(expectedMissingCount, gap.MissingIntervalCount);
+        Assert.Equal(DateTimeOffset.Parse(firstMissingText), gap.FirstExpectedMissingBarAtUtc);
+        Assert.Equal(DateTimeOffset.Parse(lastMissingText), gap.LastExpectedMissingBarAtUtc);
     }
 
     [Fact]
