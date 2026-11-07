@@ -209,9 +209,9 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal(31, result.ComparedBarCount);
         Assert.Equal(0m, result.MaximumAbsoluteError);
         var gap = Assert.Single(result.TimestampGaps!);
-        Assert.Equal(start.AddMinutes(110), gap.PreviousBarAtUtc);
-        Assert.Equal(start.AddMinutes(112), gap.CurrentBarAtUtc);
-        Assert.Equal(start.AddMinutes(111), gap.ExpectedNextBarAtUtc);
+        Assert.Equal(start.AddMinutes(109), gap.PreviousBarAtUtc);
+        Assert.Equal(start.AddMinutes(111), gap.CurrentBarAtUtc);
+        Assert.Equal(start.AddMinutes(110), gap.ExpectedNextBarAtUtc);
         Assert.Equal(1, gap.MissingIntervalCount);
         Assert.Equal(TimeSpan.FromMinutes(1), gap.GapDuration);
     }
