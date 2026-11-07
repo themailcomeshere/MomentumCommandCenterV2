@@ -1,10 +1,10 @@
 namespace MomentumCommandCenterV2.API.StrategyReports;
 
 /// <summary>
-/// Counts missing source intervals only when the gap overlaps the same New York calendar
-/// date's extended-hours chart session (04:00–20:00 ET). Scheduled overnight closures,
-/// including the after-midnight portion before 04:00 ET, are not missing intraday bars.
-/// Cross-date continuity and full-session coverage are separate qualification checks.
+/// Counts expected source timestamp slots only while the US equity extended-hours chart
+/// session is scheduled (04:00–20:00 America/New_York). The scheduled 20:00–04:00 closure
+/// is excluded even when a gap crosses part of it on the same New York calendar date.
+/// This is a timestamp-continuity diagnostic, not proof that a trade or chart candle existed.
 /// </summary>
 internal static class AtrTimestampGapDetector
 {
@@ -22,30 +22,36 @@ internal static class AtrTimestampGapDetector
     {
         if (currentUtc <= previousUtc || interval <= TimeSpan.Zero)
             return null;
-        var elapsed = currentUtc - previousUtc;
-        if (elapsed <= interval + TimeSpan.FromSeconds(1))
+        if (currentUtc - previousUtc <= interval + TimeSpan.FromSeconds(1))
             return null;
 
-        var previousLocal = TimeZoneInfo.ConvertTime(previousUtc, Eastern).DateTime;
-        var currentLocal = TimeZoneInfo.ConvertTime(currentUtc, Eastern).DateTime;
-        if (DateOnly.FromDateTime(previousLocal) != DateOnly.FromDateTime(currentLocal))
+        var previousLocalDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(previousUtc, Eastern).DateTime);
+        var currentLocalDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(currentUtc, Eastern).DateTime);
+        if (previousLocalDate != currentLocalDate)
             return null;
 
-        // TOS ETH equity charts do not have a scheduled chart session from 20:00 through
-        // 04:00 ET. A timestamp gap wholly inside that closure must not count as a missing
-        // 5m/1m chart bar, even though both timestamps can share one New York calendar date.
-        var gapStart = previousLocal.TimeOfDay + interval;
-        var gapEnd = currentLocal.TimeOfDay;
-        if (gapStart >= ExtendedSessionEnd || gapEnd <= ExtendedSessionStart)
+        // Walk the expected chart timestamps, not wall-clock elapsed/interval. A gap
+        // spanning 00:10–09:05 ET contains 106 wall-clock 5m slots but only 61 slots
+        // inside the declared 04:00–20:00 ET chart session.
+        var expected = new List<DateTimeOffset>();
+        for (var candidate = previousUtc.Add(interval); candidate < currentUtc; candidate = candidate.Add(interval))
+        {
+            var localTime = TimeZoneInfo.ConvertTime(candidate, Eastern).TimeOfDay;
+            if (localTime >= ExtendedSessionStart && localTime < ExtendedSessionEnd)
+                expected.Add(candidate);
+        }
+
+        if (expected.Count == 0)
             return null;
 
-        var missingIntervals = Math.Max(1, (int)Math.Ceiling((double)elapsed.Ticks / interval.Ticks) - 1);
         return new ThinkorswimAtrTimestampGap(
             previousUtc,
             currentUtc,
-            previousUtc.Add(interval),
+            expected[0],
             currentUtc,
-            missingIntervals,
-            elapsed - interval);
+            expected.Count,
+            currentUtc - previousUtc - interval,
+            expected[0],
+            expected[^1]);
     }
 }
