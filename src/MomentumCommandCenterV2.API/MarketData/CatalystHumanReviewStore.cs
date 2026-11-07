@@ -45,7 +45,9 @@ public sealed class CatalystHumanReviewStore(string? path = null)
                 input.Label.Trim().ToUpperInvariant(),
                 input.RuleSetVersion?.Trim() ?? "MCC-CATALYST-TRIAGE-1.0",
                 input.Notes?.Trim(),
-                DateTimeOffset.UtcNow);
+                DateTimeOffset.UtcNow,
+                string.IsNullOrWhiteSpace(input.PredictedSeverity) ? null : input.PredictedSeverity.Trim().ToUpperInvariant(),
+                input.PredictedCategories?.Select(x => x.Trim().ToUpperInvariant()).Where(x => x.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? Array.Empty<string>());
             await using var stream = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read,
                 16 * 1024, FileOptions.Asynchronous);
             await using var writer = new StreamWriter(stream);
@@ -110,6 +112,11 @@ public sealed class CatalystHumanReviewStore(string? path = null)
             throw new ArgumentException("Label must be MATERIAL_RISK, MATERIAL_EVENT, NON_MATERIAL, IRRELEVANT, DUPLICATE, or UNCERTAIN.", nameof(input));
         if (input.Notes?.Length > 2000)
             throw new ArgumentException("Notes must be at most 2000 characters.", nameof(input));
+        if (input.PredictedSeverity is not null &&
+            !new[] { "RISK", "MATERIAL", "UNCLASSIFIED" }.Contains(input.PredictedSeverity.Trim(), StringComparer.OrdinalIgnoreCase))
+            throw new ArgumentException("PredictedSeverity must be RISK, MATERIAL, or UNCLASSIFIED.", nameof(input));
+        if (input.PredictedCategories?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 100) == true)
+            throw new ArgumentException("PredictedCategories must contain non-empty values of at most 100 characters.", nameof(input));
     }
 }
 
@@ -122,7 +129,9 @@ public sealed record CatalystHumanReviewInput(
     string Source,
     string Label,
     string? RuleSetVersion = null,
-    string? Notes = null);
+    string? Notes = null,
+    string? PredictedSeverity = null,
+    IReadOnlyList<string>? PredictedCategories = null);
 
 public sealed record CatalystHumanReviewRecord(
     string ReviewId,
@@ -135,4 +144,6 @@ public sealed record CatalystHumanReviewRecord(
     string Label,
     string RuleSetVersion,
     string? Notes,
-    DateTimeOffset ReviewedAtUtc);
+    DateTimeOffset ReviewedAtUtc,
+    string? PredictedSeverity = null,
+    IReadOnlyList<string>? PredictedCategories = null);
