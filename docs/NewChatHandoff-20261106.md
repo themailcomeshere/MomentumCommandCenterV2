@@ -1,9 +1,97 @@
-# CURRENT HANDOFF — 2026-11-06, browser launch diagnosis + ATR parity reread
+# CURRENT HANDOFF — 2026-11-07, ATR gap session slots + feature continuation
 
 **Repository:** `themailcomeshere/MomentumCommandCenterV2`  
 **Branch:** `feature/opportunity-quality-classification`  
 **Dashboard:** `frontend/index.html`  
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
+
+# CURRENT ENGINEERING CONTINUATION — 2026-11-07
+
+This section supersedes older ATR gap-count interpretations below. Keep all code changes on `feature/opportunity-quality-classification`; main Dashboard remains `frontend/index.html`. Do not use PrototypeIndex. Order submission remains NOT IMPLEMENTED.
+
+## Exact ATR gaps supplied by operator
+
+Latest parity response from the operator:
+- EVR 5m: 2 gaps.
+  1. 2026-11-05 05:10Z → 14:05Z = 00:10 → 09:05 EST. Raw elapsed arithmetic reports 106 five-minute intervals, but the scheduled 20:00–04:00 ET closure is excluded. There are 61 expected timestamp slots in the 04:00–20:00 ET chart session: 04:00 through 09:00 ET.
+  2. 14:05Z → 14:30Z = 09:05 → 09:30 ET. Four expected slots: 09:10, 09:15, 09:20, 09:25 ET.
+- CBOE 5m: 1 gap.
+  1. 2026-11-04 21:00Z → 23:40Z = 16:00 → 18:40 ET. 31 expected after-hours slots: 16:05 through 18:35 ET.
+
+**Code change:** `AtrTimestampGapDetector` now counts only expected timestamp slots inside 04:00–20:00 ET and returns first/last expected missing UTC timestamps. The previous EVR `missingIntervalCount=106` was misleading wall-clock arithmetic; the new expected chart-session count is 61. The count does not prove a trade or candle existed. Never impute bars.
+
+CI passed for the detector + test commit `028796bb4915ab8b118f7f5550eb8acd425aa250`: Release build, zero warnings/errors, 239/239 tests. Later commits add catalyst validation, Overnight provenance, and Opportunity Quality pool ranking; check exact latest branch-head CI before pulling.
+
+Full analysis: `docs/Validation/ATR-Gap-Session-Slot-Analysis-20261107.md`.
+
+## Additional feature implementation in this continuation
+
+### Overnight opening reference
+The history result now explicitly labels the next-session reference as `ONE_MINUTE_BAR_OPEN_PROXY` and `officialOpeningAuctionVerified=false`. The prior regular close → next 09:30 one-minute bar Open endpoint spans Day 1 after-hours and Day 2 premarket in its net return, but does not reconstruct the path or GTC_EXT extrema. Do not claim auction-print parity. Exact historical scanner buy/sell endpoints still require verification against the original scanner formula.
+
+### Catalyst validation
+- Human review records now persist the triage prediction severity/categories that existed when the article was reviewed.
+- New endpoint: `GET /api/market-data/catalyst-reviews/validation`.
+- Uses a chronological later-20% holdout and reports confusion matrix, precision, recall, specificity and accuracy.
+- Positive human labels: MATERIAL_RISK / MATERIAL_EVENT. Negative labels: NON_MATERIAL / IRRELEVANT. DUPLICATE / UNCERTAIN, legacy records without saved prediction and conflicting duplicate-article labels are excluded.
+- This evaluates fixed keyword triage; it does not train the model or create catalyst clearance.
+- No human-label dataset or measured metrics has been evidenced yet.
+
+### Opportunity Quality pool ordering
+- New endpoint: `GET /api/market-data/opportunity-quality/rank?symbols=EVR,CBOE,...`.
+- Accepts 1–50 unique explicit symbols; concurrency is capped at four; returns every candidate including DATA? / BLOCKED.
+- Diagnostic ordering uses existing classification, then raw 5M RVOL, 30-bar 1M range/ATR and prior-high distance. It does not invent a weighted score/probability.
+- This is not market-wide discovery and is not yet wired into a Dashboard control. Full UI integration, pool paging/bounds, and historical calibration remain open.
+
+## Source audit: 1M / 5M authority and EOD
+
+Repository source review found:
+- `docs/Charts/1M/MainStudy_V14.5.2.txt` includes reconstructed 5M Daily VWAP, 5M close > EMA9, EMA9 >= EMA20 and RSI checks. The independent 1M Daily VWAP execution gate remains separate.
+- `docs/Charts/5M/MainStudy.txt` and 1M V14.5.2 both map 15:55 Arizona to 17:55 ET standard time / 18:55 ET daylight time.
+- This is source inspection only. Neither study has been compiled or matched-bar validated in Thinkorswim in this continuation.
+
+## Operator next steps
+
+1. Pull latest branch and run Release tests:
+```powershell
+git switch feature/opportunity-quality-classification
+git pull --ff-only origin feature/opportunity-quality-classification
+dotnet test .\MomentumCommandCenterV2.sln -c Release
+git rev-parse HEAD
+```
+2. After API rebuild/restart, re-read ATR parity and inspect the corrected count/first-last fields:
+```powershell
+$base = "http://localhost:53360"
+$evr = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m&warmupBars=99&windowBars=119"
+$cboe = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m&warmupBars=99&windowBars=119"
+$evr | Select-Object status,timestampGapCount,timestampGaps | ConvertTo-Json -Depth 10
+$cboe | Select-Object status,timestampGapCount,timestampGaps | ConvertTo-Json -Depth 10
+```
+3. In TOS inspect EVR 04:00–09:00 ET, EVR 09:10–09:25 ET, and CBOE 16:05–18:35 ET. Record whether candles actually appear. If present but absent from the export, correct export; if absent from chart, document no-bar semantics. Never impute.
+4. Compile the revised V2.1 ATR study, 1M V14.5.2 and 5M MainStudy in TOS. Compare matched completed 5M permission and 1M execution; test Arizona 15:54/15:55/15:56 on standard/daylight dates.
+5. Run catalyst validation:
+```powershell
+Invoke-RestMethod "$base/api/market-data/catalyst-reviews/validation" | ConvertTo-Json -Depth 12
+```
+Review articles and save both positive and negative human labels; only then can the chronological holdout have meaningful precision/recall.
+6. Exercise the explicit Opportunity Quality pool API with a bounded set of candidate symbols:
+```powershell
+Invoke-RestMethod "$base/api/market-data/opportunity-quality/rank?symbols=EVR,CBOE,RTO" | ConvertTo-Json -Depth 20
+```
+The endpoint accepts up to 50 symbols. It is diagnostic-only and not yet shown in the Dashboard.
+7. Re-run browser diagnostics after pulling the Edge executable discovery fix. The previous failure was the resolved Edge executable path, not the script path.
+8. Run stream collector during an actual regular session. Friday 18:52 ET attempts were correctly rejected; next weekday opportunity was Monday 2026-11-09 09:30 ET / 07:30 Arizona, only if the exchange is actually open.
+9. Keep SIP/40-session walk-forward parked unless the operator independently reports changed SIP entitlement. Do not retry SIP or ask for another entitlement check.
+
+## Remaining items that cannot be truthfully marked complete yet
+
+- TOS chart-side classification of the exact ATR gaps; ThinkScript compilation and matched-state replay.
+- Official auction print / first eligible observed trade parity.
+- Catalyst human-label sample and measured holdout metrics.
+- Dashboard integration of Opportunity Quality pool ordering and historical calibration.
+- V3 Boring Overnight watchlist column; exact historical Overnight endpoint and authoritative metric source must be frozen before implementing it.
+- Full Dashboard CDP/browser acceptance and regular-session stream/collector evidence.
+- SIP-dependent 40-session runtime walk-forward.
 
 # LATEST OPERATOR UPDATE — 2026-11-06, Daily audit UI and PowerShell acceptance
 
