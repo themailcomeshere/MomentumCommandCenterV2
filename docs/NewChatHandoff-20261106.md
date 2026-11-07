@@ -1,4 +1,4 @@
-# CURRENT HANDOFF — 2026-11-06, Daily qualification failure + ATR recurrence audit
+# CURRENT HANDOFF — 2026-11-06, browser launch diagnosis + ATR parity reread
 
 **Repository:** `themailcomeshere/MomentumCommandCenterV2`  
 **Branch:** `feature/opportunity-quality-classification`  
@@ -6,6 +6,45 @@
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
 
 # LATEST OPERATOR UPDATE — 2026-11-06, Daily audit UI and PowerShell acceptance
+
+# LATEST OPERATOR UPDATE — 2026-11-06 evening: browser launch, stream guard, ATR reread
+
+## Browser diagnostics
+
+The operator ran `Capture-DashboardBrowserDiagnostics.ps1` from the repository root with `-BaseUri "http://localhost:53359/" -CaptureSeconds 120`. PowerShell found and executed the script, but `Start-Process` failed with “The system cannot find the file specified.” This points to the Edge executable path resolved by the script, not the script's own path.
+
+**Code fix committed:** `50945206dd3ac207ab96efbcb9a42911cc13d335`.
+- Explicit `-BrowserPath` is validated as an existing `msedge.exe` file.
+- Discovery now checks standard Program Files / LocalAppData install paths, Windows App Paths registry entries, and all `Get-Command msedge.exe` results.
+- The path is resolved to an absolute path, checked immediately before launch, and printed.
+- Start-Process failures now identify the exact executable and underlying error.
+
+**Still open:** the operator must pull the change and rerun. No CDP console/network capture, screenshot or manifest was produced by the failed attempt. If auto-discovery still fails, run `Get-Command msedge.exe -All | Select-Object Source,Definition` and pass the actual full executable path using `-BrowserPath`. Do not pass the diagnostics script path as `-BrowserPath`.
+
+## Regular-session stream/collector
+
+Both operator attempts at 2026-11-06 18:52 ET were correctly rejected because the regular session window is 09:30–16:00 ET. This is expected guard behavior, not a test pass and not a script defect. No stream/collector runtime evidence was captured.
+
+Next weekday opportunity: Monday 2026-11-09 at 09:30 ET / 07:30 Arizona, only if the exchange is actually open. Confirm the session calendar; holidays and early closes still require operator judgment.
+
+## ATR parity reread — current results supersede the earlier gap counts
+
+The operator re-read the local parity endpoints after the session-aware detector update, using existing persisted observations; no CSV re-import was needed.
+
+| Symbol | Status | Source observations | Compared bars | Gaps | MAE | Maximum absolute error |
+|---|---|---:|---:|---:|---:|---:|
+| EVR 5m | GAPS_PRESENT | 327 | 20 | 2 | 0.0000294330206094 | 0.0000495349247568 |
+| CBOE 5m | GAPS_PRESENT | 338 | 20 | 1 | 0.0000203865947752 | 0.0000426076307465 |
+
+Both maximum errors are within the 0.00005 tolerance. The EVR gap count fell from 3 to 2 because the same-date 00:00–00:10 ET interval inside the scheduled 20:00–04:00 ET closure is no longer counted. The remaining 2 EVR and 1 CBOE gaps still prevent MATCH. Inspect the exact missing intervals against the actual TOS chart/session contract; do not impute bars or re-import the unchanged CSVs. Revised ThinkScript compilation in TOS remains unverified.
+
+## Current operator action list
+
+- [ ] Pull feature branch and rerun browser diagnostics; inspect the resolved Edge executable if launch still fails.
+- [ ] Commit browser evidence folder after a successful capture; then review console, network and screenshot.
+- [ ] Run stream/collector capture during an actual open regular session (next weekday opportunity Monday 2026-11-09, 09:30 ET / 07:30 Arizona).
+- [ ] Inspect remaining EVR/CBOE ATR gaps in Thinkorswim and compile the revised V2.1 study.
+- [ ] Continue remaining work in the order requested: ATR continuity and TOS authority/EOD; Overnight boundary; Catalyst validation; Opportunity Quality full-pool ranking; V3 Boring Overnight column; full Dashboard browser acceptance; walk-forward only when qualified history exists.
 
 ## Corrections to the previous action plan
 
