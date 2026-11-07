@@ -29,6 +29,8 @@ The detector now counts scheduled session slots rather than all wall-clock inter
 
 The 20-pair history response now explicitly labels its next-session opening input as `ONE_MINUTE_BAR_OPEN_PROXY`, with `officialOpeningAuctionVerified=false`. Its close-to-next-open net endpoint spans Day 1 after-hours and Day 2 premarket but does not reconstruct path/extrema. Do not claim official auction parity. Exact historical scanner buy/sell endpoints still need to be checked against the original scanner formula. IEX remains diagnostic-only; SIP is parked.
 
+See [Catalyst-and-Opportunity-Quality-Validation-20261107.md](Validation/Catalyst-and-Opportunity-Quality-Validation-20261107.md) for API usage and validation definitions.
+
 ### Catalyst validation implementation
 
 Human review records now retain the classifier prediction severity/categories at review time. `GET /api/market-data/catalyst-reviews/validation` deduplicates by symbol + article identity, excludes uncertain/duplicate/legacy predictionless/conflicting records, and reports a chronological later-20% holdout confusion matrix with precision/recall/specificity/accuracy. Frontend review submission now sends the saved prediction and displays the validation status.
@@ -39,7 +41,7 @@ Human-positive labels: MATERIAL_RISK / MATERIAL_EVENT. Human-negative: NON_MATER
 
 Added `OpportunityQualityPoolRanker` plus `GET /api/market-data/opportunity-quality/rank?symbols=...` for 1–50 unique explicit symbols. It assesses each supplied symbol with concurrency limited to four, returns all candidates, and sorts by existing classification then raw 5M RVOL, 30-bar 1M range/ATR, and prior-high distance. No composite score or probability is invented.
 
-**Still open:** Dashboard integration, pool paging/bounds for the actual scanner universe, historical calibration, and validation of provisional assessor thresholds. The API endpoint is not a market-wide discovery service.
+**Dashboard integration implemented:** Red Zone now has a **Rank quality pool · top 50** control. It ranks the top 50 imported scanner-score candidates and renders the diagnostic classification/metrics/reasons. This is a disclosed bounded prefilter; candidates beyond 50 are not assessed. Operator click-through/runtime acceptance and CI for the latest UI commit remain open. Pool expansion/paging, historical calibration, and provisional threshold validation remain open. The API endpoint is not a market-wide discovery service.
 
 ## Operator update — 2026-11-06 evening
 
