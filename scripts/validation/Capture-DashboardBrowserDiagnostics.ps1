@@ -28,26 +28,78 @@ function Get-SafeUrl([string]$Value) {
     } catch { return "[non-http-url]" }
 }
 function Get-EdgePath {
-    if (-not [string]::IsNullOrWhiteSpace($BrowserPath) -and (Test-Path -LiteralPath $BrowserPath)) { return $BrowserPath }
-    $candidates = @(
-        (Join-Path ([Environment]::GetEnvironmentVariable("ProgramFiles(x86)")) "Microsoft/Edge/Application/msedge.exe"),
-        (Join-Path $env:ProgramFiles "Microsoft/Edge/Application/msedge.exe"),
-        (Join-Path $env:LOCALAPPDATA "Microsoft/Edge/Application/msedge.exe")
-    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
-    if ($candidates.Count -gt 0) { return $candidates[0] }
-    $command = Get-Command msedge.exe -ErrorAction SilentlyContinue
-    if ($command) { return $command.Source }
-    throw "Microsoft Edge was not found. Supply -BrowserPath with the full msedge.exe path."
+    if (-not [string]::IsNullOrWhiteSpace($BrowserPath)) {
+        if (-not (Test-Path -LiteralPath $BrowserPath -PathType Leaf)) {
+            throw "The supplied -BrowserPath is not an existing file: '$BrowserPath'. Supply the full path to msedge.exe."
+        }
+        $explicit = (Resolve-Path -LiteralPath $BrowserPath).Path
+        if ([IO.Path]::GetFileName($explicit) -ine "msedge.exe") {
+            throw "The supplied -BrowserPath must point to msedge.exe, not '$explicit'."
+        }
+        return $explicit
+    }
+
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    foreach ($root in @(
+        [Environment]::GetEnvironmentVariable("ProgramFiles(x86)"),
+        $env:ProgramFiles,
+        $env:LOCALAPPDATA
+    )) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$root)) {
+            $candidates.Add((Join-Path $root "Microsoft/Edge/Application/msedge.exe"))
+        }
+    }
+
+    # App Paths covers non-default installs and machine/user-specific Edge registrations.
+    foreach ($key in @(
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe",
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe"
+    )) {
+        try {
+            $registered = (Get-Item -LiteralPath $key -ErrorAction Stop).GetValue("")
+            if (-not [string]::IsNullOrWhiteSpace([string]$registered)) {
+                $candidates.Add([string]$registered)
+            }
+        } catch {}
+    }
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            $resolved = (Resolve-Path -LiteralPath $candidate).Path
+            if ([IO.Path]::GetFileName($resolved) -ieq "msedge.exe") { return $resolved }
+        }
+    }
+
+    foreach ($command in @(Get-Command msedge.exe -All -ErrorAction SilentlyContinue)) {
+        $source = if ($command.Source) { $command.Source } else { $command.Definition }
+        if (-not [string]::IsNullOrWhiteSpace([string]$source) -and (Test-Path -LiteralPath $source -PathType Leaf)) {
+            $resolved = (Resolve-Path -LiteralPath $source).Path
+            if ([IO.Path]::GetFileName($resolved) -ieq "msedge.exe") { return $resolved }
+        }
+    }
+
+    $checked = @($candidates | Select-Object -Unique) -join "; "
+    throw "Microsoft Edge executable was not found. Checked: $checked. Supply -BrowserPath with the full existing path to msedge.exe."
 }
 $debugRoot = "http://127.0.0.1:$DebugPort"
 $debugReady = $false
 try { $null = Invoke-RestMethod "$debugRoot/json/version" -TimeoutSec 2; $debugReady = $true } catch {}
 if (-not $debugReady) {
     $edge = Get-EdgePath
+    if (-not (Test-Path -LiteralPath $edge -PathType Leaf)) {
+        throw "Resolved Edge executable disappeared before launch: '$edge'."
+    }
     $profile = Join-Path $env:TEMP "MCC-CDP-$stamp"
     New-Item -ItemType Directory -Force -Path $profile | Out-Null
     $edgeArguments = @("--remote-debugging-port=$DebugPort","--user-data-dir=`"$profile`"","--no-first-run","--disable-default-apps",$BaseUri)
-    Start-Process -FilePath $edge -ArgumentList $edgeArguments | Out-Null
+    Write-Host "Launching Microsoft Edge executable: $edge"
+    try {
+        $browserProcess = Start-Process -FilePath $edge -ArgumentList $edgeArguments -WorkingDirectory $env:TEMP -PassThru -ErrorAction Stop
+    } catch {
+        throw "Microsoft Edge launch failed. Resolved executable: '$edge'. Confirm that this exact file exists and is executable. Start-Process error: $($_.Exception.Message)"
+    }
+    if (-not $browserProcess) { throw "Start-Process did not return a Microsoft Edge process for '$edge'." }
     $deadline = [DateTimeOffset]::UtcNow.AddSeconds(30)
     do {
         Start-Sleep -Milliseconds 500
