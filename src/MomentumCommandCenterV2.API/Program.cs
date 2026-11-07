@@ -432,6 +432,87 @@ app.MapGet("/api/market-data/live-assessment", async (
 .WithSummary("Calculate live 5M permission and 1M execution from provider OHLCV")
 .WithDescription("Returns timestamped 1m/5m technical snapshots, same-time-of-day 5m relative volume, freshness, V2 permission/execution state, and recent 1m chart bars. Uses fresh WebSocket-persisted 1m bars when the subscription, 50-bar history, latest-bar freshness, and source-provenance checks pass; otherwise 1m falls back to historical REST. 5M permission remains REST-backed. The API assessment cache is 10 seconds; the browser refreshes every 15 seconds. 5M permission is withheld unless completed history, freshness, and five prior same-slot 5m volume samples are available.");
 
+app.MapGet("/api/market-data/opportunity-quality/rank", async (
+    string symbols,
+    string? providerName,
+    LiveSymbolAssessmentService assessmentService,
+    CancellationToken cancellationToken) =>
+{
+    var requested = symbols.Split(new[] { ',', ';', ' ', '\\t', '\\r', '\\n' },
+        StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(x => x.ToUpperInvariant()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    if (requested.Length == 0 || requested.Length > 50 || requested.Any(x => !IsValidSymbol(x)))
+        return Results.BadRequest(new { error = "Provide 1–50 unique valid comma-separated symbols. The returned ranking covers this explicit pool only." });
+
+    var selectedProvider = providerName ?? "Alpaca";
+    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    using var throttle = new SemaphoreSlim(4, 4);
+    var assessments = await Task.WhenAll(requested.Select(async symbol =>
+    {
+        await throttle.WaitAsync(cancellationToken);
+        try
+        {
+            var assessment = await assessmentService.GetAsync(symbol, selectedProvider, cancellationToken);
+            var root = JsonSerializer.SerializeToElement(assessment, jsonOptions);
+            var quality = root.GetProperty("opportunityQuality");
+            var metrics = quality.TryGetProperty("metrics", out var metricElement) &&
+                metricElement.ValueKind == JsonValueKind.Object ? metricElement : default;
+            decimal? Metric(string name) =>
+                metrics.ValueKind == JsonValueKind.Object &&
+                metrics.TryGetProperty(name, out var value) &&
+                value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out var number)
+                    ? number : null;
+            bool? entryAllowed = root.TryGetProperty("decision", out var decision) &&
+                decision.ValueKind == JsonValueKind.Object &&
+                decision.TryGetProperty("entryAllowed", out var entry) &&
+                entry.ValueKind is JsonValueKind.True or JsonValueKind.False
+                    ? entry.GetBoolean() : null;
+            var reasons = quality.TryGetProperty("reasons", out var reasonArray) &&
+                reasonArray.ValueKind == JsonValueKind.Array
+                    ? reasonArray.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String)
+                        .Select(x => x.GetString()!).ToArray()
+                    : Array.Empty<string>();
+            return new OpportunityQualityPoolCandidate(
+                symbol,
+                quality.TryGetProperty("status", out var status) ? status.GetString() ?? "DATA?" : "DATA?",
+                quality.TryGetProperty("classification", out var classification) ? classification.GetString() ?? "DataUnknown" : "DataUnknown",
+                quality.TryGetProperty("displayLabel", out var label) ? label.GetString() ?? "QUALITY — UNKNOWN" : "QUALITY — UNKNOWN",
+                Metric("relativeVolume"),
+                Metric("recentRangeInAtr"),
+                Metric("resistanceDistanceInAtr"),
+                entryAllowed,
+                root.TryGetProperty("dataFresh", out var fresh) && fresh.ValueKind == JsonValueKind.True,
+                reasons);
+        }
+        catch (Exception ex) when (ex is ArgumentException or ProviderNotConfiguredException or HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+        {
+            return new OpportunityQualityPoolCandidate(
+                symbol, "DATA?", "DataUnknown", "QUALITY — UNKNOWN",
+                null, null, null, null, false,
+                new[] { "ASSESSMENT_FAILED", ex.GetType().Name });
+        }
+        finally
+        {
+            throttle.Release();
+        }
+    }));
+
+    var ranked = OpportunityQualityPoolRanker.Rank(assessments);
+    return Results.Ok(new
+    {
+        generatedAtUtc = DateTimeOffset.UtcNow,
+        provider = selectedProvider,
+        rankingVersion = OpportunityQualityPoolRanker.Version,
+        scope = "EXPLICIT_USER_SUPPLIED_POOL",
+        candidateCount = ranked.Count,
+        ranked,
+        note = "Ranks every symbol supplied in this request. Ordering uses the existing diagnostic classification, then raw 5M RVOL, 30-bar 1M range/ATR, and prior-high distance; no weighted score or calibrated probability is invented. V2 eligibility/execution remain separate and unchanged. Missing/stale evidence sorts last as DATA?. This is not a market-wide scanner or order instruction."
+    });
+})
+.WithName("RankOpportunityQualityPool")
+.WithSummary("Rank an explicit candidate pool using diagnostic Opportunity Quality")
+.WithDescription("Provide 1–50 unique comma-separated symbols and optional providerName. Every supplied symbol is assessed with bounded concurrency. The response includes all candidates, including DATA? and BLOCKED, and uses a disclosed diagnostic ordering without a composite score or probability claim.");
+
 app.MapGet("/api/market-data/replay", async (
     string? symbol,
     DateTimeOffset? asOfUtc,
