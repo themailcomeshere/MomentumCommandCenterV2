@@ -12,6 +12,35 @@ The former Master To-Do had 310 unchecked boxes across 2,680 lines. Most were re
 
 This document consolidates the distinct unfinished workstreams and defines what is missing, the implementation boundary, dependencies, and acceptance evidence. It does not convert external dependencies or user-side acceptance into claimed code completion.
 
+## Engineering continuation — 2026-11-07
+
+### ATR gap diagnostics and TOS authority
+
+The operator supplied exact `timestampGaps` for EVR/CBOE 5m. Convert UTC to EST:
+- EVR 05:10Z→14:05Z = 00:10→09:05 ET. Raw wall-clock arithmetic yields 106 five-minute intervals, but 45 are inside the scheduled overnight closure; only 61 expected timestamps lie in the 04:00–20:00 ET chart session (04:00 through 09:00 ET).
+- EVR 14:05Z→14:30Z = 09:05→09:30 ET; four expected slots (09:10, 09:15, 09:20, 09:25 ET).
+- CBOE 21:00Z→23:40Z = 16:00→18:40 ET; 31 expected after-hours slots (16:05 through 18:35 ET).
+
+The detector now counts scheduled session slots rather than all wall-clock intervals and returns the first/last expected missing UTC timestamps. This is a diagnostic definition, not proof that a trade or candle existed. CI passed on `028796bb4915ab8b118f7f5550eb8acd425aa250` with 239/239 tests. Full analysis: [ATR-Gap-Session-Slot-Analysis-20261107.md](Validation/ATR-Gap-Session-Slot-Analysis-20261107.md).
+
+**Still open:** TOS chart-side candle-presence inspection; compile V2.1 ATR export and 1M V14.5.2 / 5M MainStudy in TOS; matched 5M permission / 1M execution / EOD state replay. Source audit finds the intended 5M VWAP condition and EMA9 >= EMA20 in V14.5.2, with the independent 1M VWAP execution gate retained. Both 1M/5M source files map 15:55 Arizona to 17:55 ET standard / 18:55 ET daylight. None of this proves TOS compilation or runtime parity.
+
+### Overnight boundary
+
+The 20-pair history response now explicitly labels its next-session opening input as `ONE_MINUTE_BAR_OPEN_PROXY`, with `officialOpeningAuctionVerified=false`. Its close-to-next-open net endpoint spans Day 1 after-hours and Day 2 premarket but does not reconstruct path/extrema. Do not claim official auction parity. Exact historical scanner buy/sell endpoints still need to be checked against the original scanner formula. IEX remains diagnostic-only; SIP is parked.
+
+### Catalyst validation implementation
+
+Human review records now retain the classifier prediction severity/categories at review time. `GET /api/market-data/catalyst-reviews/validation` deduplicates by symbol + article identity, excludes uncertain/duplicate/legacy predictionless/conflicting records, and reports a chronological later-20% holdout confusion matrix with precision/recall/specificity/accuracy. Frontend review submission now sends the saved prediction and displays the validation status.
+
+Human-positive labels: MATERIAL_RISK / MATERIAL_EVENT. Human-negative: NON_MATERIAL / IRRELEVANT. Predicted positive: RISK / MATERIAL. Predicted negative: UNCLASSIFIED. This measures fixed phrase triage; it does not train a classifier or create CLEAR. **No label sample or measured metrics is evidenced yet.**
+
+### Opportunity Quality full-pool diagnostic ordering
+
+Added `OpportunityQualityPoolRanker` plus `GET /api/market-data/opportunity-quality/rank?symbols=...` for 1–50 unique explicit symbols. It assesses each supplied symbol with concurrency limited to four, returns all candidates, and sorts by existing classification then raw 5M RVOL, 30-bar 1M range/ATR, and prior-high distance. No composite score or probability is invented.
+
+**Still open:** Dashboard integration, pool paging/bounds for the actual scanner universe, historical calibration, and validation of provisional assessor thresholds. The API endpoint is not a market-wide discovery service.
+
 ## Operator update — 2026-11-06 evening
 
 - Browser diagnostics did not reach CDP capture. The PowerShell script path was valid; `Start-Process` failed because the resolved Edge executable could not be found/launched. The script's Edge discovery/validation/launch diagnostics have now been hardened in commit `50945206dd3ac207ab96efbcb9a42911cc13d335`. Operator-side rerun is still required; do not mark browser acceptance complete.
