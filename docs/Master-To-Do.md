@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-06 (operator Daily panel evidence + browser/stream scripts)  
+**Updated:** 2026-11-06 (browser launch diagnosis + latest ATR parity reread)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
 **Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
@@ -13,6 +13,17 @@
 **Browser/stream acceptance:** [Browser-and-Stream-Collector-Acceptance-20261106.md](Validation/Browser-and-Stream-Collector-Acceptance-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
+
+## Latest operator evidence — browser/stream attempts and ATR parity (2026-11-06 evening)
+
+- [x] Recorded the browser diagnostics failure: the script itself was found and executed, but `Start-Process` could not locate/launch the resolved Edge executable. This is an executable-discovery/launch-path problem, not a missing diagnostics-script path.
+- [x] Hardened `Capture-DashboardBrowserDiagnostics.ps1`: validates an explicitly supplied browser path as an existing `msedge.exe` file; searches standard Edge install roots, Windows App Paths registry entries and all `Get-Command msedge.exe` results; resolves to an absolute path; prints the exact executable; and returns a specific launch error if Start-Process fails.
+- [ ] Re-run browser diagnostics after pulling this fix. No screenshot/CDP evidence has been captured yet; browser acceptance remains open.
+- [x] Recorded both stream collector attempts as correctly blocked by the regular-session guard: operator time 2026-11-06 18:52 ET was outside 09:30–16:00 ET. This is expected behavior, not a collector test pass or a script defect.
+- [ ] Run the 10-minute stream/collector capture during a confirmed regular session. Next weekday opportunity: Monday 2026-11-09, 09:30 ET / 07:30 Arizona, subject to actual exchange session status. Do not run during holidays or after an early close.
+- [x] Re-read local ATR parity after the session-aware gap-detector deployment, using existing persisted observations only. EVR 5m: `GAPS_PRESENT`, 327 observations, 20 compared bars, 2 timestamp gaps, MAE 0.0000294330, max error 0.0000495349. CBOE 5m: `GAPS_PRESENT`, 338 observations, 20 compared bars, 1 timestamp gap, MAE 0.0000203866, max error 0.0000426076. Both numeric comparisons remain within 0.00005; neither is MATCH because continuity is unresolved.
+- [x] Confirmed revised gap detector removed one EVR gap relative to the earlier 3-gap response. Remaining gaps: EVR 2, CBOE 1. Do not impute bars or re-import unchanged CSVs.
+- [ ] Inspect the exact remaining source timestamps against the TOS chart and declared 04:00–20:00 ET chart-session contract; determine whether these are omitted chart bars or legitimate no-eligible-print intervals. Compile the revised ThinkScript in TOS; it is not yet verified.
 
 ## Verified at this checkpoint
 
