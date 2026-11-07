@@ -39,6 +39,32 @@ Fail-closed means:
 
 This behavior is already part of the documented evaluation contract. The remaining acceptance is to inspect the live qualification panel after a current scanner import and capture the actual per-candidate statuses/reasons; the Daily audit output alone does not prove that panel's behavior.
 
+## Latest operator attempt — 2026-11-06 evening
+
+### Browser capture failure
+
+The operator invoked the script from the repository root using `-BaseUri "http://localhost:53359/" -CaptureSeconds 120`. PowerShell found and executed the script at the expected repository path, but `Start-Process` failed at the Edge launch line with “The system cannot find the file specified.” Therefore the failure is not evidence that the PowerShell script path is wrong; the resolved browser executable path was not launchable.
+
+The script has been hardened on the feature branch:
+- An explicit `-BrowserPath` must resolve to an existing file named `msedge.exe`.
+- Automatic discovery checks standard 32-bit/64-bit/local Edge install paths, Windows App Paths registry entries, and all `Get-Command msedge.exe` matches.
+- The selected executable is normalized to an absolute path, printed before launch, and checked again immediately before Start-Process.
+- Launch failures now report the exact resolved executable and underlying Start-Process error.
+
+**Not yet captured:** browser console/network events, screenshot, and manifest. The fix has not yet been executed on the operator's machine. If discovery still fails, obtain the actual installed path with `Get-Command msedge.exe -All | Select-Object Source,Definition` or locate `msedge.exe`, then pass its full path with `-BrowserPath`. Do not pass the script path as BrowserPath.
+
+### Stream collector attempt
+
+The operator ran the read-only stream/collector script twice at 2026-11-06 18:52 ET. Both attempts correctly stopped because the time was outside 09:30–16:00 ET. This is expected fail-closed guard behavior and is **not** a collector test result. The next weekday opportunity is Monday 2026-11-09 at 09:30 ET / 07:30 Arizona, provided the exchange is actually open. The operator must still account for holidays and early closes.
+
+### ATR parity reread
+
+The operator restarted/re-read parity using existing persisted observations. Latest responses:
+- EVR 5m: `GAPS_PRESENT`, 327 source observations, 20 compared bars, 2 timestamp gaps, MAE 0.0000294330206094, maximum absolute error 0.0000495349247568.
+- CBOE 5m: `GAPS_PRESENT`, 338 source observations, 20 compared bars, 1 timestamp gap, MAE 0.0000203865947752, maximum absolute error 0.0000426076307465.
+
+Both maximum errors are within the 0.00005 numeric tolerance, but neither status is MATCH. The detector now excludes the previously identified EVR 00:00–00:10 ET interval wholly inside the scheduled overnight closure; the latest EVR gap count is 2 rather than the earlier 3. Remaining gaps still block continuity certification. Do not impute bars or re-import unchanged source CSVs.
+
 ## 1. Browser console/network capture
 
 PowerShell script: `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1`
