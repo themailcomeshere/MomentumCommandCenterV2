@@ -12,6 +12,13 @@ The former Master To-Do had 310 unchecked boxes across 2,680 lines. Most were re
 
 This document consolidates the distinct unfinished workstreams and defines what is missing, the implementation boundary, dependencies, and acceptance evidence. It does not convert external dependencies or user-side acceptance into claimed code completion.
 
+## Operator update — 2026-11-06 evening
+
+- Browser diagnostics did not reach CDP capture. The PowerShell script path was valid; `Start-Process` failed because the resolved Edge executable could not be found/launched. The script's Edge discovery/validation/launch diagnostics have now been hardened in commit `50945206dd3ac207ab96efbcb9a42911cc13d335`. Operator-side rerun is still required; do not mark browser acceptance complete.
+- The stream/collector script was invoked twice at 18:52 ET and correctly rejected both attempts outside the 09:30–16:00 ET regular-session window. No stream/collector runtime evidence was collected. Next weekday opportunity: Monday 2026-11-09 at 09:30 ET / 07:30 Arizona, only if the exchange is actually open.
+- Latest local ATR parity reread after the detector change: EVR 5m `GAPS_PRESENT`, 327 observations, 20 compared bars, 2 gaps, MAE 0.0000294330206094, max 0.0000495349247568; CBOE 5m `GAPS_PRESENT`, 338 observations, 20 compared bars, 1 gap, MAE 0.0000203865947752, max 0.0000426076307465. Numeric values are within tolerance; continuity is not certified. No new import was performed or needed.
+- Remaining ATR investigation must use the exact timestamps from the returned parity payload and TOS chart evidence. Do not assume the gaps are missing trades or no-trade intervals without chart evidence; never impute. Compile the revised V2.1 ThinkScript in TOS.
+
 ### Verified current checkpoint
 
 - Release build and tests: operator-reported PASS at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`.
