@@ -896,6 +896,38 @@ $("refreshRedZone")?.addEventListener("click",()=>{
  renderMorningReport();refreshFocusedPriceChart();
  $("redZoneManageStatus").textContent="Red Zone refreshed from the currently selected scanner group. Use Refresh Alpaca market movers to retrieve new provider discoveries.";
 });
+$("rankOpportunityPool")?.addEventListener("click",async()=>{
+ const status=$("opportunityPoolRankingStatus"),host=$("opportunityPoolRanking"),button=$("rankOpportunityPool");
+ const imported=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ if(!imported.length){if(status)status.textContent="Import a Thinkorswim scanner CSV before ranking the explicit candidate pool.";return;}
+ const ordered=imported.slice().sort((a,b)=>{
+  const av=Number(a.score),bv=Number(b.score);
+  return (Number.isFinite(bv)?bv:-Infinity)-(Number.isFinite(av)?av:-Infinity);
+ });
+ const symbols=[...new Set(ordered.map(row=>String(row.symbol||"").trim().toUpperCase()).filter(Boolean))].slice(0,50);
+ if(!symbols.length){if(status)status.textContent="No valid symbols were found in the imported scanner pool.";return;}
+ if(button)button.disabled=true;
+ if(status)status.textContent="Assessing "+symbols.length+" candidate(s) with bounded API concurrency. This may take a while.";
+ if(host)host.replaceChildren();
+ try{
+  const response=await fetch("/api/market-data/opportunity-quality/rank?symbols="+encodeURIComponent(symbols.join(",")),{cache:"no-store",headers:{Accept:"application/json"}});
+  const payload=await response.json();
+  if(!response.ok)throw new Error(payload.detail||payload.title||payload.error||("HTTP "+response.status));
+  const ranked=Array.isArray(payload.ranked)?payload.ranked:[];
+  const cards=ranked.map(item=>{
+   const card=document.createElement("article");card.className="catalyst-review-card";
+   const title=document.createElement("strong");title.textContent="#"+item.rank+" · "+item.symbol+" · "+(item.displayLabel||item.classification||"QUALITY — UNKNOWN");
+   const metrics=document.createElement("p");metrics.className="muted small";
+   const value=x=>x==null?"DATA?":Number(x).toFixed(2);
+   metrics.textContent="RVOL "+value(item.relativeVolume)+" · 30×1M range/ATR "+value(item.recentRangeInAtr)+" · prior-high distance/ATR "+value(item.resistanceDistanceInAtr)+" · 1M entry "+(item.entryAllowed==null?"UNKNOWN":item.entryAllowed?"READY":"NOT READY");
+   const reasons=document.createElement("p");reasons.className="small";reasons.textContent=(item.reasons||[]).join(" · ")||"No reason codes returned.";
+   card.append(title,metrics,reasons);return card;
+  });
+  if(host)host.replaceChildren(...(cards.length?cards:[Object.assign(document.createElement("p"),{className:"muted small",textContent:"No ranking results returned."})]));
+  if(status)status.textContent="Ranked "+ranked.length+" of "+imported.length+" imported symbols. Pool scope: top "+symbols.length+" by imported Overnight Score. Diagnostic ordering only; not calibrated, not market-wide, and never overrides 5M/1M eligibility. DATA? candidates remain visible.";
+ }catch(error){if(status)status.textContent="Opportunity Quality ranking failed: "+error.message;}
+ finally{if(button)button.disabled=false;}
+});
 $("exportMorningReport")?.addEventListener("click",()=>{
  const group=$("scannerGroup")?.value||"momentum";
  const rows=Array.isArray(scannerData[group])?scannerData[group]:[];
