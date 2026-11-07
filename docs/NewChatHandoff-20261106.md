@@ -43,6 +43,8 @@ The history result now explicitly labels the next-session reference as `ONE_MINU
 - Diagnostic ordering uses existing classification, then raw 5M RVOL, 30-bar 1M range/ATR and prior-high distance. It does not invent a weighted score/probability.
 - Main Dashboard now has **Rank quality pool · top 50** in the Red Zone controls. It ranks the top 50 imported scanner-score candidates and renders diagnostic classification/metrics/reasons. This is a disclosed prefilter, not the full imported list when more than 50 rows exist. Operator click-through/runtime acceptance and exact latest-head CI remain open. Pool paging/bounds and historical calibration remain open.
 
+The main Dashboard top-50 pool-ranking integration passed GitHub Actions on `69c1b39562b62dc30e4a43b1a6227438120c31b2`: frontend JavaScript syntax PASS, Release build with 0 warnings/errors, 243/243 tests. This is not operator-side browser acceptance.
+
 ## Source audit: 1M / 5M authority and EOD
 
 Repository source review found:
