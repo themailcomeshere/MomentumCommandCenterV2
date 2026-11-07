@@ -38,6 +38,20 @@ The operator re-read the local parity endpoints after the session-aware detector
 
 Both maximum errors are within the 0.00005 tolerance. The EVR gap count fell from 3 to 2 because the same-date 00:00–00:10 ET interval inside the scheduled 20:00–04:00 ET closure is no longer counted. The remaining 2 EVR and 1 CBOE gaps still prevent MATCH. Inspect the exact missing intervals against the actual TOS chart/session contract; do not impute bars or re-import the unchanged CSVs. Revised ThinkScript compilation in TOS remains unverified.
 
+## Additional ATR diagnostics implementation
+
+To avoid another vague “2 gaps / 1 gap” loop, the parity API now includes a `timestampGaps` array containing exact previous/current UTC bars, expected next timestamp, first observed timestamp after the gap, missing interval count and gap duration. This is a diagnostic addition only; it does not weaken the gap gate or impute bars. A regression test checks the exact interval fields. GitHub Actions for the latest branch head is still pending at the time of this handoff update.
+
+After CI passes and local pull/build/API restart, run:
+```powershell
+$base = "http://localhost:53360"
+$evr = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m&warmupBars=99&windowBars=119"
+$cboe = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m&warmupBars=99&windowBars=119"
+$evr | Select-Object status,timestampGapCount,timestampGaps | ConvertTo-Json -Depth 10
+$cboe | Select-Object status,timestampGapCount,timestampGaps | ConvertTo-Json -Depth 10
+```
+Inspect each reported interval in TOS. The JSON identifies the exact source discontinuity but does not determine whether TOS displayed a bar there; that requires chart-side evidence.
+
 ## Current operator action list
 
 - [ ] Pull feature branch and rerun browser diagnostics; inspect the resolved Edge executable if launch still fails.
