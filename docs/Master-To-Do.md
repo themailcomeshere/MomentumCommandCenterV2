@@ -29,7 +29,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 - [x] Added exact timestamp-gap details to the ATR parity response: previous bar UTC, current observed bar UTC, expected next bar UTC, first observed bar after the gap, estimated missing interval count and gap duration.
 - [x] Added a regression assertion that verifies exact gap timestamps and missing-interval count for a synthetic 1m gap. The existing fail-closed `GAPS_PRESENT` status is unchanged.
-- [ ] Await GitHub Actions for the exact latest branch head; the implementation has not yet been confirmed by CI.
+- [x] GitHub Actions passed the browser executable-discovery fix on `50945206dd3ac207ab96efbcb9a42911cc13d335` and the ATR gap-detail implementation/tests on `5bc2ac57f5f83e00f77930e7ae13374d556828a4`: Release build, 0 warnings/errors, 236/236 tests. The subsequent documentation-only head's CI was still running at the time of this update.
 - [ ] After pulling/building/restarting the API, re-read EVR/CBOE parity and inspect `timestampGaps` in the JSON response. Use those exact UTC intervals to inspect the TOS chart; do not infer that a missing interval was a trade or a bar.
 
 ## Verified at this checkpoint
