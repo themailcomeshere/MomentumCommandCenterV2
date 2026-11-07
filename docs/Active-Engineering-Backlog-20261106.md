@@ -41,6 +41,20 @@ This document consolidates the distinct unfinished workstreams and defines what 
 The latest 5m parity responses report `MCC-WILDER-ATR-PARITY-1.1`, ATR(14) Wilder, tolerance 0.00005, 99 warm-up bars and 20 compared bars. EVR and CBOE numeric errors are within tolerance, but 3 EVR and 1 CBOE timestamp gaps in the latest 119-observation window keep both at `GAPS_PRESENT`. The latest imports appended 2 EVR and 9 CBOE observations, with no corrections. The revised ThinkScript removes the old time-of-day export filter but remains uncompiled/unverified in Thinkorswim. See [ATR export coverage diagnosis](Validation/ATR-Export-Coverage-Fix-20261106.md) and [latest provider evidence](Validation/Sell-Limit-Evidence-Analysis-20261106.md).
 
 The latest IEX provider comparison requested 119 timestamps per symbol, returned 104 EVR and 109 CBOE bars, and found 0/119 exact OHLCV rows for each. It is explicitly diagnostic: the response feed was IEX, not SIP. This cannot establish which source is wrong or predict SIP equality.
+## Additional ATR diagnostics implementation — 2026-11-06 evening
+
+The parity result now carries a `timestampGaps` array for the exact qualification-window discontinuities. Each entry includes `previousBarAtUtc`, `currentBarAtUtc`, `expectedNextBarAtUtc`, `firstObservedBarAfterGapAtUtc`, `missingIntervalCount`, and `gapDuration`. This is diagnostic only: it does not alter gap classification, tolerance, ATR calculation, or the fail-closed status. A regression test checks the exact UTC values and missing interval count. GitHub Actions for the latest commits is pending; do not claim the code/test change passed until the exact branch head is green.
+
+After pull/build/restart, retrieve:
+```powershell
+$base = "http://localhost:53360"
+$evr = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m&warmupBars=99&windowBars=119"
+$cboe = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m&warmupBars=99&windowBars=119"
+$evr | Select-Object status,timestampGapCount,timestampGaps | ConvertTo-Json -Depth 10
+$cboe | Select-Object status,timestampGapCount,timestampGaps | ConvertTo-Json -Depth 10
+```
+Use the exact gap intervals to inspect the TOS chart. Never infer or synthesize bars. The output identifies timestamps only; it cannot determine whether a chart bar existed without chart evidence.
+
 ## P0 — ATR correctness and sell-limit qualification
 
 ### P0.1 Diagnose numeric ATR mismatches
