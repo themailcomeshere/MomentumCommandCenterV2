@@ -25,6 +25,13 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Confirmed revised gap detector removed one EVR gap relative to the earlier 3-gap response. Remaining gaps: EVR 2, CBOE 1. Do not impute bars or re-import unchanged CSVs.
 - [ ] Inspect the exact remaining source timestamps against the TOS chart and declared 04:00–20:00 ET chart-session contract; determine whether these are omitted chart bars or legitimate no-eligible-print intervals. Compile the revised ThinkScript in TOS; it is not yet verified.
 
+## ATR diagnostic improvement — 2026-11-06 evening
+
+- [x] Added exact timestamp-gap details to the ATR parity response: previous bar UTC, current observed bar UTC, expected next bar UTC, first observed bar after the gap, estimated missing interval count and gap duration.
+- [x] Added a regression assertion that verifies exact gap timestamps and missing-interval count for a synthetic 1m gap. The existing fail-closed `GAPS_PRESENT` status is unchanged.
+- [ ] Await GitHub Actions for the exact latest branch head; the implementation has not yet been confirmed by CI.
+- [ ] After pulling/building/restarting the API, re-read EVR/CBOE parity and inspect `timestampGaps` in the JSON response. Use those exact UTC intervals to inspect the TOS chart; do not infer that a missing interval was a trade or a bar.
+
 ## Verified at this checkpoint
 
 - [x] Operator reports Release build and tests PASS at local source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`.
