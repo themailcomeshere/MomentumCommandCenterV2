@@ -164,10 +164,17 @@ public sealed record ThinkorswimAtrParityResult(
     string Explanation,
     IReadOnlyList<ThinkorswimAtrTimestampGap>? TimestampGaps = null);
 
+/// <summary>
+/// A gap between observed export rows. MissingIntervalCount counts scheduled chart
+/// timestamp slots in the 04:00–20:00 ET extended-hours session, not wall-clock slots
+/// during the scheduled overnight closure. It does not assert that trades/candles existed.
+/// </summary>
 public sealed record ThinkorswimAtrTimestampGap(
     DateTimeOffset PreviousBarAtUtc,
     DateTimeOffset CurrentBarAtUtc,
     DateTimeOffset ExpectedNextBarAtUtc,
     DateTimeOffset FirstObservedBarAfterGapAtUtc,
     int MissingIntervalCount,
-    TimeSpan GapDuration);
+    TimeSpan GapDuration,
+    DateTimeOffset FirstExpectedMissingBarAtUtc,
+    DateTimeOffset LastExpectedMissingBarAtUtc);
