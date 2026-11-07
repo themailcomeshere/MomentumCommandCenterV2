@@ -38,6 +38,9 @@ public sealed class BoringOvernightHistoryCalculatorTests
         Assert.NotNull(result.AverageReturnPct5D);
         Assert.Equal((result.Returns[0].NextOpen / result.Returns[0].PreviousClose - 1m) * 100m,
             result.Returns[0].ReturnPct);
+        Assert.Equal("ONE_MINUTE_BAR_OPEN_PROXY", result.Returns[0].NextOpenReferenceKind);
+        Assert.False(result.Returns[0].OfficialOpeningAuctionVerified);
+        Assert.Contains("Day 1 after-hours and Day 2 premarket", result.ProvenanceNote);
     }
 
     [Fact]
