@@ -40,7 +40,7 @@ Both maximum errors are within the 0.00005 tolerance. The EVR gap count fell fro
 
 ## Additional ATR diagnostics implementation
 
-To avoid another vague “2 gaps / 1 gap” loop, the parity API now includes a `timestampGaps` array containing exact previous/current UTC bars, expected next timestamp, first observed timestamp after the gap, missing interval count and gap duration. This is a diagnostic addition only; it does not weaken the gap gate or impute bars. A regression test checks the exact interval fields. GitHub Actions for the latest branch head is still pending at the time of this handoff update.
+To avoid another vague “2 gaps / 1 gap” loop, the parity API now includes a `timestampGaps` array containing exact previous/current UTC bars, expected next timestamp, first observed timestamp after the gap, missing interval count and gap duration. This is a diagnostic addition only; it does not weaken the gap gate or impute bars. A regression test checks the exact interval fields. GitHub Actions passed the Edge discovery fix (`50945206dd3ac207ab96efbcb9a42911cc13d335`) and ATR gap-detail implementation/tests (`5bc2ac57f5f83e00f77930e7ae13374d556828a4`): Release build, 0 warnings/errors, 236/236 tests. The subsequent documentation-only head was still running CI at the time of this handoff update.
 
 After CI passes and local pull/build/API restart, run:
 ```powershell
