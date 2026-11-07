@@ -1,18 +1,65 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-06 (browser launch diagnosis + latest ATR parity reread)  
+**Updated:** 2026-11-07 (exact ATR gap slots + catalyst validation + Opportunity Quality pool API)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
 **Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
+**Exact ATR gap/session-slot analysis:** [ATR-Gap-Session-Slot-Analysis-20261107.md](Validation/ATR-Gap-Session-Slot-Analysis-20261107.md)  
 **Latest provider/sell-limit evidence:** [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md)  
 **Daily data qualification:** [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md)  
 **Earlier evidence archive:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)  
 **Browser/stream acceptance:** [Browser-and-Stream-Collector-Acceptance-20261106.md](Validation/Browser-and-Stream-Collector-Acceptance-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
+
+## Engineering continuation — 2026-11-07 (operator exact gaps + feature implementation)
+
+### P0 — ATR continuity and TOS authority/EOD
+
+- [x] Converted the operator's exact gaps to Eastern time and inspected the committed EVR/CBOE Strategy Report exports. EVR: 00:10→09:05 ET and 09:05→09:30 ET; CBOE: 16:00→18:40 ET. No new export/import is justified.
+- [x] Corrected ATR gap diagnostics to count only expected 5-minute timestamp slots inside the 04:00–20:00 ET chart session. The first EVR gap is 61 expected chart-session slots, not 106 wall-clock slots; the second is 4; CBOE is 31. Added first/last expected missing UTC timestamps.
+- [x] Added regression tests for all three real intervals and the one-minute synthetic gap. CI passed on code/test commit `028796bb4915ab8b118f7f5550eb8acd425aa250`: Release build, 0 warnings/errors, 239/239 tests.
+- [x] Source audit: 1M V14.5.2 reconstructs 5M permission with 5M close above Daily VWAP, 5M close above EMA9, EMA9 >= EMA20 and RSI; separate 1M VWAP execution gate remains. Both 1M V14.5.2 and 5M MainStudy use 17:55 ET in standard time / 18:55 ET in daylight time for 15:55 Arizona.
+- [ ] Inspect actual TOS chart candle presence at EVR 04:00–09:00 ET, EVR 09:10–09:25 ET and CBOE 16:05–18:35 ET. The export alone cannot distinguish no-trade/no-bar from omitted export rows.
+- [ ] Compile both studies in TOS and run matched completed-bar permission/EOD checks on both sides of DST. Source inspection and GitHub CI are not ThinkScript compilation or runtime parity.
+
+### P1 — Overnight boundary and Boring Overnight
+
+- [x] API/history output now labels the 09:30 reference as `ONE_MINUTE_BAR_OPEN_PROXY` and `officialOpeningAuctionVerified=false`.
+- [x] Documentation now states the previous RTH close → next RTH 09:30 bar-open net return spans Day 1 after-hours and Day 2 premarket, but is endpoint-only and does not reconstruct the path/extrema.
+- [ ] Verify the official auction print versus first eligible observed trade. Current IEX evidence cannot certify consolidated/auction coverage; SIP remains parked under the known HTTP 403 blocker.
+- [ ] Resolve the precise historical Overnight buy/sell endpoints against the existing TOS scanner formula/source before promoting the close/open proxy as authoritative.
+- [ ] Implement the separate V3 Boring Overnight watchlist column only after endpoint/session semantics and source-backed metric fields are frozen. The data contract remains the specification; no guessed proxy column should be promoted.
+
+### P1 — Catalyst validation
+
+- [x] Human review records now persist the exact triage severity/categories present at review time.
+- [x] Added chronological holdout validation endpoint: `GET /api/market-data/catalyst-reviews/validation`. It excludes uncertain/duplicate/legacy-predictionless/conflicting records and reports confusion matrix, precision, recall, specificity and accuracy.
+- [x] Added frontend capture of prediction fields and displays validation status after a review is saved.
+- [ ] Collect human-adjudicated examples across both positive and negative classes; inspect the endpoint until the later time-based holdout contains both. No precision/recall evidence is available yet. Unknown news remains UNKNOWN and never CLEAR.
+
+### P1 — Opportunity Quality full-pool ranking
+
+- [x] Added deterministic diagnostic pool ordering and tests.
+- [x] Added `GET /api/market-data/opportunity-quality/rank?symbols=...` for 1–50 unique explicit symbols with assessment concurrency capped at four. All supplied candidates are returned; DATA? and BLOCKED sort after diagnostic quality classes.
+- [ ] Wire the endpoint into the main Dashboard scanner workflow and decide how the candidate pool is bounded/paged. Current API ranking is not market-wide discovery and is not yet a calibrated numeric score.
+- [ ] Calibrate with time-separated candidate snapshots/outcomes before changing provisional thresholds or calling the rank operational.
+
+### P1 — Full Dashboard/browser and regular-session collector
+
+- [x] Edge executable discovery/launch handling fix is committed and its code CI passed on the earlier code commit.
+- [ ] Pull and execute the corrected browser diagnostics on the operator machine; save screenshot/CDP evidence and inspect errors.
+- [ ] Run the stream/collector capture during a confirmed regular session; Friday evening attempts were correctly rejected by the session guard.
+
+### P2 — Walk-forward
+
+- [x] Validator implementation exists.
+- [ ] Runtime-qualified 40-session history and walk-forward remain parked behind the known SIP HTTP 403 entitlement blocker. Do not retry SIP or request another entitlement check unless the operator independently reports changed access.
+
+**Detailed exact-gap analysis:** [ATR-Gap-Session-Slot-Analysis-20261107.md](Validation/ATR-Gap-Session-Slot-Analysis-20261107.md).
 
 ## Latest operator evidence — browser/stream attempts and ATR parity (2026-11-06 evening)
 
