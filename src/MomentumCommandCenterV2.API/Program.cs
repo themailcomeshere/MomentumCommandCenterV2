@@ -438,7 +438,7 @@ app.MapGet("/api/market-data/opportunity-quality/rank", async (
     LiveSymbolAssessmentService assessmentService,
     CancellationToken cancellationToken) =>
 {
-    var requested = symbols.Split(new[] { ',', ';', ' ', '\\t', '\\r', '\\n' },
+    var requested = symbols.Split(new[] { ',', ';', ' ', '\t', '\r', '\n' },
         StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Select(x => x.ToUpperInvariant()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     if (requested.Length == 0 || requested.Length > 50 || requested.Any(x => !IsValidSymbol(x)))
