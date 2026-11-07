@@ -14,9 +14,8 @@ public static class CatalystHumanReviewValidation
         var eligible = records
             .Where(x => x.PredictedSeverity is "RISK" or "MATERIAL" or "UNCLASSIFIED")
             .Where(x => TryGetHumanTruth(x.Label, out _))
-            .GroupBy(x => string.IsNullOrWhiteSpace(x.ArticleId)
-                ? x.Url.Trim()
-                : x.ArticleId.Trim(),
+            .GroupBy(x => x.Symbol.Trim().ToUpperInvariant() + "|" +
+                (string.IsNullOrWhiteSpace(x.ArticleId) ? x.Url.Trim() : x.ArticleId.Trim()),
                 StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
