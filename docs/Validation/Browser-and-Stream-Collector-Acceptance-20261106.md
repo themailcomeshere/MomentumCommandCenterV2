@@ -65,6 +65,12 @@ The operator restarted/re-read parity using existing persisted observations. Lat
 
 Both maximum errors are within the 0.00005 numeric tolerance, but neither status is MATCH. The detector now excludes the previously identified EVR 00:00–00:10 ET interval wholly inside the scheduled overnight closure; the latest EVR gap count is 2 rather than the earlier 3. Remaining gaps still block continuity certification. Do not impute bars or re-import unchanged source CSVs.
 
+## ATR parity exact-gap diagnostics added
+
+The parity response has been extended with a `timestampGaps` array. Each qualifying gap reports the previous observed bar, current observed bar, expected next bar, first observed bar after the gap, missing interval count and elapsed gap duration in UTC. This does not change the status calculation or make a gap acceptable. It is intended to make chart-side investigation precise without another export/import cycle.
+
+The latest implementation and regression test are awaiting GitHub Actions. After CI passes and the operator pulls/builds/restarts, use the PowerShell query in [Master To-Do](../Master-To-Do.md) / [Active Engineering Backlog](../Active-Engineering-Backlog-20261106.md) to retrieve the exact intervals.
+
 ## 1. Browser console/network capture
 
 PowerShell script: `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1`
