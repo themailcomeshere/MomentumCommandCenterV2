@@ -464,10 +464,23 @@ function renderCatalystHumanReviewQueue(){
    if(!article.url||!/^https?:\/\//i.test(article.url)){status.textContent="Cannot save: source article URL is missing or invalid.";return;}
    save.disabled=true;status.textContent="Saving append-only review…";
    try{
-    const response=await fetch("/api/market-data/catalyst-reviews",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,articleId:article.id||null,headline:article.headline||"Untitled article",url:article.url,publishedAtUtc:article.publishedAtUtc||null,source:"Alpaca News",label:label.value,ruleSetVersion:evidence.catalyst?.ruleSetVersion||"MCC-CATALYST-TRIAGE-1.0",notes:notes.value||null})});
+    const response=await fetch("/api/market-data/catalyst-reviews",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,articleId:article.id||null,headline:article.headline||"Untitled article",url:article.url,publishedAtUtc:article.publishedAtUtc||null,source:"Alpaca News",label:label.value,ruleSetVersion:evidence.catalyst?.ruleSetVersion||"MCC-CATALYST-TRIAGE-1.0",notes:notes.value||null,predictedSeverity:item.severity||"UNCLASSIFIED",predictedCategories:item.categories||[]})});
     const payload=await response.json();if(!response.ok)throw new Error(payload.detail||payload.title||payload.error||("HTTP "+response.status));
     status.textContent="Saved "+label.value+" · "+(payload.reviewId||payload.review?.reviewId||"review recorded")+". This does not clear catalyst status.";
-    const overall=$("catalystReviewStatus");if(overall)overall.textContent="Human review appended for "+symbol+". Automated triage remains unchanged.";
+    const overall=$("catalystReviewStatus");
+    if(overall){
+     overall.textContent="Human review appended for "+symbol+". Refreshing chronological triage validation…";
+     try{
+      const validationResponse=await fetch("/api/market-data/catalyst-reviews/validation",{cache:"no-store",headers:{Accept:"application/json"}});
+      const validation=await validationResponse.json();
+      if(!validationResponse.ok)throw new Error(validation.detail||validation.title||"HTTP "+validationResponse.status);
+      const holdout=validation.holdout||{};
+      const pct=value=>value==null?"n/a":(value*100).toFixed(1)+"%";
+      overall.textContent=validation.status==="TIME_ORDERED_HOLDOUT_METRICS_AVAILABLE"
+       ?"Human labels: "+validation.includedUniqueReviewCount+" unique · chronological holdout N="+validation.holdoutCount+" · precision "+pct(holdout.precision)+" · recall "+pct(holdout.recall)+". Descriptive only; not catalyst clearance."
+       :"Human labels saved: "+validation.includedUniqueReviewCount+" usable unique review(s); holdout validation "+validation.status+". Need both human-positive and human-negative labels in the later time slice. No catalyst clearance.";
+     }catch(validationError){overall.textContent="Human review saved; validation metrics unavailable: "+validationError.message+". Automated triage remains unchanged.";}
+    }
    }catch(error){status.textContent="Review save failed: "+error.message;save.disabled=false;}
   });
   controls.append(label,notes,save);card.append(title,meta,summary,link,controls,status);return card;
