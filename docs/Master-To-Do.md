@@ -8,6 +8,7 @@
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
 **Exact ATR gap/session-slot analysis:** [ATR-Gap-Session-Slot-Analysis-20261107.md](Validation/ATR-Gap-Session-Slot-Analysis-20261107.md)  
+**Catalyst and Opportunity Quality validation:** [Catalyst-and-Opportunity-Quality-Validation-20261107.md](Validation/Catalyst-and-Opportunity-Quality-Validation-20261107.md)  
 **Latest provider/sell-limit evidence:** [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md)  
 **Daily data qualification:** [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md)  
 **Earlier evidence archive:** [ATR-Evidence-Export-Analysis-20261106.md](Validation/ATR-Evidence-Export-Analysis-20261106.md)  
@@ -45,7 +46,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 - [x] Added deterministic diagnostic pool ordering and tests.
 - [x] Added `GET /api/market-data/opportunity-quality/rank?symbols=...` for 1–50 unique explicit symbols with assessment concurrency capped at four. All supplied candidates are returned; DATA? and BLOCKED sort after diagnostic quality classes.
-- [ ] Wire the endpoint into the main Dashboard scanner workflow and decide how the candidate pool is bounded/paged. Current API ranking is not market-wide discovery and is not yet a calibrated numeric score.
+- [x] Wired the endpoint into the main Dashboard with a **Rank quality pool · top 50** control. It uses the top 50 imported scanner-score candidates as a disclosed prefilter; it does not change Red Zone's four-card selection. Current API ranking is not market-wide discovery and is not a calibrated numeric score.
 - [ ] Calibrate with time-separated candidate snapshots/outcomes before changing provisional thresholds or calling the rank operational.
 
 ### P1 — Full Dashboard/browser and regular-session collector
