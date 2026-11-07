@@ -22,12 +22,16 @@ public sealed class CatalystHumanReviewStoreTests
                     "Example News",
                     "material_event",
                     "MCC-CATALYST-TRIAGE-1.0",
-                    "Earnings released after close"),
+                    "Earnings released after close",
+                    "MATERIAL",
+                    new[] { "EARNINGS_OR_GUIDANCE" }),
                 CancellationToken.None);
 
             Assert.Equal("EVER", record.Symbol);
             Assert.Equal("MATERIAL_EVENT", record.Label);
             Assert.Equal("article-123", record.ArticleId);
+            Assert.Equal("MATERIAL", record.PredictedSeverity);
+            Assert.Contains("EARNINGS_OR_GUIDANCE", record.PredictedCategories!);
 
             var latest = await store.GetLatestAsync("EVER", 10, CancellationToken.None);
             var saved = Assert.Single(latest);
@@ -42,6 +46,64 @@ public sealed class CatalystHumanReviewStoreTests
             if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
         }
     }
+
+
+    [Fact]
+    public void ValidationUsesLaterChronologicalHoldoutAndReportsConfusionMetrics()
+    {
+        var start = DateTimeOffset.Parse("2026-11-01T00:00:00Z");
+        var records = Enumerable.Range(0, 10).Select(index =>
+        {
+            var positive = index % 2 == 0;
+            var label = positive ? "MATERIAL_EVENT" : "NON_MATERIAL";
+            var prediction = index == 9 ? "MATERIAL" : (positive ? "RISK" : "UNCLASSIFIED");
+            return new CatalystHumanReviewRecord(
+                "review-" + index, "TEST", "article-" + index, "headline",
+                "https://example.com/" + index, start.AddDays(index), "Example",
+                label, "MCC-CATALYST-TRIAGE-1.0", null, start.AddDays(index),
+                prediction, Array.Empty<string>());
+        }).ToArray();
+
+        var result = CatalystHumanReviewValidation.Evaluate(records);
+
+        Assert.Equal("TIME_ORDERED_HOLDOUT_METRICS_AVAILABLE", result.Status);
+        Assert.Equal(8, result.TrainingCount);
+        Assert.Equal(2, result.HoldoutCount);
+        Assert.Equal(start.AddDays(8), result.HoldoutStartUtc);
+        Assert.Equal(1, result.Holdout.TruePositive);
+        Assert.Equal(1, result.Holdout.FalsePositive);
+        Assert.Equal(0, result.Holdout.FalseNegative);
+        Assert.Equal(0.5m, result.Holdout.Precision);
+        Assert.Equal(1m, result.Holdout.Recall);
+    }
+
+    [Fact]
+    public void ValidationExcludesUncertainDuplicateAndConflictingArticleReviews()
+    {
+        var now = DateTimeOffset.Parse("2026-11-06T20:00:00Z");
+        var records = new[]
+        {
+            Review("1", "a", "MATERIAL_EVENT", "MATERIAL", now.AddMinutes(1)),
+            Review("2", "b", "NON_MATERIAL", "UNCLASSIFIED", now.AddMinutes(2)),
+            Review("3", "c", "UNCERTAIN", "RISK", now.AddMinutes(3)),
+            Review("4", "d", "DUPLICATE", "MATERIAL", now.AddMinutes(4)),
+            Review("5", "e", "MATERIAL_RISK", "RISK", now.AddMinutes(5)),
+            Review("6", "e", "NON_MATERIAL", "RISK", now.AddMinutes(6))
+        };
+
+        var result = CatalystHumanReviewValidation.Evaluate(records);
+
+        Assert.Equal(4, result.ExcludedReviewCount);
+        Assert.Equal(1, result.ConflictingArticleCount);
+        Assert.Equal(2, result.IncludedUniqueReviewCount);
+        Assert.Equal("INSUFFICIENT_HOLDOUT_CLASS_COVERAGE", result.Status);
+    }
+
+    private static CatalystHumanReviewRecord Review(
+        string id, string articleId, string label, string prediction, DateTimeOffset reviewedAt) =>
+        new(id, "TEST", articleId, "headline", "https://example.com/" + articleId,
+            reviewedAt, "Example", label, "MCC-CATALYST-TRIAGE-1.0", null,
+            reviewedAt, prediction, Array.Empty<string>());
 
     [Theory]
     [InlineData("CLEAR")]
