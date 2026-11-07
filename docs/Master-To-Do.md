@@ -49,6 +49,8 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Wired the endpoint into the main Dashboard with a **Rank quality pool · top 50** control. It uses the top 50 imported scanner-score candidates as a disclosed prefilter; it does not change Red Zone's four-card selection. Current API ranking is not market-wide discovery and is not a calibrated numeric score.
 - [ ] Calibrate with time-separated candidate snapshots/outcomes before changing provisional thresholds or calling the rank operational.
 
+- [x] Opportunity Quality pool API + main Dashboard top-50 control passed GitHub Actions on `69c1b39562b62dc30e4a43b1a6227438120c31b2`: frontend JavaScript syntax PASS, Release build 0 warnings/errors, 243/243 tests PASS. This is CI verification, not operator browser acceptance.
+
 ### P1 — Full Dashboard/browser and regular-session collector
 
 - [x] Edge executable discovery/launch handling fix is committed and its code CI passed on the earlier code commit.
