@@ -69,7 +69,7 @@ Both maximum errors are within the 0.00005 numeric tolerance, but neither status
 
 The parity response has been extended with a `timestampGaps` array. Each qualifying gap reports the previous observed bar, current observed bar, expected next bar, first observed bar after the gap, missing interval count and elapsed gap duration in UTC. This does not change the status calculation or make a gap acceptable. It is intended to make chart-side investigation precise without another export/import cycle.
 
-The latest implementation and regression test are awaiting GitHub Actions. After CI passes and the operator pulls/builds/restarts, use the PowerShell query in [Master To-Do](../Master-To-Do.md) / [Active Engineering Backlog](../Active-Engineering-Backlog-20261106.md) to retrieve the exact intervals.
+GitHub Actions passed the browser discovery/launch fix on `50945206dd3ac207ab96efbcb9a42911cc13d335` and the ATR gap-detail implementation/test on `5bc2ac57f5f83e00f77930e7ae13374d556828a4`: Release build, 0 warnings/errors, 236/236 tests. This does not execute PowerShell on the operator's machine or compile the ThinkScript in TOS. After CI passes and the operator pulls/builds/restarts, use the PowerShell query in [Master To-Do](../Master-To-Do.md) / [Active Engineering Backlog](../Active-Engineering-Backlog-20261106.md) to retrieve the exact intervals.
 
 ## 1. Browser console/network capture
 
