@@ -89,7 +89,9 @@ public static class BoringOvernightHistoryCalculator
                 open,
                 (open / close - 1m) * 100m,
                 closeObservation.ObservationId,
-                openObservation.ObservationId));
+                openObservation.ObservationId,
+                "ONE_MINUTE_BAR_OPEN_PROXY",
+                false));
         }
 
         returns = returns.OrderBy(x => x.NextSessionDate).ToList();
@@ -118,7 +120,7 @@ public static class BoringOvernightHistoryCalculator
             returns,
             missing,
             complete && enoughHistory
-                ? "Calculated from explicitly supplied close/open boundary timestamps and persisted observations. Provider truth, exchange-calendar correctness, corporate-action adjustment, and source coverage still require independent validation."
+                ? "Calculated from previous regular-session close through the next regular-session 09:30 one-minute bar Open. This interval spans Day 1 after-hours and Day 2 premarket in its net endpoint return, but does not reconstruct the path or eligible-window extrema. The 09:30 bar Open is a first-minute bar-open proxy, not a verified official opening-auction print. Provider truth, exchange-calendar correctness, corporate-action adjustment, and source coverage still require independent validation."
                 : "INCOMPLETE_HISTORY: no rolling metric is emitted unless every requested pair exists and the required history count is met.");
     }
 
@@ -148,7 +150,9 @@ public sealed record OvernightReturnObservation(
     decimal NextOpen,
     decimal ReturnPct,
     string PreviousCloseObservationId,
-    string NextOpenObservationId);
+    string NextOpenObservationId,
+    string NextOpenReferenceKind = "ONE_MINUTE_BAR_OPEN_PROXY",
+    bool OfficialOpeningAuctionVerified = false);
 
 public sealed record OvernightMissingBoundary(
     DateOnly NextSessionDate,
