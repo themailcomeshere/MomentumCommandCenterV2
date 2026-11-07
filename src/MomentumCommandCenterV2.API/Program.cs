@@ -896,7 +896,10 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             catalystError,
             snapshot,
             evaluation,
-            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact 09:30 ET one-minute bar pairs exist. Daily qualification fields require complete 20-session SIP data; IEX values are diagnostic only. Catalyst risk phrases map to RISK; all other news statuses remain UNKNOWN and cannot clear a candidate. The 09:30 one-minute bar Open is not independently verified as the official opening-auction print. No candidate is qualified and no order is submitted."
+            overnightIntervalDefinition = "Previous regular-session close through next regular-session 09:30 ET one-minute bar Open. The net endpoint return spans Day 1 after-hours and Day 2 premarket; this is not a path/extrema calculation.",
+            openingReferenceKind = "ONE_MINUTE_BAR_OPEN_PROXY",
+            officialOpeningAuctionVerified = false,
+            note = "Fetched and persisted 1m provider bars, calculated 20 previous-RTH-close to next-RTH-open pairs, and appended an auditable evaluator-input snapshot. Historical fields are populated only when all exact 09:30 ET one-minute bar pairs exist. The 09:30 bar Open is explicitly a proxy and is not verified as the official opening-auction print. Daily qualification fields require complete 20-session SIP data; IEX values are diagnostic only. Catalyst risk phrases map to RISK; all other news statuses remain UNKNOWN and cannot clear a candidate. No candidate is qualified and no order is submitted."
         });
     }
     catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
