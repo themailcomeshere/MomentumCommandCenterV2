@@ -196,3 +196,69 @@ A reviewer must decide whether those filings actually correspond to the stored a
 - No source establishes whether absent TOS payload slots correspond to candles visible on the chart, no-trade/no-bar periods, or Strategy Report export omissions.
 - IEX is partial exchange coverage and cannot be used to fill or certify consolidated extended-hours coverage. SIP remains an external entitlement blocker.
 - The catalyst holdout remains unavailable until additional unique, source-verified human labels provide both positive and negative truth classes in the chronological holdout.
+
+
+## Operator update — 2026-11-08 (session coverage endpoint + catalyst validation)
+
+### Swagger / endpoint verification
+
+The operator confirmed the Swagger ATR import file picker is fixed and queried:
+- GET /api/strategy-report/atr-session-coverage?symbol=EVR&timeframe=5m
+- GET /api/strategy-report/atr-session-coverage?symbol=CBOE&timeframe=5m
+
+The endpoint returned four EVR sessions and two CBOE sessions. It is read-only and derives scheduled-session coverage from persisted V2.1, ATR14 Wilder, Phoenix-timezone, extended-hours and corporate-action-adjusted observations. It explicitly does not prove that a missing scheduled timestamp contained a candle or eligible trade. No rows were imputed.
+
+### Exact reported coverage — Eastern time (Nov 2–6, 2026)
+
+| Symbol | Session date | First observed ET | Last observed ET | Missing leading slots | Missing trailing slots |
+|---|---|---|---|---:|---:|
+| EVR | Nov 2 | 09:30 | 16:00 | 66 (04:00–09:25) | 47 (16:05–19:55) |
+| EVR | Nov 3 | 09:00 | 16:00 | 60 (04:00–08:55) | 47 (16:05–19:55) |
+| EVR | Nov 4 | 09:00 | 16:00 | 60 (04:00–08:55) | 47 (16:05–19:55) |
+| EVR | Nov 5 | 00:00 | 15:55 | 0 | 48 (16:00–19:55) |
+| CBOE | Nov 4 | 00:45 | 18:40 | 0 | 15 (18:45–19:55) |
+| CBOE | Nov 5 | 09:30 | 16:05 | 66 (04:00–09:25) | 46 (16:10–19:55) |
+
+The leading/trailing endpoint is distinct from interior parity gaps:
+- EVR Nov 5: 4 missing slots, 09:10–09:25 ET.
+- CBOE Nov 4: 31 missing slots, 16:05–18:35 ET.
+
+The earlier numeric parity errors were within 0.00005 tolerance, but parity remains GAPS_PRESENT. The latest operator message did not include a fresh numeric-error response; do not claim a fresh numeric comparison.
+
+### Catalyst validation — current local runtime
+
+Operator supplied:
+- rawReviewCount=3; includedUniqueReviewCount=1; excludedReviewCount=2; conflictingArticleCount=0
+- trainingCount=0; holdoutCount=0; status=INSUFFICIENT_LABELS
+- note: at least 6 unique, non-conflicting reviews with saved triage predictions are required to form a two-observation 20% chronological holdout; received 1. This is a structural minimum only, not statistical qualification.
+
+| Symbol | Article ID | Human label | Saved prediction | Treatment |
+|---|---|---|---|---|
+| ENOV | 116604852 | UNCERTAIN | MATERIAL | Excluded; preserve UNCERTAIN |
+| ARDT | 116604839 | UNCERTAIN | MATERIAL | Excluded; preserve UNCERTAIN |
+| EWTX | 117008554 | MATERIAL_RISK | UNCLASSIFIED | Included; one false negative |
+
+No training or holdout metrics can be calculated from one eligible observation. Do not create labels, infer missing articles, relabel ENOV/ARDT from a different article, or treat this as classifier qualification.
+
+### Required next evidence
+
+**ATR operator actions**
+1. In TOS, open EVR 5m / 2026-11-05 and CBOE 5m / 2026-11-04. Verify 5m aggregation, America/Phoenix chart timezone, extended hours ON, corporate-action adjustment ON, and the corrected V2.1 payload study.
+2. Use crosshair/data box to inspect EVR 04:00–09:00 ET and 09:10–09:25 ET; inspect CBOE 16:05–18:35 ET. Record whether bars actually exist and exact first/last bar timestamps in each interval.
+3. Clarify prior EVR 05:21 and CBOE 06:15 observations with AM/PM, exact date and displayed timezone. Do not map them to gaps until anchored.
+4. Compile corrected study in TOS. If a candle exists in TOS but is absent from export, create an export spanning the entire affected interval and inspect embedded payload timestamps before import. If no candle exists, document no-bar behavior and do not synthesize a row.
+5. Re-run EVR/CBOE parity only after a genuine source correction; do not re-import unchanged files.
+
+**Catalyst operator actions**
+1. Review new source articles/filings from the Dashboard Overnight Qualification queue.
+2. Save one review per symbol/article with a source-verified label and rationale; include both positive (MATERIAL_RISK, MATERIAL_EVENT) and negative (NON_MATERIAL, IRRELEVANT) examples. Use UNCERTAIN when evidence is insufficient.
+3. Ensure each record captures the saved triage prediction at review time. Missing-prediction legacy records do not qualify.
+4. Query GET /api/market-data/catalyst-reviews/validation after each batch. Six eligible unique reviews is only the minimum structural gate; continue building a representative sample and double-review a subset.
+5. Preserve raw validation JSON and review records. No classifier promotion until a sufficiently sized time-separated holdout supports meaningful metrics and reviewer agreement is assessed.
+
+## [Uncertainties]
+
+- Data not found in sources: actual TOS candle presence in the reported missing intervals. Coverage reports scheduled timestamp coverage only.
+- Data not found in sources: fresh numeric MAE/max-error values from the current operator run.
+- Earlier EVR 05:21 / CBOE 06:15 observations still lack confirmed AM/PM, exact date and timezone.
+- Catalyst validation remains statistically unqualified; one eligible review cannot produce train/holdout metrics.
