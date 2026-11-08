@@ -305,3 +305,10 @@ Current operator steps: [New Chat Handoff 2026-11-07](docs/NewChatHandoff-202611
 The operator verified local source SHA `bb6a04aedc6f3cbfda1250a7cc9d8d676594419e` and API health OK. New CBOE/EVR inspect imports were idempotent, but the exports did not cover the requested chart intervals: EVR began at 09:30 ET (after the requested 04:00–09:25 windows) and CBOE ended at 15:55 ET (before the requested 16:05–18:35 window). Import gapCount is an interior-gap count, not proof of full-session coverage.
 
 New code reports leading/trailing scheduled 04:00–20:00 ET session coverage per Eastern date, adds regression tests, and exposes catalyst human-review exclusion reasons in the API and Dashboard. Three catalyst reviews are now saved, but only one is eligible and two are excluded; the exact exclusion reasons are not known until the new build's validation response is queried. Latest implementation commits are on `feature/opportunity-quality-classification`; see [Master To-Do](docs/Master-To-Do.md), [current handoff](docs/NewChatHandoff-20261107.md), and [dated evidence](docs/Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
+
+
+## November 8, 2026 — ATR/catalyst validation status
+
+The ATR import endpoint now returns the parser's leading/trailing scheduled 04:00–20:00 ET session coverage diagnostics as `sessionCoverage`; a regression test covers partial-session exports. This fixes an API response omission, not the underlying incomplete source. The committed EVR and CBOE Nov 4 Strategy Reports contain only 82 ATR payload rows each and are incomplete across the extended-hours window, with additional interior timestamp gaps. Embedded V2.1 epochs are the bar timestamps; the Strategy Report Date/Time field is an order-event timestamp.
+
+Catalyst review validation currently has three saved records: two UNCERTAIN records (ENOV and ARDT) correctly excluded, and one EWTX MATERIAL_RISK review against an UNCLASSIFIED saved prediction (a false negative). One eligible observation cannot support a chronological holdout or classifier promotion. Keep unknown/uncertain states fail-closed; see the dated operator evidence and Master To-Do for details.
