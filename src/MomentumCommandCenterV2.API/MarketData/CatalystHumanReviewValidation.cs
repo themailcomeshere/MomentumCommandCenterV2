@@ -46,7 +46,7 @@ public static class CatalystHumanReviewValidation
         var conflictDetails = conflictingGroups.Select(group => new CatalystHumanReviewConflictDetail(
             group.Key,
             group.Select(x => x.Symbol).Distinct(StringComparer.OrdinalIgnoreCase).Single(),
-            group.Select(x => x.ArticleId).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.ArticleId)),
+            group.Select(x => x.ArticleId).FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)),
             group.Select(x => x.Label).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray(),
             group.OrderBy(x => x.ReviewedAtUtc).Select(x => new CatalystHumanReviewConflictRecord(
                 x.ReviewId, x.Label, x.PredictedSeverity, x.ReviewedAtUtc, x.Headline, x.Url)).ToArray()))
