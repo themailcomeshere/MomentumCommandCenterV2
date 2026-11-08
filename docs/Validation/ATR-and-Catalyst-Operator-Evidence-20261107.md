@@ -157,3 +157,42 @@ GitHub Actions for parser, coverage tests and catalyst validation tests have pas
 3. Re-query the ATR import/parity endpoint. Inspect the new per-session coverage array. Expect EVR Nov 5 to report leading and trailing partial-session coverage; CBOE Nov 4 to report trailing coverage after 15:55 ET. These are scheduled-slot coverage warnings, not proof of actual candles.
 4. Re-export from TOS with an explicit range that includes EVR 04:00–09:25 ET and CBOE 16:00–18:40 ET on the target dates. Check first/last payload timestamps before importing. The export must actually span the requested interval.
 5. Re-query catalyst validation. Copy the new `exclusionBreakdown` object and the three saved-review records from `GET /api/market-data/catalyst-reviews?limit=20` (redact article URLs if needed, but retain symbol, articleId, label, predictedSeverity, reviewedAtUtc). This identifies why two reviews were excluded without guessing.
+
+
+## Operator update — 2026-11-08 (latest supplied review records and committed CSV audit)
+
+### Source files audited directly from the feature branch
+
+- `data/ScannerExports/StrategyReports_EVR_1104 export.csv` (blob `58d7c3004fd62f97084797404b85660214f390ee`): 82 embedded V2.1 5m ATR observations; first payload epoch 2026-11-04 14:05Z (09:05 ET); last 21:00Z (16:00 ET); one interior gap, 09:15→09:30 ET (2 missing 5m slots).
+- `data/ScannerExports/StrategyReports_CBOE_1104 export.csv` (blob `12ede8d20fa7a47e76cef9966b85129e823bb539`): 82 embedded V2.1 5m ATR observations; first payload epoch 2026-11-04 06:10Z (01:10 ET); last 20:55Z (15:55 ET); three interior gaps: 01:10→02:35 ET (16 slots), 02:35→09:00 ET (76 slots), and 09:00→09:25 ET (4 slots).
+- The Strategy Report `Date/Time` column is the strategy order-event time, not the ATR bar time. The importer correctly extracts the timestamp from the embedded `MCC_OHLCV_ATR|v2.1|...` payload. Do not compare those two timestamp fields as if they were the same clock.
+- Both files are partial versus the required 04:00–20:00 ET extended-hours session. EVR misses scheduled leading 04:00–09:00 and trailing 16:05–19:55 ET slots; CBOE has large interior holes and no observations after 15:55 ET. These are missing imported payload observations, not proof of actual TOS candles or trades in every slot.
+
+### Import API correction
+
+- Found that `StrategyReportAtrV2Parser.Parse()` already calculated `SessionCoverage`, but `POST /api/strategy-report/atr-import` did not include that property in its JSON response. This meant the operator could not see the leading/trailing coverage diagnostics after import.
+- Fixed the import route to return `sessionCoverage` alongside interior gaps.
+- Added a parser regression test for a 09:30–15:55 ET partial session: 66 leading and 48 trailing scheduled slots, with exact UTC boundaries. The test explicitly validates scheduled coverage only; it does not assert candle existence.
+- Commits: `abea490af4864613e1f1b60a59d0a7d0194b8816` (API response), `9376d94374bc4840cf1e410fcf09fe8ffb81f349` (test).
+
+### Catalyst review records — exact interpretation
+
+| Symbol | Article ID | Human label | Saved prediction | Validation |
+|---|---|---|---|---|
+| ENOV | 116604852 | UNCERTAIN | MATERIAL | Excluded as non-evaluable |
+| ARDT | 116604839 | UNCERTAIN | MATERIAL | Excluded as non-evaluable |
+| EWTX | 117008554 | MATERIAL_RISK | UNCLASSIFIED | Included; false negative |
+
+The result is 3 raw / 1 eligible / 2 excluded / 0 conflicts. The only eligible record is a false negative: human truth positive, saved triage prediction negative. Training and holdout remain 0/0 because one eligible observation cannot be split into a meaningful chronological evaluation. This is not a pass or a production-quality estimate.
+
+The user could not open the ENOV and ARDT TradingView articles. Preserve both as UNCERTAIN. Alternate primary-source material for independent review (not automatic relabeling):
+- ENOV official November 5, 2026 Form 8-K / earnings announcement: https://ir.enovis.com/static-files/5a472069-e8f5-4e5d-9f15-374cbe655d6b
+- ARDT SEC November 4, 2026 Form 8-K: https://www.sec.gov/Archives/edgar/data/1756655/000162828026070163/ardt-20261104.htm
+
+A reviewer must decide whether those filings actually correspond to the stored article's event and label; a different source is not automatically the same article. Do not rewrite the saved append-only records or promote either uncertain label.
+
+## [Uncertainties]
+
+- No source establishes whether absent TOS payload slots correspond to candles visible on the chart, no-trade/no-bar periods, or Strategy Report export omissions.
+- IEX is partial exchange coverage and cannot be used to fill or certify consolidated extended-hours coverage. SIP remains an external entitlement blocker.
+- The catalyst holdout remains unavailable until additional unique, source-verified human labels provide both positive and negative truth classes in the chronological holdout.
