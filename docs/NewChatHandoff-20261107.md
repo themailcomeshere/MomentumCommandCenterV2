@@ -192,3 +192,49 @@ Detailed evidence: [ATR and Catalyst Operator Evidence](Validation/ATR-and-Catal
 5. Re-run parity only after genuinely new/corrected TOS payload observations are imported.
 
 **Unresolved:** full extended-hours TOS source continuity, provider SIP entitlement, 99 consecutive-bar parity gates, and catalyst holdout qualification. Order submission remains NOT IMPLEMENTED.
+
+
+---
+
+# Current handoff addendum — 2026-11-08 (branch head 71c76c853726bbaf35f932b08efa04b4f2289beb)
+
+## Verified state
+- Branch: `feature/opportunity-quality-classification`; do not modify master.
+- CI: exact prior code/test head `6234b3959ec8de315cbca2ffbd04719d74c4149f`, Actions run [42516614630](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42516614630), conclusion **success**. The current documentation-only commit has not yet been run through CI.
+- API import route returns `sessionCoverage` now. It is visible in the JSON response to Swagger `POST /api/strategy-report/atr-import`; no unchanged EVR/CBOE file needs to be re-imported.
+- The prior EVR/CBOE inspect exports were idempotent (zero new observations). Source continuity remains unresolved.
+- Catalyst records: ENOV and ARDT are UNCERTAIN; EWTX is MATERIAL_RISK vs saved UNCLASSIFIED prediction (one false negative). Included=1, excluded=2, training=0, holdout=0. No validation pass.
+
+## What is required to finish ATR source continuity
+The remaining evidence cannot be produced by code or inferred from the CSV. It must come from the Thinkorswim chart itself:
+1. EVR 5m, 2026-11-05: inspect 04:00–09:00 ET and 09:10–09:25 ET.
+2. CBOE 5m, 2026-11-04: inspect 16:05–18:35 ET.
+3. On each chart, confirm America/Phoenix timezone, extended hours ON, corporate-action adjustment ON, 5m aggregation, and corrected V2.1 study.
+4. Use the crosshair/data box to record exact timestamps of bars actually visible. Record “no bar” explicitly where appropriate. Do not infer from compressed axis labels.
+5. Only if a visible chart bar is missing from the export: export that interval, inspect the embedded `MCC_OHLCV_ATR|v2.1` epoch payload, then import the genuinely new/corrected rows. Do not re-import the unchanged inspect CSVs.
+6. Re-run parity with 99 warm-up bars and require both numeric tolerance and continuity. No imputation; no IEX substitution for SIP/TOS source truth.
+
+## What is required to finish catalyst validation
+1. Review original ENOV article 116604852 and ARDT article 116604839 independently. Keep UNCERTAIN unless source/event identity is verified; official IR/SEC alternatives are only review aids.
+2. Add source-verified material-positive and non-material/irrelevant-negative reviews, with rationale and original source identity. Include triage misses and false alarms; do not label missing news as negative.
+3. Six eligible unique records is merely the structural minimum to yield a two-record 20% chronological holdout. The holdout must contain both truth classes. A substantially larger representative sample and double-review agreement are needed before promotion.
+4. Re-query `GET /api/market-data/catalyst-reviews/validation` after each batch and preserve the JSON/exclusion breakdown.
+
+## Operator commands after pulling/building
+```powershell
+$base = "http://localhost:53360"
+Invoke-RestMethod "$base/api/health" | ConvertTo-Json -Depth 8
+Invoke-RestMethod "$base/api/market-data/catalyst-reviews/validation" | ConvertTo-Json -Depth 12
+$evr = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m&warmupBars=99&windowBars=119"
+$cboe = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m&warmupBars=99&windowBars=119"
+$evr | ConvertTo-Json -Depth 12
+$cboe | ConvertTo-Json -Depth 12
+```
+
+To view `sessionCoverage` without creating observations, use the API's existing import response only when a genuinely new export needs importing. Swagger endpoint: `POST /api/strategy-report/atr-import`. There is currently no documented read-only persisted session-coverage endpoint. Do not import the same EVR/CBOE files merely to see this field.
+
+## [Uncertainties]
+- No TOS chart crosshair evidence was supplied for the missing intervals; source omission versus no-bar behavior is unresolved.
+- Current catalyst eligible sample is one; holdout qualification is impossible.
+- SIP entitlement remains HTTP 403; current entitlement state is not re-verified.
+- Current local API process SHA/restart and runtime endpoint responses are not verified by the assistant.
