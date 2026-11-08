@@ -26,7 +26,7 @@ The operator explicitly confirms all three parity discontinuities have **no visi
 - [x] EVR Nov 5 04:00–09:00 ET: 61 scheduled 5m slots have no TOS candles; export is accurate.
 - [x] EVR Nov 5 09:10–09:25 ET: 4 scheduled 5m slots have no TOS candles; export is accurate.
 - [x] CBOE Nov 4 16:05–18:35 ET: 31 scheduled 5m slots have no TOS candles; export is accurate.
-- [x] Recorded these exact three intervals as operator-confirmed no-bar adjudications in `AtrVerifiedNoBarIntervals`. The parity evaluator now excludes only exact, symbol/timeframe/timestamp-matched adjudications from the unresolved-gap gate. Unrecognized gaps still block MATCH.
+- [x] Recorded these exact three intervals as operator-confirmed no-bar adjudications in `AtrVerifiedNoBarIntervals`. Parity comparison version MCC-WILDER-ATR-PARITY-1.2 excludes only exact, symbol/timeframe/timestamp-matched adjudications from the unresolved-gap gate. Unrecognized gaps still block MATCH.
 - [x] Added regression tests for all three exact no-bar windows. Wilder ATR recurrence remains calculated over actual observed bars; no bar is fabricated or imputed.
 - [ ] Pull/rebuild/restart the API and re-query parity. Expected: EVR and CBOE numeric errors remain within 0.00005, unresolved timestamp gap count 0, verified no-bar interval count 2 and 1 respectively, status MATCH. This expected runtime result is not yet operator-verified.
 
