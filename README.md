@@ -321,3 +321,6 @@ Catalyst review validation currently has three saved records: two UNCERTAIN reco
 - ATR source continuity is still unqualified pending exact Thinkorswim chart crosshair evidence for EVR Nov 5 04:00–09:00 ET and 09:10–09:25 ET, and CBOE Nov 4 16:05–18:35 ET. Record actual bars or no-bar intervals; never impute.
 - Catalyst review sample: ENOV and ARDT are UNCERTAIN/excluded; EWTX is one eligible false negative (MATERIAL_RISK vs UNCLASSIFIED). Included=1; training=0; holdout=0. Continue source-verified positive and negative adjudications; do not relabel inaccessible articles.
 - Execution checklist: [Master To-Do](docs/Master-To-Do.md). Operator sequence and blockers: [current handoff](docs/NewChatHandoff-20261107.md).
+
+
+Catalyst validation now fails closed until at least six eligible unique reviews exist to form a two-row chronological holdout. This is a structural floor only, not statistical qualification; the current three-review set has only one eligible observation. See the Master To-Do and current handoff.
