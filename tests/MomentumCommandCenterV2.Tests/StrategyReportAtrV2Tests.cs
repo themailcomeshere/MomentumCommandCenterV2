@@ -219,10 +219,11 @@ public sealed class StrategyReportAtrV2Tests
     }
 
     [Theory]
-    [InlineData("2026-11-05T05:10:00Z", "2026-11-05T14:05:00Z", 61, "2026-11-05T09:00:00Z", "2026-11-05T14:00:00Z")]
-    [InlineData("2026-11-05T14:05:00Z", "2026-11-05T14:30:00Z", 4, "2026-11-05T14:10:00Z", "2026-11-05T14:25:00Z")]
-    [InlineData("2026-11-04T21:00:00Z", "2026-11-04T23:40:00Z", 31, "2026-11-04T21:05:00Z", "2026-11-04T23:35:00Z")]
+    [InlineData("EVR", "2026-11-05T05:10:00Z", "2026-11-05T14:05:00Z", 61, "2026-11-05T09:00:00Z", "2026-11-05T14:00:00Z")]
+    [InlineData("EVR", "2026-11-05T14:05:00Z", "2026-11-05T14:30:00Z", 4, "2026-11-05T14:10:00Z", "2026-11-05T14:25:00Z")]
+    [InlineData("CBOE", "2026-11-04T21:00:00Z", "2026-11-04T23:40:00Z", 31, "2026-11-04T21:05:00Z", "2026-11-04T23:35:00Z")]
     public void CountsOnlyExpectedEthSlotsAndExcludesScheduledOvernightClosure(
+        string symbol,
         string previousText,
         string currentText,
         int expectedMissingCount,
@@ -236,7 +237,7 @@ public sealed class StrategyReportAtrV2Tests
             .Concat(Enumerable.Range(0, 128).Select(index => current.AddMinutes(5 * (index + 1))))
             .ToArray();
         var observations = timestamps.Select((timestamp, index) => new StrategyReportAtrObservation(
-            index.ToString(), "EVR", "5m", timestamp, 100m, 101m, 99m, 100m, 1000m, 2m)).ToArray();
+            index.ToString(), symbol, "5m", timestamp, 100m, 101m, 99m, 100m, 1000m, 2m)).ToArray();
         var stored = observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
             "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
 
