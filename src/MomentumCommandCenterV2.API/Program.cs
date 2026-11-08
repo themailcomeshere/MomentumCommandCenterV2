@@ -1483,6 +1483,7 @@ app.MapPost("/api/strategy-report/atr-import", async (
             parsed.LastTimestampUtc,
             parsed.GapCount,
             parsed.GapSamples,
+            parsed.SessionCoverage,
             persistence,
             interpretation = parsed.Interpretation
         });
@@ -1493,7 +1494,7 @@ app.MapPost("/api/strategy-report/atr-import", async (
 })
 .WithName("ImportThinkorswimAtrV2Report")
 .WithSummary("Parse and persist Thinkorswim ATR V2 observations")
-.WithDescription("Upload the MCC_OHLCV_ATR_V2 Strategy Report as multipart/form-data. Required fields: file, atrPeriod, atrAverageType=Wilder, chartTimezone, extendedHours=true/false, corporateActionAdjustment=true/false. ATR observations are persisted separately from provider OHLCV. Re-imports are idempotent; changed values are retained as corrections. Gaps are reported and never imputed.")
+.WithDescription("Upload the MCC_OHLCV_ATR_V2 Strategy Report as multipart/form-data. Required fields: file, atrPeriod, atrAverageType=Wilder, chartTimezone, extendedHours=true/false, corporateActionAdjustment=true/false. ATR observations are persisted separately from provider OHLCV. Re-imports are idempotent; changed values are retained as corrections. Interior gaps and leading/trailing scheduled 04:00–20:00 ET coverage are reported separately and never imputed. Coverage counts are schedule diagnostics, not proof that a trade or chart candle existed.")
 .ProducesProblem(400);
 
 app.MapPost("/api/boring-overnight/sell-limit", async (
