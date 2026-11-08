@@ -144,7 +144,7 @@ public sealed class CatalystHumanReviewStoreTests
                 "EWTX", "article-1", "Headline", "https://example.com/a", published,
                 "Example", "MATERIAL_RISK", null, "First adjudication", "UNCLASSIFIED"),
                 CancellationToken.None);
-            await store.AppendAsync(new CatalystHumanReviewInput(
+            var second = await store.AppendAsync(new CatalystHumanReviewInput(
                 "EWTX", "article-1", "Headline", "https://example.com/a", published,
                 "Example", "NON_MATERIAL", null, "Conflicting adjudication", "UNCLASSIFIED"),
                 CancellationToken.None);
@@ -152,7 +152,7 @@ public sealed class CatalystHumanReviewStoreTests
             var correction = await store.AppendAsync(new CatalystHumanReviewInput(
                 "EWTX", "article-1", "Headline", "https://example.com/a", published,
                 "Example", "MATERIAL_RISK", null, "Reviewed source; supersedes incorrect prior label",
-                "UNCLASSIFIED", null, new[] { first.ReviewId }),
+                "UNCLASSIFIED", null, new[] { first.ReviewId, second.ReviewId }),
                 CancellationToken.None);
 
             var records = await store.GetLatestAsync(null, 20, CancellationToken.None);
