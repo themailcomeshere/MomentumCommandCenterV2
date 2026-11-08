@@ -248,3 +248,19 @@ Detailed evidence and operator sequence: [ATR-and-Catalyst-Operator-Evidence-202
 Detailed evidence: [ATR-and-Catalyst-Operator-Evidence-20261107.md](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
 
 **Current status:** ATR export inspection was not aligned to the requested windows; partial-session diagnostics are now implemented but require local deployment. Catalyst review save succeeded for three records, but only one is eligible; new exclusion diagnostics will explain the two exclusions after deployment. No parity pass or catalyst clearance is established.
+
+
+## 2026-11-08 — ATR source coverage and catalyst validation recheck
+
+- [x] Inspected both committed Nov 4 Strategy Report CSVs by embedded V2.1 payload epochs, not Strategy Report order-event Date/Time values.
+- [x] EVR export: 82 observations, 09:05–16:00 ET, one interior gap (09:15→09:30, two slots); incomplete 04:00–20:00 ET session.
+- [x] CBOE export: 82 observations, 01:10–15:55 ET, three interior gaps (16, 76, and 4 slots); incomplete 04:00–20:00 ET session.
+- [x] Found and fixed the ATR import route omission: parser computed leading/trailing session coverage but API response did not return it. `sessionCoverage` is now included.
+- [x] Added a regression test for 66 leading / 48 trailing scheduled slots on a 09:30–15:55 ET export.
+- [x] Interpreted current catalyst records: ENOV and ARDT are correctly excluded as UNCERTAIN; EWTX is an eligible false negative (MATERIAL_RISK vs UNCLASSIFIED).
+- [ ] Pull/build/restart from the latest feature branch and confirm the ATR import response includes `sessionCoverage`; run full .NET tests and retain output.
+- [ ] For source continuity, determine whether the TOS chart itself displays bars in the missing intervals. Do not impute bars or use IEX as a replacement for TOS/SIP.
+- [ ] Continue source-verified human review collection. Preserve ENOV/ARDT as UNCERTAIN unless the reviewer can verify the exact underlying article/event. EWTX is one positive human case missed by triage; one sample cannot validate performance.
+- [ ] Require a chronological holdout with both truth classes plus a larger representative sample and reviewer-agreement check before considering classifier promotion.
+
+**Current status:** Import diagnostics are now returned to the caller, but the supplied source exports are still incomplete. Catalyst validation is correctly fail-closed and has one eligible false-negative example; holdout qualification remains unavailable.
