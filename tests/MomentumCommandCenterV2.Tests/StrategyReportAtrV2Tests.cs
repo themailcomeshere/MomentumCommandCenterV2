@@ -400,7 +400,7 @@ public sealed class StrategyReportAtrV2Tests
         var result = ThinkorswimAtrParityService.Compare(stored, comparisonWindowBars: 119);
 
         Assert.Equal("MATCH", result.Status);
-        Assert.Equal("MCC-WILDER-ATR-PARITY-1.1", result.ComparisonVersion);
+        Assert.Equal("MCC-WILDER-ATR-PARITY-1.2", result.ComparisonVersion);
         Assert.Equal(346, result.SourceObservationCount);
         Assert.Equal(20, result.ComparedBarCount);
         Assert.Equal(0, result.TimestampGapCount);
