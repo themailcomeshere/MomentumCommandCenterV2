@@ -104,7 +104,7 @@ public static class ThinkorswimAtrParityService
                 warmupBars, MinimumComparisonBars, ExportRoundingTolerance, rows.Length, 0, gaps,
                 null, null, null, null, null, null, first,
                 $"Only {availableWindowBars} observations are available in the comparison window; {warmupBars} warm-up observations are required before comparing completed-bar ATR. Full imported history contains {rows.Length} observations.",
-                unresolvedGapDetails, verifiedGapDetails.Length);
+                unresolvedGapDetails, verifiedGapDetails.Length, verifiedGapDetails);
 
         var comparisonStartIndex = windowStartIndex + warmupBars;
         var errors = new List<(DateTimeOffset Timestamp, decimal Absolute, decimal RelativePct)>();
@@ -172,7 +172,8 @@ public sealed record ThinkorswimAtrParityResult(
     StrategyReportAtrImportMetadata? Metadata,
     string Explanation,
     IReadOnlyList<ThinkorswimAtrTimestampGap>? TimestampGaps = null,
-    int VerifiedNoBarIntervalCount = 0);
+    int VerifiedNoBarIntervalCount = 0,
+    IReadOnlyList<ThinkorswimAtrTimestampGap>? VerifiedNoBarIntervals = null);
 
 /// <summary>
 /// A gap between observed export rows. MissingIntervalCount counts scheduled chart
