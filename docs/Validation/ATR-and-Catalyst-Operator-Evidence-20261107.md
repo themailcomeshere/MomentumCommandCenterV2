@@ -262,3 +262,47 @@ No training or holdout metrics can be calculated from one eligible observation. 
 - Data not found in sources: fresh numeric MAE/max-error values from the current operator run.
 - Earlier EVR 05:21 / CBOE 06:15 observations still lack confirmed AM/PM, exact date and timezone.
 - Catalyst validation remains statistically unqualified; one eligible review cannot produce train/holdout metrics.
+
+
+## Operator correction — 2026-11-08 (explicit no-bar confirmation and catalyst conflict)
+
+### ATR: operator source adjudication
+
+The operator explicitly corrected the prior handoff: **the candles do not appear in Thinkorswim, and the export is accurate to what is visible.** Do not ask the operator to repeat chart inspection or imply that the export omitted existing candles.
+
+| Symbol | Session date | Missing scheduled slots | Exact ET interval | Exact missing UTC timestamps | Adjudication |
+|---|---|---:|---|---|---|
+| EVR | 2026-11-05 | 61 | 04:00–09:00 | 09:00Z–14:00Z (inclusive, 5m) | No TOS candles; export accurate |
+| EVR | 2026-11-05 | 4 | 09:10–09:25 | 14:10Z–14:25Z (inclusive, 5m) | No TOS candles; export accurate |
+| CBOE | 2026-11-04 | 31 | 16:05–18:35 | 21:05Z–23:35Z (inclusive, 5m) | No TOS candles; export accurate |
+
+These are legitimate no-bar intervals, not missing export rows. The API now has a narrowly scoped operator-confirmed no-bar registry for these exact symbol/timeframe/timestamp ranges. The parity evaluator removes only exact matches from the unresolved timestamp-gap gate and reports the number of verified no-bar intervals separately. Any other gap remains blocking. ATR recurrence uses actual observed OHLCV rows; no synthetic bars are introduced.
+
+The operator's supplied numeric results remain within tolerance:
+- EVR MAE 0.0000294330206093993971654557; max absolute error 0.0000495349247567752940205113; tolerance 0.00005.
+- CBOE MAE 0.0000203865947752491599540927; max absolute error 0.0000426076307464691409374068; tolerance 0.00005.
+
+After pulling/rebuilding/restarting, expected parity is EVR `MATCH` with 2 verified no-bar intervals and CBOE `MATCH` with 1 verified no-bar interval, assuming the persisted rows and numeric results are unchanged. This is an expected result from the new code, not yet operator-verified. The status remains unconfirmed until the local endpoints are queried.
+
+### Catalyst: latest validation response
+
+Operator supplied: raw=4, eligible=0, excluded=4, conflicts=1, training=0, holdout=0. Exclusion breakdown: missing saved prediction=0, non-evaluable labels=2, duplicate-same-label=0, conflicting-article review records=2. Therefore two records are an article-level label conflict; the other two are non-evaluable (likely UNCERTAIN/DUPLICATE based on taxonomy, but their exact labels are not in the supplied response).
+
+New implementation:
+- Validation returns article-level conflict diagnostics, including symbol, article ID/key, conflicting labels, review IDs, saved prediction, reviewed time, headline and URL.
+- Append-only review input supports `supersedesReviewIds`. Superseded IDs must exist and match the same symbol/article. A correction retains all original rows in the audit log while excluding explicitly superseded rows from evaluation. This prevents a conflict from being permanent while preserving history.
+- Tests cover conflict diagnostics and explicit supersession.
+
+Operator action after deployment:
+1. Query `GET /api/market-data/catalyst-reviews/validation` and inspect `conflictingArticles`.
+2. Open the source article. Determine the correct human label; do not choose based on prediction.
+3. Submit one new review via `POST /api/market-data/catalyst-reviews`, retaining the correct saved `predictedSeverity`, explaining the adjudication in `notes`, and setting `supersedesReviewIds` to both conflicting review IDs. The API rejects IDs that do not exist or belong to another symbol/article.
+4. Re-query validation. The two superseded records remain in the raw audit count but no longer count as active conflict records.
+5. Keep the two non-evaluable reviews excluded unless independently source-adjudicated. Continue collecting positive and negative labels; six eligible unique reviews is only the structural minimum.
+
+## [Uncertainties]
+
+- Runtime ATR parity after the no-bar registry change: not yet queried on the operator's local rebuilt API.
+- Catalyst conflict's exact article ID, labels and review IDs: Data not found in sources until the updated diagnostics endpoint is queried.
+- The two non-evaluable review labels are not included in the operator's validation summary; do not assume their exact labels.
+- Catalyst validation remains unqualified and classifier promotion is not authorized.
