@@ -89,7 +89,14 @@ public static class ThinkorswimAtrParityService
                 .Where(gap => gap is not null)
                 .Select(gap => gap!)
                 .ToArray();
-        var gaps = gapDetails.Length;
+        var verifiedNoBarGaps = AtrVerifiedNoBarIntervals.GetFor(rows[0].Symbol, rows[0].Timeframe);
+        var unresolvedGapDetails = gapDetails.Where(gap => !verifiedNoBarGaps.Any(verified =>
+            verified.FirstExpectedMissingBarAtUtc == gap.FirstExpectedMissingBarAtUtc &&
+            verified.LastExpectedMissingBarAtUtc == gap.LastExpectedMissingBarAtUtc)).ToArray();
+        var verifiedGapDetails = gapDetails.Where(gap => verifiedNoBarGaps.Any(verified =>
+            verified.FirstExpectedMissingBarAtUtc == gap.FirstExpectedMissingBarAtUtc &&
+            verified.LastExpectedMissingBarAtUtc == gap.LastExpectedMissingBarAtUtc)).ToArray();
+        var gaps = unresolvedGapDetails.Length;
 
         if (availableWindowBars <= warmupBars)
             return new ThinkorswimAtrParityResult(
@@ -97,7 +104,7 @@ public static class ThinkorswimAtrParityService
                 warmupBars, MinimumComparisonBars, ExportRoundingTolerance, rows.Length, 0, gaps,
                 null, null, null, null, null, null, first,
                 $"Only {availableWindowBars} observations are available in the comparison window; {warmupBars} warm-up observations are required before comparing completed-bar ATR. Full imported history contains {rows.Length} observations.",
-                gapDetails);
+                unresolvedGapDetails, verifiedGapDetails.Length);
 
         var comparisonStartIndex = windowStartIndex + warmupBars;
         var errors = new List<(DateTimeOffset Timestamp, decimal Absolute, decimal RelativePct)>();
@@ -116,7 +123,7 @@ public static class ThinkorswimAtrParityService
                 null, null, null, errors.FirstOrDefault().Timestamp == default ? null : errors[0].Timestamp,
                 errors.LastOrDefault().Timestamp == default ? null : errors[^1].Timestamp, null, first,
                 $"Only {errors.Count} matched completed bars remain after the warm-up; at least {MinimumComparisonBars} are required.",
-                gapDetails);
+                unresolvedGapDetails, verifiedGapDetails.Length);
 
         var orderedErrors = errors.Select(x => x.Absolute).OrderBy(x => x).ToArray();
         var meanAbsolute = orderedErrors.Average();
@@ -130,11 +137,13 @@ public static class ThinkorswimAtrParityService
             warmupBars, MinimumComparisonBars, ExportRoundingTolerance, rows.Length, errors.Count, gaps,
             meanAbsolute, maxAbsolute, p90, errors[0].Timestamp, errors[^1].Timestamp, meanRelative, first,
             matched
-                ? "Every compared Wilder ATR value matches the Thinkorswim export within the four-decimal export rounding bound, and the comparison window has no intraday timestamp gaps within its New York session dates. This validates the ATR algorithm on these imported bars only; provider-feed and live-history parity remain separate."
+                ? verifiedGapDetails.Length > 0
+                    ? $"Every compared Wilder ATR value matches within the four-decimal export rounding bound. {verifiedGapDetails.Length} timestamp discontinuity interval(s) are explicitly adjudicated by the operator as no-candle periods in Thinkorswim; these are not missing export bars and are excluded from the unresolved continuity gate. Wilder recurrence is evaluated across the actual observed bars only. This validates the algorithm on these imported bars; provider-feed and live-history parity remain separate."
+                    : "Every compared Wilder ATR value matches the Thinkorswim export within the four-decimal export rounding bound, and the comparison window has no unresolved intraday timestamp gaps. This validates the ATR algorithm on these imported bars only; provider-feed and live-history parity remain separate."
                 : status == "GAPS_PRESENT"
-                    ? "ATR values are within numeric tolerance, but one or more intraday source timestamps are missing within a New York session date. Wilder recurrence across missing bars cannot be certified; no gap is imputed and parity is not MATCH."
+                    ? "ATR values are within numeric tolerance, but one or more intraday source timestamp gaps are not covered by explicit operator-confirmed no-candle adjudications. No gap is imputed and parity is not MATCH."
                     : "Server Wilder ATR does not match the exported Thinkorswim ATR within the four-decimal export rounding bound. Numeric sell-limit orchestration must remain blocked. This comparison uses the imported TOS OHLCV bars and does not diagnose provider-feed differences.",
-            gapDetails);
+            unresolvedGapDetails, verifiedGapDetails.Length);
     }
 
     private static ThinkorswimAtrParityResult Empty(string reason, string status = "NO_DATA") =>
@@ -162,7 +171,8 @@ public sealed record ThinkorswimAtrParityResult(
     decimal? MeanRelativeErrorPct,
     StrategyReportAtrImportMetadata? Metadata,
     string Explanation,
-    IReadOnlyList<ThinkorswimAtrTimestampGap>? TimestampGaps = null);
+    IReadOnlyList<ThinkorswimAtrTimestampGap>? TimestampGaps = null,
+    int VerifiedNoBarIntervalCount = 0);
 
 /// <summary>
 /// A gap between observed export rows. MissingIntervalCount counts scheduled chart
