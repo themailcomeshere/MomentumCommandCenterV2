@@ -143,6 +143,8 @@ public sealed class CatalystHumanReviewStore(string? path = null)
             throw new ArgumentException("PredictedCategories must contain non-empty values of at most 100 characters.", nameof(input));
         if (input.SupersedesReviewIds?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 64) == true)
             throw new ArgumentException("SupersedesReviewIds must contain non-empty review IDs of at most 64 characters.", nameof(input));
+        if (input.SupersedesReviewIds?.Count > 0 && string.IsNullOrWhiteSpace(input.Notes))
+            throw new ArgumentException("A source-backed rationale in Notes is required when superseding prior reviews.", nameof(input));
     }
 }
 
