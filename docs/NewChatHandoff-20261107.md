@@ -238,3 +238,12 @@ To view `sessionCoverage` without creating observations, use the API's existing 
 - Current catalyst eligible sample is one; holdout qualification is impossible.
 - SIP entitlement remains HTTP 403; current entitlement state is not re-verified.
 - Current local API process SHA/restart and runtime endpoint responses are not verified by the assistant.
+
+
+### Catalyst validation safeguard added — 2026-11-08
+
+The validator now requires **six eligible unique reviews** before creating a chronological 20% holdout. With fewer than six it returns `INSUFFICIENT_LABELS`, zero train/holdout counts and a note stating the required minimum. This prevents the previous behavior in which two eligible records could produce a one-row holdout and superficially available metrics. Six is only the mathematical floor for a two-observation holdout; it is not a statistically reliable sample. A 10-record regression still verifies 8 training / 2 holdout metrics. The two-record exclusion test now verifies the insufficient-label response.
+
+- Code commit: `23cc4f647f4cbc4a0920c76a086b3391e3d26891`
+- Test commit: `545fd4f330d5e0e47d7d0972e77aa81151791d66`
+- Latest CI run: [42518620507](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42518620507) — queued at handoff update; verify before claiming pass.
