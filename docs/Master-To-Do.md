@@ -1,9 +1,9 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-07 evening (operator ATR recheck + zero-label catalyst result; exact-head CI verified)  
+**Updated:** 2026-11-08 (operator session-coverage endpoint recheck + 3-review catalyst validation)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
-**Current handoff:** [NewChatHandoff-20261107.md](NewChatHandoff-20261107.md)  
+**Current handoff:** [NewChatHandoff-20261108.md](NewChatHandoff-20261108.md)  
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
@@ -16,6 +16,35 @@
 **Browser/stream acceptance:** [Browser-and-Stream-Collector-Acceptance-20261106.md](Validation/Browser-and-Stream-Collector-Acceptance-20261106.md)
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
+
+## Operator evidence update — 2026-11-08 (session coverage + catalyst sample)
+
+### P0 — ATR source continuity
+
+- [x] Operator confirmed the Swagger multipart upload is fixed.
+- [x] Operator queried the read-only persisted-observation coverage endpoint for EVR and CBOE and supplied complete JSON. Results are recorded in [ATR and Catalyst Operator Evidence](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
+- [x] Reconciled per-session coverage against prior parity gaps. EVR Nov 2–4 has systematic leading/trailing omissions; EVR Nov 5 starts at 00:00 ET but ends at 15:55 ET. CBOE Nov 4 has an interior 16:05–18:35 ET gap and ends at 18:40 ET; CBOE Nov 5 starts 09:30 ET and ends 16:05 ET.
+- [x] Confirmed the read-only endpoint measures expected 04:00–20:00 ET slots from persisted TOS observations only. It cannot establish that an absent slot had a chart candle or eligible trade.
+- [ ] Inspect exact intervals in Thinkorswim using crosshair/data-box timestamps; record candle presence and compile the corrected V2.1 study in TOS.
+- [ ] If TOS shows candles absent from the export, create a complete-range corrected export and import only genuinely new/corrected payload observations. If no candle exists, preserve no-bar evidence; never impute.
+- [ ] Re-run parity after an actual source correction. Require numeric tolerance and continuity to pass independently; retain GAPS_PRESENT until resolved.
+
+### P1 — Catalyst human validation
+
+- [x] Operator re-queried validation after the six-review structural-minimum safeguard was deployed. Runtime reports raw=3, eligible=1, excluded=2, conflicts=0, train=0, holdout=0.
+- [x] Confirmed the one eligible review is EWTX / article 117008554 / MATERIAL_RISK versus saved UNCLASSIFIED (false negative). ENOV and ARDT remain UNCERTAIN and excluded. Do not relabel without source-level adjudication.
+- [x] Confirmed six eligible unique non-conflicting reviews are only a structural floor for a two-row chronological holdout, not statistical qualification.
+- [ ] Collect additional source-verified positive and negative human labels, with saved triage predictions and rationale. Do not count UNCERTAIN, duplicates, missing predictions, or unsupported labels toward the minimum.
+- [ ] Re-query validation after each batch; continue until the later chronological holdout contains both truth classes, then expand substantially and double-review a subset.
+
+### Current acceptance state
+
+- [x] Swagger ATR file upload control — operator verified.
+- [x] Read-only ATR session-coverage endpoint — operator verified for EVR and CBOE.
+- [ ] ATR source continuity / TOS chart-side candle adjudication — BLOCKED on operator chart evidence.
+- [ ] ATR numeric + continuity parity MATCH — NOT ACHIEVED; prior EVR/CBOE results remain GAPS_PRESENT.
+- [ ] Catalyst training/holdout validation — BLOCKED by one eligible human review; no metrics can be computed.
+- [ ] Catalyst classifier promotion — NOT AUTHORIZED.
 
 ## Engineering continuation — 2026-11-07 (operator exact gaps + feature implementation)
 
