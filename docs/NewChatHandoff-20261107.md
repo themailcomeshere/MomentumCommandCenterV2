@@ -166,3 +166,29 @@ The operator saved three records; endpoint reports raw=3, included=1, excluded=2
 6. Continue unique, non-conflicting, evaluable human reviews across both positive and negative truth classes. No holdout metrics yet.
 
 Detailed evidence: [ATR and Catalyst Operator Evidence](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
+
+
+## 7. Operator update — 2026-11-08 (latest source and catalyst evidence)
+
+### ATR CSV audit
+- EVR Nov 4 file: 82 payload bars, 09:05–16:00 ET, one interior gap 09:15→09:30 ET (2 slots); incomplete 04:00–20:00 ET.
+- CBOE Nov 4 file: 82 payload bars, 01:10–15:55 ET, interior gaps 01:10→02:35 (16), 02:35→09:00 (76), 09:00→09:25 (4); incomplete 04:00–20:00 ET.
+- Use the embedded V2.1 epoch for bar time. Strategy Report Date/Time is an order-event timestamp.
+- Code defect fixed: ATR parser already computed sessionCoverage, but the import API response omitted it. The route now returns sessionCoverage. Regression test covers 09:30–15:55 ET => 66 leading + 48 trailing scheduled 5m slots.
+- Commits: `abea490af4864613e1f1b60a59d0a7d0194b8816`, `9376d94374bc4840cf1e410fcf09fe8ffb81f349`.
+
+### Catalyst
+- ENOV / article 116604852: UNCERTAIN, predicted MATERIAL — correctly excluded.
+- ARDT / article 116604839: UNCERTAIN, predicted MATERIAL — correctly excluded.
+- EWTX / article 117008554: MATERIAL_RISK, predicted UNCLASSIFIED — included false negative.
+- Totals: raw 3, eligible 1, excluded 2, conflicts 0, train/holdout 0/0. No classifier validation pass.
+- Alternative primary sources for human inspection only: ENOV official IR Form 8-K https://ir.enovis.com/static-files/5a472069-e8f5-4e5d-9f15-374cbe655d6b ; ARDT SEC Form 8-K https://www.sec.gov/Archives/edgar/data/1756655/000162828026070163/ardt-20261104.htm . Do not relabel the original records unless the source/event match is verified by the reviewer.
+
+### Next
+1. Pull feature branch and run `.scripts\Get-Latest-And-Test.ps1`; verify latest SHA and full test result.
+2. Restart API and import a partial-session test export only if needed to verify `sessionCoverage` appears in the response. Do not re-import the existing CSVs unchanged.
+3. Inspect TOS chart timestamps in actual gaps to classify export omission versus no-bar behavior. Do not synthesize observations.
+4. Add additional unique source-verified catalyst reviews across both truth classes; keep inaccessible/ambiguous articles UNCERTAIN.
+5. Re-run parity only after genuinely new/corrected TOS payload observations are imported.
+
+**Unresolved:** full extended-hours TOS source continuity, provider SIP entitlement, 99 consecutive-bar parity gates, and catalyst holdout qualification. Order submission remains NOT IMPLEMENTED.
