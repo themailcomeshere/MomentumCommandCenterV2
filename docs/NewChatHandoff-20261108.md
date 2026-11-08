@@ -69,12 +69,14 @@ $cboeCoverage | ConvertTo-Json -Depth 12
 
 $evrParity = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m&warmupBars=99&windowBars=119"
 $cboeParity = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m&warmupBars=99&windowBars=119"
-$evrParity | Select-Object status,sourceObservationCount,comparedBarCount,timestampGapCount,timestampGaps,meanAbsoluteError,maximumAbsoluteError | ConvertTo-Json -Depth 12
+$evrParity | Select-Object status,sourceObservationCount,comparedBarCount,timestampGapCount,verifiedNoBarIntervalCount,timestampGaps,verifiedNoBarIntervals,meanAbsoluteError,maximumAbsoluteError | ConvertTo-Json -Depth 12
 $cboeParity | Select-Object status,sourceObservationCount,comparedBarCount,timestampGapCount,timestampGaps,meanAbsoluteError,maximumAbsoluteError | ConvertTo-Json -Depth 12
 
 $reviews = Invoke-RestMethod "$base/api/market-data/catalyst-reviews?limit=20"
 $reviews | ConvertTo-Json -Depth 12
-Invoke-RestMethod "$base/api/market-data/catalyst-reviews/validation" | ConvertTo-Json -Depth 12
+$validation = Invoke-RestMethod "$base/api/market-data/catalyst-reviews/validation"
+$validation | ConvertTo-Json -Depth 15
+$validation.conflictingArticles | ConvertTo-Json -Depth 15
 ```
 
 Do not import unchanged files. Do not retry SIP; known HTTP 403 entitlement remains parked. IEX is not a substitute for consolidated/SIP qualification. Numeric sell-limit output remains fail-closed while independent gates are incomplete.
