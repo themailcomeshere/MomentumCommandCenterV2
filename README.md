@@ -312,3 +312,12 @@ New code reports leading/trailing scheduled 04:00–20:00 ET session coverage pe
 The ATR import endpoint now returns the parser's leading/trailing scheduled 04:00–20:00 ET session coverage diagnostics as `sessionCoverage`; a regression test covers partial-session exports. This fixes an API response omission, not the underlying incomplete source. The committed EVR and CBOE Nov 4 Strategy Reports contain only 82 ATR payload rows each and are incomplete across the extended-hours window, with additional interior timestamp gaps. Embedded V2.1 epochs are the bar timestamps; the Strategy Report Date/Time field is an order-event timestamp.
 
 Catalyst review validation currently has three saved records: two UNCERTAIN records (ENOV and ARDT) correctly excluded, and one EWTX MATERIAL_RISK review against an UNCLASSIFIED saved prediction (a false negative). One eligible observation cannot support a chronological holdout or classifier promotion. Keep unknown/uncertain states fail-closed; see the dated operator evidence and Master To-Do for details.
+
+
+### November 8 — current ATR continuity and catalyst validation gate
+
+- Exact code/test head `6234b3959ec8de315cbca2ffbd04719d74c4149f` passed GitHub Actions run [42516614630](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42516614630). Subsequent commits update the operator checklist and handoff; rerun CI for the documentation head.
+- ATR import now returns `sessionCoverage` in the `POST /api/strategy-report/atr-import` JSON response. This is not a persisted read-only endpoint and does not repair missing source rows. Existing EVR/CBOE exports add zero observations; do not re-import them.
+- ATR source continuity is still unqualified pending exact Thinkorswim chart crosshair evidence for EVR Nov 5 04:00–09:00 ET and 09:10–09:25 ET, and CBOE Nov 4 16:05–18:35 ET. Record actual bars or no-bar intervals; never impute.
+- Catalyst review sample: ENOV and ARDT are UNCERTAIN/excluded; EWTX is one eligible false negative (MATERIAL_RISK vs UNCLASSIFIED). Included=1; training=0; holdout=0. Continue source-verified positive and negative adjudications; do not relabel inaccessible articles.
+- Execution checklist: [Master To-Do](docs/Master-To-Do.md). Operator sequence and blockers: [current handoff](docs/NewChatHandoff-20261107.md).
