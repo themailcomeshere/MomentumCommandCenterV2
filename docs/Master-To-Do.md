@@ -305,3 +305,18 @@ The import response's `sessionCoverage` is visible only in the JSON response to 
 **Status:** latest branch CI is green. ATR diagnostics are implemented; underlying TOS source continuity is NOT complete because chart-level evidence is missing. Catalyst validation infrastructure is implemented; classifier validation is NOT complete because only one eligible human label exists. No synthetic data, imputed bars, or relabeling performed.
 
 - [x] Hardened catalyst validation: fewer than six eligible unique reviews now returns `INSUFFICIENT_LABELS` with the exact structural minimum in the note; this prevents a misleading one-row holdout from being presented as usable evaluation. Regression expectation updated. Code commit `23cc4f647f4cbc4a0920c76a086b3391e3d26891`; test commit `545fd4f330d5e0e47d7d0972e77aa81151791d66`. CI for the latest code/test head is running; do not call it verified until run 42518620507 completes.
+
+
+## 2026-11-08 operator feedback and API usability fixes
+
+- [x] Diagnosed why Swagger showed only Execute for ATR import: endpoint read multipart form fields from `HttpRequest` but did not declare its multipart request-body schema. Added explicit Swagger fields for CSV file, ATR period, Wilder average type, chart timezone, extended-hours flag, and corporate-action adjustment.
+- [x] Added read-only `GET /api/strategy-report/atr-session-coverage?symbol=EVR&timeframe=5m` (and CBOE) calculated from persisted qualifying V2.1 observations. This lets the operator inspect coverage without re-importing existing files.
+- [x] Captured current runtime parity output: EVR 327 observations, 20 comparisons, max error 0.0000495349 (within 0.00005), two gaps; CBOE 338 observations, 20 comparisons, max error 0.0000426076 (within tolerance), one gap. Both correctly remain GAPS_PRESENT.
+- [x] Identified exact gaps from runtime output: EVR Nov 5 04:00–09:00 ET (61 expected slots) and 09:10–09:25 ET (4 slots); CBOE Nov 4 16:05–18:35 ET (31 slots). These are unresolved source continuity until TOS chart evidence determines visible bars vs no-bar intervals.
+- [x] Confirmed prior local catalyst response came from an older build: it still says minimum two reviews. Current branch requires six eligible unique reviews. Pull/build/restart before interpreting the endpoint.
+- [x] Confirmed latest previous catalyst code/test workflow run 42518620507 passed; failure on 42518610557 was the stale test expectation, fixed in 545fd4f and covered by passing run.
+- [ ] Verify the new Swagger multipart fields and read-only coverage endpoint after pulling latest branch and restarting API.
+- [ ] Obtain TOS chart evidence for the three exact gap intervals; do not infer candles from the parity output.
+- [ ] Collect additional human catalyst reviews; current data remains 1 eligible / 2 uncertain.
+
+New commits: `0719911f5c8d079b82ac19e59d11116fe811b025` (parser coverage visibility) and `5720a6e046d621f69813bb83554d6894f30f6a62` (Swagger schema + read-only endpoint). Latest CI run for the latter is [42519899439](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42519899439), pending at update time.
