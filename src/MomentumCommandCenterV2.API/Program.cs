@@ -1495,7 +1495,69 @@ app.MapPost("/api/strategy-report/atr-import", async (
 .WithName("ImportThinkorswimAtrV2Report")
 .WithSummary("Parse and persist Thinkorswim ATR V2 observations")
 .WithDescription("Upload the MCC_OHLCV_ATR_V2 Strategy Report as multipart/form-data. Required fields: file, atrPeriod, atrAverageType=Wilder, chartTimezone, extendedHours=true/false, corporateActionAdjustment=true/false. ATR observations are persisted separately from provider OHLCV. Re-imports are idempotent; changed values are retained as corrections. Interior gaps and leading/trailing scheduled 04:00–20:00 ET coverage are reported separately and never imputed. Coverage counts are schedule diagnostics, not proof that a trade or chart candle existed.")
-.ProducesProblem(400);
+.ProducesProblem(400)
+.WithOpenApi(operation =>
+{
+    operation.RequestBody = new OpenApiRequestBody
+    {
+        Required = true,
+        Content =
+        {
+            ["multipart/form-data"] = new OpenApiMediaType
+            {
+                Schema = new OpenApiSchema
+                {
+                    Type = "object",
+                    Required = new HashSet<string> { "file", "atrPeriod", "atrAverageType", "chartTimezone", "extendedHours", "corporateActionAdjustment" },
+                    Properties =
+                    {
+                        ["file"] = new OpenApiSchema { Type = "string", Format = "binary", Description = "Thinkorswim Strategy Report CSV, max 10 MB." },
+                        ["atrPeriod"] = new OpenApiSchema { Type = "integer", Example = new OpenApiInteger(14) },
+                        ["atrAverageType"] = new OpenApiSchema { Type = "string", Enum = new List<IOpenApiAny> { new OpenApiString("Wilder") }, Example = new OpenApiString("Wilder") },
+                        ["chartTimezone"] = new OpenApiSchema { Type = "string", Example = new OpenApiString("America/Phoenix") },
+                        ["extendedHours"] = new OpenApiSchema { Type = "boolean", Example = new OpenApiBoolean(true) },
+                        ["corporateActionAdjustment"] = new OpenApiSchema { Type = "boolean", Example = new OpenApiBoolean(true) }
+                    }
+                }
+            }
+        }
+    };
+    return operation;
+});
+
+
+app.MapGet("/api/strategy-report/atr-session-coverage", async (
+    MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore atrStore,
+    string? symbol, string? timeframe, CancellationToken ct) =>
+{
+    if (!string.IsNullOrWhiteSpace(symbol) && !IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (!string.IsNullOrWhiteSpace(timeframe) && timeframe is not ("1m" or "5m" or "15m" or "30m" or "1h" or "4h"))
+        return Results.BadRequest(new { error = "timeframe must be 1m, 5m, 15m, 30m, 1h, or 4h." });
+    var rows = await atrStore.GetLatestAsync(symbol, timeframe, null, null, 10000, ct);
+    var consistent = rows.Where(x => x.Metadata.StudyVersion == "MCC_OHLCV_ATR_V2.1" &&
+            x.Metadata.AtrPeriod == 14 && x.Metadata.AtrAverageType == "Wilder" &&
+            x.Metadata.ExtendedHours && x.Metadata.CorporateActionAdjustment &&
+            x.Metadata.ChartTimezone.Equals("America/Phoenix", StringComparison.OrdinalIgnoreCase))
+        .GroupBy(x => (x.Observation.Symbol, x.Observation.Timeframe));
+    var coverage = consistent.SelectMany(group =>
+    {
+        var ordered = group.OrderBy(x => x.Observation.SourceTimestampUtc).ToArray();
+        var interval = ordered.First().Observation.Timeframe switch
+        {
+            "1m" => TimeSpan.FromMinutes(1), "5m" => TimeSpan.FromMinutes(5),
+            "15m" => TimeSpan.FromMinutes(15), "30m" => TimeSpan.FromMinutes(30),
+            "1h" => TimeSpan.FromHours(1), "4h" => TimeSpan.FromHours(4), _ => TimeSpan.Zero
+        };
+        return MomentumCommandCenterV2.API.StrategyReports.StrategyReportAtrV2Parser.BuildSessionCoverage(
+            ordered.Select(x => x.Observation).ToArray(), interval).Select(x => new { symbol = group.Key.Symbol, timeframe = group.Key.Timeframe, coverage = x });
+    }).ToArray();
+    return Results.Ok(new { count = coverage.Length, sessions = coverage,
+        interpretation = "Read-only coverage calculated from persisted TOS ATR observations. This does not establish whether absent scheduled timestamps had a chart candle or no trade; no bars are imputed. Only V2.1, ATR14 Wilder, Phoenix, extended-hours and corporate-action-adjusted provenance is included." });
+})
+.WithName("GetThinkorswimAtrSessionCoverage")
+.WithSummary("Read persisted Thinkorswim ATR scheduled-session coverage without importing")
+.WithDescription("Optional filters: symbol and timeframe. Returns per-Eastern-date leading/trailing scheduled 04:00–20:00 ET coverage calculated from already persisted qualifying V2.1 observations. It is read-only and does not infer candle existence.");
 
 app.MapPost("/api/boring-overnight/sell-limit", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellLimitRequest request,
