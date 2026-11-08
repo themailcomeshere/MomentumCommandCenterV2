@@ -117,7 +117,7 @@ public static class StrategyReportAtrV2Parser
     }
 
 
-    private static IReadOnlyList<StrategyReportAtrSessionCoverage> BuildSessionCoverage(
+    public static IReadOnlyList<StrategyReportAtrSessionCoverage> BuildSessionCoverage(
         IReadOnlyList<StrategyReportAtrObservation> observations, TimeSpan interval)
     {
         var eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
