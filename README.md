@@ -1,16 +1,16 @@
 # Momentum Command Center V3
 
-## Current project status — 2026-11-06
+## Current project status — 2026-11-07
 
 - Working branch: `feature/opportunity-quality-classification`. The main Dashboard is `frontend/index.html`, served at `http://localhost:53360/`. There is no PrototypeIndex acceptance target.
 - The operator's local Release build/test PASS was at source SHA `cd6e93f1c91a8bb69953bd12e5e9cee30e2fe839`. The later ATR session-gap detector and regression tests passed GitHub Actions on code/test commit `151cb97976121600833c8927bddf4cf175567b7b` (Release build, 0 warnings/errors, 236/236 tests). Subsequent commits include documentation and PowerShell evidence-script updates; the newest branch-head workflow is queued. The new PowerShell scripts have not yet been executed on the operator's Windows machine.
 - Alpaca's current usable feed is IEX. Recent SIP requests have repeatedly returned HTTP 403 for this account. Do not retry SIP, switch configuration, or ask the operator to repeat SIP requests. SIP-dependent consolidated qualification and GTC_EXT work remain parked unless the operator reports a genuine entitlement change.
 - The visible **Daily data audit** panel was operator-verified for RTO, EVR, and CBOE: 3 symbols returned, 0 API errors, 0 qualification-usable, all diagnostic-only / `DATA? · IEX_PARTIAL`, with 20/20 sessions, zero missing, and FRESH. RTO/EVR independent OHLCV parity previously failed on IEX; CBOE independent Daily reference data is absent.
-- Existing EVR/CBOE StrategyReport CSVs and persisted observations are already committed. Do not ask for or re-import the same exports. Latest 5m ATR values are within numeric tolerance and Wilder recurrence is rounding-consistent, but EVR/CBOE parity remains `GAPS_PRESENT` because timestamp continuity is unresolved. Only a demonstrably new corrected export after compiling the revised ThinkScript could add new evidence.
+- Existing EVR/CBOE StrategyReport CSVs and persisted observations are already committed. Latest operator recheck: EVR 5m 327 observations / 20 compared / 2 gaps; CBOE 5m 338 / 20 / 1 gap. User reports chart bars beginning at 05:21 (EVR) and 06:15 (CBOE), but AM/PM/date/timezone are not yet anchored. See [Nov 7 ATR/catalyst evidence](docs/Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md). Do not ask for or re-import the same exports. Latest 5m ATR values are within numeric tolerance and Wilder recurrence is rounding-consistent, but EVR/CBOE parity remains `GAPS_PRESENT` because timestamp continuity is unresolved. Only a demonstrably new corrected export after compiling the revised ThinkScript could add new evidence.
 - A session-boundary gap-detector fix is committed: same-date 00:00–00:10 ET intervals wholly inside the 20:00–04:00 ET closure are excluded, while premarket-overlapping and after-hours gaps remain countable. Three regression tests passed; GitHub Actions build passed with 0 warnings/errors and 236/236 tests on `151cb97976121600833c8927bddf4cf175567b7b`. Local API parity re-read remains pending; no repeat export/import is needed.
-- The 20-training/20-unseen-test walk-forward validator is implemented; runtime qualification against 40 complete eligible sessions is not captured. It is blocked by source-qualified GTC_EXT evidence and the known SIP restriction.
+- Catalyst human-review validation endpoint is implemented, but the operator's latest local response has zero saved reviews and therefore no holdout metrics. Real positive and negative human adjudications remain required. The 20-training/20-unseen-test walk-forward validator is implemented; runtime qualification against 40 complete eligible sessions is not captured. It is blocked by source-qualified GTC_EXT evidence and the known SIP restriction.
 - New PowerShell evidence scripts: `scripts/validation/Capture-DashboardBrowserDiagnostics.ps1` (CDP console/network/screenshot) and `scripts/validation/Test-RegularSessionStreamCollector.ps1` (regular-session WebSocket/collector polling). See [Browser and Stream Collector Acceptance](docs/Validation/Browser-and-Stream-Collector-Acceptance-20261106.md).
-- Canonical current checklist: [Master To-Do](docs/Master-To-Do.md). Current continuation: [New Chat Handoff](docs/NewChatHandoff-20261106.md). Detailed backlog: [Active Engineering Backlog](docs/Active-Engineering-Backlog-20261106.md).
+- Canonical current checklist: [Master To-Do](docs/Master-To-Do.md). Current continuation: [New Chat Handoff](docs/NewChatHandoff-20261107.md). Detailed backlog: [Active Engineering Backlog](docs/Active-Engineering-Backlog-20261106.md).
 
 **Safety boundary:** MCC is decision-support-only. Order submission is NOT IMPLEMENTED. Missing, stale, incomplete, or unverified inputs remain UNKNOWN / DATA? and never become READY by assumption.
 
@@ -289,3 +289,12 @@ The qualification panel also exposes an append-only human catalyst review queue 
 Repeated recent Alpaca SIP requests returned HTTP 403 because the account subscription does not permit recent SIP data. This is a known external blocker. Do not repeat SIP requests or ask the operator to reconfigure/test SIP. IEX remains partial-exchange diagnostic coverage; SIP-dependent qualification, live movers, and GTC_EXT target research remain parked unless the operator independently reports a genuine entitlement change.
 
 The GTC_EXT exact-window capture and the fail-closed sell-limit calculator exist, but a provenance-bound end-to-end calculation and validated walk-forward result are still outstanding. Wilder ATR code exists; Thinkorswim numeric parity is not established. Numeric sell limits remain withheld until exact SIP coverage, matched ATR evidence and walk-forward validation are complete.
+
+
+## November 7 operator evidence update
+
+The current feature-branch head `b212caf0c2d1df0393fdcc05b5f872c0966aeb67` passed GitHub Actions [run 42340443270](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42340443270). This is repository CI only, not local runtime or Thinkorswim acceptance.
+
+Latest local ATR recheck remains `GAPS_PRESENT`: EVR 5m has 2 timestamp gaps; CBOE 5m has 1. The chart-visible bar-start observations reported by the operator still need exact date, AM/PM and timezone alignment before changing the detector or requesting a new export. Catalyst validation currently has zero human review records and no measurable holdout metrics. Do not invent labels, synthesize bars, relax tolerance, or promote unknown catalyst state to CLEAR.
+
+Current operator steps: [New Chat Handoff 2026-11-07](docs/NewChatHandoff-20261107.md). Full recorded evidence: [ATR and Catalyst Operator Evidence 2026-11-07](docs/Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
