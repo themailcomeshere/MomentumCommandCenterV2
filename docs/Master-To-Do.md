@@ -17,6 +17,39 @@
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
 
+## Operator correction and implementation — 2026-11-08 (confirmed no-bar intervals + review conflict repair)
+
+### ATR source continuity
+
+The operator explicitly confirms all three parity discontinuities have **no visible Thinkorswim candles** and that the Strategy Report export accurately matches the chart. This is authoritative operator evidence; do not ask for another crosshair inspection or treat these as export omissions.
+
+- [x] EVR Nov 5 04:00–09:00 ET: 61 scheduled 5m slots have no TOS candles; export is accurate.
+- [x] EVR Nov 5 09:10–09:25 ET: 4 scheduled 5m slots have no TOS candles; export is accurate.
+- [x] CBOE Nov 4 16:05–18:35 ET: 31 scheduled 5m slots have no TOS candles; export is accurate.
+- [x] Recorded these exact three intervals as operator-confirmed no-bar adjudications in `AtrVerifiedNoBarIntervals`. The parity evaluator now excludes only exact, symbol/timeframe/timestamp-matched adjudications from the unresolved-gap gate. Unrecognized gaps still block MATCH.
+- [x] Added regression tests for all three exact no-bar windows. Wilder ATR recurrence remains calculated over actual observed bars; no bar is fabricated or imputed.
+- [ ] Pull/rebuild/restart the API and re-query parity. Expected: EVR and CBOE numeric errors remain within 0.00005, unresolved timestamp gap count 0, verified no-bar interval count 2 and 1 respectively, status MATCH. This expected runtime result is not yet operator-verified.
+
+### Catalyst human-review integrity
+
+Latest operator result: raw reviews 4, included 0, excluded 4, conflicting article groups 1, non-evaluable labels 2, conflicting review records 2, no missing saved predictions. The single conflict is not safe to resolve without article-level details.
+
+- [x] Added article-level conflict diagnostics to validation output: symbol/article identity, conflicting labels, review IDs, saved predictions, timestamps, headlines and URLs.
+- [x] Added append-only explicit supersession support. A new adjudication can supersede prior review IDs only when those IDs exist and belong to the same symbol/article. Superseded rows remain in the audit log but no longer participate in validation.
+- [x] Added regression tests for conflict details and explicit supersession.
+- [ ] Pull/rebuild/restart, query validation and inspect `conflictingArticles`; open the actual source and determine the correct label. Do not guess which of the two labels is correct.
+- [ ] Submit one source-backed adjudication with the preserved saved triage prediction, rationale in Notes, and `supersedesReviewIds` containing both conflicting review IDs. Re-query validation.
+- [ ] Keep the two UNCERTAIN reviews excluded unless their original sources support a new independent adjudication. Then collect additional positive and negative source-verified reviews until at least six eligible records and a meaningful chronological holdout exist.
+
+### Acceptance state
+
+- [x] TOS chart absence confirmed by operator; export accuracy confirmed.
+- [x] Exact three no-bar intervals explicitly adjudicated in code.
+- [ ] Runtime ATR parity MATCH — pending operator rebuild/recheck.
+- [x] Catalyst conflict diagnostics and safe correction/supersession mechanism implemented.
+- [ ] Catalyst validation — still INSUFFICIENT_LABELS until a real conflict is adjudicated and more human labels are collected.
+- [ ] No classifier promotion authorized.
+
 ## Operator evidence update — 2026-11-08 (session coverage + catalyst sample)
 
 ### P0 — ATR source continuity
@@ -25,14 +58,15 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Operator queried the read-only persisted-observation coverage endpoint for EVR and CBOE and supplied complete JSON. Results are recorded in [ATR and Catalyst Operator Evidence](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
 - [x] Reconciled per-session coverage against prior parity gaps. EVR Nov 2–4 has systematic leading/trailing omissions; EVR Nov 5 starts at 00:00 ET but ends at 15:55 ET. CBOE Nov 4 has an interior 16:05–18:35 ET gap and ends at 18:40 ET; CBOE Nov 5 starts 09:30 ET and ends 16:05 ET.
 - [x] Confirmed the read-only endpoint measures expected 04:00–20:00 ET slots from persisted TOS observations only. It cannot establish that an absent slot had a chart candle or eligible trade.
-- [ ] Inspect exact intervals in Thinkorswim using crosshair/data-box timestamps; record candle presence and compile the corrected V2.1 study in TOS.
-- [ ] If TOS shows candles absent from the export, create a complete-range corrected export and import only genuinely new/corrected payload observations. If no candle exists, preserve no-bar evidence; never impute.
-- [ ] Re-run parity after an actual source correction. Require numeric tolerance and continuity to pass independently; retain GAPS_PRESENT until resolved.
+- [x] Operator confirmed no candles appear in the three exact intervals and the export accurately reflects TOS. No additional chart inspection or re-export is needed.
+- [x] Added exact operator-confirmed no-bar adjudications; unrecognized timestamp gaps remain blocking.
+- [ ] Rebuild/restart and verify ATR parity reports MATCH with verified no-bar interval counts.
 
 ### P1 — Catalyst human validation
 
-- [x] Operator re-queried validation after the six-review structural-minimum safeguard was deployed. Runtime reports raw=3, eligible=1, excluded=2, conflicts=0, train=0, holdout=0.
-- [x] Confirmed the one eligible review is EWTX / article 117008554 / MATERIAL_RISK versus saved UNCLASSIFIED (false negative). ENOV and ARDT remain UNCERTAIN and excluded. Do not relabel without source-level adjudication.
+- [x] Operator re-queried validation: raw=4, eligible=0, excluded=4, conflicting article groups=1, non-evaluable labels=2, conflicting records=2.
+- [x] Added conflict detail output and append-only supersession support to permit explicit source-backed adjudication without deleting audit history.
+- [ ] Inspect the conflicting article IDs/labels after rebuild, resolve only with source evidence, and continue collecting positive/negative labels.
 - [x] Confirmed six eligible unique non-conflicting reviews are only a structural floor for a two-row chronological holdout, not statistical qualification.
 - [ ] Collect additional source-verified positive and negative human labels, with saved triage predictions and rationale. Do not count UNCERTAIN, duplicates, missing predictions, or unsupported labels toward the minimum.
 - [ ] Re-query validation after each batch; continue until the later chronological holdout contains both truth classes, then expand substantially and double-review a subset.
@@ -41,9 +75,9 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 
 - [x] Swagger ATR file upload control — operator verified.
 - [x] Read-only ATR session-coverage endpoint — operator verified for EVR and CBOE.
-- [ ] ATR source continuity / TOS chart-side candle adjudication — BLOCKED on operator chart evidence.
-- [ ] ATR numeric + continuity parity MATCH — NOT ACHIEVED; prior EVR/CBOE results remain GAPS_PRESENT.
-- [ ] Catalyst training/holdout validation — BLOCKED by one eligible human review; no metrics can be computed.
+- [x] ATR source continuity adjudication — operator confirmed all three gaps are genuine no-candle periods and exports are accurate.
+- [ ] ATR numeric + continuity parity MATCH — code now recognizes those exact no-bar intervals; runtime verification pending.
+- [ ] Catalyst training/holdout validation — currently zero eligible reviews due to one conflicting article group and two non-evaluable labels; source adjudication and additional reviews required.
 - [ ] Catalyst classifier promotion — NOT AUTHORIZED.
 
 ## Engineering continuation — 2026-11-07 (operator exact gaps + feature implementation)
