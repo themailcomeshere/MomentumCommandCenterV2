@@ -247,3 +247,36 @@ The validator now requires **six eligible unique reviews** before creating a chr
 - Code commit: `23cc4f647f4cbc4a0920c76a086b3391e3d26891`
 - Test commit: `545fd4f330d5e0e47d7d0972e77aa81151791d66`
 - Latest CI run: [42518620507](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42518620507) — queued at handoff update; verify before claiming pass.
+
+
+## 2026-11-08 follow-up — runtime output and API usability
+
+User reports Swagger `POST /api/strategy-report/atr-import` displayed only Execute. Root cause: route consumes `HttpRequest.ReadFormAsync` but had no OpenAPI multipart request schema. Added explicit form schema with required `file`, `atrPeriod`, `atrAverageType`, `chartTimezone`, `extendedHours`, and `corporateActionAdjustment` fields. Also added read-only persisted coverage endpoint:
+
+`GET /api/strategy-report/atr-session-coverage?symbol=EVR&timeframe=5m`
+
+Use same endpoint with `symbol=CBOE`. No import is performed and no rows are changed.
+
+### Runtime parity supplied by operator
+- EVR: 327 source observations; 20 compared bars; MAE 0.0000294330; max error 0.0000495349 (inside 0.00005 tolerance); two timestamp gaps; status GAPS_PRESENT.
+- EVR gaps: Nov 5 04:00–09:00 ET (61 scheduled 5m slots) and 09:10–09:25 ET (4 slots).
+- CBOE: 338 source observations; 20 compared bars; MAE 0.0000203866; max error 0.0000426076 (inside tolerance); one timestamp gap; status GAPS_PRESENT.
+- CBOE gap: Nov 4 16:05–18:35 ET (31 scheduled 5m slots).
+- Numeric parity passes the configured tolerance for both symbols; timestamp continuity does not. Keep both unqualified.
+
+The prior catalyst endpoint response note says minimum two; that is stale code. Current branch code requires six eligible unique reviews. The current three-review dataset still yields one eligible review, so remains insufficient.
+
+### CI and build failure diagnosis
+Run 42518610557 failed because the test still expected `INSUFFICIENT_HOLDOUT_CLASS_COVERAGE` after the new six-review minimum changed the correct status to `INSUFFICIENT_LABELS`. Test expectation was corrected in commit `545fd4f`; run 42518620507 passed. The subsequent import-schema/coverage endpoint commits are under CI run [42519899439](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42519899439), pending at this note.
+
+### Next operator steps
+1. Pull latest feature branch and rerun `.\scripts\Get-Latest-And-Test.ps1`. If local build still fails, capture the six actual compiler error lines (CSxxxx plus file/line); the earlier GitHub CI failure was a test assertion, not a build error.
+2. Restart API. Swagger should show a multipart form with a file picker and five metadata controls. The endpoint requires all fields.
+3. Call read-only session coverage endpoint for EVR and CBOE; do not import old CSVs.
+4. Inspect TOS charts for the exact gaps above and report each visible candle timestamp or confirm no candle. Only export/import genuinely missing TOS rows.
+5. Collect additional catalyst reviews from independently verified source articles. Keep uncertain articles uncertain.
+
+[Uncertainties]
+- Chart evidence still does not establish whether missing ATR slots correspond to chart bars or no-bar intervals.
+- Local build's six compiler errors are not included in the user's message, so exact local error cause cannot be diagnosed from the supplied summary alone.
+- Latest Swagger/coverage endpoint CI was pending at this handoff revision.
