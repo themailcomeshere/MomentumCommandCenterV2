@@ -6,6 +6,9 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// </summary>
 public static class CatalystHumanReviewValidation
 {
+    // A 20% chronological holdout needs at least two observations; six eligible
+    // unique reviews is the smallest sample that yields a two-row holdout.
+    public const int MinimumEligibleReviews = 6;
     public static CatalystHumanReviewValidationResult Evaluate(
         IReadOnlyCollection<CatalystHumanReviewRecord> records)
     {
@@ -39,9 +42,9 @@ public static class CatalystHumanReviewValidation
         var excluded = records.Count - deduplicated.Length;
         var breakdown = new CatalystHumanReviewExclusionBreakdown(
             missingPrediction, nonEvaluableLabel, duplicateRecords, conflictingRecords);
-        if (deduplicated.Length < 2)
+        if (deduplicated.Length < MinimumEligibleReviews)
             return Empty(records.Count, deduplicated.Length, excluded, conflicts, breakdown,
-                "INSUFFICIENT_LABELS: at least two unique, non-conflicting reviews with a saved triage prediction are required.");
+                $"INSUFFICIENT_LABELS: at least {MinimumEligibleReviews} unique, non-conflicting reviews with saved triage predictions are required to form a two-observation 20% chronological holdout; received {deduplicated.Length}. This is only a structural minimum, not statistical qualification.");
 
         // The later 20% of reviewed articles is held out chronologically. This does not
         // tune the fixed rules; it prevents reporting in-sample metrics as holdout results.
