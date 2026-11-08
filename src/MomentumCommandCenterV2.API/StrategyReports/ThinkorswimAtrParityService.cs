@@ -143,7 +143,7 @@ public static class ThinkorswimAtrParityService
                 : status == "GAPS_PRESENT"
                     ? "ATR values are within numeric tolerance, but one or more intraday source timestamp gaps are not covered by explicit operator-confirmed no-candle adjudications. No gap is imputed and parity is not MATCH."
                     : "Server Wilder ATR does not match the exported Thinkorswim ATR within the four-decimal export rounding bound. Numeric sell-limit orchestration must remain blocked. This comparison uses the imported TOS OHLCV bars and does not diagnose provider-feed differences.",
-            unresolvedGapDetails, verifiedGapDetails.Length);
+            unresolvedGapDetails, verifiedGapDetails.Length, verifiedGapDetails);
     }
 
     private static ThinkorswimAtrParityResult Empty(string reason, string status = "NO_DATA") =>
