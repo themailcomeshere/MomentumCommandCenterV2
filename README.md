@@ -324,3 +324,6 @@ Catalyst review validation currently has three saved records: two UNCERTAIN reco
 
 
 Catalyst validation now fails closed until at least six eligible unique reviews exist to form a two-row chronological holdout. This is a structural floor only, not statistical qualification; the current three-review set has only one eligible observation. See the Master To-Do and current handoff.
+
+
+The ATR import Swagger operation now declares its multipart file and metadata fields. A read-only `/api/strategy-report/atr-session-coverage` endpoint exposes persisted per-session coverage without re-importing. Latest supplied parity evidence: EVR 2 timestamp gaps and CBOE 1 timestamp gap; numeric errors are within tolerance but neither series qualifies as MATCH. See the Master To-Do and current handoff for exact intervals and operator steps.
