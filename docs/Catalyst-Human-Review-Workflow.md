@@ -68,3 +68,34 @@ The existing Alpaca news endpoint returns ticker-linked articles, but article-le
 5. MCC appends the record to its local review store. The UI confirms the review ID/status; it does not change the automated catalyst assessment or candidate decision.
 
 The production and prototype dashboard both expose this queue. Articles only appear after a successful catalyst fetch; no-news remains UNKNOWN and is not a labelable article.
+
+
+## Resolving conflicting reviews (append-only correction)
+
+The validation endpoint now returns a `conflictingArticles` array. Each entry includes the symbol/article identity, conflicting labels, and the review IDs, saved predictions, timestamps, headlines and URLs for the conflicting records.
+
+After reviewing the original article/filing, submit one new adjudication. Preserve the triage prediction that was saved for the reviewed article, provide a rationale in `notes`, and supersede both conflicting review IDs:
+
+```json
+{
+  "symbol": "SYMBOL_FROM_CONFLICT_DETAILS",
+  "articleId": "ARTICLE_ID_FROM_CONFLICT_DETAILS",
+  "headline": "Original article headline",
+  "url": "https://publisher.example/original-article",
+  "publishedAtUtc": "2026-11-06T20:00:00Z",
+  "source": "Original publisher",
+  "label": "MATERIAL_RISK",
+  "ruleSetVersion": "MCC-CATALYST-TRIAGE-1.0",
+  "notes": "Source-backed adjudication. Explain why this label supersedes the two prior reviews.",
+  "predictedSeverity": "UNCLASSIFIED",
+  "predictedCategories": [],
+  "supersedesReviewIds": [
+    "FIRST_CONFLICTING_REVIEW_ID",
+    "SECOND_CONFLICTING_REVIEW_ID"
+  ]
+}
+```
+
+The values above are a schema example only; do not copy the placeholder values or choose a label/prediction without inspecting the actual conflict and original source. The API checks that each superseded ID exists and belongs to the same symbol/article. Original records are retained in the append-only audit log; superseded records no longer participate in validation. Query `GET /api/market-data/catalyst-reviews/validation` again afterward.
+
+The two non-evaluable reviews in the operator's latest response remain excluded unless their source material supports an independent new adjudication. Do not turn UNCERTAIN into a positive or negative label to increase sample size.
