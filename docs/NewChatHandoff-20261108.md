@@ -2,7 +2,7 @@
 
 **Repository:** themailcomeshere/MomentumCommandCenterV2  
 **Working branch:** feature/opportunity-quality-classification  
-**Documentation commits:** Master To-Do 5f4ab9b13a2c8e9d5a5b6599f53d4046eac88e3c; operator evidence 8d578c2e95657c84e0e60964d1ac3e9e4b39c8c7  
+**Latest implementation and documentation:** see feature branch head; latest handoff update includes exact no-bar adjudications and conflict resolution workflow.  
 **Pre-documentation code head:** 2c9f126067986699ef82b76cb6996d51978433dd  
 **GitHub Actions:** [42519967088 — success](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42519967088) on pre-documentation code head.  
 **Dashboard:** frontend/index.html at http://localhost:53360/  
@@ -20,62 +20,40 @@ Continue on the feature branch. Do not switch to PrototypeIndex or modify master
 - It does not establish whether an absent slot had a TOS candle or eligible trade. No bars are imputed.
 - Code/schema + endpoint commit 5720a6e046d621f69813bb83554d6894f30f6a62 passed [run 42519899439](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42519899439). Pre-documentation code head 2c9f126067986699ef82b76cb6996d51978433dd passed [run 42519967088](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42519967088).
 
-## 2. ATR source continuity — current evidence
+## 2. ATR source continuity — operator-confirmed no-bar intervals
 
-All times below are Eastern Standard Time.
+The operator explicitly confirmed all three missing intervals have no visible TOS candles and the Strategy Report export accurately reflects the chart. Do not ask for another crosshair inspection, re-export, or compile just to fill these gaps.
 
-| Symbol | Date | First → last observed ET | Leading missing | Trailing missing |
-|---|---|---|---:|---:|
-| EVR | Nov 2 | 09:30 → 16:00 | 66 (04:00–09:25) | 47 (16:05–19:55) |
-| EVR | Nov 3 | 09:00 → 16:00 | 60 (04:00–08:55) | 47 (16:05–19:55) |
-| EVR | Nov 4 | 09:00 → 16:00 | 60 (04:00–08:55) | 47 (16:05–19:55) |
-| EVR | Nov 5 | 00:00 → 15:55 | 0 | 48 (16:00–19:55) |
-| CBOE | Nov 4 | 00:45 → 18:40 | 0 | 15 (18:45–19:55) |
-| CBOE | Nov 5 | 09:30 → 16:05 | 66 (04:00–09:25) | 46 (16:10–19:55) |
+| Symbol | Date | ET interval | Missing slots | Exact missing UTC timestamps | Source adjudication |
+|---|---|---|---:|---|---|
+| EVR | Nov 5 | 04:00–09:00 | 61 | 09:00Z–14:00Z | No candles in TOS; export accurate |
+| EVR | Nov 5 | 09:10–09:25 | 4 | 14:10Z–14:25Z | No candles in TOS; export accurate |
+| CBOE | Nov 4 | 16:05–18:35 | 31 | 21:05Z–23:35Z | No candles in TOS; export accurate |
 
-These leading/trailing counts are distinct from interior parity gaps:
-- EVR Nov 5: 4 missing slots, 09:10–09:25 ET.
-- CBOE Nov 4: 31 missing slots, 16:05–18:35 ET.
+The new code records only these exact symbol/timeframe/expected-timestamp intervals as verified no-bar periods. They are removed from unresolved gap count; all other unexpected gaps still block parity. Wilder ATR recurrence uses actual observed OHLCV rows only; no synthetic or imputed bars.
 
-The prior EVR 5m and CBOE 5m parity responses were GAPS_PRESENT. Their prior MAE/max error were within 0.00005 tolerance, but continuity did not qualify. The latest operator message did not include fresh numeric parity values.
+The operator's latest numeric results remain within tolerance:
+- EVR MAE 0.0000294330206093993971654557; max 0.0000495349247567752940205113; tolerance 0.00005.
+- CBOE MAE 0.0000203865947752491599540927; max 0.0000426076307464691409374068; tolerance 0.00005.
 
-### Required to finish ATR continuity
+**Expected after deployment:** EVR parity MATCH, unresolved gaps 0, verified no-bar intervals 2; CBOE parity MATCH, unresolved gaps 0, verified no-bar intervals 1. This is not yet runtime-verified. Pull/rebuild/restart and query both endpoints.
 
-1. Open EVR 5m Nov 5 and CBOE 5m Nov 4 in Thinkorswim. Verify 5m aggregation, chart timezone America/Phoenix, extended hours ON, corporate-action adjustment ON, and corrected V2.1 payload study.
-2. Use crosshair/data-box timestamps to inspect EVR 04:00–09:00 ET and 09:10–09:25 ET; inspect CBOE 16:05–18:35 ET. Record actual candle presence and exact first/last timestamps.
-3. Clarify prior chart observations “EVR 05:21” and “CBOE 06:15” with AM/PM, exact date and displayed timezone. Do not map them to gaps until anchored.
-4. Compile corrected V2.1 ThinkScript in TOS. If a chart candle exists but is absent from export, export the full affected interval, verify embedded payload timestamps, then import only genuine new/corrected rows.
-5. If no chart candle exists, record no-bar behavior. Do not create zero-volume, interpolated or synthetic observations.
-6. Re-run parity after a real correction. Numeric tolerance and timestamp continuity are independent gates. Do not relax either gate to obtain MATCH.
+## 3. Catalyst validation — latest operator response and implemented repair
 
-Do not re-import previously inspected unchanged CSVs.
+Latest response: raw reviews 4; eligible 0; excluded 4; conflicts 1; training/holdout 0/0. Breakdown: no missing saved predictions, two non-evaluable labels, zero same-label duplicates, and two records participating in one conflicting article group.
 
-## 3. Catalyst validation — current evidence
+New code:
+- Validation returns `conflictingArticles` with article identity, conflicting labels, review IDs, saved prediction, timestamps, headlines and URLs.
+- Append-only review submission accepts `supersedesReviewIds`. IDs must exist and belong to the same symbol/article. Superseded reviews remain in audit history but are excluded from active validation.
+- Regression tests cover conflict detail and explicit supersession.
 
-Operator's current endpoint response:
-- INSUFFICIENT_LABELS
-- raw reviews 3; included unique 1; excluded 2; conflicts 0
-- training 0; holdout 0
-- minimum: 6 unique, non-conflicting reviews with saved triage predictions for a two-observation 20% chronological holdout. This is a structural minimum only, not statistical qualification.
+### Operator action after pulling/rebuilding
 
-| Symbol | Article ID | Human label | Saved prediction | Validation |
-|---|---|---|---|---|
-| ENOV | 116604852 | UNCERTAIN | MATERIAL | Excluded; retain UNCERTAIN |
-| ARDT | 116604839 | UNCERTAIN | MATERIAL | Excluded; retain UNCERTAIN |
-| EWTX | 117008554 | MATERIAL_RISK | UNCLASSIFIED | Included; false negative |
-
-One eligible observation cannot create training or holdout. Do not fabricate labels or relabel ENOV/ARDT based on a different article/source.
-
-### Required to finish catalyst validation
-
-1. In Dashboard Overnight Qualification, fetch and open actual source articles/filings.
-2. Save one review per unique symbol/article with a source-verified label and rationale. Include positive truth labels MATERIAL_RISK/MATERIAL_EVENT and negative truth labels NON_MATERIAL/IRRELEVANT. Use UNCERTAIN if evidence is insufficient.
-3. Each review must capture the saved triage prediction. Do not count missing-prediction records, duplicates, uncertain labels or conflicts.
-4. Re-query GET /api/market-data/catalyst-reviews/validation after each batch and preserve JSON.
-5. Reach at least six eligible unique reviews before a structural split can form; then continue to a substantially larger representative set. Ensure the later chronological holdout contains both positive and negative truth classes. Double-review a subset and assess reviewer agreement before classifier promotion.
-6. This evaluates fixed keyword triage; it does not train a model. UNKNOWN/no-news remains UNKNOWN and never CLEAR.
-
-Workflow: docs/Catalyst-Human-Review-Workflow.md.
+1. Query `GET /api/market-data/catalyst-reviews/validation`; inspect `conflictingArticles`.
+2. Open the actual article and decide the correct human label from the source, not the prediction.
+3. Submit a new POST review preserving the saved `predictedSeverity`, adding adjudication rationale in `notes`, and setting `supersedesReviewIds` to both conflicting review IDs. The API verifies both IDs refer to the same symbol/article.
+4. Re-query validation. The superseded records remain in raw audit history but no longer create an active conflict.
+5. Keep the two non-evaluable reviews excluded unless independently source-adjudicated. Collect more positive and negative labels; six eligible reviews remains only a structural minimum.
 
 ## 4. PowerShell verification after pulling
 
@@ -108,15 +86,16 @@ Do not import unchanged files. Do not retry SIP; known HTTP 403 entitlement rema
 - [x] Per-session leading/trailing coverage reconciled against known interior parity gaps.
 - [x] Six-eligible-review structural minimum documented and enforced in code.
 - [x] Three catalyst reviews reconciled: two UNCERTAIN excluded, one eligible false negative.
-- [ ] Inspect exact TOS chart candles in all requested intervals.
-- [ ] Compile corrected V2.1 ThinkScript in TOS.
-- [ ] Correct export only if TOS shows payload omissions; re-run ATR parity to MATCH.
-- [ ] Collect representative source-verified positive/negative catalyst reviews and achieve meaningful chronological holdout metrics.
-- [ ] Double-review a subset and assess agreement before classifier promotion.
+- [x] Operator confirmed the three exact intervals contain no TOS candles and export is accurate.
+- [x] Added exact no-bar adjudications to ATR parity; unresolved gaps remain fail-closed.
+- [ ] Pull/rebuild/restart and verify EVR/CBOE parity MATCH and verified no-bar counts.
+- [x] Added catalyst article-level conflict diagnostics and append-only supersession support.
+- [ ] Inspect and source-adjudicate the single conflicting article; submit supersession record.
+- [ ] Collect representative positive/negative reviews and achieve meaningful chronological holdout metrics; double-review a subset.
 
 ## [Uncertainties]
 
-- Actual TOS candle presence in absent intervals: Data not found in sources.
+- TOS candle presence is operator-confirmed absent for the three listed intervals; no-bar adjudications are in code.
 - Fresh numeric ATR MAE/max-error from latest operator recheck: Data not found in sources.
 - Prior 05:21 / 06:15 observations lack complete date/timezone/AM-PM anchors.
-- Catalyst metrics remain unavailable because only one review is eligible.
+- Catalyst metrics remain unavailable: latest validation reports zero eligible reviews and one conflicting article group.
