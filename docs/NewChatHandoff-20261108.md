@@ -30,7 +30,7 @@ The operator explicitly confirmed all three missing intervals have no visible TO
 | EVR | Nov 5 | 09:10–09:25 | 4 | 14:10Z–14:25Z | No candles in TOS; export accurate |
 | CBOE | Nov 4 | 16:05–18:35 | 31 | 21:05Z–23:35Z | No candles in TOS; export accurate |
 
-The new code records only these exact symbol/timeframe/expected-timestamp intervals as verified no-bar periods. They are removed from unresolved gap count; all other unexpected gaps still block parity. Wilder ATR recurrence uses actual observed OHLCV rows only; no synthetic or imputed bars.
+Parity version MCC-WILDER-ATR-PARITY-1.2 records only these exact symbol/timeframe/expected-timestamp intervals as verified no-bar periods. They are removed from unresolved gap count; all other unexpected gaps still block parity. Wilder ATR recurrence uses actual observed OHLCV rows only; no synthetic or imputed bars.
 
 The operator's latest numeric results remain within tolerance:
 - EVR MAE 0.0000294330206093993971654557; max 0.0000495349247567752940205113; tolerance 0.00005.
