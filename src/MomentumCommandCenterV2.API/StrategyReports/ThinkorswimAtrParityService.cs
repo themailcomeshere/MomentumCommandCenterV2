@@ -6,7 +6,7 @@ namespace MomentumCommandCenterV2.API.StrategyReports;
 /// </summary>
 public static class ThinkorswimAtrParityService
 {
-    public const string Version = "MCC-WILDER-ATR-PARITY-1.1";
+    public const string Version = "MCC-WILDER-ATR-PARITY-1.2";
     public const int DefaultWarmupBars = 99;
     public const int MinimumComparisonBars = 20;
     // TOS V2 payloads export ATR to at most four decimal places; this is half one unit of that precision.
