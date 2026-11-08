@@ -96,7 +96,8 @@ public sealed class CatalystHumanReviewStoreTests
         Assert.Equal(4, result.ExcludedReviewCount);
         Assert.Equal(1, result.ConflictingArticleCount);
         Assert.Equal(2, result.IncludedUniqueReviewCount);
-        Assert.Equal("INSUFFICIENT_HOLDOUT_CLASS_COVERAGE", result.Status);
+        Assert.Equal("INSUFFICIENT_LABELS", result.Status);
+        Assert.Contains("at least 6 unique", result.Note);
     }
 
     private static CatalystHumanReviewRecord Review(
