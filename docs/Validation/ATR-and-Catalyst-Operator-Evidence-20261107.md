@@ -276,7 +276,7 @@ The operator explicitly corrected the prior handoff: **the candles do not appear
 | EVR | 2026-11-05 | 4 | 09:10–09:25 | 14:10Z–14:25Z (inclusive, 5m) | No TOS candles; export accurate |
 | CBOE | 2026-11-04 | 31 | 16:05–18:35 | 21:05Z–23:35Z (inclusive, 5m) | No TOS candles; export accurate |
 
-These are legitimate no-bar intervals, not missing export rows. The API now has a narrowly scoped operator-confirmed no-bar registry for these exact symbol/timeframe/timestamp ranges. The parity evaluator removes only exact matches from the unresolved timestamp-gap gate and reports the number of verified no-bar intervals separately. Any other gap remains blocking. ATR recurrence uses actual observed OHLCV rows; no synthetic bars are introduced.
+These are legitimate no-bar intervals, not missing export rows. Parity version MCC-WILDER-ATR-PARITY-1.2 now has a narrowly scoped operator-confirmed no-bar registry for these exact symbol/timeframe/timestamp ranges. The parity evaluator removes only exact matches from the unresolved timestamp-gap gate and reports the number of verified no-bar intervals separately. Any other gap remains blocking. ATR recurrence uses actual observed OHLCV rows; no synthetic bars are introduced.
 
 The operator's supplied numeric results remain within tolerance:
 - EVR MAE 0.0000294330206093993971654557; max absolute error 0.0000495349247567752940205113; tolerance 0.00005.
