@@ -132,6 +132,43 @@ public sealed class CatalystHumanReviewStoreTests
         Assert.Equal(0, result.ExclusionBreakdown.ConflictingArticleReview);
     }
 
+    [Fact]
+    public async Task ExplicitSupersessionResolvesArticleConflictWithoutDeletingAuditHistory()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-catalyst-review-tests", Guid.NewGuid().ToString("N"));
+        var store = new CatalystHumanReviewStore(Path.Combine(directory, "reviews.jsonl"));
+        try
+        {
+            var published = DateTimeOffset.Parse("2026-11-06T20:00:00Z");
+            var first = await store.AppendAsync(new CatalystHumanReviewInput(
+                "EWTX", "article-1", "Headline", "https://example.com/a", published,
+                "Example", "MATERIAL_RISK", null, "First adjudication", "UNCLASSIFIED"),
+                CancellationToken.None);
+            await store.AppendAsync(new CatalystHumanReviewInput(
+                "EWTX", "article-1", "Headline", "https://example.com/a", published,
+                "Example", "NON_MATERIAL", null, "Conflicting adjudication", "UNCLASSIFIED"),
+                CancellationToken.None);
+
+            var correction = await store.AppendAsync(new CatalystHumanReviewInput(
+                "EWTX", "article-1", "Headline", "https://example.com/a", published,
+                "Example", "MATERIAL_RISK", null, "Reviewed source; supersedes incorrect prior label",
+                "UNCLASSIFIED", null, new[] { first.ReviewId }),
+                CancellationToken.None);
+
+            var records = await store.GetLatestAsync(null, 20, CancellationToken.None);
+            var result = CatalystHumanReviewValidation.Evaluate(records);
+            Assert.Equal(3, result.RawReviewCount);
+            Assert.Equal(0, result.ConflictingArticleCount);
+            Assert.Equal(1, result.IncludedUniqueReviewCount);
+            Assert.Equal(2, result.ExclusionBreakdown!.SupersededReviewCount);
+            Assert.Contains(first.ReviewId, correction.SupersedesReviewIds!);
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
     [Theory]
     [InlineData("CLEAR")]
     [InlineData("CLEAR_WITH_SOURCE")]
