@@ -224,3 +224,27 @@ The current Daily task is no longer “script not run”; it is “script run, i
 Detailed evidence and operator sequence: [ATR-and-Catalyst-Operator-Evidence-20261107.md](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md) and [NewChatHandoff-20261107.md](NewChatHandoff-20261107.md).
 
 **Status:** ATR parity remains blocked by unresolved source timestamp continuity; catalyst validation remains insufficient because the local human-review store is empty. No numeric sell limit or catalyst CLEAR is authorized.
+
+
+## Operator update — 2026-11-08 UTC / local evening Nov 7
+
+- [x] Operator confirmed local source SHA `bb6a04aedc6f3cbfda1250a7cc9d8d676594419e` and API health OK / decision-support-only / order submission NOT IMPLEMENTED.
+- [x] Reviewed new CBOE and EVR inspect import responses. Both imports were idempotent (82/82 and 78/78 identical; zero appended/corrections).
+- [x] Identified that the requested chart windows were NOT included in these exports: EVR file starts 09:30 ET (requested intervals end 09:25 ET); CBOE file ends 15:55 ET (requested interval starts 16:05 ET). Do not interpret their zero/interior gap count as inspection of omitted time ranges.
+- [x] Identified importer diagnostics gap: prior import result only counted interior gaps and did not report leading/trailing scheduled 04:00–20:00 ET coverage.
+- [x] Added per-Eastern-session leading/trailing coverage diagnostics to the ATR import result. Added a regression test for 09:30–15:55 ET partial export (66 leading 5m slots, 48 trailing slots). These are scheduled-slot coverage warnings, not proof of chart candles.
+- [x] Added catalyst validation exclusion breakdown: missing saved prediction, non-evaluable label, duplicate same-label review, conflicting-article review.
+- [x] Updated Dashboard validation status to show those exclusion reasons.
+- [x] Added tests for the catalyst exclusion breakdown.
+- [x] GitHub Actions passed for ATR coverage parser/test commits and catalyst validation/test commits through `72a8cafd04df931d72726c628f38faaed3f9fd77`.
+- [ ] Confirm latest Dashboard commit CI completion before treating the entire new head as green.
+- [ ] Pull latest feature branch, rebuild and restart local API; operator's verified local SHA predates these commits.
+- [ ] Re-export EVR 5m with payload timestamps covering 04:00–09:25 ET on Nov 5; verify first/last timestamps before import.
+- [ ] Re-export CBOE 5m with payload timestamps covering 16:00–18:40 ET on Nov 4; verify first/last timestamps before import.
+- [ ] Do not re-import the existing inspect CSVs: they added zero rows.
+- [ ] Re-query catalyst validation and copy `exclusionBreakdown`; retrieve the 3 stored records to identify which two are excluded. The exact reason counts are currently Data not found in sources.
+- [ ] Continue collecting unique, evaluable positive and negative article labels; metrics remain unavailable until a chronological holdout includes both truth classes.
+
+Detailed evidence: [ATR-and-Catalyst-Operator-Evidence-20261107.md](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
+
+**Current status:** ATR export inspection was not aligned to the requested windows; partial-session diagnostics are now implemented but require local deployment. Catalyst review save succeeded for three records, but only one is eligible; new exclusion diagnostics will explain the two exclusions after deployment. No parity pass or catalyst clearance is established.
