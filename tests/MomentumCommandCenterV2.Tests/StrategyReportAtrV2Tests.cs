@@ -384,4 +384,29 @@ public sealed class StrategyReportAtrV2Tests
     private static StrategyReportAtrImportMetadata Metadata() => new(
         "test.csv", "MCC_OHLCV_ATR_V2.1", 14, "Wilder", "America/Phoenix",
         true, true, "batch-1", DateTimeOffset.UtcNow);
+
+    [Fact]
+    public void ReportsLeadingAndTrailingExtendedHoursCoverageForPartialExport()
+    {
+        var start = DateTimeOffset.Parse("2026-11-06T14:30:00Z"); // 09:30 ET
+        var rows = Enumerable.Range(0, 78).Select(index =>
+        {
+            var timestamp = start.AddMinutes(index * 5).ToUnixTimeMilliseconds();
+            return $"{index + 1};MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{timestamp}|100|101|99|100|1000|2.0);Buy to Open;";
+        });
+        var report = "Strategy report\\nSymbol: EVR\\nId;Strategy;Side;\\n" + string.Join("\\n", rows);
+
+        var result = StrategyReportAtrV2Parser.Parse(report);
+
+        var coverage = Assert.Single(result.SessionCoverage!);
+        Assert.Equal(new DateOnly(2026, 11, 6), coverage.EasternSessionDate);
+        Assert.Equal(66, coverage.MissingLeadingIntervalCount);
+        Assert.Equal(48, coverage.MissingTrailingIntervalCount);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-06T09:00:00Z"), coverage.FirstMissingLeadingAtUtc);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-06T14:25:00Z"), coverage.LastMissingLeadingAtUtc);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-06T21:00:00Z"), coverage.FirstMissingTrailingAtUtc);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-07T00:55:00Z"), coverage.LastMissingTrailingAtUtc);
+    }
+
+
 }
