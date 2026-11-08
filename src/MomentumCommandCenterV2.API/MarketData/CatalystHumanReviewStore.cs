@@ -34,6 +34,29 @@ public sealed class CatalystHumanReviewStore(string? path = null)
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_path))!);
+            var supersedes = (input.SupersedesReviewIds ?? Array.Empty<string>())
+                .Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim())
+                .Distinct(StringComparer.Ordinal).ToArray();
+            if (supersedes.Length > 0)
+            {
+                if (!File.Exists(_path))
+                    throw new ArgumentException("Superseded review IDs must reference existing saved reviews.", nameof(input));
+                var existing = File.ReadLines(_path)
+                    .Where(line => !string.IsNullOrWhiteSpace(line))
+                    .Select(line => JsonSerializer.Deserialize<CatalystHumanReviewRecord>(line, JsonOptions))
+                    .Where(x => x is not null).ToArray();
+                foreach (var reviewId in supersedes)
+                {
+                    var prior = existing.SingleOrDefault(x => x!.ReviewId.Equals(reviewId, StringComparison.Ordinal));
+                    if (prior is null)
+                        throw new ArgumentException($"Superseded review ID '{reviewId}' was not found.", nameof(input));
+                    var sameArticle = prior.Symbol.Equals(input.Symbol.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                        (string.IsNullOrWhiteSpace(prior.ArticleId) ? prior.Url : prior.ArticleId)
+                            .Equals(string.IsNullOrWhiteSpace(input.ArticleId) ? input.Url : input.ArticleId, StringComparison.OrdinalIgnoreCase);
+                    if (!sameArticle)
+                        throw new ArgumentException($"Review ID '{reviewId}' does not belong to this symbol/article.", nameof(input));
+                }
+            }
             var record = new CatalystHumanReviewRecord(
                 Guid.NewGuid().ToString("N"),
                 input.Symbol.Trim().ToUpperInvariant(),
@@ -47,7 +70,8 @@ public sealed class CatalystHumanReviewStore(string? path = null)
                 input.Notes?.Trim(),
                 DateTimeOffset.UtcNow,
                 string.IsNullOrWhiteSpace(input.PredictedSeverity) ? null : input.PredictedSeverity.Trim().ToUpperInvariant(),
-                input.PredictedCategories?.Select(x => x.Trim().ToUpperInvariant()).Where(x => x.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? Array.Empty<string>());
+                input.PredictedCategories?.Select(x => x.Trim().ToUpperInvariant()).Where(x => x.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? Array.Empty<string>(),
+                supersedes);
             await using var stream = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read,
                 16 * 1024, FileOptions.Asynchronous);
             await using var writer = new StreamWriter(stream);
@@ -117,6 +141,8 @@ public sealed class CatalystHumanReviewStore(string? path = null)
             throw new ArgumentException("PredictedSeverity must be RISK, MATERIAL, or UNCLASSIFIED.", nameof(input));
         if (input.PredictedCategories?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 100) == true)
             throw new ArgumentException("PredictedCategories must contain non-empty values of at most 100 characters.", nameof(input));
+        if (input.SupersedesReviewIds?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 64) == true)
+            throw new ArgumentException("SupersedesReviewIds must contain non-empty review IDs of at most 64 characters.", nameof(input));
     }
 }
 
@@ -131,7 +157,8 @@ public sealed record CatalystHumanReviewInput(
     string? RuleSetVersion = null,
     string? Notes = null,
     string? PredictedSeverity = null,
-    IReadOnlyList<string>? PredictedCategories = null);
+    IReadOnlyList<string>? PredictedCategories = null,
+    IReadOnlyList<string>? SupersedesReviewIds = null);
 
 public sealed record CatalystHumanReviewRecord(
     string ReviewId,
@@ -146,4 +173,5 @@ public sealed record CatalystHumanReviewRecord(
     string? Notes,
     DateTimeOffset ReviewedAtUtc,
     string? PredictedSeverity = null,
-    IReadOnlyList<string>? PredictedCategories = null);
+    IReadOnlyList<string>? PredictedCategories = null,
+    IReadOnlyList<string>? SupersedesReviewIds = null);
