@@ -264,3 +264,42 @@ Detailed evidence: [ATR-and-Catalyst-Operator-Evidence-20261107.md](Validation/A
 - [ ] Require a chronological holdout with both truth classes plus a larger representative sample and reviewer-agreement check before considering classifier promotion.
 
 **Current status:** Import diagnostics are now returned to the caller, but the supplied source exports are still incomplete. Catalyst validation is correctly fail-closed and has one eligible false-negative example; holdout qualification remains unavailable.
+
+
+## 2026-11-08 — ATR source continuity and catalyst validation execution
+
+### Completed engineering and evidence audit
+- [x] Confirmed latest feature-branch head before this update: `6234b3959ec8de315cbca2ffbd04719d74c4149f`; exact-head GitHub Actions run [42516614630](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42516614630) completed **success**.
+- [x] Re-read the current branch README, Master To-Do, active handoff, catalyst workflow, ATR parser/parity service, JSONL observation store, validation service, and API route implementation.
+- [x] Confirmed the import route now returns `sessionCoverage`; this is a response diagnostic only. It does not reconstruct missing source observations.
+- [x] Confirmed existing EVR/CBOE inspect exports are idempotent (0 appended); do not re-import them.
+- [x] Confirmed current catalyst evidence: ENOV and ARDT are UNCERTAIN and excluded; EWTX is one eligible false negative. Eligible sample=1; training=0; holdout=0. Do not alter labels to inflate the sample.
+- [x] Recorded the exact difference between export completeness and actual chart continuity: CSVs alone cannot distinguish a missing export row from a legitimate no-bar/no-print interval.
+
+### P0 — ATR source continuity (still blocked on source-of-truth evidence)
+- [ ] Operator must inspect the exact Thinkorswim 5m charts with crosshair/data-box timestamps: EVR 2026-11-05 04:00–09:00 ET and 09:10–09:25 ET; CBOE 2026-11-04 16:05–18:35 ET. Record each visible bar's timestamp or explicitly record no bar.
+- [ ] For each visible TOS bar missing from the export, generate a new export containing the interval, verify its embedded epoch payload, and import only genuinely new/corrected observations.
+- [ ] For intervals with no TOS bar, record no-bar evidence and keep the parity gate fail-closed until the product contract explicitly distinguishes no-print intervals from export omissions.
+- [ ] Re-run ATR parity after any new observation. Require 99 consecutive eligible bars in the actual parity window; do not let a numeric MAE pass override unresolved continuity.
+- [ ] Do not substitute IEX for consolidated SIP/TOS source continuity. SIP entitlement remains an external HTTP 403 blocker; Data not found in sources for any changed entitlement status.
+
+### P1 — Catalyst validation (still blocked on independently adjudicated labels)
+- [ ] Independently inspect the original ENOV and ARDT articles. Their saved UNCERTAIN labels remain unchanged unless the reviewer confirms the official IR/SEC item is the same event and records a new justified review.
+- [ ] Add source-verified MATERIAL_RISK/MATERIAL_EVENT and NON_MATERIAL/IRRELEVANT examples. Include false positives, false negatives, and ambiguous cases; never treat no-news/missing-feed as a negative.
+- [ ] Continue until the chronological holdout has both human truth classes; six eligible unique reviews is only the structural floor for a two-row 20% holdout, not a statistically meaningful sample. Target a materially larger balanced set and double-review a subset before promotion.
+- [ ] Re-query `GET /api/market-data/catalyst-reviews/validation`; retain raw JSON and inspect exclusion breakdown. Do not train/tune or promote from the current one-row sample.
+
+### Operator verification — exact commands
+```powershell
+$base = "http://localhost:53360"
+Invoke-RestMethod "$base/api/health" | ConvertTo-Json -Depth 8
+Invoke-RestMethod "$base/api/market-data/catalyst-reviews/validation" | ConvertTo-Json -Depth 12
+$evr = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=EVR&timeframe=5m&warmupBars=99&windowBars=119"
+$cboe = Invoke-RestMethod "$base/api/strategy-report/atr-parity?symbol=CBOE&timeframe=5m&warmupBars=99&windowBars=119"
+$evr | ConvertTo-Json -Depth 12
+$cboe | ConvertTo-Json -Depth 12
+```
+
+The import response's `sessionCoverage` is visible only in the JSON response to `POST /api/strategy-report/atr-import` (Swagger: execute that endpoint). Do not post the unchanged EVR/CBOE files just to view it; no read-only persisted coverage endpoint is currently documented. Restarting the API does not itself display import responses.
+
+**Status:** latest branch CI is green. ATR diagnostics are implemented; underlying TOS source continuity is NOT complete because chart-level evidence is missing. Catalyst validation infrastructure is implemented; classifier validation is NOT complete because only one eligible human label exists. No synthetic data, imputed bars, or relabeling performed.
