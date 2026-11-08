@@ -95,6 +95,10 @@ public sealed class CatalystHumanReviewStoreTests
 
         Assert.Equal(4, result.ExcludedReviewCount);
         Assert.Equal(1, result.ConflictingArticleCount);
+        var conflict = Assert.Single(result.ConflictingArticles!);
+        Assert.Equal("e", conflict.ArticleId);
+        Assert.Equal(new[] { "MATERIAL_RISK", "NON_MATERIAL" }, conflict.ConflictingLabels);
+        Assert.Equal(2, conflict.Reviews.Count);
         Assert.Equal(2, result.IncludedUniqueReviewCount);
         Assert.Equal("INSUFFICIENT_LABELS", result.Status);
         Assert.Contains("at least 6 unique", result.Note);
