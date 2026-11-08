@@ -14,8 +14,11 @@ public static class CatalystHumanReviewValidation
     {
         ArgumentNullException.ThrowIfNull(records);
 
-        var missingPrediction = records.Count(x => x.PredictedSeverity is not ("RISK" or "MATERIAL" or "UNCLASSIFIED"));
-        var withPrediction = records.Where(x => x.PredictedSeverity is "RISK" or "MATERIAL" or "UNCLASSIFIED").ToArray();
+        var supersededIds = records.SelectMany(x => x.SupersedesReviewIds ?? Array.Empty<string>())
+            .ToHashSet(StringComparer.Ordinal);
+        var activeRecords = records.Where(x => !supersededIds.Contains(x.ReviewId)).ToArray();
+        var missingPrediction = activeRecords.Count(x => x.PredictedSeverity is not ("RISK" or "MATERIAL" or "UNCLASSIFIED"));
+        var withPrediction = activeRecords.Where(x => x.PredictedSeverity is "RISK" or "MATERIAL" or "UNCLASSIFIED").ToArray();
         var nonEvaluableLabel = withPrediction.Count(x => !TryGetHumanTruth(x.Label, out _));
         var eligible = withPrediction
             .Where(x => TryGetHumanTruth(x.Label, out _))
@@ -49,7 +52,7 @@ public static class CatalystHumanReviewValidation
                 x.ReviewId, x.Label, x.PredictedSeverity, x.ReviewedAtUtc, x.Headline, x.Url)).ToArray()))
             .ToArray();
         var breakdown = new CatalystHumanReviewExclusionBreakdown(
-            missingPrediction, nonEvaluableLabel, duplicateRecords, conflictingRecords);
+            missingPrediction, nonEvaluableLabel, duplicateRecords, conflictingRecords, supersededIds.Count);
         if (deduplicated.Length < MinimumEligibleReviews)
             return Empty(records.Count, deduplicated.Length, excluded, conflicts, breakdown,
                 $"INSUFFICIENT_LABELS: at least {MinimumEligibleReviews} unique, non-conflicting reviews with saved triage predictions are required to form a two-observation 20% chronological holdout; received {deduplicated.Length}. This is only a structural minimum, not statistical qualification.",
@@ -120,7 +123,8 @@ public sealed record CatalystHumanReviewExclusionBreakdown(
     int MissingSavedPrediction,
     int NonEvaluableLabel,
     int DuplicateSameLabelReview,
-    int ConflictingArticleReview);
+    int ConflictingArticleReview,
+    int SupersededReviewCount = 0);
 
 public sealed record CatalystHumanReviewConfusionMetrics(
     int SampleCount, int TruePositive, int FalsePositive, int TrueNegative, int FalseNegative,
