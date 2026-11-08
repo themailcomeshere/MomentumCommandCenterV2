@@ -394,7 +394,7 @@ public sealed class StrategyReportAtrV2Tests
             var timestamp = start.AddMinutes(index * 5).ToUnixTimeMilliseconds();
             return $"{index + 1};MCC_OHLCV_ATR_V2.1(MCC_OHLCV_ATR|v2.1|EVR|5m|{timestamp}|100|101|99|100|1000|2.0);Buy to Open;";
         });
-        var report = "Strategy report\\nSymbol: EVR\\nId;Strategy;Side;\\n" + string.Join("\\n", rows);
+        var report = "Strategy report" + Environment.NewLine + "Symbol: EVR" + Environment.NewLine + "Id;Strategy;Side;" + Environment.NewLine + string.Join(Environment.NewLine, rows);
 
         var result = StrategyReportAtrV2Parser.Parse(report);
 
