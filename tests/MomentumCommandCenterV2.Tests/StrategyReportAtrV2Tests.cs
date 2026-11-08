@@ -242,8 +242,10 @@ public sealed class StrategyReportAtrV2Tests
 
         var result = ThinkorswimAtrParityService.Compare(stored, warmupBars: 15, comparisonWindowBars: 130);
 
-        Assert.Equal("GAPS_PRESENT", result.Status);
-        var gap = Assert.Single(result.TimestampGaps!);
+        Assert.Equal("MATCH", result.Status);
+        Assert.Equal(0, result.TimestampGapCount);
+        var gap = Assert.Single(result.VerifiedNoBarIntervals!);
+        Assert.Equal(1, result.VerifiedNoBarIntervalCount);
         Assert.Equal(expectedMissingCount, gap.MissingIntervalCount);
         Assert.Equal(DateTimeOffset.Parse(firstMissingText), gap.FirstExpectedMissingBarAtUtc);
         Assert.Equal(DateTimeOffset.Parse(lastMissingText), gap.LastExpectedMissingBarAtUtc);
@@ -272,7 +274,8 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal("MATCH", result.Status);
         Assert.Equal(0, result.TimestampGapCount);
         Assert.Equal(1, result.VerifiedNoBarIntervalCount);
-        Assert.Contains("operator-confirmed no-candle", result.Explanation);
+        Assert.Contains("no-candle periods", result.Explanation);
+        Assert.Single(result.VerifiedNoBarIntervals!);
     }
 
     [Fact]
