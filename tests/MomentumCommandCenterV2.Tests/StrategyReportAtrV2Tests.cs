@@ -249,6 +249,32 @@ public sealed class StrategyReportAtrV2Tests
         Assert.Equal(DateTimeOffset.Parse(lastMissingText), gap.LastExpectedMissingBarAtUtc);
     }
 
+    [Theory]
+    [InlineData("EVR", "2026-11-05T05:10:00Z", "2026-11-05T14:05:00Z")]
+    [InlineData("EVR", "2026-11-05T14:05:00Z", "2026-11-05T14:30:00Z")]
+    [InlineData("CBOE", "2026-11-04T21:00:00Z", "2026-11-04T23:40:00Z")]
+    public void OperatorConfirmedNoBarIntervalsDoNotBlockNumericAtrParity(
+        string symbol, string previousText, string nextText)
+    {
+        var metadata = Metadata();
+        var previous = DateTimeOffset.Parse(previousText);
+        var next = DateTimeOffset.Parse(nextText);
+        var timestamps = new[] { previous, next }
+            .Concat(Enumerable.Range(1, 128).Select(index => next.AddMinutes(index * 5)))
+            .ToArray();
+        var observations = timestamps.Select((timestamp, index) => new StrategyReportAtrObservation(
+            index.ToString(), symbol, "5m", timestamp, 100m, 101m, 99m, 100m, 1000m, 2m)).ToArray();
+        var stored = observations.Select((item, index) => new ThinkorswimAtrStoredObservation(
+            "row-" + index, DateTimeOffset.UtcNow, metadata, item, "hash-" + index, null)).ToArray();
+
+        var result = ThinkorswimAtrParityService.Compare(stored, warmupBars: 15, comparisonWindowBars: 130);
+
+        Assert.Equal("MATCH", result.Status);
+        Assert.Equal(0, result.TimestampGapCount);
+        Assert.Equal(1, result.VerifiedNoBarIntervalCount);
+        Assert.Contains("operator-confirmed no-candle", result.Explanation);
+    }
+
     [Fact]
     public void WilderParityIgnoresScheduledOvernightClosureBetweenSessionDates()
     {
