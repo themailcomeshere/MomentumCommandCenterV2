@@ -105,6 +105,28 @@ public sealed class CatalystHumanReviewStoreTests
             reviewedAt, "Example", label, "MCC-CATALYST-TRIAGE-1.0", null,
             reviewedAt, prediction, Array.Empty<string>());
 
+
+    [Fact]
+    public void ValidationExplainsWhySavedReviewsAreExcluded()
+    {
+        var now = DateTimeOffset.Parse("2026-11-06T20:00:00Z");
+        var records = new[]
+        {
+            Review("1", "a", "MATERIAL_EVENT", "MATERIAL", now.AddMinutes(1)),
+            Review("2", "b", "UNCERTAIN", "RISK", now.AddMinutes(2)),
+            Review("3", "c", "NON_MATERIAL", "UNCLASSIFIED", now.AddMinutes(3)) with { PredictedSeverity = null }
+        };
+
+        var result = CatalystHumanReviewValidation.Evaluate(records);
+
+        Assert.Equal(1, result.IncludedUniqueReviewCount);
+        Assert.Equal(2, result.ExcludedReviewCount);
+        Assert.Equal(1, result.ExclusionBreakdown!.NonEvaluableLabel);
+        Assert.Equal(1, result.ExclusionBreakdown.MissingSavedPrediction);
+        Assert.Equal(0, result.ExclusionBreakdown.DuplicateSameLabelReview);
+        Assert.Equal(0, result.ExclusionBreakdown.ConflictingArticleReview);
+    }
+
     [Theory]
     [InlineData("CLEAR")]
     [InlineData("CLEAR_WITH_SOURCE")]
