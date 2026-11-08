@@ -123,7 +123,7 @@ public static class ThinkorswimAtrParityService
                 null, null, null, errors.FirstOrDefault().Timestamp == default ? null : errors[0].Timestamp,
                 errors.LastOrDefault().Timestamp == default ? null : errors[^1].Timestamp, null, first,
                 $"Only {errors.Count} matched completed bars remain after the warm-up; at least {MinimumComparisonBars} are required.",
-                unresolvedGapDetails, verifiedGapDetails.Length);
+                unresolvedGapDetails, verifiedGapDetails.Length, verifiedGapDetails);
 
         var orderedErrors = errors.Select(x => x.Absolute).OrderBy(x => x).ToArray();
         var meanAbsolute = orderedErrors.Average();
