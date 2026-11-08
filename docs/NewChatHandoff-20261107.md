@@ -127,3 +127,42 @@ Do not retry SIP: the known HTTP 403 entitlement restriction remains unchanged. 
 - The current local catalyst-review store has zero records; no article-level human labels are present.
 - Latest pasted ATR response omitted MAE/max-error fields; numeric error metrics are not restated here.
 - The local API process SHA and current local browser acceptance are not verified.
+
+
+## 6. Latest operator update — 2026-11-08 UTC (local Nov 7 evening)
+
+### Verified local runtime
+- Local source SHA verified by operator: `bb6a04aedc6f3cbfda1250a7cc9d8d676594419e`.
+- API health: `OK`; mode `decision-support-only`; order submission `NOT IMPLEMENTED`.
+
+### ATR inspect exports: wrong coverage windows
+Both new files were V2.1 / ATR14 Wilder / Phoenix / extended-hours ON / corporate-action adjustment ON and imported idempotently:
+- CBOE: 82 observations, 06:10Z (01:10 ET) through 20:55Z (15:55 ET), 2 interior gaps, 0 appended, 82 identical.
+- EVR: 78 observations, 14:30Z (09:30 ET) through 20:55Z (15:55 ET), 0 interior gaps, 0 appended, 78 identical.
+
+Neither file covers the requested interval:
+- EVR starts 09:30 ET; requested ranges were 04:00–09:00 and 09:10–09:25 ET.
+- CBOE ends 15:55 ET; requested range was 16:05–18:35 ET.
+The parser's prior `gapCount` only counted interior discontinuities. A zero does not prove the absent leading/trailing part of a session was inspected.
+
+### Code committed to fix missing diagnostics
+- Import parser now returns per-Eastern-session leading/trailing missing scheduled slots (04:00–20:00 ET), separately from interior gaps. It explicitly does not claim those scheduled slots contained actual candles.
+- Regression test verifies 09:30–15:55 ET 5m partial export reports 66 leading and 48 trailing scheduled slots.
+- Catalyst validation now returns mutually exclusive exclusion reasons: missing saved prediction, non-evaluable label, duplicate same-label review, conflicting-article review.
+- Dashboard now displays the exclusion breakdown after validation refresh.
+- Tests added for ATR partial coverage and catalyst exclusion breakdown.
+
+Latest code commit: `65ba3b8e42704d722d29b10265b5f8d4606e9d55` (Dashboard display). GitHub Actions for ATR coverage and catalyst diagnostics/tests passed through `72a8cafd04df931d72726c628f38faaed3f9fd77`; latest Dashboard workflow was still in progress when the evidence note was updated. Verify latest-head CI before assuming it is green.
+
+### Catalyst review result
+The operator saved three records; endpoint reports raw=3, included=1, excluded=2, conflicts=0. The prior endpoint did not reveal the two exclusion reasons. After pulling latest code, query validation and retrieve the three saved records. Do not assume they are duplicate or uncertain until the new breakdown says so.
+
+### Immediate operator sequence
+1. Pull `feature/opportunity-quality-classification`, build/test, restart API. The currently verified local SHA predates the new diagnostics.
+2. Re-query ATR import/parity; inspect per-session coverage output.
+3. Generate a genuinely new EVR export spanning 04:00–09:25 ET Nov 5 and CBOE export spanning 16:00–18:40 ET Nov 4. Verify payload first/last timestamps before import. Do not re-import the two prior inspect CSVs.
+4. Query `GET /api/market-data/catalyst-reviews/validation`; copy `exclusionBreakdown`.
+5. Query `GET /api/market-data/catalyst-reviews?limit=20`; provide label, symbol, articleId, predictedSeverity and reviewedAtUtc for all three. Article URLs can be omitted.
+6. Continue unique, non-conflicting, evaluable human reviews across both positive and negative truth classes. No holdout metrics yet.
+
+Detailed evidence: [ATR and Catalyst Operator Evidence](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
