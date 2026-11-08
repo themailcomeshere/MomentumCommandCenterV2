@@ -1,13 +1,14 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-07 (exact ATR gap slots + catalyst validation + Opportunity Quality pool API)  
+**Updated:** 2026-11-07 evening (operator ATR recheck + zero-label catalyst result; exact-head CI verified)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
-**Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
+**Current handoff:** [NewChatHandoff-20261107.md](NewChatHandoff-20261107.md)  
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
 **Exact ATR gap/session-slot analysis:** [ATR-Gap-Session-Slot-Analysis-20261107.md](Validation/ATR-Gap-Session-Slot-Analysis-20261107.md)  
+**Latest operator ATR/catalyst evidence:** [ATR-and-Catalyst-Operator-Evidence-20261107.md](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md)  
 **Catalyst and Opportunity Quality validation:** [Catalyst-and-Opportunity-Quality-Validation-20261107.md](Validation/Catalyst-and-Opportunity-Quality-Validation-20261107.md)  
 **Latest provider/sell-limit evidence:** [Sell-Limit-Evidence-Analysis-20261106.md](Validation/Sell-Limit-Evidence-Analysis-20261106.md)  
 **Daily data qualification:** [Daily-Data-Qualification-20261106.md](Validation/Daily-Data-Qualification-20261106.md)  
@@ -204,3 +205,22 @@ The current Daily task is no longer “script not run”; it is “script run, i
 - SIP entitlement, 40/40 GTC_EXT coverage, walk-forward runtime pass, exact prior close, browser acceptance and regular-session WebSocket recovery remain unverified.
 - Scanner full-pool missing-field count must be refreshed; 296 was the last recorded audit result.
 - No actual broker execution ledger or broker-fill integration is verified.
+
+
+## Operator recheck — 2026-11-07 evening (supersedes prior runtime sample counts)
+
+- [x] Recorded the latest local parity result using 99 warm-up + 119-window request: EVR 5m = 327 observations / 20 compared / 2 gaps; CBOE 5m = 338 observations / 20 compared / 1 gap.
+- [x] Recorded exact latest intervals: EVR 00:10→09:05 ET (61 scheduled chart-session slots) and 09:05→09:30 ET (4 slots); CBOE 16:00→18:40 ET (31 slots).
+- [x] Inspected committed exports around these intervals. EVR's first Nov 5 payload is 14:05Z; CBOE's Nov 4 payload sequence jumps from 21:00Z to 23:40Z. No unchanged re-import performed.
+- [x] Recorded operator chart observations: EVR bars reportedly begin at 05:21; CBOE at 06:15. These are not yet tied to exact AM/PM, chart date and displayed timezone.
+- [ ] Match those chart-visible candles to the exact gap intervals using the TOS crosshair/data box. A visible candle absent from the export means export omission; no candle means no-bar/no-print evidence. Do not infer or impute.
+- [ ] Compile corrected V2.1 ThinkScript and produce a new export only if the chart proves existing candles were omitted. Re-import only genuinely new/corrected rows.
+- [x] Recorded catalyst validation response: rawReviewCount=0, included=0, excluded=0, training=0, holdout=0; precision/recall/specificity/accuracy null.
+- [x] Verified the repository already contains append-only human review storage, prediction-at-review-time capture, and chronological holdout validation endpoint.
+- [ ] Collect real human-adjudicated article reviews across both positive and negative classes using [Catalyst Human Review Workflow](Catalyst-Human-Review-Workflow.md). Do not create synthetic labels or count no-news as a negative.
+- [x] Verified GitHub Actions for exact feature-branch head `b212caf0c2d1df0393fdcc05b5f872c0966aeb67` succeeded: [run 42340443270](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42340443270).
+- [ ] Confirm local API was restarted from that exact built source; endpoint responses do not include the process SHA.
+
+Detailed evidence and operator sequence: [ATR-and-Catalyst-Operator-Evidence-20261107.md](Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md) and [NewChatHandoff-20261107.md](NewChatHandoff-20261107.md).
+
+**Status:** ATR parity remains blocked by unresolved source timestamp continuity; catalyst validation remains insufficient because the local human-review store is empty. No numeric sell limit or catalyst CLEAR is authorized.
