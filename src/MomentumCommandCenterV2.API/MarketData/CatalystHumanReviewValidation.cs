@@ -11,16 +11,24 @@ public static class CatalystHumanReviewValidation
     {
         ArgumentNullException.ThrowIfNull(records);
 
-        var eligible = records
-            .Where(x => x.PredictedSeverity is "RISK" or "MATERIAL" or "UNCLASSIFIED")
+        var missingPrediction = records.Count(x => x.PredictedSeverity is not ("RISK" or "MATERIAL" or "UNCLASSIFIED"));
+        var withPrediction = records.Where(x => x.PredictedSeverity is "RISK" or "MATERIAL" or "UNCLASSIFIED").ToArray();
+        var nonEvaluableLabel = withPrediction.Count(x => !TryGetHumanTruth(x.Label, out _));
+        var eligible = withPrediction
             .Where(x => TryGetHumanTruth(x.Label, out _))
             .GroupBy(x => x.Symbol.Trim().ToUpperInvariant() + "|" +
                 (string.IsNullOrWhiteSpace(x.ArticleId) ? x.Url.Trim() : x.ArticleId.Trim()),
                 StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        var conflicts = eligible.Count(group =>
-            group.Select(x => x.Label).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1);
+        var conflictingGroups = eligible
+            .Where(group => group.Select(x => x.Label).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+            .ToArray();
+        var conflicts = conflictingGroups.Length;
+        var conflictingRecords = conflictingGroups.Sum(group => group.Count());
+        var duplicateRecords = eligible
+            .Where(group => group.Select(x => x.Label).Distinct(StringComparer.OrdinalIgnoreCase).Count() == 1)
+            .Sum(group => group.Count() - 1);
         var deduplicated = eligible
             .Where(group => group.Select(x => x.Label).Distinct(StringComparer.OrdinalIgnoreCase).Count() == 1)
             .Select(group => group.OrderByDescending(x => x.ReviewedAtUtc).First())
@@ -29,8 +37,10 @@ public static class CatalystHumanReviewValidation
             .ToArray();
 
         var excluded = records.Count - deduplicated.Length;
+        var breakdown = new CatalystHumanReviewExclusionBreakdown(
+            missingPrediction, nonEvaluableLabel, duplicateRecords, conflictingRecords);
         if (deduplicated.Length < 2)
-            return Empty(deduplicated.Length, excluded, conflicts,
+            return Empty(records.Count, deduplicated.Length, excluded, conflicts, breakdown,
                 "INSUFFICIENT_LABELS: at least two unique, non-conflicting reviews with a saved triage prediction are required.");
 
         // The later 20% of reviewed articles is held out chronologically. This does not
@@ -46,28 +56,17 @@ public static class CatalystHumanReviewValidation
             : "INSUFFICIENT_HOLDOUT_CLASS_COVERAGE";
 
         return new CatalystHumanReviewValidationResult(
-            status,
-            "MCC-CATALYST-HUMAN-VALIDATION-1.0",
-            records.Count,
-            deduplicated.Length,
-            excluded,
-            conflicts,
-            training.Length,
-            holdout.Length,
-            holdout[0].ReviewedAtUtc,
-            holdout[^1].ReviewedAtUtc,
-            trainMetrics,
-            testMetrics,
-            "Human-positive labels are MATERIAL_RISK/MATERIAL_EVENT; human-negative labels are NON_MATERIAL/IRRELEVANT. DUPLICATE, UNCERTAIN, legacy reviews without a saved prediction, and conflicting duplicate-article labels are excluded. A prediction is positive for RISK or MATERIAL and negative for UNCLASSIFIED. These are descriptive metrics for the fixed triage rules, not a trained classifier, not evidence of catalyst clearance, and not sufficient by themselves to approve production use.");
+            status, "MCC-CATALYST-HUMAN-VALIDATION-1.0",
+            records.Count, deduplicated.Length, excluded, conflicts,
+            training.Length, holdout.Length, holdout[0].ReviewedAtUtc, holdout[^1].ReviewedAtUtc,
+            trainMetrics, testMetrics,
+            "Human-positive labels are MATERIAL_RISK/MATERIAL_EVENT; human-negative labels are NON_MATERIAL/IRRELEVANT. DUPLICATE, UNCERTAIN, legacy reviews without a saved prediction, and conflicting duplicate-article labels are excluded. A prediction is positive for RISK or MATERIAL and negative for UNCLASSIFIED. These are descriptive metrics for the fixed triage rules, not a trained classifier, not evidence of catalyst clearance, and not sufficient by themselves to approve production use.",
+            breakdown);
     }
 
-    private static CatalystHumanReviewConfusionMetrics Calculate(
-        IReadOnlyCollection<CatalystHumanReviewRecord> rows)
+    private static CatalystHumanReviewConfusionMetrics Calculate(IReadOnlyCollection<CatalystHumanReviewRecord> rows)
     {
-        var tp = 0;
-        var fp = 0;
-        var tn = 0;
-        var fn = 0;
+        var tp = 0; var fp = 0; var tn = 0; var fn = 0;
         foreach (var row in rows)
         {
             TryGetHumanTruth(row.Label, out var actualPositive);
@@ -77,15 +76,7 @@ public static class CatalystHumanReviewValidation
             else if (!actualPositive && !predictedPositive) tn++;
             else fn++;
         }
-
-        return new CatalystHumanReviewConfusionMetrics(
-            rows.Count,
-            tp,
-            fp,
-            tn,
-            fn,
-            tp + fn,
-            tn + fp,
+        return new(rows.Count, tp, fp, tn, fn, tp + fn, tn + fp,
             tp + fp == 0 ? null : (decimal)tp / (tp + fp),
             tp + fn == 0 ? null : (decimal)tp / (tp + fn),
             tn + fp == 0 ? null : (decimal)tn / (tn + fp),
@@ -103,37 +94,29 @@ public static class CatalystHumanReviewValidation
         return label is "MATERIAL_RISK" or "MATERIAL_EVENT" or "NON_MATERIAL" or "IRRELEVANT";
     }
 
-    private static CatalystHumanReviewValidationResult Empty(int included, int excluded, int conflicts, string note) =>
+    private static CatalystHumanReviewValidationResult Empty(
+        int raw, int included, int excluded, int conflicts,
+        CatalystHumanReviewExclusionBreakdown breakdown, string note) =>
         new("INSUFFICIENT_LABELS", "MCC-CATALYST-HUMAN-VALIDATION-1.0",
-            included + excluded, included, excluded, conflicts, 0, 0, null, null,
+            raw, included, excluded, conflicts, 0, 0, null, null,
             Calculate(Array.Empty<CatalystHumanReviewRecord>()),
-            Calculate(Array.Empty<CatalystHumanReviewRecord>()), note);
+            Calculate(Array.Empty<CatalystHumanReviewRecord>()), note, breakdown);
 }
 
+public sealed record CatalystHumanReviewExclusionBreakdown(
+    int MissingSavedPrediction,
+    int NonEvaluableLabel,
+    int DuplicateSameLabelReview,
+    int ConflictingArticleReview);
+
 public sealed record CatalystHumanReviewConfusionMetrics(
-    int SampleCount,
-    int TruePositive,
-    int FalsePositive,
-    int TrueNegative,
-    int FalseNegative,
-    int ActualPositiveCount,
-    int ActualNegativeCount,
-    decimal? Precision,
-    decimal? Recall,
-    decimal? Specificity,
-    decimal? Accuracy);
+    int SampleCount, int TruePositive, int FalsePositive, int TrueNegative, int FalseNegative,
+    int ActualPositiveCount, int ActualNegativeCount,
+    decimal? Precision, decimal? Recall, decimal? Specificity, decimal? Accuracy);
 
 public sealed record CatalystHumanReviewValidationResult(
-    string Status,
-    string ValidationVersion,
-    int RawReviewCount,
-    int IncludedUniqueReviewCount,
-    int ExcludedReviewCount,
-    int ConflictingArticleCount,
-    int TrainingCount,
-    int HoldoutCount,
-    DateTimeOffset? HoldoutStartUtc,
-    DateTimeOffset? HoldoutEndUtc,
-    CatalystHumanReviewConfusionMetrics Training,
-    CatalystHumanReviewConfusionMetrics Holdout,
-    string Note);
+    string Status, string ValidationVersion,
+    int RawReviewCount, int IncludedUniqueReviewCount, int ExcludedReviewCount, int ConflictingArticleCount,
+    int TrainingCount, int HoldoutCount, DateTimeOffset? HoldoutStartUtc, DateTimeOffset? HoldoutEndUtc,
+    CatalystHumanReviewConfusionMetrics Training, CatalystHumanReviewConfusionMetrics Holdout,
+    string Note, CatalystHumanReviewExclusionBreakdown? ExclusionBreakdown = null);
