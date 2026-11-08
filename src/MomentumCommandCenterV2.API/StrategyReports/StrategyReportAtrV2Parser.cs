@@ -107,11 +107,61 @@ public static class StrategyReportAtrV2Parser
             .Select(x => new StrategyReportAtrGap(x.Expected, x.Actual, x.Actual - x.Expected))
             .ToArray();
 
+        var sessionCoverage = BuildSessionCoverage(ordered, interval);
         return new StrategyReportAtrImportResult(
             ordered[0].Symbol, ordered[0].Timeframe, payloadVersion!, dataRows, ordered.Length,
             ordered[0].SourceTimestampUtc, ordered[^1].SourceTimestampUtc,
             gaps.Length, gaps.Take(100).ToArray(), ordered,
-            "V2 ATR observations parsed from explicit completed-bar payloads. Gaps are reported, not imputed; the Strategy Report Date/Time order-event timestamp is not used as a bar timestamp.");
+            "V2 ATR observations parsed from explicit completed-bar payloads. Interior timestamp gaps and partial 04:00–20:00 ET session coverage are reported, not imputed; the Strategy Report Date/Time order-event timestamp is not used as a bar timestamp.",
+            sessionCoverage);
+    }
+
+
+    private static IReadOnlyList<StrategyReportAtrSessionCoverage> BuildSessionCoverage(
+        IReadOnlyList<StrategyReportAtrObservation> observations, TimeSpan interval)
+    {
+        var eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+        var results = new List<StrategyReportAtrSessionCoverage>();
+        foreach (var session in observations
+            .GroupBy(x => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(x.SourceTimestampUtc, eastern).DateTime))
+            .OrderBy(x => x.Key))
+        {
+            var rows = session.OrderBy(x => x.SourceTimestampUtc).ToArray();
+            var firstLocal = TimeZoneInfo.ConvertTime(rows[0].SourceTimestampUtc, eastern).DateTime;
+            var lastLocal = TimeZoneInfo.ConvertTime(rows[^1].SourceTimestampUtc, eastern).DateTime;
+            var sessionStart = LocalEastern(session.Key, new TimeSpan(4, 0, 0), eastern);
+            var sessionEnd = LocalEastern(session.Key, new TimeSpan(20, 0, 0), eastern);
+            var leading = 0;
+            var firstExpected = sessionStart;
+            while (firstExpected < rows[0].SourceTimestampUtc && firstExpected < sessionEnd)
+            {
+                leading++;
+                firstExpected = firstExpected.Add(interval);
+            }
+            var trailing = 0;
+            var lastExpected = rows[^1].SourceTimestampUtc.Add(interval);
+            while (lastExpected < sessionEnd)
+            {
+                trailing++;
+                lastExpected = lastExpected.Add(interval);
+            }
+            if (firstLocal.TimeOfDay > new TimeSpan(4, 0, 0) || lastLocal.TimeOfDay < new TimeSpan(20, 0, 0))
+            {
+                results.Add(new StrategyReportAtrSessionCoverage(
+                    session.Key, rows[0].SourceTimestampUtc, rows[^1].SourceTimestampUtc,
+                    leading, trailing, leading > 0 ? sessionStart : null,
+                    leading > 0 ? firstExpected.Add(-interval) : null,
+                    trailing > 0 ? rows[^1].SourceTimestampUtc.Add(interval) : null,
+                    trailing > 0 ? lastExpected.Add(-interval) : null));
+            }
+        }
+        return results;
+    }
+
+    private static DateTimeOffset LocalEastern(DateOnly date, TimeSpan time, TimeZoneInfo eastern)
+    {
+        var local = date.ToDateTime(TimeOnly.MinValue).Add(time);
+        return new DateTimeOffset(local, eastern.GetUtcOffset(local)).ToUniversalTime();
     }
 
     private static List<List<string>> ParseRecords(string csv)
@@ -169,4 +219,16 @@ public sealed record StrategyReportAtrImportResult(
     int GapCount,
     IReadOnlyList<StrategyReportAtrGap> GapSamples,
     IReadOnlyList<StrategyReportAtrObservation> Observations,
-    string Interpretation);
+    string Interpretation,
+    IReadOnlyList<StrategyReportAtrSessionCoverage>? SessionCoverage = null);
+
+public sealed record StrategyReportAtrSessionCoverage(
+    DateOnly EasternSessionDate,
+    DateTimeOffset FirstObservedAtUtc,
+    DateTimeOffset LastObservedAtUtc,
+    int MissingLeadingIntervalCount,
+    int MissingTrailingIntervalCount,
+    DateTimeOffset? FirstMissingLeadingAtUtc,
+    DateTimeOffset? LastMissingLeadingAtUtc,
+    DateTimeOffset? FirstMissingTrailingAtUtc,
+    DateTimeOffset? LastMissingTrailingAtUtc);
