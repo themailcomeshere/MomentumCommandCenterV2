@@ -298,3 +298,10 @@ The current feature-branch head `b212caf0c2d1df0393fdcc05b5f872c0966aeb67` passe
 Latest local ATR recheck remains `GAPS_PRESENT`: EVR 5m has 2 timestamp gaps; CBOE 5m has 1. The chart-visible bar-start observations reported by the operator still need exact date, AM/PM and timezone alignment before changing the detector or requesting a new export. Catalyst validation currently has zero human review records and no measurable holdout metrics. Do not invent labels, synthesize bars, relax tolerance, or promote unknown catalyst state to CLEAR.
 
 Current operator steps: [New Chat Handoff 2026-11-07](docs/NewChatHandoff-20261107.md). Full recorded evidence: [ATR and Catalyst Operator Evidence 2026-11-07](docs/Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
+
+
+## Latest operator update — November 8 UTC / November 7 Arizona
+
+The operator verified local source SHA `bb6a04aedc6f3cbfda1250a7cc9d8d676594419e` and API health OK. New CBOE/EVR inspect imports were idempotent, but the exports did not cover the requested chart intervals: EVR began at 09:30 ET (after the requested 04:00–09:25 windows) and CBOE ended at 15:55 ET (before the requested 16:05–18:35 window). Import gapCount is an interior-gap count, not proof of full-session coverage.
+
+New code reports leading/trailing scheduled 04:00–20:00 ET session coverage per Eastern date, adds regression tests, and exposes catalyst human-review exclusion reasons in the API and Dashboard. Three catalyst reviews are now saved, but only one is eligible and two are excluded; the exact exclusion reasons are not known until the new build's validation response is queried. Latest implementation commits are on `feature/opportunity-quality-classification`; see [Master To-Do](docs/Master-To-Do.md), [current handoff](docs/NewChatHandoff-20261107.md), and [dated evidence](docs/Validation/ATR-and-Catalyst-Operator-Evidence-20261107.md).
