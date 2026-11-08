@@ -476,9 +476,11 @@ function renderCatalystHumanReviewQueue(){
       if(!validationResponse.ok)throw new Error(validation.detail||validation.title||"HTTP "+validationResponse.status);
       const holdout=validation.holdout||{};
       const pct=value=>value==null?"n/a":(value*100).toFixed(1)+"%";
+      const excluded=validation.exclusionBreakdown||{};
+      const exclusionText="Excluded: "+(excluded.missingSavedPrediction||0)+" missing saved prediction, "+(excluded.nonEvaluableLabel||0)+" non-evaluable label, "+(excluded.duplicateSameLabelReview||0)+" duplicate review, "+(excluded.conflictingArticleReview||0)+" conflicting-article review(s).";
       overall.textContent=validation.status==="TIME_ORDERED_HOLDOUT_METRICS_AVAILABLE"
-       ?"Human labels: "+validation.includedUniqueReviewCount+" unique · chronological holdout N="+validation.holdoutCount+" · precision "+pct(holdout.precision)+" · recall "+pct(holdout.recall)+". Descriptive only; not catalyst clearance."
-       :"Human labels saved: "+validation.includedUniqueReviewCount+" usable unique review(s); holdout validation "+validation.status+". Need both human-positive and human-negative labels in the later time slice. No catalyst clearance.";
+       ?"Human labels: "+validation.includedUniqueReviewCount+" unique · chronological holdout N="+validation.holdoutCount+" · precision "+pct(holdout.precision)+" · recall "+pct(holdout.recall)+". "+exclusionText+" Descriptive only; not catalyst clearance."
+       :"Human labels saved: "+validation.includedUniqueReviewCount+" usable unique review(s); holdout validation "+validation.status+". "+exclusionText+" Need both human-positive and human-negative labels in the later time slice. No catalyst clearance.";
      }catch(validationError){overall.textContent="Human review saved; validation metrics unavailable: "+validationError.message+". Automated triage remains unchanged.";}
     }
    }catch(error){status.textContent="Review save failed: "+error.message;save.disabled=false;}
