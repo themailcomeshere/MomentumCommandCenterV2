@@ -131,8 +131,8 @@ public sealed class CatalystHumanReviewStore(string? path = null)
             throw new ArgumentException("Source must identify the actual publisher/provider; placeholder values such as 'string' are not accepted.", nameof(input));
         if (!string.IsNullOrWhiteSpace(input.RuleSetVersion) && IsPlaceholder(input.RuleSetVersion))
             throw new ArgumentException("RuleSetVersion must identify the actual triage ruleset; placeholder values such as 'string' are not accepted.", nameof(input));
-        if (input.Notes is not null && IsPlaceholder(input.Notes))
-            throw new ArgumentException("Notes must contain an actual review rationale; placeholder values such as 'string' are not accepted.", nameof(input));
+        if (input.Notes is not null && !HasReviewRationale(input.Notes))
+            throw new ArgumentException("Notes must contain at least 40 characters of article-specific evidence and reasoning; placeholder text or appeals to an assistant's recommendation are not accepted.", nameof(input));
         if (!Uri.TryCreate(input.Url, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
             throw new ArgumentException("Article URL must be an absolute HTTP or HTTPS URL.", nameof(input));
@@ -147,9 +147,20 @@ public sealed class CatalystHumanReviewStore(string? path = null)
             throw new ArgumentException("PredictedCategories must contain actual non-placeholder category values of at most 100 characters.", nameof(input));
         if (input.SupersedesReviewIds?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 64) == true)
             throw new ArgumentException("SupersedesReviewIds must contain non-empty review IDs of at most 64 characters.", nameof(input));
-        if (input.SupersedesReviewIds?.Count > 0 &&
-            (string.IsNullOrWhiteSpace(input.Notes) || input.Notes.Trim().Length < 12 || IsPlaceholder(input.Notes)))
-            throw new ArgumentException("A meaningful source-backed rationale of at least 12 characters is required when superseding prior reviews.", nameof(input));
+        if (input.SupersedesReviewIds?.Count > 0 && !HasReviewRationale(input.Notes))
+            throw new ArgumentException("A source-based, article-specific rationale of at least 40 characters is required when superseding prior reviews.", nameof(input));
+    }
+
+    internal static bool HasReviewRationale(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Trim().Length < 40 || IsPlaceholder(value))
+            return false;
+        var normalized = value.Trim().ToLowerInvariant();
+        return !new[]
+        {
+            "because you said", "because chatgpt said", "because the assistant said",
+            "you told me", "your recommendation", "assistant recommendation"
+        }.Any(normalized.Contains);
     }
 
     internal static bool IsPlaceholder(string? value)
