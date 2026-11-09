@@ -457,7 +457,7 @@ function renderCatalystHumanReviewQueue(){
   const controls=document.createElement("div");controls.className="catalyst-review-controls";
   const label=document.createElement("select");label.setAttribute("aria-label","Human catalyst label for "+symbol);
   ["MATERIAL_RISK","MATERIAL_EVENT","NON_MATERIAL","IRRELEVANT","DUPLICATE","UNCERTAIN"].forEach(value=>{const option=document.createElement("option");option.value=value;option.textContent=value;label.append(option);});
-  const notes=document.createElement("textarea");notes.maxLength=2000;notes.placeholder="Why does this label fit? Review the source article.";notes.setAttribute("aria-label","Review notes for "+symbol);
+  const notes=document.createElement("textarea");notes.maxLength=2000;notes.placeholder="At least 40 characters: cite specific facts from the article and explain why they fit this label. Do not rely on a recommendation.";notes.setAttribute("aria-label","Review notes for "+symbol);
   const save=document.createElement("button");save.type="button";save.className="quiet-button";save.textContent="Save human review";
   const status=document.createElement("span");status.className="muted small";
   save.addEventListener("click",async()=>{
