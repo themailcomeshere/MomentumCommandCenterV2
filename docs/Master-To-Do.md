@@ -116,7 +116,7 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - [x] Regular-session stream/collector evidence script implemented.
 - [x] Dashboard load/API latency instrumentation work was started; prior measurement showed a 10.24s live-assessment request and a pending WebSocket connection, so no overall performance pass is claimed.
 - [ ] Verify MCC Top 4 selects/fetches four distinct tickers after latest pull; if the imported file has fewer than four unique symbols, show the source-data limitation.
-- [ ] Verify four per-symbol Daily and catalyst responses, errors and timestamps; article queue only lists symbols with returned articles, not every symbol queried.
+- [ ] Verify the post-fetch status lists four distinct queried symbols and the evidence table shows each result. The human-review queue lists only symbols with returned articles, not every symbol queried.
 - [ ] Execute browser diagnostics on operator machine; retain screenshot, console exceptions and sanitized network evidence.
 - [ ] Complete full Dashboard acceptance: import/parity, Red Zone, exclusions, Morning Brief, replay, sell-limit gate explanations, responsive layout and CDP console/network health.
 - [ ] During a confirmed regular session, capture 5–10 minutes of SPY/RKLX/ASTX/XRPN stream/collector data. Verify per-symbol subscriptions, completed bars, timestamps, received/persisted deltas and watermarks.
