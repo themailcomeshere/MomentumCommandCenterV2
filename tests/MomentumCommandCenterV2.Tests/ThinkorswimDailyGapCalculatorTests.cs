@@ -41,6 +41,23 @@ public sealed class ThinkorswimDailyGapCalculatorTests
     }
 
     [Fact]
+    public void CalculatesBoringWinnerAsSeparateResearchGate()
+    {
+        var bars = Enumerable.Range(0, 21).Select(i =>
+        {
+            var close = 100m + i;
+            var open = i == 0 ? close : (99m + i) * 1.01m;
+            return new ThinkorswimDailyGapBar(new DateOnly(2026, 10, 1).AddDays(i),
+                open, Math.Max(open, close) + 1m, Math.Min(open, close) - 1m, close);
+        }).ToArray();
+        var result = ThinkorswimDailyGapCalculator.Calculate(new("TEST", "Thinkorswim export",
+            "DAY", true, true, "America/Phoenix", bars));
+        Assert.True(result.BoringWinnerPass);
+        Assert.Equal(20, result.BoringWinnerInRangeCount);
+        Assert.Equal(0m, result.BoringWinnerSampleStdDevPct);
+    }
+
+    [Fact]
     public void WithholdsAllStatisticsUntilTwentyGapObservationsExist()
     {
         var bars = Enumerable.Range(0, 20).Select(i =>
