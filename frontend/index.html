@@ -661,6 +661,19 @@
    </table>
   </div>
  </section>
+  <section class="panel" aria-label="Thinkorswim daily gap reference import">
+   <div class="section-heading"><div><h3>Thinkorswim Daily OHLC reference</h3><p class="muted small">Import at least 21 daily OHLC bars for one symbol. MCC calculates the eight supplied scanner fields using MCC-TOS-DAILY-GAP-1.0 and compares them with the imported scanner row. No Alpaca/IEX substitution is performed.</p></div></div>
+   <div class="watchlist-form">
+    <label for="tosDailyReferenceSymbol">Symbol</label><input id="tosDailyReferenceSymbol" maxlength="8" placeholder="e.g. WRBY">
+    <label for="tosDailyReferenceFile">TOS daily OHLC CSV</label><input id="tosDailyReferenceFile" type="file" accept=".csv,text/csv">
+    <label><input id="tosDailyExtendedHours" type="checkbox" checked> Extended hours ON</label>
+    <label><input id="tosDailyAdjusted" type="checkbox" checked> Corporate-action adjusted</label>
+    <label for="tosDailyTimezone">Chart timezone</label><input id="tosDailyTimezone" value="America/Phoenix" maxlength="80">
+    <button id="tosDailyReferenceImport" type="button" class="quiet-button">Import &amp; calculate parity</button>
+   </div>
+   <p id="tosDailyReferenceStatus" class="muted small" role="status">No TOS daily reference imported. Required CSV headers: Date, Open, High, Low, Close. The symbol is entered above. Use the same TOS aggregation settings as the scanner.</p>
+   <div class="table-wrap"><table><thead><tr><th>Column</th><th>TOS scanner CSV</th><th>MCC from TOS OHLC</th><th>Parity</th></tr></thead><tbody id="tosDailyReferenceRows"><tr><td colspan="4">No parity result.</td></tr></tbody></table></div>
+  </section>
  <div class="table-wrap overnight-qualification-table">
   <table>
    <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON %</th><th>Median ON %</th><th>5D ON %</th><th>ON Momentum</th><th>Current ON %</th><th>Above 20 SMA</th><th>Overnight Score</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
