@@ -540,9 +540,11 @@ async function renderOvernightQualification(){
  let passed=0,failed=0,unknown=0,excluded=0;
  const evaluated=rows.map(item=>{
   const m=item.overnightMetrics||{};
-  const onWin=metric(m.onWin),avgOn=metric(m.avgOn),fiveDay=metric(m.fiveDayOn),currentOn=metric(m.currentOn),above20=metric(m.above20Sma);
+  const onWin=metric(m.onWin),avgOn=metric(m.avgOn),medianOn=metric(m.medianOn),fiveDay=metric(m.fiveDayOn),onMomentum=metric(m.onMomentum),currentOn=metric(m.currentOn),above20=metric(m.above20Sma),score=metric(item.score);
   const checks=[onWin>=60,avgOn>=0.10,fiveDay>avgOn,currentOn<3,above20===1];
-  const requiredMetrics=[onWin,avgOn,fiveDay,currentOn,above20];
+  // All eight source columns are required for a complete imported scanner observation.
+  // Do not call a row PASS when Median, Momentum, or Overnight Score is missing.
+  const requiredMetrics=[onWin,avgOn,medianOn,fiveDay,onMomentum,currentOn,above20,score];
   // Missing custom-expression output is UNKNOWN, never a failed historical gate.
   const history=requiredMetrics.some(value=>value===null)?"DATA?":checks.every(Boolean)?"PASS":"FAIL";
   if(history==="PASS")passed++;else if(history==="FAIL")failed++;else unknown++;
@@ -559,12 +561,12 @@ async function renderOvernightQualification(){
   const catalystLabel=live.catalystError?"ERROR · "+live.catalystError:!catalyst?(live.dailyError||live.daily?"NOT LOADED":"NOT FETCHED"):catalystStatus+(catalyst.coverageComplete===false?" · COVERAGE INCOMPLETE":"");
   const catalystRisk=catalystStatus==="RISK_PRESENT";
   const decision=isExcluded===true?"BLOCKED · SCHWAB EXCLUSION":exclusionError?"DATA? · EXCLUSION LIST":history==="FAIL"?"BLOCKED · HISTORICAL GATE":dailyGate==="FAIL"?"BLOCKED · DAILY PRICE / LIQUIDITY":catalystRisk?"BLOCKED · CATALYST RISK":daily?.qualificationUsable!==true?"DATA? · DAILY SIP / 20 SESSIONS":dailyGate!=="PASS"?"DATA? · DAILY METRICS":!catalyst||catalyst.coverageComplete!==true||catalystStatus!=="CLEAR_WITH_SOURCE"?"MANUAL REVIEW · CATALYST": "MANUAL REVIEW · 5M / 1M";
-  return {...item,onWin,avgOn,fiveDay,currentOn,above20,history,isExcluded,decision,daily,price,averageVolume,dailyGate,catalystLabel,live};
+  return {...item,onWin,avgOn,medianOn,fiveDay,onMomentum,currentOn,above20,score,history,isExcluded,decision,daily,price,averageVolume,dailyGate,catalystLabel,live};
  }).sort((a,b)=>(metric(b.score)??-Infinity)-(metric(a.score)??-Infinity)||String(a.symbol).localeCompare(String(b.symbol)));
  const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined?"DATA?":String(value);return td;};
  body.replaceChildren(...evaluated.map(item=>{
   const tr=document.createElement("tr");
-  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.fiveDay),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell(item.price===null?(item.daily?.feedCoverage==="IEX_PARTIAL"?"DATA? · IEX PARTIAL":item.live.dailyError?"ERROR · "+item.live.dailyError:null):fmt(item.price)),cell(item.averageVolume===null?(item.live.dailyError?"ERROR · "+item.live.dailyError:null):fmt(item.averageVolume)),cell(item.catalystLabel),cell(item.decision));
+  tr.append(cell(item.symbol),cell(item.onWin),cell(item.avgOn),cell(item.medianOn),cell(item.fiveDay),cell(item.onMomentum),cell(item.currentOn),cell(item.above20===null?null:item.above20===1?"YES":"NO"),cell(item.score),cell(item.history),cell(exclusionError?"DATA?":item.isExcluded?"EXCLUDED":"NO"),cell(item.price===null?(item.daily?.feedCoverage==="IEX_PARTIAL"?"DATA? · IEX PARTIAL":item.live.dailyError?"ERROR · "+item.live.dailyError:null):fmt(item.price)),cell(item.averageVolume===null?(item.live.dailyError?"ERROR · "+item.live.dailyError:null):fmt(item.averageVolume)),cell(item.catalystLabel),cell(item.decision));
   tr.className=item.decision.startsWith("BLOCKED")?"qualification-blocked":"qualification-pending";
   return tr;
  }));
