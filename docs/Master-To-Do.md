@@ -5,10 +5,11 @@
 - [x] Added focused-symbol sell-limit action reusing the existing evidence-gated API and quantile. No duplicate calculator and no order submission.
 - [x] Moved 1M close / Daily VWAP / ATR14 / extension diagnostics into the collapsible Decision Explanation. They are calculated from returned 1M bars, labelled diagnostic-only, and carry provider/feed and timestamps. Red Zone hides those redundant metric paragraphs in Boring Overnight mode.
 - [x] Boring Overnight Red Zone now uses historical 5M bars and marks intraday 5M/1M gates NOT USED rather than displaying Intraday stale status.
-- [x] Manual pinned symbols are polled during Automatic mode; sound requires a known false-to-true EXECUTION READY transition and enabled sound.
+- [x] Manual pinned symbols are polled during Intraday Automatic mode; sound requires a known false-to-true EXECUTION READY transition and enabled sound. Boring Overnight currently has no READY state (the evaluator deliberately keeps READY at 0), so it must not emit an equivalent sound until a validated Overnight-ready definition exists.
 - [x] Scanner Workbench Symbols auto-populates with up to 20 unique imported Overnight symbols sorted by Overnight Score; manual Use Overnight Top 20 action is available. It does not submit a scan.
 - [x] Removed obsolete Red Zone static chip, redundant label ID, and obsolete explanatory paragraph. Preserved `.gate-warning` and Ticker placeholder.
 - [x] Decision Explanation and Timeframe Handoff are collapsible with pointer cursor. Timeframe Handoff is hidden in Boring Overnight mode.
+- [ ] Define a source-qualified Boring Overnight READY state and corresponding alert transition; current evaluator intentionally remains fail-closed at READY=0. Do not substitute Boring Winner PASS for READY.
 - [ ] Operator build/test, browser verification, and API/runtime acceptance remain required.
 
 ## Operator evidence and implementation — 2026-11-09 (Overnight top-20, mode isolation, TOS formula engine)
