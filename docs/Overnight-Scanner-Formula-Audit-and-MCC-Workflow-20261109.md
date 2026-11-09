@@ -31,7 +31,7 @@ Where `win20` and all return terms are decimal fractions, not already-percent-sc
 
 The score is a ranking heuristic. It has no calibration to the probability of a profitable trade, does not include spread, liquidity, RVOL, catalyst risk, price, tradability or execution slippage, and should not be interpreted as a return forecast.
 
-## 2. Boring Winner — inactive reference formula
+## 2. Boring Winner — active research formula (not a production gate)
 
 The supplied Boring Winner formula is not currently used in the scanner. It returns 1 only when all are true:
 
@@ -41,7 +41,7 @@ The supplied Boring Winner formula is not currently used in the scanner. It retu
 - 20-session sample standard deviation <= 3.00%
 - Current daily close is above its 20-day simple average
 
-It is a candidate hard-gate definition, not a validated model. It has not been promoted into MCC or a Thinkorswim V3 study. Keep it separate from Overnight Score until the operator approves and the thresholds are tested on source-qualified, point-in-time data.
+It is a candidate hard-gate definition, not a validated model. It has not been promoted into MCC or a Thinkorswim V3 study. MCC now calculates this separately from Overnight Score when a source-qualified Thinkorswim daily OHLC import is present. The result is labelled RESEARCH ONLY and does not affect READY. Keep it separate from Overnight Score until thresholds are tested on source-qualified, point-in-time data.
 
 ## 3. Screenshot — candidate triage, not trade recommendations
 
@@ -98,7 +98,7 @@ No candidate can be called READY from this screenshot. It is a ranking view, not
 - Add independent per-column parity tests, score decomposition, missing-history behavior and rounding/display tests. Do not compute a partial 20-sample statistic as if it were complete.
 - Implement the separate V3 Boring Overnight column/study only after its intended buy/sell endpoints, time zone, extended-hours inclusion and official auction/first eligible trade semantics are frozen.
 - Add liquidity/spread/volume/catalyst gates as separate evidence fields; do not silently alter the existing Overnight Score formula.
-- Keep Boring Winner inactive until separately approved, source-qualified and validated on chronological out-of-sample data.
+- Keep Boring Winner out of production qualification until separately approved, source-qualified and validated on chronological out-of-sample data.
 
 ## [Uncertainties]
 
