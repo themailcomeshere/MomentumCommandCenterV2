@@ -1,4 +1,28 @@
-# CURRENT HANDOFF — 2026-11-09 (catalyst label legend and rationale guard)
+# CURRENT HANDOFF — 2026-11-09 (operator recheck + Top-4 deduplication)
+
+## Operator update — 2026-11-09 (latest supplied validation + Top-4 fix)
+
+### Operator evidence
+
+- Label legend: operator confirmed it looks good.
+- Catalyst validation after deployment: raw 6, included 0, excluded 6, conflicts 0, training/holdout 0/0; non-evaluable=2, superseded=3, inadequateReviewEvidence=1. The rationale guard correctly excluded the old assistant-appeal record.
+- New review `fbc839fc9c2740c1ad87e6bc641e2a77` is not a valid correction yet. Notes are generic affirmation, not article facts. It supersedes `8405880...` but not the currently weak `f496393...`; its ruleSetVersion is `MCC-CATALYST-HUMAN-VALIDATION-1.0`, not verified prediction provenance. Do not count it.
+
+### New code changes on this branch
+
+- API and historical validation now reject additional generic confirmation language matching the supplied EWTX notes; the Dashboard form mirrors the check. A regression test uses the exact submitted note. This is a heuristic quality screen; it cannot prove factual accuracy.
+- MCC Top 4 now deduplicates scanner imports by ticker after score ordering, preserving the highest-scoring row for each ticker. Four repeated rows for one ticker can no longer result in four requests to the same symbol / one symbol in the evidence map.
+
+### Operator next steps
+
+1. Pull/build/test using the standard sequence below; restart the API from the newly built output.
+2. Verify MCC Top 4 lists four distinct tickers. Click Fetch Daily + catalyst and verify the status names four distinct tickers and reports four queried symbols. If the import contains fewer than four unique tickers, correct the source import; do not invent symbols.
+3. Independently open the original EWTX article and record specific verifiable facts. Determine the label yourself; the prior assistant label is not evidence.
+4. Verify the original publisher and actual saved triage ruleset version. The supplied review payload does not establish either. Do not use the human-validation version as the prediction ruleset.
+5. Append a correction superseding both active weak EWTX records: `f496393535df431ab275231b57f8530a` and `fbc839fc9c2740c1ad87e6bc641e2a77`. Keep saved prediction `UNCLASSIFIED` and categories `[]`; do not modify audit history.
+6. Re-query validation. Expected: no conflict, inadequateReviewEvidence=0 for the active EWTX review, with all other source-unsupported/UNCERTAIN labels still excluded.
+7. Continue collecting independently sourced positive and negative examples. Do not promote the classifier until a substantially larger balanced sample, both truth classes in chronological holdout, and reviewer agreement are demonstrated.
+
 
 **Repository:** themailcomeshere/MomentumCommandCenterV2  
 **Working branch:** feature/opportunity-quality-classification  
