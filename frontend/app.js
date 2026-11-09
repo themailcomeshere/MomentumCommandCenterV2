@@ -310,11 +310,29 @@ async function refreshOvernightPriceSummary(symbol){
   const local=ts=>new Date(ts).toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true});
   const last=bars.at(-1),lp=last?parts(last.timestamp):null,lastMinute=lp?Number(lp.hour)*60+Number(lp.minute):-1,lastDate=lp?lp.year+"-"+lp.month+"-"+lp.day:"";
   const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
+  const rthDate=rth?(()=>{const z=parts(rth.timestamp);return z.year+"-"+z.month+"-"+z.day;})():null;
+  const sessionBars=rthDate?bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute);return z.year+"-"+z.month+"-"+z.day===rthDate&&m>=570&&m<960;}):[];
+  const volumeBars=sessionBars.filter(b=>Number.isFinite(Number(b.volume))&&Number(b.volume)>0&&Number.isFinite(Number(b.high))&&Number.isFinite(Number(b.low)));
+  const volumeTotal=volumeBars.reduce((sum,b)=>sum+Number(b.volume),0);
+  const dailyVwap=volumeTotal>0?volumeBars.reduce((sum,b)=>sum+((Number(b.high)+Number(b.low)+Number(b.close))/3)*Number(b.volume),0)/volumeTotal:null;
+  const trueRanges=bars.slice(1).map((b,i)=>{const high=Number(b.high),low=Number(b.low),prior=Number(bars[i].close);return Number.isFinite(high)&&Number.isFinite(low)?Math.max(high-low,Math.abs(high-prior),Math.abs(low-prior)):null;}).filter(Number.isFinite);
+  const atr14=trueRanges.length>=14?trueRanges.slice(-14).reduce((sum,x)=>sum+x,0)/14:null;
+  const extension=last&&dailyVwap!==null&&atr14!==null&&atr14>0?Math.abs(Number(last.close)-dailyVwap)/atr14:null;
   if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
   if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · 16:00 ET close":" · exact 16:00 close not established"):"Data not found in sources: no RTH 1M bar returned.";}
   if(p)p.textContent=last?"$"+Number(last.close).toFixed(4):"DATA? — NO BAR";
   if(pl&&last){const z=parts(last.timestamp),m=Number(z.hour)*60+Number(z.minute);pl.textContent=m>=960?"AFTER-HOURS PRICE":m<570?"PREMARKET / EXTENDED PRICE":"LATEST PRICE";}
   if(pt)pt.textContent=last?"Latest returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: provider returned no 1M bars.";
+  const reasonList=$("reasons"),source=$("decisionSource"),score=$("decisionScore"),notice=$("mcc-static-0086-div");
+  if(reasonList){const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);reasonList.replaceChildren(...[
+   "1M close "+(last?"$"+fmt(last.close):"DATA?"),
+   "Daily VWAP "+(dailyVwap===null?"DATA?":"$"+fmt(dailyVwap)),
+   "ATR14 "+(atr14===null?"DATA?":"$"+fmt(atr14)),
+   "Extension "+(extension===null?"DATA?":extension.toFixed(2)+" ATR")
+  ].map(text=>Object.assign(document.createElement("li"),{textContent:text})));}
+  if(source)source.textContent="Overnight diagnostic calculations · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · RTH VWAP session "+(rthDate||"UNKNOWN")+" · latest 1M bar "+(last?local(last.timestamp)+" Arizona":"UNKNOWN")+" · partial-feed limitations apply.";
+  if(score){score.textContent="OVERNIGHT DIAGNOSTICS · NOT A SIGNAL";score.className="redzone-score score-unknown";}
+  if(notice)notice.textContent="These 1M close / Daily VWAP / ATR14 / Extension values are descriptive diagnostics only. They do not establish Boring Overnight qualification, 5M Permission, 1M execution readiness, consolidated coverage, or an executable quote.";
  }catch(e){if(c)c.textContent="DATA?";if(p)p.textContent="DATA?";if(ct)ct.textContent="Price request failed · "+e.message;if(pt)pt.textContent="Price request failed · source timestamp unavailable";}
 }
 async function refreshFocusedPriceChart(){
@@ -907,16 +925,15 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
  try{
   if($("mode")?.value==="overnight"){
    statusNode.textContent="BORING OVERNIGHT · RESEARCH";scoreNode.textContent="Intraday V2 permission: NOT USED";scoreNode.className="redzone-score score-unknown";
-   extensionNode.textContent="Intraday close / VWAP / ATR extension: NOT USED in Boring Overnight mode.";
-   freshnessNode.textContent="Historical / extended-hours chart data · no intraday freshness gate.";
-   participationNode.textContent="5M participation: NOT USED in Boring Overnight mode.";participationNode.className="redzone-participation unknown";
+   extensionNode.hidden=true;freshnessNode.hidden=true;participationNode.hidden=true;
    reasonNode.textContent="Reviewed under Boring Overnight rules. Intraday EXECUTION READY is not evaluated in this mode.";
    gateNode.textContent="Intraday 5M Permission / 1M execution: NOT USED · Overnight qualification is separate.";
    const q=new URLSearchParams({symbol,timeframe:"5m",from:new Date(Date.now()-5*86400000).toISOString(),to:new Date().toISOString(),providerName:"Alpaca"}),r=await fetch("/api/market-data/bars?"+q,{cache:"no-store"}),d=await r.json();if(!r.ok)throw Error(d.detail||d.error||("HTTP "+r.status));
    drawPriceLine(chartNode,(d.bars||[]).filter(b=>Number.isFinite(Number(b.close))).sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp)),symbol);return;
   }
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
-  observeRedZoneReadiness(symbol,decision);
+  extensionNode.hidden=false;freshnessNode.hidden=false;participationNode.hidden=false;
+   observeRedZoneReadiness(symbol,decision);
   statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   const money=value=>value!==null&&value!==undefined&&Number.isFinite(Number(value))?"$"+Number(value).toFixed(3):"DATA?";
