@@ -14,7 +14,7 @@
 - Alpaca Daily client retries transient network/timeouts, 429 and 5xx up to three attempts with bounded delay/Retry-After. Request is cloned per attempt. Non-transient 4xx is not retried.
 - Daily API preserves provider status classes: 422 for unsupported symbol/request, 503 for rate limit, 502 for upstream gateway/server failure.
 - Regression tests cover transient 502 recovery and non-transient 422 no-retry.
-- Latest code branch head at time of this handoff: see current branch ref. CI was running; verify latest run before accepting.
+- Latest code-bearing commit `59719e6263e7e51a3eafaacf86a0507817f3e2ef` passed Release build/tests: [CI run 42659428224](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42659428224). Documentation commits after that code commit were still running CI; check exact current branch head.
 
 ## Overnight truth audit
 
