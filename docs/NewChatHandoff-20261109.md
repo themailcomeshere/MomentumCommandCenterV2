@@ -15,6 +15,12 @@
 - Removed Red Zone static chip/paragraph and redundant label ID. Preserved `.gate-warning` and Ticker placeholder.
 - Decision Explanation and Timeframe Handoff are collapsible with pointer cursor. Timeframe Handoff is hidden in Boring Overnight mode.
 
+## CI status
+
+- Code commit `b2a1ff594f089f789b4932692ec00f6bf831d8a8`: GitHub Actions JavaScript syntax check, .NET Release build, and full tests passed (run `42716511385`).
+- Latest branch head at this handoff update: `e36a24c5c59c7e49dc2aa703c8fe2d13e8fa4253`. Exact-head JavaScript syntax check and .NET build passed; full test step is running (run `42716521717`).
+- Local Windows runtime/browser acceptance is not yet recorded.
+
 ## Operator acceptance
 
 1. Run `.\scripts\Get-Latest-And-Test.ps1`, restart API, hard-refresh Dashboard.
