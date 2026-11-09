@@ -6,12 +6,12 @@ Collect auditable human labels for ticker-linked news articles so the catalyst t
 
 ## Labels
 
-- `MATERIAL_RISK`: article identifies a material adverse, legal, regulatory, dilution, solvency, listing, product or other downside risk.
-- `MATERIAL_EVENT`: relevant material event (earnings, guidance, M&A, major contract, leadership, corporate action) without asserting that it is adverse.
-- `NON_MATERIAL`: ticker-linked but not material to the overnight decision.
-- `IRRELEVANT`: not actually relevant to the symbol/company.
-- `DUPLICATE`: duplicate or substantially repeated coverage of another article.
-- `UNCERTAIN`: insufficient information or ambiguous relevance.
+- `MATERIAL_RISK`: the article identifies a specific material adverse exposure or downside risk: legal/regulatory action, dilution, solvency/liquidity stress, listing threat, product/safety issue, or another credible threat to the issuer. Use this when the article's substance is adverse.
+- `MATERIAL_EVENT`: a significant company event that matters to the ticker but is not inherently adverse: earnings/guidance, M&A, major contract, leadership change, or corporate action. Do not use this instead of MATERIAL_RISK when the event itself presents a specific downside risk.
+- `NON_MATERIAL`: about the correct company, but routine or unlikely to materially affect the overnight trading decision.
+- `IRRELEVANT`: not actually about this issuer/security, including ticker collisions, namesakes, or unrelated entities.
+- `DUPLICATE`: repeated or substantially overlapping coverage of an article already reviewed; not a new independent example.
+- `UNCERTAIN`: relevance or materiality cannot be determined from verifiable source evidence; excluded from positive/negative performance metrics.
 
 Do not use a label of CLEAR. No human review label automatically clears a candidate.
 
@@ -48,7 +48,8 @@ Omit symbol to read the latest records across symbols. Limit is 1–500.
 ## Data quality and governance
 
 - Submit one review per article/symbol pair; preserve the source article ID, headline, URL, source name and publication time.
-- Review the actual article/filing, not only the headline. Notes must explain why the label was chosen; a source, ruleset version or rationale consisting of placeholder text is invalid.
+- Review the actual article/filing, not only the headline. Notes must contain at least 40 characters describing article-specific facts and why those facts support the label. A rationale such as "because you said" is not evidence and is rejected. Placeholder text and appeals to an assistant's recommendation are rejected both at submission and during historical validation.
+- `ruleSetVersion` must identify the actual automated triage ruleset that generated the saved prediction. Do not put the human-validation schema version in this field.
 - Use `UNCERTAIN` when the article cannot be verified. Do not infer a missing article or an empty feed as a clearance.
 - Keep the automated assessment and human label as separate fields. The store is append-only; corrections should be submitted as a new review with an explanation, not by overwriting the old record.
 - Labels are not yet adjudicated, de-duplicated, or used to compute precision/recall. A representative labelled set, double-review sampling, agreement measurement, and time-separated holdout validation are still required before classifier promotion.
