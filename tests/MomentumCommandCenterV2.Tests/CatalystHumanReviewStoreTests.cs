@@ -22,7 +22,7 @@ public sealed class CatalystHumanReviewStoreTests
                     "Example News",
                     "material_event",
                     "MCC-CATALYST-TRIAGE-1.0",
-                    "Earnings released after close",
+                    "Quarterly earnings were released after the close; the article reports updated guidance that could affect the next session.",
                     "MATERIAL",
                     new[] { "EARNINGS_OR_GUIDANCE" }),
                 CancellationToken.None);
@@ -60,7 +60,7 @@ public sealed class CatalystHumanReviewStoreTests
             return new CatalystHumanReviewRecord(
                 "review-" + index, "TEST", "article-" + index, "headline",
                 "https://example.com/" + index, start.AddDays(index), "Example",
-                label, "MCC-CATALYST-TRIAGE-1.0", "Source-backed review rationale for validation test.", start.AddDays(index),
+                label, "MCC-CATALYST-TRIAGE-1.0", "The article reports a material development affecting the issuer's operations and near-term outlook.", start.AddDays(index),
                 prediction, Array.Empty<string>());
         }).ToArray();
 
@@ -142,16 +142,16 @@ public sealed class CatalystHumanReviewStoreTests
             var published = DateTimeOffset.Parse("2026-11-06T20:00:00Z");
             var first = await store.AppendAsync(new CatalystHumanReviewInput(
                 "EWTX", "article-1", "Headline", "https://example.com/a", published,
-                "Example", "MATERIAL_RISK", null, "First adjudication", "UNCLASSIFIED"),
+                "Example", "MATERIAL_RISK", null, "The source article describes a regulatory action and a potential adverse effect on the company's commercial operations.", "UNCLASSIFIED"),
                 CancellationToken.None);
             var second = await store.AppendAsync(new CatalystHumanReviewInput(
                 "EWTX", "article-1", "Headline", "https://example.com/a", published,
-                "Example", "NON_MATERIAL", null, "Conflicting adjudication", "UNCLASSIFIED"),
+                "Example", "NON_MATERIAL", null, "The source article instead describes a routine event without any identified adverse effect or risk.", "UNCLASSIFIED"),
                 CancellationToken.None);
 
             var correction = await store.AppendAsync(new CatalystHumanReviewInput(
                 "EWTX", "article-1", "Headline", "https://example.com/a", published,
-                "Example", "MATERIAL_RISK", null, "Reviewed source; supersedes incorrect prior label",
+                "Example", "MATERIAL_RISK", null, "The article describes a pending regulatory action with a potential adverse effect on the company's commercial operations; this supersedes the earlier conflicting labels.",
                 "UNCLASSIFIED", null, new[] { first.ReviewId, second.ReviewId }),
                 CancellationToken.None);
 
@@ -170,7 +170,7 @@ public sealed class CatalystHumanReviewStoreTests
     }
 
     [Theory]
-    [InlineData("string", "MCC-CATALYST-TRIAGE-1.0", "A sufficiently detailed review rationale.")]
+    [InlineData("string", "MCC-CATALYST-TRIAGE-1.0", "The article reports a material development affecting the issuer's operations and near-term outlook.")]
     [InlineData("Example News", "string", "A sufficiently detailed review rationale.")]
     [InlineData("Example News", "MCC-CATALYST-TRIAGE-1.0", "string")]
     public async Task RejectsPlaceholderReviewMetadata(string source, string ruleSetVersion, string notes)
@@ -200,7 +200,27 @@ public sealed class CatalystHumanReviewStoreTests
             await Assert.ThrowsAsync<ArgumentException>(() => store.AppendAsync(
                 new CatalystHumanReviewInput("RTO", "a", "A headline", "https://example.com/a", null,
                     "Example News", "MATERIAL_EVENT", "MCC-CATALYST-TRIAGE-1.0",
-                    "A sufficiently detailed review rationale.", "UNCLASSIFIED", new[] { "string" }),
+                    "The article reports a material development affecting the issuer's operations and near-term outlook.", "UNCLASSIFIED", new[] { "string" }),
+                CancellationToken.None));
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData("Because you said it should be MATERIAL_RISK and I agree with your recommendation.")]
+    [InlineData("This is not enough detail to explain the actual article and the reason for the label.")]
+    public async Task RejectsUnsupportedOrInsufficientReviewRationale(string notes)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-catalyst-review-tests", Guid.NewGuid().ToString("N"));
+        var store = new CatalystHumanReviewStore(Path.Combine(directory, "reviews.jsonl"));
+        try
+        {
+            await Assert.ThrowsAsync<ArgumentException>(() => store.AppendAsync(
+                new CatalystHumanReviewInput("EWTX", "117008554", "Headline", "https://example.com/a", null,
+                    "TradingView", "MATERIAL_RISK", "MCC-CATALYST-TRIAGE-1.0", notes, "UNCLASSIFIED"),
                 CancellationToken.None));
         }
         finally
