@@ -1690,3 +1690,14 @@ main{margin-top:16px}
 #exclusionsDetails > summary:focus-visible { outline: 2px solid var(--accent, #65b9ff); outline-offset: 3px; }
 #exclusionsDetails > summary::-webkit-details-marker { cursor: pointer; }
 #opportunity-status.overnight-intraday-hidden { display: none !important; }
+
+.overnight-opportunity-status{grid-template-columns:repeat(3,minmax(0,1fr))}
+.overnight-opportunity-status .metric{min-height:150px}
+.overnight-opportunity-status button{margin-top:10px;width:100%}
+.decision-details>summary{cursor:pointer;list-style:none}
+.decision-details>summary::-webkit-details-marker{display:none}
+.decision-details>summary::after{content:"＋";color:var(--muted);margin-left:12px;font-weight:800}
+.decision-details[open]>summary::after{content:"−"}
+.decision-details-content{padding-top:12px}
+body.boring-overnight-mode #mcc-static-0087-article{display:none!important}
+@media(max-width:760px){.overnight-opportunity-status{grid-template-columns:1fr}}
