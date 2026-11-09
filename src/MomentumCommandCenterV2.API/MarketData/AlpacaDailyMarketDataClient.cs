@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using MomentumCommandCenterV2.API.BoringOvernight;
@@ -13,6 +14,7 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
     private readonly string? _key = configuration["MarketData:Alpaca:ApiKey"] ?? Environment.GetEnvironmentVariable("ALPACA_API_KEY");
     private readonly string? _secret = configuration["MarketData:Alpaca:ApiSecret"] ?? Environment.GetEnvironmentVariable("ALPACA_API_SECRET");
+    private const int MaxAttempts = 3;
     private readonly string _feed = (configuration["MarketData:Alpaca:Feed"] ?? "sip").Trim().ToLowerInvariant();
 
     public async Task<DailyMarketMetrics> GetMetricsAsync(string symbol, DateTimeOffset nowUtc, CancellationToken ct)
@@ -32,10 +34,10 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         request.Headers.Add("APCA-API-KEY-ID", _key);
         request.Headers.Add("APCA-API-SECRET-KEY", _secret);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+        using var response = await SendWithRetryAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (!response.IsSuccessStatusCode)
-            throw new HttpRequestException($"Alpaca Daily bars returned {(int)response.StatusCode} {response.ReasonPhrase}: {(body.Length > 400 ? body[..400] : body)}");
+            throw new HttpRequestException($"Alpaca Daily bars returned {(int)response.StatusCode} {response.ReasonPhrase}: {(body.Length > 400 ? body[..400] : body)}", null, response.StatusCode);
 
         using var document = JsonDocument.Parse(body);
         var root = document.RootElement;
