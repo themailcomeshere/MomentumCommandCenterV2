@@ -159,7 +159,9 @@ public sealed class CatalystHumanReviewStore(string? path = null)
         return !new[]
         {
             "because you said", "because chatgpt said", "because the assistant said",
-            "you told me", "your recommendation", "assistant recommendation"
+            "you told me", "your recommendation", "assistant recommendation",
+            "after reviewing it", "certainly fits", "i can confirm this",
+            "definitely more than", "this is more than", "it certainly fits"
         }.Any(normalized.Contains);
     }
 
