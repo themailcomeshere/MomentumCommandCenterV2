@@ -471,16 +471,19 @@ async function fetchDailyDataAudit(){
  if(!input||!body)return;
  const symbols=[...new Set(input.value.split(",").map(x=>x.trim().toUpperCase()).filter(x=>/^[A-Z0-9.-]{1,8}$/.test(x)))];
  if(!symbols.length){if(status)status.textContent="Enter at least one valid ticker.";return;}
+ if(symbols.length>20){if(status)status.textContent="Daily data audit accepts at most 20 symbols per run.";return;}
  if(button)button.disabled=true;
  if(status)status.textContent="Requesting Daily bars and recalculating 20-session metrics for "+symbols.join(", ")+"…";
- const results=await Promise.all(symbols.map(async symbol=>{
+ const results=new Array(symbols.length);let nextIndex=0;
+ const worker=async()=>{while(true){const index=nextIndex++;if(index>=symbols.length)return;const symbol=symbols[index];
   try{
    const response=await fetch("/api/market-data/daily?symbol="+encodeURIComponent(symbol),{cache:"no-store",headers:{Accept:"application/json"}});
    const payload=await response.json();
    if(!response.ok)throw new Error(payload.detail||payload.title||payload.error||("HTTP "+response.status));
-   return {symbol,payload,error:null};
-  }catch(error){return {symbol,payload:null,error:error.message};}
- }));
+   results[index]={symbol,payload,error:null};
+  }catch(error){results[index]={symbol,payload:null,error:error.message};}
+ }};
+ await Promise.all(Array.from({length:Math.min(4,symbols.length)},worker));
  if(button)button.disabled=false;
  const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined||value===""?"DATA?":String(value);return td;};
  const fmt=(value,digits=4)=>value===null||value===undefined||!Number.isFinite(Number(value))?"DATA?":Number(value).toLocaleString(undefined,{maximumFractionDigits:digits});
@@ -506,6 +509,56 @@ async function fetchDailyDataAudit(){
  if(status)status.textContent="Daily API checked "+results.length+" symbol(s): "+passes+" qualification-usable, "+(results.length-passes-errors)+" returned but DATA? / diagnostic-only, "+errors+" API errors. Values shown as observed source metrics; no independent-source parity is implied.";
 }
 $("dailyAuditRefresh")?.addEventListener("click",()=>void fetchDailyDataAudit());
+
+$("tosDailyReferenceImport")?.addEventListener("click",async()=>{
+ const status=$("tosDailyReferenceStatus"),file=$("tosDailyReferenceFile")?.files?.[0];
+ const symbol=String($("tosDailyReferenceSymbol")?.value||"").trim().toUpperCase();
+ const rowsHost=$("tosDailyReferenceRows"),button=$("tosDailyReferenceImport");
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter one valid symbol.";return;}
+ if(!file){status.textContent="Choose a Thinkorswim daily OHLC CSV first.";return;}
+ button.disabled=true;status.textContent="Reading TOS daily OHLC reference…";
+ try{
+  const raw=String(await file.text()).replace(/^\uFEFF/,""),lines=raw.split(/\r?\n/).filter(x=>x.trim());
+  if(lines[0]&&/^sep=./i.test(lines[0]))lines.shift();
+  if(!lines.length)throw new Error("CSV is empty.");
+  const delimiter=detectCsvDelimiter(lines[0]),headers=parseCsvLine(lines[0],delimiter).map(normalizeCsvHeader);
+  const find=(...names)=>names.map(n=>headers.indexOf(n)).find(i=>i>=0);
+  const ix={date:find("date","sessiondate","tradingdate"),open:find("open"),high:find("high"),low:find("low"),close:find("close")};
+  if(Object.values(ix).some(v=>v===undefined))throw new Error("CSV requires Date, Open, High, Low, Close headers.");
+  const bars=lines.slice(1).map((line,index)=>{
+   const v=parseCsvLine(line,delimiter),dateText=String(v[ix.date]||"").trim();
+   let dateMatch=dateText.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+   let sessionDate;
+   if(dateMatch)sessionDate=dateMatch[1]+"-"+dateMatch[2].padStart(2,"0")+"-"+dateMatch[3].padStart(2,"0");
+   else {const us=dateText.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(us)sessionDate=us[3]+"-"+us[1].padStart(2,"0")+"-"+us[2].padStart(2,"0");}
+   const number=i=>Number(String(v[i]??"").replace(/[$,%\s,]/g,""));
+   if(!sessionDate||[ix.open,ix.high,ix.low,ix.close].some(i=>!Number.isFinite(number(i))))return null;
+   return {sessionDate,open:number(ix.open),high:number(ix.high),low:number(ix.low),close:number(ix.close)};
+  }).filter(Boolean).sort((a,b)=>a.sessionDate.localeCompare(b.sessionDate));
+  if(bars.length<21)throw new Error("Only "+bars.length+" valid daily bars parsed; 21 are required to calculate 20 daily gaps.");
+  const request={symbol,source:"Thinkorswim daily OHLC CSV",aggregation:"DAY",extendedHours:$("tosDailyExtendedHours").checked,
+   corporateActionAdjusted:$("tosDailyAdjusted").checked,chartTimeZone:$("tosDailyTimezone").value.trim(),bars};
+  const response=await fetch("/api/overnight-scanner/thinkorswim-daily-bars",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(request)});
+  const payload=await response.json();if(!response.ok)throw new Error(payload.error||payload.detail||("HTTP "+response.status));
+  const calc=payload.calculation||{},sourceRow=(scannerData.imported||[]).find(x=>String(x.symbol).toUpperCase()===symbol),m=sourceRow?.overnightMetrics||{};
+  const values=[
+   ["ON WIN %",m.onWin,calc.onWinPct,2],["AVG ON %",m.avgOn,calc.avgOnPct,2],["Median ON %",m.medianOn,calc.medianOnPct,2],
+   ["5D ON %",m.fiveDayOn,calc.fiveDayOnPct,2],["ON Momentum",m.onMomentum,calc.onMomentum,2],
+   ["Current ON %",m.currentOn,calc.currentOnPct,2],["Above 20 SMA",m.above20Sma,calc.above20Sma,0],["Overnight Score",sourceRow?.score,calc.overnightScore,2]
+  ];
+  rowsHost.replaceChildren(...values.map(([label,tos,mcc,digits])=>{
+   const tr=document.createElement("tr"),a=Number(String(tos??"").replace(/[% ,]/g,"")),b=Number(mcc);
+   const valid=tos!==null&&tos!==undefined&&String(tos).trim()!==""&&Number.isFinite(a)&&Number.isFinite(b);
+   const match=valid&&a.toFixed(digits)===b.toFixed(digits);
+   for(const value of [label,valid?a.toFixed(digits):"DATA?",Number.isFinite(b)?b.toFixed(digits):"DATA?",valid?(match?"MATCH":"MISMATCH"):"NO SCANNER VALUE"]){const td=document.createElement("td");td.textContent=value;tr.append(td);}
+   tr.className=valid?(match?"qualification-pending":"qualification-blocked"):"qualification-pending";return tr;
+  }));
+  const matches=values.filter(([_,tos,mcc,d])=>tos!==null&&tos!==undefined&&String(tos).trim()!==""&&Number.isFinite(Number(String(tos).replace(/[% ,]/g,"")))&&Number.isFinite(Number(mcc))&&Number(String(tos).replace(/[% ,]/g,"")).toFixed(d)===Number(mcc).toFixed(d)).length;
+  status.textContent=payload.status+" · "+symbol+" · "+bars.length+" TOS daily bars · "+matches+"/8 displayed fields match to scanner display precision · "+calc.calculationVersion+" · import "+payload.importId+". This verifies arithmetic against the supplied TOS bars, not the aggregation's extended-hours semantics or independent source entitlement.";
+ }catch(error){status.textContent="TOS reference import/parity failed: "+error.message;}
+ finally{button.disabled=false;}
+});
+
 $("dailyAuditTop20")?.addEventListener("click",populateDailyAuditFromOvernightTop20);
 
 function renderOvernightTopFourEvidence(results){
