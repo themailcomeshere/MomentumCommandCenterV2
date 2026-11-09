@@ -20,8 +20,19 @@ public static class CatalystHumanReviewValidation
         var missingPrediction = activeRecords.Count(x => x.PredictedSeverity is not ("RISK" or "MATERIAL" or "UNCLASSIFIED"));
         var withPrediction = activeRecords.Where(x => x.PredictedSeverity is "RISK" or "MATERIAL" or "UNCLASSIFIED").ToArray();
         var nonEvaluableLabel = withPrediction.Count(x => !TryGetHumanTruth(x.Label, out _));
-        var eligible = withPrediction
+        var evaluableLabels = withPrediction
             .Where(x => TryGetHumanTruth(x.Label, out _))
+            .ToArray();
+        var inadequateReviewEvidence = evaluableLabels.Count(x =>
+            CatalystHumanReviewStore.IsPlaceholder(x.Source) ||
+            CatalystHumanReviewStore.IsPlaceholder(x.RuleSetVersion) ||
+            x.Notes is null || x.Notes.Trim().Length < 12 ||
+            CatalystHumanReviewStore.IsPlaceholder(x.Notes));
+        var eligible = evaluableLabels
+            .Where(x => !CatalystHumanReviewStore.IsPlaceholder(x.Source) &&
+                !CatalystHumanReviewStore.IsPlaceholder(x.RuleSetVersion) &&
+                x.Notes is not null && x.Notes.Trim().Length >= 12 &&
+                !CatalystHumanReviewStore.IsPlaceholder(x.Notes))
             .GroupBy(x => x.Symbol.Trim().ToUpperInvariant() + "|" +
                 (string.IsNullOrWhiteSpace(x.ArticleId) ? x.Url.Trim() : x.ArticleId.Trim()),
                 StringComparer.OrdinalIgnoreCase)
@@ -52,7 +63,8 @@ public static class CatalystHumanReviewValidation
                 x.ReviewId, x.Label, x.PredictedSeverity, x.ReviewedAtUtc, x.Headline, x.Url)).ToArray()))
             .ToArray();
         var breakdown = new CatalystHumanReviewExclusionBreakdown(
-            missingPrediction, nonEvaluableLabel, duplicateRecords, conflictingRecords, supersededIds.Count);
+            missingPrediction, nonEvaluableLabel, duplicateRecords, conflictingRecords,
+            supersededIds.Count, inadequateReviewEvidence);
         if (deduplicated.Length < MinimumEligibleReviews)
             return Empty(records.Count, deduplicated.Length, excluded, conflicts, breakdown,
                 $"INSUFFICIENT_LABELS: at least {MinimumEligibleReviews} unique, non-conflicting reviews with saved triage predictions are required to form a two-observation 20% chronological holdout; received {deduplicated.Length}. This is only a structural minimum, not statistical qualification.",
@@ -124,7 +136,8 @@ public sealed record CatalystHumanReviewExclusionBreakdown(
     int NonEvaluableLabel,
     int DuplicateSameLabelReview,
     int ConflictingArticleReview,
-    int SupersededReviewCount = 0);
+    int SupersededReviewCount = 0,
+    int InadequateReviewEvidence = 0);
 
 public sealed record CatalystHumanReviewConfusionMetrics(
     int SampleCount, int TruePositive, int FalsePositive, int TrueNegative, int FalseNegative,
