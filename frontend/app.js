@@ -351,7 +351,9 @@ function saveOvernightShortlists(){try{localStorage.setItem(overnightShortlistSt
 function renderOvernightShortlistPicker(rows){
  const picker=$("overnightManualTopFourPicker"),summary=$("overnightShortlistSummary");if(!picker)return;
  const symbols=[...new Set(rows.map(x=>String(x.symbol||"").trim().toUpperCase()).filter(Boolean))];overnightManualSymbols=overnightManualSymbols.filter(x=>symbols.includes(x)).slice(0,4);picker.replaceChildren();
- const ranked=rows.slice().sort((a,b)=>(Number(String(b.score??"").replace(/[^0-9.-]/g,""))||-Infinity)-(Number(String(a.score??"").replace(/[^0-9.-]/g,""))||-Infinity)||String(a.symbol).localeCompare(String(b.symbol))).slice(0,4).map(x=>String(x.symbol||"").toUpperCase());
+ const scoreOf=item=>{const raw=String(item.score??"").replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);return raw?Number(raw[0]):-Infinity;};
+ const uniqueRows=[...new Map(rows.map(item=>[String(item.symbol||"").trim().toUpperCase(),item]).filter(([symbol])=>symbol)).values()];
+ const ranked=uniqueRows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol))).slice(0,4).map(x=>String(x.symbol||"").toUpperCase());
  const paint=(id,items,empty)=>{const host=$(id);if(!host)return;host.replaceChildren();(items.length?items:[]).forEach((symbol,index)=>{const tag=document.createElement("span");tag.className="overnight-shortlist-symbol";tag.textContent=(index+1)+". "+symbol;host.append(tag);});if(!items.length){const note=document.createElement("span");note.className="muted small";note.textContent=empty;host.append(note);}};
  paint("overnightMccTopFourDisplay",ranked,"No imported rows");paint("overnightMyTopFourDisplay",overnightManualSymbols,"Select four symbols below");
  symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();renderCatalystHumanReviewQueue();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
@@ -370,8 +372,10 @@ $("overnightShortlistManual")?.addEventListener("click",()=>{if(overnightManualS
 async function fetchOvernightTopFourEvidence(){
  const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
  if(!rows.length){if(status)status.textContent="Import the Overnight Scanner CSV first.";return;}
- const ranked=rows.slice().sort((a,b)=>(Number(String(b.score??"").replace(/[^0-9.-]/g,""))||-Infinity)-(Number(String(a.score??"").replace(/[^0-9.-]/g,""))||-Infinity)||String(a.symbol).localeCompare(String(b.symbol)));
- const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>rows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):ranked.slice(0,4);
+ const scoreOf=item=>{const raw=String(item.score??"").replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);return raw?Number(raw[0]):-Infinity;};
+ const uniqueRows=[...new Map(rows.map(item=>[String(item.symbol||"").trim().toUpperCase(),item]).filter(([symbol])=>symbol)).values()];
+ const ranked=uniqueRows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)));
+ const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>uniqueRows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):ranked.slice(0,4);
  if(selected.length!==4){if(status)status.textContent=overnightShortlistMode==="manual"?"Select exactly four symbols in My Top 4 before fetching.":"MCC could not identify four distinct imported candidates.";return;}
  if(button)button.disabled=true;if(status)status.textContent="Fetching Daily and catalyst evidence for "+(overnightShortlistMode==="manual"?"My Top 4":"MCC Top 4")+": "+selected.map(x=>x.symbol).join(", ")+"…";
  const results=await Promise.all(selected.map(async item=>{
@@ -462,7 +466,7 @@ function renderCatalystHumanReviewQueue(){
   const status=document.createElement("span");status.className="muted small";
   save.addEventListener("click",async()=>{
    if(!article.url||!/^https?:\/\//i.test(article.url)){status.textContent="Cannot save: source article URL is missing or invalid.";return;}
-   if(notes.value.trim().length<40||/because you said|because chatgpt said|because the assistant said|you told me|your recommendation|assistant recommendation/i.test(notes.value)){status.textContent="Add at least 40 characters of article-specific evidence and reasoning. An assistant recommendation is not evidence.";return;}
+   if(notes.value.trim().length<40||/because you said|because chatgpt said|because the assistant said|you told me|your recommendation|assistant recommendation|after reviewing it|certainly fits|i can confirm this|definitely more than|this is more than|it certainly fits/i.test(notes.value)){status.textContent="Add at least 40 characters of article-specific facts and explain why they support the label. Generic confirmation and assistant recommendations are not evidence.";return;}
    save.disabled=true;status.textContent="Saving append-only review…";
    try{
     const response=await fetch("/api/market-data/catalyst-reviews",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,articleId:article.id||null,headline:article.headline||"Untitled article",url:article.url,publishedAtUtc:article.publishedAtUtc||null,source:"Alpaca News",label:label.value,ruleSetVersion:evidence.catalyst?.ruleSetVersion||"MCC-CATALYST-TRIAGE-1.0",notes:notes.value||null,predictedSeverity:item.severity||"UNCLASSIFIED",predictedCategories:item.categories||[]})});
