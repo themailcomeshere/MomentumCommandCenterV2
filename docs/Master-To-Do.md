@@ -1,8 +1,9 @@
 ## Boring Overnight UI implementation — 2026-11-09
 
 - [x] Added Previous Regular-Session Close, Latest Price (identified as extended-hours when latest 1M bar is outside RTH), and Calculated Limit Sell to the focused-symbol panel.
-- [x] Price fields show Phoenix source timestamps; latest 1M close is not represented as a live quote. Exact 16:00 ET wording is used only when the 15:59 ET bar is present.
+- [x] Price fields show Phoenix source timestamps; latest 1M close is not represented as a live quote. Previous Regular-Session Close excludes the in-progress RTH session; exact 16:00 ET wording is used only when the 15:59 ET bar is present.
 - [x] Added focused-symbol sell-limit action reusing the existing evidence-gated API and quantile. No duplicate calculator and no order submission.
+- [x] Moved 1M close / Daily VWAP / ATR14 / extension diagnostics into the collapsible Decision Explanation. They are calculated from returned 1M bars, labelled diagnostic-only, and carry provider/feed and timestamps. Red Zone hides those redundant metric paragraphs in Boring Overnight mode.
 - [x] Boring Overnight Red Zone now uses historical 5M bars and marks intraday 5M/1M gates NOT USED rather than displaying Intraday stale status.
 - [x] Manual pinned symbols are polled during Automatic mode; sound requires a known false-to-true EXECUTION READY transition and enabled sound.
 - [x] Scanner Workbench Symbols auto-populates with up to 20 unique imported Overnight symbols sorted by Overnight Score; manual Use Overnight Top 20 action is available. It does not submit a scan.
