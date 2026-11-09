@@ -319,7 +319,7 @@ async function refreshOvernightPriceSummary(symbol){
   const atr14=trueRanges.length>=14?trueRanges.slice(-14).reduce((sum,x)=>sum+x,0)/14:null;
   const extension=last&&dailyVwap!==null&&atr14!==null&&atr14>0?Math.abs(Number(last.close)-dailyVwap)/atr14:null;
   if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
-  if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · 16:00 ET close":" · exact 16:00 close not established"):"Data not found in sources: no RTH 1M bar returned.";}
+  if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · final 1M bar before 16:00 ET; official auction print not verified":" · exact session-close bar not established"):"Data not found in sources: no RTH 1M bar returned.";}
   if(p)p.textContent=last?"$"+Number(last.close).toFixed(4):"DATA? — NO BAR";
   if(pl&&last){const z=parts(last.timestamp),m=Number(z.hour)*60+Number(z.minute);pl.textContent=m>=960?"AFTER-HOURS PRICE":m<570?"PREMARKET / EXTENDED PRICE":"LATEST PRICE";}
   if(pt)pt.textContent=last?"Latest returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: provider returned no 1M bars.";
