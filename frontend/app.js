@@ -83,11 +83,14 @@ function render(){
  }
 }
 $("mode")?.addEventListener("change",render);
-$("symbol")?.addEventListener("change",()=>{render();void refreshFocusedPriceChart();});
+$("symbol")?.addEventListener("change",render);
 $("reset")?.addEventListener("click",()=>{if($("mode"))$("mode").value="momentum";render();void refreshFocusedPriceChart();});
 render();
-void refreshFocusedPriceChart();
-window.setInterval(()=>{if(document.visibilityState==="visible"){void refreshRedZoneAssessments();void refreshFocusedPriceChart();void refreshDecisionExplanation();void loadMinuteBarStreamStatus();}},15000);
+window.setInterval(()=>{
+ if(document.visibilityState!=="visible")return;
+ if($("mode")?.value==="overnight"){void refreshFocusedPriceChart();return;}
+ void refreshRedZoneAssessments();void refreshFocusedPriceChart();void refreshDecisionExplanation();void loadMinuteBarStreamStatus();
+},15000);
 
 
 /// MODULE: Quick Start guide
