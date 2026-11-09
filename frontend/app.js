@@ -403,7 +403,7 @@ async function fetchOvernightTopFourEvidence(){
  renderOvernightQualification();
  const failed=results.filter(x=>x.evidence.dailyError||x.evidence.catalystError);
  renderCatalystHumanReviewQueue();
- if(status)status.textContent="Live evidence fetched for "+results.length+" candidates: "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. Only this selected group of four was queried; other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
+ if(status)status.textContent="Live evidence fetched for "+results.length+" distinct candidates ("+results.map(x=>x.symbol).join(", ")+"): "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. The human-review queue lists only articles actually returned; a symbol with no returned articles remains UNKNOWN, not CLEAR. Other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
 }
 
 
