@@ -18,7 +18,7 @@
 ## CI status
 
 - Code commit `b2a1ff594f089f789b4932692ec00f6bf831d8a8`: GitHub Actions JavaScript syntax check, .NET Release build, and full tests passed (run `42716511385`).
-- Branch-head `e36a24c5c59c7e49dc2aa703c8fe2d13e8fa4253` passed exact-head JavaScript syntax check, .NET Release build, and full tests (run `42716521717`). Subsequent commits only update documentation; no application code changed after this passing verification. The newest documentation-only commit has its own workflow queued.
+- Branch-head `e36a24c5c59c7e49dc2aa703c8fe2d13e8fa4253` passed exact-head JavaScript syntax check, .NET Release build, and full tests (run `42716521717`). After this passing verification, one source-only wording change at `3de5bbb80762c978ae6c45cdb4eab3ba4b9808a3` clarified the VWAP/ATR bar-derived labels; exact-head CI for that label-only change is queued. The remaining follow-up commits are documentation-only. The newest documentation-only commit has its own workflow queued.
 - Local Windows runtime/browser acceptance is not yet recorded.
 
 ## Operator acceptance
