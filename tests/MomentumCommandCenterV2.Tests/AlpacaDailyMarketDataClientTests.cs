@@ -126,6 +126,62 @@ public sealed class AlpacaDailyMarketDataClientTests
         Assert.Null(result.AverageDailyVolume20);
     }
 
+
+    [Fact]
+    public async Task GetMetricsAsync_RetriesTransientGatewayFailureBeforeReturningDailyMetrics()
+    {
+        var attempts = 0;
+        using var http = new HttpClient(new SequenceHandler(() =>
+        {
+            attempts++;
+            return attempts < 3
+                ? new HttpResponseMessage(HttpStatusCode.BadGateway)
+                : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("""{"bars":[]}""") };
+        })) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "key",
+            ["MarketData:Alpaca:ApiSecret"] = "secret",
+            ["MarketData:Alpaca:Feed"] = "sip"
+        }).Build();
+
+        var result = await new AlpacaDailyMarketDataClient(http, config).GetMetricsAsync("BAYRY",
+            new DateTimeOffset(2026, 11, 9, 17, 0, 0, TimeSpan.Zero), CancellationToken.None);
+
+        Assert.Equal(3, attempts);
+        Assert.Equal(0, result.ValidSessionCount);
+        Assert.False(result.QualificationUsable);
+    }
+
+    [Fact]
+    public async Task GetMetricsAsync_DoesNotRetryNonTransientUnprocessableSymbolResponse()
+    {
+        var attempts = 0;
+        using var http = new HttpClient(new SequenceHandler(() =>
+        {
+            attempts++;
+            return new HttpResponseMessage(HttpStatusCode.UnprocessableEntity) { Content = new StringContent("symbol not supported") };
+        })) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "key",
+            ["MarketData:Alpaca:ApiSecret"] = "secret",
+            ["MarketData:Alpaca:Feed"] = "sip"
+        }).Build();
+
+        var error = await Assert.ThrowsAsync<HttpRequestException>(() => new AlpacaDailyMarketDataClient(http, config).GetMetricsAsync("BAYRY",
+            new DateTimeOffset(2026, 11, 9, 17, 0, 0, TimeSpan.Zero), CancellationToken.None));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, error.StatusCode);
+        Assert.Equal(1, attempts);
+    }
+
+    private sealed class SequenceHandler(Func<HttpResponseMessage> responseFactory) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            => Task.FromResult(responseFactory());
+    }
+
     private sealed class RecordingHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory) : HttpMessageHandler
     {
         public HttpRequestMessage? Request { get; private set; }
