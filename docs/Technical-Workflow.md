@@ -7,7 +7,7 @@
 1. **This document** — the normal sequence for updating, building, restarting, and smoke-testing a new MCC version.
 2. **`Runtime-Acceptance-Runbook.md`** — authoritative detailed runtime acceptance criteria, scripts, evidence files, and failure handling.
 3. **Feature-specific runbooks** — use only when that feature changed or is being certified (for example WebSocket delivery, Boring Overnight history, provider/feed comparison, or Schwab integration).
-4. **`Master-To-Do.md` and `NewChatHandoff-20261106.md`** — current status and open work, not substitutes for test procedures.
+4. **`Master-To-Do.md` and the latest dated `NewChatHandoff-*.md`** — current status and open work, not substitutes for test procedures.
 
 **You do not need to execute every section of the Runtime Acceptance Runbook after every commit.** Run the standard update/build/API smoke test below every time. Run deeper acceptance only for changed functionality, a scheduled certification, or when a smoke test exposes a problem.
 
