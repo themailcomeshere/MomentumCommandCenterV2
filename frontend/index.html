@@ -1,6 +1,12 @@
 <!doctype html>
 <html lang="en" id="mcc-static-0001-html">
-<head id="mcc-static-0002-head"><meta charset="utf-8" id="mcc-static-0003-meta"><meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta"><title id="mcc-static-0005-title">Momentum Command Center — Workbench</title><link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link"><link rel="stylesheet" href="./styles.css?v=20261102-main-chart-layout-v2" id="mcc-static-0007-link"><style id="prototype-layout-styles">
+<head id="mcc-static-0002-head">
+    <meta charset="utf-8" id="mcc-static-0003-meta">
+    <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
+    <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
+    <link rel="stylesheet" href="./styles.css?v=20261102-main-chart-layout-v2" id="mcc-static-0007-link">
+    <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
             position: fixed;
@@ -177,9 +183,9 @@
             min-width: 0
         }
 
-        .prototype-page #opportunity-status > .metric {
-            min-width: 0
-        }
+            .prototype-page #opportunity-status > .metric {
+                min-width: 0
+            }
 
         @media(max-width:1100px) {
             .prototype-page #opportunity-status {
@@ -238,6 +244,7 @@
             text-align: right;
             margin: 0 0 2px
         }
+
         .prototype-page .market-session-overnight {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -246,11 +253,12 @@
             font-size: 11px;
             color: var(--muted, #8b95a5);
         }
-        .prototype-page .market-session-overnight strong {
-            color: var(--text, #e8edf4);
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-        }
+
+            .prototype-page .market-session-overnight strong {
+                color: var(--text, #e8edf4);
+                font-variant-numeric: tabular-nums;
+                white-space: nowrap;
+            }
 
         .prototype-page .topbar-readiness-heading {
             margin-bottom: 0
@@ -354,63 +362,103 @@
                 text-align: left
             }
         }
-    
-/* Prototype header mirrors production: brand and readiness are sibling columns. */
-.prototype-page .topbar-layout{
- display:grid;
- grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);
- align-items:start;
- gap:16px;
- width:100%;
- min-width:0;
- flex:1;
-}
-.prototype-page .topbar-brand{
- display:flex;
- flex-direction:row;
- flex-wrap:wrap;
- align-items:center;
- justify-content:space-between;
- gap:10px 16px;
- min-width:0;
-}
-.prototype-page .topbar-tools{display:flex;align-items:center;gap:8px;flex:1 0 100%;flex-wrap:wrap;min-width:0}
-.prototype-page .topbar-readiness{min-width:0;width:100%;max-width:none;align-self:start}
-.prototype-page .market-session-clock{align-self:center;text-align:right;margin:0 0 2px auto}
-.prototype-page #prototype-transport-readiness .demo-flag{
- display:flex;
- align-items:center;
- justify-content:flex-start;
- gap:7px;
- min-width:0;
- max-width:100%;
- white-space:normal;
-}
-.prototype-page #prototype-transport-readiness #marketTransportLabel{
- display:inline;
- width:auto;
- height:auto;
- margin:0;
- padding:0;
- border-radius:0;
- color:var(--muted);
- background:transparent;
- white-space:normal;
- overflow-wrap:normal;
- word-break:normal;
- line-height:1.25;
-}
-@media(max-width:900px){
- .prototype-page .topbar-layout{grid-template-columns:minmax(0,1fr);width:100%}
- .prototype-page .topbar-brand{align-items:flex-start}
- .prototype-page .topbar-tools{width:100%}
- .prototype-page .topbar-readiness{width:100%;max-width:none}
- .prototype-page .market-session-clock{align-self:flex-start;text-align:left}
-}
-</style>
+
+        /* Prototype header mirrors production: brand and readiness are sibling columns. */
+        .prototype-page .topbar-layout {
+            display: grid;
+            grid-template-columns: minmax(0,1.1fr) minmax(320px,.9fr);
+            align-items: start;
+            gap: 16px;
+            width: 100%;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .prototype-page .topbar-brand {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px 16px;
+            min-width: 0;
+        }
+
+        .prototype-page .topbar-tools {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1 0 100%;
+            flex-wrap: wrap;
+            min-width: 0
+        }
+
+        .prototype-page .topbar-readiness {
+            min-width: 0;
+            width: 100%;
+            max-width: none;
+            align-self: start
+        }
+
+        .prototype-page .market-session-clock {
+            align-self: center;
+            text-align: right;
+            margin: 0 0 2px auto
+        }
+
+        .prototype-page #prototype-transport-readiness .demo-flag {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 7px;
+            min-width: 0;
+            max-width: 100%;
+            white-space: normal;
+        }
+
+        .prototype-page #prototype-transport-readiness #marketTransportLabel {
+            display: inline;
+            width: auto;
+            height: auto;
+            margin: 0;
+            padding: 0;
+            border-radius: 0;
+            color: var(--muted);
+            background: transparent;
+            white-space: normal;
+            overflow-wrap: normal;
+            word-break: normal;
+            line-height: 1.25;
+        }
+
+        @media(max-width:900px) {
+            .prototype-page .topbar-layout {
+                grid-template-columns: minmax(0,1fr);
+                width: 100%
+            }
+
+            .prototype-page .topbar-brand {
+                align-items: flex-start
+            }
+
+            .prototype-page .topbar-tools {
+                width: 100%
+            }
+
+            .prototype-page .topbar-readiness {
+                width: 100%;
+                max-width: none
+            }
+
+            .prototype-page .market-session-clock {
+                align-self: flex-start;
+                text-align: left
+            }
+        }
+    </style>
 </head>
 <body id="mcc-static-0008-body" class="prototype-page">
-<aside class="prototype-dock" id="prototype-dock" aria-label="Workspace and focused symbol">
+    <aside class="prototype-dock" id="prototype-dock" aria-label="Workspace and focused symbol">
         <div class="prototype-symbol-control" id="prototype-symbol-control">
             <label for="symbol" id="prototype-symbol-label">SYMBOL</label>
             <input id="symbol" type="text" value="SPY" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Focused symbol">
@@ -433,7 +481,7 @@
         </select>
         <button id="openQuickStart" class="prototype-quick-start" type="button">Quick Start</button><button id="reset" class="prototype-reset" type="button">Reset</button>
     </aside>
-<header class="topbar" id="mcc-header">
+    <header class="topbar" id="mcc-header">
         <div class="topbar-layout" id="mcc-static-0009-div">
             <div class="topbar-brand" id="mcc-static-0010-div">
                 <div class="topbar-title-row" id="mcc-static-0011-div"><h1 id="mcc-static-0013-h1">Momentum Command Center</h1><button id="openMorningBrief" type="button" class="quiet-button">Morning Command Brief</button></div>
@@ -452,7 +500,8 @@
             </div>
             <details class="topbar-readiness" id="system-readiness" aria-label="System readiness">
                 <summary class="topbar-readiness-heading" aria-label="Expand or collapse system readiness"><span class="eyebrow">SYSTEM READINESS</span><span class="chip">Decision support</span></summary>
-                <div class="readiness-grid" id="mcc-static-0032-div"><div class="readiness-runtime"><strong>WebSocket</strong><span id="streamStatus" class="chip">WS minute bars: checking…</span></div><div class="readiness-runtime"><strong>Build</strong><span id="prototype-page-badge" class="chip">MAIN INDEX · ACTIVE</span></div>
+                <div class="readiness-grid" id="mcc-static-0032-div">
+                    <div class="readiness-runtime"><strong>WebSocket</strong><span id="streamStatus" class="chip">WS minute bars: checking…</span></div><div class="readiness-runtime"><strong>Build</strong><span id="prototype-page-badge" class="chip">MAIN INDEX · ACTIVE</span></div>
                     <div id="prototype-transport-readiness" class="readiness-item"><div class="demo-flag" id="prototype-demo-flag"><span id="prototype-transport-dot"></span><span id="marketTransportLabel">ALPACA REST · 15s UI REFRESH</span></div><strong id="prototype-transport-title">Data transport</strong></div>
                     <div id="mcc-static-0033-div"><span class="readiness-dot demo" id="mcc-static-0034-span"></span><strong id="mcc-static-0035-strong">Market data</strong><span id="mcc-static-0036-span">Alpaca historical REST · 10s cache</span></div>
                     <div id="mcc-static-0037-div"><span class="readiness-dot blocked" id="mcc-static-0038-span"></span><strong id="mcc-static-0039-strong">Thinkorswim</strong><span id="mcc-static-0040-span">No API/session connection</span></div>
@@ -462,9 +511,9 @@
             </details>
         </div>
     </header>
-<main id="mcc-static-0049-main">
+    <main id="mcc-static-0049-main">
 
-<section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
+        <section id="main-chart-section" class="panel main-chart-section" aria-labelledby="mainChartTitle">
             <div class="main-chart-header" id="mcc-static-0050-div">
                 <div id="mainChartSymbol" class="focus-symbol-chip">SPY</div>
                 <div class="main-chart-heading" id="mcc-static-0051-div">
@@ -493,286 +542,314 @@
         </section>
 
 
-<div id="morning-command" class="command-layout" aria-label="Morning command workspace">
-<section id="red-zone" class="panel redzone-panel">
- <div class="section-heading" id="mcc-static-0069-div"><div id="mcc-static-0070-div"><div class="eyebrow" id="mcc-static-0071-div">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2 id="mcc-static-0072-h2">Red Zone</h2><p class="muted" id="mcc-static-0073-p">Up to four priority stocks. Pin a symbol or add it from the scanner; ranking is not entry permission.</p></div><div class="report-actions" id="mcc-static-0074-div"><button id="toggleRedZoneMode" type="button" class="quiet-button" aria-pressed="false" title="Automatic mode selects the top scanner-score preview; manual mode shows pinned symbols in saved order.">Mode: Automatic</button><button id="toggleRedZoneSound" type="button" class="quiet-button" aria-pressed="false">Enable sound alerts</button><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><button id="rankOpportunityPool" type="button" class="quiet-button">Rank quality pool · top 50</button><span class="chip" id="mcc-static-0075-span">Preview / discovery</span></div></div>
- <form id="redZoneAddForm" class="redzone-manage-form"><label for="redZoneAddSymbol" id="mcc-static-0076-label">Add a symbol</label><input id="redZoneAddSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker to pin in Red Zone"><button type="submit" id="mcc-static-0077-button">Pin to Red Zone</button><button id="restoreRedZone" type="button" class="quiet-button">Restore dismissed / repopulate</button><button id="clearRedZoneCandidates" type="button" class="quiet-button">Dismiss/Clear all Red Zone Candidates</button></form>
- <p id="redZoneManageStatus" class="muted" role="status">CSV imports update Red Zone immediately. Technical card assessments refresh every 15 seconds; Alpaca discoveries refresh every 30 seconds when selected. Thinkorswim scans require CSV import.</p>
- <p id="opportunityPoolRankingStatus" class="muted small" role="status">Opportunity Quality pool ranking is diagnostic. It assesses the top 50 imported scanner-score candidates; missing/stale evidence remains DATA?.</p>
- <div id="opportunityPoolRanking" class="catalyst-review-queue"></div>
- <div id="redZoneGrid" class="redzone-grid"><article class="redzone-empty" id="mcc-static-0078-article">No candidate rows available.</article></div>
- <p class="notice" id="mcc-static-0079-p">Tiles below are built from local demo/import or fetched discovery rows; each tile attempts a recent Alpaca 1-minute price line. Missing data remains unavailable.  Rank is the supplied scanner score, not a validated MCC opportunity score. Missing source, freshness, 5M Permission, or 1M event must never be treated as passing.</p>
-</section>
-</div>
-<section id="decision-layout" class="layout"><article class="panel" id="mcc-static-0080-article"><div class="section-heading" id="mcc-static-0081-div"><div id="mcc-static-0082-div"><div class="eyebrow" id="mcc-static-0083-div">DECISION EXPLANATION · LIVE API</div><h2 id="mcc-static-0084-h2">Why this classification?</h2></div><span id="decisionScore" class="redzone-score score-unknown">Loading live score…</span></div><ul id="reasons" class="reason-list"><li id="mcc-static-0085-li">Waiting for live 1M/5M source bars.</li></ul><p id="decisionSource" class="muted small">Source, feed, timestamps, and evaluation state will appear here.</p><div class="notice" id="mcc-static-0086-div">The six V2 score conditions are evaluated from completed 5M OHLCV bars. A 5M permission score is not an entry signal; the 1M execution gate must also confirm. Decision support only — no orders are submitted.</div></article>
-<article class="panel" id="mcc-static-0087-article"><div class="section-heading" id="mcc-static-0088-div"><div id="mcc-static-0089-div"><div class="eyebrow" id="mcc-static-0090-div">TIMEFRAME HANDOFF</div><h2 id="mcc-static-0091-h2">5M authority → 1M execution</h2></div></div><div class="timeframe-row" id="mcc-static-0092-div"><span class="tf" id="mcc-static-0093-span">5M</span><div id="mcc-static-0094-div"><strong id="fiveState">5M permission: LOADING</strong><p id="mcc-static-0095-p">Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row" id="mcc-static-0096-div"><span class="tf" id="mcc-static-0097-span">1M</span><div id="mcc-static-0098-div"><strong id="oneState">1M execution: LOADING</strong><p id="mcc-static-0099-p">Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="handoff-howto" id="mcc-static-0100-div">
- <strong id="mcc-static-0101-strong">How to use the handoff</strong>
- <ul id="mcc-static-0102-ul">
-  <li id="mcc-static-0103-li"><b id="mcc-static-0104-b">Before considering an entry:</b> check 5M permission first. If it is NO, UNKNOWN, or stale, do not treat a 1M move as an authorized setup.</li>
-  <li id="mcc-static-0105-li"><b id="mcc-static-0106-b">When 5M permission is YES:</b> watch 1M for a separate execution confirmation. A high 5M score alone is not an entry signal.</li>
-  <li id="mcc-static-0107-li"><b id="mcc-static-0108-b">How often:</b> review when a new completed 5M bar closes, and inspect 1M as each completed minute arrives. No button press is required; the dashboard refreshes automatically every 15 seconds, but it is not a tick feed.</li>
-  <li id="mcc-static-0109-li"><b id="mcc-static-0110-b">After entry:</b> reassess 1M management on each completed minute and recheck 5M structure on each completed 5M bar. Missing or stale data means WAIT / UNKNOWN.</li>
-  <li><b>For an exit:</b> this handoff is not an exit button and does not currently receive a broker-synced open position. It therefore cannot produce a position-specific EXIT decision. Evaluate exits against the actual open position separately; do not reuse a fresh-entry check as an exit rule.</li>
-  <li id="mcc-static-0111-li"><b id="mcc-static-0112-b">Replay:</b> use it after historical bars have been stored to inspect a past decision. It does not predict a future setup or recover a historical broker position.</li>
- </ul>
-</div>
-<div class="divider" id="mcc-static-0113-div"></div><div class="section-heading" id="mcc-static-0114-div"><h3 id="mcc-static-0115-h3">Historical decision replay</h3><span class="chip" id="mcc-static-0116-span">Stored bars · no lookahead</span></div>
-<form id="historicalReplayForm" class="replay-controls">
- <label id="mcc-static-0117-label">Symbol <input id="replaySymbol" value="SPY" maxlength="8" required></label>
- <label id="mcc-static-0118-label">Source feed <select id="replayFeed"><option value="iex" id="mcc-static-0119-option">IEX</option><option value="sip" id="mcc-static-0120-option">SIP</option></select></label>
- <label id="mcc-static-0121-label">As-of (Arizona local time) <input id="replayAsOfLocal" type="datetime-local" required></label>
- <label class="replay-position-toggle" id="mcc-static-0122-label"><input id="replayHasPosition" type="checkbox"> Simulate an existing position</label>
- <button id="replayRun" type="submit">Replay V2 decision</button>
-</form>
-<p id="replayStatus" class="muted small">Replay uses only stored, completed 1M/5M bars at or before the selected UTC timestamp. It does not download missing history.</p>
-<div id="replayResult" class="replay-result" aria-live="polite"><p class="muted small" id="mcc-static-0123-p">No replay run yet. Stream/collector data must first exist in the API instance's raw-bar store.</p></div></article></section>
-<section id="overnightPanel" data-section-id="overnight-analysis" class="panel hidden">
- <div class="section-heading" id="mcc-static-0124-div"><div id="mcc-static-0125-div"><div class="eyebrow" id="mcc-static-0126-div">BORING OVERNIGHT · API-BACKED</div><h2 id="mcc-static-0127-h2">Overnight scan &amp; analysis</h2></div><span class="chip" id="mcc-static-0128-span">Research only · no orders</span></div>
- <p class="notice" id="mcc-static-0129-p">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
- <form id="overnightBarsForm" class="overnight-controls">
-  <label id="mcc-static-0130-label">Symbol <input id="overnightSymbol" value="RTO" maxlength="8" required></label>
-  <label id="mcc-static-0131-label">Bar interval <select id="overnightTimeframe"><option value="1m" selected id="mcc-static-0132-option">1 minute</option><option value="5m" id="mcc-static-0133-option">5 minutes</option></select></label>
-  <label id="mcc-static-0134-label">From (Arizona local) <input id="overnightFrom" type="datetime-local" required></label>
-  <label id="mcc-static-0135-label">To (Arizona local) <input id="overnightTo" type="datetime-local" required></label>
-  <button id="overnightFetch" type="submit">Fetch &amp; analyze bars</button>
-  <button id="overnightRefreshSnapshots" type="button" class="quiet-button">Refresh saved evaluations</button>
- </form>
- <p id="overnightStatus" class="muted" role="status">Ready to request bars.</p>
- <div class="overnight-history-capture" id="mcc-static-0136-div">
-  <button id="overnightCapture20" type="button">Fetch / retry 20-session close/open history</button>
-  <p id="overnightHistoryStatus" class="muted" role="status">No 20-session capture run yet. This fetches 1-minute provider bars, persists them, and calculates the 20 most recent regular close/open pairs.</p>
-  <div class="overnight-results-grid" id="mcc-static-0137-div">
-   <article class="overnight-result" id="mcc-static-0138-article"><h3 id="mcc-static-0139-h3">20-session close/open history</h3><dl id="mcc-static-0140-dl">
-    <div id="mcc-static-0141-div"><dt id="mcc-static-0142-dt">Valid / required pairs</dt><dd id="overnightHistoryPairs">DATA?</dd></div>
-    <div id="mcc-static-0143-div"><dt id="mcc-static-0144-dt">Overnight win rate</dt><dd id="overnightHistoryWinRate">DATA?</dd></div>
-    <div id="mcc-static-0145-div"><dt id="mcc-static-0146-dt">20-pair mean return</dt><dd id="overnightHistoryMean20">DATA?</dd></div>
-    <div id="mcc-static-0147-div"><dt id="mcc-static-0148-dt">20-pair median return</dt><dd id="overnightHistoryMedian20">DATA?</dd></div>
-    <div id="mcc-static-0149-div"><dt id="mcc-static-0150-dt">5-pair mean return</dt><dd id="overnightHistoryMean5">DATA?</dd></div>
-    <div id="mcc-static-0151-div"><dt id="mcc-static-0152-dt">Missing pairs</dt><dd id="overnightHistoryMissing">DATA?</dd></div>
-   </dl></article>
-   <article class="overnight-result" id="mcc-static-0153-article"><h3 id="mcc-static-0154-h3">Capture provenance</h3><dl id="mcc-static-0155-dl">
-    <div id="mcc-static-0156-div"><dt id="mcc-static-0157-dt">Provider / feed</dt><dd id="overnightHistoryProvider">NOT CAPTURED</dd></div>
-    <div id="mcc-static-0158-div"><dt id="mcc-static-0159-dt">Fetched / newly stored bars</dt><dd id="overnightHistoryBars">DATA?</dd></div>
-    <div id="mcc-static-0160-div"><dt id="mcc-static-0161-dt">Calendar ruleset</dt><dd id="overnightHistoryCalendar">NOT CAPTURED</dd></div>
-    <div id="mcc-static-0162-div"><dt id="mcc-static-0163-dt">Calculated at (UTC)</dt><dd id="overnightHistoryAsOf">NOT CAPTURED</dd></div>
-   </dl></article>
-  </div>
-  <div class="table-wrap" id="mcc-static-0164-div"><table id="mcc-static-0165-table"><thead id="mcc-static-0166-thead"><tr id="mcc-static-0167-tr"><th id="mcc-static-0168-th">Next session</th><th id="mcc-static-0169-th">Previous close</th><th id="mcc-static-0170-th">Next open</th><th id="mcc-static-0171-th">ON return</th><th id="mcc-static-0172-th">Source timestamps (UTC)</th></tr></thead><tbody id="overnightHistoryRows"><tr id="mcc-static-0173-tr"><td colspan="5" id="mcc-static-0174-td">No session pairs captured.</td></tr></tbody></table></div>
-  <details class="overnight-boundary-details"><summary>Show exact boundary coverage audit (40 rows)</summary>
-  <div class="section-heading" id="overnightBoundaryAuditHeading"><div id="overnightBoundaryAuditHeadingText"><div class="eyebrow" id="overnightBoundaryAuditEyebrow">EXACT BOUNDARY COVERAGE AUDIT</div><h3 id="overnightBoundaryAuditTitle">Provider response vs persisted store</h3><p class="muted" id="overnightBoundaryAuditDescription">The 20-session capture checks all 40 expected regular close/open timestamps for the selected provider/feed. The next-session value currently uses the Open of the exact 09:30 ET one-minute bar; that is a proxy and is not independently verified as the official opening-auction print.</p></div></div>
-  <div class="table-wrap" id="mcc-static-0175-div"><table id="mcc-static-0176-table"><thead id="mcc-static-0177-thead"><tr id="mcc-static-0178-tr"><th id="mcc-static-0179-th">Session</th><th id="mcc-static-0180-th">Boundary</th><th id="mcc-static-0181-th">Expected timestamp (UTC)</th><th id="mcc-static-0182-th">Provider exact bar</th><th id="mcc-static-0183-th">Store exact bar</th><th id="mcc-static-0184-th">Nearest provider bar</th><th id="mcc-static-0185-th">Audit result</th></tr></thead><tbody id="overnightBoundaryCoverageRows"><tr id="mcc-static-0186-tr"><td colspan="7" id="mcc-static-0187-td">Run the 20-session capture to audit all 40 expected boundary bars.</td></tr></tbody></table></div>
-  </details>
- </div>
- <details class="overnight-control-details"><summary>Optional diagnostic: compare this ticker with SPY</summary>
-            <section class="overnight-coverage-audit" aria-labelledby="overnightCoverageTitle" id="mcc-static-0188-section">
-  <div class="section-heading" id="mcc-static-0189-div"><div id="mcc-static-0190-div"><div class="eyebrow" id="overnightControlTestEyebrow">POST-MARKET CONTROL TEST</div><h3 id="overnightCoverageTitle">Ticker vs SPY control test</h3><p class="muted" id="mcc-static-0192-p">Fetches the selected ticker and SPY over the identical UTC window. This checks whether the configured source returns any observations; it is not a full provider-entitlement or exact-boundary coverage audit.</p></div></div>
-  <form id="overnightCoverageForm" class="overnight-controls">
-   <label id="mcc-static-0193-label">From (UTC) <input id="overnightCoverageFrom" type="datetime-local" value="2026-10-28T20:00" required></label>
-   <label id="mcc-static-0194-label">To (UTC) <input id="overnightCoverageTo" type="datetime-local" value="2026-10-28T23:55" required></label>
-   <button id="overnightCoverageRun" type="submit">Compare ticker vs SPY</button>
-  </form>
-  <p id="overnightCoverageStatus" class="muted" role="status">No control test run in this session.</p>
-  <div class="table-wrap" id="mcc-static-0195-div"><table id="mcc-static-0196-table"><thead id="mcc-static-0197-thead"><tr id="mcc-static-0198-tr"><th id="mcc-static-0199-th">Symbol</th><th id="mcc-static-0200-th">Provider / feed</th><th id="mcc-static-0201-th">Bars</th><th id="mcc-static-0202-th">First / latest source time (UTC)</th><th id="mcc-static-0203-th">Interpretation</th></tr></thead><tbody id="overnightCoverageRows"><tr id="mcc-static-0204-tr"><td colspan="5" id="mcc-static-0205-td">No coverage results.</td></tr></tbody></table></div>
-  <p class="notice" id="mcc-static-0206-p">On 2026-10-28, 20:00 UTC was 16:00 EDT (regular close); later timestamps are post-market. Sparse IEX bars prove only that the feed returned those observations for that symbol/window. Empty results do not prove no trading or identify entitlement cause.</p>
- </section>
+        <div id="morning-command" class="command-layout" aria-label="Morning command workspace">
+            <section id="red-zone" class="panel redzone-panel">
+                <div class="section-heading" id="mcc-static-0069-div"><div id="mcc-static-0070-div"><div class="eyebrow" id="mcc-static-0071-div">TOP CANDIDATES · MULTI-PANE MONITOR</div><h2 id="mcc-static-0072-h2">Red Zone</h2><p class="muted" id="mcc-static-0073-p">Up to four priority stocks. Pin a symbol or add it from the scanner; ranking is not entry permission.</p></div><div class="report-actions" id="mcc-static-0074-div"><button id="toggleRedZoneMode" type="button" class="quiet-button" aria-pressed="false" title="Automatic mode selects the top scanner-score preview; manual mode shows pinned symbols in saved order.">Mode: Automatic</button><button id="toggleRedZoneSound" type="button" class="quiet-button" aria-pressed="false">Enable sound alerts</button><button id="refreshRedZone" type="button" class="quiet-button">Refresh Red Zone</button><button id="rankOpportunityPool" type="button" class="quiet-button">Rank quality pool · top 50</button><span class="chip" id="mcc-static-0075-span">Preview / discovery</span></div></div>
+                <form id="redZoneAddForm" class="redzone-manage-form"><label for="redZoneAddSymbol" id="mcc-static-0076-label">Add a symbol</label><input id="redZoneAddSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker to pin in Red Zone"><button type="submit" id="mcc-static-0077-button">Pin to Red Zone</button><button id="restoreRedZone" type="button" class="quiet-button">Restore dismissed / repopulate</button><button id="clearRedZoneCandidates" type="button" class="quiet-button">Dismiss/Clear all Red Zone Candidates</button></form>
+                <p id="redZoneManageStatus" class="muted" role="status">CSV imports update Red Zone immediately. Technical card assessments refresh every 15 seconds; Alpaca discoveries refresh every 30 seconds when selected. Thinkorswim scans require CSV import.</p>
+                <p id="opportunityPoolRankingStatus" class="muted small" role="status">Opportunity Quality pool ranking is diagnostic. It assesses the top 50 imported scanner-score candidates; missing/stale evidence remains DATA?.</p>
+                <div id="opportunityPoolRanking" class="catalyst-review-queue"></div>
+                <div id="redZoneGrid" class="redzone-grid"><article class="redzone-empty" id="mcc-static-0078-article">No candidate rows available.</article></div>
+                <p class="notice" id="mcc-static-0079-p">Tiles below are built from local demo/import or fetched discovery rows; each tile attempts a recent Alpaca 1-minute price line. Missing data remains unavailable.  Rank is the supplied scanner score, not a validated MCC opportunity score. Missing source, freshness, 5M Permission, or 1M event must never be treated as passing.</p>
+            </section>
+        </div>
+        <section id="decision-layout" class="layout">
+            <article class="panel" id="mcc-static-0080-article">
+                <div class="section-heading" id="mcc-static-0081-div">
+                    <div id="mcc-static-0082-div">
+                        <div class="eyebrow" id="mcc-static-0083-div">DECISION EXPLANATION · LIVE API</div>
+                        <h2 id="mcc-static-0084-h2">Why this classification?</h2>
+                    </div>
+                    <span id="decisionScore" class="redzone-score score-unknown">Loading live score…</span>
+                </div><ul id="reasons" class="reason-list">
+                    <li id="mcc-static-0085-li">Waiting for live 1M/5M source bars.</li>
+                </ul>
+                <p id="decisionSource" class="muted small">Source, feed, timestamps, and evaluation state will appear here.</p>
+                <div class="notice" id="mcc-static-0086-div">The six V2 score conditions are evaluated from completed 5M OHLCV bars. A 5M permission score is not an entry signal; the 1M execution gate must also confirm. Decision support only — no orders are submitted.</div>
+            </article>
+            <article class="panel" id="mcc-static-0087-article">
+                <div class="section-heading" id="mcc-static-0088-div"><div id="mcc-static-0089-div"><div class="eyebrow" id="mcc-static-0090-div">TIMEFRAME HANDOFF</div><h2 id="mcc-static-0091-h2">5M authority → 1M execution</h2></div></div><div class="timeframe-row" id="mcc-static-0092-div"><span class="tf" id="mcc-static-0093-span">5M</span><div id="mcc-static-0094-div"><strong id="fiveState">5M permission: LOADING</strong><p id="mcc-static-0095-p">Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row" id="mcc-static-0096-div"><span class="tf" id="mcc-static-0097-span">1M</span><div id="mcc-static-0098-div"><strong id="oneState">1M execution: LOADING</strong><p id="mcc-static-0099-p">Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="handoff-howto" id="mcc-static-0100-div">
+                    <strong id="mcc-static-0101-strong">How to use the handoff</strong>
+                    <ul id="mcc-static-0102-ul">
+                        <li id="mcc-static-0103-li"><b id="mcc-static-0104-b">Before considering an entry:</b> check 5M permission first. If it is NO, UNKNOWN, or stale, do not treat a 1M move as an authorized setup.</li>
+                        <li id="mcc-static-0105-li"><b id="mcc-static-0106-b">When 5M permission is YES:</b> watch 1M for a separate execution confirmation. A high 5M score alone is not an entry signal.</li>
+                        <li id="mcc-static-0107-li"><b id="mcc-static-0108-b">How often:</b> review when a new completed 5M bar closes, and inspect 1M as each completed minute arrives. No button press is required; the dashboard refreshes automatically every 15 seconds, but it is not a tick feed.</li>
+                        <li id="mcc-static-0109-li"><b id="mcc-static-0110-b">After entry:</b> reassess 1M management on each completed minute and recheck 5M structure on each completed 5M bar. Missing or stale data means WAIT / UNKNOWN.</li>
+                        <li><b>For an exit:</b> this handoff is not an exit button and does not currently receive a broker-synced open position. It therefore cannot produce a position-specific EXIT decision. Evaluate exits against the actual open position separately; do not reuse a fresh-entry check as an exit rule.</li>
+                        <li id="mcc-static-0111-li"><b id="mcc-static-0112-b">Replay:</b> use it after historical bars have been stored to inspect a past decision. It does not predict a future setup or recover a historical broker position.</li>
+                    </ul>
+                </div>
+                <div class="divider" id="mcc-static-0113-div"></div><div class="section-heading" id="mcc-static-0114-div"><h3 id="mcc-static-0115-h3">Historical decision replay</h3><span class="chip" id="mcc-static-0116-span">Stored bars · no lookahead</span></div>
+                <form id="historicalReplayForm" class="replay-controls">
+                    <label id="mcc-static-0117-label">Symbol <input id="replaySymbol" value="SPY" maxlength="8" required></label>
+                    <label id="mcc-static-0118-label">Source feed <select id="replayFeed"><option value="iex" id="mcc-static-0119-option">IEX</option><option value="sip" id="mcc-static-0120-option">SIP</option></select></label>
+                    <label id="mcc-static-0121-label">As-of (Arizona local time) <input id="replayAsOfLocal" type="datetime-local" required></label>
+                    <label class="replay-position-toggle" id="mcc-static-0122-label"><input id="replayHasPosition" type="checkbox"> Simulate an existing position</label>
+                    <button id="replayRun" type="submit">Replay V2 decision</button>
+                </form>
+                <p id="replayStatus" class="muted small">Replay uses only stored, completed 1M/5M bars at or before the selected UTC timestamp. It does not download missing history.</p>
+                <div id="replayResult" class="replay-result" aria-live="polite"><p class="muted small" id="mcc-static-0123-p">No replay run yet. Stream/collector data must first exist in the API instance's raw-bar store.</p></div>
+            </article>
+        </section>
+        <section id="overnightPanel" data-section-id="overnight-analysis" class="panel hidden">
+            <div class="section-heading" id="mcc-static-0124-div"><div id="mcc-static-0125-div"><div class="eyebrow" id="mcc-static-0126-div">BORING OVERNIGHT · API-BACKED</div><h2 id="mcc-static-0127-h2">Overnight scan &amp; analysis</h2></div><span class="chip" id="mcc-static-0128-span">Research only · no orders</span></div>
+            <p class="notice" id="mcc-static-0129-p">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
+            <form id="overnightBarsForm" class="overnight-controls">
+                <label id="mcc-static-0130-label">Symbol <input id="overnightSymbol" value="RTO" maxlength="8" required></label>
+                <label id="mcc-static-0131-label">Bar interval <select id="overnightTimeframe"><option value="1m" selected id="mcc-static-0132-option">1 minute</option><option value="5m" id="mcc-static-0133-option">5 minutes</option></select></label>
+                <label id="mcc-static-0134-label">From (Arizona local) <input id="overnightFrom" type="datetime-local" required></label>
+                <label id="mcc-static-0135-label">To (Arizona local) <input id="overnightTo" type="datetime-local" required></label>
+                <button id="overnightFetch" type="submit">Fetch &amp; analyze bars</button>
+                <button id="overnightRefreshSnapshots" type="button" class="quiet-button">Refresh saved evaluations</button>
+            </form>
+            <p id="overnightStatus" class="muted" role="status">Ready to request bars.</p>
+            <div class="overnight-history-capture" id="mcc-static-0136-div">
+                <button id="overnightCapture20" type="button">Fetch / retry 20-session close/open history</button>
+                <p id="overnightHistoryStatus" class="muted" role="status">No 20-session capture run yet. This fetches 1-minute provider bars, persists them, and calculates the 20 most recent regular close/open pairs.</p>
+                <div class="overnight-results-grid" id="mcc-static-0137-div">
+                    <article class="overnight-result" id="mcc-static-0138-article">
+                        <h3 id="mcc-static-0139-h3">20-session close/open history</h3><dl id="mcc-static-0140-dl">
+                            <div id="mcc-static-0141-div"><dt id="mcc-static-0142-dt">Valid / required pairs</dt><dd id="overnightHistoryPairs">DATA?</dd></div>
+                            <div id="mcc-static-0143-div"><dt id="mcc-static-0144-dt">Overnight win rate</dt><dd id="overnightHistoryWinRate">DATA?</dd></div>
+                            <div id="mcc-static-0145-div"><dt id="mcc-static-0146-dt">20-pair mean return</dt><dd id="overnightHistoryMean20">DATA?</dd></div>
+                            <div id="mcc-static-0147-div"><dt id="mcc-static-0148-dt">20-pair median return</dt><dd id="overnightHistoryMedian20">DATA?</dd></div>
+                            <div id="mcc-static-0149-div"><dt id="mcc-static-0150-dt">5-pair mean return</dt><dd id="overnightHistoryMean5">DATA?</dd></div>
+                            <div id="mcc-static-0151-div"><dt id="mcc-static-0152-dt">Missing pairs</dt><dd id="overnightHistoryMissing">DATA?</dd></div>
+                        </dl>
+                    </article>
+                    <article class="overnight-result" id="mcc-static-0153-article">
+                        <h3 id="mcc-static-0154-h3">Capture provenance</h3><dl id="mcc-static-0155-dl">
+                            <div id="mcc-static-0156-div"><dt id="mcc-static-0157-dt">Provider / feed</dt><dd id="overnightHistoryProvider">NOT CAPTURED</dd></div>
+                            <div id="mcc-static-0158-div"><dt id="mcc-static-0159-dt">Fetched / newly stored bars</dt><dd id="overnightHistoryBars">DATA?</dd></div>
+                            <div id="mcc-static-0160-div"><dt id="mcc-static-0161-dt">Calendar ruleset</dt><dd id="overnightHistoryCalendar">NOT CAPTURED</dd></div>
+                            <div id="mcc-static-0162-div"><dt id="mcc-static-0163-dt">Calculated at (UTC)</dt><dd id="overnightHistoryAsOf">NOT CAPTURED</dd></div>
+                        </dl>
+                    </article>
+                </div>
+                <div class="table-wrap" id="mcc-static-0164-div"><table id="mcc-static-0165-table"><thead id="mcc-static-0166-thead"><tr id="mcc-static-0167-tr"><th id="mcc-static-0168-th">Next session</th><th id="mcc-static-0169-th">Previous close</th><th id="mcc-static-0170-th">Next open</th><th id="mcc-static-0171-th">ON return</th><th id="mcc-static-0172-th">Source timestamps (UTC)</th></tr></thead><tbody id="overnightHistoryRows"><tr id="mcc-static-0173-tr"><td colspan="5" id="mcc-static-0174-td">No session pairs captured.</td></tr></tbody></table></div>
+                <details class="overnight-boundary-details">
+                    <summary>Show exact boundary coverage audit (40 rows)</summary>
+                    <div class="section-heading" id="overnightBoundaryAuditHeading"><div id="overnightBoundaryAuditHeadingText"><div class="eyebrow" id="overnightBoundaryAuditEyebrow">EXACT BOUNDARY COVERAGE AUDIT</div><h3 id="overnightBoundaryAuditTitle">Provider response vs persisted store</h3><p class="muted" id="overnightBoundaryAuditDescription">The 20-session capture checks all 40 expected regular close/open timestamps for the selected provider/feed. The next-session value currently uses the Open of the exact 09:30 ET one-minute bar; that is a proxy and is not independently verified as the official opening-auction print.</p></div></div>
+                    <div class="table-wrap" id="mcc-static-0175-div"><table id="mcc-static-0176-table"><thead id="mcc-static-0177-thead"><tr id="mcc-static-0178-tr"><th id="mcc-static-0179-th">Session</th><th id="mcc-static-0180-th">Boundary</th><th id="mcc-static-0181-th">Expected timestamp (UTC)</th><th id="mcc-static-0182-th">Provider exact bar</th><th id="mcc-static-0183-th">Store exact bar</th><th id="mcc-static-0184-th">Nearest provider bar</th><th id="mcc-static-0185-th">Audit result</th></tr></thead><tbody id="overnightBoundaryCoverageRows"><tr id="mcc-static-0186-tr"><td colspan="7" id="mcc-static-0187-td">Run the 20-session capture to audit all 40 expected boundary bars.</td></tr></tbody></table></div>
+                </details>
+            </div>
+            <details class="overnight-control-details">
+                <summary>Optional diagnostic: compare this ticker with SPY</summary>
+                <section class="overnight-coverage-audit" aria-labelledby="overnightCoverageTitle" id="mcc-static-0188-section">
+                    <div class="section-heading" id="mcc-static-0189-div"><div id="mcc-static-0190-div"><div class="eyebrow" id="overnightControlTestEyebrow">POST-MARKET CONTROL TEST</div><h3 id="overnightCoverageTitle">Ticker vs SPY control test</h3><p class="muted" id="mcc-static-0192-p">Fetches the selected ticker and SPY over the identical UTC window. This checks whether the configured source returns any observations; it is not a full provider-entitlement or exact-boundary coverage audit.</p></div></div>
+                    <form id="overnightCoverageForm" class="overnight-controls">
+                        <label id="mcc-static-0193-label">From (UTC) <input id="overnightCoverageFrom" type="datetime-local" value="2026-10-28T20:00" required></label>
+                        <label id="mcc-static-0194-label">To (UTC) <input id="overnightCoverageTo" type="datetime-local" value="2026-10-28T23:55" required></label>
+                        <button id="overnightCoverageRun" type="submit">Compare ticker vs SPY</button>
+                    </form>
+                    <p id="overnightCoverageStatus" class="muted" role="status">No control test run in this session.</p>
+                    <div class="table-wrap" id="mcc-static-0195-div"><table id="mcc-static-0196-table"><thead id="mcc-static-0197-thead"><tr id="mcc-static-0198-tr"><th id="mcc-static-0199-th">Symbol</th><th id="mcc-static-0200-th">Provider / feed</th><th id="mcc-static-0201-th">Bars</th><th id="mcc-static-0202-th">First / latest source time (UTC)</th><th id="mcc-static-0203-th">Interpretation</th></tr></thead><tbody id="overnightCoverageRows"><tr id="mcc-static-0204-tr"><td colspan="5" id="mcc-static-0205-td">No coverage results.</td></tr></tbody></table></div>
+                    <p class="notice" id="mcc-static-0206-p">On 2026-10-28, 20:00 UTC was 16:00 EDT (regular close); later timestamps are post-market. Sparse IEX bars prove only that the feed returned those observations for that symbol/window. Empty results do not prove no trading or identify entitlement cause.</p>
+                </section>
             </details>
             <div class="overnight-results-grid" id="mcc-static-0207-div">
- <section class="overnight-result" aria-labelledby="overnightSellLimitTitle" id="mcc-static-0208-section">
-  <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
-  <button id="overnightCaptureSellWindow" type="button" class="quiet-button">Fetch 40-session GTC_EXT sell-window history</button>
-  <label for="overnightSellLimitQuantile">Research target quantile (%)</label>
-  <input id="overnightSellLimitQuantile" type="number" min="1" max="99" step="1" placeholder="Choose 1–99" inputmode="numeric">
-  <button id="overnightCalculateSellLimit" type="button" class="quiet-button">Assess sell-limit evidence gates</button>
-  <p id="overnightSellLimitAssessmentStatus" class="muted" role="status">No sell-limit assessment run. This endpoint is diagnostic and never submits an order.</p>
-  <div id="overnightSellLimitEvidenceGates" aria-live="polite"></div>
-  <p id="overnightSellWindowStatus" class="muted" role="status">Not captured. This fetches the exact 07:00–19:59 ET one-minute bars for each of the latest 40 completed sell sessions (20 training + 20 later test) plus each prior regular-session close. SIP is required for qualification; IEX is diagnostic only.</p>
-  <dl id="mcc-static-0209-dl">
-   <div id="mcc-static-0210-div"><dt id="mcc-static-0211-dt">Calculated limit</dt><dd id="overnightSellLimitPrice">DATA? — NOT CALCULATED</dd></div>
-   <div id="mcc-static-0212-div"><dt id="mcc-static-0213-dt">Reference close</dt><dd id="overnightSellLimitClose">DATA?</dd></div>
-   <div id="mcc-static-0214-div"><dt id="mcc-static-0215-dt">Target basis</dt><dd id="overnightSellLimitMethod">Historical eligible-window target distribution + ATR context</dd></div>
-   <div id="mcc-static-0216-div"><dt id="mcc-static-0217-dt">Validation</dt><dd id="overnightSellLimitValidation">NOT VERIFIED</dd></div>
-  </dl>
-  <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until 40/40 exact GTC_EXT windows are complete on SIP, ATR parity is MATCH, and walk-forward validation passes on 20 training + 20 later unseen test sessions. A bar high touching a limit is not an actual fill.</p>
- </section>
-  <article class="overnight-result" id="mcc-static-0218-article"><h3 id="mcc-static-0219-h3">Requested bar coverage</h3><dl id="mcc-static-0220-dl"><div id="mcc-static-0221-div"><dt id="mcc-static-0222-dt">Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div id="mcc-static-0223-div"><dt id="mcc-static-0224-dt">Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div id="mcc-static-0225-div"><dt id="mcc-static-0226-dt">First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div id="mcc-static-0227-div"><dt id="mcc-static-0228-dt">Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div id="mcc-static-0229-div"><dt id="mcc-static-0230-dt">Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div id="mcc-static-0231-div"><dt id="mcc-static-0232-dt">Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
-  <article class="overnight-result" id="mcc-static-0233-article"><h3 id="mcc-static-0234-h3">What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice" id="mcc-static-0235-p">The new capture button requests and persists Alpaca 1-minute bars, generates 20 close/open boundaries with the MCC US-equities calendar ruleset, and displays every valid or missing pair. This is a history calculation only; it does not calculate the separate GTC_EXT sell-window target or qualify a candidate.</p></article>
- </div>
- <div class="section-heading overnight-snapshot-heading" id="mcc-static-0236-div"><div id="mcc-static-0237-div"><h3 id="mcc-static-0238-h3">Saved Overnight input snapshots</h3><p class="muted" id="mcc-static-0239-p">Read from <code id="mcc-static-0240-code">/api/boring-overnight/snapshots</code>. These are persisted evaluator inputs, not stored final decisions. Each 20-session capture now appends a snapshot automatically; incomplete history and missing current gates remain UNKNOWN.</p></div></div>
- <p id="overnightSnapshotStatus" class="muted" role="status">Saved input snapshots have not been loaded.</p>
+                <section class="overnight-result" aria-labelledby="overnightSellLimitTitle" id="mcc-static-0208-section">
+                    <h3 id="overnightSellLimitTitle">Calculated Limit Sell</h3>
+                    <button id="overnightCaptureSellWindow" type="button" class="quiet-button">Fetch 40-session GTC_EXT sell-window history</button>
+                    <label for="overnightSellLimitQuantile">Research target quantile (%)</label>
+                    <input id="overnightSellLimitQuantile" type="number" min="1" max="99" step="1" placeholder="Choose 1–99" inputmode="numeric">
+                    <button id="overnightCalculateSellLimit" type="button" class="quiet-button">Assess sell-limit evidence gates</button>
+                    <p id="overnightSellLimitAssessmentStatus" class="muted" role="status">No sell-limit assessment run. This endpoint is diagnostic and never submits an order.</p>
+                    <div id="overnightSellLimitEvidenceGates" aria-live="polite"></div>
+                    <p id="overnightSellWindowStatus" class="muted" role="status">Not captured. This fetches the exact 07:00–19:59 ET one-minute bars for each of the latest 40 completed sell sessions (20 training + 20 later test) plus each prior regular-session close. SIP is required for qualification; IEX is diagnostic only.</p>
+                    <dl id="mcc-static-0209-dl">
+                        <div id="mcc-static-0210-div"><dt id="mcc-static-0211-dt">Calculated limit</dt><dd id="overnightSellLimitPrice">DATA? — NOT CALCULATED</dd></div>
+                        <div id="mcc-static-0212-div"><dt id="mcc-static-0213-dt">Reference close</dt><dd id="overnightSellLimitClose">DATA?</dd></div>
+                        <div id="mcc-static-0214-div"><dt id="mcc-static-0215-dt">Target basis</dt><dd id="overnightSellLimitMethod">Historical eligible-window target distribution + ATR context</dd></div>
+                        <div id="mcc-static-0216-div"><dt id="mcc-static-0217-dt">Validation</dt><dd id="overnightSellLimitValidation">NOT VERIFIED</dd></div>
+                    </dl>
+                    <p id="overnightSellLimitReason" class="notice">No numeric sell limit is issued until 40/40 exact GTC_EXT windows are complete on SIP, ATR parity is MATCH, and walk-forward validation passes on 20 training + 20 later unseen test sessions. A bar high touching a limit is not an actual fill.</p>
+                </section>
+                <article class="overnight-result" id="mcc-static-0218-article"><h3 id="mcc-static-0219-h3">Requested bar coverage</h3><dl id="mcc-static-0220-dl"><div id="mcc-static-0221-div"><dt id="mcc-static-0222-dt">Provider / feed</dt><dd id="overnightProvider">NOT LOADED</dd></div><div id="mcc-static-0223-div"><dt id="mcc-static-0224-dt">Bars returned</dt><dd id="overnightCount">DATA?</dd></div><div id="mcc-static-0225-div"><dt id="mcc-static-0226-dt">First source bar</dt><dd id="overnightFirst">DATA?</dd></div><div id="mcc-static-0227-div"><dt id="mcc-static-0228-dt">Latest source bar</dt><dd id="overnightLatest">DATA?</dd></div><div id="mcc-static-0229-div"><dt id="mcc-static-0230-dt">Latest bar age</dt><dd id="overnightAge">UNKNOWN</dd></div><div id="mcc-static-0231-div"><dt id="mcc-static-0232-dt">Observed gaps</dt><dd id="overnightGaps">UNKNOWN</dd></div></dl></article>
+                <article class="overnight-result" id="mcc-static-0233-article"><h3 id="mcc-static-0234-h3">What this result means</h3><p id="overnightInterpretation">No request has been run. A bar request is descriptive evidence, not an Overnight qualification.</p><p class="notice" id="mcc-static-0235-p">The new capture button requests and persists Alpaca 1-minute bars, generates 20 close/open boundaries with the MCC US-equities calendar ruleset, and displays every valid or missing pair. This is a history calculation only; it does not calculate the separate GTC_EXT sell-window target or qualify a candidate.</p></article>
+            </div>
+            <div class="section-heading overnight-snapshot-heading" id="mcc-static-0236-div"><div id="mcc-static-0237-div"><h3 id="mcc-static-0238-h3">Saved Overnight input snapshots</h3><p class="muted" id="mcc-static-0239-p">Read from <code id="mcc-static-0240-code">/api/boring-overnight/snapshots</code>. These are persisted evaluator inputs, not stored final decisions. Each 20-session capture now appends a snapshot automatically; incomplete history and missing current gates remain UNKNOWN.</p></div></div>
+            <p id="overnightSnapshotStatus" class="muted" role="status">Saved input snapshots have not been loaded.</p>
             <div class="table-wrap" id="mcc-static-0241-div"><table id="mcc-static-0242-table"><thead id="mcc-static-0243-thead"><tr id="mcc-static-0244-tr"><th id="mcc-static-0245-th">Symbol</th><th id="mcc-static-0246-th">As of (UTC)</th><th id="mcc-static-0247-th">Recorded (UTC)</th><th id="mcc-static-0248-th">Provider / feed</th><th id="mcc-static-0249-th">Record type</th><th>Historical pairs</th><th>Daily metrics / source</th><th id="mcc-static-0250-th">Key gate inputs (not a decision)</th></tr></thead><tbody id="overnightSnapshotRows"><tr id="mcc-static-0251-tr"><td colspan="8" id="mcc-static-0252-td">No saved evaluations loaded yet.</td></tr></tbody></table></div>
-</section>
-<section id="scanner-workbench" class="workbench-grid"><article class="panel" id="mcc-static-0253-article"><div class="section-heading" id="mcc-static-0254-div"><div id="mcc-static-0255-div"><div class="eyebrow" id="mcc-static-0256-div">SCANNER WORKBENCH</div><h2 id="mcc-static-0257-h2">Candidate discovery</h2></div><label class="file-button" for="scannerFile" id="mcc-static-0258-label">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls" id="mcc-static-0259-div"><select id="scannerGroup"><option value="momentum" id="mcc-static-0260-option">A · Momentum Hunter</option><option value="breakout" id="mcc-static-0261-option">B · Breakout Trigger</option><option value="reclaim" id="mcc-static-0262-option">C · Reclaim / Continuation</option><option value="discovery" id="mcc-static-0263-option">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
-<div class="scanner-live-toolbar" id="mcc-static-0264-div"><button id="refreshMarketMovers" type="button">Refresh Alpaca market movers</button><span id="liveMoversStatus" class="muted">Live discovery requires API credentials and SIP screener entitlement.</span></div><p class="muted small" id="mcc-static-0265-p"><span class="legend-line" id="mcc-static-0266-span">¹ ATG = Alpaca Top Gainers</span><span class="legend-line" id="mcc-static-0267-span">² ATL = Alpaca Top Losers</span><span class="legend-line" id="mcc-static-0268-span">Change = provider-reported percent change</span><span class="legend-line" id="mcc-static-0269-span">Source = provider update timestamp (Arizona time)</span></p>
-<div class="scanner-api-controls" id="mcc-static-0270-div">
- <form id="scanAnalyzeForm">
-  <label id="mcc-static-0271-label">Symbols <input id="apiScanSymbols" value="SPY,QQQ,TTE,FMS" maxlength="500" aria-label="Comma-separated symbols to scan"></label>
-  <label id="mcc-static-0272-label">Bars <select id="apiScanTimeframe"><option value="1m" id="mcc-static-0273-option">1 minute</option><option value="5m" selected id="mcc-static-0274-option">5 minutes</option></select></label>
-  <label id="mcc-static-0275-label">From (Arizona local time) <input id="apiScanFrom" type="datetime-local" required></label>
-  <label id="mcc-static-0276-label">To (Arizona local time) <input id="apiScanTo" type="datetime-local" required></label>
-  <button id="apiScanRun" type="submit">Scan & Analyze (1M + 5M)</button>
- </form>
- <p class="notice" id="mcc-static-0277-p">Fetches Alpaca 1M and 5M bars for each supplied symbol. Enter times in Arizona local time; MCC converts them to UTC. Summaries are not Thinkorswim states or a Boring Overnight qualification.</p>
-</div><div class="table-wrap" id="mcc-static-0278-div"><table id="mcc-static-0279-table"><thead id="mcc-static-0280-thead"><tr id="mcc-static-0281-tr"><th id="mcc-static-0282-th">Symbol</th><th id="mcc-static-0283-th">Score</th><th id="mcc-static-0284-th">Status</th><th id="mcc-static-0285-th">Extension</th><th id="mcc-static-0286-th">Freshness</th><th id="mcc-static-0287-th">Reason</th><th id="mcc-static-0288-th"></th></tr></thead><tbody id="scannerRows"></tbody></table></div><p class="notice" id="mcc-static-0289-p">Local workbench only. Imported rows are evidence for review, not live scanner results or trading instructions. Extension/freshness fields are not calculated unless supplied in your CSV.</p></article><article class="panel" id="mcc-static-0290-article"><div class="section-heading" id="mcc-static-0291-div"><div id="mcc-static-0292-div"><div class="eyebrow" id="mcc-static-0293-div">WATCHLIST</div><h2 id="mcc-static-0294-h2">Working candidates</h2></div><button id="clearWatchlist" class="quiet-button">Clear</button></div><form id="watchlistForm" class="watchlist-form"><input id="watchSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker"><button type="submit" id="mcc-static-0295-button">Add</button></form><ul id="watchlistRows" class="watchlist"></ul><p class="notice" id="mcc-static-0296-p">Watchlist is stored only in this browser using local storage. It does not submit orders or connect to a broker.</p></article></section>
-<section id="overnight-qualification" class="panel overnight-qualification-panel">
- <div class="section-heading">
-  <div><div class="eyebrow">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
-   <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import, switch between MCC Top 4 (highest imported scanner scores) and My Top 4 (four symbols you select). Fetching retrieves adjusted Daily metrics and the preceding 24 hours of ticker news for exactly the active four; it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p>
-  </div>
-  <div class="overnight-shortlist-controls"><div class="overnight-shortlist-toggle" role="group" aria-label="Daily and catalyst candidate group"><button id="overnightShortlistMcc" type="button" class="quiet-button" aria-pressed="true">MCC Top 4</button><button id="overnightShortlistManual" type="button" class="quiet-button" aria-pressed="false" disabled>My Top 4</button></div><strong id="overnightShortlistActive" class="muted small">Active group: MCC Top 4 · highest imported scanner scores</strong><p class="muted small">Select exactly four imported symbols for My Top 4. Your selection is saved in this browser and kept separate from MCC Top 4.</p><div class="overnight-shortlist-lists"><div><strong>MCC discovered Top 4</strong><div id="overnightMccTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Import scanner CSV</span></div></div><div><strong>My selected Top 4</strong><div id="overnightMyTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Select four symbols below</span></div></div></div><div id="overnightManualTopFourPicker" class="overnight-shortlist-picker" aria-label="Select four personal candidates"></div><span id="overnightShortlistSummary" class="muted small">0/4 selected</span><button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for MCC Top 4</button></div>
- </div>
- <div class="overnight-qualification-summary">
-  <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
-  <div><span>Historical pass</span><strong id="overnightQualPass">DATA?</strong></div>
-  <div><span>Historical fail</span><strong id="overnightQualFail">DATA?</strong></div><div><span>Unknown history</span><strong id="overnightQualUnknown">DATA?</strong></div>
-  <div><span>Excluded</span><strong id="overnightQualExcluded">DATA?</strong></div>
-  <div><span>Final READY</span><strong id="overnightQualReady">0</strong></div>
- </div>
- <p class="muted small">Unknown / incomplete history means one or more required custom-expression metrics are unavailable. These rows are DATA? — not historical FAIL candidates. Inspect their History cells and source CSV values separately.</p>
- <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
- <section id="catalystHumanReview" class="catalyst-human-review" aria-label="Human catalyst article review">
-  <div class="section-heading"><div><h3>Human catalyst review queue</h3><p class="muted small">Review source articles returned for the active top-four group. Labels are append-only research data; they never clear a catalyst or create READY.</p></div><span id="catalystReviewQueueCount" class="chip">0 articles</span></div>
-  <div class="catalyst-label-legend" aria-label="Human catalyst label definitions">
-   <h4>Label guide — choose the article's meaning, not the model's prediction</h4>
-   <dl>
-    <div><dt>MATERIAL_RISK</dt><dd>Specific adverse exposure or downside risk: legal/regulatory action, dilution, solvency/liquidity stress, listing threat, product/safety issue, or another credible threat to the issuer.</dd></div>
-    <div><dt>MATERIAL_EVENT</dt><dd>A significant company event that matters to the ticker, but is not inherently adverse: earnings/guidance, M&amp;A, major contract, leadership change, or corporate action. Use MATERIAL_RISK when the article's substance is specifically adverse.</dd></div>
-    <div><dt>NON_MATERIAL</dt><dd>About the correct company, but routine or unlikely to materially affect the overnight trading decision.</dd></div>
-    <div><dt>IRRELEVANT</dt><dd>Not actually about this issuer/security, including a ticker collision, namesake, or unrelated entity.</dd></div>
-    <div><dt>DUPLICATE</dt><dd>Repeated or substantially overlapping coverage of an article already reviewed. Do not count it as a new independent example.</dd></div>
-    <div><dt>UNCERTAIN</dt><dd>Cannot determine relevance or materiality from verifiable source evidence. Keep it out of positive/negative performance metrics.</dd></div>
-   </dl>
-   <p class="muted small">Review the linked source, not just the headline or summary. Notes must state the article-specific facts and why they support the selected label. Do not use an assistant's suggestion as evidence. Human labels never clear a catalyst or create READY.</p>
-  </div>
-  <div id="catalystReviewQueue" class="catalyst-review-queue"><p class="muted small">Fetch Daily + catalyst evidence to load articles for human review.</p></div>
-  <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
- </section>
- <section class="panel daily-data-audit" aria-label="Daily market data audit">
-  <div class="section-heading"><div><h3>Daily data audit</h3><p class="muted small">Direct API check for up to 20 symbols. Overnight CSV import fills this field with the top 20 unique symbols by Overnight Score. Observed metrics remain diagnostic unless the source is complete, fresh and consolidated SIP.</p></div></div>
-  <div class="watchlist-form">
-   <label for="dailyAuditSymbols">Symbols</label><input id="dailyAuditSymbols" value="RTO,EVR" maxlength="400" aria-label="Daily audit symbols">
-   <button id="dailyAuditTop20" type="button" class="quiet-button">Use Overnight Top 20</button>
-   <button id="dailyAuditRefresh" type="button" class="quiet-button">Validate Daily data</button>
-  </div>
-  <p id="dailyAuditStatus" class="muted small" role="status">Not yet queried. This audit does not assume that Alpaca IEX is consolidated market data.</p>
-  <div class="table-wrap">
-   <table>
-    <thead><tr><th>Symbol</th><th>Source / feed</th><th>Adjustment</th><th>Latest expected / actual</th><th>Retrieved UTC</th><th>Sessions</th><th>Observed close</th><th>Observed SMA20</th><th>Observed 20D avg vol</th><th>Freshness</th><th>Qualification</th><th>Missing sessions</th></tr></thead>
-    <tbody id="dailyAuditRows"><tr><td colspan="12">Daily API has not been queried.</td></tr></tbody>
-   </table>
-  </div>
- </section>
-  <section class="panel" aria-label="Thinkorswim daily gap reference import">
-   <div class="section-heading"><div><h3>Thinkorswim Daily OHLC reference</h3><p class="muted small">Import at least 21 daily OHLC bars for one symbol. MCC calculates the eight supplied scanner fields using MCC-TOS-DAILY-GAP-1.0 and compares them with the imported scanner row. No Alpaca/IEX substitution is performed.</p></div></div>
-   <div class="watchlist-form">
-    <label for="tosDailyReferenceSymbol">Symbol</label><input id="tosDailyReferenceSymbol" maxlength="8" placeholder="e.g. WRBY">
-    <label for="tosDailyReferenceFile">TOS daily OHLC CSV</label><input id="tosDailyReferenceFile" type="file" accept=".csv,text/csv">
-    <label><input id="tosDailyExtendedHours" type="checkbox"> Extended hours ON</label>
-    <label><input id="tosDailyAdjusted" type="checkbox"> Corporate-action adjusted</label>
-    <label for="tosDailyTimezone">Chart timezone</label><input id="tosDailyTimezone" value="America/Phoenix" maxlength="80">
-    <button id="tosDailyReferenceImport" type="button" class="quiet-button">Import &amp; calculate parity</button>
-   </div>
-   <p id="tosDailyReferenceStatus" class="muted small" role="status">No TOS daily reference imported. Required CSV headers: Date, Open, High, Low, Close. The symbol is entered above. Use the same TOS aggregation settings as the scanner.</p>
-   <div class="table-wrap"><table><thead><tr><th>Column</th><th>TOS scanner CSV</th><th>MCC from TOS OHLC</th><th>Parity</th></tr></thead><tbody id="tosDailyReferenceRows"><tr><td colspan="4">No parity result.</td></tr></tbody></table></div>
-  </section>
- <div class="table-wrap overnight-qualification-table">
-  <table>
-   <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON %</th><th>Median ON %</th><th>5D ON %</th><th>ON Momentum</th><th>Current ON %</th><th>Above 20 SMA</th><th>Overnight Score</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
-   <tbody id="overnightQualificationRows"><tr><td colspan="15">No imported Overnight Scanner data.</td></tr></tbody>
-  </table>
- </div>
- <section class="overnight-result" aria-labelledby="overnightTopFourEvidenceTitle">
-  <h3 id="overnightTopFourEvidenceTitle">Top 4 live evidence — every queried symbol</h3>
-  <p class="muted small">This table lists all four requests independently of article review cards. Daily errors, missing news and incomplete coverage remain explicit; no-news is UNKNOWN, not CLEAR.</p>
-  <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Daily result</th><th>Daily feed / completeness</th><th>Daily error</th><th>Catalyst result</th><th>Articles</th><th>Catalyst coverage</th><th>Catalyst error</th></tr></thead><tbody id="overnightTopFourEvidenceRows"><tr><td colspan="8">Fetch Daily + catalyst for a Top 4 group to populate all four symbols.</td></tr></tbody></table></div>
- </section>
- <p class="notice">A historical pass is not READY. Price must be &gt; $5 and 20D average daily volume must be &gt;= 500,000 on complete SIP data. RISK_PRESENT blocks; material, unclassified or incomplete catalyst coverage requires manual review. This provisional classifier never clears a catalyst, so READY remains 0. 5M authority / 1M execution evidence is still not connected. This panel will not substitute missing values with zero.</p>
-</section>
-<section id="data-integrations" class="integration-grid">
- <article class="panel" id="mcc-static-0297-article">
-  <details id="exclusionsDetails">
-   <summary class="section-heading"><div><div class="eyebrow">EXCLUSIONS · API-BACKED</div><h2>MCC exclusion watchlist</h2></div><span class="chip">Expand / collapse</span></summary>
-   <div class="section-heading"><div></div><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button></div>
-   <form id="exclusionForm" class="watchlist-form"><input id="exclusionSymbol" maxlength="8" placeholder="Ticker (e.g. TTE)" aria-label="Symbol to exclude" required><input id="exclusionReason" maxlength="200" placeholder="Reason (optional)" aria-label="Exclusion reason"><button type="submit" id="mcc-static-0302-button">Add exclusion</button></form>
-   <p id="exclusionStatus" class="muted">Loading local MCC exclusions…</p><div class="exclusions-list-wrap"><ul id="exclusionRows" class="watchlist"></ul></div>
-   <p class="notice" id="mcc-static-0303-p">This list is persisted by MCC and used by the Boring Overnight evaluator. It does not sync with Thinkorswim's personal watchlist. Keep both lists aligned manually until a supported import/sync path is verified.</p>
-  </details>
- </article>
- <article class="panel" id="mcc-static-0304-article">
-  <div class="section-heading" id="mcc-static-0305-div"><div id="mcc-static-0306-div"><div class="eyebrow" id="mcc-static-0307-div">THINKORSWIM · CSV</div><h2 id="mcc-static-0308-h2">StrategyReport upload</h2></div></div>
-  <form id="strategyReportForm" class="upload-form">
-   <label for="strategyReportFile" id="mcc-static-0309-label">Thinkorswim StrategyReport CSV (max 10 MB)</label><input id="strategyReportFile" type="file" accept=".csv,text/csv" required>
-   <fieldset class="atr-import-metadata"><legend>ATR V2 chart provenance</legend>
-    <label for="atrImportPeriod">ATR length <input id="atrImportPeriod" type="number" min="1" max="200" value="14" required></label>
-    <label for="atrImportAverage">Average type <select id="atrImportAverage"><option value="Wilder" selected>Wilder</option></select></label>
-    <label for="atrImportTimezone">Chart timezone <input id="atrImportTimezone" value="America/Phoenix" required></label>
-    <label><input id="atrImportExtendedHours" type="checkbox" checked> Extended hours ON</label>
-    <label><input id="atrImportAdjustment" type="checkbox" checked> Corporate-action adjustment ON</label>
-   </fieldset>
-   <button type="submit" id="mcc-static-0310-button">Import StrategyReport</button>
-  </form>
-  <p id="strategyReportStatus" class="muted">V1 reports are parsed for review. ATR V2 reports are validated and saved in MCC’s separate Thinkorswim ATR store.</p>
-  <div id="strategyReportSummary" class="upload-summary hidden"></div>
-  <div class="button-row" id="mcc-static-0311-div"><button id="downloadStrategyReportJson" type="button" class="quiet-button hidden">Download parsed JSON</button><button id="downloadParityCsv" type="button" class="quiet-button hidden">Download Parity Template CSV</button></div>
-  <p class="notice" id="mcc-static-0312-p">ATR V2 imports preserve source chart settings and timestamp gaps; repeated imports are idempotent. StrategyReport order-event prices are not broker fills.</p>
- </article>
-</section>
+        </section>
+        <section id="scanner-workbench" class="workbench-grid">
+            <article class="panel" id="mcc-static-0253-article">
+                <div class="section-heading" id="mcc-static-0254-div"><div id="mcc-static-0255-div"><div class="eyebrow" id="mcc-static-0256-div">SCANNER WORKBENCH</div><h2 id="mcc-static-0257-h2">Candidate discovery</h2></div><label class="file-button" for="scannerFile" id="mcc-static-0258-label">Import CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"></div><div class="scanner-controls" id="mcc-static-0259-div"><select id="scannerGroup"><option value="momentum" id="mcc-static-0260-option">A · Momentum Hunter</option><option value="breakout" id="mcc-static-0261-option">B · Breakout Trigger</option><option value="reclaim" id="mcc-static-0262-option">C · Reclaim / Continuation</option><option value="discovery" id="mcc-static-0263-option">D · Market Movers / Discovery</option></select><span id="scannerSource" class="muted">Illustrative local candidates</span></div>
+                <div class="scanner-live-toolbar" id="mcc-static-0264-div"><button id="refreshMarketMovers" type="button">Refresh Alpaca market movers</button><span id="liveMoversStatus" class="muted">Live discovery requires API credentials and SIP screener entitlement.</span></div><p class="muted small" id="mcc-static-0265-p"><span class="legend-line" id="mcc-static-0266-span">¹ ATG = Alpaca Top Gainers</span><span class="legend-line" id="mcc-static-0267-span">² ATL = Alpaca Top Losers</span><span class="legend-line" id="mcc-static-0268-span">Change = provider-reported percent change</span><span class="legend-line" id="mcc-static-0269-span">Source = provider update timestamp (Arizona time)</span></p>
+                <div class="scanner-api-controls" id="mcc-static-0270-div">
+                    <form id="scanAnalyzeForm">
+                        <label id="mcc-static-0271-label">Symbols <input id="apiScanSymbols" value="SPY,QQQ,TTE,FMS" maxlength="500" aria-label="Comma-separated symbols to scan"></label>
+                        <label id="mcc-static-0272-label">Bars <select id="apiScanTimeframe"><option value="1m" id="mcc-static-0273-option">1 minute</option><option value="5m" selected id="mcc-static-0274-option">5 minutes</option></select></label>
+                        <label id="mcc-static-0275-label">From (Arizona local time) <input id="apiScanFrom" type="datetime-local" required></label>
+                        <label id="mcc-static-0276-label">To (Arizona local time) <input id="apiScanTo" type="datetime-local" required></label>
+                        <button id="apiScanRun" type="submit">Scan & Analyze (1M + 5M)</button>
+                    </form>
+                    <p class="notice" id="mcc-static-0277-p">Fetches Alpaca 1M and 5M bars for each supplied symbol. Enter times in Arizona local time; MCC converts them to UTC. Summaries are not Thinkorswim states or a Boring Overnight qualification.</p>
+                </div><div class="table-wrap" id="mcc-static-0278-div"><table id="mcc-static-0279-table"><thead id="mcc-static-0280-thead"><tr id="mcc-static-0281-tr"><th id="mcc-static-0282-th">Symbol</th><th id="mcc-static-0283-th">Score</th><th id="mcc-static-0284-th">Status</th><th id="mcc-static-0285-th">Extension</th><th id="mcc-static-0286-th">Freshness</th><th id="mcc-static-0287-th">Reason</th><th id="mcc-static-0288-th"></th></tr></thead><tbody id="scannerRows"></tbody></table></div><p class="notice" id="mcc-static-0289-p">Local workbench only. Imported rows are evidence for review, not live scanner results or trading instructions. Extension/freshness fields are not calculated unless supplied in your CSV.</p>
+            </article><article class="panel" id="mcc-static-0290-article"><div class="section-heading" id="mcc-static-0291-div"><div id="mcc-static-0292-div"><div class="eyebrow" id="mcc-static-0293-div">WATCHLIST</div><h2 id="mcc-static-0294-h2">Working candidates</h2></div><button id="clearWatchlist" class="quiet-button">Clear</button></div><form id="watchlistForm" class="watchlist-form"><input id="watchSymbol" maxlength="8" placeholder="Ticker" aria-label="Ticker"><button type="submit" id="mcc-static-0295-button">Add</button></form><ul id="watchlistRows" class="watchlist"></ul><p class="notice" id="mcc-static-0296-p">Watchlist is stored only in this browser using local storage. It does not submit orders or connect to a broker.</p></article>
+        </section>
+        <section id="overnight-qualification" class="panel overnight-qualification-panel">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
+                    <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import, switch between MCC Top 4 (highest imported scanner scores) and My Top 4 (four symbols you select). Fetching retrieves adjusted Daily metrics and the preceding 24 hours of ticker news for exactly the active four; it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p>
+                </div>
+                <div class="overnight-shortlist-controls"><div class="overnight-shortlist-toggle" role="group" aria-label="Daily and catalyst candidate group"><button id="overnightShortlistMcc" type="button" class="quiet-button" aria-pressed="true">MCC Top 4</button><button id="overnightShortlistManual" type="button" class="quiet-button" aria-pressed="false" disabled>My Top 4</button></div><strong id="overnightShortlistActive" class="muted small">Active group: MCC Top 4 · highest imported scanner scores</strong><p class="muted small">Select exactly four imported symbols for My Top 4. Your selection is saved in this browser and kept separate from MCC Top 4.</p><div class="overnight-shortlist-lists"><div><strong>MCC discovered Top 4</strong><div id="overnightMccTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Import scanner CSV</span></div></div><div><strong>My selected Top 4</strong><div id="overnightMyTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Select four symbols below</span></div></div></div><div id="overnightManualTopFourPicker" class="overnight-shortlist-picker" aria-label="Select four personal candidates"></div><span id="overnightShortlistSummary" class="muted small">0/4 selected</span><button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for MCC Top 4</button></div>
+            </div>
+            <div class="overnight-qualification-summary">
+                <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
+                <div><span>Historical pass</span><strong id="overnightQualPass">DATA?</strong></div>
+                <div><span>Historical fail</span><strong id="overnightQualFail">DATA?</strong></div><div><span>Unknown history</span><strong id="overnightQualUnknown">DATA?</strong></div>
+                <div><span>Excluded</span><strong id="overnightQualExcluded">DATA?</strong></div>
+                <div><span>Final READY</span><strong id="overnightQualReady">0</strong></div>
+            </div>
+            <p class="muted small">Unknown / incomplete history means one or more required custom-expression metrics are unavailable. These rows are DATA? — not historical FAIL candidates. Inspect their History cells and source CSV values separately.</p>
+            <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
+            <section id="catalystHumanReview" class="catalyst-human-review" aria-label="Human catalyst article review">
+                <div class="section-heading"><div><h3>Human catalyst review queue</h3><p class="muted small">Review source articles returned for the active top-four group. Labels are append-only research data; they never clear a catalyst or create READY.</p></div><span id="catalystReviewQueueCount" class="chip">0 articles</span></div>
+                <div class="catalyst-label-legend" aria-label="Human catalyst label definitions">
+                    <h4>Label guide — choose the article's meaning, not the model's prediction</h4>
+                    <dl>
+                        <div><dt>MATERIAL_RISK</dt><dd>Specific adverse exposure or downside risk: legal/regulatory action, dilution, solvency/liquidity stress, listing threat, product/safety issue, or another credible threat to the issuer.</dd></div>
+                        <div><dt>MATERIAL_EVENT</dt><dd>A significant company event that matters to the ticker, but is not inherently adverse: earnings/guidance, M&amp;A, major contract, leadership change, or corporate action. Use MATERIAL_RISK when the article's substance is specifically adverse.</dd></div>
+                        <div><dt>NON_MATERIAL</dt><dd>About the correct company, but routine or unlikely to materially affect the overnight trading decision.</dd></div>
+                        <div><dt>IRRELEVANT</dt><dd>Not actually about this issuer/security, including a ticker collision, namesake, or unrelated entity.</dd></div>
+                        <div><dt>DUPLICATE</dt><dd>Repeated or substantially overlapping coverage of an article already reviewed. Do not count it as a new independent example.</dd></div>
+                        <div><dt>UNCERTAIN</dt><dd>Cannot determine relevance or materiality from verifiable source evidence. Keep it out of positive/negative performance metrics.</dd></div>
+                    </dl>
+                    <p class="muted small">Review the linked source, not just the headline or summary. Notes must state the article-specific facts and why they support the selected label. Do not use an assistant's suggestion as evidence. Human labels never clear a catalyst or create READY.</p>
+                </div>
+                <div id="catalystReviewQueue" class="catalyst-review-queue"><p class="muted small">Fetch Daily + catalyst evidence to load articles for human review.</p></div>
+                <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
+            </section>
+            <section class="panel daily-data-audit" aria-label="Daily market data audit">
+                <div class="section-heading"><div><h3>Daily data audit</h3><p class="muted small">Direct API check for up to 20 symbols. Overnight CSV import fills this field with the top 20 unique symbols by Overnight Score. Observed metrics remain diagnostic unless the source is complete, fresh and consolidated SIP.</p></div></div>
+                <div class="watchlist-form">
+                    <label for="dailyAuditSymbols">Symbols</label><input id="dailyAuditSymbols" value="RTO,EVR" maxlength="400" aria-label="Daily audit symbols">
+                    <button id="dailyAuditTop20" type="button" class="quiet-button">Use Overnight Top 20</button>
+                    <button id="dailyAuditRefresh" type="button" class="quiet-button">Validate Daily data</button>
+                </div>
+                <p id="dailyAuditStatus" class="muted small" role="status">Not yet queried. This audit does not assume that Alpaca IEX is consolidated market data.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Symbol</th><th>Source / feed</th><th>Adjustment</th><th>Latest expected / actual</th><th>Retrieved UTC</th><th>Sessions</th><th>Observed close</th><th>Observed SMA20</th><th>Observed 20D avg vol</th><th>Freshness</th><th>Qualification</th><th>Missing sessions</th></tr></thead>
+                        <tbody id="dailyAuditRows"><tr><td colspan="12">Daily API has not been queried.</td></tr></tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="panel" aria-label="Thinkorswim daily gap reference import">
+                <div class="section-heading"><div><h3>Thinkorswim Daily OHLC reference</h3><p class="muted small">Import at least 21 daily OHLC bars for one symbol. MCC calculates the eight supplied scanner fields using MCC-TOS-DAILY-GAP-1.0 and compares them with the imported scanner row. No Alpaca/IEX substitution is performed.</p></div></div>
+                <div class="watchlist-form">
+                    <label for="tosDailyReferenceSymbol">Symbol</label><input id="tosDailyReferenceSymbol" maxlength="8" placeholder="e.g. WRBY">
+                    <label for="tosDailyReferenceFile">TOS daily OHLC CSV</label><input id="tosDailyReferenceFile" type="file" accept=".csv,text/csv">
+                    <label><input id="tosDailyExtendedHours" type="checkbox"> Extended hours ON</label>
+                    <label><input id="tosDailyAdjusted" type="checkbox"> Corporate-action adjusted</label>
+                    <label for="tosDailyTimezone">Chart timezone</label><input id="tosDailyTimezone" value="America/Phoenix" maxlength="80">
+                    <button id="tosDailyReferenceImport" type="button" class="quiet-button">Import &amp; calculate parity</button>
+                </div>
+                <p id="tosDailyReferenceStatus" class="muted small" role="status">No TOS daily reference imported. Required CSV headers: Date, Open, High, Low, Close. The symbol is entered above. Use the same TOS aggregation settings as the scanner.</p>
+                <div class="table-wrap"><table><thead><tr><th>Column</th><th>TOS scanner CSV</th><th>MCC from TOS OHLC</th><th>Parity</th></tr></thead><tbody id="tosDailyReferenceRows"><tr><td colspan="4">No parity result.</td></tr></tbody></table></div>
+            </section>
+            <div class="table-wrap overnight-qualification-table">
+                <table>
+                    <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON %</th><th>Median ON %</th><th>5D ON %</th><th>ON Momentum</th><th>Current ON %</th><th>Above 20 SMA</th><th>Overnight Score</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
+                    <tbody id="overnightQualificationRows"><tr><td colspan="15">No imported Overnight Scanner data.</td></tr></tbody>
+                </table>
+            </div>
+            <section class="overnight-result" aria-labelledby="overnightTopFourEvidenceTitle">
+                <h3 id="overnightTopFourEvidenceTitle">Top 4 live evidence — every queried symbol</h3>
+                <p class="muted small">This table lists all four requests independently of article review cards. Daily errors, missing news and incomplete coverage remain explicit; no-news is UNKNOWN, not CLEAR.</p>
+                <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Daily result</th><th>Daily feed / completeness</th><th>Daily error</th><th>Catalyst result</th><th>Articles</th><th>Catalyst coverage</th><th>Catalyst error</th></tr></thead><tbody id="overnightTopFourEvidenceRows"><tr><td colspan="8">Fetch Daily + catalyst for a Top 4 group to populate all four symbols.</td></tr></tbody></table></div>
+            </section>
+            <p class="notice">A historical pass is not READY. Price must be &gt; $5 and 20D average daily volume must be &gt;= 500,000 on complete SIP data. RISK_PRESENT blocks; material, unclassified or incomplete catalyst coverage requires manual review. This provisional classifier never clears a catalyst, so READY remains 0. 5M authority / 1M execution evidence is still not connected. This panel will not substitute missing values with zero.</p>
+        </section>
+        <section id="data-integrations" class="integration-grid">
+            <article class="panel" id="mcc-static-0297-article">
+                <details id="exclusionsDetails">
+                    <summary class="section-heading"><div><div class="eyebrow">EXCLUSIONS · API-BACKED</div><h2>MCC exclusion watchlist</h2></div><span class="chip">Expand / collapse</span></summary>
+                    <div class="section-heading"><div></div><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button></div>
+                    <form id="exclusionForm" class="watchlist-form"><input id="exclusionSymbol" maxlength="8" placeholder="Ticker (e.g. TTE)" aria-label="Symbol to exclude" required><input id="exclusionReason" maxlength="200" placeholder="Reason (optional)" aria-label="Exclusion reason"><button type="submit" id="mcc-static-0302-button">Add exclusion</button></form>
+                    <p id="exclusionStatus" class="muted">Loading local MCC exclusions…</p><div class="exclusions-list-wrap"><ul id="exclusionRows" class="watchlist"></ul></div>
+                    <p class="notice" id="mcc-static-0303-p">This list is persisted by MCC and used by the Boring Overnight evaluator. It does not sync with Thinkorswim's personal watchlist. Keep both lists aligned manually until a supported import/sync path is verified.</p>
+                </details>
+            </article>
+            <article class="panel" id="mcc-static-0304-article">
+                <div class="section-heading" id="mcc-static-0305-div"><div id="mcc-static-0306-div"><div class="eyebrow" id="mcc-static-0307-div">THINKORSWIM · CSV</div><h2 id="mcc-static-0308-h2">StrategyReport upload</h2></div></div>
+                <form id="strategyReportForm" class="upload-form">
+                    <label for="strategyReportFile" id="mcc-static-0309-label">Thinkorswim StrategyReport CSV (max 10 MB)</label><input id="strategyReportFile" type="file" accept=".csv,text/csv" required>
+                    <fieldset class="atr-import-metadata">
+                        <legend>ATR V2 chart provenance</legend>
+                        <label for="atrImportPeriod">ATR length <input id="atrImportPeriod" type="number" min="1" max="200" value="14" required></label>
+                        <label for="atrImportAverage">Average type <select id="atrImportAverage"><option value="Wilder" selected>Wilder</option></select></label>
+                        <label for="atrImportTimezone">Chart timezone <input id="atrImportTimezone" value="America/Phoenix" required></label>
+                        <label><input id="atrImportExtendedHours" type="checkbox" checked> Extended hours ON</label>
+                        <label><input id="atrImportAdjustment" type="checkbox" checked> Corporate-action adjustment ON</label>
+                    </fieldset>
+                    <button type="submit" id="mcc-static-0310-button">Import StrategyReport</button>
+                </form>
+                <p id="strategyReportStatus" class="muted">V1 reports are parsed for review. ATR V2 reports are validated and saved in MCC’s separate Thinkorswim ATR store.</p>
+                <div id="strategyReportSummary" class="upload-summary hidden"></div>
+                <div class="button-row" id="mcc-static-0311-div"><button id="downloadStrategyReportJson" type="button" class="quiet-button hidden">Download parsed JSON</button><button id="downloadParityCsv" type="button" class="quiet-button hidden">Download Parity Template CSV</button></div>
+                <p class="notice" id="mcc-static-0312-p">ATR V2 imports preserve source chart settings and timestamp gaps; repeated imports are idempotent. StrategyReport order-event prices are not broker fills.</p>
+            </article>
+        </section>
 
-<section id="provider-comparison" class="panel provider-compare" aria-labelledby="providerCompareTitle">
- <div class="section-heading" id="mcc-static-0313-div"><div id="mcc-static-0314-div"><div class="eyebrow" id="mcc-static-0315-div">DATA PROVIDER DIAGNOSTICS · NOT A DAILY STEP</div><h2 id="providerCompareTitle">Provider comparison</h2><p class="muted" id="mcc-static-0316-p">Use when onboarding or re-testing a data provider, not as part of the normal morning scan.</p></div><span class="chip warning-chip" id="mcc-static-0317-span">API STATUS · HISTORICAL REST</span></div>
- <div class="provider-compare-toolbar" id="mcc-static-0318-div"><label for="providerSymbol" id="mcc-static-0319-label">Test symbol <input id="providerSymbol" value="UPC" maxlength="8" aria-label="Provider test symbol"></label><label for="providerInterval" id="mcc-static-0320-label">Aggregation <select id="providerInterval"><option value="1m" id="mcc-static-0321-option">1 minute</option><option value="5m" id="mcc-static-0322-option">5 minutes</option></select></label><label for="providerDate" id="mcc-static-0323-label">Test date <input id="providerDate" type="date"></label><button id="providerCompareRun" type="button">Prepare comparison</button></div>
- <div class="provider-cards" id="mcc-static-0324-div">
-  <article class="provider-card" aria-labelledby="alpacaTitle" id="mcc-static-0325-article"><div class="provider-card-heading" id="mcc-static-0326-div"><div id="mcc-static-0327-div"><div class="eyebrow" id="mcc-static-0328-div">ADAPTER A</div><h3 id="alpacaTitle">Alpaca</h3></div><span class="chip" id="mcc-static-0329-span">Free tier: IEX</span></div><p class="provider-plan" id="mcc-static-0330-p">Paid test target: Algo Trader Plus · public list price $99/mo</p><dl id="mcc-static-0331-dl"><div id="mcc-static-0332-div"><dt id="mcc-static-0333-dt">Feed</dt><dd id="mcc-static-0334-dd">IEX-only on Basic; SIP coverage requires eligible paid access</dd></div><div id="mcc-static-0335-div"><dt id="mcc-static-0336-dt">Connection</dt><dd id="alpacaConnection">NOT CONNECTED</dd></div><div id="mcc-static-0337-div"><dt id="mcc-static-0338-dt">Latest observation</dt><dd id="alpacaLatest">DATA NOT LOADED</dd></div><div id="mcc-static-0339-div"><dt id="mcc-static-0340-dt">Coverage / freshness</dt><dd id="alpacaCoverage">Not measured</dd></div><div id="mcc-static-0341-div"><dt id="mcc-static-0342-dt">Gap / recovery test</dt><dd id="alpacaRecovery">Not run</dd></div></dl><p class="provider-status" id="mcc-static-0343-p">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
-  <article class="provider-card" aria-labelledby="massiveTitle" id="mcc-static-0344-article"><div class="provider-card-heading" id="mcc-static-0345-div"><div id="mcc-static-0346-div"><div class="eyebrow" id="mcc-static-0347-div">ADAPTER B</div><h3 id="massiveTitle">Massive Stocks</h3></div><span class="chip" id="mcc-static-0348-span">Free tier: delayed / limited</span></div><p class="provider-plan" id="mcc-static-0349-p">Paid test target: Advanced · public list price $199/mo</p><dl id="mcc-static-0350-dl"><div id="mcc-static-0351-div"><dt id="mcc-static-0352-dt">Feed</dt><dd id="mcc-static-0353-dd">Real-time plan target with trades, quotes, aggregates and snapshots</dd></div><div id="mcc-static-0354-div"><dt id="mcc-static-0355-dt">Connection</dt><dd id="massiveConnection">NOT CONNECTED</dd></div><div id="mcc-static-0356-div"><dt id="mcc-static-0357-dt">Latest observation</dt><dd id="massiveLatest">DATA NOT LOADED</dd></div><div id="mcc-static-0358-div"><dt id="mcc-static-0359-dt">Coverage / freshness</dt><dd id="massiveCoverage">Not measured</dd></div><div id="mcc-static-0360-div"><dt id="mcc-static-0361-dt">Gap / recovery test</dt><dd id="massiveRecovery">Not run</dd></div></dl><p class="provider-status" id="mcc-static-0362-p">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
- </div>
- <div class="table-wrap provider-results-wrap" id="mcc-static-0363-div"><table id="mcc-static-0364-table"><thead id="mcc-static-0365-thead"><tr id="mcc-static-0366-tr"><th id="mcc-static-0367-th">Comparison field</th><th id="mcc-static-0368-th">Alpaca</th><th id="mcc-static-0369-th">Massive</th></tr></thead><tbody id="providerComparisonRows"><tr id="mcc-static-0370-tr"><td id="mcc-static-0371-td">Request</td><td colspan="2" id="mcc-static-0372-td">Choose symbol, interval, and date, then prepare a comparison record. This does not fetch data.</td></tr></tbody></table></div>
- <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
-</section>
+        <section id="provider-comparison" class="panel provider-compare" aria-labelledby="providerCompareTitle">
+            <div class="section-heading" id="mcc-static-0313-div"><div id="mcc-static-0314-div"><div class="eyebrow" id="mcc-static-0315-div">DATA PROVIDER DIAGNOSTICS · NOT A DAILY STEP</div><h2 id="providerCompareTitle">Provider comparison</h2><p class="muted" id="mcc-static-0316-p">Use when onboarding or re-testing a data provider, not as part of the normal morning scan.</p></div><span class="chip warning-chip" id="mcc-static-0317-span">API STATUS · HISTORICAL REST</span></div>
+            <div class="provider-compare-toolbar" id="mcc-static-0318-div"><label for="providerSymbol" id="mcc-static-0319-label">Test symbol <input id="providerSymbol" value="UPC" maxlength="8" aria-label="Provider test symbol"></label><label for="providerInterval" id="mcc-static-0320-label">Aggregation <select id="providerInterval"><option value="1m" id="mcc-static-0321-option">1 minute</option><option value="5m" id="mcc-static-0322-option">5 minutes</option></select></label><label for="providerDate" id="mcc-static-0323-label">Test date <input id="providerDate" type="date"></label><button id="providerCompareRun" type="button">Prepare comparison</button></div>
+            <div class="provider-cards" id="mcc-static-0324-div">
+                <article class="provider-card" aria-labelledby="alpacaTitle" id="mcc-static-0325-article"><div class="provider-card-heading" id="mcc-static-0326-div"><div id="mcc-static-0327-div"><div class="eyebrow" id="mcc-static-0328-div">ADAPTER A</div><h3 id="alpacaTitle">Alpaca</h3></div><span class="chip" id="mcc-static-0329-span">Free tier: IEX</span></div><p class="provider-plan" id="mcc-static-0330-p">Paid test target: Algo Trader Plus · public list price $99/mo</p><dl id="mcc-static-0331-dl"><div id="mcc-static-0332-div"><dt id="mcc-static-0333-dt">Feed</dt><dd id="mcc-static-0334-dd">IEX-only on Basic; SIP coverage requires eligible paid access</dd></div><div id="mcc-static-0335-div"><dt id="mcc-static-0336-dt">Connection</dt><dd id="alpacaConnection">NOT CONNECTED</dd></div><div id="mcc-static-0337-div"><dt id="mcc-static-0338-dt">Latest observation</dt><dd id="alpacaLatest">DATA NOT LOADED</dd></div><div id="mcc-static-0339-div"><dt id="mcc-static-0340-dt">Coverage / freshness</dt><dd id="alpacaCoverage">Not measured</dd></div><div id="mcc-static-0341-div"><dt id="mcc-static-0342-dt">Gap / recovery test</dt><dd id="alpacaRecovery">Not run</dd></div></dl><p class="provider-status" id="mcc-static-0343-p">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
+                <article class="provider-card" aria-labelledby="massiveTitle" id="mcc-static-0344-article"><div class="provider-card-heading" id="mcc-static-0345-div"><div id="mcc-static-0346-div"><div class="eyebrow" id="mcc-static-0347-div">ADAPTER B</div><h3 id="massiveTitle">Massive Stocks</h3></div><span class="chip" id="mcc-static-0348-span">Free tier: delayed / limited</span></div><p class="provider-plan" id="mcc-static-0349-p">Paid test target: Advanced · public list price $199/mo</p><dl id="mcc-static-0350-dl"><div id="mcc-static-0351-div"><dt id="mcc-static-0352-dt">Feed</dt><dd id="mcc-static-0353-dd">Real-time plan target with trades, quotes, aggregates and snapshots</dd></div><div id="mcc-static-0354-div"><dt id="mcc-static-0355-dt">Connection</dt><dd id="massiveConnection">NOT CONNECTED</dd></div><div id="mcc-static-0356-div"><dt id="mcc-static-0357-dt">Latest observation</dt><dd id="massiveLatest">DATA NOT LOADED</dd></div><div id="mcc-static-0358-div"><dt id="mcc-static-0359-dt">Coverage / freshness</dt><dd id="massiveCoverage">Not measured</dd></div><div id="mcc-static-0360-div"><dt id="mcc-static-0361-dt">Gap / recovery test</dt><dd id="massiveRecovery">Not run</dd></div></dl><p class="provider-status" id="mcc-static-0362-p">Status: REST adapter status is loaded from this API. A successful response does not establish full-session coverage or scanner readiness.</p></article>
+            </div>
+            <div class="table-wrap provider-results-wrap" id="mcc-static-0363-div"><table id="mcc-static-0364-table"><thead id="mcc-static-0365-thead"><tr id="mcc-static-0366-tr"><th id="mcc-static-0367-th">Comparison field</th><th id="mcc-static-0368-th">Alpaca</th><th id="mcc-static-0369-th">Massive</th></tr></thead><tbody id="providerComparisonRows"><tr id="mcc-static-0370-tr"><td id="mcc-static-0371-td">Request</td><td colspan="2" id="mcc-static-0372-td">Choose symbol, interval, and date, then prepare a comparison record. This does not fetch data.</td></tr></tbody></table></div>
+            <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
+        </section>
 
-<details id="morningBriefDetails" class="morning-brief-details">
- <summary id="mcc-static-0373-summary"><span id="mcc-static-0374-span"><strong id="mcc-static-0375-strong">Morning Command Brief</strong><small id="mcc-static-0376-small">Expand for the latest market snapshot, movers, sector proxies, and source limitations</small></span><span class="chip" id="mcc-static-0377-span">COLLAPSED BY DEFAULT</span></summary>
- <section id="morning-brief" class="panel morning-report" aria-labelledby="morningReportTitle">
- <div class="section-heading" id="mcc-static-0378-div"><div id="mcc-static-0379-div"><div class="eyebrow" id="mcc-static-0380-div">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Market snapshot</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions" id="mcc-static-0381-div"><span class="chip warning-chip" id="mcc-static-0382-span">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
- <div class="report-banner" id="mcc-static-0383-div"><span class="readiness-dot blocked" id="mcc-static-0384-span"></span><div id="mcc-static-0385-div"><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
- <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p id="mcc-static-0386-p">API market observations: NOT CONNECTED in static preview.</p></div>
- <div class="morning-summary-grid" id="mcc-static-0387-div">
-  <article id="mcc-static-0388-article"><span class="eyebrow" id="mcc-static-0389-span">SCANNER FEED</span><strong id="mcc-static-0390-strong">Not connected</strong><small id="mcc-static-0391-small">Provider not selected</small></article>
-  <article id="mcc-static-0392-article"><span class="eyebrow" id="mcc-static-0393-span">WATCHLIST</span><strong id="morningWatchCount">0</strong><small id="mcc-static-0394-small">Browser-local symbols only</small></article>
-  <article id="mcc-static-0395-article"><span class="eyebrow" id="mcc-static-0396-span">TOP CANDIDATES</span><strong id="morningTopCount">0</strong><small id="mcc-static-0397-small">Demo/import rows only</small></article>
-  <article id="mcc-static-0398-article"><span class="eyebrow" id="mcc-static-0399-span">BORING OVERNIGHT</span><strong id="mcc-static-0400-strong">NOT CALCULATED</strong><small id="mcc-static-0401-small">Pipeline not wired</small></article>
- </div>
- <p class="notice" id="mcc-static-0402-p">Arizona time does not observe daylight saving time. The report must eventually show Arizona time plus the correct Eastern market/session context. This preview has no market feed, so it cannot establish current session status or quote freshness.</p>
-</section>
-</details>
+        <details id="morningBriefDetails" class="morning-brief-details">
+            <summary id="mcc-static-0373-summary"><span id="mcc-static-0374-span"><strong id="mcc-static-0375-strong">Morning Command Brief</strong><small id="mcc-static-0376-small">Expand for the latest market snapshot, movers, sector proxies, and source limitations</small></span><span class="chip" id="mcc-static-0377-span">COLLAPSED BY DEFAULT</span></summary>
+            <section id="morning-brief" class="panel morning-report" aria-labelledby="morningReportTitle">
+                <div class="section-heading" id="mcc-static-0378-div"><div id="mcc-static-0379-div"><div class="eyebrow" id="mcc-static-0380-div">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Market snapshot</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions" id="mcc-static-0381-div"><span class="chip warning-chip" id="mcc-static-0382-span">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
+                <div class="report-banner" id="mcc-static-0383-div"><span class="readiness-dot blocked" id="mcc-static-0384-span"></span><div id="mcc-static-0385-div"><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
+                <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p id="mcc-static-0386-p">API market observations: NOT CONNECTED in static preview.</p></div>
+                <div class="morning-summary-grid" id="mcc-static-0387-div">
+                    <article id="mcc-static-0388-article"><span class="eyebrow" id="mcc-static-0389-span">SCANNER FEED</span><strong id="mcc-static-0390-strong">Not connected</strong><small id="mcc-static-0391-small">Provider not selected</small></article>
+                    <article id="mcc-static-0392-article"><span class="eyebrow" id="mcc-static-0393-span">WATCHLIST</span><strong id="morningWatchCount">0</strong><small id="mcc-static-0394-small">Browser-local symbols only</small></article>
+                    <article id="mcc-static-0395-article"><span class="eyebrow" id="mcc-static-0396-span">TOP CANDIDATES</span><strong id="morningTopCount">0</strong><small id="mcc-static-0397-small">Demo/import rows only</small></article>
+                    <article id="mcc-static-0398-article"><span class="eyebrow" id="mcc-static-0399-span">BORING OVERNIGHT</span><strong id="mcc-static-0400-strong">NOT CALCULATED</strong><small id="mcc-static-0401-small">Pipeline not wired</small></article>
+                </div>
+                <p class="notice" id="mcc-static-0402-p">Arizona time does not observe daylight saving time. The report must eventually show Arizona time plus the correct Eastern market/session context. This preview has no market feed, so it cannot establish current session status or quote freshness.</p>
+            </section>
+        </details>
 
-<section id="dashboard-feedback" class="panel feedback-panel">
- <div class="section-heading" id="mcc-static-0403-div"><div id="mcc-static-0404-div"><div class="eyebrow" id="mcc-static-0405-div">PRODUCT FEEDBACK</div><h2 id="mcc-static-0406-h2">Dashboard notes</h2></div><span class="muted" id="mcc-static-0407-span">Saved in this browser only</span></div>
- <form id="feedbackForm" class="feedback-form">
-  <label for="feedbackArea" id="mcc-static-0408-label">Area</label><select id="feedbackArea"><option id="mcc-static-0409-option">Dashboard layout</option><option id="mcc-static-0410-option">Opportunity classification</option><option id="mcc-static-0411-option">5M → 1M handoff</option><option id="mcc-static-0412-option">Scanner workflow</option><option id="mcc-static-0413-option">EXT / pullback watch</option><option id="mcc-static-0414-option">Boring Overnight</option><option id="mcc-static-0415-option">Data quality / freshness</option><option id="mcc-static-0416-option">Other</option></select>
-  <label for="feedbackPriority" id="mcc-static-0417-label">Priority</label><select id="feedbackPriority"><option id="mcc-static-0418-option">Idea</option><option id="mcc-static-0419-option">Confusing</option><option id="mcc-static-0420-option">Bug / mismatch</option><option id="mcc-static-0421-option">High priority</option></select>
-  <label for="feedbackText" id="mcc-static-0422-label">What should change?</label><textarea id="feedbackText" rows="3" maxlength="2000" placeholder="Describe what you expected, what you saw, and which symbol/timeframe or replay snapshot applies." required></textarea>
-  <div class="feedback-actions" id="mcc-static-0423-div"><button type="submit" id="mcc-static-0424-button">Save note</button><button id="exportFeedback" type="button" class="quiet-button">Export notes</button><button id="clearFeedback" type="button" class="quiet-button">Clear notes</button></div>
- </form>
- <ul id="feedbackRows" class="feedback-list"></ul>
- <p class="notice" id="mcc-static-0425-p">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
-</section>
-<section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
-<dialog id="morningBriefDialog" class="morning-brief-dialog" aria-labelledby="morningBriefDialogTitle">
- <div class="section-heading" id="mcc-static-0426-div"><div id="mcc-static-0427-div"><div class="eyebrow" id="mcc-static-0428-div">MORNING REPORT · LIVE API SNAPSHOT</div><h2 id="morningBriefDialogTitle">Morning Command Brief</h2></div><div class="report-actions" id="mcc-static-0429-div"><button id="exportMorningReportModal" type="button" class="quiet-button">Export report JSON</button><button id="closeMorningBrief" type="button" class="quiet-button">Close</button></div></div>
- <div id="morningBriefModalContent" class="morning-brief-modal-content"><p class="muted" id="mcc-static-0430-p">Loading the latest API-backed brief…</p></div>
- <p class="notice" id="mcc-static-0431-p">Partial market snapshot only. Missing inputs remain DATA NOT FOUND IN SOURCES; this is not a trade instruction.</p>
-</dialog>
-<dialog id="quickStartDialog" class="quick-start-dialog" aria-labelledby="quickStartTitle">
- <div class="section-heading" id="mcc-static-0432-div"><div id="mcc-static-0433-div"><div class="eyebrow" id="mcc-static-0434-div">MCC WORKFLOW</div><h2 id="quickStartTitle">Quick Start</h2></div><div class="report-actions"><a class="quiet-button" href="https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Technical-Workflow.md" target="_blank" rel="noopener noreferrer">Technical Workflow</a><a class="quiet-button" href="https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Overnight-Scanner-Quick-Start.md" target="_blank" rel="noopener noreferrer">Overnight Scanner Guide</a><button id="closeQuickStart" type="button" class="quiet-button">Close</button></div></div>
- <ol class="quick-start-steps" id="mcc-static-0435-ol">
-  <li id="mcc-static-0436-li"><strong id="mcc-static-0437-strong">Review Morning Command Brief.</strong> Check the timestamp, source status, market context, and unavailable inputs.</li>
-  <li id="mcc-static-0438-li"><strong id="mcc-static-0439-strong">Refresh Alpaca market movers.</strong> Load persisted discovery events; treat them as candidates, not qualified trades.</li>
-  <li id="mcc-static-0440-li"><strong id="mcc-static-0441-strong">Review Red Zone.</strong> Inspect up to four candidates. Pin symbols you want to keep visible, dismiss rows you do not want, or restore dismissed rows.</li>
-  <li id="mcc-static-0442-li"><strong id="mcc-static-0443-strong">Inspect the Main Chart.</strong> Select a symbol or click a Red Zone tile. The chart and decision panels follow the focused symbol.</li>
-  <li id="mcc-static-0444-li"><strong id="mcc-static-0445-strong">Use Scan &amp; Analyze.</strong> Enter symbols and an Arizona-time window to retrieve 1M/5M bars and inspect source coverage and reasons.</li>
-  <li id="mcc-static-0446-li"><strong id="mcc-static-0447-strong">Review the 5M → 1M decision context.</strong> Keep higher-timeframe permission separate from the 1M execution event. Missing evidence is not a pass.</li>
-  <li id="mcc-static-0448-li"><strong id="mcc-static-0449-strong">Use Boring Overnight separately.</strong> Run historical bar and coverage checks; do not treat incomplete history or missing catalyst data as READY.</li>
-  <li id="mcc-static-0450-li"><strong id="mcc-static-0451-strong">Provider comparison is diagnostic.</strong> Run it only when testing Alpaca vs Massive for a chosen date and timeframe, not every morning.</li>
- </ol>
+        <section id="dashboard-feedback" class="panel feedback-panel">
+            <div class="section-heading" id="mcc-static-0403-div"><div id="mcc-static-0404-div"><div class="eyebrow" id="mcc-static-0405-div">PRODUCT FEEDBACK</div><h2 id="mcc-static-0406-h2">Dashboard notes</h2></div><span class="muted" id="mcc-static-0407-span">Saved in this browser only</span></div>
+            <form id="feedbackForm" class="feedback-form">
+                <label for="feedbackArea" id="mcc-static-0408-label">Area</label><select id="feedbackArea"><option id="mcc-static-0409-option">Dashboard layout</option><option id="mcc-static-0410-option">Opportunity classification</option><option id="mcc-static-0411-option">5M → 1M handoff</option><option id="mcc-static-0412-option">Scanner workflow</option><option id="mcc-static-0413-option">EXT / pullback watch</option><option id="mcc-static-0414-option">Boring Overnight</option><option id="mcc-static-0415-option">Data quality / freshness</option><option id="mcc-static-0416-option">Other</option></select>
+                <label for="feedbackPriority" id="mcc-static-0417-label">Priority</label><select id="feedbackPriority"><option id="mcc-static-0418-option">Idea</option><option id="mcc-static-0419-option">Confusing</option><option id="mcc-static-0420-option">Bug / mismatch</option><option id="mcc-static-0421-option">High priority</option></select>
+                <label for="feedbackText" id="mcc-static-0422-label">What should change?</label><textarea id="feedbackText" rows="3" maxlength="2000" placeholder="Describe what you expected, what you saw, and which symbol/timeframe or replay snapshot applies." required></textarea>
+                <div class="feedback-actions" id="mcc-static-0423-div"><button type="submit" id="mcc-static-0424-button">Save note</button><button id="exportFeedback" type="button" class="quiet-button">Export notes</button><button id="clearFeedback" type="button" class="quiet-button">Clear notes</button></div>
+            </form>
+            <ul id="feedbackRows" class="feedback-list"></ul>
+            <p class="notice" id="mcc-static-0425-p">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
+        </section>
+        <section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
+        <dialog id="morningBriefDialog" class="morning-brief-dialog" aria-labelledby="morningBriefDialogTitle">
+            <div class="section-heading" id="mcc-static-0426-div"><div id="mcc-static-0427-div"><div class="eyebrow" id="mcc-static-0428-div">MORNING REPORT · LIVE API SNAPSHOT</div><h2 id="morningBriefDialogTitle">Morning Command Brief</h2></div><div class="report-actions" id="mcc-static-0429-div"><button id="exportMorningReportModal" type="button" class="quiet-button">Export report JSON</button><button id="closeMorningBrief" type="button" class="quiet-button">Close</button></div></div>
+            <div id="morningBriefModalContent" class="morning-brief-modal-content"><p class="muted" id="mcc-static-0430-p">Loading the latest API-backed brief…</p></div>
+            <p class="notice" id="mcc-static-0431-p">Partial market snapshot only. Missing inputs remain DATA NOT FOUND IN SOURCES; this is not a trade instruction.</p>
+        </dialog>
+        <dialog id="quickStartDialog" class="quick-start-dialog" aria-labelledby="quickStartTitle">
+            <div class="section-heading" id="mcc-static-0432-div"><div id="mcc-static-0433-div"><div class="eyebrow" id="mcc-static-0434-div">MCC WORKFLOW</div><h2 id="quickStartTitle">Quick Start</h2></div><div class="report-actions"><a class="quiet-button" href="https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Technical-Workflow.md" target="_blank" rel="noopener noreferrer">Technical Workflow</a><a class="quiet-button" href="https://github.com/themailcomeshere/MomentumCommandCenterV2/blob/feature/opportunity-quality-classification/docs/Overnight-Scanner-Quick-Start.md" target="_blank" rel="noopener noreferrer">Overnight Scanner Guide</a><button id="closeQuickStart" type="button" class="quiet-button">Close</button></div></div>
+            <ol class="quick-start-steps" id="mcc-static-0435-ol">
+                <li id="mcc-static-0436-li"><strong id="mcc-static-0437-strong">Review Morning Command Brief.</strong> Check the timestamp, source status, market context, and unavailable inputs.</li>
+                <li id="mcc-static-0438-li"><strong id="mcc-static-0439-strong">Refresh Alpaca market movers.</strong> Load persisted discovery events; treat them as candidates, not qualified trades.</li>
+                <li id="mcc-static-0440-li"><strong id="mcc-static-0441-strong">Review Red Zone.</strong> Inspect up to four candidates. Pin symbols you want to keep visible, dismiss rows you do not want, or restore dismissed rows.</li>
+                <li id="mcc-static-0442-li"><strong id="mcc-static-0443-strong">Inspect the Main Chart.</strong> Select a symbol or click a Red Zone tile. The chart and decision panels follow the focused symbol.</li>
+                <li id="mcc-static-0444-li"><strong id="mcc-static-0445-strong">Use Scan &amp; Analyze.</strong> Enter symbols and an Arizona-time window to retrieve 1M/5M bars and inspect source coverage and reasons.</li>
+                <li id="mcc-static-0446-li"><strong id="mcc-static-0447-strong">Review the 5M → 1M decision context.</strong> Keep higher-timeframe permission separate from the 1M execution event. Missing evidence is not a pass.</li>
+                <li id="mcc-static-0448-li"><strong id="mcc-static-0449-strong">Use Boring Overnight separately.</strong> Run historical bar and coverage checks; do not treat incomplete history or missing catalyst data as READY.</li>
+                <li id="mcc-static-0450-li"><strong id="mcc-static-0451-strong">Provider comparison is diagnostic.</strong> Run it only when testing Alpaca vs Massive for a chosen date and timeframe, not every morning.</li>
+            </ol>
             <h3>Overnight Scanner workflow</h3>
             <ol class="quick-start-steps">
                 <li><strong>Run the Thinkorswim Overnight scan.</strong> Sort by Overnight Score and preserve the scan timestamp, result count, and CSV export when available.</li>
@@ -782,6 +859,10 @@
                 <li><strong>Research news and inspect charts.</strong> Verify catalysts and upload Daily/5M charts for the shortlist. Use 1M only for a specific entry/exit review.</li>
             </ol>
             <p class="notice" id="mcc-static-0452-p">This prototype does not connect to Thinkorswim, submit orders, or establish a validated live opportunity ranking. Confirm data source, timestamps, freshness, and actual chart states before acting.</p>
-</dialog>
-<footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer></main><script src="./app.js?v=20261105-atr-import-control-recovery-v3" id="mcc-static-0454-script"></script><script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
-</body></html>
+        </dialog>
+        <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
+    </main>
+    <script src="./app.js?v=20261105-atr-import-control-recovery-v3" id="mcc-static-0454-script"></script>
+    <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
+</body>
+</html>

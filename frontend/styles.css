@@ -121,7 +121,7 @@ button {
     color: var(--text);
     border: 1px solid var(--line);
     border-radius: 9px;
-    padding: 9px 12px;
+    padding: 3px 6px;
     font: inherit;
 }
 
@@ -388,7 +388,7 @@ footer {
 .quiet-button {
     border: 1px solid var(--line);
     border-radius: 9px;
-    padding: 9px 12px;
+    padding: 3px 6px;
     background: #203553;
     color: var(--text);
     cursor: pointer;
@@ -718,7 +718,7 @@ th {
     .redzone-card h3 {
         font-size: 24px;
         letter-spacing: -0.03em;
-        margin: 14px 0 5px;
+        /*margin: 14px 0 5px;*/
     }
 
     .redzone-card p {
@@ -1058,11 +1058,15 @@ th {
  .redzone-manage-form input{flex:1}
 }
 
+#mcc-static-0069-div {
+    margin-bottom: 1px !important;
+}
+
 
 /* MCC live assessment and compact header — 2026-10-30 */
-.topbar{
- display:block;
- padding:12px max(16px,calc((100vw - 1240px)/2));
+.topbar {
+    display: block;
+    padding: 12px max(16px,calc((100vw - 1240px)/2));
 }
 .topbar-layout{
  display:grid;
