@@ -352,8 +352,9 @@ function renderOvernightShortlistPicker(rows){
  const picker=$("overnightManualTopFourPicker"),summary=$("overnightShortlistSummary");if(!picker)return;
  const symbols=[...new Set(rows.map(x=>String(x.symbol||"").trim().toUpperCase()).filter(Boolean))];overnightManualSymbols=overnightManualSymbols.filter(x=>symbols.includes(x)).slice(0,4);picker.replaceChildren();
  const scoreOf=item=>{const raw=String(item.score??"").replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);return raw?Number(raw[0]):-Infinity;};
- const uniqueRows=[...new Map(rows.map(item=>[String(item.symbol||"").trim().toUpperCase(),item]).filter(([symbol])=>symbol)).values()];
- const ranked=uniqueRows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol))).slice(0,4).map(x=>String(x.symbol||"").toUpperCase());
+ const sortedRows=rows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)));
+ const uniqueRows=[...new Map(sortedRows.map(item=>[String(item.symbol||"").trim().toUpperCase(),item]).filter(([symbol])=>symbol)).values()];
+ const ranked=uniqueRows.slice(0,4).map(x=>String(x.symbol||"").toUpperCase());
  const paint=(id,items,empty)=>{const host=$(id);if(!host)return;host.replaceChildren();(items.length?items:[]).forEach((symbol,index)=>{const tag=document.createElement("span");tag.className="overnight-shortlist-symbol";tag.textContent=(index+1)+". "+symbol;host.append(tag);});if(!items.length){const note=document.createElement("span");note.className="muted small";note.textContent=empty;host.append(note);}};
  paint("overnightMccTopFourDisplay",ranked,"No imported rows");paint("overnightMyTopFourDisplay",overnightManualSymbols,"Select four symbols below");
  symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();renderCatalystHumanReviewQueue();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
@@ -373,8 +374,9 @@ async function fetchOvernightTopFourEvidence(){
  const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
  if(!rows.length){if(status)status.textContent="Import the Overnight Scanner CSV first.";return;}
  const scoreOf=item=>{const raw=String(item.score??"").replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);return raw?Number(raw[0]):-Infinity;};
- const uniqueRows=[...new Map(rows.map(item=>[String(item.symbol||"").trim().toUpperCase(),item]).filter(([symbol])=>symbol)).values()];
- const ranked=uniqueRows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)));
+ const sortedRows=rows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)));
+ const uniqueRows=[...new Map(sortedRows.map(item=>[String(item.symbol||"").trim().toUpperCase(),item]).filter(([symbol])=>symbol)).values()];
+ const ranked=uniqueRows;
  const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>uniqueRows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):ranked.slice(0,4);
  if(selected.length!==4){if(status)status.textContent=overnightShortlistMode==="manual"?"Select exactly four symbols in My Top 4 before fetching.":"MCC could not identify four distinct imported candidates.";return;}
  if(button)button.disabled=true;if(status)status.textContent="Fetching Daily and catalyst evidence for "+(overnightShortlistMode==="manual"?"My Top 4":"MCC Top 4")+": "+selected.map(x=>x.symbol).join(", ")+"…";
