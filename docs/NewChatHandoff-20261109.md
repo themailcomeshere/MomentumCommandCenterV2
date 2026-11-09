@@ -165,3 +165,8 @@ Important: the field `ruleSetVersion` should identify the actual automated triag
 - The actual article text/publisher identity and the exact ruleset version saved at the time of triage were not included in the supplied runtime payload. Use the actual values from the article and saved triage record; do not guess.
 - CI for the new evidence-quality guard is pending at this handoff.
 - No current catalyst precision/recall metrics exist.
+
+
+### Latest Top-4 fetch diagnostics
+
+The post-fetch status now prints the exact four distinct symbols queried and distinguishes the per-symbol evidence table from the article-only human-review queue. A ticker with no returned articles remains UNKNOWN; the queue is not a roster of all four requests. The latest frontend commits are `099c7a619ef37cb7acc1d3469be56c9fd4fb94c3` (highest-scoring row retained per unique ticker) and `efbab2e73e595eb71e54a1dd2d8942a6102067c9` (queried-symbol status). CI was still running for these exact commits at this handoff update.
