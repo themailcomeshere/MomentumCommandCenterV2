@@ -1,9 +1,9 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-08 (operator session-coverage endpoint recheck + 3-review catalyst validation)  
+**Updated:** 2026-11-09 (operator-confirmed ATR parity MATCH + EWTX conflict supersession; evidence-quality guard)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
-**Current handoff:** [NewChatHandoff-20261108.md](NewChatHandoff-20261108.md)  
+**Current handoff:** [NewChatHandoff-20261109.md](NewChatHandoff-20261109.md)  
 **Detailed active backlog:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)  
 **Latest ATR evidence analysis:** [ATR-Export-Coverage-Fix-20261106.md](Validation/ATR-Export-Coverage-Fix-20261106.md)  
@@ -20,6 +20,41 @@
 **Implementation CI:** commit `bdb56b66d0c3993923aeb4b3445fc63a190fcf04` passed [GitHub Actions run 42532647770](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42532647770): frontend syntax, Release build, and all tests. This verifies code/tests, not the operator's local runtime output.
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
+
+## Operator verification and catalyst evidence-quality hardening — 2026-11-09
+
+### P0 — ATR source continuity: operator runtime PASS
+
+- [x] Operator pulled/rebuilt/restarted the feature branch and re-queried both parity endpoints.
+- [x] EVR 5m: `MATCH`, 327 source observations, 20 compared bars, 0 unresolved timestamp gaps, 2 verified no-bar intervals; MAE 0.0000294330206093994, max error 0.0000495349247567753 (tolerance 0.00005).
+- [x] CBOE 5m: `MATCH`, 338 source observations, 20 compared bars, 0 unresolved timestamp gaps, 1 verified no-bar interval; MAE 0.0000203865947752492, max error 0.0000426076307464691 (tolerance 0.00005).
+- [x] Verified gap details match the three exact operator-confirmed no-candle windows; these remain audit diagnostics and are not fabricated bars.
+- [x] Updated runtime acceptance state: ATR numeric + timestamp continuity parity is operator-verified PASS for EVR and CBOE.
+
+### P1 — Catalyst review conflict: conflict resolved, one record requires metadata correction
+
+- [x] Operator submitted review `8405880abfd14b3f83c32e380ced7358` for EWTX / article `117008554`, explicitly superseding both conflicting review IDs `5a89f75f1cbf4bedb75423dc964016b9` and `b485426152ba4668a256ff284b527e9d`.
+- [x] Re-query confirms `conflictingArticleCount=0`, `supersededReviewCount=2`, raw review count 5 and included unique count 1.
+- [x] Preserved the human-selected `MATERIAL_RISK` label and saved `UNCLASSIFIED` prediction as a false-negative observation; do not alter the prediction to improve metrics.
+- [x] Identified placeholder values in the submitted record: source=`string`, ruleSetVersion=`string`, notes=`string`, predictedCategories=[`STRING`]. The record is append-only and cannot be edited in place.
+- [x] Added API rejection for placeholder source/ruleset/notes/category values; supersession now requires a meaningful rationale of at least 12 characters.
+- [x] Added validation exclusion for historical records with placeholder/missing review evidence, exposed as `inadequateReviewEvidence` in the exclusion breakdown.
+- [x] Added regression tests for rejected placeholders and previously persisted weak evidence.
+- [ ] Pull/rebuild/restart the evidence-quality guard, then append a corrected EWTX review that supersedes review `8405880abfd14b3f83c32e380ced7358`, with the actual publisher, actual ruleset version, a source-based rationale, and the unchanged saved prediction `UNCLASSIFIED`. Keep `predictedCategories` empty unless the saved prediction actually included categories.
+- [ ] Re-query validation and confirm the EWTX review is included only after its evidence metadata is adequate. The two earlier reviews remain superseded.
+- [ ] Collect at least five additional eligible unique reviews (six is only the structural minimum), with positive and negative truth classes and saved predictions. Ensure the chronological holdout contains both truth classes; then expand sample and double-review a subset.
+- [ ] No classifier promotion until representative holdout evidence, reviewer agreement, and broader calibration are complete.
+
+### Update/test command correction
+
+The operator reports the reliable sequence for this checkout was:
+```powershell
+git status --short --branch
+git switch feature/opportunity-quality-classification
+git pull --ff-only origin feature/opportunity-quality-classification
+.\\scripts\\Get-Latest-And-Test.ps1
+```
+Use this explicit sequence if the update script does not switch/pull correctly in the current PowerShell session. Do not reset or discard a dirty working tree. The local Release build/test result for this new commit remains pending until operator execution.
 
 ## Operator correction and implementation — 2026-11-08 (confirmed no-bar intervals + review conflict repair)
 
@@ -49,9 +84,9 @@ Latest operator result: raw reviews 4, included 0, excluded 4, conflicting artic
 
 - [x] TOS chart absence confirmed by operator; export accuracy confirmed.
 - [x] Exact three no-bar intervals explicitly adjudicated in code.
-- [ ] Runtime ATR parity MATCH — pending operator rebuild/recheck.
+- [x] Runtime ATR parity MATCH — operator verified EVR and CBOE on 2026-11-09.
 - [x] Catalyst conflict diagnostics and safe correction/supersession mechanism implemented.
-- [ ] Catalyst validation — still INSUFFICIENT_LABELS until a real conflict is adjudicated and more human labels are collected.
+- [ ] Catalyst validation — conflict resolved, but usable sample remains one or fewer after evidence-quality screening; holdout metrics unavailable.
 - [ ] No classifier promotion authorized.
 
 ## Operator evidence update — 2026-11-08 (session coverage + catalyst sample)
