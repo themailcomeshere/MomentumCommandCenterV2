@@ -2,7 +2,7 @@
 
 **Repository:** themailcomeshere/MomentumCommandCenterV2  
 **Working branch:** feature/opportunity-quality-classification  
-**Branch head before this handoff update:** pending docs commit  
+**Current branch head:** `0ba7f2ca3babc349eaba40052c97c76e8215df28`  
 **Dashboard:** frontend/index.html at http://localhost:53360/  
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
 
@@ -85,7 +85,13 @@ Run from the repository root. Do not force-reset or discard uncommitted changes.
 5. **Opportunity Quality:** gather time-separated candidate snapshots/outcomes and calibrate ranking before treating it as operational.
 6. **Walk-forward:** runtime qualification remains blocked by the known SIP entitlement issue and required complete eligible history.
 
-## 5. Checklist state
+## 5. CI status
+
+- [x] Evidence-quality code and tests passed GitHub Actions on code/test commit `973aaf55482ea5c188071a4567d7b58fab019d92`: [run 42647886829](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42647886829). This run includes frontend syntax validation, Release build and full test suite.
+- [ ] Documentation-only commits after that code/test commit are queued for exact latest branch-head CI: [run 42648083688](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42648083688).
+- [ ] Operator local pull/build/test and API restart remain required before runtime verification of the new metadata guard.
+
+## 6. Checklist state
 
 - [x] EVR ATR parity MATCH, 0 unresolved gaps, 2 verified no-bar intervals.
 - [x] CBOE ATR parity MATCH, 0 unresolved gaps, 1 verified no-bar interval.
