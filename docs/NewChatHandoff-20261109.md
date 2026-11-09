@@ -25,9 +25,18 @@
 7. Import scanner CSV; verify up to 20 unique symbols sorted by Overnight Score. Confirm Scan & Analyze is not automatically submitted.
 8. Verify disclosures open/close. Timeframe Handoff hidden in Boring Overnight and available in Intraday.
 
-## Boring Winner
+## Boring Winner — implemented as a separate research calculation
 
-Boring Winner is an active strategy-development objective, not a production-ready gate. Its formula is documented; source-qualified chronological validation and outcome calibration remain open. Do not mark candidates READY from this formula alone.
+The TOS Daily OHLC calculator now returns the Boring Winner result separately from the eight active Overnight Scanner metrics. It evaluates:
+- 20-session win rate ≥ 60%
+- 20-session average return between +0.10% and +3.00%, inclusive
+- At least 10 of the last 20 returns within +0.10%…+3.00%
+- 20-session sample standard deviation ≤ 3.00%
+- Current daily close above the 20-day SMA
+
+The API result exposes pass/fail, in-range count, and sample standard deviation. The Dashboard displays this as **RESEARCH ONLY** after importing at least 21 TOS daily OHLC bars. It does not change the existing Overnight Score, historical qualification, or READY state. A unit test covers a qualifying 20-return sample.
+
+Remaining: validate against chronological, source-qualified data and confirm the operator's actual TOS daily aggregation/session settings. Do not promote this to a production gate or TOS V3 study until those checks pass.
 
 ## [Uncertainties]
 
