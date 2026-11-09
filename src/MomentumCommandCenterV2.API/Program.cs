@@ -80,6 +80,7 @@ builder.Services.AddSingleton<MomentumCommandCenterV2.API.MarketData.MarketDataC
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>());
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore>();
+builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapReferenceStore>();
 builder.Services.AddSingleton<MorningBriefSnapshotStore>();
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
@@ -129,6 +130,35 @@ app.MapGet("/api/health", () => Results.Ok(new
 }))
 .WithSummary("Check API liveness")
 .WithDescription("Example response: { \"status\": \"OK\", \"mode\": \"decision-support-only\", \"orderSubmission\": \"NOT IMPLEMENTED\" }.");
+
+app.MapPost("/api/overnight-scanner/thinkorswim-daily-bars", async (
+    MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapImport request,
+    MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapReferenceStore store,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var saved = await store.AppendAsync(request, ct);
+        return Results.Ok(new { status = "IMPORTED_REFERENCE_ONLY", saved.ImportId, saved.ImportedAtUtc,
+            saved.ContentFingerprint, calculation = saved.Calculation,
+            qualification = "NOT_ESTABLISHED", note = "TOS source values are stored as reference evidence. Session parity, source completeness and independent qualification are not inferred." });
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (InvalidDataException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithSummary("Import Thinkorswim daily OHLC reference observations and calculate the eight Overnight Scanner columns")
+.WithDescription("Requires explicit source, aggregation, extended-hours, corporate-action-adjustment and chart-timezone metadata. At least 21 daily bars are required for all 20 gap observations. Does not substitute provider bars or certify session parity.");
+
+app.MapGet("/api/overnight-scanner/thinkorswim-daily-bars", async (
+    string? symbol,
+    int? limit,
+    MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapReferenceStore store,
+    CancellationToken ct) =>
+{
+    try { return Results.Ok(await store.LatestAsync(symbol, limit ?? 50, ct)); }
+    catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithSummary("Read imported Thinkorswim daily-gap reference calculations");
 
 app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
 {
