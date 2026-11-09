@@ -2,7 +2,7 @@
 
 **Repository:** themailcomeshere/MomentumCommandCenterV2  
 **Working branch:** feature/opportunity-quality-classification  
-**Current branch head:** `0ba7f2ca3babc349eaba40052c97c76e8215df28`  
+**Current branch:** [feature/opportunity-quality-classification](https://github.com/themailcomeshere/MomentumCommandCenterV2/tree/feature/opportunity-quality-classification). The evidence-quality code/test commit is recorded in §5.  
 **Dashboard:** frontend/index.html at http://localhost:53360/  
 **Order submission:** NOT IMPLEMENTED; decision-support-only.
 
