@@ -647,9 +647,10 @@
   <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
  </section>
  <section class="panel daily-data-audit" aria-label="Daily market data audit">
-  <div class="section-heading"><div><h3>Daily data audit</h3><p class="muted small">Direct API check for RTO and EVR. Observed metrics remain diagnostic unless the source is complete, fresh and consolidated SIP.</p></div></div>
+  <div class="section-heading"><div><h3>Daily data audit</h3><p class="muted small">Direct API check for up to 20 symbols. Overnight CSV import fills this field with the top 20 unique symbols by Overnight Score. Observed metrics remain diagnostic unless the source is complete, fresh and consolidated SIP.</p></div></div>
   <div class="watchlist-form">
-   <label for="dailyAuditSymbols">Symbols</label><input id="dailyAuditSymbols" value="RTO,EVR" maxlength="80" aria-label="Daily audit symbols">
+   <label for="dailyAuditSymbols">Symbols</label><input id="dailyAuditSymbols" value="RTO,EVR" maxlength="400" aria-label="Daily audit symbols">
+   <button id="dailyAuditTop20" type="button" class="quiet-button">Use Overnight Top 20</button>
    <button id="dailyAuditRefresh" type="button" class="quiet-button">Validate Daily data</button>
   </div>
   <p id="dailyAuditStatus" class="muted small" role="status">Not yet queried. This audit does not assume that Alpaca IEX is consolidated market data.</p>
