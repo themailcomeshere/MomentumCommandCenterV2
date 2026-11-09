@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-09 (operator-confirmed ATR parity MATCH + EWTX conflict supersession; evidence-quality guard)  
+**Updated:** 2026-11-09 (catalyst label legend restored + article-specific review rationale guard)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
 **Current handoff:** [NewChatHandoff-20261109.md](NewChatHandoff-20261109.md)  
@@ -20,6 +20,19 @@
 **Implementation CI:** commit `bdb56b66d0c3993923aeb4b3445fc63a190fcf04` passed [GitHub Actions run 42532647770](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42532647770): frontend syntax, Release build, and all tests. This verifies code/tests, not the operator's local runtime output.
 
 This is the sole active execution checklist. Historical repeated checkboxes were moved verbatim to the archive and consolidated into the detailed backlog. Do not use historical unchecked boxes as current task status. Keep this file concise; put technical acceptance criteria in the active backlog and specialized runbooks.
+
+## Catalyst label guidance and EWTX evidence follow-up — 2026-11-09
+
+- [x] Restored the six-label legend directly above the dashboard review queue, with explicit definitions for MATERIAL_RISK, MATERIAL_EVENT, NON_MATERIAL, IRRELEVANT, DUPLICATE and UNCERTAIN.
+- [x] Clarified that MATERIAL_RISK is for a specific adverse exposure/downside risk; MATERIAL_EVENT is a significant event not inherently adverse.
+- [x] Added dashboard guidance to open the original article and write article-specific facts plus the reason they support the chosen label.
+- [x] Tightened review submission and historical validation: rationale must be at least 40 characters, must not be placeholder text, and must not rely on an assistant's recommendation. This catches the operator's "because you said it should be MATERIAL_RISK" rationale.
+- [x] Added regression coverage for short/assistant-appeal rationales and retained historical weak-evidence exclusion.
+- [x] Preserved append-only audit history; no old review was edited or deleted.
+- [ ] Operator must pull/rebuild/restart this commit. Validation should then exclude review `f496393535df431ab275231b57f8530a` as inadequate evidence (its rationale is an appeal to an assistant recommendation), even though the previous deployed validator counted it as the single included unique review.
+- [ ] Append a new EWTX review superseding `f496393535df431ab275231b57f8530a`, using a source-backed article rationale. Do not treat my prior suggested label as evidence. Re-read the original article and independently decide whether its facts represent material downside risk.
+- [ ] Use the actual prediction ruleset version that generated `UNCLASSIFIED`; `MCC-CATALYST-HUMAN-VALIDATION-1.0` describes the validation process, not necessarily the prediction ruleset. The workflow example uses `MCC-CATALYST-TRIAGE-1.0`; verify the actual saved triage version rather than guessing.
+- [ ] After the correction, verify `inadequateReviewEvidence=0` for the active EWTX review, `conflictingArticleCount=0`, and continue collecting balanced labels. No training/holdout metrics until the structural minimum and class-distribution requirements are met.
 
 ## Operator verification and catalyst evidence-quality hardening — 2026-11-09
 
