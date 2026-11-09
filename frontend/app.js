@@ -68,10 +68,12 @@ window.setInterval(()=>{if(document.visibilityState==="visible")void refreshMark
 const requestedMinuteBarSymbols=new Set();
 function render(){
  const overnight=$("mode")?.value==="overnight";
+ document.body.classList.toggle("boring-overnight-mode",overnight);
  $("overnightPanel")?.classList.toggle("hidden",!overnight);
+ $("overnight-opportunity-status")?.classList.toggle("hidden",!overnight);
+ if(overnight&&$("overnightSymbol")&&$("symbol")?.value)$("overnightSymbol").value=$("symbol").value.trim().toUpperCase();
  const eyebrow=document.querySelector(".hero-card .eyebrow");
  if(eyebrow)eyebrow.textContent=overnight?"BORING OVERNIGHT · RESEARCH":"LIVE OPPORTUNITY CLASSIFICATION";
- $("opportunity-status")?.classList.toggle("overnight-intraday-hidden",overnight);
  if(overnight){
   const classification=$("classification"),headline=$("headline"),eligibility=$("eligibility"),freshness=$("freshness");
   if(classification){classification.textContent="BORING OVERNIGHT · RESEARCH";classification.className="classification boring";}
@@ -128,6 +130,8 @@ const scannerData={
 /// MODULE STATE: Declare Red Zone state before startup refreshes or restored imports can render it.
 let redZoneAssessmentRefreshers=[];
 let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
+const previousRedZoneReadiness=new Map();
+function observeRedZoneReadiness(symbol,decision){const key=String(symbol||"").toUpperCase(),ready=decision?.entryAllowed===true,prior=previousRedZoneReadiness.get(key);if(ready&&prior===false&&redZoneSoundEnabled)playRedZoneAlert();if(typeof decision?.entryAllowed==="boolean")previousRedZoneReadiness.set(key,decision.entryAllowed);}
 
 let restoredScannerImport=null;
 try{
@@ -295,10 +299,28 @@ async function refreshDecisionExplanation(){
   if(sourceNode)sourceNode.textContent="No live assessment received.";
  }
 }
+async function refreshOvernightPriceSummary(symbol){
+ const c=$("overnightAtClosePrice"),ct=$("overnightAtCloseTimestamp"),p=$("overnightCurrentPrice"),pl=$("overnightCurrentPriceLabel"),pt=$("overnightCurrentPriceTimestamp");
+ [c,p].forEach(x=>{if(x)x.textContent="LOADING…";});
+ try{
+  const to=new Date(),from=new Date(to.getTime()-5*86400000),q=new URLSearchParams({symbol,timeframe:"1m",from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
+  const r=await fetch("/api/market-data/bars?"+q,{cache:"no-store"}),d=await r.json();if(!r.ok)throw Error(d.detail||d.error||("HTTP "+r.status));
+  const bars=(d.bars||[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp));
+  const parts=ts=>Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));
+  const local=ts=>new Date(ts).toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true});
+  const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute);return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960;}).at(-1),last=bars.at(-1);
+  if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
+  if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · 16:00 ET close":" · exact 16:00 close not established"):"Data not found in sources: no RTH 1M bar returned.";}
+  if(p)p.textContent=last?"$"+Number(last.close).toFixed(4):"DATA? — NO BAR";
+  if(pl&&last){const z=parts(last.timestamp),m=Number(z.hour)*60+Number(z.minute);pl.textContent=m>=960||m<570?"AFTER-HOURS / EXTENDED PRICE":"LATEST PRICE";}
+  if(pt)pt.textContent=last?"Latest returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: provider returned no 1M bars.";
+ }catch(e){if(c)c.textContent="DATA?";if(p)p.textContent="DATA?";if(ct)ct.textContent="Price request failed · "+e.message;if(pt)pt.textContent="Price request failed · source timestamp unavailable";}
+}
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
  const symbol=($("symbol")?.value||"").trim().toUpperCase();
  if($("mode")?.value==="overnight"){
+  void refreshOvernightPriceSummary(symbol);
   host.replaceChildren();
   const badge=$("mainChartSymbol");if(badge)badge.textContent=symbol||"NO SYMBOL";
   const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 5-minute extended-hours research chart";host.append(title);
@@ -466,6 +488,9 @@ function getOvernightTopSymbols(limit=20){
  return ranked;
 }
 function populateDailyAuditFromOvernightTop20(){
+ const scannerInput=$("apiScanSymbols"),topSymbols=getOvernightTopSymbols(20);
+ if(scannerInput&&topSymbols.length)scannerInput.value=topSymbols.join(",");
+
  const input=$("dailyAuditSymbols"),status=$("dailyAuditStatus");
  const symbols=getOvernightTopSymbols(20);
  if(!input||!symbols.length)return;
@@ -879,7 +904,18 @@ $("toggleRedZoneSound")?.addEventListener("click",async()=>{
 async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,participationNode,reasonNode,gateNode,chartNode){
  void ensureMinuteBarSubscription(symbol);
  try{
+  if($("mode")?.value==="overnight"){
+   statusNode.textContent="BORING OVERNIGHT · RESEARCH";scoreNode.textContent="Intraday V2 permission: NOT USED";scoreNode.className="redzone-score score-unknown";
+   extensionNode.textContent="Intraday close / VWAP / ATR extension: NOT USED in Boring Overnight mode.";
+   freshnessNode.textContent="Historical / extended-hours chart data · no intraday freshness gate.";
+   participationNode.textContent="5M participation: NOT USED in Boring Overnight mode.";participationNode.className="redzone-participation unknown";
+   reasonNode.textContent="Reviewed under Boring Overnight rules. Intraday EXECUTION READY is not evaluated in this mode.";
+   gateNode.textContent="Intraday 5M Permission / 1M execution: NOT USED · Overnight qualification is separate.";
+   const q=new URLSearchParams({symbol,timeframe:"5m",from:new Date(Date.now()-5*86400000).toISOString(),to:new Date().toISOString(),providerName:"Alpaca"}),r=await fetch("/api/market-data/bars?"+q,{cache:"no-store"}),d=await r.json();if(!r.ok)throw Error(d.detail||d.error||("HTTP "+r.status));
+   drawPriceLine(chartNode,(d.bars||[]).filter(b=>Number.isFinite(Number(b.close))).sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp)),symbol);return;
+  }
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
+  observeRedZoneReadiness(symbol,decision);
   statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   const money=value=>value!==null&&value!==undefined&&Number.isFinite(Number(value))?"$"+Number(value).toFixed(3):"DATA?";
@@ -924,6 +960,11 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
 }
 async function refreshRedZoneAssessments(){
  await Promise.allSettled(redZoneAssessmentRefreshers.map(refresh=>refresh()));
+ const state=readRedZoneState();
+ if(state.mode==="automatic"&&$("mode")?.value!=="overnight"){
+  const shown=new Set((scannerData[$("scannerGroup")?.value||"momentum"]||[]).slice(0,4).map(x=>String(x.symbol||"").toUpperCase()));
+  await Promise.allSettled(state.pinned.filter(s=>!shown.has(String(s).toUpperCase())).map(async s=>{try{const d=await fetchLiveAssessment(s);observeRedZoneReadiness(s,d.decision||null);}catch{/* unknown data does not alert */}}));
+ }
 }
 function renderMorningReport(){
  const grid=$("redZoneGrid");if(!grid)return;
@@ -1013,6 +1054,10 @@ $("toggleRedZoneMode")?.addEventListener("click",()=>{
  if(status)status.textContent=state.mode==="manual"
   ?"Manual mode enabled. Red Zone now shows only your pinned symbols in saved order. Add a ticker with Pin to Red Zone."
   :"Automatic mode enabled. Red Zone shows the top four supplied scanner-score candidates after historical gates; live Opportunity Quality is diagnostic and not yet the ranker.";
+});
+$("populateScannerTop20")?.addEventListener("click",()=>{
+ const symbols=getOvernightTopSymbols(20),input=$("apiScanSymbols");if(input&&symbols.length)input.value=symbols.join(",");
+ const status=$("scannerSource");if(status)status.textContent=symbols.length?"Scanner Workbench populated with "+symbols.length+" unique symbols sorted by Overnight Score.":"Import an Overnight Scanner CSV first.";
 });
 $("scannerGroup")?.addEventListener("change",()=>{suppressNextRedZoneAlert=true;renderMorningReport();});
 $("redZoneAddForm")?.addEventListener("submit",event=>{
@@ -1853,6 +1898,10 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
  }
 });
 
+$("overnightQuickCalculateSellLimit")?.addEventListener("click",()=>{
+ const symbol=String($("symbol")?.value||"").trim().toUpperCase();if(symbol&&$("overnightSymbol"))$("overnightSymbol").value=symbol;
+ $("overnightCalculateSellLimit")?.click();
+});
 $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
  const button=$("overnightCalculateSellLimit");
  const status=$("overnightSellLimitAssessmentStatus");
@@ -1882,6 +1931,8 @@ $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
   $("overnightSellLimitMethod").textContent="Historical "+quantile+"th percentile · "+(data.atrParity?.status||"ATR DATA?");
   $("overnightSellLimitValidation").textContent=data.status+" · "+(data.atrParity?.status||"ATR DATA?");
   $("overnightSellLimitReason").textContent=data.explanation||"No sell-limit explanation was returned.";
+  if($("overnightQuickSellLimit"))$("overnightQuickSellLimit").textContent=calculation?.calculatedLimitSell!=null?"$"+Number(calculation.calculatedLimitSell).toFixed(2):"DATA? — NOT CALCULATED";
+  if($("overnightQuickSellLimitDetail"))$("overnightQuickSellLimitDetail").textContent=data.status+" · "+quantile+"th percentile · no order submitted";
   const gates=Array.isArray(data.gates)?data.gates:[];
   for(const gate of gates){
    const row=document.createElement("p");
@@ -1893,6 +1944,7 @@ $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
  }catch(error){
   status.textContent="Sell-limit assessment failed: "+error.message+" No numeric limit was calculated.";
   $("overnightSellLimitPrice").textContent="DATA? — NOT CALCULATED";
+  if($("overnightQuickSellLimit"))$("overnightQuickSellLimit").textContent="DATA? — NOT CALCULATED";
  }finally{button.disabled=false;}
 });
  
