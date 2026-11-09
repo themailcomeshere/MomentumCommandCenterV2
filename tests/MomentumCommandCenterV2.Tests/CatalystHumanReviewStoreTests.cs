@@ -170,6 +170,42 @@ public sealed class CatalystHumanReviewStoreTests
     }
 
     [Theory]
+    [InlineData("string", "MCC-CATALYST-TRIAGE-1.0", "A sufficiently detailed review rationale.", new string[0])]
+    [InlineData("Example News", "string", "A sufficiently detailed review rationale.", new string[0])]
+    [InlineData("Example News", "MCC-CATALYST-TRIAGE-1.0", "string", new string[0])]
+    [InlineData("Example News", "MCC-CATALYST-TRIAGE-1.0", "A sufficiently detailed review rationale.", new[] { "string" })]
+    public async Task RejectsPlaceholderReviewMetadata(string source, string ruleSetVersion, string notes, string[] categories)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-catalyst-review-tests", Guid.NewGuid().ToString("N"));
+        var store = new CatalystHumanReviewStore(Path.Combine(directory, "reviews.jsonl"));
+        try
+        {
+            await Assert.ThrowsAsync<ArgumentException>(() => store.AppendAsync(
+                new CatalystHumanReviewInput("RTO", "a", "A headline", "https://example.com/a", null,
+                    source, "MATERIAL_EVENT", ruleSetVersion, notes, "UNCLASSIFIED", categories),
+                CancellationToken.None));
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ValidationExcludesPreviouslySavedPlaceholderEvidence()
+    {
+        var now = DateTimeOffset.Parse("2026-11-09T15:00:00Z");
+        var record = new CatalystHumanReviewRecord("weak", "EWTX", "117008554",
+            "Edgewise explores sale", "https://example.com/a", now, "string", "MATERIAL_RISK",
+            "string", "string", now, "UNCLASSIFIED", new[] { "STRING" });
+        var result = CatalystHumanReviewValidation.Evaluate(new[] { record });
+        Assert.Equal(0, result.IncludedUniqueReviewCount);
+        Assert.Equal(1, result.ExclusionBreakdown!.InadequateReviewEvidence);
+        Assert.Equal(1, result.ExcludedReviewCount);
+        Assert.Equal("INSUFFICIENT_LABELS", result.Status);
+    }
+
+    [Theory]
     [InlineData("CLEAR")]
     [InlineData("CLEAR_WITH_SOURCE")]
     [InlineData("BUY")]
