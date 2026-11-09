@@ -1,0 +1,28 @@
+def onReturn = open / close[1] - 1;
+
+def win20 =
+    Average(if onReturn > 0 then 1 else 0, 20);
+
+def avg20 =
+    Average(onReturn, 20);
+
+def median20 =
+    Median(onReturn, 20);
+
+def avg5 =
+    Average(onReturn, 5);
+
+def trend =
+    avg5 - avg20;
+
+def aboveSMA =
+    if close > Average(close, 20)
+    then 1
+    else 0;
+
+plot ONScore =
+    (win20 * 50)
+    + (avg20 * 1000)
+    + (median20 * 1000)
+    + (trend * 1000)
+    + (aboveSMA * 10);

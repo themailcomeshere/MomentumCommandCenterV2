@@ -1,0 +1,4 @@
+plot SMATrend =
+    if close > Average(close, 20)
+    then 1
+    else 0;

@@ -1,0 +1,31 @@
+def onReturn = open / close[1] - 1;
+
+def win20 =
+    Average(if onReturn > 0 then 1 else 0, 20);
+
+def avg20 =
+    Average(onReturn, 20);
+
+def goodNight =
+    if onReturn >= 0.001 and onReturn <= 0.03
+    then 1
+    else 0;
+
+def consistency =
+    Average(goodNight, 20);
+
+def volatility =
+    StDev(onReturn, 20);
+
+def aboveSMA =
+    close > Average(close, 20);
+
+plot BoringWinner =
+    if win20 >= 0.60
+       and avg20 >= 0.001
+       and avg20 <= 0.03
+       and consistency >= 0.50
+       and volatility <= 0.03
+       and aboveSMA
+    then 1
+    else 0;

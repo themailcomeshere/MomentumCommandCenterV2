@@ -1,0 +1,6 @@
+def overnightReturn = open / close[1] - 1;
+
+def avg5 = Average(overnightReturn, 5);
+def avg20 = Average(overnightReturn, 20);
+
+plot ONMomentum = (avg5 - avg20) * 100;

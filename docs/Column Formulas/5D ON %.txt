@@ -1,0 +1,3 @@
+def overnightReturn = open / close[1] - 1;
+plot AvgOvernight5 =
+    Average(overnightReturn, 5) * 100;
