@@ -30,7 +30,7 @@ public static class ThinkorswimDailyGapCalculator
             return new(request.Symbol.Trim().ToUpperInvariant(), CalculationVersion, request.Source,
                 request.Aggregation, request.ExtendedHours, request.CorporateActionAdjusted, request.ChartTimeZone,
                 bars.Length, returns.Count, "INSUFFICIENT_HISTORY", null, null, null, null, null, null, null, null,
-                Array.Empty<decimal>(), "At least 21 daily OHLC bars are required for 20 daily-gap observations.");
+                null, null, null, Array.Empty<decimal>(), "At least 21 daily OHLC bars are required for 20 daily-gap observations.");
 
         var last20 = returns.TakeLast(20).ToArray();
         var last5 = returns.TakeLast(5).ToArray();
@@ -44,11 +44,19 @@ public static class ThinkorswimDailyGapCalculator
         var score = win20 / 100m * 50m + avg20 * 1000m
             + median20 * 1000m + (avg5 - avg20) * 1000m
             + (above20 ? 10m : 0m);
+        var boringWinnerInRangeCount = last20.Count(x => x * 100m >= 0.10m && x * 100m <= 3.00m);
+        var sampleVariance = last20.Sum(x => (x - avg20) * (x - avg20)) / (last20.Length - 1);
+        var boringWinnerSampleStdDevPct = (decimal)Math.Sqrt((double)sampleVariance) * 100m;
+        var boringWinnerPass = win20 >= 60m
+            && avg20 * 100m >= 0.10m && avg20 * 100m <= 3.00m
+            && boringWinnerInRangeCount >= 10
+            && boringWinnerSampleStdDevPct <= 3.00m
+            && above20;
         return new(request.Symbol.Trim().ToUpperInvariant(), CalculationVersion, request.Source,
             request.Aggregation, request.ExtendedHours, request.CorporateActionAdjusted, request.ChartTimeZone,
             bars.Length, returns.Count, "COMPLETE_20_GAPS",
             win20, avg20 * 100m, median20 * 100m, avg5 * 100m, momentum, currentOn,
-            above20 ? 1 : 0, score, last20,
+            above20 ? 1 : 0, score, boringWinnerPass, boringWinnerInRangeCount, boringWinnerSampleStdDevPct, last20,
             "Exact supplied formulas calculated from TOS daily OHLC. Aggregation/session semantics are metadata only and are not independently verified by this calculation.");
     }
 
@@ -88,6 +96,7 @@ public sealed record ThinkorswimDailyGapResult(
     bool CorporateActionAdjusted, string ChartTimeZone, int BarCount, int ReturnCount, string Status,
     decimal? OnWinPct, decimal? AvgOnPct, decimal? MedianOnPct, decimal? FiveDayOnPct,
     decimal? OnMomentum, decimal? CurrentOnPct, int? Above20Sma, decimal? OvernightScore,
+    bool? BoringWinnerPass, int? BoringWinnerInRangeCount, decimal? BoringWinnerSampleStdDevPct,
     IReadOnlyList<decimal> Last20ReturnsDecimal, string ProvenanceNote);
 
 /// <summary>Append-only TOS daily reference observations. Corrections append new imports; no source rows are overwritten.</summary>
