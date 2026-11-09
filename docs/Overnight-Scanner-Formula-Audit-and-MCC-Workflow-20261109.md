@@ -105,3 +105,36 @@ No candidate can be called READY from this screenshot. It is a ranking view, not
 - Thinkorswim's exact daily aggregation session boundaries and extended-hours treatment used by this scanner are not established by the text formulas alone. The formulas are exact; the session interpretation needs chart/scanner settings and matched exports.
 - The screenshot is a static top-50 view. It does not establish the full 419-row data quality, current market quotes, catalyst coverage, or execution conditions.
 - Data not found in sources for a complete per-symbol 20-session raw return series, bid/ask spread, RVOL, dollar-volume evidence, and independently verified outcomes.
+
+
+## 6. MCC implementation added after operator verification
+
+### Daily audit top-20 workflow
+- After a scanner CSV is imported or restored, MCC now fills **Daily data audit → Symbols** with the top 20 unique symbols sorted by imported Overnight Score.
+- The **Use Overnight Top 20** button can refill the field on demand.
+- The input supports up to 20 symbols; validation runs at most four Daily requests concurrently to avoid launching 20 simultaneous provider calls.
+- Filling the field does not automatically issue requests. Click **Validate Daily data** when ready. The existing qualification restrictions still apply: IEX is partial diagnostic data, not consolidated SIP qualification.
+
+### Overnight chart behavior
+- MCC persists the selected workspace in browser local storage and restores it before startup chart requests.
+- In Boring Overnight mode, the Main Chart requests historical 5-minute bars over a rolling five-day window and redraws on symbol changes and the normal 15-second visible-page refresh.
+- The chart does not request the intraday `live-assessment` endpoint in Overnight mode. Intraday 5M permission and 1M execution are explicitly labelled **NOT USED** and their metric cards are hidden.
+- The Overnight chart displays the most recently returned historical bars. It does not claim that an old after-hours observation is a current quote or executable price.
+- This separates an Overnight research chart from the intraday freshness/permission state. It does not convert IEX into complete extended-hours coverage.
+
+### TOS daily OHLC import and calculation
+- API: `POST /api/overnight-scanner/thinkorswim-daily-bars`; history: `GET /api/overnight-scanner/thinkorswim-daily-bars?symbol=WRBY&limit=50`.
+- Storage is append-only JSONL under LocalApplicationData/MomentumCommandCenterV2/tos-daily-gap-reference.jsonl (override with `MCC_TOS_DAILY_GAP_PATH`). Each import retains source, aggregation, extended-hours flag, corporate-action adjustment flag, chart timezone, raw bars, calculation version, fingerprint and calculation.
+- Dashboard import requires one symbol and CSV headers `Date, Open, High, Low, Close`. The symbol and the actual TOS session/adjustment settings are entered explicitly. At least 21 valid daily OHLC bars are required for 20 daily-gap returns.
+- Calculator version: `MCC-TOS-DAILY-GAP-1.0`. It calculates ON Win %, AVG ON %, Median ON %, 5D ON %, ON Momentum, Current ON %, Above 20 SMA and Overnight Score directly from the imported TOS bars. It emits no rolling metrics for fewer than 20 gap observations.
+- Dashboard compares each calculated field to the matching imported scanner CSV field at displayed precision and reports MATCH/MISMATCH/NO SCANNER VALUE.
+- This is **reference arithmetic parity**, not yet proof that the TOS aggregation settings were selected correctly or that another provider has equivalent extended-hours bars. The operator must select the actual settings; defaults are deliberately unchecked.
+
+### Exclusions toggle affordance
+The disclosure summary now uses a pointer cursor, hover background, and keyboard-visible focus outline. Click the heading area or disclosure marker to expand/collapse.
+
+## 7. Still blocked — do not infer the missing trade semantics
+
+The supplied active scanner formulas are fully specified and the independent calculator is implemented. They are daily-bar gap formulas, not an intraday entry/sell-window strategy. A separate V3 Boring Overnight trade column still requires the operator's exact Arizona-local buy timestamp and sell/measurement endpoint, the bar/session convention, and the official-auction versus first-eligible-trade rule. The new daily-gap calculator intentionally does not guess those values.
+
+The inactive Boring Winner remains inactive pending approval and chronological source-qualified validation.
