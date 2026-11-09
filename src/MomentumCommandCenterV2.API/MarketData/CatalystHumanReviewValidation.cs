@@ -26,13 +26,11 @@ public static class CatalystHumanReviewValidation
         var inadequateReviewEvidence = evaluableLabels.Count(x =>
             CatalystHumanReviewStore.IsPlaceholder(x.Source) ||
             CatalystHumanReviewStore.IsPlaceholder(x.RuleSetVersion) ||
-            x.Notes is null || x.Notes.Trim().Length < 12 ||
-            CatalystHumanReviewStore.IsPlaceholder(x.Notes));
+            !CatalystHumanReviewStore.HasReviewRationale(x.Notes));
         var eligible = evaluableLabels
             .Where(x => !CatalystHumanReviewStore.IsPlaceholder(x.Source) &&
                 !CatalystHumanReviewStore.IsPlaceholder(x.RuleSetVersion) &&
-                x.Notes is not null && x.Notes.Trim().Length >= 12 &&
-                !CatalystHumanReviewStore.IsPlaceholder(x.Notes))
+                CatalystHumanReviewStore.HasReviewRationale(x.Notes))
             .GroupBy(x => x.Symbol.Trim().ToUpperInvariant() + "|" +
                 (string.IsNullOrWhiteSpace(x.ArticleId) ? x.Url.Trim() : x.ArticleId.Trim()),
                 StringComparer.OrdinalIgnoreCase)
