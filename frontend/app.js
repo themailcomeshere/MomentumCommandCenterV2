@@ -326,8 +326,8 @@ async function refreshOvernightPriceSummary(symbol){
   const reasonList=$("reasons"),source=$("decisionSource"),score=$("decisionScore"),notice=$("mcc-static-0086-div");
   if(reasonList){const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);reasonList.replaceChildren(...[
    "1M close "+(last?"$"+fmt(last.close):"DATA?"),
-   "Daily VWAP "+(dailyVwap===null?"DATA?":"$"+fmt(dailyVwap)),
-   "ATR14 "+(atr14===null?"DATA?":"$"+fmt(atr14)),
+   "RTH VWAP (1M typical-price proxy) "+(dailyVwap===null?"DATA?":"$"+fmt(dailyVwap)),
+   "1M ATR14 (simple average) "+(atr14===null?"DATA?":"$"+fmt(atr14)),
    "Extension "+(extension===null?"DATA?":extension.toFixed(2)+" ATR")
   ].map(text=>Object.assign(document.createElement("li"),{textContent:text})));}
   if(source)source.textContent="Overnight diagnostic calculations · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · RTH VWAP session "+(rthDate||"UNKNOWN")+" · latest 1M bar "+(last?local(last.timestamp)+" Arizona":"UNKNOWN")+" · partial-feed limitations apply.";
