@@ -902,7 +902,7 @@ $("toggleRedZoneSound")?.addEventListener("click",async()=>{
  }
 });
 async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extensionNode,freshnessNode,participationNode,reasonNode,gateNode,chartNode){
- void ensureMinuteBarSubscription(symbol);
+ if($("mode")?.value!=="overnight")void ensureMinuteBarSubscription(symbol);
  try{
   if($("mode")?.value==="overnight"){
    statusNode.textContent="BORING OVERNIGHT · RESEARCH";scoreNode.textContent="Intraday V2 permission: NOT USED";scoreNode.className="redzone-score score-unknown";
