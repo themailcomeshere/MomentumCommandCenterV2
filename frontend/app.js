@@ -306,13 +306,14 @@ async function refreshOvernightPriceSummary(symbol){
   const to=new Date(),from=new Date(to.getTime()-5*86400000),q=new URLSearchParams({symbol,timeframe:"1m",from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
   const r=await fetch("/api/market-data/bars?"+q,{cache:"no-store"}),d=await r.json();if(!r.ok)throw Error(d.detail||d.error||("HTTP "+r.status));
   const bars=(d.bars||[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp));
-  const parts=ts=>Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));
+  const parts=ts=>Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));
   const local=ts=>new Date(ts).toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true});
-  const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute);return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960;}).at(-1),last=bars.at(-1);
+  const last=bars.at(-1),lp=last?parts(last.timestamp):null,lastMinute=lp?Number(lp.hour)*60+Number(lp.minute):-1,lastDate=lp?lp.year+"-"+lp.month+"-"+lp.day:"";
+  const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
   if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
   if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · 16:00 ET close":" · exact 16:00 close not established"):"Data not found in sources: no RTH 1M bar returned.";}
   if(p)p.textContent=last?"$"+Number(last.close).toFixed(4):"DATA? — NO BAR";
-  if(pl&&last){const z=parts(last.timestamp),m=Number(z.hour)*60+Number(z.minute);pl.textContent=m>=960||m<570?"AFTER-HOURS / EXTENDED PRICE":"LATEST PRICE";}
+  if(pl&&last){const z=parts(last.timestamp),m=Number(z.hour)*60+Number(z.minute);pl.textContent=m>=960?"AFTER-HOURS PRICE":m<570?"PREMARKET / EXTENDED PRICE":"LATEST PRICE";}
   if(pt)pt.textContent=last?"Latest returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: provider returned no 1M bars.";
  }catch(e){if(c)c.textContent="DATA?";if(p)p.textContent="DATA?";if(ct)ct.textContent="Price request failed · "+e.message;if(pt)pt.textContent="Price request failed · source timestamp unavailable";}
 }
