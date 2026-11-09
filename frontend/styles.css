@@ -1678,3 +1678,11 @@ main{margin-top:16px}
 .catalyst-label-legend dt{font-size:11px;font-weight:800;color:var(--text)}
 .catalyst-label-legend dd{margin:2px 0 0;font-size:11px;line-height:1.4;color:var(--muted)}
 .catalyst-label-legend>p{margin:9px 0 0}
+
+
+/* Native disclosure summary is the actual toggle target. */
+#exclusionsDetails > summary { cursor: pointer; border-radius: 8px; transition: background-color .15s ease, color .15s ease; }
+#exclusionsDetails > summary:hover { background: rgba(255,255,255,.055); }
+#exclusionsDetails > summary:focus-visible { outline: 2px solid var(--accent, #65b9ff); outline-offset: 3px; }
+#exclusionsDetails > summary::-webkit-details-marker { cursor: pointer; }
+#opportunity-status.overnight-intraday-hidden { display: none !important; }
