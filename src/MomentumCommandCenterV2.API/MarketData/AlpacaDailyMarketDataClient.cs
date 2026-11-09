@@ -122,6 +122,30 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
             latestExpected, expectedDates, missingSessionDates, sessionObservations);
     }
 
+    private async Task<HttpResponseMessage> SendWithRetryAsync(HttpRequestMessage request, CancellationToken ct)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            using var attemptRequest = new HttpRequestMessage(request.Method, request.RequestUri);
+            foreach (var header in request.Headers)
+                attemptRequest.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            HttpResponseMessage response;
+            try { response = await client.SendAsync(attemptRequest, HttpCompletionOption.ResponseHeadersRead, ct); }
+            catch (HttpRequestException) when (attempt < MaxAttempts)
+            { await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), ct); continue; }
+            catch (TaskCanceledException) when (!ct.IsCancellationRequested && attempt < MaxAttempts)
+            { await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), ct); continue; }
+            if ((response.StatusCode == HttpStatusCode.RequestTimeout || (int)response.StatusCode == 429 || (int)response.StatusCode >= 500) && attempt < MaxAttempts)
+            {
+                var delay = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromMilliseconds(300 * attempt);
+                response.Dispose();
+                await Task.Delay(delay > TimeSpan.FromSeconds(5) ? TimeSpan.FromSeconds(5) : delay, ct);
+                continue;
+            }
+            return response;
+        }
+    }
+
     private sealed record DailyBar(DateTimeOffset TimestampUtc, double Open, double High, double Low, double Close, long Volume);
 }
 
