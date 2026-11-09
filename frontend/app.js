@@ -68,7 +68,19 @@ function render(){
  $("overnightPanel")?.classList.toggle("hidden",!overnight);
  const eyebrow=document.querySelector(".hero-card .eyebrow");
  if(eyebrow)eyebrow.textContent=overnight?"BORING OVERNIGHT · RESEARCH":"LIVE OPPORTUNITY CLASSIFICATION";
- void refreshDecisionExplanation();
+ $("opportunity-status")?.classList.toggle("overnight-intraday-hidden",overnight);
+ if(overnight){
+  const classification=$("classification"),headline=$("headline"),eligibility=$("eligibility"),freshness=$("freshness");
+  if(classification){classification.textContent="BORING OVERNIGHT · RESEARCH";classification.className="classification boring";}
+  if(headline)headline.textContent="Overnight workspace uses historical Daily and extended-hours chart evidence. Intraday 5M permission and 1M execution are not evaluated in this mode.";
+  if(eligibility)eligibility.textContent="Intraday permission: NOT USED";
+  if(freshness)freshness.textContent="Overnight chart: latest available bars · not a live-permission freshness gate";
+  const source=$("decisionSource");if(source)source.textContent="Overnight research mode · no 5M/1M permission request";
+  void refreshFocusedPriceChart();
+ }else{
+  void refreshDecisionExplanation();
+  void refreshFocusedPriceChart();
+ }
 }
 $("mode")?.addEventListener("change",render);
 $("symbol")?.addEventListener("change",()=>{render();void refreshFocusedPriceChart();});
@@ -213,6 +225,14 @@ function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
 let decisionRefreshSequence=0;
 async function refreshDecisionExplanation(){
  const requestId=++decisionRefreshSequence;
+ if($("mode")?.value==="overnight"){
+  if($("classification")){$("classification").textContent="BORING OVERNIGHT · RESEARCH";$("classification").className="classification boring";}
+  if($("headline"))$("headline").textContent="Intraday permission and execution freshness are not part of Overnight research mode.";
+  if($("eligibility"))$("eligibility").textContent="Intraday permission: NOT USED";
+  if($("freshness"))$("freshness").textContent="Overnight chart: latest available bars";
+  if($("decisionSource"))$("decisionSource").textContent="Overnight research mode · intraday assessment bypassed";
+  return;
+ }
  const symbol=($("symbol")?.value||"").trim().toUpperCase();
  const classification=$("classification"),headline=$("headline"),price=$("price"),dailyVwap=$("dailyVwap"),atr14=$("atr14"),rvol=$("rvol"),extension=$("extension"),eligibility=$("eligibility"),freshness=$("freshness"),reasons=$("reasons"),fiveState=$("fiveState"),oneState=$("oneState"),scoreNode=$("decisionScore"),sourceNode=$("decisionSource");
  if(!symbol||!classification)return;
@@ -271,7 +291,26 @@ async function refreshDecisionExplanation(){
 }
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
- const symbol=($("symbol")?.value||"").trim().toUpperCase();void ensureMinuteBarSubscription(symbol);host.replaceChildren();
+ const symbol=($("symbol")?.value||"").trim().toUpperCase();
+ if($("mode")?.value==="overnight"){
+  host.replaceChildren();
+  const badge=$("mainChartSymbol");if(badge)badge.textContent=symbol||"NO SYMBOL";
+  const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 5-minute extended-hours research chart";host.append(title);
+  try{
+   const to=new Date(),from=new Date(to.getTime()-5*86400000);
+   const params=new URLSearchParams({symbol,timeframe:"5m",from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
+   const response=await fetch("/api/market-data/bars?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+   const data=await response.json();if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
+   const bars=(Array.isArray(data.bars)?data.bars:[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+   drawPriceLine(host,bars,symbol);
+   const last=bars.length?bars[bars.length-1]:null;
+   const detail=document.createElement("p");detail.className="chart-meta";
+   detail.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"UNKNOWN")+" · "+bars.length+" returned 5M bars · latest source bar "+(last?new Date(last.timestamp).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" Arizona":"NOT AVAILABLE")+" · intraday permission NOT EVALUATED · no stale-permission status applies in Overnight mode.";
+   host.append(detail);
+  }catch(error){const p=document.createElement("p");p.className="chart-unavailable";p.textContent="Overnight historical chart unavailable · "+error.message;host.append(p);}
+  return;
+ }
+ void ensureMinuteBarSubscription(symbol);host.replaceChildren();
  const symbolBadge=$("mainChartSymbol");if(symbolBadge)symbolBadge.textContent=symbol||"NO SYMBOL";
  const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute OHLCV close · auto-refresh 15s";host.append(title);
  try{
@@ -408,6 +447,25 @@ async function fetchOvernightTopFourEvidence(){
 }
 
 
+function getOvernightTopSymbols(limit=20){
+ const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ const scoreOf=item=>{const raw=String(item.score??"").replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);return raw?Number(raw[0]):-Infinity;};
+ const seen=new Set(),ranked=[];
+ for(const item of rows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)))){
+  const symbol=String(item.symbol||"").trim().toUpperCase();
+  if(!symbol||seen.has(symbol))continue;seen.add(symbol);ranked.push(symbol);
+  if(ranked.length>=limit)break;
+ }
+ return ranked;
+}
+function populateDailyAuditFromOvernightTop20(){
+ const input=$("dailyAuditSymbols"),status=$("dailyAuditStatus");
+ const symbols=getOvernightTopSymbols(20);
+ if(!input||!symbols.length)return;
+ input.value=symbols.join(",");
+ if(status)status.textContent="Populated with the top "+symbols.length+" unique imported Overnight Scanner symbols, sorted by Overnight Score. Click Validate Daily data to request their 20-session evidence; this step only fills the input.";
+}
+
 async function fetchDailyDataAudit(){
  const input=$("dailyAuditSymbols"),button=$("dailyAuditRefresh"),status=$("dailyAuditStatus"),body=$("dailyAuditRows");
  if(!input||!body)return;
@@ -448,6 +506,7 @@ async function fetchDailyDataAudit(){
  if(status)status.textContent="Daily API checked "+results.length+" symbol(s): "+passes+" qualification-usable, "+(results.length-passes-errors)+" returned but DATA? / diagnostic-only, "+errors+" API errors. Values shown as observed source metrics; no independent-source parity is implied.";
 }
 $("dailyAuditRefresh")?.addEventListener("click",()=>void fetchDailyDataAudit());
+$("dailyAuditTop20")?.addEventListener("click",populateDailyAuditFromOvernightTop20);
 
 function renderOvernightTopFourEvidence(results){
  const body=$("overnightTopFourEvidenceRows");if(!body)return;
@@ -657,6 +716,7 @@ $("scannerFile").addEventListener("change",event=>{
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;
   overnightLiveEvidence.clear();
+  populateDailyAuditFromOvernightTop20();
   const importedSymbols=new Set(imported.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
   const redZoneState=readRedZoneState();
   const previouslyDismissed=redZoneState.dismissed.length;
@@ -677,6 +737,7 @@ $("scannerFile").addEventListener("change",event=>{
 renderScanner();renderWatchlist();
 if(restoredScannerImport?.rows?.length){
  scannerData.imported=restoredScannerImport.rows;
+ populateDailyAuditFromOvernightTop20();
  const option=document.querySelector('#scannerGroup option[value="imported"]')||document.createElement("option");
  option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);
  $("scannerGroup").value="imported";renderScanner();renderMorningReport();void renderOvernightQualification();
