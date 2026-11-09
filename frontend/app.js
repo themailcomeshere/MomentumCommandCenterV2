@@ -1820,6 +1820,13 @@ $("overnightCapture20")?.addEventListener("click", async () => {
   const returns=Array.isArray(h.returns)?h.returns:[];
   for(const item of returns){
    const tr=document.createElement("tr");
+   const bw=$("tosDailyBoringWinnerStatus");
+   if(bw){
+    const state=calc.boringWinnerPass===true?"PASS":calc.boringWinnerPass===false?"FAIL":"DATA? — INSUFFICIENT HISTORY";
+    const count=calc.boringWinnerInRangeCount==null?"DATA?":calc.boringWinnerInRangeCount+"/20 in +0.10%…+3.00%";
+    const sd=calc.boringWinnerSampleStdDevPct==null?"DATA?":Number(calc.boringWinnerSampleStdDevPct).toFixed(3)+"% sample SD";
+    bw.textContent="Boring Winner · RESEARCH ONLY: "+state+" · "+count+" · "+sd+" · requires win ≥60%, mean +0.10%…+3.00%, ≥10 in-range gaps, sample SD ≤3.00%, and close > SMA20. Not a READY gate.";
+   }
    const values=[item.nextSessionDate,item.previousClose,item.nextOpen,pct(item.returnPct),item.previousCloseBarTimestampUtc+" → "+item.nextOpenBarTimestampUtc];
    for(const value of values){const td=document.createElement("td");td.textContent=String(value??"DATA?");tr.append(td);}
    rows.append(tr);
