@@ -48,7 +48,7 @@ Omit symbol to read the latest records across symbols. Limit is 1–500.
 ## Data quality and governance
 
 - Submit one review per article/symbol pair; preserve the source article ID, headline, URL, source name and publication time.
-- Review the actual article/filing, not only the headline. Notes should explain why the label was chosen.
+- Review the actual article/filing, not only the headline. Notes must explain why the label was chosen; a source, ruleset version or rationale consisting of placeholder text is invalid.
 - Use `UNCERTAIN` when the article cannot be verified. Do not infer a missing article or an empty feed as a clearance.
 - Keep the automated assessment and human label as separate fields. The store is append-only; corrections should be submitted as a new review with an explanation, not by overwriting the old record.
 - Labels are not yet adjudicated, de-duplicated, or used to compute precision/recall. A representative labelled set, double-review sampling, agreement measurement, and time-separated holdout validation are still required before classifier promotion.
@@ -96,6 +96,6 @@ After reviewing the original article/filing, submit one new adjudication. Preser
 }
 ```
 
-The values above are a schema example only; do not copy the placeholder values or choose a label/prediction without inspecting the actual conflict and original source. The API checks that each superseded ID exists and belongs to the same symbol/article. Original records are retained in the append-only audit log; superseded records no longer participate in validation. Query `GET /api/market-data/catalyst-reviews/validation` again afterward.
+The values above are a schema example only; do not copy the placeholder values or choose a label/prediction without inspecting the actual conflict and original source. The API checks that each superseded ID exists and belongs to the same symbol/article. Supersession rationale must be meaningful and at least 12 characters. Literal placeholder values such as `string`, `test`, `todo`, `placeholder`, `n/a` and `na` are rejected in source, ruleset version, notes and prediction categories. Older records containing placeholder/missing evidence are excluded from validation and counted in `exclusionBreakdown.inadequateReviewEvidence`. Original records are retained in the append-only audit log; superseded records no longer participate in validation. Query `GET /api/market-data/catalyst-reviews/validation` again afterward.
 
 The two non-evaluable reviews in the operator's latest response remain excluded unless their source material supports an independent new adjudication. Do not turn UNCERTAIN into a positive or negative label to increase sample size.
