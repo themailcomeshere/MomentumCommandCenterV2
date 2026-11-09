@@ -1,3 +1,38 @@
+## Operator evidence — 2026-11-09 (Top-4, Daily provider, catalyst validation)
+
+- [x] Operator confirms MCC Top 4 made requests for exactly four symbols; the article queue currently shows only EWTX.
+- [x] Clarified that article cards are article-driven, not a four-symbol query roster. No returned article for another symbol is UNKNOWN, not CLEAR.
+- [x] Added a separate four-symbol evidence table so every selected ticker shows Daily outcome, feed/completeness, Daily error, catalyst outcome, article count, catalyst coverage and catalyst error.
+- [x] Operator reports BAYRY Daily API returned HTTP 502. Added bounded three-attempt retry for transient network/timeout/429/5xx responses and preserved provider HTTP status in exceptions. API maps provider 422 to 422, 429 to 503, and upstream 5xx to 502. Runtime retry behavior still needs operator verification.
+- [x] Operator catalyst validation now shows raw 7, eligible 0, excluded 7, conflicts 0, non-evaluable 2, superseded 3, inadequate evidence 2. No classifier metrics exist; this is correct fail-closed behavior.
+- [x] Latest EWTX assessment response establishes the actual triage ruleset as `MCC-CATALYST-TRIAGE-1.0` for the newly returned investor-conference article 117314249. It does not establish the ruleset stored with the older sale-exploration article 117008554.
+- [ ] The original EWTX sale-exploration article still requires source-backed adjudication; do not reuse the new conference article's metadata/label.
+
+## Overnight engineering audit — 2026-11-09
+
+- [x] Reviewed current Boring Overnight API, history calculator, evaluator, calendar, Dashboard, source scanner CSV and V3 column requirements.
+- [x] Confirmed the current 20-pair calculator computes prior regular-session close to next session 09:30 one-minute bar Open. It includes Day 1 after-hours and Day 2 premarket only in the *net endpoint interval*; it does not calculate the operator's actual buy-time entry or any path/extrema.
+- [x] Confirmed the 09:30 one-minute Open is explicitly a proxy, not a verified official opening-auction print.
+- [x] Confirmed the current calendar is an MCC-maintained holiday/early-close ruleset, not a live official exchange-calendar source.
+- [x] Preserved the scanner CSV's custom-expression subscription-limit messages as missing data, not historical FAIL. Latest operator import: 495 rows, 185 PASS / 14 FAIL / 296 DATA?, exclusions 56 loaded / 0 matches.
+- [ ] Exact intended Arizona-local buy-time and sell/measurement endpoints must be frozen against the original TOS scanner formula and operator's confirmed order workflow before replacing the current close/open research metric. The current calculator must not be relabelled as actual trade-window return.
+- [ ] Official auction print vs first eligible observed trade remains unverified; Alpaca minute-bar Open cannot certify the auction print. Obtain an authoritative auction/eligible-trade source with entitlement and timestamp semantics.
+- [ ] Complete independent RTO/EVR OHLCV parity; prior IEX comparison failed and IEX remains partial-exchange diagnostic data.
+- [ ] Qualified independent Daily source remains open. Alpaca SIP entitlement and corporate-action/adjustment equivalence must be established; BAYRY 502 requires operator runtime retry/error verification.
+- [ ] Catalyst representative dataset, reviewer agreement and classifier qualification remain open; do not synthesize labels.
+- [ ] Opportunity Quality historical calibration remains open; no time-separated outcome-labelled candidate dataset is present in reviewed sources.
+- [ ] Thinkorswim V3 Boring Overnight column/chart deliverable remains unimplemented/uncompiled. Do not claim it is done by writing a draft script without TOS compilation and parity.
+- [ ] 5M/1M installed-study authority and EOD verification remain operator-side evidence gates.
+
+## Dashboard runtime follow-up
+
+- [x] Added all-four-symbol live evidence display independently of the catalyst article cards.
+- [x] Added transient retry and accurate upstream status mapping for Daily requests.
+- [ ] Operator must pull latest branch, build/test, restart API, and repeat MCC Top 4 fetch; verify all four rows populate and inspect BAYRY outcome.
+- [ ] Full browser/CDP acceptance, full Dashboard acceptance, regular-session WebSocket proof, collector recovery, and HAR performance measurement remain open.
+
+---
+
 # Momentum Command Center — Master To-Do
 
 **Updated:** 2026-11-09 (operator validation recheck, EWTX rationale hardening, MCC Top-4 distinct-symbol fix)  
@@ -115,8 +150,8 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - [x] Edge discovery/launch diagnostics and browser CDP capture script implemented.
 - [x] Regular-session stream/collector evidence script implemented.
 - [x] Dashboard load/API latency instrumentation work was started; prior measurement showed a 10.24s live-assessment request and a pending WebSocket connection, so no overall performance pass is claimed.
-- [ ] Verify MCC Top 4 selects/fetches four distinct tickers after latest pull; if the imported file has fewer than four unique symbols, show the source-data limitation.
-- [ ] Verify the post-fetch status lists four distinct queried symbols and the evidence table shows each result. The human-review queue lists only symbols with returned articles, not every symbol queried.
+- [x] Four-symbol evidence table implemented; [ ] verify MCC Top 4 selects/fetches four distinct tickers after latest pull; if the imported file has fewer than four unique symbols, show the source-data limitation.
+- [x] Separate four-symbol evidence table implemented; [ ] verify the post-fetch status lists four distinct queried symbols and the evidence table shows each result. The human-review queue lists only symbols with returned articles, not every symbol queried.
 - [ ] Execute browser diagnostics on operator machine; retain screenshot, console exceptions and sanitized network evidence.
 - [ ] Complete full Dashboard acceptance: import/parity, Red Zone, exclusions, Morning Brief, replay, sell-limit gate explanations, responsive layout and CDP console/network health.
 - [ ] During a confirmed regular session, capture 5–10 minutes of SPY/RKLX/ASTX/XRPN stream/collector data. Verify per-symbol subscriptions, completed bars, timestamps, received/persisted deltas and watermarks.
