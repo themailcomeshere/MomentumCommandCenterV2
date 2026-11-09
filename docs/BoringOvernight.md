@@ -1,3 +1,39 @@
+## 2026-11-09 — Overnight functional gap audit and corrected delivery status
+
+### Current operator import and runtime evidence
+
+- Latest Overnight Scanner import: 495 rows.
+- Historical gates: 185 PASS / 14 FAIL / 296 DATA?.
+- Exclusions: 56 loaded / 0 matches.
+- The 296 DATA? rows include unavailable custom-expression history; these are not historical FAIL candidates. Preserve raw History cells and CSV values separately from gate classification.
+- Four Daily + catalyst requests were made for the selected Top 4. EWTX is the only symbol currently represented in the catalyst article cards. The cards show returned articles only; a symbol with no returned article remains UNKNOWN, not CLEAR.
+- BAYRY Daily endpoint returned HTTP 502. New code adds bounded retry for transient network/timeout/429/5xx and preserves non-transient provider status. Runtime behavior must be rechecked after local deployment.
+
+### What is now implemented
+
+- Dashboard now renders a separate per-symbol evidence table for all four Top 4 requests, independently of article cards. It shows Daily result, feed/session completeness, Daily error, catalyst result, article count, coverage and catalyst error.
+- Daily provider requests now retry up to three times for transient failures with bounded delay/Retry-After. HTTP 422 is surfaced as unsupported symbol/request; 429 is surfaced as rate-limited; upstream 5xx remains 502 after retries.
+- Tests cover transient 502 recovery and no retry for a non-transient 422.
+
+### Critical definition distinction
+
+The existing `BoringOvernightHistoryCalculator` and `capture-history` endpoint calculate the prior regular-session close to the next regular-session 09:30 one-minute bar Open. This interval spans Day 1 after-hours plus Day 2 premarket, so the endpoint return includes their net price effect. It does **not** calculate the operator's actual buy-time return, full intraperiod path, high/low excursion, or executable sell-window touch.
+
+The 09:30 bar Open is `ONE_MINUTE_BAR_OPEN_PROXY`; `officialOpeningAuctionVerified=false`. It is not an official auction print. The calendar is the MCC-maintained `MCC_US_EQUITIES_CALENDAR_V2` ruleset, not a live official exchange-calendar feed.
+
+### Remaining Overnight blockers — do not relabel as done
+
+1. Freeze exact Arizona-local buy time and sell/measurement endpoint against the original TOS Overnight scanner formula and the operator's confirmed order workflow. Keep current close/open research series separately named until the actual strategy endpoint is implemented.
+2. Compare official opening auction print with the first eligible observed trade using a properly entitled authoritative source. Minute-bar Open alone cannot certify this.
+3. Implement and validate the distinct V3 Thinkorswim Boring Overnight watchlist column. The C# evaluator is not that TOS deliverable; source creation does not equal TOS compile/runtime verification.
+4. Validate 5M authority / 1M timing and Arizona EOD cutoff on the exact installed TOS studies and matched completed bars.
+5. Obtain source-qualified 1m continuity and exact provider/TOS OHLCV matches; do not impute missing bars.
+6. Preserve missing scanner custom-expression fields as DATA? and report per-field coverage. Do not relabel these as historical FAIL.
+
+### Completion rule
+
+Overnight is not fully qualified until the exact buy/sell endpoint is source-verified, independent history parity is complete, official auction semantics are established where required, the TOS column/studies compile and match the installed versions, and missing-data behavior is demonstrated. No numeric claim or READY status may be based on proxy endpoints or unavailable custom-expression values.
+
 ## 2026-11-03 — corrected Overnight procedure and current qualification
 
 The current CSV import result is 198 rows because that is the content of this particular export; row count varies by scan snapshot and is not a fixed acceptance target. Do not compare it to a prior screenshot's 248-result count. The current user-confirmed import rendered all 198 rows, with 187 historical PASS, 11 FAIL, and 0 unknown metrics. Current price, 20D average volume, catalyst clearance and chart evidence remain DATA?. The local exclusion store has 56 entries (canonical 55 plus TEST); OSW/EVR/MHK are not in the canonical list. The Overnight process starts in the final 60 minutes of the regular session of the regular session, before the buy-day close. The measured Overnight interval includes both Day 1 after-hours and Day 2 premarket. The 10:52 export contains 198 symbols (not the reported 248); 187 pass the five available historical gates, but current price, 20D average volume, catalyst clearance and chart evidence are still missing. The local exclusion store has been seeded with the canonical 55 symbols plus TEST. See [full-universe report](Validation/Overnight-Scanner-Full-Universe-20261103.md) and [canonical process specification](project-control/Trading_System/MomentumCommandCenterV3_Boring_Overnight_Decision_Column_TODO.md).
