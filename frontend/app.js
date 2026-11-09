@@ -309,6 +309,7 @@ async function refreshFocusedPriceChart(){
    const data=await response.json();if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
    const bars=(Array.isArray(data.bars)?data.bars:[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
    drawPriceLine(host,bars,symbol);
+   const chartTitle=document.createElement("div");chartTitle.className="chart-title";chartTitle.textContent=symbol+" · 5-minute extended-hours research chart";host.prepend(chartTitle);
    const last=bars.length?bars[bars.length-1]:null;
    const detail=document.createElement("p");detail.className="chart-meta";
    detail.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"UNKNOWN")+" · "+bars.length+" returned 5M bars · latest source bar "+(last?new Date(last.timestamp).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" Arizona":"NOT AVAILABLE")+" · intraday permission NOT EVALUATED · no stale-permission status applies in Overnight mode.";
@@ -638,7 +639,7 @@ async function renderOvernightQualification(){
  const setText=(id,value)=>{const node=$(id);if(node)node.textContent=String(value);};
  setText("overnightQualImported",rows.length);
  if(!rows.length){
-  body.replaceChildren(Object.assign(document.createElement("tr"),{innerHTML:"<td colspan=\"12\">Import the Overnight Scanner CSV from Scanner Workbench → Candidate discovery.</td>"}));
+  body.replaceChildren(Object.assign(document.createElement("tr"),{innerHTML:"<td colspan=\"15\">Import the Overnight Scanner CSV from Scanner Workbench → Candidate discovery.</td>"}));
   setText("overnightQualificationStatus","No imported scanner rows. This panel does not run a new Thinkorswim scan.");
   setText("overnightQualPass","DATA?");setText("overnightQualFail","DATA?");setText("overnightQualUnknown","DATA?");setText("overnightQualExcluded","DATA?");setText("overnightQualReady","0");
   return;
