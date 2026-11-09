@@ -1,3 +1,20 @@
+## Operator evidence and implementation — 2026-11-09 (Overnight top-20, mode isolation, TOS formula engine)
+
+- [x] Operator confirmed all eight scanner columns display after prior deployment; some HISTORY values remain DATA? while PRICE and 20D AVG VOL are populated. These evidence fields remain independent.
+- [x] Added automatic population of Daily data audit Symbols with the top 20 unique imported Overnight symbols, sorted by Overnight Score, on import and restored import.
+- [x] Added a manual **Use Overnight Top 20** action; audit accepts up to 20 symbols and runs no more than four Daily requests concurrently. Population does not automatically launch API requests.
+- [x] Made EXCLUSIONS disclosure summary visibly interactive with pointer cursor, hover affordance and keyboard focus outline.
+- [x] Persisted workspace mode and restore it before startup requests; Boring Overnight no longer starts the Intraday live-assessment path.
+- [x] In Boring Overnight mode, Main Chart uses 5-minute historical bars over a rolling five-day window, updates on selected-symbol changes, and refreshes while visible. Intraday permission/execution cards are hidden and status explicitly says NOT USED.
+- [x] Added versioned `MCC-TOS-DAILY-GAP-1.0` calculator reproducing all eight supplied Thinkorswim scanner formulas from explicit TOS daily OHLC bars.
+- [x] Added append-only TOS daily reference store, import/read API endpoints, CSV import UI, provenance fields (aggregation, extended-hours, adjustment, timezone), and per-column displayed-precision parity results.
+- [x] Added regression tests for all eight fields, score decomposition, insufficient history, duplicate dates and source metadata validation.
+- [ ] CI for this code set and operator local build/runtime acceptance are pending.
+- [ ] Import matched TOS OHLC exports and compare with scanner CSV for representative symbols; until then formula parity is implemented but empirical per-symbol parity is not yet demonstrated.
+- [ ] Exact V3 trade-window Boring Overnight study remains blocked on frozen Arizona-local buy timestamp, sell/measurement endpoint, and official auction vs first eligible trade semantics. Do not substitute daily-gap scanner formula for executable trade return.
+- [ ] BAYRY Daily response contract diagnosis remains open.
+- [ ] Remaining P0/P1/P2/P3 checklist below remains current; do not mark unresolved external data/entitlement/operator evidence tasks complete.
+
 ## Operator evidence and implementation — 2026-11-09 (Overnight formulas + BAYRY)
 
 - [x] Operator supplied all eight active Overnight Scanner ThinkScript columns and the inactive Boring Winner formula in `docs/Column Formulas`; reviewed exact source.
