@@ -211,7 +211,7 @@ public sealed class CatalystHumanReviewStoreTests
 
     [Theory]
     [InlineData("Because you said it should be MATERIAL_RISK and I agree with your recommendation.")]
-    [InlineData("This is not enough detail to explain the actual article and the reason for the label.")]
+    [InlineData("Insufficient source detail.")]
     public async Task RejectsUnsupportedOrInsufficientReviewRationale(string notes)
     {
         var directory = Path.Combine(Path.GetTempPath(), "mcc-catalyst-review-tests", Guid.NewGuid().ToString("N"));
