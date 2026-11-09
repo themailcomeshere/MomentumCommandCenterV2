@@ -24,6 +24,8 @@
 - [ ] Thinkorswim V3 Boring Overnight column/chart deliverable remains unimplemented/uncompiled. Do not claim it is done by writing a draft script without TOS compilation and parity.
 - [ ] 5M/1M installed-study authority and EOD verification remain operator-side evidence gates.
 
+- [x] Daily transient retry, per-symbol evidence table, and status mapping code/tests passed Release CI run [42659428224](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42659428224) on code commit `59719e6263e7e51a3eafaacf86a0507817f3e2ef`.
+
 ## Dashboard runtime follow-up
 
 - [x] Added all-four-symbol live evidence display independently of the catalyst article cards.
