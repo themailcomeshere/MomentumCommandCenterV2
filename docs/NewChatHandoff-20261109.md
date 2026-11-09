@@ -135,13 +135,19 @@ Important: the field `ruleSetVersion` should identify the actual automated triag
 
 ## 6. CI status
 
-- [ ] Latest corrected test commit `bf05cce98504264eeeb9af93cc8af9315e676df6` is running in [GitHub Actions run 42651528472](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42651528472). An earlier run caught a negative test fixture whose text was longer than the new minimum; the fixture was corrected to a genuinely short rationale. Do not treat CI as green until this run completes.
-
-- [x] Evidence-quality code and tests passed GitHub Actions on code/test commit `973aaf55482ea5c188071a4567d7b58fab019d92`: [run 42647886829](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42647886829). This run includes frontend syntax validation, Release build and full test suite.
-- [ ] Documentation-only commits after that code/test commit are queued for exact latest branch-head CI: [run 42648083688](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42648083688).
-- [ ] Operator local pull/build/test and API restart remain required before runtime verification of the new metadata guard.
+- [x] Evidence-quality guard + tests passed: [run 42651528472](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42651528472).
+- [x] Generic rationale rejection + regression fixture passed: [run 42655128579](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42655128579).
+- [x] Top-4 distinct-symbol deduplication frontend commit passed: [run 42655221198](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42655221198).
+- [x] Latest workflow-doc update commit passed: [run 42655348102](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42655348102).
+- [ ] Exact latest documentation-only branch head `364ac31a60625a83024ef84d8ed6422742b3931e` has not yet received its own CI run. All code-bearing commits listed above passed.
+- [ ] Operator local pull/build/test and API restart remain required before runtime verification of the newest guard and Top-4 behavior.
 
 ## 7. Checklist state
+
+- [x] Current Master To-Do was consolidated into a single current-state checklist; detailed engineering acceptance criteria remain in Active-Engineering-Backlog-20261106.md.
+- [x] Latest operator validation, generic-rationale rejection, and distinct-symbol Top-4 fix are recorded in the Master To-Do and this handoff.
+- [ ] Operator runtime verification and independent EWTX source adjudication remain open.
+
 
 - [x] EVR ATR parity MATCH, 0 unresolved gaps, 2 verified no-bar intervals.
 - [x] CBOE ATR parity MATCH, 0 unresolved gaps, 1 verified no-bar interval.
