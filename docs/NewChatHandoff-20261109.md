@@ -42,7 +42,7 @@ Remaining: validate against chronological, source-qualified data and confirm the
 ## [Uncertainties]
 
 - Provider may return no after-hours bars or partial IEX observations; values remain DATA? or latest timestamp.
-- A 1-minute bar close is not an NBBO quote or guaranteed executable price.
+- A 1-minute bar close is not an NBBO quote or guaranteed executable price. The 15:59 ET bar is not proof of the official opening/closing auction print.
 - Sell-limit API remains fail-closed.
 - Browser/runtime acceptance and latest branch-head CI are pending.
 - Background monitoring uses the visible-page refresh cycle.
