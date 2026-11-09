@@ -1,155 +1,114 @@
-# CURRENT HANDOFF — 2026-11-09 (Overnight scanner formula integration)
+# CURRENT HANDOFF — 2026-11-09 (Overnight top-20, chart mode, TOS parity engine)
 
-## Current branch
+## Branch and operating rules
+- Branch: `feature/opportunity-quality-classification`. Do not switch to master.
+- Main Dashboard: `frontend/index.html`; do not use PrototypeIndex.
+- Local repo: `C:\Users\jampo\source\repos\MomentumCommandCenterV2`.
+- Preserve local uncommitted changes. API is decision-support-only; order submission is NOT IMPLEMENTED.
+- Master checklist: [Master-To-Do.md](Master-To-Do.md). Detailed scanner procedure: [Overnight-Scanner-Formula-Audit-and-MCC-Workflow-20261109.md](Overnight-Scanner-Formula-Audit-and-MCC-Workflow-20261109.md).
 
-- Branch: `feature/opportunity-quality-classification`
-- Starting branch head when this work began: `dc9fee0b84f3a8b4e8955203466d779b46e17c2c` (operator's formula upload).
-- Latest commits from this work are listed in the current Git history; query branch head before making further changes.
-- Main Dashboard: `frontend/index.html` at `http://localhost:53360/`.
-- Do not switch to master; do not use PrototypeIndex.
+## Latest operator verification
+- All eight Overnight Scanner columns now appear in the qualification table.
+- Some HISTORY values are DATA? (missing custom-expression history); all PRICE and 20D AVG VOL values populated in the operator's verification. Keep history, price and liquidity evidence separate.
+- Exclusions section works; operator requested hand cursor on disclosure toggle. Pointer/hover/focus affordance added.
+- BAYRY stream subscription and live assessment return 200. Daily history still returns 502 with `Alpaca Daily response did not contain a bars array.`
+- Top 4 results: BAYRY Daily ERROR; EWTX/ENOV/ARDT Daily 20/20 IEX_PARTIAL/FRESH. EWTX one unclassified article; ENOV/ARDT no article results remain UNKNOWN, not CLEAR.
 
-## Latest operator evidence
+## New implementation
 
-### BAYRY / Top 4
-- Stream subscribe: 200 OK.
-- Live assessment: 200 OK on initial load and after CSV import / Red Zone cleared.
-- Daily history endpoint: 502 after CSV import and after Red Zone cleared.
-- UI error: `Alpaca Daily response did not contain a bars array.`
-- This isolates the reported issue to the Daily response contract/parsing path, not stream subscription or live assessment. A successful HTTP status with unexpected JSON shape is not retried by the transient HTTP retry.
-- Top 4 evidence:
-  - BAYRY: Daily ERROR / UNKNOWN; catalyst UNKNOWN; zero articles; Daily shape error.
-  - EWTX: Daily complete 20/20, IEX_PARTIAL/FRESH; one UNCLASSIFIED_NEWS_REVIEW article.
-  - ENOV: Daily complete 20/20, IEX_PARTIAL/FRESH; zero articles, catalyst UNKNOWN.
-  - ARDT: Daily complete 20/20, IEX_PARTIAL/FRESH; zero articles, catalyst UNKNOWN.
-- No-news remains UNKNOWN, never CLEAR. IEX partial feed does not qualify consolidated liquidity/price gates.
+### Daily data audit top 20
+- On scanner CSV import or local restore, the Daily data audit input is populated with top 20 unique symbols by Overnight Score.
+- Manual **Use Overnight Top 20** button added.
+- Max 20 symbols; request concurrency capped at four. Filling the input does not auto-run the Daily audit; operator clicks Validate Daily data.
+- Ranking uses imported score and preserves distinct symbols.
 
-### Overnight Scanner import / screenshot
-- Import: 495 rows; 185 PASS / 14 FAIL / 296 DATA?; exclusions 56 loaded / 0 matches.
-- Missing custom-expression subscription history is DATA?, not historical FAIL.
-- Screenshot shows top 50 of 419 sorted by Overnight Score. Formula audit lists the top 15 and explains ranking. It is a static scanner snapshot, not live quote/catalyst/entry evidence.
-- BAYRY is rank 13 in the screenshot, but its MCC Daily endpoint error remains independent of the Thinkorswim scanner values.
+### Boring Overnight Main Chart
+- Workspace selection persists in localStorage and is restored at the top of app.js before startup requests.
+- Boring Overnight mode skips the live-assessment endpoint and dynamic 1m subscription.
+- Main Chart requests historical 5m bars over the last five days, refreshes on symbol changes and at the existing visible-page interval.
+- Intraday 5M permission and 1M execution status cards are hidden; status reads NOT USED rather than STALE_MARKET_DATA.
+- The chart reports latest returned historical bar and source/feed. It does not represent a live executable quote.
+- If the workspace was previously selected as Overnight, the page should restore it before initial SPY assessment; this specifically avoids the slow initial SPY live-assessment call in that mode.
 
-## Formula source audit
+### TOS daily-gap engine
+- New `ThinkorswimDailyGapCalculator.cs`, version `MCC-TOS-DAILY-GAP-1.0`.
+- Implements exact supplied formulas:
+  - `r = daily open / prior daily close - 1`
+  - win20 = mean of positive-return indicator over 20
+  - avg20, median20, avg5
+  - momentum = avg5 - avg20
+  - current gap = latest return
+  - aboveSMA = latest close > mean of latest 20 closes
+  - score = win20*50 + avg20*1000 + median20*1000 + (avg5-avg20)*1000 + aboveSMA*10
+- Requires 21 daily OHLC bars for 20 gap returns; missing history emits no calculated statistics.
+- Append-only store: `MCC_TOS_DAILY_GAP_PATH` or LocalApplicationData/MomentumCommandCenterV2/tos-daily-gap-reference.jsonl.
+- API:
+  - POST `/api/overnight-scanner/thinkorswim-daily-bars`
+  - GET `/api/overnight-scanner/thinkorswim-daily-bars?symbol=WRBY&limit=50`
+- Dashboard import accepts CSV headers Date, Open, High, Low, Close; symbol, aggregation, extended-hours flag, adjustment flag and chart timezone are explicit metadata.
+- Dashboard displays each of eight per-column comparisons to imported scanner values at display precision.
+- TOS session/adjustment checkboxes default unchecked; operator must select actual TOS scanner settings. No Alpaca/IEX substitution is allowed.
+- Tests added for eight outputs, score decomposition, insufficient history, duplicate dates and source metadata.
+- Formula arithmetic is implemented; matched TOS exports and empirical symbol parity are still pending.
 
-Operator uploaded the original formula text files under `docs/Column Formulas`. All eight active formulas are now documented in [Overnight-Scanner-Formula-Audit-and-MCC-Workflow-20261109.md](Overnight-Scanner-Formula-Audit-and-MCC-Workflow-20261109.md).
+## Critical semantic boundary
+The eight supplied scanner formulas are daily-bar gap metrics. They do not define the operator's exact buy time, sell/measurement endpoint, path/extrema, or auction/first-eligible-trade convention. A separate V3 trade-window Boring Overnight study must not be invented until those details are frozen. The earlier close-to-next-09:30-open history calculator remains a different research proxy and must not be relabelled as actual trade return.
 
-Shared return:
-`r = daily open / prior daily close - 1`
+## Outstanding issues and workstreams
 
-Columns:
-1. ON WIN % = 20-sample average of positive-return indicator × 100.
-2. AVG ON % = 20-sample mean return × 100.
-3. Median ON % = 20-sample median return × 100.
-4. 5D ON % = 5-sample mean return × 100.
-5. ON Momentum = (5-sample mean − 20-sample mean) × 100.
-6. Current ON % = current daily open / prior daily close − 1, × 100.
-7. Above 20 SMA = current daily close > 20-sample simple average close.
-8. Overnight Score = win20×50 + avg20×1000 + median20×1000 + (avg5−avg20)×1000 + aboveSMA×10.
-
-The score is a ranking heuristic, not a probability. The 5D ON % display is not separately added; its value enters via momentum. The inactive Boring Winner formula is documented but not activated.
-
-Important semantic gap: the code says daily `open` and prior daily `close`; it does not define the daily bar's extended-hours session boundary. It cannot by itself prove the operator's intended buy-at-time/sell endpoint or the whole AH Day 1 + PM Day 2 path. Verify TOS aggregation settings and match exported bars before implementing a substitute. Do not assume this is the exact 7:55 PM Arizona execution return.
-
-## Implemented in this update
-
-1. [x] Dashboard EXCLUSIONS · API-BACKED panel is wrapped in a native collapsible section. The Refresh button, add form, status and list remain inside it.
-2. [x] Overnight qualification table now displays all eight source metrics: ON Win, 20D average, Median, 5D average, Momentum, Current ON, Above SMA, Overnight Score.
-3. [x] Historical status requires all eight fields to be present; missing median/momentum/score keeps the row DATA?.
-4. [x] Formula audit and operator walkthrough document created.
-5. [x] Master To-Do updated with new code and runtime evidence.
-6. [x] Existing transient Daily retries remain in code, but they do not address the current malformed/alternate successful-response shape.
-7. [ ] Latest branch-head CI and local runtime verification still required. Do not claim these changes are runtime accepted.
-
-## Exact MCC workflow for a candidate
-
-1. Import the Overnight Scanner CSV into the main Dashboard.
-2. Confirm import row count and counts of PASS / FAIL / DATA?. Keep DATA? separate from FAIL.
-3. Expand EXCLUSIONS only when needed; compare MCC's exclusion list against the TOS personal watchlist manually.
-4. Select MCC Top 4 (highest imported score, unique tickers) or My Top 4 (manual four-symbol group).
-5. Click Fetch Daily + catalyst. Inspect the separate four-symbol evidence table; do not infer that missing article cards mean a clean symbol.
-6. Require complete, fresh, consolidated SIP Daily history before price/SMA/ADV qualification. IEX is partial diagnostic coverage only.
-7. Open each returned catalyst article and apply the six-label evidence workflow; unknown coverage stays unknown.
-8. Read each candidate row's eight metrics, history, exclusion, price, 20D average volume, catalyst coverage and decision.
-9. For finalists, manually inspect actual quote/spread, extended-hours liquidity, news and the operator's intended Arizona-local entry/sell process. The current score does not include those.
-10. Treat historical PASS as a data/threshold result, not a trade instruction. MCC is decision-support-only; order submission is NOT IMPLEMENTED.
-
-## All-workstream status snapshot
-
-### P0 — Data integrity / sell-limit
-- ATR V2 import, Wilder implementation, gap diagnostics and exact confirmed no-bar handling: DONE.
-- EVR 5m parity: MATCH (327 observations, 20 compared, 0 unresolved gaps, 2 verified no-bar intervals).
-- CBOE 5m parity: MATCH (338 observations, 20 compared, 0 unresolved gaps, 1 verified no-bar interval).
-- Revised ThinkScript compile: OPEN.
-- EVR 1m continuity: OPEN.
-- 119 exact provider/TOS 5m OHLCV matches including volume: OPEN.
-- Exact previous RTH close from same qualified source: OPEN.
-- Walk-forward code exists; runtime qualification BLOCKED pending complete source-qualified 40-session dataset.
-- SIP/GTC_EXT 40-session capture: PARKED after established 403 entitlement denial. Do not retry unless operator independently reports changed entitlement.
+### P0 — Data integrity / sell limit
+- ATR EVR 5m parity MATCH; CBOE 5m parity MATCH, verified no-bar intervals explicit and no bars imputed.
+- Revised ThinkScript compile, EVR 1m continuity, 119 exact provider/TOS 5m OHLCV+volume comparisons, exact previous RTH close: OPEN.
+- Walk-forward runtime qualification BLOCKED on complete source-qualified 40-session dataset.
+- SIP/GTC_EXT 40-session capture PARKED after known 403; do not retry unless entitlement changes.
 
 ### P1 — Market data / strategy
-- RTO/EVR independent OHLCV parity: FAILED on IEX; need independent entitled source, not another unchanged IEX run.
-- Daily 20-session API and audit UI: implemented; IEX remains partial and unqualified.
-- BAYRY Daily: OPEN; diagnose 200-response JSON shape/contract.
-- Catalyst review store, six-label UI, validation and fail-closed evidence guards: implemented. Current sample: 0 eligible; no metrics.
-- EWTX old sale-exploration article: source-backed adjudication OPEN. Don't reuse current investor-conference article's metadata.
-- Opportunity Quality ranking code exists; historical calibration and representative outcome data OPEN.
-- Overnight formula audit: DONE.
-- All-eight-column Dashboard display and DATA? completeness gate: implemented, runtime pending.
-- Exact TOS daily aggregation session semantics: OPEN.
-- Official auction print vs first eligible trade: OPEN; needs authoritative entitled data.
-- Exact operator Overnight buy/sell endpoints and historical path/extrema: OPEN.
-- Separate V3 Boring Overnight TOS column/study: OPEN; no compile/parity proof.
-- Boring Winner: inactive; no promotion.
-- TOS 5m/1m authority and Arizona EOD verification: operator evidence OPEN.
+- RTO/EVR independent OHLCV parity failed on IEX; IEX is partial diagnostic only.
+- Qualified independent Daily source OPEN; do not assume SIP.
+- BAYRY Daily response payload diagnosis OPEN; inspect safe redacted JSON root/properties/bars type/count and provider correlation IDs.
+- Catalyst human review infrastructure exists; current eligible dataset is zero. EWTX original article adjudication OPEN; no classifier calibration without eligible labels.
+- Opportunity Quality historical calibration OPEN.
+- TOS daily-gap formula engine DONE in code; empirical parity from matched TOS exports OPEN.
+- V3 Boring Overnight execution-window metric/study OPEN, blocked on exact AZ local buy/sell endpoints and official auction/eligible-trade semantics.
+- Boring Winner remains inactive.
+- 5m/1m TOS authority and Arizona EOD verification OPEN.
 
-### P1 — Dashboard / browser / collector
-- Main Dashboard only: DONE.
-- Four-symbol Top 4 evidence table: implemented; BAYRY result currently ERROR; runtime follow-up OPEN.
-- Collapsible EXCLUSIONS section: implemented, runtime pending.
-- Full browser/CDP acceptance: OPEN.
-- Full Dashboard functional acceptance: OPEN.
-- Regular-session WebSocket/collector proof: OPEN.
-- Restart/sleep/wake/recovery/idempotency exercise: OPEN.
-- HAR performance measurement: OPEN.
+### P1 — Dashboard / collector
+- Top-20 Daily audit field auto-population and manual action implemented; operator runtime verification pending.
+- Overnight chart mode bypass implemented; verify saved workspace restores and SPY live-assessment is not requested in Overnight mode.
+- Full browser/CDP acceptance, full Dashboard acceptance, regular-session WebSocket delivery, collector recovery/idempotency and HAR timing OPEN.
+- Collapsible exclusions pointer affordance implemented; verify runtime.
 
-### P2 — integrations / deployment
-- Broker fill reconciliation ledger: OPEN.
-- Schwab read-only OAuth integration: blocked on external developer approval/app setup.
-- Provider licensing, entitlement, coverage and retention assessment: OPEN.
-- Packaging, backup/restore, log rotation, health monitoring and unattended recovery: OPEN.
-- Order submission: NOT IMPLEMENTED by design.
+### P2/P3
+- Broker fill reconciliation ledger OPEN.
+- Schwab read-only OAuth blocked on developer approval/app setup.
+- Provider entitlements/licensing/coverage and deployment hardening OPEN.
+- Latest exact-head CI and operator local build/test/runtime acceptance OPEN.
 
-### P3 — release governance
-- Feature-branch workflow and technical runbook: DONE.
-- Latest branch-head Release CI: VERIFY.
-- Local pull/build/test/restart and runtime acceptance: OPEN.
-- Keep Master To-Do and handoff synchronized: DONE for this update.
-
-## Next operator steps
-
-Run from `C:\Users\jampo\source\repos\MomentumCommandCenterV2`:
-
+## Operator sequence
+From repository root:
 ```powershell
 git status --short --branch
 git switch feature/opportunity-quality-classification
 git pull --ff-only origin feature/opportunity-quality-classification
 .\scripts\Get-Latest-And-Test.ps1
 ```
-
-Do not reset or discard local changes. Restart the API from the tested build.
+Do not reset or discard local changes. Restart API using the tested build.
 
 Then:
-1. Re-import the same 495-row Overnight Scanner CSV.
-2. Verify the table shows Median ON %, ON Momentum and Overnight Score alongside the other five metrics.
-3. Verify rows missing any of the eight formula fields show DATA?, not PASS/FAIL.
-4. Expand/collapse EXCLUSIONS and verify Refresh/Add/Remove still work.
-5. Fetch Daily + catalyst for MCC Top 4. Confirm four distinct symbols in the evidence table.
-6. For BAYRY, capture the raw HTTP response body from the Alpaca Daily request via server-side safe diagnostics (redact keys). Record root JSON type, property names, bars property type/count, HTTP status and Alpaca request/correlation headers if present. Do not share API credentials. The current exception text is insufficient to identify the upstream contract variant.
-7. Continue the separate TOS tasks only after verifying the daily aggregation settings against exported bars.
+1. Re-import the scanner CSV. Verify Daily data audit input fills with the top 20 unique tickers by score. Confirm the Use Overnight Top 20 button works.
+2. Click Validate Daily data. Inspect each row; IEX remains diagnostic only.
+3. Select Boring Overnight mode, refresh page, and confirm it restores. Inspect Network: there should be no `/api/market-data/live-assessment?symbol=SPY` request while in Overnight mode. Main Chart should call `/api/market-data/bars` with timeframe=5m and the selected symbol.
+4. Change symbol to a candidate (e.g. WRBY). Confirm Main Chart title, data and symbol badge update; classification remains BORING OVERNIGHT · RESEARCH; intraday cards are hidden; no stale permission state is shown.
+5. Expand/collapse EXCLUSIONS; cursor should be a hand over the summary heading/marker.
+6. Export a TOS daily OHLC CSV with at least 21 rows for one candidate, headers Date/Open/High/Low/Close. Select the exact actual aggregation/session and corporate-action settings. Import via Thinkorswim Daily OHLC reference panel. Review all eight MATCH/MISMATCH results.
+7. If mismatch occurs, retain the imported result and source CSV; do not change tolerances to force a match.
+8. Capture BAYRY Daily response shape separately, redacting credentials.
 
 ## [Uncertainties]
-
-- Exact TOS daily bar extended-hours semantics remain unverified. Formulas alone do not settle the session boundary.
-- Data not found in sources for the full 20-session per-symbol raw returns, complete scanner CSV, live spreads/RVOL and independent outcome labels.
-- BAYRY's successful upstream payload body is not present in the supplied evidence, so its exact shape and root cause remain unknown.
-- No official auction/eligible-trade feed or compiled V3 TOS study has been evidenced.
+- No actual matched TOS daily OHLC export was supplied in this turn, so empirical parity remains unverified.
+- TOS scanner aggregation session/extended-hours semantics remain unconfirmed.
+- Exact operator Arizona-local trade entry and sell/measurement endpoints remain unresolved; do not invent a separate execution study.
+- Official auction versus first eligible trade data source is not evidenced.
+- BAYRY raw upstream Daily response body is unavailable.
+- CI and local runtime verification for this newest code set have not yet been established.
