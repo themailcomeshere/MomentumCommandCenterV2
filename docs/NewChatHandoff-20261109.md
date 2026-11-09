@@ -1,4 +1,4 @@
-# CURRENT HANDOFF — 2026-11-09
+# CURRENT HANDOFF — 2026-11-09 (catalyst label legend and rationale guard)
 
 **Repository:** themailcomeshere/MomentumCommandCenterV2  
 **Working branch:** feature/opportunity-quality-classification  
@@ -85,21 +85,46 @@ Run from the repository root. Do not force-reset or discard uncommitted changes.
 5. **Opportunity Quality:** gather time-separated candidate snapshots/outcomes and calibrate ranking before treating it as operational.
 6. **Walk-forward:** runtime qualification remains blocked by the known SIP entitlement issue and required complete eligible history.
 
-## 5. CI status
+## 5. Catalyst label legend restored and rationale quality tightened
+
+The dashboard now displays the six-label guide immediately above the human review queue:
+- `MATERIAL_RISK`: specific material downside exposure or adverse risk.
+- `MATERIAL_EVENT`: significant event, not inherently adverse.
+- `NON_MATERIAL`: correct issuer, but no meaningful overnight impact expected.
+- `IRRELEVANT`: not actually the issuer/security (including ticker collision).
+- `DUPLICATE`: repeated coverage, not a new independent example.
+- `UNCERTAIN`: insufficient verifiable evidence; not a positive/negative truth label.
+
+The operator's latest record `f496393535df431ab275231b57f8530a` contains notes: "Rationale is because you said it should be MATERIAL_RISK". The prior deployed validator counted it as the one included review because the text was long enough. That is not an independent human adjudication. The code now requires at least 40 characters of article-specific facts and reasoning, and rejects obvious appeals to an assistant's recommendation. Historical validation applies the same rule, so after deployment this record should be counted under `inadequateReviewEvidence`, and the included unique count should fall from 1 to 0 unless another valid record exists.
+
+Important: the field `ruleSetVersion` should identify the actual automated triage ruleset that produced `UNCLASSIFIED`, not the human-validation schema. The submitted `MCC-CATALYST-HUMAN-VALIDATION-1.0` may therefore be incorrect; inspect the saved assessment's actual ruleset version and do not guess.
+
+### Correct the EWTX review after deployment
+
+1. Pull and test the latest feature branch, restart the API.
+2. Open the original Seeking Alpha article via its TradingView syndication page. Read the article body; headline alone is insufficient.
+3. Independently decide whether the article describes a specific material downside risk. Do not use my prior recommendation as the reason.
+4. Append a new review for EWTX / 117008554, superseding only `f496393535df431ab275231b57f8530a`. Preserve `predictedSeverity=UNCLASSIFIED` and `predictedCategories=[]` because those are the saved triage outputs provided.
+5. Set `source` to the original publisher/provider where known (the article is syndicated through TradingView; verify whether Seeking Alpha is the actual publisher). Set `ruleSetVersion` to the saved triage version.
+6. Write notes with at least 40 characters of article-specific facts and why they support the label.
+7. Re-query validation. Expect zero conflicts, and verify `inadequateReviewEvidence=0` for the corrected active record.
+
+## 6. CI status
 
 - [x] Evidence-quality code and tests passed GitHub Actions on code/test commit `973aaf55482ea5c188071a4567d7b58fab019d92`: [run 42647886829](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42647886829). This run includes frontend syntax validation, Release build and full test suite.
 - [ ] Documentation-only commits after that code/test commit are queued for exact latest branch-head CI: [run 42648083688](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42648083688).
 - [ ] Operator local pull/build/test and API restart remain required before runtime verification of the new metadata guard.
 
-## 6. Checklist state
+## 7. Checklist state
 
 - [x] EVR ATR parity MATCH, 0 unresolved gaps, 2 verified no-bar intervals.
 - [x] CBOE ATR parity MATCH, 0 unresolved gaps, 1 verified no-bar interval.
 - [x] EWTX conflicting review pair superseded; conflict count now zero.
 - [x] Identified weak placeholder metadata in the superseding EWTX record.
 - [x] Implemented placeholder rejection and historical evidence-quality exclusion with tests.
-- [ ] Operator pull/build/test and runtime verification of evidence-quality guard.
-- [ ] Append corrected EWTX review superseding the weak intermediate review.
+- [x] Restored dashboard label legend and enforced 40-character article-specific rationale; reject assistant-appeal rationales.
+- [ ] Operator pull/build/test and runtime verification of the updated article-specific rationale guard.
+- [ ] Append corrected EWTX review superseding weak intermediate review `f496393535df431ab275231b57f8530a`.
 - [ ] Collect balanced source-backed catalyst reviews and qualify a chronological holdout.
 - [ ] Complete the independent open workstreams above.
 
