@@ -156,7 +156,7 @@ app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketData
             : statusCode == StatusCodes.Status503ServiceUnavailable
                 ? "Daily market-data provider is rate limited"
                 : "Daily market-data provider request failed";
-        return Results.Problem(statusCode: statusCode, title, detail: ex.Message);
+        return Results.Problem(statusCode: statusCode, title: title, detail: ex.Message);
     }
     catch (InvalidOperationException ex)
     {
