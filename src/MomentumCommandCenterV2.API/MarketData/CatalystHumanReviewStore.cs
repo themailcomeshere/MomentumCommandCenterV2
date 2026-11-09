@@ -127,8 +127,12 @@ public sealed class CatalystHumanReviewStore(string? path = null)
             throw new ArgumentException("Symbol must be 1–8 letters, digits, dot, or hyphen.", nameof(input));
         if (string.IsNullOrWhiteSpace(input.Headline) || input.Headline.Length > 1000)
             throw new ArgumentException("Headline is required and must be at most 1000 characters.", nameof(input));
-        if (string.IsNullOrWhiteSpace(input.Source) || input.Source.Length > 200)
-            throw new ArgumentException("Source is required and must be at most 200 characters.", nameof(input));
+        if (string.IsNullOrWhiteSpace(input.Source) || input.Source.Length > 200 || IsPlaceholder(input.Source))
+            throw new ArgumentException("Source must identify the actual publisher/provider; placeholder values such as 'string' are not accepted.", nameof(input));
+        if (!string.IsNullOrWhiteSpace(input.RuleSetVersion) && IsPlaceholder(input.RuleSetVersion))
+            throw new ArgumentException("RuleSetVersion must identify the actual triage ruleset; placeholder values such as 'string' are not accepted.", nameof(input));
+        if (input.Notes is not null && IsPlaceholder(input.Notes))
+            throw new ArgumentException("Notes must contain an actual review rationale; placeholder values such as 'string' are not accepted.", nameof(input));
         if (!Uri.TryCreate(input.Url, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp))
             throw new ArgumentException("Article URL must be an absolute HTTP or HTTPS URL.", nameof(input));
@@ -139,12 +143,25 @@ public sealed class CatalystHumanReviewStore(string? path = null)
         if (input.PredictedSeverity is not null &&
             !new[] { "RISK", "MATERIAL", "UNCLASSIFIED" }.Contains(input.PredictedSeverity.Trim(), StringComparer.OrdinalIgnoreCase))
             throw new ArgumentException("PredictedSeverity must be RISK, MATERIAL, or UNCLASSIFIED.", nameof(input));
-        if (input.PredictedCategories?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 100) == true)
-            throw new ArgumentException("PredictedCategories must contain non-empty values of at most 100 characters.", nameof(input));
+        if (input.PredictedCategories?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 100 || IsPlaceholder(x)) == true)
+            throw new ArgumentException("PredictedCategories must contain actual non-placeholder category values of at most 100 characters.", nameof(input));
         if (input.SupersedesReviewIds?.Any(x => string.IsNullOrWhiteSpace(x) || x.Length > 64) == true)
             throw new ArgumentException("SupersedesReviewIds must contain non-empty review IDs of at most 64 characters.", nameof(input));
-        if (input.SupersedesReviewIds?.Count > 0 && string.IsNullOrWhiteSpace(input.Notes))
-            throw new ArgumentException("A source-backed rationale in Notes is required when superseding prior reviews.", nameof(input));
+        if (input.SupersedesReviewIds?.Count > 0 &&
+            (string.IsNullOrWhiteSpace(input.Notes) || input.Notes.Trim().Length < 12 || IsPlaceholder(input.Notes)))
+            throw new ArgumentException("A meaningful source-backed rationale of at least 12 characters is required when superseding prior reviews.", nameof(input));
+    }
+
+    internal static bool IsPlaceholder(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return true;
+        var normalized = value.Trim();
+        return normalized.Equals("string", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Equals("test", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Equals("todo", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Equals("placeholder", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Equals("n/a", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Equals("na", StringComparison.OrdinalIgnoreCase);
     }
 }
 
