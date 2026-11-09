@@ -41,8 +41,8 @@ public static class ThinkorswimDailyGapCalculator
         var currentOn = returns[^1] * 100m;
         var above20 = bars[^1].Close > bars.TakeLast(20).Average(x => x.Close);
         var momentum = (avg5 - avg20) * 100m;
-        var score = win20 / 100m * 50m + avg20 * 100m * 1000m
-            + median20 * 100m * 1000m + (avg5 - avg20) * 1000m
+        var score = win20 / 100m * 50m + avg20 * 1000m
+            + median20 * 1000m + (avg5 - avg20) * 1000m
             + (above20 ? 10m : 0m);
         return new(request.Symbol.Trim().ToUpperInvariant(), CalculationVersion, request.Source,
             request.Aggregation, request.ExtendedHours, request.CorporateActionAdjusted, request.ChartTimeZone,
