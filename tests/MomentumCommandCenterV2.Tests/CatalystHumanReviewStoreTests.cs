@@ -60,7 +60,7 @@ public sealed class CatalystHumanReviewStoreTests
             return new CatalystHumanReviewRecord(
                 "review-" + index, "TEST", "article-" + index, "headline",
                 "https://example.com/" + index, start.AddDays(index), "Example",
-                label, "MCC-CATALYST-TRIAGE-1.0", null, start.AddDays(index),
+                label, "MCC-CATALYST-TRIAGE-1.0", "Source-backed review rationale for validation test.", start.AddDays(index),
                 prediction, Array.Empty<string>());
         }).ToArray();
 
@@ -107,7 +107,7 @@ public sealed class CatalystHumanReviewStoreTests
     private static CatalystHumanReviewRecord Review(
         string id, string articleId, string label, string prediction, DateTimeOffset reviewedAt) =>
         new(id, "TEST", articleId, "headline", "https://example.com/" + articleId,
-            reviewedAt, "Example", label, "MCC-CATALYST-TRIAGE-1.0", null,
+            reviewedAt, "Example", label, "MCC-CATALYST-TRIAGE-1.0", "Source-backed review rationale for validation test.",
             reviewedAt, prediction, Array.Empty<string>());
 
 
