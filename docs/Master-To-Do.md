@@ -1,3 +1,19 @@
+## Current operator update — 2026-11-09 (Top-4 deduplication + EWTX rationale recheck)
+
+- [x] Operator confirms the six-label legend is visible and correct.
+- [x] Operator runtime validation after deploying the evidence guard: raw=6, eligible=0, excluded=6, conflicts=0; non-evaluable=2, superseded=3, inadequate evidence=1. This confirms the prior assistant-appeal review is excluded and no metrics are available.
+- [x] Identified the new EWTX review `fbc839fc9c2740c1ad87e6bc641e2a77` as insufficient: its notes are generic confirmation rather than article-specific facts; it supersedes `8405880...` rather than the weak active review `f496393...`; its `ruleSetVersion` is the human-validation version, not verified triage provenance.
+- [x] Hardened API, historical validation and Dashboard review form to reject the observed generic confirmation phrases in addition to short/placeholder/assistant-appeal rationales. Added a regression test using the exact submitted notes. This remains a quality heuristic, not semantic fact verification.
+- [x] Fixed MCC Top 4 selection to rank imported rows first, retain only the highest-scoring row per unique ticker, and fetch four distinct symbols rather than allowing duplicate scanner rows for one ticker to consume multiple slots.
+- [ ] Operator must pull/build/restart the latest code and confirm the Top 4 list shows four distinct symbols and the evidence table reports four queried symbols. If fewer than four unique tickers exist in the import, the UI must report that limitation rather than repeat a symbol.
+- [ ] Append one independently researched EWTX correction superseding both currently active weak records `f496393535df431ab275231b57f8530a` and `fbc839fc9c2740c1ad87e6bc641e2a77`. Preserve the original saved prediction `UNCLASSIFIED` and empty categories. Verify the actual original publisher and saved triage ruleset version; do not guess either. Notes must identify concrete article facts and why they support the independently chosen label.
+- [ ] Re-query catalyst validation after the corrected EWTX review; require conflict=0 and inadequateReviewEvidence=0 for the active EWTX record. The two UNCERTAIN records remain excluded.
+- [ ] Continue source-backed positive and negative human reviews; six is only a structural floor, not statistical qualification. Require both truth classes in the chronological holdout, double-review a subset and measure reviewer agreement before any promotion.
+
+**Latest exact-head CI before this update:** branch head `0e7fb9521f25000dcbc432019b544d35a96ed876` passed run [42651619770](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42651619770). The new code commits from this update still require CI.
+
+---
+
 # Momentum Command Center — Master To-Do
 
 **Updated:** 2026-11-09 (catalyst label legend restored + article-specific review rationale guard)  
