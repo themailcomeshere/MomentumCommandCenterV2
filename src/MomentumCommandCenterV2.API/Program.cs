@@ -145,7 +145,18 @@ app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketData
     }
     catch (HttpRequestException ex)
     {
-        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily market-data provider request failed", detail: ex.Message);
+        var providerStatus = ex.StatusCode;
+        var statusCode = providerStatus == System.Net.HttpStatusCode.UnprocessableEntity
+            ? StatusCodes.Status422UnprocessableEntity
+            : providerStatus == System.Net.HttpStatusCode.TooManyRequests
+                ? StatusCodes.Status503ServiceUnavailable
+                : StatusCodes.Status502BadGateway;
+        var title = statusCode == StatusCodes.Status422UnprocessableEntity
+            ? "Daily market-data symbol or request is not supported"
+            : statusCode == StatusCodes.Status503ServiceUnavailable
+                ? "Daily market-data provider is rate limited"
+                : "Daily market-data provider request failed";
+        return Results.Problem(statusCode: statusCode, title, detail: ex.Message);
     }
     catch (InvalidOperationException ex)
     {
