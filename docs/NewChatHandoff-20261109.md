@@ -6,9 +6,10 @@
 ## Implemented
 
 - Focused-symbol metrics: Previous Regular-Session Close, Latest Price (labelled AFTER-HOURS / EXTENDED when applicable), and Calculated Limit Sell.
-- Prices use returned Alpaca 1-minute bars over five calendar days and show Phoenix timestamps. Latest bar close is not a live quote. Exact 16:00 ET close is claimed only when the 15:59 ET bar is present.
+- Prices use returned Alpaca 1-minute bars over five calendar days and show Phoenix timestamps. Latest bar close is not a live quote. Previous Regular-Session Close excludes an in-progress RTH session; exact 16:00 ET close is claimed only when the 15:59 ET bar is present.
+- The collapsible Decision Explanation now carries the 1M close, RTH Daily VWAP, simple 1M ATR14, and VWAP extension diagnostics from the same returned bars. Missing volume/high/low/history remains DATA?. Provider/feed/time provenance is shown. These values are descriptive only and do not establish qualification or execution permission.
 - Quick limit-sell action delegates to the existing quantile/evidence-gate handler and `POST /api/boring-overnight/sell-limit`; existing evidence gates remain and no order is submitted.
-- Boring Overnight Red Zone cards use historical 5-minute bars and mark intraday 5M/1M gates NOT USED.
+- Boring Overnight Red Zone cards use historical 5-minute bars, hide redundant 1M/VWAP/ATR/freshness paragraphs, and mark intraday 5M/1M gates NOT USED.
 - Manual pins are polled in background during Automatic mode. Sound requires a prior known false followed by true; UNKNOWN→true does not alert.
 - Scanner Workbench Symbols auto-populates with up to 20 unique imported Overnight symbols sorted by Overnight Score. Manual **Use Overnight Top 20** button is available and does not submit the scan.
 - Removed Red Zone static chip/paragraph and redundant label ID. Preserved `.gate-warning` and Ticker placeholder.
