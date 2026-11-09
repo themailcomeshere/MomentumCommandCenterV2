@@ -28,6 +28,7 @@ This is the sole active execution checklist. Historical repeated checkboxes were
 - [x] Added dashboard guidance to open the original article and write article-specific facts plus the reason they support the chosen label.
 - [x] Tightened review submission and historical validation: rationale must be at least 40 characters, must not be placeholder text, and must not rely on an assistant's recommendation. This catches the operator's "because you said it should be MATERIAL_RISK" rationale.
 - [x] Added regression coverage for short/assistant-appeal rationales and retained historical weak-evidence exclusion.
+- [x] Corrected a too-long negative test fixture discovered by CI; the follow-up run is checking the corrected test suite.
 - [x] Preserved append-only audit history; no old review was edited or deleted.
 - [ ] Operator must pull/rebuild/restart this commit. Validation should then exclude review `f496393535df431ab275231b57f8530a` as inadequate evidence (its rationale is an appeal to an assistant recommendation), even though the previous deployed validator counted it as the single included unique review.
 - [ ] Append a new EWTX review superseding `f496393535df431ab275231b57f8530a`, using a source-backed article rationale. Do not treat my prior suggested label as evidence. Re-read the original article and independently decide whether its facts represent material downside risk.
