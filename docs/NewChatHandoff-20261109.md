@@ -71,7 +71,7 @@ The operator reports this explicit sequence worked when the update script did no
 git status --short --branch
 git switch feature/opportunity-quality-classification
 git pull --ff-only origin feature/opportunity-quality-classification
-.\\scripts\\Get-Latest-And-Test.ps1
+.\scripts\Get-Latest-And-Test.ps1
 ```
 
 Run from the repository root. Do not force-reset or discard uncommitted changes. The script runs restore, Release build, tests, and prints the source SHA. Record the local SHA and test totals.
