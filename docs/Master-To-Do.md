@@ -52,7 +52,7 @@ The operator reports the reliable sequence for this checkout was:
 git status --short --branch
 git switch feature/opportunity-quality-classification
 git pull --ff-only origin feature/opportunity-quality-classification
-.\\scripts\\Get-Latest-And-Test.ps1
+.\scripts\Get-Latest-And-Test.ps1
 ```
 Use this explicit sequence if the update script does not switch/pull correctly in the current PowerShell session. Do not reset or discard a dirty working tree. The local Release build/test result for this new commit remains pending until operator execution.
 
