@@ -111,6 +111,8 @@ Important: the field `ruleSetVersion` should identify the actual automated triag
 
 ## 6. CI status
 
+- [ ] Latest corrected test commit `bf05cce98504264eeeb9af93cc8af9315e676df6` is running in [GitHub Actions run 42651528472](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42651528472). An earlier run caught a negative test fixture whose text was longer than the new minimum; the fixture was corrected to a genuinely short rationale. Do not treat CI as green until this run completes.
+
 - [x] Evidence-quality code and tests passed GitHub Actions on code/test commit `973aaf55482ea5c188071a4567d7b58fab019d92`: [run 42647886829](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42647886829). This run includes frontend syntax validation, Release build and full test suite.
 - [ ] Documentation-only commits after that code/test commit are queued for exact latest branch-head CI: [run 42648083688](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42648083688).
 - [ ] Operator local pull/build/test and API restart remain required before runtime verification of the new metadata guard.
