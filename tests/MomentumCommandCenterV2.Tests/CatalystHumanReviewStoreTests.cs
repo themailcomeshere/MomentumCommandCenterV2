@@ -212,6 +212,7 @@ public sealed class CatalystHumanReviewStoreTests
     [Theory]
     [InlineData("Because you said it should be MATERIAL_RISK and I agree with your recommendation.")]
     [InlineData("Insufficient source detail.")]
+    [InlineData("After reviewing it, it certainly fits. I can confirm this. This should be way more than 40 characters. OK this is definitely more than 40 characters")]
     public async Task RejectsUnsupportedOrInsufficientReviewRationale(string notes)
     {
         var directory = Path.Combine(Path.GetTempPath(), "mcc-catalyst-review-tests", Guid.NewGuid().ToString("N"));
