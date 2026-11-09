@@ -559,20 +559,14 @@
         </div>
         <section id="decision-layout" class="layout">
             <article class="panel" id="mcc-static-0080-article"><details class="decision-details"><summary class="section-heading decision-details-summary"><div><div class="eyebrow" id="mcc-static-0083-div">DECISION EXPLANATION · LIVE API</div><h2 id="mcc-static-0084-h2">Why this classification?</h2></div><span id="decisionScore" class="redzone-score score-unknown">Loading live score…</span></summary><div class="decision-details-content">
-                <div class="section-heading" id="mcc-static-0081-div">
-                    <div id="mcc-static-0082-div">
-                        <div class="eyebrow" id="mcc-static-0083-div">DECISION EXPLANATION · LIVE API</div>
-                        <h2 id="mcc-static-0084-h2">Why this classification?</h2>
-                    </div>
-                    <span id="decisionScore" class="redzone-score score-unknown">Loading live score…</span>
-                </div><ul id="reasons" class="reason-list">
+<ul id="reasons" class="reason-list">
                     <li id="mcc-static-0085-li">Waiting for live 1M/5M source bars.</li>
                 </ul>
                 <p id="decisionSource" class="muted small">Source, feed, timestamps, and evaluation state will appear here.</p>
                 <div class="notice" id="mcc-static-0086-div">The six V2 score conditions are evaluated from completed 5M OHLCV bars. A 5M permission score is not an entry signal; the 1M execution gate must also confirm. Decision support only — no orders are submitted.</div></div></details>
             </article>
             <article class="panel" id="mcc-static-0087-article"><details class="decision-details timeframe-handoff-details"><summary class="section-heading decision-details-summary"><div><div class="eyebrow" id="mcc-static-0090-div">TIMEFRAME HANDOFF</div><h2 id="mcc-static-0091-h2">5M authority → 1M execution</h2></div></summary><div class="decision-details-content">
-                <div class="section-heading" id="mcc-static-0088-div"><div id="mcc-static-0089-div"><div class="eyebrow" id="mcc-static-0090-div">TIMEFRAME HANDOFF</div><h2 id="mcc-static-0091-h2">5M authority → 1M execution</h2></div></div><div class="timeframe-row" id="mcc-static-0092-div"><span class="tf" id="mcc-static-0093-span">5M</span><div id="mcc-static-0094-div"><strong id="fiveState">5M permission: LOADING</strong><p id="mcc-static-0095-p">Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row" id="mcc-static-0096-div"><span class="tf" id="mcc-static-0097-span">1M</span><div id="mcc-static-0098-div"><strong id="oneState">1M execution: LOADING</strong><p id="mcc-static-0099-p">Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="handoff-howto" id="mcc-static-0100-div">
+<div class="timeframe-row" id="mcc-static-0092-div"><span class="tf" id="mcc-static-0093-span">5M</span><div id="mcc-static-0094-div"><strong id="fiveState">5M permission: LOADING</strong><p id="mcc-static-0095-p">Higher-timeframe structure and the six-factor score determine directional permission.</p></div></div><div class="timeframe-row" id="mcc-static-0096-div"><span class="tf" id="mcc-static-0097-span">1M</span><div id="mcc-static-0098-div"><strong id="oneState">1M execution: LOADING</strong><p id="mcc-static-0099-p">Entry confirmation is separate from 5M permission and may remain WAITING or BLOCKED.</p></div></div><div class="handoff-howto" id="mcc-static-0100-div">
                     <strong id="mcc-static-0101-strong">How to use the handoff</strong>
                     <ul id="mcc-static-0102-ul">
                         <li id="mcc-static-0103-li"><b id="mcc-static-0104-b">Before considering an entry:</b> check 5M permission first. If it is NO, UNKNOWN, or stale, do not treat a 1M move as an authorized setup.</li>
