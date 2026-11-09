@@ -401,6 +401,7 @@ async function fetchOvernightTopFourEvidence(){
  }));
  if(button)button.disabled=false;
  renderOvernightQualification();
+ renderOvernightTopFourEvidence(results);
  const failed=results.filter(x=>x.evidence.dailyError||x.evidence.catalystError);
  renderCatalystHumanReviewQueue();
  if(status)status.textContent="Live evidence fetched for "+results.length+" distinct candidates ("+results.map(x=>x.symbol).join(", ")+"): "+(results.length-failed.length)+" complete, "+failed.length+" with provider/API errors. The human-review queue lists only articles actually returned; a symbol with no returned articles remains UNKNOWN, not CLEAR. Other imported rows remain DATA?. No candidate can become READY because catalyst clearance and 5M/1M evidence are not validated.";
@@ -448,6 +449,19 @@ async function fetchDailyDataAudit(){
 }
 $("dailyAuditRefresh")?.addEventListener("click",()=>void fetchDailyDataAudit());
 
+function renderOvernightTopFourEvidence(results){
+ const body=$("overnightTopFourEvidenceRows");if(!body)return;
+ const cell=value=>{const td=document.createElement("td");td.textContent=value===null||value===undefined||value===""?"UNKNOWN":String(value);return td;};
+ body.replaceChildren(...results.map(({symbol,evidence})=>{
+  const d=evidence.daily,c=evidence.catalyst,articles=Array.isArray(c?.articles)?c.articles:[],tr=document.createElement("tr");
+  const dailyResult=evidence.dailyError?"ERROR":d?.qualificationUsable===true?"QUALIFICATION USABLE":d?.completeness||"DATA?";
+  const dailyCoverage=d?[d.feedCoverage||"UNKNOWN",(d.validSessionCount??0)+"/20 sessions",d.dataFresh===true?"FRESH":"NOT FRESH"].join(" · "):"UNKNOWN";
+  const catalystResult=evidence.catalystError?"ERROR":c?.status||"UNKNOWN";
+  const coverage=c?(c.coverageComplete===true?"COMPLETE":"INCOMPLETE / UNKNOWN"):"UNKNOWN";
+  tr.append(cell(symbol),cell(dailyResult),cell(dailyCoverage),cell(evidence.dailyError),cell(catalystResult),cell(articles.length),cell(coverage),cell(evidence.catalystError));
+  tr.className=evidence.dailyError||evidence.catalystError?"qualification-blocked":"qualification-pending";return tr;
+ }));
+}
 function renderCatalystHumanReviewQueue(){
  const host=$("catalystReviewQueue"),count=$("catalystReviewQueueCount");if(!host)return;
  const rows=[];
