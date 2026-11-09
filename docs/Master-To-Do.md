@@ -38,7 +38,8 @@
 - [ ] Diagnose BAYRY's HTTP-200 upstream payload shape (or unexpected response envelope) and handle valid empty/unsupported-symbol responses explicitly. Current retry handles transient transport/status failures only; it cannot repair a successful response with a missing/wrong bars shape.
 - [ ] Operator pull/build/test/restart and runtime verify the collapsible exclusions panel and all-eight-column table.
 - [ ] Confirm TOS daily aggregation/session setting: formulas are exactly `open / close[1] - 1`, but code does not specify whether daily `open` reflects regular-hours only or includes extended hours. Match exported TOS bars to MCC data before declaring overnight-window parity.
-- [ ] **ACTIVE DEVELOPMENT OBJECTIVE — Boring Winner.** Do not keep this strategy inactive: implement its documented formula as a separately reported research flag/score, preserve its hard gates, and validate against chronological source-qualified outcomes before production use. The current formula is not yet approved as a READY gate; no TOS V3 Boring Overnight study has been compiled.
+- [x] Implemented the documented Boring Winner formula as a separate result in the TOS Daily OHLC reference calculator: 20-session win rate, mean return band, count of returns within +0.10%…+3.00%, sample standard deviation, and close above SMA20. Added unit coverage for a qualifying sample. RESEARCH ONLY; not connected to READY.
+- [ ] Validate Boring Winner on chronological source-qualified historical samples and confirm daily-bar session/extended-hours semantics before production use. No TOS V3 Boring Overnight study has been compiled.
 
 ## Operator evidence — 2026-11-09 (Top-4, Daily provider, catalyst validation)
 
