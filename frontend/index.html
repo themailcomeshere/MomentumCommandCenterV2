@@ -631,6 +631,18 @@
  <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
  <section id="catalystHumanReview" class="catalyst-human-review" aria-label="Human catalyst article review">
   <div class="section-heading"><div><h3>Human catalyst review queue</h3><p class="muted small">Review source articles returned for the active top-four group. Labels are append-only research data; they never clear a catalyst or create READY.</p></div><span id="catalystReviewQueueCount" class="chip">0 articles</span></div>
+  <div class="catalyst-label-legend" aria-label="Human catalyst label definitions">
+   <h4>Label guide — choose the article's meaning, not the model's prediction</h4>
+   <dl>
+    <div><dt>MATERIAL_RISK</dt><dd>Specific adverse exposure or downside risk: legal/regulatory action, dilution, solvency/liquidity stress, listing threat, product/safety issue, or another credible threat to the issuer.</dd></div>
+    <div><dt>MATERIAL_EVENT</dt><dd>A significant company event that matters to the ticker, but is not inherently adverse: earnings/guidance, M&amp;A, major contract, leadership change, or corporate action. Use MATERIAL_RISK when the article's substance is specifically adverse.</dd></div>
+    <div><dt>NON_MATERIAL</dt><dd>About the correct company, but routine or unlikely to materially affect the overnight trading decision.</dd></div>
+    <div><dt>IRRELEVANT</dt><dd>Not actually about this issuer/security, including a ticker collision, namesake, or unrelated entity.</dd></div>
+    <div><dt>DUPLICATE</dt><dd>Repeated or substantially overlapping coverage of an article already reviewed. Do not count it as a new independent example.</dd></div>
+    <div><dt>UNCERTAIN</dt><dd>Cannot determine relevance or materiality from verifiable source evidence. Keep it out of positive/negative performance metrics.</dd></div>
+   </dl>
+   <p class="muted small">Review the linked source, not just the headline or summary. Notes must state the article-specific facts and why they support the selected label. Do not use an assistant's suggestion as evidence. Human labels never clear a catalyst or create READY.</p>
+  </div>
   <div id="catalystReviewQueue" class="catalyst-review-queue"><p class="muted small">Fetch Daily + catalyst evidence to load articles for human review.</p></div>
   <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
  </section>
