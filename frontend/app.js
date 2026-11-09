@@ -462,6 +462,7 @@ function renderCatalystHumanReviewQueue(){
   const status=document.createElement("span");status.className="muted small";
   save.addEventListener("click",async()=>{
    if(!article.url||!/^https?:\/\//i.test(article.url)){status.textContent="Cannot save: source article URL is missing or invalid.";return;}
+   if(notes.value.trim().length<40||/because you said|because chatgpt said|because the assistant said|you told me|your recommendation|assistant recommendation/i.test(notes.value)){status.textContent="Add at least 40 characters of article-specific evidence and reasoning. An assistant recommendation is not evidence.";return;}
    save.disabled=true;status.textContent="Saving append-only review…";
    try{
     const response=await fetch("/api/market-data/catalyst-reviews",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,articleId:article.id||null,headline:article.headline||"Untitled article",url:article.url,publishedAtUtc:article.publishedAtUtc||null,source:"Alpaca News",label:label.value,ruleSetVersion:evidence.catalyst?.ruleSetVersion||"MCC-CATALYST-TRIAGE-1.0",notes:notes.value||null,predictedSeverity:item.severity||"UNCLASSIFIED",predictedCategories:item.categories||[]})});
