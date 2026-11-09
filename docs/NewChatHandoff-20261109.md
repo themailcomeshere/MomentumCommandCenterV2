@@ -18,7 +18,7 @@
 ## CI status
 
 - Code commit `b2a1ff594f089f789b4932692ec00f6bf831d8a8`: GitHub Actions JavaScript syntax check, .NET Release build, and full tests passed (run `42716511385`).
-- Latest branch head at this handoff update: `e36a24c5c59c7e49dc2aa703c8fe2d13e8fa4253`. Exact-head JavaScript syntax check and .NET build passed; full test step is running (run `42716521717`).
+- Branch-head `e36a24c5c59c7e49dc2aa703c8fe2d13e8fa4253` passed exact-head JavaScript syntax check, .NET Release build, and full tests (run `42716521717`). Subsequent commits only update documentation; no application code changed after this passing verification. The newest documentation-only commit has its own workflow queued.
 - Local Windows runtime/browser acceptance is not yet recorded.
 
 ## Operator acceptance
