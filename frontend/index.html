@@ -470,7 +470,7 @@
                 <div class="main-chart-heading" id="mcc-static-0051-div">
                     <div class="eyebrow" id="mcc-static-0053-div">FOCUSED SYMBOL · API-BACKED</div>
                     <h2 id="mainChartTitle">Main Chart</h2>
-                    <p class="muted" id="mcc-static-0054-p">1M WebSocket bars when subscribed and fresh; REST fallback. 5M permission remains REST-backed. Completed bars, not trade ticks.</p>
+                    <p class="muted" id="mcc-static-0054-p">Intraday: 1M WebSocket bars and REST-backed 5M permission. Overnight: historical 5M chart only; no intraday permission check.</p>
                 </div>
                 <article class="panel hero-card main-chart-classification" id="mcc-static-0057-article">
                     <div class="eyebrow" id="mcc-static-0058-div">LIVE OPPORTUNITY CLASSIFICATION</div>
@@ -666,8 +666,8 @@
    <div class="watchlist-form">
     <label for="tosDailyReferenceSymbol">Symbol</label><input id="tosDailyReferenceSymbol" maxlength="8" placeholder="e.g. WRBY">
     <label for="tosDailyReferenceFile">TOS daily OHLC CSV</label><input id="tosDailyReferenceFile" type="file" accept=".csv,text/csv">
-    <label><input id="tosDailyExtendedHours" type="checkbox" checked> Extended hours ON</label>
-    <label><input id="tosDailyAdjusted" type="checkbox" checked> Corporate-action adjusted</label>
+    <label><input id="tosDailyExtendedHours" type="checkbox"> Extended hours ON</label>
+    <label><input id="tosDailyAdjusted" type="checkbox"> Corporate-action adjusted</label>
     <label for="tosDailyTimezone">Chart timezone</label><input id="tosDailyTimezone" value="America/Phoenix" maxlength="80">
     <button id="tosDailyReferenceImport" type="button" class="quiet-button">Import &amp; calculate parity</button>
    </div>
