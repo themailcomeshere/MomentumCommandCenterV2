@@ -1,6 +1,9 @@
 /// MODULE: Live Decision Workbench
 /// PURPOSE: Renders the focused symbol from the live assessment API; no synthetic snapshots are used.
 const $=id=>document.getElementById(id);
+// Restore the selected workspace before any startup chart or live-assessment request can fire.
+try{const savedMode=localStorage.getItem("mcc.workspaceMode.v1");if(savedMode==="overnight"||savedMode==="momentum")$("mode").value=savedMode;}catch{}
+$("mode")?.addEventListener("change",()=>{try{localStorage.setItem("mcc.workspaceMode.v1",$("mode").value);}catch{}});
 const feedbackKey="mcc.dashboardFeedback.v1";
 
 /// MODULE: Exchange session countdown
