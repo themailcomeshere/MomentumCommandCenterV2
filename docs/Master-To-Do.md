@@ -51,7 +51,7 @@ Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open
 - [x] Removed obsolete Red Zone static chip, redundant label ID, and obsolete explanatory paragraph. Preserved `.gate-warning` and Ticker placeholder.
 - [x] Decision Explanation and Timeframe Handoff are collapsible with pointer cursor. Timeframe Handoff is hidden in Boring Overnight mode.
 - [ ] Define a source-qualified Boring Overnight READY state and corresponding alert transition; current evaluator intentionally remains fail-closed at READY=0. Do not substitute Boring Winner PASS for READY.
-- [x] November 10 code-bearing branch head `436d0a53d10501f2053cce7b203f5f5ed1b7a689` passed GitHub Actions JavaScript syntax validation, .NET Release build (0 warnings / 0 errors), and all 266 tests (run `42751327218`). Subsequent commits through `94d18ca3a241e6313f18d4f2a247270e7122d5d1` are documentation-only; exact-head documentation workflow is queued.
+- [x] Latest code-bearing branch head `8a633674bf355c80bad0e7bd9779ddb49e8748e0` passed GitHub Actions JavaScript syntax validation, .NET Release build (0 warnings / 0 errors), and all 264 tests (run `42751987992`). Subsequent commits, if any, are documentation-only.
 - [ ] Operator Windows build/run, browser verification, and API/runtime acceptance remain required.
 
 ## Operator evidence and implementation — 2026-11-09 (Overnight top-20, mode isolation, TOS formula engine)
