@@ -288,10 +288,11 @@ The first store read after each API process restart still has to scan the existi
    ```
    Expected branch: `feature/opportunity-quality-classification`. Do not discard local changes. Record the exact tested SHA and Release build/test summary.
 2. Restart the API from that tested build and hard-refresh the Dashboard.
-3. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once. Wait for completion. Confirm the disclosure opens and contains the entire returned gate list, with PASS/BLOCKED and details. Copy the result status and `performanceDiagnostics`. If the request remains running, capture the POST request's HTTP status, elapsed time, response body (if any), and API log exception; do not click repeatedly or assume DATA? means a gate failed.
-4. Measure the live-assessment warm path. The first EVR request after restart can rebuild the JSONL index; record it as the cold/warm-up request. Run one further EVR request and record PowerShell client elapsed plus `performanceDiagnostics`; this second request is the meaningful warm-cache comparison.
-5. At the scheduled final-hour start, verify the evaluation clock separately changes to OPEN. This remains TBD.
-6. Send the exact Release build/test output, calculated-sell result/gates/timings, and cold-vs-warm EVR timings.
+3. Run one EVR live-assessment request first to trigger the one-time JSONL index rebuild after restart. Record it as the cold/warm-up request; it may be slower than a warm request. Do not run several symbols yet.
+4. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once. Wait for completion. Confirm the disclosure opens and contains the entire returned gate list, with PASS/BLOCKED and details. Copy the result status and `performanceDiagnostics`. If the request remains running, capture the POST request's HTTP status, elapsed time, response body (if any), and API log exception; do not click repeatedly or assume DATA? means a gate failed.
+5. Run one further EVR live-assessment request and record PowerShell client elapsed plus `performanceDiagnostics`; this second request is the meaningful warm-cache comparison.
+6. At the scheduled final-hour start, verify the evaluation clock separately changes to OPEN. This remains TBD.
+7. Send the exact Release build/test output, calculated-sell result/gates/timings, and cold-vs-warm EVR timings.
 
 ### Do not repeat unchanged work
 
