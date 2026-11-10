@@ -329,3 +329,48 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - Do not change Alpaca IEX, switch to SIP without a confirmed entitlement change, reduce sell-limit evidence gates, impute missing timestamps, or treat IEX as consolidated coverage.
 - No order is submitted by the sell-limit assessment. PROVISIONAL remains research-only.
 - Existing completed stream, scanner, BAYRY, and RKLX-name checks do not need to be repeated unless the relevant code/data changes.
+
+
+## November 10 follow-up — measured store improvement and Calculated Limit Sell correction
+
+### Operator measurements after the in-memory JSONL index change
+
+- [x] Cold/warm-up EVR request: client 0.649s; server total 475.2ms; WebSocket-store read 7.1ms; persistence 3.5ms; calculation 30.9ms.
+- [x] Warm EVR request: client 0.399s; server total 391.5ms; WebSocket-store read 4.1ms; persistence 6.7ms; calculation 3.5ms.
+- [x] Confirmed warm-path improvement against the prior sample: client latency fell from 12.046s to 0.399s; the previous server report of 51.622s is now 391.5ms. This is an observed before/after sample, not a multi-symbol performance guarantee.
+- [x] The newer client/server timing boundaries are close: 174ms difference on the first request and about 8ms on the warm request.
+- [ ] The 7.1ms WebSocket-store read does not by itself prove that the process-local JSONL index rebuild was performed during that request. The store may have been initialized earlier by startup/background activity. Added explicit jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded fields to the live-assessment diagnostics so the next restart test measures the actual one-time load.
+
+### Calculated Limit Sell root cause and fix
+
+- [x] Traced the no-Network click behavior to the frontend path: the quick button displayed “Assessment running…” and programmatically clicked a second button; that handler returned before its first fetch when the quantile field was blank or the symbol invalid. The quantile input had no default and was located away from the quick action. This is the source-code explanation consistent with no Network activity; the exact operator DOM value at the failed click was not captured.
+- [x] Moved the quantile input into the quick card and set a clearly labelled 50th-percentile (median) default. The user can change it before assessment.
+- [x] Removed the synthetic button click. Both quick and detailed actions now call the same async assessment function directly.
+- [x] Validation failures now appear in the quick disclosure/status rather than leaving a false “Assessment running…” state. The quick action disables during the request and re-enables on completion/error.
+- [x] Success and failure paths mirror API gate details into the quick disclosure; a completed BLOCKED response remains a valid assessment result and is not presented as a calculated price.
+- [ ] Operator browser retest is still required to verify the request is sent and all gates are rendered.
+
+### Cold index instrumentation and regression coverage
+
+- [x] Added process-local index diagnostics to JsonlMarketBarObservationStore: loaded flag, number of index builds, most recent build duration, and number of unique source keys indexed.
+- [x] Added those values to live-assessment performanceDiagnostics. jsonlIndexLastLoadElapsedMs describes the most recent process-local rebuild and may have happened before the current request; compare it with jsonlIndexLoadCount after a fresh API restart.
+- [x] Extended store regression test to assert one index build, one unique source key, and no second rebuild during a later correction append/read.
+- [x] Added exact-boundary market-session clock test: evaluation opens at the exact final-hour start and closes at the exact buy deadline.
+- [x] Existing API clock tests already cover before/inside the final hour, DST, after-hours, holiday/weekend skips, and early close.
+- [ ] Actual browser clock transition on the operator's machine remains unverified. The Dashboard recalculates once per second; runtime observation at the scheduled Arizona-local boundary is still required.
+
+### Next operator acceptance
+
+1. Pull the latest feature branch, run the Release build/test script, and restart the API.
+2. Hard-refresh the Dashboard. Cache key: 20261110-sell-limit-quick-action-index-diagnostics-v3.
+3. In BORING OVERNIGHT mode, select RKLX and confirm the quick card shows the Research target quantile (%) field defaulted to 50. Change it only if a different percentile is intended.
+4. Click Assess calculated limit sell once. Confirm Network shows GET /api/providers/status followed by POST /api/boring-overnight/sell-limit. Confirm the quick disclosure contains every API gate. Record status and timing diagnostics. If no request occurs, inspect console for a JS exception and capture the field value.
+5. After API restart, run one EVR live-assessment request and record jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, jsonlIndexLoaded, websocketStoreReadElapsedMs, persistenceElapsedMs, and client elapsed. Expect index load count 1 for a freshly initialized store instance; if already loaded at API startup, the request reports the startup rebuild duration.
+6. Run a second EVR request to confirm index load count stays 1 and warm-read times remain low.
+7. Verify the evaluation clock says OPEN at the scheduled final-hour start and returns to the countdown/closed state at the regular-session buy deadline.
+
+### Guardrails
+
+- Median/50th percentile is a visible research default only; it does not relax evidence gates or assert a validated trading target.
+- Keep IEX as configured. No order submission, feed substitution, missing-data imputation, or qualification-gate changes.
+- The local/browser checks above cannot be completed from repository CI alone.
