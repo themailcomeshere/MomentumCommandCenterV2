@@ -1713,3 +1713,11 @@ body.boring-overnight-mode #mcc-static-0087-article{display:none!important}
 .quick-sell-evidence{margin:7px 0;font-size:11px}.quick-sell-evidence>summary{cursor:pointer;color:var(--blue);font-weight:750}
 .quick-sell-gates{max-height:240px;overflow:auto;margin-top:6px;padding:6px 8px;border:1px solid var(--line);border-radius:7px}
 .quick-sell-gates p{margin:4px 0;font-size:10px;line-height:1.4}
+
+
+/* 2026-11-10: urgency colors for the regular-session Overnight purchase countdown. */
+#overnightBuyCountdown.countdown-normal{color:var(--green)}
+#overnightBuyCountdown.countdown-caution{color:#f4c45e}
+#overnightBuyCountdown.countdown-urgent{color:#ff934f}
+#overnightBuyCountdown.countdown-critical{color:#ff5c68;font-weight:900}
+#overnightBuyCountdown.countdown-closed{color:var(--muted)}
