@@ -40,6 +40,14 @@ The November 10 operator run exposed a stale-price presentation issue, missing v
 - No new calculator, order submission, or gate relaxation was introduced.
 - The orchestration reads persisted observations only. Five calendar days of 1M bars do not establish the 40 complete GTC_EXT sessions, SIP feed, exact previous-session close, ATR parity, same-source OHLCV, or walk-forward validation.
 
+### Overnight execution-window calculator
+
+- Research/evaluation window begins at 1:00 PM Arizona.
+- Buy window begins at 3:00 PM Arizona and hard-closes at 7:55 PM Eastern. During Eastern Standard Time this is 5:55 PM Arizona; during Eastern Daylight Time it is 4:55 PM Arizona. The 7:55 PM Eastern cutoff leaves five minutes before the current 8:00 PM Eastern post-market end.
+- Buy sessions are Monday–Thursday only. The next sell session is the next exchange trading day, with the GTC_EXT eligible window 7:00 AM–8:00 PM Eastern.
+- The header clock now displays the date-specific buy and next-session sell windows in Arizona local time. It uses named time zones and the maintained calendar for weekends, holidays, DST and early closes.
+- This is a schedule calculator, not proof of per-symbol GTC_EXT eligibility or a fill. Schwab order-ticket confirmation remains required.
+
 ### Scanner Workbench
 
 - Boring Overnight Scan & Analyze now defaults to a five-calendar-day window. Intraday keeps the six-hour default.
