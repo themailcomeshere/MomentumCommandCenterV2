@@ -197,7 +197,7 @@ The Yahoo endpoint initially had a compile failure caused by a named-argument ty
 - [x] During API phase REGULAR, show the countdown to `overnightBuyDeadlineUtc` (the actual session close) and apply green / yellow / orange / red urgency styling by remaining time.
 - [x] Call `refreshInstrumentTitle(symbol)` on each focused-chart refresh. The function previously existed but was never called, explaining why RKLX's returned name did not appear anywhere in the Dashboard.
 - [x] Open the focused Calculated Limit Sell evidence disclosure when the quick action is clicked, and mirror every returned gate's PASS/BLOCKED status and explanation directly inside that disclosure.
-- [x] Add `performanceDiagnostics` to uncached live-assessment responses: provider fetch wall time (1m and 5m in parallel), WebSocket store read time, persistence time, calculation time and total server time.
+- [x] Add `performanceDiagnostics` to uncached live-assessment responses: provider fetch wall time plus separate 1m and 5m fetch durations, source used for each timeframe, WebSocket store read time, persistence time, calculation time and total server time.
 - [x] Bump the Dashboard app.js query string to force browsers to load the new code.
 - [ ] Exact-head CI and local Windows/browser acceptance of these follow-up changes remain pending.
 
@@ -209,7 +209,7 @@ The Yahoo endpoint initially had a compile failure caused by a named-argument ty
 - [x] Scanner CSV import rendered all 50 local rows. The separate Scan & Analyze (1M + 5M) action was then run on 20 candidates. All returned rows were OBSERVED · NOT QUALIFIED on Alpaca/IEX. Counts varied widely (5M 5–27 bars; 1M 6–75 bars); these observations are not Overnight qualification, Boring Winner calculations, or trade signals.
 - [x] BAYRY Daily audit returned 0 valid sessions, 0 available completed sessions and all 20 expected session dates missing (October 13–November 9, 2026). The parser change did not create data. Keep BAYRY Daily qualification blocked; do not backfill older sessions or weaken completeness.
 - [x] RKLX instrument endpoint returned the full Alpaca asset name, but the operator confirmed it was absent from the Dashboard before the latest frontend fix.
-- [x] Live-assessment calls for EVR, RKLX, ASTX and SPY took approximately 51.8 seconds each in the operator's local runtime. This is unacceptable for interactive UX. The current service requests 1m bars over 3 calendar days and 5m bars over 21 calendar days in parallel; it uses WebSocket 1m history only when at least 50 fresh completed WebSocket bars exist. In the supplied stream test RKLX (24), ASTX (37) and XRPN (7) did not meet that 50-bar threshold, and 5m remains REST-backed. The new response timing breakdown is intended to locate the dominant stage; the exact cause is not established yet.
+- [x] Live-assessment calls for EVR, RKLX, ASTX and SPY took approximately 51.8 seconds each in the operator's local runtime. This is unacceptable for interactive UX. The current service requests 1m bars over 3 calendar days and 5m bars over 21 calendar days in parallel; it uses WebSocket 1m history only when at least 50 fresh completed WebSocket bars exist. In the supplied stream test RKLX (24), ASTX (37) and XRPN (7) did not meet that 50-bar threshold, and 5m remains REST-backed. The new response timing breakdown includes separate 1m and 5m durations and their source paths, so it can identify which request dominates; the exact cause is not established yet.
 
 ### Correct operating instructions for the next retest
 
