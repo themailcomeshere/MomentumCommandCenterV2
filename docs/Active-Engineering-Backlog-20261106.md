@@ -273,10 +273,10 @@ The detailed design remains in [MomentumCommandCenterV3_Boring_Overnight_Decisio
 **Implementation status:** stream/collector and runtime validation scripts exist. Current operator evidence does not prove regular-session bar delivery or recovery behavior.
 
 **Missing work**
-- During regular market hours capture before/after stream status for SPY, RKLX, ASTX and XRPN over 5–10 minutes.
+- [x] One bounded 10-minute regular-session sample is already recorded: SPY/RKLX/ASTX/XRPN subscriptions acknowledged; completed-bar deltas +10/+3/+3/+2; collector cycles 39→48 with zero cycle errors. This does not prove general IEX coverage or recovery.
 - Verify per-symbol `barsBySymbol`, `receivedBars`, `persistedBars`, `lastBarUtc` and source timestamps advance.
 - Verify 1m switches to WebSocket only after subscription acknowledgement, >=50 completed persisted bars, freshness and provenance. 5m Permission remains REST-backed.
-- Exercise restart, sleep/wake, network outage, provider/auth failure, duplicate/replayed events, session boundary and historical backfill.
+- [ ] Exercise restart, sleep/wake, network outage, provider/auth failure, duplicate/replayed events, session boundary and historical backfill.
 - Verify collector watermarks advance per symbol and recovery is idempotent.
 
 ### P1.8 Dashboard/browser and performance acceptance
@@ -285,8 +285,8 @@ The detailed design remains in [MomentumCommandCenterV3_Boring_Overnight_Decisio
 
 **Missing operator acceptance**
 - Hard-refresh `http://localhost:53360/`; verify no console exceptions and no failed required requests.
-- Verify StrategyReport import, all five ATR provenance controls, persisted observation counts, parity output and blocked sell-limit gate explanations.
-- Verify Red Zone Manual/Automatic modes, ordered pins, dismissal/restore persistence, imported CSV top-four preview, exclusion list, and DATA? states.
+- Verify StrategyReport import, all five ATR provenance controls, persisted observation counts, parity output and blocked sell-limit gate explanations. The Calculated Limit Sell API has returned its full BLOCKED evidence payload; the quick-card browser disclosure still needs confirmation that every gate is rendered.
+- Verify Red Zone Manual/Automatic modes, ordered pins, dismissal/restore persistence, imported CSV top-four preview, exclusion list, and DATA? states. The Boring Overnight Main Chart five-metric cards and scanner visibility were accepted on 2026-11-10; see the dedicated acceptance record.
 - Verify Morning Brief initial-load deferral, modal/history, replay form and Arizona-local timestamps.
 - Measure document, DOMContentLoaded, load, largest request and Fetch & Analyze API durations using browser Network/HAR. Compare to a captured baseline; do not claim improvement without measurements.
 - Verify responsive layout and sound permission only where applicable.
