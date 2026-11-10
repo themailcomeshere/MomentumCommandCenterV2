@@ -21,6 +21,9 @@
 - [x] The historical RKLX bar shown by the UI was 11/9 2:46 PM Arizona at $9.7800. It was not a current after-hours quote.
 - [x] Scanner Workbench returned zero 1M/5M bars for the supplied 20-symbol set on the configured IEX feed/window. This is feed/window coverage evidence, not a claim that those securities had no market activity.
 
+- [x] Implemented calendar-backed Overnight execution-window calculator in the header clock: research opens 1:00 PM Arizona; buy window opens 3:00 PM Arizona and closes 7:55 PM Eastern; next trading session GTC_EXT sell window is 7:00 AM–8:00 PM Eastern. All displayed schedule times are converted to Arizona local time, with DST, Monday–Thursday buy-day selection, Friday exclusion, weekends, holidays and next-session sell date handled by the versioned calendar. Added unit tests. This is a schedule only; per-symbol GTC_EXT eligibility and actual fills remain unverified.
+- [ ] Validate the displayed schedule against the operator's Schwab order ticket for representative EST/EDT dates and early-close sessions.
+
 ### Still blocked — do not fabricate or waive evidence
 
 - [ ] RKLX live/after-hours price source acceptance: verify local Yahoo post-market reference and Alpaca latest IEX trade timestamps against an independently observed quote. Yahoo is secondary indicative data; IEX is partial.
