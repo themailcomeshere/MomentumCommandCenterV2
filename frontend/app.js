@@ -4,6 +4,9 @@ const $=id=>document.getElementById(id);
 // Sequence guard must exist before the initial render can invoke the async refresh.
 let decisionRefreshSequence=0;
 const LIVE_ASSESSMENT_TIMEOUT_MS=20000;
+const OVERNIGHT_METRIC_TIMEOUT_MS=20000;
+let overnightPriceSummarySequence=0;
+let overnightPriceSummaryController=null;
 // Restore the selected workspace before any startup chart or live-assessment request can fire.
 try{const savedMode=localStorage.getItem("mcc.workspaceMode.v1");if(savedMode==="overnight"||savedMode==="momentum")$("mode").value=savedMode;}catch{}
 $("mode")?.addEventListener("change",()=>{try{localStorage.setItem("mcc.workspaceMode.v1",$("mode").value);}catch{}});
@@ -384,51 +387,104 @@ async function refreshDecisionExplanation(){
  }
 }
 async function refreshOvernightPriceSummary(symbol){
+ const requestId=++overnightPriceSummarySequence;
+ overnightPriceSummaryController?.abort();
+ const controller=new AbortController();overnightPriceSummaryController=controller;
  const c=$("overnightAtClosePrice"),ct=$("overnightAtCloseTimestamp"),p=$("overnightCurrentPrice"),pl=$("overnightCurrentPriceLabel"),pt=$("overnightCurrentPriceTimestamp");
- [c,p].forEach(x=>{if(x)x.textContent="LOADING…";});
+ const price=$("price"),oneMinuteTimestamp=$("oneMinuteTimestamp"),dailyVwapNode=$("dailyVwap"),atr14Node=$("atr14"),rvolNode=$("rvol"),extensionNode=$("extension");
+ const priceDetail=$("priceMetricDetail"),vwapDetail=$("dailyVwapDetail"),atrDetail=$("atr14Detail"),rvolDetail=$("rvolDetail"),extensionDetail=$("extensionDetail");
+ const isCurrent=()=>requestId===overnightPriceSummarySequence&&$("mode")?.value==="overnight"&&($("symbol")?.value||"").trim().toUpperCase()===String(symbol||"").trim().toUpperCase();
+ [c,p,price,dailyVwapNode,atr14Node,extensionNode].forEach(x=>{if(x)x.textContent="LOADING…";});
+ if(rvolNode)rvolNode.textContent="NOT USED";
+ if(oneMinuteTimestamp)oneMinuteTimestamp.textContent="Historical bar timestamp: loading…";
+ if(priceDetail)priceDetail.textContent="Latest returned 1M bar close · research only";
+ if(vwapDetail)vwapDetail.textContent="Last available regular-session VWAP · historical diagnostic";
+ if(atrDetail)atrDetail.textContent="1M simple average True Range · last 14 returned ranges";
+ if(rvolDetail)rvolDetail.textContent="NOT EVALUATED in Boring Overnight mode; intraday same-time RVOL is not used.";
+ if(extensionDetail)extensionDetail.textContent="Historical |1M close − RTH VWAP| / 1M ATR14 · diagnostic only";
+ const timeoutId=window.setTimeout(()=>controller.abort(),OVERNIGHT_METRIC_TIMEOUT_MS);
  try{
   const to=new Date(),from=new Date(to.getTime()-5*86400000),q=new URLSearchParams({symbol,timeframe:"1m",from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
-  const r=await fetch("/api/market-data/bars?"+q,{cache:"no-store"}),d=await r.json();if(!r.ok)throw Error(d.detail||d.error||("HTTP "+r.status));
-  const bars=(d.bars||[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp));
+  const r=await fetch("/api/market-data/bars?"+q,{cache:"no-store",headers:{Accept:"application/json"},signal:controller.signal});
+  let d;try{d=await r.json();}catch(error){if(controller.signal.aborted)throw error;throw Error("Daily/1M historical bars returned an unreadable response.");}
+  if(!r.ok)throw Error(d.detail||d.error||("HTTP "+r.status));
+  const bars=(Array.isArray(d.bars)?d.bars:[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((x,y)=>new Date(x.timestamp)-new Date(y.timestamp));
+  if(!isCurrent())return;
   const parts=ts=>Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));
   const local=ts=>new Date(ts).toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true});
   const last=bars.at(-1),lp=last?parts(last.timestamp):null,lastMinute=lp?Number(lp.hour)*60+Number(lp.minute):-1,lastDate=lp?lp.year+"-"+lp.month+"-"+lp.day:"";
-  let latestTrade=null,latestTradeError=null,yahooQuote=null,yahooError=null;
-   try{const tradeResponse=await fetch("/api/market-data/latest-trade?"+new URLSearchParams({symbol}),{cache:"no-store",headers:{Accept:"application/json"}});const tradePayload=await tradeResponse.json();if(!tradeResponse.ok)throw Error(tradePayload.detail||tradePayload.error||("HTTP "+tradeResponse.status));latestTrade=tradePayload.trade||null;}catch(error){latestTradeError=error.message;}
-   try{const yahooResponse=await fetch("/api/market-data/yahoo-extended-hours?"+new URLSearchParams({symbol}),{cache:"no-store",headers:{Accept:"application/json"}});const yahooPayload=await yahooResponse.json();if(!yahooResponse.ok)throw Error(yahooPayload.detail||yahooPayload.error||("HTTP "+yahooResponse.status));yahooQuote=yahooPayload;}catch(error){yahooError=error.message;}
-   const barTimestamp=last?new Date(last.timestamp).getTime():0,tradeTimestamp=latestTrade?new Date(latestTrade.timestampUtc).getTime():0,yahooTimestamp=yahooQuote?.postMarketTimeUtc?new Date(yahooQuote.postMarketTimeUtc).getTime():0;
-   const useTrade=latestTrade&&Number.isFinite(tradeTimestamp)&&tradeTimestamp>=barTimestamp;
-   const useYahoo=yahooQuote?.postMarketPrice!=null&&Number.isFinite(yahooTimestamp)&&yahooTimestamp>=Math.max(barTimestamp,useTrade?tradeTimestamp:0);
-   const shownPrice=useYahoo?Number(yahooQuote.postMarketPrice):useTrade?Number(latestTrade.price):last?Number(last.close):null;
-   const shownTimestamp=useYahoo?yahooQuote.postMarketTimeUtc:useTrade?latestTrade.timestampUtc:last?.timestamp;
-   const shownAgeMinutes=shownTimestamp?Math.max(0,(Date.now()-new Date(shownTimestamp).getTime())/60000):null;
-   const shownParts=shownTimestamp?parts(shownTimestamp):null,shownMinute=shownParts?Number(shownParts.hour)*60+Number(shownParts.minute):-1;
-   const shownSession=shownMinute>=960&&shownMinute<1200?"AFTER-HOURS":shownMinute>=240&&shownMinute<570?"PREMARKET":shownMinute>=570&&shownMinute<960?"REGULAR SESSION":"EXTENDED SESSION";
-   const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
+  const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
   const rthDate=rth?(()=>{const z=parts(rth.timestamp);return z.year+"-"+z.month+"-"+z.day;})():null;
   const sessionBars=rthDate?bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute);return z.year+"-"+z.month+"-"+z.day===rthDate&&m>=570&&m<960;}):[];
   const volumeBars=sessionBars.filter(b=>Number.isFinite(Number(b.volume))&&Number(b.volume)>0&&Number.isFinite(Number(b.high))&&Number.isFinite(Number(b.low)));
   const volumeTotal=volumeBars.reduce((sum,b)=>sum+Number(b.volume),0);
   const dailyVwap=volumeTotal>0?volumeBars.reduce((sum,b)=>sum+((Number(b.high)+Number(b.low)+Number(b.close))/3)*Number(b.volume),0)/volumeTotal:null;
-  const trueRanges=bars.slice(1).map((b,i)=>{const high=Number(b.high),low=Number(b.low),prior=Number(bars[i].close);return Number.isFinite(high)&&Number.isFinite(low)?Math.max(high-low,Math.abs(high-prior),Math.abs(low-prior)):null;}).filter(Number.isFinite);
+  const trueRanges=bars.slice(1).map((b,i)=>{const high=Number(b.high),low=Number(b.low),prior=Number(bars[i].close);return Number.isFinite(high)&&Number.isFinite(low)&&Number.isFinite(prior)?Math.max(high-low,Math.abs(high-prior),Math.abs(low-prior)):null;}).filter(Number.isFinite);
   const atr14=trueRanges.length>=14?trueRanges.slice(-14).reduce((sum,x)=>sum+x,0)/14:null;
   const extension=last&&dailyVwap!==null&&atr14!==null&&atr14>0?Math.abs(Number(last.close)-dailyVwap)/atr14:null;
+  const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);
+  if(price)price.textContent=last?"$"+fmt(last.close):"DATA? — NO 1M BAR";
+  if(oneMinuteTimestamp)oneMinuteTimestamp.textContent=last?"Last returned 1M bar · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: no 1M bars returned.";
+  if(priceDetail)priceDetail.textContent="Latest returned 1M bar close · historical research only; not an executable quote";
+  if(dailyVwapNode)dailyVwapNode.textContent=dailyVwap===null?"DATA?":"$"+fmt(dailyVwap);
+  if(vwapDetail)vwapDetail.textContent=rthDate?"RTH 1M typical-price VWAP proxy · session "+rthDate+" · "+volumeBars.length+" volume bars":"DATA? · no qualifying RTH volume bars";
+  if(atr14Node)atr14Node.textContent=atr14===null?"DATA?":"$"+fmt(atr14);
+  if(atrDetail)atrDetail.textContent="1M simple average True Range · "+trueRanges.length+" ranges available · "+(trueRanges.length>=14?"14-bar value":"14 required");
+  if(rvolNode)rvolNode.textContent="NOT USED";
+  if(rvolDetail)rvolDetail.textContent="Intraday same-time 5M RVOL is intentionally not evaluated in Boring Overnight mode.";
+  if(extensionNode)extensionNode.textContent=extension===null?"DATA?":extension.toFixed(2)+" ATR";
+  if(extensionDetail)extensionDetail.textContent=extension===null?"DATA? · requires a 1M close, RTH VWAP and 14-bar ATR":"Historical |1M close − RTH VWAP| / 1M ATR14 · diagnostic only";
   if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
   if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · final 1M bar before 16:00 ET; official auction print not verified":" · exact session-close bar not established"):"Data not found in sources: no RTH 1M bar returned.";}
-  if(p)p.textContent=shownPrice!==null?"$"+shownPrice.toFixed(4):"DATA? — NO TRADE OR BAR";
-  if(pl)pl.textContent=useYahoo?(shownAgeMinutes>5?"LAST AFTER-HOURS PRICE · STALE":"AFTER-HOURS PRICE"):useTrade?(shownAgeMinutes>5?"LAST IEX TRADE · STALE":shownSession==="AFTER-HOURS"?"AFTER-HOURS PRICE":shownSession==="PREMARKET"?"PREMARKET PRICE":"LATEST PROVIDER TRADE"):"LAST RETURNED 1M BAR";
-  if(pt)pt.textContent=useYahoo?"Yahoo Finance after-hours reference · "+local(yahooQuote.postMarketTimeUtc)+" Arizona · "+(shownAgeMinutes<=5?"recent reference":"STALE "+shownAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not executable":useTrade?"Alpaca latest "+shownSession.toLowerCase()+" trade · "+local(latestTrade.timestampUtc)+" Arizona · "+latestTrade.feed.toUpperCase()+" · "+(shownAgeMinutes<=5?"recent provider trade":"STALE "+shownAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not guaranteed executable":last?"Last returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · "+(latestTradeError?"latest trade unavailable: "+latestTradeError:"no newer trade on configured feed")+(yahooError?" · Yahoo reference unavailable: "+yahooError:"")+" · not a live quote":"Data not found in sources: no 1M bars or latest trade returned."
   const reasonList=$("reasons"),source=$("decisionSource"),score=$("decisionScore"),notice=$("mcc-static-0086-div");
-  if(reasonList){const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);reasonList.replaceChildren(...[
-   "1M close "+(last?"$"+fmt(last.close):"DATA?"),
-   "RTH VWAP (1M typical-price proxy) "+(dailyVwap===null?"DATA?":"$"+fmt(dailyVwap)),
-   "1M ATR14 (simple average) "+(atr14===null?"DATA?":"$"+fmt(atr14)),
-   "Extension "+(extension===null?"DATA?":extension.toFixed(2)+" ATR")
-  ].map(text=>Object.assign(document.createElement("li"),{textContent:text})));}
-  if(source)source.textContent="Overnight diagnostic calculations · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · RTH VWAP session "+(rthDate||"UNKNOWN")+" · latest 1M bar "+(last?local(last.timestamp)+" Arizona":"UNKNOWN")+" · partial-feed limitations apply.";
+  if(reasonList){reasonList.replaceChildren(...[
+   "Overnight historical 1M close "+(last?"$"+fmt(last.close):"DATA?"),
+   "Last RTH VWAP (1M typical-price proxy) "+(dailyVwap===null?"DATA?":"$"+fmt(dailyVwap)),
+   "1M ATR14 (simple average True Range) "+(atr14===null?"DATA?":"$"+fmt(atr14)),
+   "ATR extension "+(extension===null?"DATA?":extension.toFixed(2)+" ATR"),
+   "Intraday 5M relative volume NOT USED in Boring Overnight mode."
+  ].map(text=>Object.assign(document.createElement("li"),{textContent})));}
+  if(source)source.textContent="Overnight diagnostic calculations · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · RTH VWAP session "+(rthDate||"UNKNOWN")+" · latest 1M bar "+(last?local(last.timestamp)+" Arizona":"UNKNOWN")+" · no intraday permission or execution evaluation.";
   if(score){score.textContent="OVERNIGHT DIAGNOSTICS · NOT A SIGNAL";score.className="redzone-score score-unknown";}
-  if(notice)notice.textContent="These 1M close / Daily VWAP / ATR14 / Extension values are descriptive diagnostics only. They do not establish Boring Overnight qualification, 5M Permission, 1M execution readiness, consolidated coverage, or an executable quote.";
- }catch(e){if(c)c.textContent="DATA?";if(p)p.textContent="DATA?";if(ct)ct.textContent="Price request failed · "+e.message;if(pt)pt.textContent="Price request failed · source timestamp unavailable";}
+  if(notice)notice.textContent="These 1M close / RTH VWAP / ATR14 / extension values are descriptive historical diagnostics only. Relative volume is not evaluated in Boring Overnight mode. None establishes Boring Overnight qualification, 5M permission, 1M execution readiness, consolidated coverage, or an executable quote.";
+  const readReference=async url=>{
+   const referenceController=new AbortController(),referenceTimeout=window.setTimeout(()=>referenceController.abort(),5000);
+   try{const response=await fetch(url,{cache:"no-store",headers:{Accept:"application/json"},signal:referenceController.signal});const body=await response.json();if(!response.ok)throw Error(body.detail||body.error||("HTTP "+response.status));return body;}
+   finally{window.clearTimeout(referenceTimeout);}
+  };
+  const [tradeResult,yahooResult]=await Promise.allSettled([
+   readReference("/api/market-data/latest-trade?"+new URLSearchParams({symbol})),
+   readReference("/api/market-data/yahoo-extended-hours?"+new URLSearchParams({symbol}))
+  ]);
+  if(!isCurrent())return;
+  const latestTrade=tradeResult.status==="fulfilled"?tradeResult.value.trade||null:null;
+  const latestTradeError=tradeResult.status==="rejected"?tradeResult.reason?.message||"latest trade unavailable":null;
+  const yahooQuote=yahooResult.status==="fulfilled"?yahooResult.value:null;
+  const yahooError=yahooResult.status==="rejected"?yahooResult.reason?.message||"Yahoo reference unavailable":null;
+  const barTimestamp=last?new Date(last.timestamp).getTime():0,tradeTimestamp=latestTrade?new Date(latestTrade.timestampUtc).getTime():0,yahooTimestamp=yahooQuote?.postMarketTimeUtc?new Date(yahooQuote.postMarketTimeUtc).getTime():0;
+  const useTrade=latestTrade&&Number.isFinite(tradeTimestamp)&&tradeTimestamp>=barTimestamp;
+  const useYahoo=yahooQuote?.postMarketPrice!=null&&Number.isFinite(yahooTimestamp)&&yahooTimestamp>=Math.max(barTimestamp,useTrade?tradeTimestamp:0);
+  const shownPrice=useYahoo?Number(yahooQuote.postMarketPrice):useTrade?Number(latestTrade.price):last?Number(last.close):null;
+  const shownTimestamp=useYahoo?yahooQuote.postMarketTimeUtc:useTrade?latestTrade.timestampUtc:last?.timestamp;
+  const shownAgeMinutes=shownTimestamp?Math.max(0,(Date.now()-new Date(shownTimestamp).getTime())/60000):null;
+  const shownParts=shownTimestamp?parts(shownTimestamp):null,shownMinute=shownParts?Number(shownParts.hour)*60+Number(shownParts.minute):-1;
+  const shownSession=shownMinute>=960&&shownMinute<1200?"AFTER-HOURS":shownMinute>=240&&shownMinute<570?"PREMARKET":shownMinute>=570&&shownMinute<960?"REGULAR SESSION":"EXTENDED SESSION";
+  if(p)p.textContent=shownPrice!==null&&Number.isFinite(shownPrice)?"$"+shownPrice.toFixed(4):"DATA? — NO TRADE OR BAR";
+  if(pl)pl.textContent=useYahoo?(shownAgeMinutes>5?"LAST AFTER-HOURS PRICE · STALE":"AFTER-HOURS PRICE"):useTrade?(shownAgeMinutes>5?"LAST IEX TRADE · STALE":shownSession==="AFTER-HOURS"?"AFTER-HOURS PRICE":shownSession==="PREMARKET"?"PREMARKET PRICE":"LATEST PROVIDER TRADE"):"LAST RETURNED 1M BAR";
+  if(pt)pt.textContent=useYahoo?"Yahoo Finance after-hours reference · "+local(yahooQuote.postMarketTimeUtc)+" Arizona · "+(shownAgeMinutes<=5?"recent reference":"STALE "+shownAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not executable":useTrade?"Alpaca latest "+shownSession.toLowerCase()+" trade · "+local(latestTrade.timestampUtc)+" Arizona · "+String(latestTrade.feed||"UNKNOWN").toUpperCase()+" · "+(shownAgeMinutes<=5?"recent provider trade":"STALE "+shownAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not guaranteed executable":last?"Last returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · "+(latestTradeError?"latest trade unavailable: "+latestTradeError:"no newer trade on configured feed")+(yahooError?" · Yahoo reference unavailable: "+yahooError:"")+" · not a live quote":"Data not found in sources: no 1M bars or latest trade returned.";
+ }catch(error){
+  if(!isCurrent())return;
+  const message=controller.signal.aborted?"Overnight historical metric request timed out after "+(OVERNIGHT_METRIC_TIMEOUT_MS/1000)+" seconds. Check the bars API and server diagnostics.":error.message;
+  if(c)c.textContent="DATA?";if(p)p.textContent="DATA?";if(ct)ct.textContent="Historical price request failed · "+message;if(pt)pt.textContent="Historical price request failed · source timestamp unavailable";
+  if(price)price.textContent="DATA?";if(oneMinuteTimestamp)oneMinuteTimestamp.textContent="Historical bar unavailable · "+message;
+  if(dailyVwapNode)dailyVwapNode.textContent="DATA?";if(atr14Node)atr14Node.textContent="DATA?";if(rvolNode)rvolNode.textContent="NOT USED";if(extensionNode)extensionNode.textContent="DATA?";
+  if(priceDetail)priceDetail.textContent=message;if(vwapDetail)vwapDetail.textContent=message;if(atrDetail)atrDetail.textContent=message;if(rvolDetail)rvolDetail.textContent="Intraday same-time 5M RVOL is intentionally not evaluated in Boring Overnight mode.";if(extensionDetail)extensionDetail.textContent=message;
+  const source=$("decisionSource");if(source)source.textContent="Overnight historical metrics unavailable · "+message;
+  const reasonList=$("reasons");if(reasonList)reasonList.replaceChildren(Object.assign(document.createElement("li"),{textContent:message}));
+ }finally{
+  window.clearTimeout(timeoutId);
+  if(overnightPriceSummaryController===controller)overnightPriceSummaryController=null;
+ }
 }
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
