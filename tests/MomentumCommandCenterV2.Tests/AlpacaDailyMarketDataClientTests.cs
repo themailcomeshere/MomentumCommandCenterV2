@@ -128,6 +128,30 @@ public sealed class AlpacaDailyMarketDataClientTests
 
 
     [Fact]
+    public async Task GetMetricsAsync_AcceptsSymbolKeyedBarsEnvelope()
+    {
+        using var http = new HttpClient(new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"bars":{"BAYRY":[{"t":"2026-11-06T14:30:00Z","o":10,"h":11,"l":9,"c":10.5,"v":1200}]}}""")
+        })) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "key",
+            ["MarketData:Alpaca:ApiSecret"] = "secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
+        }).Build();
+
+        var result = await new AlpacaDailyMarketDataClient(http, config).GetMetricsAsync("BAYRY",
+            new DateTimeOffset(2026, 11, 9, 17, 0, 0, TimeSpan.Zero), CancellationToken.None);
+
+        Assert.Equal(1, result.ValidSessionCount);
+        Assert.Single(result.Sessions);
+        Assert.Equal(10.5d, result.ObservedClose);
+        Assert.Equal("IEX_PARTIAL", result.FeedCoverage);
+        Assert.False(result.QualificationUsable);
+    }
+
+    [Fact]
     public async Task GetMetricsAsync_RetriesTransientGatewayFailureBeforeReturningDailyMetrics()
     {
         var attempts = 0;
