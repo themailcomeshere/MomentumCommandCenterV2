@@ -1,10 +1,16 @@
 # Active Engineering Backlog — 2026-11-06
 
 **Canonical execution checklist:** [Master-To-Do.md](Master-To-Do.md)  
-**Current handoff:** [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md)  
+**Current handoff:** [NewChatHandoff-20261110.md](NewChatHandoff-20261110.md)  
 **Branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html`, served at `http://localhost:53360/`  
 **Order routing:** NOT IMPLEMENTED. MCC remains decision-support-only.
+
+## November 10 operator acceptance addendum
+
+- [x] Boring Overnight Main Chart five-metric browser acceptance and Intraday Scanner Workbench visibility passed on 2026-11-10. Exact operator-reported values and display provenance: [Boring Overnight Main Chart acceptance](Validation/Boring-Overnight-Main-Chart-Acceptance-20261110.md).
+- [ ] Full Boring Overnight import/shortlist/Boring Top 4/Daily/catalyst/candidate-review acceptance remains separate and open.
+- [ ] Calculated Limit Sell browser disclosure, evaluation-clock vs Schwab-ticket check, ATR V2 TOS compile, independent provider/TOS parity, and all source/entitlement-dependent work remain open as recorded in [Master To-Do](Master-To-Do.md).
 
 ## Scope and reconciliation method
 
