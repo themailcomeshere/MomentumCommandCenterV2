@@ -1,6 +1,8 @@
 /// MODULE: Live Decision Workbench
 /// PURPOSE: Renders the focused symbol from the live assessment API; no synthetic snapshots are used.
 const $=id=>document.getElementById(id);
+// Sequence guard must exist before the initial render can invoke the async refresh.
+let decisionRefreshSequence=0;
 // Restore the selected workspace before any startup chart or live-assessment request can fire.
 try{const savedMode=localStorage.getItem("mcc.workspaceMode.v1");if(savedMode==="overnight"||savedMode==="momentum")$("mode").value=savedMode;}catch{}
 $("mode")?.addEventListener("change",()=>{try{localStorage.setItem("mcc.workspaceMode.v1",$("mode").value);}catch{}});
@@ -286,7 +288,6 @@ function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
  const suffix=entryReady?" · EXECUTION READY":score>=5?(decision?" · 5M PERMISSION; CHECK 1M STATE":" · 5M PERMISSION; 1M NOT EVALUATED"):score<=2?" · LOW ALIGNMENT":" · PARTIAL ALIGNMENT";
  node.textContent=marker+"V2 5M score: "+score+"/6"+suffix;
 }
-let decisionRefreshSequence=0;
 async function refreshDecisionExplanation(){
  const requestId=++decisionRefreshSequence;
  if($("mode")?.value==="overnight"){
