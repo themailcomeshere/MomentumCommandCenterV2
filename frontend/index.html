@@ -462,6 +462,7 @@
         <div class="prototype-symbol-control" id="prototype-symbol-control">
             <label for="symbol" id="prototype-symbol-label">SYMBOL</label>
             <input id="symbol" type="text" value="SPY" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Focused symbol">
+            <div id="prototype-symbol-classification" class="prototype-symbol-classification classification-unknown" aria-live="polite">CLASSIFICATION · LOADING</div>
         </div>
         <div class="prototype-workspace-control" id="prototype-workspace-control">
 
@@ -533,7 +534,7 @@
                 <section id="overnight-opportunity-status" class="status-grid overnight-opportunity-status hidden" aria-label="Boring Overnight price and sell-limit metrics">
 <article class="panel metric"><div class="eyebrow">PREVIOUS REGULAR-SESSION CLOSE</div><strong id="overnightAtClosePrice">DATA?</strong><small id="overnightAtCloseTimestamp">Last RTH 1M bar close · source timestamp unavailable</small></article>
 <article class="panel metric"><div class="eyebrow" id="overnightCurrentPriceLabel">LATEST PRICE</div><strong id="overnightCurrentPrice">DATA?</strong><small id="overnightCurrentPriceTimestamp">Latest 1M bar close · not a live quote</small></article>
-<article class="panel metric"><div class="eyebrow">CALCULATED LIMIT SELL</div><strong id="overnightQuickSellLimit">DATA? — NOT CALCULATED</strong><small id="overnightQuickSellLimitDetail">Evidence-gated research output · no order submitted</small><button id="overnightQuickCalculateSellLimit" type="button" class="quiet-button">Assess calculated limit sell</button></article>
+<article class="panel metric"><div class="eyebrow">CALCULATED LIMIT SELL</div><strong id="overnightQuickSellLimit">DATA? — NOT CALCULATED</strong><small id="overnightQuickSellLimitDetail">Evidence-gated research output · no order submitted</small><details class="quick-sell-evidence"><summary>Why is the limit unavailable?</summary><div id="overnightQuickSellLimitGateSummary" class="quick-sell-gates"><p class="muted small">Run the assessment to see each failed evidence gate.</p></div></details><button id="overnightQuickCalculateSellLimit" type="button" class="quiet-button">Assess calculated limit sell</button></article>
 </section>
                 <section id="opportunity-status" class="status-grid" aria-label="Focused symbol opportunity metrics">
                     <article class="panel metric" id="mcc-static-0060-article"><div class="eyebrow" id="mcc-static-0061-div">1M CLOSE</div><strong id="price">Loading…</strong><small id="mcc-static-0062-small">Latest completed 1M bar close · current minute excluded</small><small id="oneMinuteTimestamp">Completed bar timestamp: loading…</small></article>
