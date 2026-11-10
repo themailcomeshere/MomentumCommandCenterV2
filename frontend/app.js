@@ -443,7 +443,7 @@ async function refreshOvernightPriceSummary(symbol){
    "1M ATR14 (simple average True Range) "+(atr14===null?"DATA?":"$"+fmt(atr14)),
    "ATR extension "+(extension===null?"DATA?":extension.toFixed(2)+" ATR"),
    "Intraday 5M relative volume NOT USED in Boring Overnight mode."
-  ].map(text=>Object.assign(document.createElement("li"),{textContent})));}
+  ].map(text=>Object.assign(document.createElement("li"),{textContent:text})));}
   if(source)source.textContent="Overnight diagnostic calculations · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · RTH VWAP session "+(rthDate||"UNKNOWN")+" · latest 1M bar "+(last?local(last.timestamp)+" Arizona":"UNKNOWN")+" · no intraday permission or execution evaluation.";
   if(score){score.textContent="OVERNIGHT DIAGNOSTICS · NOT A SIGNAL";score.className="redzone-score score-unknown";}
   if(notice)notice.textContent="These 1M close / RTH VWAP / ATR14 / extension values are descriptive historical diagnostics only. Relative volume is not evaluated in Boring Overnight mode. None establishes Boring Overnight qualification, 5M permission, 1M execution readiness, consolidated coverage, or an executable quote.";
