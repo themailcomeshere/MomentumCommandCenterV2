@@ -319,9 +319,10 @@ This is the current authoritative checklist. The detailed backlog contains imple
 
 1. Pull `feature/opportunity-quality-classification`, verify clean status and branch, then run ` .\\scripts\\Get-Latest-And-Test.ps1` from the repository root.
 2. Restart the API and hard-refresh the Dashboard. The script cache key is `20261110-jsonl-index-sell-limit-timings-v1`.
-3. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once and allow the request to finish. Confirm the disclosure shows all gate rows, including explicit BLOCKED reasons. Record `performanceDiagnostics` from the response or the timing summary displayed in the status.
-4. Run one EVR live-assessment request to warm the new store index if needed, then a second request to measure the warm path. Record client elapsed and all server diagnostics. The first post-restart request may include the one-time JSONL index rebuild; do not compare that cold read directly with a warm request.
-5. Verify the final-hour evaluation clock changes to OPEN at its scheduled start. This remains the only outstanding clock UI check.
+3. Run one EVR live-assessment request first to trigger the one-time JSONL index rebuild after restart; record it as the cold/warm-up request.
+4. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once and allow the request to finish. Confirm the disclosure shows all gate rows, including explicit BLOCKED reasons. Record `performanceDiagnostics` from the response or the timing summary displayed in the status.
+5. Run one further EVR live-assessment request to measure the warm path. Record client elapsed and all server diagnostics; do not compare the cold read directly with the warm request.
+6. Verify the final-hour evaluation clock changes to OPEN at its scheduled start. This remains the only outstanding clock UI check.
 
 ### Guardrails
 
