@@ -584,6 +584,51 @@ app.MapGet("/api/market-data/replay", async (
 .WithSummary("Replay a historical V2 decision from persisted 1m/5m OHLCV")
 .WithDescription("Query parameters: symbol and asOfUtc (UTC timestamp ending in Z) are required; providerName (default Alpaca), feed, and hasPosition (default false) are optional. Missing required query parameters return HTTP 400. Uses only stored completed bars at or before asOfUtc and the current V2SignalEngine/default configuration. It does not fetch missing bars, infer historical broker positions, or submit orders.");
 
+app.MapGet("/api/market-data/latest-trade", async (
+    string symbol,
+    AlpacaMarketDataAdapter alpaca,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsValidSymbol(symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var trade = await alpaca.GetLatestTradeAsync(symbol, cancellationToken);
+        return Results.Ok(new
+        {
+            symbol = symbol.ToUpperInvariant(),
+            provider = "Alpaca",
+            feed = alpaca.ConfiguredFeed,
+            retrievedAtUtc = DateTimeOffset.UtcNow,
+            trade,
+            coverage = alpaca.ConfiguredFeed.Equals("sip", StringComparison.OrdinalIgnoreCase) ? "SIP" : "IEX_PARTIAL",
+            note = "Latest provider trade, not a consolidated NBBO quote. Feed coverage and trade timestamp must be checked before treating it as current."
+        });
+    }
+    catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+    { return Results.Problem($"Latest-trade lookup failed: {ex.GetType().Name}: {ex.Message}", statusCode: 502); }
+})
+.WithSummary("Retrieve Alpaca's latest trade for a symbol")
+.WithDescription("Returns the latest trade on the configured Alpaca feed with its source timestamp. IEX is partial coverage; this is not NBBO or a guaranteed executable price.");
+
+app.MapGet("/api/market-data/instrument", async (
+    string symbol,
+    AlpacaMarketDataAdapter alpaca,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsValidSymbol(symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var instrument = await alpaca.GetInstrumentMetadataAsync(symbol, cancellationToken);
+        return instrument is null ? Results.NotFound(new { symbol = symbol.ToUpperInvariant(), error = "Instrument metadata not found." }) : Results.Ok(instrument);
+    }
+    catch (ProviderNotConfiguredException ex) { return Results.Problem(ex.Message, statusCode: 503); }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+    { return Results.Problem($"Instrument metadata lookup failed: {ex.GetType().Name}: {ex.Message}", statusCode: 502); }
+})
+.WithSummary("Retrieve instrument display name and asset metadata")
+.WithDescription("Uses Alpaca Trading API asset metadata; supports live and paper credentials. Metadata failure does not block chart rendering.");
+
 app.MapGet("/api/market-data/bars", async (
     string symbol,
     string timeframe,
