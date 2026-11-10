@@ -421,3 +421,33 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - [ ] Browser acceptance for new import placement, shortlist cards, Daily audit coloring and Boring Top 4 evidence fetch.
 - [ ] Review Daily/catalyst/price/volume/exclusion evidence for CRBG, FG and IBN before any qualification decision.
 - [ ] Continue SIP/ATR evidence blockers and 16.5-second JSONL cold-index performance work independently; do not weaken gates.
+
+
+## November 10 — Candidate qualification and focused Main Chart loading-state follow-up
+
+### Operator evidence
+
+- [x] Candidate qualification queried CRBG, FG, IBN and HDB independently. All four Daily requests returned 20/20 expected sessions and FRESH on Alpaca IEX; the feed remains explicitly IEX_PARTIAL, so these are complete expected-session observations but not consolidated-market qualification.
+- [x] Catalyst coverage is COMPLETE for all four query attempts. FG returned one article with MATERIAL_EVENT_REVIEW; CRBG, IBN and HDB returned zero articles and correctly remain UNKNOWN rather than CLEAR.
+- [x] Daily Data Audit Missing Sessions coloring was operator-accepted: NONE green; missing dates red; UNKNOWN neutral.
+- [x] LYSDY and BNPQY returned 0/20 expected sessions with the latest expected session missing. Their missing-date lists remain explicit; no backfill or inferred values.
+- [ ] Investigate supported Daily data for LYSDY and BNPQY. Keep qualification blocked unless a source returns independently validated observations with documented feed/adjustment/session provenance.
+- [ ] Review source-backed Daily/catalyst evidence for CRBG, FG, IBN and HDB before any qualification decision. IEX_PARTIAL is not consolidated coverage; zero articles remains UNKNOWN.
+
+### Focused Main Chart — five metric cards stuck at Loading
+
+- [x] Source inspection confirmed that 1M CLOSE, DAILY VWAP, ATR14, RELATIVE VOLUME and ATR EXTENSION are populated by the shared `/api/market-data/live-assessment` request. Existing success and error paths update all five cards, but the request had no client-side timeout; a fetch/body read that never settles could leave the initial Loading values indefinitely.
+- [x] Added a 20-second AbortController timeout around the complete HTTP response and JSON-body read. A timeout cancels the request and enters the existing fail-closed error path, replacing metric Loading values with DATA? / UNKNOWN and showing a specific timeout explanation in the classification headline.
+- [x] Preserved per-symbol in-flight request de-duplication and the existing request-sequence guard. No indicator formulas, qualification gates, provider/feed settings or READY logic were changed.
+- [x] Bumped the frontend script cache key to `20261110-live-assessment-timeout-v1`.
+- [ ] Exact-head GitHub Actions syntax/build/test verification.
+- [ ] Operator browser acceptance: select CRBG in Intraday mode; verify metric cards resolve normally or, if the API stalls, leave Loading within 20 seconds and show the timeout error. Check Network for an aborted request and capture the API/server logs.
+- [ ] Verify a timeout for one symbol does not prevent a later retry or another symbol's assessment; confirm the aborted in-flight entry is removed and a successful subsequent request repopulates all five metrics.
+- [ ] If timeout reproduces, inspect the request duration and API `performanceDiagnostics`; do not treat the timeout as a root-cause fix for backend slowness.
+
+### Acceptance and safety boundaries
+
+- Keep Alpaca configured to IEX unless the operator reports a verified entitlement change. Do not retry SIP or infer consolidated coverage.
+- No missing Daily sessions, prices, catalyst facts, ATR observations or timestamps may be imputed.
+- No-news is UNKNOWN, not CLEAR. Complete expected session count does not upgrade IEX_PARTIAL to consolidated coverage.
+- MCC remains decision-support-only; order submission is NOT IMPLEMENTED.
