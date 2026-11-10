@@ -60,7 +60,7 @@ SMX, CSQR, AMRC and TTWO should be event/outlier investigations, not promoted be
 
 1. Switch to **BORING OVERNIGHT**.
 2. Import this CSV at the top of **Overnight Candidate Workspace**.
-3. Review **Boring Overnight Shortlist**. Automatic display uses the existing imported historical checks, excludes extreme absolute current ON gaps (absolute value >= 3%), and sorts by win rate, median ON, average/median consistency, then lower absolute momentum. This is a display heuristic, not a new qualification gate.
+3. Review **Boring Overnight Shortlist**. Automatic display uses the existing imported historical checks, requires Median ON >= AVG ON to avoid positive-tail-dominated averages, excludes extreme absolute current ON gaps (absolute value >= 3%), and sorts by win rate, median ON, average/median consistency, then lower absolute momentum. This is a display heuristic, not a new qualification gate.
 4. In **Candidate qualification**, the automatic group is now **Boring Top 4**. Click **Fetch Daily + catalyst for Boring Top 4**. This is the same Candidate qualification action previously labeled "Fetch Daily + catalyst for MCC Top 4"; its automatic cohort is now boring-profile rather than highest raw score. **My Top 4** remains the manual override.
 5. Run **Daily Data Audit** for the populated Boring Top 20. Check missing sessions, feed, freshness, adjustment, observed close/SMA20/volume and qualification status. Missing Sessions NONE is green; a complete session list alone does not make IEX consolidated SIP.
 6. Open CRBG, FG and IBN in Main Chart and review timestamps/source. Inspect the full catalyst review queue and exclusions.
