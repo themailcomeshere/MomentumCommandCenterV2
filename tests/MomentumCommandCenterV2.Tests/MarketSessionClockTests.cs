@@ -39,6 +39,18 @@ public sealed class MarketSessionClockTests
     }
 
     [Fact]
+    public void EvaluationClockOpensAtExactStartAndClosesAtExactBuyDeadline()
+    {
+        var exactStart = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-11-03T20:00:00Z"));
+        Assert.True(exactStart.OvernightEvaluationOpen);
+        Assert.True(exactStart.OvernightBuyWindowOpen);
+
+        var exactDeadline = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-11-03T21:00:00Z"));
+        Assert.False(exactDeadline.OvernightEvaluationOpen);
+        Assert.False(exactDeadline.OvernightBuyWindowOpen);
+    }
+
+    [Fact]
     public void BuyWindowTracksEasternCloseAcrossDaylightSavingTime()
     {
         // During EDT, 3:00 PM Eastern is noon Arizona; close is 1:00 PM Arizona.
