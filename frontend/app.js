@@ -905,6 +905,9 @@ $("scannerFile").addEventListener("change",event=>{
   const redZoneState=readRedZoneState();
   const previouslyDismissed=redZoneState.dismissed.length;
   redZoneState.dismissed=redZoneState.dismissed.filter(symbol=>!importedSymbols.has(String(symbol).toUpperCase()));
+  // A fresh scanner import should repopulate the automatic candidate view.
+  // Preserve saved pins so the operator can still switch to Manual afterwards.
+  redZoneState.mode="automatic";
   const dismissalResetCount=previouslyDismissed-redZoneState.dismissed.length;
   writeRedZoneState(redZoneState);
   let persistenceNote="";
