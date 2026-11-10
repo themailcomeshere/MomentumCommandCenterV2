@@ -436,14 +436,15 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 
 ### Focused Main Chart — five metric cards stuck at Loading
 
-- [x] Source inspection confirmed that 1M CLOSE, DAILY VWAP, ATR14, RELATIVE VOLUME and ATR EXTENSION are populated by the shared `/api/market-data/live-assessment` request. Existing success and error paths update all five cards, but the request had no client-side timeout; a fetch/body read that never settles could leave the initial Loading values indefinitely.
+- [x] Source inspection confirmed that, in INTRADAY MOMENTUM mode, 1M CLOSE, DAILY VWAP, ATR14, RELATIVE VOLUME and ATR EXTENSION are populated by the shared `/api/market-data/live-assessment` request. Boring Overnight has a separate historical renderer and must not call that Intraday permission endpoint. Existing success and error paths update all five cards, but the request had no client-side timeout; a fetch/body read that never settles could leave the initial Loading values indefinitely.
 - [x] Added a 20-second AbortController timeout around the complete HTTP response and JSON-body read. A timeout cancels the request and enters the existing fail-closed error path, replacing metric Loading values with DATA? / UNKNOWN and showing a specific timeout explanation in the classification headline.
 - [x] Preserved per-symbol in-flight request de-duplication and the existing request-sequence guard. No indicator formulas, qualification gates, provider/feed settings or READY logic were changed.
 - [x] Bumped the frontend script cache key to `20261110-live-assessment-timeout-v1`.
 
 - [x] Isolated V8 harness compiled the updated `fetchLiveAssessment()` function, simulated a stalled fetch/abort, observed the explicit 20-second timeout message, and verified the in-flight map entry is removed. This is a focused function-level check, not full browser, exact-head CI, or Windows runtime acceptance.
 - [ ] Exact-head GitHub Actions syntax/build/test verification.
-- [ ] Operator browser acceptance: select CRBG in Intraday mode; verify metric cards resolve normally or, if the API stalls, leave Loading within 20 seconds and show the timeout error. Check Network for an aborted request and capture the API/server logs.
+- [x] Operator browser acceptance: CRBG's five Main Chart metrics resolved successfully in Intraday mode.
+- [ ] Boring Overnight five-metric acceptance is tracked separately below; the first operator test showed all five fields stuck at Loading.
 - [ ] Verify a timeout for one symbol does not prevent a later retry or another symbol's assessment; confirm the aborted in-flight entry is removed and a successful subsequent request repopulates all five metrics.
 - [ ] If timeout reproduces, inspect the request duration and API `performanceDiagnostics`; do not treat the timeout as a root-cause fix for backend slowness.
 
