@@ -313,8 +313,8 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - [ ] The first store access after API restart still has to rebuild the in-memory index from the existing JSONL file. Measure this cold-start cost separately from warm reads. No database migration or deletion/compaction of source observations was performed.
 - [ ] Verify warm-read performance and append persistence on the operator's actual data file; do not claim the latency issue is resolved from code inspection alone.
 - [ ] Verify Calculated Limit Sell now completes, renders every PASS/BLOCKED gate, and exposes stage timings. If still slow, use the new stage breakdown to isolate the remaining stage.
-- [x] Exact latest branch-head GitHub Actions passed frontend JavaScript syntax validation, .NET Release build, and .NET tests.
-- [ ] Local Windows Release build/test, API restart, and browser acceptance remain pending.
+- [x] Latest code-bearing commit 1f5275c9448eb3b1608fadee847d37ac855044e8 passed GitHub Actions frontend JavaScript syntax validation, .NET Release build, and .NET tests.
+- [ ] Documentation-only follow-up commits are newer; their latest workflow and local Windows/API/browser acceptance remain pending.
 
 ### Updated acceptance order
 
