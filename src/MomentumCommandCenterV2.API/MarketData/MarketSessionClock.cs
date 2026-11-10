@@ -4,8 +4,9 @@ namespace MomentumCommandCenterV2.API.MarketData;
 
 /// <summary>
 /// Returns the live US-equities session plus the configured Boring Overnight schedule.
-/// Research starts 1:00 PM Arizona; the buy window opens 3:00 PM Arizona and ends at
-/// 7:55 PM Eastern (five minutes before the regular post-market session ends).
+/// The candidate is selected and purchased during the final regular-session hour.
+/// The Overnight measurement begins at the regular-session close and includes the
+/// Buy Day after-hours period and the following Sell Day premarket period.
 /// The next trading session's GTC_EXT eligible sell window is 7:00 AM–8:00 PM Eastern.
 /// These are schedule windows only; per-symbol broker eligibility and actual fills are not verified.
 /// Exceptional unscheduled exchange closures are not represented by the maintained calendar.
@@ -24,7 +25,6 @@ public static class MarketSessionClock
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
     private static readonly TimeZoneInfo Phoenix = TimeZoneInfo.FindSystemTimeZoneById("America/Phoenix");
     private static readonly TimeOnly PreMarketStart = new(4, 0), RegularOpen = new(9, 30), AfterHoursEnd = new(20, 0);
-    private static readonly TimeOnly EvaluationStart = new(13, 0), BuyWindowStart = new(15, 0), BuyDeadline = new(19, 55);
     private static readonly TimeOnly SellWindowStart = new(7, 0), SellWindowEnd = new(20, 0);
 
     public static MarketSessionClockSnapshot GetSnapshot(DateTimeOffset nowUtc)
@@ -53,21 +53,23 @@ public static class MarketSessionClock
             throw new InvalidOperationException("Could not find the next supported US-equities trading session.");
 
         var buySession = FindNextBuySession(today, localTime);
+        var buyClose = UsEquitiesSessionCalendar.GetRegularClose(buySession);
+        var buyWindowStartEastern = buyClose.AddHours(-1);
         var sellSession = FindNextTradingSession(buySession.AddDays(1));
-        var evaluationStartUtc = ToUtc(Phoenix, buySession, EvaluationStart);
-        var buyStartUtc = ToUtc(Phoenix, buySession, BuyWindowStart);
-        var buyDeadlineUtc = ToUtc(Eastern, buySession, BuyDeadline);
+        var evaluationStartUtc = ToUtc(Eastern, buySession, buyWindowStartEastern);
+        var buyStartUtc = evaluationStartUtc;
+        var buyDeadlineUtc = ToUtc(Eastern, buySession, buyClose);
         var sellStartUtc = ToUtc(Eastern, sellSession, SellWindowStart);
         var sellEndUtc = ToUtc(Eastern, sellSession, SellWindowEnd);
         var evaluationOpen = nowUtc >= evaluationStartUtc && nowUtc < buyDeadlineUtc;
-        var buyWindowOpen = nowUtc >= buyStartUtc && nowUtc < buyDeadlineUtc;
+        var buyWindowOpen = evaluationOpen;
 
         return new MarketSessionClockSnapshot(
             phase, label, ToUtc(Eastern, phase == "CLOSED" ? nextSession : today, targetTime),
             nowUtc, targetEvent, "America/New_York", UsEquitiesSessionCalendar.Version,
             evaluationStartUtc, buyDeadlineUtc, evaluationOpen, buyStartUtc, buyWindowOpen,
             buySession, sellSession, sellStartUtc, sellEndUtc,
-            "Research 1:00–3:00 PM Arizona; buy window 3:00 PM Arizona–7:55 PM Eastern. Next-session GTC_EXT window 7:00 AM–8:00 PM Eastern. Schedule only; broker eligibility and fills are not verified.");
+            "Candidate research and purchase: final 60 minutes of the regular session, ending at the regular-session close. Overnight measurement then includes Buy Day after-hours and Sell Day premarket. Next-session GTC_EXT window: 7:00 AM–8:00 PM Eastern. Schedule only; broker eligibility and fills are not verified.");
     }
 
     private static DateOnly FindNextBuySession(DateOnly today, TimeOnly easternTime)
@@ -77,7 +79,7 @@ public static class MarketSessionClock
         {
             if (!UsEquitiesSessionCalendar.IsTradingSession(candidate) ||
                 candidate.DayOfWeek is DayOfWeek.Friday or DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
-            if (candidate == today && easternTime >= BuyDeadline) continue;
+            if (candidate == today && easternTime >= UsEquitiesSessionCalendar.GetRegularClose(candidate)) continue;
             return candidate;
         }
         throw new InvalidOperationException("Could not find the next Monday–Thursday Boring Overnight buy session.");
