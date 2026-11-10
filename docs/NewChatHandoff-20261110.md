@@ -151,7 +151,7 @@ IEX cannot pass the SIP gate. A recent 5-day 1M response cannot substitute for t
 
 ## CI and acceptance status
 
-The Yahoo endpoint initially had a compile failure caused by a named-argument typo in its error response. That typo was corrected in the next commit. Subsequent source/test commits triggered new workflows. The latest exact-head workflow must be checked before claiming a full pass. Local Windows build, browser acceptance, provider entitlement and market-hours stream tests remain pending.
+The Yahoo endpoint initially had a compile failure caused by a named-argument typo in its error response. That typo was corrected. Code-bearing head `436d0a53d10501f2053cce7b203f5f5ed1b7a689` passed GitHub Actions JavaScript syntax validation, .NET Release build (0 warnings / 0 errors), and all 266 tests (run `42751327218`). Later commits through the handoff are documentation-only; their exact-head workflow is queued. Local Windows build, browser acceptance, provider entitlement and market-hours stream tests remain pending.
 
 ## [Uncertainties]
 
