@@ -411,7 +411,7 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 
 ## November 10 — Boring Overnight flow, Daily audit and new 13:44 export
 
-- [x] Moved CSV import into the top of Overnight Candidate Workspace; retained the existing CSV parser and storage behavior.
+- [x] Moved CSV import into the top of Overnight Candidate Workspace; retained the existing CSV parser and storage behavior. A fresh import now resets Red Zone to Automatic while preserving saved manual pins, preventing a persisted empty Manual view from suppressing the new candidates.
 - [x] Hide Intraday Scanner Workbench controls in Boring Overnight mode so market movers, scan inputs and 1M/5M analysis are not required for the Overnight workflow.
 - [x] Replaced Intraday Red Zone card content in Boring Overnight with historical Overnight metrics; no Intraday V2 5M permission / 1M execution labels or Intraday live-assessment calls in these cards.
 - [x] Added Boring Overnight Shortlist ranking: existing historical screen plus complete source metrics, Median ON >= AVG ON, and absolute Current ON below 3%; win-rate-first, then median, average/median consistency and lower absolute momentum. Display-only; does not change qualification gates.
