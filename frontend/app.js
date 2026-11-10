@@ -14,9 +14,29 @@ async function refreshInstrumentTitle(symbol){
  try{const response=await fetch("/api/market-data/instrument?"+new URLSearchParams({symbol:ticker}),{cache:"no-store",headers:{Accept:"application/json"}});
  const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.detail||data.error||("HTTP "+response.status));
  instrumentMetadataCache.set(ticker,data);if(($("symbol")?.value||"").trim().toUpperCase()===ticker)heading.textContent=symbolDisplayName(ticker);
- }catch{instrumentMetadataCache.set(ticker,{symbol:ticker,name:null});if(($("symbol")?.value||"").trim().toUpperCase()===ticker)heading.textContent=ticker+" — instrument name unavailable";}
+ }catch{
+  try{
+   const response=await fetch("/api/market-data/yahoo-extended-hours?"+new URLSearchParams({symbol:ticker}),{cache:"no-store",headers:{Accept:"application/json"}});
+   const quote=await response.json();if(!response.ok)throw Error("Yahoo metadata unavailable");
+   instrumentMetadataCache.set(ticker,{symbol:ticker,name:quote.name||null});
+  }catch{instrumentMetadataCache.set(ticker,{symbol:ticker,name:null});}
+  if(($("symbol")?.value||"").trim().toUpperCase()===ticker)heading.textContent=instrumentMetadataCache.get(ticker).name?symbolDisplayName(ticker):ticker+" — instrument name unavailable";
+ }
 }
 function setDockClassification(label,kind="unknown"){const node=$("prototype-symbol-classification");if(node){node.textContent=label;node.className="prototype-symbol-classification classification-"+kind;}}
+async function refreshOvernightDockClassification(symbol){
+ const ticker=String(symbol||"").trim().toUpperCase();if(!ticker)return;
+ setDockClassification("BORING WINNER · CHECKING RESEARCH","unknown");
+ try{
+  const response=await fetch("/api/overnight-scanner/thinkorswim-daily-bars?"+new URLSearchParams({symbol:ticker,limit:"1"}),{cache:"no-store",headers:{Accept:"application/json"}});
+  const rows=await response.json();if(!response.ok)throw Error("reference lookup failed");
+  if(($("symbol")?.value||"").trim().toUpperCase()!==ticker||$("mode")?.value!=="overnight")return;
+  const result=Array.isArray(rows)&&rows.length?rows[0].calculation?.boringWinnerPass:null;
+  if(result===true)setDockClassification("BORING WINNER · PASS · RESEARCH ONLY","high");
+  else if(result===false)setDockClassification("BORING WINNER · FAIL · RESEARCH ONLY","blocked");
+  else setDockClassification("BORING WINNER · NOT CALCULATED","unknown");
+ }catch{if(($("symbol")?.value||"").trim().toUpperCase()===ticker&&$("mode")?.value==="overnight")setDockClassification("BORING WINNER · DATA?","unknown");}
+}
 function updateDockClassificationFromAssessment(data){
  const classification=String(data?.opportunityQuality?.classification||"DataUnknown");
  const map={ReadyHighOpportunity:["QUALITY — HIGH","high"],ReadyModerate:["QUALITY — MODERATE","moderate"],ReadyBoring:["QUALITY — LOW","boring"],ReadyExtended:["TIMING — EXTENDED","extended"],WatchDeveloping:["WATCH — DEVELOPING","watch"],Blocked:["BLOCKED","blocked"],DataUnknown:["DATA?","unknown"]};
