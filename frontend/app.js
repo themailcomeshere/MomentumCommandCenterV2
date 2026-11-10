@@ -2058,7 +2058,11 @@ $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
    if(quickGateSummary){const quickRow=document.createElement("p");quickRow.className=row.className;quickRow.textContent=row.textContent;quickGateSummary.append(quickRow);}
   }
   if(quickGateSummary&&!gates.length)quickGateSummary.textContent="The API returned no individual gate records. Check the assessment status below.";
-  status.textContent=data.status+" · effective Alpaca feed "+feed.toUpperCase()+" · "+gates.filter(x=>x.passed).length+"/"+gates.length+" evidence gates passed · no order submitted.";
+  const timing=data.performanceDiagnostics;
+  const timingSummary=timing
+   ?" · "+(timing.totalElapsedMs/1000).toFixed(1)+"s total (history "+(timing.historyReadElapsedMs/1000).toFixed(1)+"s; ATR store "+(timing.atrStoreReadElapsedMs/1000).toFixed(1)+"s; reference "+(timing.referenceCloseReadElapsedMs/1000).toFixed(1)+"s; provider parity "+(timing.providerParityBarsReadElapsedMs/1000).toFixed(1)+"s)"
+   :"";
+  status.textContent=data.status+" · effective Alpaca feed "+feed.toUpperCase()+" · "+gates.filter(x=>x.passed).length+"/"+gates.length+" evidence gates passed"+timingSummary+" · no order submitted.";
  }catch(error){
   status.textContent="Sell-limit assessment failed: "+error.message+" No numeric limit was calculated.";
   if($("overnightQuickSellLimitGateSummary"))$("overnightQuickSellLimitGateSummary").textContent=status.textContent;
