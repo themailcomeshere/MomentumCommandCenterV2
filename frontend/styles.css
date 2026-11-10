@@ -1721,3 +1721,24 @@ body.boring-overnight-mode #mcc-static-0087-article{display:none!important}
 #overnightBuyCountdown.countdown-urgent{color:#ff934f}
 #overnightBuyCountdown.countdown-critical{color:#ff5c68;font-weight:900}
 #overnightBuyCountdown.countdown-closed{color:var(--muted)}
+
+
+/* Boring Overnight workflow: hide unrelated intraday scanner controls. */
+body.boring-overnight-mode #scanner-workbench{display:none!important}
+body.boring-overnight-mode .overnight-import-strip{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;padding:14px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:rgba(35,57,83,.22)}
+body.boring-overnight-mode .overnight-import-strip>div p{margin:4px 0 0}
+body.boring-overnight-mode #overnightImportStatus{grid-column:1/-1}
+.overnight-workflow-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:12px 0 18px;counter-reset:overnight-step}
+.overnight-workflow-steps li{display:grid;gap:4px;padding:10px;border:1px solid var(--line);border-radius:10px;counter-increment:overnight-step}
+.overnight-workflow-steps li strong:before{content:counter(overnight-step) " · ";color:var(--blue)}
+.overnight-workflow-steps li span{font-size:11px;color:var(--muted)}
+.overnight-redzone-card .redzone-score{margin-bottom:10px}
+.overnight-redzone-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 12px;margin:8px 0 12px}
+.overnight-redzone-metrics>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:4px 0;font-size:11px}
+.overnight-redzone-metrics dt{color:var(--muted)}
+.overnight-redzone-metrics dd{margin:0;font-weight:750;font-variant-numeric:tabular-nums}
+.audit-status-good{color:#35c987!important;font-weight:800;background:rgba(53,201,135,.10)}
+.audit-status-warning{color:var(--danger)!important;font-weight:750}
+.audit-status-unknown{color:var(--muted)!important}
+@media(max-width:900px){.overnight-workflow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.overnight-workflow-steps{grid-template-columns:1fr}.overnight-import-strip{grid-template-columns:1fr}}
