@@ -173,3 +173,66 @@ The Yahoo endpoint initially had a compile failure caused by a named-argument ty
 - The operator's RKLX values ($9.14 then $9.07) are user-observed values; independent online snapshots reviewed during this pass differed. Local timestamped quote comparison is required.
 - No Boring Winner Daily OHLC CSV has yet been imported; no actual PASS/FAIL result is claimed. The dedicated ThinkScript Daily OHLC export study is still outstanding.
 - No local runtime/browser test has yet been performed against these latest commits.
+
+
+## November 10 follow-up — operator runtime evidence and UI corrections
+
+### Clarifications: StrategyReport and Boring Winner
+
+- The only supplied Thinkorswim study is `MCC_OHLCV_ATR_V2.1 — OHLCV + Thinkorswim ATR parity export`. No new Boring Winner export study has been delivered.
+- Importing that 1M/5M ATR StrategyReport does **not** calculate Boring Winner. Its interval and payload contract are not the Daily OHLC input contract.
+- The existing Boring Winner calculator runs only after a separate Daily OHLC reference import containing completed daily rows with Date/Open/High/Low/Close. The API's TOS Daily reference import calculates the eight scanner metrics, including Boring Winner, from those daily rows. It does not derive daily bars from the ATR StrategyReport.
+- Therefore no Boring Winner PASS/FAIL is available until a separate Daily OHLC dataset is imported and the calculation's session semantics are validated. A dedicated Thinkorswim export study is still outstanding.
+
+### Strategy clock — preserve the intended purchase interval
+
+- The final hour of regular trading remains the candidate-evaluation and buy window. The actual regular-session close is the buy deadline.
+- The overnight measurement begins at that close and includes Buy Day after-hours and Sell Day premarket.
+- During the regular session, `#overnightBuyCountdown` must display time remaining to the regular close, not DATA? and not time remaining only until the final-hour window starts. The countdown uses escalating urgency colors as the close approaches.
+- The API response supplied by the operator confirms `phase=REGULAR`, `targetEvent=REGULAR_SESSION_CLOSE`, evaluation start 13:00 Arizona, and buy deadline at the regular close. Do not change the strategy window or its endpoints.
+
+### UI fixes committed after operator retest
+
+- [x] Assign the API's buy-window start, sell-window start/end and buy/sell session dates to the frontend state. Previously they were parsed but never assigned, which left the buy countdown DATA? and schedule details blank.
+- [x] During API phase REGULAR, show the countdown to `overnightBuyDeadlineUtc` (the actual session close) and apply green / yellow / orange / red urgency styling by remaining time.
+- [x] Call `refreshInstrumentTitle(symbol)` on each focused-chart refresh. The function previously existed but was never called, explaining why RKLX's returned name did not appear anywhere in the Dashboard.
+- [x] Open the focused Calculated Limit Sell evidence disclosure when the quick action is clicked, and mirror every returned gate's PASS/BLOCKED status and explanation directly inside that disclosure.
+- [x] Add `performanceDiagnostics` to uncached live-assessment responses: provider fetch wall time (1m and 5m in parallel), WebSocket store read time, persistence time, calculation time and total server time.
+- [x] Bump the Dashboard app.js query string to force browsers to load the new code.
+- [ ] Exact-head CI and local Windows/browser acceptance of these follow-up changes remain pending.
+
+### Operator runtime evidence supplied November 10
+
+- [x] API health returned OK, decision-support-only; order submission remains NOT IMPLEMENTED.
+- [x] During the 10-minute regular-session stream test, SPY advanced 10 completed bars (49 to 59), RKLX advanced 3 (21 to 24), ASTX advanced 3 (34 to 37), and XRPN advanced 2 (5 to 7). All four were acknowledged at start and end. Latest timestamps advanced for each symbol. This is evidence of actual delivery for these four symbols during this interval, not proof of complete IEX coverage or TOS parity.
+- [x] Collector cycles advanced 39 to 48, with zero reported cycle errors.
+- [x] Scanner CSV import rendered all 50 local rows. The separate Scan & Analyze (1M + 5M) action was then run on 20 candidates. All returned rows were OBSERVED · NOT QUALIFIED on Alpaca/IEX. Counts varied widely (5M 5–27 bars; 1M 6–75 bars); these observations are not Overnight qualification, Boring Winner calculations, or trade signals.
+- [x] BAYRY Daily audit returned 0 valid sessions, 0 available completed sessions and all 20 expected session dates missing (October 13–November 9, 2026). The parser change did not create data. Keep BAYRY Daily qualification blocked; do not backfill older sessions or weaken completeness.
+- [x] RKLX instrument endpoint returned the full Alpaca asset name, but the operator confirmed it was absent from the Dashboard before the latest frontend fix.
+- [x] Live-assessment calls for EVR, RKLX, ASTX and SPY took approximately 51.8 seconds each in the operator's local runtime. This is unacceptable for interactive UX. The current service requests 1m bars over 3 calendar days and 5m bars over 21 calendar days in parallel; it uses WebSocket 1m history only when at least 50 fresh completed WebSocket bars exist. In the supplied stream test RKLX (24), ASTX (37) and XRPN (7) did not meet that 50-bar threshold, and 5m remains REST-backed. The new response timing breakdown is intended to locate the dominant stage; the exact cause is not established yet.
+
+### Correct operating instructions for the next retest
+
+1. Pull/build/test the latest feature branch and restart the API. Hard-refresh the Dashboard; the new script query key should prevent reuse of the older app.js.
+2. Select **BORING OVERNIGHT** before testing the buy countdown or Calculated Limit Sell quick action.
+3. During regular market hours, confirm the buy countdown says **Time remaining in regular market**, counts down to the actual regular close, and changes urgency color as the deadline approaches. Also verify the evaluation countdown separately opens at the final-hour start.
+4. Select RKLX and verify its full ETF name appears in the Main Chart heading.
+5. In the focused Calculated Limit Sell card, click **Assess calculated limit sell**. Its **Why is the limit unavailable?** disclosure should open and show every API-returned gate with PASS/BLOCKED and its explanation. The feed and qualification rules remain unchanged.
+6. Measure one live assessment first, not four sequential requests:
+   ```powershell
+   $base = 'http://localhost:53360'
+   $sw = [System.Diagnostics.Stopwatch]::StartNew()
+   $assessment = Invoke-RestMethod "$base/api/market-data/live-assessment?symbol=EVR&providerName=Alpaca"
+   $sw.Stop()
+   "Client elapsed: $($sw.Elapsed.TotalSeconds) seconds"
+   $assessment.performanceDiagnostics | ConvertTo-Json -Depth 5
+   ```
+   Record client elapsed and the server timing breakdown. If a cached response lacks `performanceDiagnostics`, restart the API to clear process memory and repeat once.
+7. Do not repeat the 10-minute stream test; it has been completed for the supplied symbols. Do not repeat the BAYRY audit unchanged; it already establishes 0/20 sessions. Do not re-run the scanner import or 1M/5M analysis unless the code/data source changes.
+8. Boring Winner remains untested until a separate TOS Daily OHLC CSV (Date/Open/High/Low/Close) is imported. Do not use the existing ATR V2.1 1M/5M StrategyReport for that step.
+
+### Interpretation of Scanner Workbench steps
+
+- Export the Overnight Scanner candidate list (the operator's CSV export), then import that CSV into MCC. The import populates historical Overnight Scanner metrics and rows.
+- **Scan & Analyze (1M + 5M)** is a separate optional live intraday diagnostic over the imported candidate symbols. It does not calculate Boring Winner or change the imported Overnight Scanner metrics.
+- The supplied 20-symbol analysis completed and returned OBSERVED · NOT QUALIFIED. No additional click is required for that completed scan. Keep the results diagnostic-only, especially with partial IEX coverage.
