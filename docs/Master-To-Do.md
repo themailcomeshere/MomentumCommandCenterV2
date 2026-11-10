@@ -407,3 +407,17 @@ This is the current authoritative checklist. The detailed backlog contains imple
 ### Intended MCC workflow reminder
 
 Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows; use **Use Overnight Top 20** in Daily data audit; click **Validate Daily data** and inspect source/feed/completeness/freshness; run **Fetch Daily + catalyst for MCC Top 4** (or My Top 4); inspect each candidate's complete evidence row; open Main Chart in Boring Overnight mode; use Calculated Limit Sell only as a fail-closed evidence diagnostic. IEX remains partial and cannot satisfy SIP qualification. No order submission is implemented.
+
+
+## November 10 — Boring Overnight flow, Daily audit and new 13:44 export
+
+- [x] Moved CSV import into the top of Overnight Candidate Workspace; retained the existing CSV parser and storage behavior.
+- [x] Hide Intraday Scanner Workbench controls in Boring Overnight mode so market movers, scan inputs and 1M/5M analysis are not required for the Overnight workflow.
+- [x] Replaced Intraday Red Zone card content in Boring Overnight with historical Overnight metrics; no Intraday V2 5M permission / 1M execution labels or Intraday live-assessment calls in these cards.
+- [x] Added Boring Overnight Shortlist ranking: existing historical screen plus complete source metrics and absolute Current ON below 3%; median-first, then win rate, average/median consistency and lower absolute momentum. Display-only; does not change qualification gates.
+- [x] Candidate qualification automatic cohort now uses the same Boring Top 4. The action is "Fetch Daily + catalyst for Boring Top 4"; My Top 4 remains manual.
+- [x] Daily Data Audit heading corrected; Missing Sessions NONE green, missing date list red, UNKNOWN neutral.
+- [x] Added 13:44 scanner export top-three analysis to docs/Boring-Overnight-Scanner-Analysis-20261110-1344.md.
+- [ ] Browser acceptance for new import placement, shortlist cards, Daily audit coloring and Boring Top 4 evidence fetch.
+- [ ] Review Daily/catalyst/price/volume/exclusion evidence for CRBG, FG and IBN before any qualification decision.
+- [ ] Continue SIP/ATR evidence blockers and 16.5-second JSONL cold-index performance work independently; do not weaken gates.
