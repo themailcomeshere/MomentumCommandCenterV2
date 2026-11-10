@@ -23,7 +23,7 @@ builder.Services.AddSwaggerGen(options =>
         string tag;
         if (path == "/api/health" || path == "/api/providers/status")
             tag = "System & Provider Health";
-        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status" || path == "/api/market-data/daily" || path == "/api/market-data/catalyst-assessment" || path.StartsWith("/api/market-data/catalyst-reviews", StringComparison.OrdinalIgnoreCase))
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/latest-trade" || path == "/api/market-data/instrument" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status" || path == "/api/market-data/daily" || path == "/api/market-data/catalyst-assessment" || path.StartsWith("/api/market-data/catalyst-reviews", StringComparison.OrdinalIgnoreCase))
             tag = "Market Data";
         else if (path == "/api/scanner/universe")
             tag = "Scanner & Discovery";
