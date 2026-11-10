@@ -328,14 +328,17 @@ async function refreshOvernightPriceSummary(symbol){
   const parts=ts=>Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));
   const local=ts=>new Date(ts).toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true});
   const last=bars.at(-1),lp=last?parts(last.timestamp):null,lastMinute=lp?Number(lp.hour)*60+Number(lp.minute):-1,lastDate=lp?lp.year+"-"+lp.month+"-"+lp.day:"";
-  let latestTrade=null,latestTradeError=null;
+  let latestTrade=null,latestTradeError=null,yahooQuote=null,yahooError=null;
    try{const tradeResponse=await fetch("/api/market-data/latest-trade?"+new URLSearchParams({symbol}),{cache:"no-store",headers:{Accept:"application/json"}});const tradePayload=await tradeResponse.json();if(!tradeResponse.ok)throw Error(tradePayload.detail||tradePayload.error||("HTTP "+tradeResponse.status));latestTrade=tradePayload.trade||null;}catch(error){latestTradeError=error.message;}
-   const barTimestamp=last?new Date(last.timestamp).getTime():0,tradeTimestamp=latestTrade?new Date(latestTrade.timestampUtc).getTime():0;
+   try{const yahooResponse=await fetch("/api/market-data/yahoo-extended-hours?"+new URLSearchParams({symbol}),{cache:"no-store",headers:{Accept:"application/json"}});const yahooPayload=await yahooResponse.json();if(!yahooResponse.ok)throw Error(yahooPayload.detail||yahooPayload.error||("HTTP "+yahooResponse.status));yahooQuote=yahooPayload;}catch(error){yahooError=error.message;}
+   const barTimestamp=last?new Date(last.timestamp).getTime():0,tradeTimestamp=latestTrade?new Date(latestTrade.timestampUtc).getTime():0,yahooTimestamp=yahooQuote?.postMarketTimeUtc?new Date(yahooQuote.postMarketTimeUtc).getTime():0;
    const useTrade=latestTrade&&Number.isFinite(tradeTimestamp)&&tradeTimestamp>=barTimestamp;
-   const shownPrice=useTrade?Number(latestTrade.price):last?Number(last.close):null;
-   const tradeAgeMinutes=useTrade?Math.max(0,(Date.now()-tradeTimestamp)/60000):null;
-   const tradeParts=useTrade?parts(latestTrade.timestampUtc):null,tradeMinute=tradeParts?Number(tradeParts.hour)*60+Number(tradeParts.minute):-1;
-   const tradeSession=tradeMinute>=960&&tradeMinute<1200?"AFTER-HOURS":tradeMinute>=240&&tradeMinute<570?"PREMARKET":tradeMinute>=570&&tradeMinute<960?"REGULAR SESSION":"EXTENDED SESSION";
+   const useYahoo=yahooQuote?.postMarketPrice!=null&&Number.isFinite(yahooTimestamp)&&yahooTimestamp>=Math.max(barTimestamp,useTrade?tradeTimestamp:0);
+   const shownPrice=useYahoo?Number(yahooQuote.postMarketPrice):useTrade?Number(latestTrade.price):last?Number(last.close):null;
+   const shownTimestamp=useYahoo?yahooQuote.postMarketTimeUtc:useTrade?latestTrade.timestampUtc:last?.timestamp;
+   const shownAgeMinutes=shownTimestamp?Math.max(0,(Date.now()-new Date(shownTimestamp).getTime())/60000):null;
+   const shownParts=shownTimestamp?parts(shownTimestamp):null,shownMinute=shownParts?Number(shownParts.hour)*60+Number(shownParts.minute):-1;
+   const shownSession=shownMinute>=960&&shownMinute<1200?"AFTER-HOURS":shownMinute>=240&&shownMinute<570?"PREMARKET":shownMinute>=570&&shownMinute<960?"REGULAR SESSION":"EXTENDED SESSION";
    const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
   const rthDate=rth?(()=>{const z=parts(rth.timestamp);return z.year+"-"+z.month+"-"+z.day;})():null;
   const sessionBars=rthDate?bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute);return z.year+"-"+z.month+"-"+z.day===rthDate&&m>=570&&m<960;}):[];
@@ -348,8 +351,8 @@ async function refreshOvernightPriceSummary(symbol){
   if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
   if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · final 1M bar before 16:00 ET; official auction print not verified":" · exact session-close bar not established"):"Data not found in sources: no RTH 1M bar returned.";}
   if(p)p.textContent=shownPrice!==null?"$"+shownPrice.toFixed(4):"DATA? — NO TRADE OR BAR";
-  if(pl)pl.textContent=useTrade?(tradeAgeMinutes>5?"LAST IEX TRADE · STALE":tradeSession==="AFTER-HOURS"?"AFTER-HOURS PRICE":tradeSession==="PREMARKET"?"PREMARKET PRICE":"LATEST PROVIDER TRADE"):"LAST RETURNED 1M BAR";
-  if(pt)pt.textContent=useTrade?"Alpaca latest "+tradeSession.toLowerCase()+" trade · "+local(latestTrade.timestampUtc)+" Arizona · "+latestTrade.feed.toUpperCase()+" · "+(tradeAgeMinutes<=5?"recent provider trade":"STALE "+tradeAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not guaranteed executable":last?"Last returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · "+(latestTradeError?"latest trade unavailable: "+latestTradeError:"no newer trade on configured feed")+" · not a live quote":"Data not found in sources: no 1M bars or latest trade returned.";
+  if(pl)pl.textContent=useYahoo?(shownAgeMinutes>5?"LAST AFTER-HOURS PRICE · STALE":"AFTER-HOURS PRICE"):useTrade?(shownAgeMinutes>5?"LAST IEX TRADE · STALE":shownSession==="AFTER-HOURS"?"AFTER-HOURS PRICE":shownSession==="PREMARKET"?"PREMARKET PRICE":"LATEST PROVIDER TRADE"):"LAST RETURNED 1M BAR";
+  if(pt)pt.textContent=useYahoo?"Yahoo Finance after-hours reference · "+local(yahooQuote.postMarketTimeUtc)+" Arizona · "+(shownAgeMinutes<=5?"recent reference":"STALE "+shownAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not executable":useTrade?"Alpaca latest "+shownSession.toLowerCase()+" trade · "+local(latestTrade.timestampUtc)+" Arizona · "+latestTrade.feed.toUpperCase()+" · "+(shownAgeMinutes<=5?"recent provider trade":"STALE "+shownAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not guaranteed executable":last?"Last returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · "+(latestTradeError?"latest trade unavailable: "+latestTradeError:"no newer trade on configured feed")+(yahooError?" · Yahoo reference unavailable: "+yahooError:"")+" · not a live quote":"Data not found in sources: no 1M bars or latest trade returned."
   const reasonList=$("reasons"),source=$("decisionSource"),score=$("decisionScore"),notice=$("mcc-static-0086-div");
   if(reasonList){const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);reasonList.replaceChildren(...[
    "1M close "+(last?"$"+fmt(last.close):"DATA?"),
