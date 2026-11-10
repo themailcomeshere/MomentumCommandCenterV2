@@ -267,6 +267,40 @@ public sealed class JsonlMarketBarObservationStoreTests
         }
     }
 
+    [Fact]
+    public async Task FirstReadAfterRestartLoadsLatestIndexAndLaterCorrectionUpdatesIt()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var original = CreateBar();
+            Assert.Equal(1, await new JsonlMarketBarObservationStore().AppendAsync(new[] { original }, CancellationToken.None));
+
+            var restartedStore = new JsonlMarketBarObservationStore();
+            var initialRead = await restartedStore.GetLatestAsync(
+                "TEST", "TestProvider", original.Timestamp, original.Timestamp, 10, CancellationToken.None);
+            Assert.Single(initialRead);
+            Assert.Equal(10.5, initialRead[0].Bar.Close);
+
+            var corrected = original with { High = 11.2, Close = 10.8 };
+            Assert.Equal(1, await restartedStore.AppendAsync(new[] { corrected }, CancellationToken.None));
+            var correctedRead = await restartedStore.GetLatestAsync(
+                "TEST", "TestProvider", original.Timestamp, original.Timestamp, 10, CancellationToken.None);
+            Assert.Single(correctedRead);
+            Assert.Equal(10.8, correctedRead[0].Bar.Close);
+            Assert.Equal(initialRead[0].ObservationId, correctedRead[0].SupersedesObservationId);
+            Assert.Equal(2, (await File.ReadAllLinesAsync(path)).Length);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
     public static IEnumerable<object[]> InvalidBars()
     {
         var valid = CreateBar();
