@@ -375,3 +375,35 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - Median/50th percentile is a visible research default only; it does not relax evidence gates or assert a validated trading target.
 - Keep IEX as configured. No order submission, feed substitution, missing-data imputation, or qualification-gate changes.
 - The local/browser checks above cannot be completed from repository CI alone.
+
+
+## November 10 — watchlist review, sell-limit runtime evidence, and cold-index measurement
+
+### Operator evidence received
+
+- [x] Provider status confirms Alpaca is configured and validated on **IEX**; Massive is not configured. Keep IEX unchanged.
+- [x] Calculated Limit Sell now returns the full evidence-gate response instead of remaining at “Assessment running.” This establishes that the API assessment executed and returned its 1,600-row evidence payload. The result is correctly BLOCKED: SIP_REQUIRED, HISTORY_40_OF_40, ATR_STUDY_SETTINGS, ATR_PARITY, CONTINUOUS_5M_ATR_WARMUP, SAME_SOURCE_5M_OHLCV, CURRENT_5M_ATR_FRESHNESS, WALK_FORWARD_VALIDATION and SELL_LIMIT_CALCULATION.
+- [x] EXACT_REFERENCE_CLOSE passed at $10.71 from the exact 1m bar timestamp 2026-11-09T20:59:00Z (Alpaca/IEX).
+- [x] Sell-limit gate outcome is fail-closed as designed. IEX is partial coverage and cannot qualify the 40 complete SIP GTC_EXT windows. Missing TOS ATR/parity and 5m warm-up observations also correctly prevent target publication. Do not relax gates or impute missing timestamps/reference closes.
+- [x] Cold JSONL index rebuild has now been measured: index loaded=true, load count=1, 16,521.1ms most recent rebuild, 230,838 unique observation keys. This is the one-time process-local rebuild duration and may have occurred at API startup, not during the EVR request.
+- [x] EVR live assessment measured 428.7ms client / 311.3ms server total; provider fetch 269.3ms; 1m 156.5ms; 5m 270.8ms; WebSocket store read 4.1ms; persistence 3.9ms; calculation 26.9ms. This is a fast warm assessment; do not conflate it with the 16.5-second cold rebuild.
+- [x] Analyzed the supplied 50-row November 10 11:38 AM AZ Overnight Watchlist Scanner export. Added [Overnight Watchlist Analysis and MCC Diagnosis](Overnight-Watchlist-Analysis-and-MCC-Diagnosis-20261110.md) with a top-10 candidate-by-candidate review and the intended MCC workflow.
+- [ ] Calculated Limit Sell browser acceptance is not fully closed until the operator confirms the Network sequence (GET /api/providers/status then POST /api/boring-overnight/sell-limit) and confirms every gate is rendered in the quick-card disclosure. The returned payload is strong API-path evidence, not proof of the full browser presentation.
+- [ ] Cold-index performance optimization remains open. The diagnostic gap is closed; the measured 16.5-second rebuild is now a quantified startup/cold-load performance issue. Profile file size/line count, deserialization, key construction, allocation and index structure before changing persistence. Preserve append-only correction semantics and exact latest-observation selection. Do not introduce an unverified cache/snapshot format.
+- [ ] Repeat EVR twice after a fresh API restart if startup timing needs confirmation; record the first request and second request separately. The current response indicates index build count 1, but does not tell whether the load occurred during host startup or the first request.
+- [ ] Top-10 candidate diagnosis remains research-only until MCC Daily source completeness, catalyst coverage, exclusion, price/volume, spread/liquidity and chart context have been reviewed. The CSV contains no raw 20-session returns or live execution data.
+- [ ] Keep the sell-limit blocked on IEX until a legitimately configured consolidated SIP source and all required persisted TOS ATR/OHLCV parity observations are available. Massive is currently NOT_CONFIGURED; do not assume its entitlement or coverage.
+
+### Top-10 interpretation summary
+
+- SMX is an extreme outlier (Current ON 92.41%, 5D ON 23.19%, AVG ON 6.23% versus Median ON 0.66%); investigate event/corporate-action/liquidity context separately.
+- WRBY has the strongest balanced non-SMX ranking profile, but Current ON is -1.19%.
+- SEZL has strong momentum (+4.93) but only 0.16% median.
+- ETON has strong recent acceleration but -1.12% current gap and 0.20% median.
+- IRWD/STEP/ACHC have current ON 0.00%; inspect full history and catalysts.
+- OPRT has -0.95% current ON; ULCC has the strongest top-10 median (0.78%) and +0.96% current ON; ARDT has +0.61% current ON.
+- All top 10 are Above 20 SMA, so that column does not discriminate within this cohort. Overnight Score is a ranking heuristic, not a probability or trade instruction.
+
+### Intended MCC workflow reminder
+
+Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows; use **Use Overnight Top 20** in Daily data audit; click **Validate Daily data** and inspect source/feed/completeness/freshness; run **Fetch Daily + catalyst for MCC Top 4** (or My Top 4); inspect each candidate's complete evidence row; open Main Chart in Boring Overnight mode; use Calculated Limit Sell only as a fail-closed evidence diagnostic. IEX remains partial and cannot satisfy SIP qualification. No order submission is implemented.
