@@ -50,7 +50,7 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         if (bars.ValueKind == JsonValueKind.Object)
         {
             if (!bars.TryGetProperty(symbol.ToUpperInvariant(), out var symbolBars))
-                bars = JsonDocument.Parse("[]").RootElement.Clone();
+                bars = JsonSerializer.SerializeToElement(Array.Empty<object>());
             else if (symbolBars.ValueKind == JsonValueKind.Array || symbolBars.ValueKind == JsonValueKind.Null)
                 bars = symbolBars;
             else
@@ -58,7 +58,7 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         }
         else if (bars.ValueKind == JsonValueKind.Null)
         {
-            bars = JsonDocument.Parse("[]").RootElement.Clone();
+            bars = JsonSerializer.SerializeToElement(Array.Empty<object>());
         }
         else if (bars.ValueKind != JsonValueKind.Array)
         {
