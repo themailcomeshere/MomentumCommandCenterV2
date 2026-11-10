@@ -9,6 +9,7 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// PURPOSE: Append-only local persistence for raw provider OHLCV observations.
 /// WHEN CALLED: The API receives provider bars during comparisons or brief generation.
 /// IMPORTANT: Identical observations are idempotent; changed values are appended as corrections.
+/// Latest observations are indexed in memory by symbol so reads do not rescan the JSONL file.
 /// </summary>
 public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
 {
@@ -17,7 +18,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     private readonly string _path = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH")
         ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "MomentumCommandCenterV2", "market-bars.jsonl");
-    private readonly Dictionary<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp), (string Hash, string Id)> _latest = new();
+
+    private readonly Dictionary<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp), MarketBarObservation> _latest = new();
+    private readonly Dictionary<string, HashSet<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp)>> _keysBySymbol = new(StringComparer.OrdinalIgnoreCase);
     private bool _loaded;
 
     /// <summary>
@@ -42,22 +45,22 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
             foreach (var bar in bars)
             {
                 var normalized = bar with { Symbol = bar.Symbol.ToUpperInvariant(), Timeframe = NormalizeTimeframe(bar.Timeframe) };
-                var key = (normalized.Provider, normalized.Symbol, normalized.Timeframe, normalized.Feed ?? string.Empty, normalized.Timestamp);
+                var key = CreateKey(normalized);
                 var hash = Hash(normalized);
-                if (_latest.TryGetValue(key, out var previous) && previous.Hash == hash)
+                if (_latest.TryGetValue(key, out var previous) && previous.ContentHash == hash)
                     continue;
 
                 var observation = new MarketBarObservation(
                     Guid.NewGuid().ToString("N"),
                     DateTimeOffset.UtcNow,
-                    bar.Provider,
-                    bar.Symbol.ToUpperInvariant(),
-                    bar.Timestamp,
+                    normalized.Provider,
+                    normalized.Symbol,
+                    normalized.Timestamp,
                     normalized,
                     hash,
-                    _latest.TryGetValue(key, out previous) ? previous.Id : null);
+                    previous?.ObservationId);
                 await writer.WriteLineAsync(JsonSerializer.Serialize(observation, JsonOptions).AsMemory(), cancellationToken);
-                _latest[key] = (hash, observation.ObservationId);
+                IndexObservation(key, observation);
                 appended++;
             }
             await writer.FlushAsync(cancellationToken);
@@ -73,6 +76,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     /// PURPOSE: Read the latest retained observation for each source bar in a requested window.
     /// WHEN CALLED: A consumer needs source-backed historical bars for analysis.
     /// IMPORTANT: Corrections remain in JSONL; this query returns the latest version per provider/symbol/timestamp.
+    /// The JSONL history is loaded once per process; subsequent reads use the symbol index in memory.
     /// </summary>
     public async Task<IReadOnlyList<MarketBarObservation>> GetLatestAsync(
         string symbol,
@@ -91,32 +95,27 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         if (limit is < 1 or > 10000)
             throw new ArgumentOutOfRangeException(nameof(limit), "Limit must be 1–10000.");
 
+        var normalizedSymbol = symbol.Trim().ToUpperInvariant();
+        var normalizedProvider = string.IsNullOrWhiteSpace(provider) ? null : provider.Trim();
         var normalizedTimeframe = timeframe is null ? null : NormalizeTimeframe(timeframe);
+        var normalizedFeed = string.IsNullOrWhiteSpace(feed) ? null : feed.Trim();
+
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            if (!File.Exists(_path)) return Array.Empty<MarketBarObservation>();
-            var latest = new Dictionary<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp), MarketBarObservation>();
-            using var reader = new StreamReader(new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-            while (await reader.ReadLineAsync(cancellationToken) is { } line)
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-                var observation = JsonSerializer.Deserialize<MarketBarObservation>(line, JsonOptions)
-                    ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
-                if (!observation.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                    (provider is not null && !observation.Provider.Equals(provider.Trim(), StringComparison.OrdinalIgnoreCase)) ||
-                    (normalizedTimeframe is not null && !NormalizeTimeframe(observation.Bar.Timeframe).Equals(normalizedTimeframe, StringComparison.OrdinalIgnoreCase)) ||
-                    (feed is not null && !string.Equals(observation.Bar.Feed, feed.Trim(), StringComparison.OrdinalIgnoreCase)) ||
-                    observation.SourceTimestamp < fromUtc || observation.SourceTimestamp > toUtc)
-                    continue;
+            await EnsureIndexLoadedAsync(cancellationToken);
+            if (!_keysBySymbol.TryGetValue(normalizedSymbol, out var symbolKeys))
+                return Array.Empty<MarketBarObservation>();
 
-                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), NormalizeTimeframe(observation.Bar.Timeframe), observation.Bar.Feed ?? string.Empty, observation.SourceTimestamp);
-                latest[key] = observation;
-            }
-
-            return latest.Values
-                .OrderBy(x => x.SourceTimestamp)
-                .ThenBy(x => x.Provider, StringComparer.OrdinalIgnoreCase)
+            return symbolKeys
+                .Select(key => _latest[key])
+                .Where(observation =>
+                    (normalizedProvider is null || observation.Provider.Equals(normalizedProvider, StringComparison.OrdinalIgnoreCase)) &&
+                    (normalizedTimeframe is null || NormalizeTimeframe(observation.Bar.Timeframe).Equals(normalizedTimeframe, StringComparison.OrdinalIgnoreCase)) &&
+                    (normalizedFeed is null || string.Equals(observation.Bar.Feed, normalizedFeed, StringComparison.OrdinalIgnoreCase)) &&
+                    observation.SourceTimestamp >= fromUtc && observation.SourceTimestamp <= toUtc)
+                .OrderBy(observation => observation.SourceTimestamp)
+                .ThenBy(observation => observation.Provider, StringComparer.OrdinalIgnoreCase)
                 .TakeLast(limit)
                 .ToArray();
         }
@@ -127,8 +126,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     }
 
     /// <summary>
-    /// PURPOSE: Rebuild the idempotency/correction index from prior append-only observations.
-    /// WHEN CALLED: The first append after process start.
+    /// PURPOSE: Rebuild the in-memory latest-observation and symbol indexes from append-only JSONL.
+    /// WHEN CALLED: The first read or append after process start.
+    /// IMPORTANT: This is the only full-file scan in a process lifetime.
     /// </summary>
     private async Task EnsureIndexLoadedAsync(CancellationToken cancellationToken)
     {
@@ -141,12 +141,28 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
                 if (string.IsNullOrWhiteSpace(line)) continue;
                 var observation = JsonSerializer.Deserialize<MarketBarObservation>(line, JsonOptions)
                     ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
-                var key = (observation.Provider, observation.Symbol.ToUpperInvariant(), NormalizeTimeframe(observation.Bar.Timeframe), observation.Bar.Feed ?? string.Empty, observation.SourceTimestamp);
-                _latest[key] = (observation.ContentHash, observation.ObservationId);
+                var key = CreateKey(observation.Bar);
+                IndexObservation(key, observation);
             }
         }
         _loaded = true;
     }
+
+    private void IndexObservation(
+        (string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp) key,
+        MarketBarObservation observation)
+    {
+        _latest[key] = observation;
+        if (!_keysBySymbol.TryGetValue(key.Symbol, out var keys))
+        {
+            keys = new HashSet<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp)>();
+            _keysBySymbol[key.Symbol] = keys;
+        }
+        keys.Add(key);
+    }
+
+    private static (string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp) CreateKey(MarketBar bar) =>
+        (bar.Provider, bar.Symbol.ToUpperInvariant(), NormalizeTimeframe(bar.Timeframe), bar.Feed ?? string.Empty, bar.Timestamp);
 
     private static string NormalizeTimeframe(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "UNKNOWN" : value.Trim().ToLowerInvariant() switch
