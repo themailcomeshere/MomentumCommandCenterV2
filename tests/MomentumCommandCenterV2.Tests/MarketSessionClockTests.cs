@@ -63,7 +63,7 @@ public sealed class MarketSessionClockTests
         Assert.Equal(DateTimeOffset.Parse("2026-11-03T01:00:00Z"), result.TargetUtc);
         Assert.False(result.OvernightEvaluationOpen);
         Assert.False(result.OvernightBuyWindowOpen);
-        Assert.Equal(new DateOnly(2026, 11, 2), result.OvernightBuySessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 3), result.OvernightBuySessionDate);
         Assert.Contains("Buy Day after-hours", result.OvernightScheduleNote);
     }
 
