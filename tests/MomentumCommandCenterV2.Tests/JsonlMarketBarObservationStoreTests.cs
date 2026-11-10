@@ -284,6 +284,11 @@ public sealed class JsonlMarketBarObservationStoreTests
                 "TEST", "TestProvider", original.Timestamp, original.Timestamp, 10, CancellationToken.None);
             Assert.Single(initialRead);
             Assert.Equal(10.5, initialRead[0].Bar.Close);
+            var coldLoadDiagnostics = restartedStore.GetDiagnostics();
+            Assert.True(coldLoadDiagnostics.IndexLoaded);
+            Assert.Equal(1, coldLoadDiagnostics.IndexLoadCount);
+            Assert.Equal(1, coldLoadDiagnostics.IndexedUniqueKeyCount);
+            Assert.True(coldLoadDiagnostics.LastIndexLoadElapsedMs >= 0);
 
             var corrected = original with { High = 11.2, Close = 10.8 };
             Assert.Equal(1, await restartedStore.AppendAsync(new[] { corrected }, CancellationToken.None));
@@ -292,6 +297,8 @@ public sealed class JsonlMarketBarObservationStoreTests
             Assert.Single(correctedRead);
             Assert.Equal(10.8, correctedRead[0].Bar.Close);
             Assert.Equal(initialRead[0].ObservationId, correctedRead[0].SupersedesObservationId);
+            Assert.Equal(1, restartedStore.GetDiagnostics().IndexLoadCount);
+            Assert.Equal(1, restartedStore.GetDiagnostics().IndexedUniqueKeyCount);
             Assert.Equal(2, (await File.ReadAllLinesAsync(path)).Length);
         }
         finally
