@@ -465,6 +465,8 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - [x] Added a 20-second `AbortController` timeout covering both response retrieval and JSON-body parsing. Timeout now cancels the request and flows into the existing fail-closed handler, which sets 1M CLOSE/DAILY VWAP/ATR14/ATR EXTENSION to DATA? and RELATIVE VOLUME to UNKNOWN, with a clear timeout message in the classification headline.
 - [x] Retained per-symbol in-flight de-duplication and stale-response sequence protection. No calculations, qualification gates, source selection or READY logic changed.
 - [x] Frontend cache key: `20261110-live-assessment-timeout-v1`.
+
+- [x] Isolated V8 harness compiled the updated `fetchLiveAssessment()` function, simulated a stalled fetch/abort, observed the explicit 20-second timeout message, and verified the in-flight map entry is removed. This is a focused function-level check, not full browser, exact-head CI, or Windows runtime acceptance.
 - [ ] Exact-head GitHub Actions result and operator Windows/browser acceptance remain pending.
 - [ ] In Intraday mode, select CRBG and observe the five cards. They must either populate from a successful API response or leave Loading within 20 seconds with a timeout explanation. Record Network request outcome and API `performanceDiagnostics`.
 - [ ] After a timeout, select another symbol or retry CRBG; verify the aborted in-flight entry is removed and the next request can succeed. Verify a normal successful response repopulates all five values.
