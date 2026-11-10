@@ -365,4 +365,4 @@ After hard refresh, a successful click should generate GET /api/providers/status
 - The index rebuild duration is not yet known; previous 7.1ms store read does not prove the rebuild occurred during that request.
 - Calculated Limit Sell still needs operator browser acceptance after this fix.
 - The final-hour clock has boundary tests but no operator browser observation at the scheduled time.
-- Latest branch-head CI is pending until the newest workflow completes.
+- Latest branch HEAD 3275da2ac1381f8c8629b6b982de4caf721847cd passed GitHub Actions: frontend JavaScript syntax validation, .NET Release build, and .NET tests. Local Windows/API/browser acceptance remains pending.
