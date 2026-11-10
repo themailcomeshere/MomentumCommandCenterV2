@@ -528,7 +528,7 @@ function renderOvernightShortlistPicker(rows){
  const sortedRows=rows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)));
  const uniqueRows=[];const seenSymbols=new Set();
  for(const item of sortedRows){const symbol=String(item.symbol||"").trim().toUpperCase();if(!symbol||seenSymbols.has(symbol))continue;seenSymbols.add(symbol);uniqueRows.push(item);}
- const ranked=uniqueRows.slice(0,4).map(x=>String(x.symbol||"").toUpperCase());
+ const ranked=getBoringOvernightCandidateRows(4).map(x=>String(x.symbol||"").toUpperCase());
  const paint=(id,items,empty)=>{const host=$(id);if(!host)return;host.replaceChildren();(items.length?items:[]).forEach((symbol,index)=>{const tag=document.createElement("span");tag.className="overnight-shortlist-symbol";tag.textContent=(index+1)+". "+symbol;host.append(tag);});if(!items.length){const note=document.createElement("span");note.className="muted small";note.textContent=empty;host.append(note);}};
  paint("overnightMccTopFourDisplay",ranked,"No imported rows");paint("overnightMyTopFourDisplay",overnightManualSymbols,"Select four symbols below");
  symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();renderCatalystHumanReviewQueue();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
@@ -582,15 +582,7 @@ async function fetchOvernightTopFourEvidence(){
 
 
 function getOvernightTopSymbols(limit=20){
- const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
- const scoreOf=item=>{const raw=String(item.score??"").replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);return raw?Number(raw[0]):-Infinity;};
- const seen=new Set(),ranked=[];
- for(const item of rows.slice().sort((a,b)=>scoreOf(b)-scoreOf(a)||String(a.symbol).localeCompare(String(b.symbol)))){
-  const symbol=String(item.symbol||"").trim().toUpperCase();
-  if(!symbol||seen.has(symbol))continue;seen.add(symbol);ranked.push(symbol);
-  if(ranked.length>=limit)break;
- }
- return ranked;
+ return getBoringOvernightCandidateRows(limit).map(item=>String(item.symbol||"").trim().toUpperCase()).filter(Boolean);
 }
 function populateDailyAuditFromOvernightTop20(){
  const scannerInput=$("apiScanSymbols"),topSymbols=getOvernightTopSymbols(20);
@@ -600,7 +592,7 @@ function populateDailyAuditFromOvernightTop20(){
  const symbols=getOvernightTopSymbols(20);
  if(!input||!symbols.length)return;
  input.value=symbols.join(",");
- if(status)status.textContent="Populated with the top "+symbols.length+" unique imported Overnight Scanner symbols, sorted by Overnight Score. Click Validate Daily data to request their 20-session evidence; this step only fills the input.";
+ if(status)status.textContent="Populated with "+symbols.length+" unique Boring Overnight shortlist symbols, median-first. Click Validate Daily data to request their 20-session evidence; this step only fills the input.";
 }
 
 async function fetchDailyDataAudit(){
