@@ -111,6 +111,62 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         return normalized;
     }
 
+    public async Task<LatestTradeSnapshot?> GetLatestTradeAsync(string symbol, CancellationToken cancellationToken)
+    {
+        if (!IsConfigured) throw new ProviderNotConfiguredException("Alpaca latest-trade lookup requires server-side API credentials.");
+        if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
+            !symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
+            throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
+
+        var query = $"v2/stocks/{Uri.EscapeDataString(symbol.ToUpperInvariant())}/trades/latest?feed={Uri.EscapeDataString(_feed)}";
+        using var response = await SendWithRetryAsync(query, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"Alpaca latest trade returned {(int)response.StatusCode} {response.ReasonPhrase}: {TrimError(body)}", null, response.StatusCode);
+        using var document = JsonDocument.Parse(body);
+        if (!document.RootElement.TryGetProperty("trade", out var trade) ||
+            trade.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            return null;
+        var price = trade.GetProperty("p").GetDecimal();
+        var timestamp = trade.GetProperty("t").GetDateTimeOffset();
+        var exchange = trade.TryGetProperty("x", out var exchangeElement) && exchangeElement.ValueKind == JsonValueKind.String
+            ? exchangeElement.GetString() : null;
+        if (price <= 0) throw new InvalidOperationException("Alpaca latest-trade response contained a non-positive price.");
+        return new(symbol.ToUpperInvariant(), price, timestamp, exchange, _feed, "Alpaca latest trade REST");
+    }
+
+    public async Task<InstrumentMetadata?> GetInstrumentMetadataAsync(string symbol, CancellationToken cancellationToken)
+    {
+        if (!IsConfigured) throw new ProviderNotConfiguredException("Alpaca instrument lookup requires server-side API credentials.");
+        if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
+            !symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
+            throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
+
+        // Alpaca asset metadata is served by the Trading API, not the Market Data API.
+        // Try live and paper hosts because credentials may belong to either account type.
+        foreach (var host in new[] { "https://api.alpaca.markets/", "https://paper-api.alpaca.markets/" })
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get,
+                new Uri(new Uri(host), $"v2/assets/{Uri.EscapeDataString(symbol.ToUpperInvariant())}"));
+            request.Headers.Add("APCA-API-KEY-ID", _key!);
+            request.Headers.Add("APCA-API-SECRET-KEY", _secret!);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (response.StatusCode == HttpStatusCode.Unauthorized) continue;
+            if (response.StatusCode == HttpStatusCode.NotFound) return null;
+            if (!response.IsSuccessStatusCode)
+                throw new HttpRequestException($"Alpaca asset metadata returned {(int)response.StatusCode} {response.ReasonPhrase}: {TrimError(body)}", null, response.StatusCode);
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+            var name = root.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null;
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            string? Read(string property) => root.TryGetProperty(property, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+            return new(symbol.ToUpperInvariant(), name, Read("exchange"), Read("class"), Read("status"), "Alpaca asset metadata");
+        }
+        throw new HttpRequestException("Alpaca asset metadata authentication failed on both live and paper Trading API hosts.", null, HttpStatusCode.Unauthorized);
+    }
+
     private async Task<HttpResponseMessage> SendWithRetryAsync(string relativeUrl, CancellationToken cancellationToken)
     {
         for (var attempt = 1; ; attempt++)
