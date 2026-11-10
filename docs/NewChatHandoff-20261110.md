@@ -468,7 +468,8 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 
 - [x] Isolated V8 harness compiled the updated `fetchLiveAssessment()` function, simulated a stalled fetch/abort, observed the explicit 20-second timeout message, and verified the in-flight map entry is removed. This is a focused function-level check, not full browser, exact-head CI, or Windows runtime acceptance.
 - [ ] Exact-head GitHub Actions result and operator Windows/browser acceptance remain pending.
-- [ ] In Intraday mode, select CRBG and observe the five cards. They must either populate from a successful API response or leave Loading within 20 seconds with a timeout explanation. Record Network request outcome and API `performanceDiagnostics`.
+- [x] Operator confirms CRBG's five Main Chart metrics resolved successfully in Intraday mode.
+- [ ] Boring Overnight five-metric browser acceptance remains open; its independent rendering defect and correction are documented in the later November 10 follow-up.
 - [ ] After a timeout, select another symbol or retry CRBG; verify the aborted in-flight entry is removed and the next request can succeed. Verify a normal successful response repopulates all five values.
 - [ ] If timeout occurs, diagnose backend/API stage timings and logs. The timeout prevents indefinite Loading; it does not resolve an underlying slow/hung server operation.
 
