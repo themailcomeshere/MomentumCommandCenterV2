@@ -447,3 +447,52 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - Frontend source changes are committed but browser acceptance has not yet been performed.
 - Boring shortlist is a transparent heuristic, not a validated predictive ranking.
 - IEX is still partial and cannot satisfy SIP qualification.
+
+
+## November 10 follow-up — Candidate qualification evidence and focused-chart timeout
+
+### Operator evidence
+
+- [x] Candidate qualification's four independent Top 4 requests returned CRBG, FG, IBN and HDB. Each Daily result is COMPLETE_20_EXPECTED_SESSIONS with IEX_PARTIAL, 20/20 sessions and FRESH. This is expected-session completeness only, not consolidated-market qualification.
+- [x] Catalyst coverage is COMPLETE for all four symbols. FG returned one article and MATERIAL_EVENT_REVIEW. CRBG, IBN and HDB returned zero articles and UNKNOWN; no-news is not CLEAR.
+- [x] Daily Data Audit coloring was accepted: Missing Sessions NONE green, missing dates red.
+- [x] LYSDY and BNPQY each returned 0/20 sessions with the full 20-date missing list and latest expected session missing. Keep them DATA? / blocked; do not backfill or treat the missing observations as zero.
+- [ ] Find an independently supported Daily source for LYSDY and BNPQY or keep them unqualified. Preserve feed, adjustment and session provenance.
+
+### Focused Main Chart — five metrics remained Loading
+
+- [x] Source-level diagnosis: `refreshDecisionExplanation()` awaits the shared `/api/market-data/live-assessment` fetch; success and rejection paths both populate/clear all five cards, but `fetchLiveAssessment()` had no timeout. A request that never settles can therefore leave the initial Loading text indefinitely. This is a confirmed missing safeguard, not proof of the specific CRBG runtime failure.
+- [x] Added a 20-second `AbortController` timeout covering both response retrieval and JSON-body parsing. Timeout now cancels the request and flows into the existing fail-closed handler, which sets 1M CLOSE/DAILY VWAP/ATR14/ATR EXTENSION to DATA? and RELATIVE VOLUME to UNKNOWN, with a clear timeout message in the classification headline.
+- [x] Retained per-symbol in-flight de-duplication and stale-response sequence protection. No calculations, qualification gates, source selection or READY logic changed.
+- [x] Frontend cache key: `20261110-live-assessment-timeout-v1`.
+- [ ] Exact-head GitHub Actions result and operator Windows/browser acceptance remain pending.
+- [ ] In Intraday mode, select CRBG and observe the five cards. They must either populate from a successful API response or leave Loading within 20 seconds with a timeout explanation. Record Network request outcome and API `performanceDiagnostics`.
+- [ ] After a timeout, select another symbol or retry CRBG; verify the aborted in-flight entry is removed and the next request can succeed. Verify a normal successful response repopulates all five values.
+- [ ] If timeout occurs, diagnose backend/API stage timings and logs. The timeout prevents indefinite Loading; it does not resolve an underlying slow/hung server operation.
+
+### Next operator run — PowerShell first
+
+From the repository root, on `feature/opportunity-quality-classification`:
+
+```powershell
+git status --short --branch
+git branch --show-current
+.\scripts\Get-Latest-And-Test.ps1
+```
+
+After the script passes:
+
+1. Restart the API.
+2. Hard-refresh `http://localhost:53360/` (the new cache key should force `app.js` reload).
+3. Select **INTRADAY MOMENTUM** mode and focus **CRBG**.
+4. Observe 1M CLOSE, DAILY VWAP, ATR14, RELATIVE VOLUME and ATR EXTENSION. Record whether all resolve before 20 seconds.
+5. If they time out, open DevTools → Network, select the `live-assessment` request, and record its duration, cancellation/error, HTTP status if returned, and response body if any. Also capture the API log/`performanceDiagnostics`; a client timeout alone does not identify the server stage.
+6. Retry CRBG or select another symbol. Confirm the aborted request does not remain cached in the in-flight map and a subsequent request can populate the metrics.
+7. Separately continue the Boring Overnight import/shortlist/Daily audit acceptance already listed above. Do not conflate it with this Intraday Main Chart test.
+
+### Guardrails
+
+- IEX remains the configured feed and explicitly partial. Do not retry SIP, switch feed, impute data or upgrade qualification.
+- Zero returned news is UNKNOWN, not CLEAR.
+- Do not weaken ATR, Daily, catalyst, Opportunity Quality or execution gates to make the UI appear complete.
+- No order submission is implemented.
