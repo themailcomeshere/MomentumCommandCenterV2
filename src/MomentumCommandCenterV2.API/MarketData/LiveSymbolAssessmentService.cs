@@ -245,7 +245,7 @@ public sealed class LiveSymbolAssessmentService(
                     totalElapsedMs = Math.Round(requestStopwatch.Elapsed.TotalMilliseconds, 1),
                     jsonlIndexLoaded = jsonlStoreDiagnostics?.IndexLoaded,
                     jsonlIndexLoadCount = jsonlStoreDiagnostics?.IndexLoadCount,
-                    jsonlIndexLastLoadElapsedMs = jsonlStoreDiagnostics is null ? null : Math.Round(jsonlStoreDiagnostics.LastIndexLoadElapsedMs, 1),
+                    jsonlIndexLastLoadElapsedMs = jsonlStoreDiagnostics is null ? (double?)null : Math.Round(jsonlStoreDiagnostics.LastIndexLoadElapsedMs, 1),
                     jsonlIndexUniqueObservationKeys = jsonlStoreDiagnostics?.IndexedUniqueKeyCount,
                     note = "Server-side stage timings for this uncached assessment. JSONL index-load timing is the most recent one-time process-local rebuild, not necessarily work performed by this request. Provider fetch duration covers 1m and 5m requests in parallel; it is not a provider-side timing breakdown."
                 },
