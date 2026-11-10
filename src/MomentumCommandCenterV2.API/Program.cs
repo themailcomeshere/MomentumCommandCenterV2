@@ -23,7 +23,7 @@ builder.Services.AddSwaggerGen(options =>
         string tag;
         if (path == "/api/health" || path == "/api/providers/status")
             tag = "System & Provider Health";
-        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/latest-trade" || path == "/api/market-data/instrument" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status" || path == "/api/market-data/daily" || path == "/api/market-data/catalyst-assessment" || path.StartsWith("/api/market-data/catalyst-reviews", StringComparison.OrdinalIgnoreCase))
+        else if (path == "/api/market-data/compare" || path == "/api/market-data/bars" || path == "/api/market-data/latest-trade" || path == "/api/market-data/instrument" || path == "/api/market-data/yahoo-extended-hours" || path == "/api/market-data/import-csv" || path == "/api/market-data/stored-bars" || path == "/api/market-data/replay" || path == "/api/market-data/stream/status" || path == "/api/market-data/daily" || path == "/api/market-data/catalyst-assessment" || path.StartsWith("/api/market-data/catalyst-reviews", StringComparison.OrdinalIgnoreCase))
             tag = "Market Data";
         else if (path == "/api/scanner/universe")
             tag = "Scanner & Discovery";
@@ -82,6 +82,12 @@ builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWa
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapReferenceStore>();
 builder.Services.AddSingleton<MorningBriefSnapshotStore>();
+builder.Services.AddHttpClient<YahooFinanceQuoteClient>(client =>
+{
+    client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
+    client.Timeout = TimeSpan.FromSeconds(8);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("MomentumCommandCenter/3.0");
+});
 builder.Services.AddHttpClient<AlpacaMarketDataAdapter>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -583,6 +589,23 @@ app.MapGet("/api/market-data/replay", async (
 })
 .WithSummary("Replay a historical V2 decision from persisted 1m/5m OHLCV")
 .WithDescription("Query parameters: symbol and asOfUtc (UTC timestamp ending in Z) are required; providerName (default Alpaca), feed, and hasPosition (default false) are optional. Missing required query parameters return HTTP 400. Uses only stored completed bars at or before asOfUtc and the current V2SignalEngine/default configuration. It does not fetch missing bars, infer historical broker positions, or submit orders.");
+
+app.MapGet("/api/market-data/yahoo-extended-hours", async (
+    string symbol,
+    YahooFinanceQuoteClient yahoo,
+    CancellationToken cancellationToken) =>
+{
+    if (!IsValidSymbol(symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var quote = await yahoo.GetQuoteAsync(symbol, cancellationToken);
+        return quote is null ? Results.NotFound(new { symbol = symbol.ToUpperInvariant(), error = "Yahoo Finance returned no quote metadata." }) : Results.Ok(quote);
+    }
+    catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
+    { return Results.Problem($"Yahoo Finance reference lookup failed: {ex.GetType().Name}: {ex.Message}", statusCode = 502); }
+})
+.WithSummary("Retrieve Yahoo Finance regular/after-hours reference prices")
+.WithDescription("Secondary reference only. Yahoo after-hours metadata may be delayed and is not NBBO or an executable quote.");
 
 app.MapGet("/api/market-data/latest-trade", async (
     string symbol,
