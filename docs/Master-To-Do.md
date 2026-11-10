@@ -453,3 +453,51 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - No missing Daily sessions, prices, catalyst facts, ATR observations or timestamps may be imputed.
 - No-news is UNKNOWN, not CLEAR. Complete expected session count does not upgrade IEX_PARTIAL to consolidated coverage.
 - MCC remains decision-support-only; order submission is NOT IMPLEMENTED.
+
+
+## November 10 — Boring Overnight Main Chart metrics correction
+
+### Operator evidence and source diagnosis
+
+- [x] Operator confirmed the new cache-key deployment produced no visible errors and the Intraday CRBG Main Chart test succeeded. A clean console alone is not definitive proof of the loaded script URL; verify the Network script request when convenient.
+- [x] Operator confirmed all five Main Chart metric fields remained at Loading in Boring Overnight: 1M CLOSE, DAILY VWAP, ATR14, RELATIVE VOLUME and ATR EXTENSION.
+- [x] Traced the mode split: `refreshDecisionExplanation()` deliberately returns early in Overnight mode, while `refreshOvernightPriceSummary()` previously populated only the separate Previous Close / Latest Price cards and the Decision Explanation. The shared five metric cards therefore had no Overnight writer. This is a distinct UI wiring defect, not the live-assessment timeout.
+- [x] Confirmed Intraday Scanner Workbench is hidden by `body.boring-overnight-mode #scanner-workbench{display:none!important}` in `frontend/styles.css`. Its visible heading was renamed to **Intraday Scanner Workbench** so the feature is searchable when Intraday mode is active.
+
+### Implemented correction
+
+- [x] Added a dedicated Boring Overnight writer for all five Main Chart metric cards, using the existing historical 1M bars request and existing RTH VWAP / simple 1M ATR14 / ATR-extension diagnostic calculations.
+- [x] 1M CLOSE is explicitly the latest returned historical 1M bar close, not a live quote or execution price.
+- [x] DAILY VWAP is labelled as the last available RTH 1M typical-price VWAP proxy, with its session date and contributing volume-bar count.
+- [x] ATR14 retains the existing simple average of the latest 14 returned 1M true ranges; the UI displays available-range count and DATA? if fewer than 14 exist.
+- [x] RELATIVE VOLUME is explicitly **NOT USED** in Boring Overnight. Intraday same-time 5M RVOL is not fabricated or reused as an Overnight qualification metric.
+- [x] ATR EXTENSION is explicitly a historical descriptive calculation: absolute latest 1M close minus RTH VWAP divided by the 1M ATR14. It is not an entry/exit signal.
+- [x] Added a 20-second timeout for the Overnight historical bars request, fail-closed DATA? states on errors, a stale-symbol/request sequence guard, and cancellation of the previous summary request when a new one starts.
+- [x] Kept the optional latest-trade and Yahoo reference requests separate from the five historical metrics. The five metrics are populated before those optional reference calls finish.
+- [x] Updated the metric helper text and frontend cache key to `20261110-overnight-main-chart-metrics-v1`.
+- [ ] Run full frontend syntax/build/test validation at the exact new branch head and operator Windows/browser acceptance.
+
+### Next operator acceptance
+
+1. Pull `feature/opportunity-quality-classification`, run the repository test script and restart the API.
+2. Hard-refresh the Dashboard. Confirm the loaded `app.js?v=20261110-overnight-main-chart-metrics-v1` request in DevTools Network.
+3. Switch to **BORING OVERNIGHT**, select CRBG, and wait for the historical bars request.
+4. Confirm 1M CLOSE shows a historical close with a Phoenix timestamp; DAILY VWAP shows a value or DATA? with the RTH session and contributing bar count; ATR14 shows a value or DATA? with the range count; RELATIVE VOLUME says NOT USED; ATR EXTENSION shows a value or DATA?.
+5. Confirm none of the five fields remains Loading after the request settles. If the bars request hangs, it must time out within 20 seconds and show DATA? plus a clear message.
+6. Switch to FG or IBN and back to CRBG. Confirm stale responses from the previous symbol do not overwrite the selected symbol's metrics.
+7. Switch to INTRADAY MOMENTUM and confirm the Intraday metric path still works; verify 5M permission and 1M execution remain exclusive to Intraday mode.
+8. In Boring Overnight, verify the section headed **Intraday Scanner Workbench** is absent. In Intraday mode, search for that exact heading if needed.
+
+### Current operator-supplied Daily audit evidence
+
+- [x] CRBG, FG and IBN each show 20/20 expected sessions, FRESH, latest expected/actual date 2026-11-10, Alpaca/IEX, split/dividend adjusted, and Missing Sessions NONE.
+- [x] Their qualification remains `DATA? · IEX_PARTIAL`. Complete expected-session count does not establish SIP/consolidated coverage.
+- [ ] Continue source-backed Daily/catalyst review for CRBG, FG, IBN and HDB. Zero articles remains UNKNOWN, not CLEAR.
+- [ ] LYSDY and BNPQY remain blocked at 0/20 until an independently supported source returns validated observations.
+
+### Guardrails
+
+- Do not call the Overnight 1M ATR14 a daily ATR14. It is a 1-minute-bar simple average true range.
+- Do not compute or infer Overnight RVOL from missing same-time baselines; it is NOT USED in this workspace.
+- Do not promote any historical diagnostic to READY, execution permission, a quote, or a trade instruction.
+- Keep IEX_PARTIAL, SIP, TOS ATR parity, and provider/TOS OHLCV blockers unchanged.
