@@ -422,7 +422,7 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - Boring Top 4 now drives both the shortlist and Candidate qualification's automatic Daily/catalyst fetch. It is win-rate-first, then median, distribution consistency and lower absolute momentum rather than highest raw score. My Top 4 remains manual.
 - The Boring display shortlist retains existing historical checks and excludes extreme absolute Current ON gaps (absolute value 3% or greater). This is display selection only; no qualification gate or READY logic was changed.
 - Daily Data Audit title and Missing Sessions coloring updated.
-- Frontend cache key: 20261110-boring-overnight-workflow-redzone-v1.
+- Frontend cache key: 20261110-boring-overnight-workflow-redzone-v2.
 
 ### 13:44 Watchlist Scanner export
 
