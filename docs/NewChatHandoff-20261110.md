@@ -7,7 +7,7 @@
 
 ## Summary
 
-The November 10 operator run exposed a stale-price presentation issue, missing visibility into sell-limit evidence gates, zero-bar scanner results on IEX, and a BAYRY Daily response-envelope failure. UI and API changes have been committed to the feature branch. Do not merge to `master` as part of this work.
+The November 10 operator run exposed a stale-price presentation issue, missing visibility into sell-limit evidence gates, zero-bar scanner results on IEX, a BAYRY Daily response-envelope failure, and a JavaScript startup temporal-dead-zone error. Fixes are committed to the feature branch. Do not merge to `master` as part of this work.
 
 ## Implemented
 
@@ -42,11 +42,16 @@ The November 10 operator run exposed a stale-price presentation issue, missing v
 
 ### Overnight execution-window calculator
 
-- Research/evaluation window begins at 1:00 PM Arizona.
 - Candidate research and buying take place only during the final 60 minutes of the regular session. The buy deadline is the actual regular-session close, derived from the exchange calendar; in November standard time this is 2:00 PM Arizona, with a 1:00 PM Arizona start on a normal session. During daylight time the normal-session window is noon–1:00 PM Arizona. Early-close days use the final hour before the shortened close. After-hours is part of the holding/measurement interval, not a time to initiate the purchase.
 - Buy sessions are Monday–Thursday only. The next sell session is the next exchange trading day, with the GTC_EXT eligible window 7:00 AM–8:00 PM Eastern.
 - The header clock now displays the date-specific buy and next-session sell windows in Arizona local time. It uses named time zones and the maintained calendar for weekends, holidays, DST and early closes.
 - This is a schedule calculator, not proof of per-symbol GTC_EXT eligibility or a fill. Schwab order-ticket confirmation remains required.
+
+### Startup error correction
+
+- Fixed `ReferenceError: Cannot access 'decisionRefreshSequence' before initialization`. The sequence counter is now initialized at the top of `frontend/app.js`, before the initial `render()` can invoke `refreshDecisionExplanation()`.
+- Bumped the Dashboard script cache key in `frontend/index.html` to `20261110-decision-refresh-init-final-hour-buy-v1`; restart the API and hard-refresh so the browser does not keep the old cached script.
+- JavaScript syntax validation passed. The .NET build/test workflow passed for code-bearing commit `aa60685580c266410df1149779d70d4bc15268ef` (run `42836168264`). The latest cache-key-only commit has a separate workflow still running at handoff time.
 
 ### Scanner Workbench
 
