@@ -290,3 +290,41 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - The latest code changes have individual passing CI runs; exact latest documentation branch-head CI is still in progress at handoff time.
 - SIP remains blocked by the previously confirmed HTTP 403 entitlement response; no change in entitlement is evidenced.
 - Browser/CDP acceptance, local runtime after latest commit, Thinkorswim compilation, and regular-session collector delivery remain unverified.
+
+
+## November 10 follow-up — JSONL store latency and Calculated Limit Sell UI
+
+
+### Operator evidence
+
+- [x] RKLX Main Chart now displays the full ETF name after the focused-chart refresh fix.
+- [x] Boring Overnight buy countdown now displays remaining regular-session time and escalates urgency colors.
+- [ ] Separate final-hour evaluation clock transition to OPEN remains TBD; do not mark complete until observed at the scheduled Arizona-local start.
+- [ ] Calculated Limit Sell quick action still fails operator acceptance: disclosure shows `Assessment running…` and `DATA? — NOT CALCULATED`; complete gate list was not observed. Keep this item open.
+- [x] One EVR live-assessment timing sample supplied: client elapsed 12.046s; server diagnostics report provider fetch 487ms (1m 234ms, 5m 491ms), WebSocket-store read 11.832s, persistence 39.284s, calculation 7ms, server total 51.622s. Alpaca REST fetch and indicator calculation are not the measured bottlenecks. The client/server elapsed mismatch remains unexplained.
+
+### Implementation committed on feature branch
+
+- [x] Reworked `JsonlMarketBarObservationStore` to build the latest-observation index once per API process, index keys by symbol, and answer subsequent reads from memory instead of rescanning/deserializing the entire JSONL file for every query.
+- [x] Preserve append-only JSONL audit history, idempotent duplicate handling, correction lineage, provider/feed/timeframe isolation, and timestamp ordering.
+- [x] Added a regression test for reading existing JSONL after store restart, then appending and reading a correction through the warmed in-memory index.
+- [x] Added stage timings to Calculated Limit Sell responses: 40-window history read, exact reference-close read, ATR store read, provider parity-bar read, walk-forward validation, and total assessment duration.
+- [x] Dashboard now appends assessment timing details to the result status when the API returns them; cache key bumped to force updated JavaScript.
+- [ ] The first store access after API restart still has to rebuild the in-memory index from the existing JSONL file. Measure this cold-start cost separately from warm reads. No database migration or deletion/compaction of source observations was performed.
+- [ ] Verify warm-read performance and append persistence on the operator's actual data file; do not claim the latency issue is resolved from code inspection alone.
+- [ ] Verify Calculated Limit Sell now completes, renders every PASS/BLOCKED gate, and exposes stage timings. If still slow, use the new stage breakdown to isolate the remaining stage.
+- [ ] Exact-head CI, local Release build/tests, API restart, and browser acceptance remain pending.
+
+### Updated acceptance order
+
+1. Pull `feature/opportunity-quality-classification`, verify clean status and branch, then run ` .\\scripts\\Get-Latest-And-Test.ps1` from the repository root.
+2. Restart the API and hard-refresh the Dashboard. The script cache key is `20261110-jsonl-index-sell-limit-timings-v1`.
+3. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once and allow the request to finish. Confirm the disclosure shows all gate rows, including explicit BLOCKED reasons. Record `performanceDiagnostics` from the response or the timing summary displayed in the status.
+4. Run one EVR live-assessment request to warm the new store index if needed, then a second request to measure the warm path. Record client elapsed and all server diagnostics. The first post-restart request may include the one-time JSONL index rebuild; do not compare that cold read directly with a warm request.
+5. Verify the final-hour evaluation clock changes to OPEN at its scheduled start. This remains the only outstanding clock UI check.
+
+### Guardrails
+
+- Do not change Alpaca IEX, switch to SIP without a confirmed entitlement change, reduce sell-limit evidence gates, impute missing timestamps, or treat IEX as consolidated coverage.
+- No order is submitted by the sell-limit assessment. PROVISIONAL remains research-only.
+- Existing completed stream, scanner, BAYRY, and RKLX-name checks do not need to be repeated unless the relevant code/data changes.
