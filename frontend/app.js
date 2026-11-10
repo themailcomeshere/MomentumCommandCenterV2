@@ -83,6 +83,7 @@ async function refreshMarketSessionClock(){
   if($("marketSessionLabel"))$("marketSessionLabel").textContent="Market session clock";
   if($("marketSessionCountdown"))$("marketSessionCountdown").textContent="DATA?";
   overnightEvaluationTargetUtc=null;overnightBuyDeadlineUtc=null;overnightBuyWindowStartUtc=null;overnightSellWindowStartUtc=null;overnightSellWindowEndUtc=null;overnightBuySessionDate=null;overnightSellSessionDate=null;overnightEvaluationOpen=false;
+   if($("overnightBuyWindowSchedule"))$("overnightBuyWindowSchedule").textContent="Buy window · DATA?";if($("overnightSellWindowSchedule"))$("overnightSellWindowSchedule").textContent="GTC_EXT sell window · DATA?";
   if($("overnightEvaluationCountdown"))$("overnightEvaluationCountdown").textContent="DATA?";
   if($("overnightBuyCountdown"))$("overnightBuyCountdown").textContent="DATA?";
   if($("marketSessionDetail"))$("marketSessionDetail").textContent="Unavailable · "+error.message;
