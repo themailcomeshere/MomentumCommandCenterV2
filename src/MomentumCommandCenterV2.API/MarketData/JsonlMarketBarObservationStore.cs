@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -21,7 +22,17 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
 
     private readonly Dictionary<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp), MarketBarObservation> _latest = new();
     private readonly Dictionary<string, HashSet<(string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp)>> _keysBySymbol = new(StringComparer.OrdinalIgnoreCase);
-    private bool _loaded;
+    private volatile bool _loaded;
+    private long _indexLoadCount;
+    private long _lastIndexLoadElapsedTicks;
+    private long _indexedUniqueKeyCount;
+
+    /// <summary>Snapshot of the one-time JSONL index rebuild for runtime diagnostics.</summary>
+    public JsonlMarketBarObservationStoreDiagnostics GetDiagnostics() => new(
+        _loaded,
+        Interlocked.Read(ref _indexLoadCount),
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadElapsedTicks)).TotalMilliseconds,
+        Interlocked.Read(ref _indexedUniqueKeyCount));
 
     /// <summary>
     /// PURPOSE: Store bars while deduplicating identical source observations and retaining corrections.
@@ -133,6 +144,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     private async Task EnsureIndexLoadedAsync(CancellationToken cancellationToken)
     {
         if (_loaded) return;
+        var stopwatch = Stopwatch.StartNew();
         if (File.Exists(_path))
         {
             using var reader = new StreamReader(new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
@@ -145,6 +157,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
                 IndexObservation(key, observation);
             }
         }
+        stopwatch.Stop();
+        Interlocked.Exchange(ref _lastIndexLoadElapsedTicks, stopwatch.Elapsed.Ticks);
+        Interlocked.Increment(ref _indexLoadCount);
         _loaded = true;
     }
 
@@ -152,6 +167,8 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         (string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp) key,
         MarketBarObservation observation)
     {
+        if (!_latest.ContainsKey(key))
+            Interlocked.Increment(ref _indexedUniqueKeyCount);
         _latest[key] = observation;
         if (!_keysBySymbol.TryGetValue(key.Symbol, out var keys))
         {
@@ -209,3 +226,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }
 }
+
+public sealed record JsonlMarketBarObservationStoreDiagnostics(
+    bool IndexLoaded,
+    long IndexLoadCount,
+    double LastIndexLoadElapsedMs,
+    long IndexedUniqueKeyCount);
