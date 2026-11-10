@@ -1,3 +1,41 @@
+## November 10 — Operator feedback, price provenance, and blocker work
+
+### Implemented on `feature/opportunity-quality-classification`
+
+- [x] Added a color-coded classification directly below the focused-symbol input. Intraday displays the separate Opportunity Quality diagnostic; Boring Overnight displays the imported Boring Winner PASS/FAIL as RESEARCH ONLY, or NOT CALCULATED. It never promotes the research flag to READY.
+- [x] Main Chart heading now resolves the instrument's display name from Alpaca asset metadata, with Yahoo Finance name fallback.
+- [x] Added Alpaca latest-trade REST retrieval on the configured feed and an optional Yahoo Finance extended-hours reference endpoint. The Overnight price card selects the newest timestamp among the returned bar, Alpaca trade and Yahoo post-market reference, and shows source/time/staleness. Neither provider trade nor Yahoo reference is NBBO or guaranteed executable.
+- [x] Replaced the incorrect implication that a latest 1M bar close is an after-hours quote. If no newer provider trade/reference exists, the card explicitly labels the old value as the last returned bar/trade and shows its age.
+- [x] Added an expandable failed-evidence list directly inside the focused Calculated Limit Sell card. The quick button still delegates to the existing evidence-gated API and submits no order.
+- [x] Overnight Scan & Analyze defaults to a five-calendar-day history window; Intraday retains the six-hour window. Results identify the actual provider/feed and explain that zero IEX bars are not proof of no market activity.
+- [x] Alpaca Daily response parsing now accepts either a normal bars array or a symbol-keyed `bars.{SYMBOL}` array. Explicit null/missing-symbol results become incomplete DATA? observations; unexpected JSON shapes still fail with a shape-specific error. Added regression coverage.
+- [x] Successful Alpaca stream authentication/subscription clears the previous connection error so a stale `connection limit exceeded` message is not shown as the current failure after a later successful connection.
+- [x] Boring Winner import UI now explains that the expected input is a Daily OHLC CSV with Date/Open/High/Low/Close, not the 1M/5M ATR parity report. Extended Hours defaults OFF; corporate-action adjustment defaults ON; chart timezone defaults to America/Phoenix.
+- [x] Added tests for timestamped Alpaca latest trades, symbol-keyed Daily bars, and Yahoo after-hours metadata.
+
+### Operator evidence from November 10
+
+- [x] API health returned OK and explicitly reported decision-support-only / order submission NOT IMPLEMENTED.
+- [x] Alpaca IEX provider status returned VALIDATED_DATA_RETURNED with 1,204 bars.
+- [x] Alpaca minute-bar stream reported a prior authentication `connection limit exceeded` error while its snapshot also reported SUBSCRIBED and zero received bars. A zero bar count after the U.S. extended session is not by itself proof of a broken stream; recheck during regular hours. Latest code clears stale error text after a successful reconnect.
+- [x] The historical RKLX bar shown by the UI was 11/9 2:46 PM Arizona at $9.7800. It was not a current after-hours quote.
+- [x] Scanner Workbench returned zero 1M/5M bars for the supplied 20-symbol set on the configured IEX feed/window. This is feed/window coverage evidence, not a claim that those securities had no market activity.
+
+### Still blocked — do not fabricate or waive evidence
+
+- [ ] RKLX live/after-hours price source acceptance: verify local Yahoo post-market reference and Alpaca latest IEX trade timestamps against an independently observed quote. Yahoo is secondary indicative data; IEX is partial.
+- [ ] Sell-limit remains fail-closed on IEX. The 5-day 1M bars returned by `/api/market-data/bars` do not equal the required 40 complete GTC_EXT sessions, SIP feed, exact reference close, 119-bar 5M TOS ATR parity, exact provider/TOS OHLCV and walk-forward evidence. Use the new disclosure to record every blocked gate.
+- [ ] Scanner symbols with zero IEX observations require a properly entitled consolidated source or a clearly labelled alternate feed. Do not change the effective feed silently.
+- [ ] BAYRY parser fix requires local retest. If it still fails, capture only the sanitized response root shape and provider status; never capture credentials.
+- [ ] Run new branch-head CI and operator Windows build/runtime/browser acceptance.
+- [ ] Compile and verify the revised ThinkScript in Thinkorswim; source changes in GitHub do not prove TOS compilation.
+
+### Boring Winner import — precise input contract
+
+The Dashboard importer expects one CSV row per completed **Daily** bar and the columns `Date, Open, High, Low, Close`. The existing 1M/5M ATR StrategyReport is not the intended input. A StrategyReport is usable only if it actually contains those daily-bar fields, one row per daily bar, without order-event rows or timestamp ambiguity.
+
+Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open is the regular-session open used by `open / close[1] - 1`; corporate-action adjustment ON; chart timezone America/Phoenix. Import at least 21 completed daily bars (40–60 is preferred for review). The import records these settings as provenance but does not independently prove TOS session semantics. Boring Winner remains RESEARCH ONLY.
+
 ## Boring Overnight UI implementation — 2026-11-09
 
 - [x] Added Previous Regular-Session Close, Latest Price (identified as extended-hours when latest 1M bar is outside RTH), and Calculated Limit Sell to the focused-symbol panel.
