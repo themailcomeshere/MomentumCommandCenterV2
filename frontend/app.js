@@ -161,7 +161,7 @@ function render(){
   void refreshFocusedPriceChart();
  }
 }
-$("mode")?.addEventListener("change",render);
+$("mode")?.addEventListener("change",()=>{render();renderMorningReport();});
 $("symbol")?.addEventListener("change",render);
 $("reset")?.addEventListener("click",()=>{if($("mode"))$("mode").value="momentum";render();void refreshFocusedPriceChart();});
 render();
@@ -539,11 +539,11 @@ function updateOvernightShortlistMode(){
  const mcc=$("overnightShortlistMcc"),manual=$("overnightShortlistManual"),button=$("overnightQualRefreshMarket"),active=$("overnightShortlistActive");
  if(mcc){mcc.setAttribute("aria-pressed",String(overnightShortlistMode==="mcc"));mcc.classList.toggle("active",overnightShortlistMode==="mcc");}
  if(manual){manual.setAttribute("aria-pressed",String(overnightShortlistMode==="manual"));manual.classList.toggle("active",overnightShortlistMode==="manual");manual.disabled=overnightManualSymbols.length!==4;}
- if(button)button.textContent=overnightShortlistMode==="mcc"?"Fetch Daily + catalyst for MCC Top 4":"Fetch Daily + catalyst for My Top 4";
- if(active)active.textContent=overnightShortlistMode==="mcc"?"Active group: MCC Top 4 · highest imported scanner scores":"Active group: My Top 4 · "+(overnightManualSymbols.length===4?overnightManualSymbols.join(", "):"select four symbols");
+ if(button)button.textContent=overnightShortlistMode==="mcc"?"Fetch Daily + catalyst for Boring Top 4":"Fetch Daily + catalyst for My Top 4";
+ if(active)active.textContent=overnightShortlistMode==="mcc"?"Active group: Boring Top 4 · median-first historical profile":"Active group: My Top 4 · "+(overnightManualSymbols.length===4?overnightManualSymbols.join(", "):"select four symbols");
 }
-$("overnightShortlistMcc")?.addEventListener("click",()=>{overnightShortlistMode="mcc";saveOvernightShortlists();updateOvernightShortlistMode();});
-$("overnightShortlistManual")?.addEventListener("click",()=>{if(overnightManualSymbols.length!==4)return;overnightShortlistMode="manual";saveOvernightShortlists();updateOvernightShortlistMode();});
+$("overnightShortlistMcc")?.addEventListener("click",()=>{overnightShortlistMode="mcc";saveOvernightShortlists();updateOvernightShortlistMode();renderMorningReport();});
+$("overnightShortlistManual")?.addEventListener("click",()=>{if(overnightManualSymbols.length!==4)return;overnightShortlistMode="manual";saveOvernightShortlists();updateOvernightShortlistMode();renderMorningReport();});
 async function fetchOvernightTopFourEvidence(){
  const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
  if(!rows.length){if(status)status.textContent="Import the Overnight Scanner CSV first.";return;}
@@ -552,7 +552,7 @@ async function fetchOvernightTopFourEvidence(){
  const uniqueRows=[];const seenSymbols=new Set();
  for(const item of sortedRows){const symbol=String(item.symbol||"").trim().toUpperCase();if(!symbol||seenSymbols.has(symbol))continue;seenSymbols.add(symbol);uniqueRows.push(item);}
  const ranked=uniqueRows;
- const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>uniqueRows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):ranked.slice(0,4);
+ const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>uniqueRows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):getBoringOvernightCandidateRows(4);
  if(selected.length!==4){if(status)status.textContent=overnightShortlistMode==="manual"?"Select exactly four symbols in My Top 4 before fetching.":"MCC could not identify four distinct imported candidates.";return;}
  if(button)button.disabled=true;if(status)status.textContent="Fetching Daily and catalyst evidence for "+(overnightShortlistMode==="manual"?"My Top 4":"MCC Top 4")+": "+selected.map(x=>x.symbol).join(", ")+"…";
  const results=await Promise.all(selected.map(async item=>{
@@ -637,7 +637,8 @@ async function fetchDailyDataAudit(){
   const missing=Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length?d.missingSessionDates.join(", "):complete?"NONE":"UNKNOWN";
   const fresh=d.dataFresh===true?"FRESH":d.dataFresh===false?"STALE / LATEST MISSING":"UNKNOWN";
   const qualified=d.qualificationUsable===true?"QUALIFICATION USABLE":"DATA? · "+(d.feedCoverage||d.completeness||"INCOMPLETE");
-  tr.append(cell(result.symbol),cell(feedLabel),cell(d.adjustment),cell(latest),cell(d.retrievedAtUtc),cell(sessionLabel),cell(fmt(d.observedClose)),cell(fmt(d.observedSma20)),cell(fmt(d.observedAverageDailyVolume20,0)),cell(fresh),cell(qualified),cell(missing));
+  const missingCell=cell(missing);missingCell.className=missing==="NONE"?"audit-status-good":missing==="UNKNOWN"?"audit-status-unknown":"audit-status-warning";
+  tr.append(cell(result.symbol),cell(feedLabel),cell(d.adjustment),cell(latest),cell(d.retrievedAtUtc),cell(sessionLabel),cell(fmt(d.observedClose)),cell(fmt(d.observedSma20)),cell(fmt(d.observedAverageDailyVolume20,0)),cell(fresh),cell(qualified),missingCell);
   tr.className=d.qualificationUsable===true?"qualification-pending":"qualification-blocked";
   return tr;
  }));
@@ -905,6 +906,7 @@ $("scannerFile").addEventListener("change",event=>{
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;
+  const importStatus=$("overnightImportStatus");if(importStatus)importStatus.textContent="Imported "+imported.length+" symbols from "+file.name+". Boring shortlist and Daily audit symbols updated.";
   overnightLiveEvidence.clear();
   populateDailyAuditFromOvernightTop20();
   const importedSymbols=new Set(imported.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
@@ -1070,7 +1072,24 @@ async function refreshRedZoneAssessments(){
   await Promise.allSettled(state.pinned.filter(s=>!shown.has(String(s).toUpperCase())).map(async s=>{try{const d=await fetchLiveAssessment(s);observeRedZoneReadiness(s,d.decision||null);}catch{/* unknown data does not alert */}}));
  }
 }
+function boringMetric(value){const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const parsed=Number(raw.replace(/,/g,"").replace("%","").trim());return Number.isFinite(parsed)?parsed:null;}
+function getBoringOvernightCandidateRows(limit=4){
+ const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ const eligible=rows.filter(item=>{const m=item.overnightMetrics||{},win=boringMetric(m.onWin),avg=boringMetric(m.avgOn),median=boringMetric(m.medianOn),five=boringMetric(m.fiveDayOn),momentum=boringMetric(m.onMomentum),current=boringMetric(m.currentOn),above=boringMetric(m.above20Sma);return [win,avg,median,five,momentum,current,above,boringMetric(item.score)].every(x=>x!==null)&&win>=60&&avg>=0.10&&five>avg&&Math.abs(current)<3&&above===1;});
+ return eligible.sort((a,b)=>{const x=a.overnightMetrics||{},y=b.overnightMetrics||{};const median=boringMetric(y.medianOn)-boringMetric(x.medianOn);if(median)return median;const win=boringMetric(y.onWin)-boringMetric(x.onWin);if(win)return win;const consistency=Math.abs(boringMetric(x.avgOn)-boringMetric(x.medianOn))-Math.abs(boringMetric(y.avgOn)-boringMetric(y.medianOn));if(consistency)return consistency;const momentum=Math.abs(boringMetric(x.onMomentum))-Math.abs(boringMetric(y.onMomentum));if(momentum)return momentum;return String(a.symbol).localeCompare(String(b.symbol));}).slice(0,limit);
+}
+function renderOvernightRedZone(){
+ const grid=$("redZoneGrid");if(!grid)return;const state=readRedZoneState(),rows=Array.isArray(scannerData.imported)?scannerData.imported:[],bySymbol=new Map(rows.map(item=>[String(item.symbol||"").toUpperCase(),item])),dismissed=new Set(state.dismissed||[]);
+ const automatic=getBoringOvernightCandidateRows(20).filter(item=>!dismissed.has(String(item.symbol||"").toUpperCase())).slice(0,4),selected=state.mode==="manual"?state.pinned.map(symbol=>bySymbol.get(symbol)||{symbol,score:"DATA?",overnightMetrics:{}}):automatic;
+ const ranked=selected.filter((item,index,all)=>all.findIndex(x=>String(x.symbol||"").toUpperCase()===String(item.symbol||"").toUpperCase())===index).slice(0,4);
+ const title=$("mcc-static-0072-h2");if(title)title.textContent="Boring Overnight Shortlist";const subtitle=$("reportSubtitle");if(subtitle)subtitle.textContent=state.mode==="manual"?"Manual shortlist · pinned symbols in saved order. Missing historical metrics remain DATA?.":"Automatic shortlist · existing historical scanner checks, ranked by median ON, then win rate and distribution consistency. Extreme current gaps are excluded from this display shortlist. Research only; not trade permission.";
+ const eyebrow=document.querySelector("#red-zone .eyebrow");if(eyebrow)eyebrow.textContent="BORING OVERNIGHT · HISTORICAL SHORTLIST";const modeButton=$("toggleRedZoneMode");if(modeButton){modeButton.textContent=state.mode==="manual"?"Mode: Manual":"Mode: Automatic";modeButton.setAttribute("aria-pressed",String(state.mode==="manual"));modeButton.title="Automatic mode shows the boring-profile shortlist; manual mode shows pinned symbols.";}
+ $("morningTopCount").textContent=String(ranked.length);
+ const cards=ranked.map((item,index)=>{const m=item.overnightMetrics||{},card=document.createElement("article");card.className="redzone-card overnight-redzone-card";const top=document.createElement("div");top.className="redzone-card-top";const rank=document.createElement("span");rank.className="rank-pill";rank.textContent="#"+(index+1);const status=document.createElement("span");status.className="chip";status.textContent=state.mode==="manual"?"MANUAL · REVIEW":"HISTORICAL SCREEN · PASS";top.append(rank,status);const symbol=document.createElement("h3");symbol.textContent=item.symbol;const score=document.createElement("div");score.className="redzone-score";score.textContent="Overnight Score: "+(item.score??"DATA?");const metrics=document.createElement("dl");metrics.className="overnight-redzone-metrics";for(const [label,value] of [["ON Win",m.onWin],["20D Avg ON",m.avgOn],["Median ON",m.medianOn],["5D ON",m.fiveDayOn],["ON Momentum",m.onMomentum],["Current ON",m.currentOn],["Above 20 SMA",m.above20Sma]]){const wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=label;dd.textContent=value??"DATA?";wrap.append(dt,dd);metrics.append(wrap);}const actions=document.createElement("div");actions.className="redzone-actions";const focus=document.createElement("button");focus.type="button";focus.className="quiet-button";focus.textContent="Open in Main Chart";focus.addEventListener("click",()=>{const input=$("symbol");if(input){input.value=item.symbol;input.dispatchEvent(new Event("change",{bubbles:true}));input.scrollIntoView({behavior:"smooth",block:"center"});}});const manage=document.createElement("button");manage.type="button";manage.className="quiet-button";manage.textContent=state.mode==="manual"?"Remove pin":"Dismiss";manage.addEventListener("click",()=>{const current=readRedZoneState(),ticker=String(item.symbol).toUpperCase();if(current.mode==="manual")current.pinned=current.pinned.filter(x=>x!==ticker);else current.dismissed=[...new Set([...current.dismissed,ticker])];writeRedZoneState(current);});actions.append(focus,manage);card.append(top,symbol,score,metrics,actions);return card;});
+ grid.replaceChildren(...(cards.length?cards:[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:rows.length?"No candidates meet the boring-profile shortlist rules. Review imported metrics and qualification.":"Import an Overnight Scanner CSV above to populate this shortlist."})]));previousRedZoneSymbols=new Set(ranked.map(x=>String(x.symbol||"").toUpperCase()));const status=$("redZoneManageStatus");if(status)status.textContent=ranked.length?"Boring Overnight shortlist: "+ranked.map(x=>x.symbol).join(", ")+". Intraday V2 permission and 5M/1M execution are not used in this workspace.":"No boring-profile candidates currently meet the shortlist display rules.";
+}
 function renderMorningReport(){
+ if($("mode")?.value==="overnight"){renderOvernightRedZone();return;}
  const grid=$("redZoneGrid");if(!grid)return;
  redZoneAssessmentRefreshers=[];
  const group=$("scannerGroup")?.value||"momentum";
