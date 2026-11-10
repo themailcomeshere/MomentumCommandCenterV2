@@ -602,7 +602,7 @@ app.MapGet("/api/market-data/yahoo-extended-hours", async (
         return quote is null ? Results.NotFound(new { symbol = symbol.ToUpperInvariant(), error = "Yahoo Finance returned no quote metadata." }) : Results.Ok(quote);
     }
     catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
-    { return Results.Problem($"Yahoo Finance reference lookup failed: {ex.GetType().Name}: {ex.Message}", statusCode = 502); }
+    { return Results.Problem($"Yahoo Finance reference lookup failed: {ex.GetType().Name}: {ex.Message}", statusCode: 502); }
 })
 .WithSummary("Retrieve Yahoo Finance regular/after-hours reference prices")
 .WithDescription("Secondary reference only. Yahoo after-hours metadata may be delayed and is not NBBO or an executable quote.");
