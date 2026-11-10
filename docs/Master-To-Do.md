@@ -474,6 +474,7 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - [x] RELATIVE VOLUME is explicitly **NOT USED** in Boring Overnight. Intraday same-time 5M RVOL is not fabricated or reused as an Overnight qualification metric.
 - [x] ATR EXTENSION is explicitly a historical descriptive calculation: absolute latest 1M close minus RTH VWAP divided by the 1M ATR14. It is not an entry/exit signal.
 - [x] Added a 20-second timeout for the Overnight historical bars request, fail-closed DATA? states on errors, a stale-symbol/request sequence guard, and cancellation of the previous summary request when a new one starts.
+- [x] Selected the latest completed RTH VWAP session using the current New York session clock, so a missing 16:00 ET after-hours bar does not incorrectly hide the just-completed session's VWAP.
 - [x] Kept the optional latest-trade and Yahoo reference requests separate from the five historical metrics. The five metrics are populated before those optional reference calls finish.
 - [x] Updated the metric helper text and frontend cache key to `20261110-overnight-main-chart-metrics-v1`.
 - [ ] Run full frontend syntax/build/test validation at the exact new branch head and operator Windows/browser acceptance.
