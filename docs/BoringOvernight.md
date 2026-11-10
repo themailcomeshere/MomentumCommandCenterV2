@@ -449,3 +449,17 @@ References:
 - https://toslc.thinkorswim.com/center/reference/thinkScript/tutorials/Advanced/Chapter-12---Past-Offset-and-Prefetch
 
 The current GTC_EXT UI capture control requires effective SIP and retrieves exact 07:00–19:59 ET 1-minute timestamps plus the exact previous regular close. The current 20-window audit is insufficient for a robust rolling 20-window walk-forward series; capture must be extended to a larger chronological sample before evaluation. OHLCV target touches are not broker fills. Actual fill evidence must come from broker order/execution records or a separate source-identified execution ledger.
+
+
+## November 10 — runtime diagnosis and updated UI behavior
+
+- RKLX's displayed $9.7800 was the last IEX 1M bar returned at 2:46 PM Arizona, not an after-hours quote. The focused-symbol price now queries Alpaca's configured-feed latest trade and Yahoo Finance's post-market reference, selects the newest source timestamp, and visibly marks stale data. IEX remains partial; Yahoo is an indicative secondary reference, not NBBO.
+- The Sell Limit quick action reads persisted qualification evidence only. Five days of 1M bars are not the required 40 complete GTC_EXT windows. IEX cannot pass SIP_REQUIRED. The UI now exposes each blocked evidence gate beside the button.
+- The Scan & Analyze Overnight default now requests five calendar days rather than six hours. It reports the effective provider/feed and does not interpret zero IEX bars as no market activity.
+- BAYRY Daily response parsing accepts both array and symbol-keyed bars envelopes and treats explicit empty/null data as incomplete rather than a malformed payload. Runtime confirmation is still required.
+- Stream status clears an old connection error only after successful authentication/subscription; recheck during regular market hours for received/persisted bars.
+
+### Boring Winner CSV settings
+
+Use a TOS Daily chart OHLC export with Date, Open, High, Low, Close columns, not the 1M/5M ATR parity StrategyReport. Initial settings: Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, America/Phoenix chart timezone, at least 21 completed bars (40–60 preferred). The importer stores the selected settings but does not prove session semantics. Boring Winner remains research-only until chronological validation.
+
