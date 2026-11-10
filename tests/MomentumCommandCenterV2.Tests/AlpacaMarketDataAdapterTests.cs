@@ -59,6 +59,36 @@ public sealed class AlpacaMarketDataAdapterTests
     }
 
     [Fact]
+    public async Task GetLatestTradeAsync_UsesConfiguredFeedAndParsesTimestampedPrice()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """{"symbol":"RKLX","trade":{"t":"2026-11-10T02:37:00Z","p":9.07,"s":100,"x":"V","c":["@"]}}""",
+                Encoding.UTF8, "application/json")
+        });
+        var client = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "iex"
+        }).Build();
+        var adapter = new AlpacaMarketDataAdapter(client, configuration);
+
+        var trade = await adapter.GetLatestTradeAsync("RKLX", CancellationToken.None);
+
+        Assert.NotNull(trade);
+        Assert.Equal("RKLX", trade.Symbol);
+        Assert.Equal(9.07m, trade.Price);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-10T02:37:00Z"), trade.TimestampUtc);
+        Assert.Equal("V", trade.Exchange);
+        Assert.Equal("iex", trade.Feed);
+        Assert.Contains("/trades/latest", handler.Request!.RequestUri!.ToString(), StringComparison.Ordinal);
+        Assert.Contains("feed=iex", handler.Request.RequestUri.Query, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task GetBarsAsync_UsesConfiguredSipFeedWithoutIexFallback()
     {
         var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
