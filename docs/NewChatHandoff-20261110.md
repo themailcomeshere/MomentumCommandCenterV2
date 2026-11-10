@@ -565,3 +565,54 @@ After the script passes:
 - The exact browser response payloads and computed Overnight values for CRBG have not yet been captured; browser acceptance remains with the operator.
 - The current 1M ATR14 is intentionally the existing 1M simple-average calculation, not a daily ATR.
 - No valid same-time 5M RVOL baseline is asserted for Overnight mode; RVOL is marked NOT USED.
+
+
+## November 10 — Operator acceptance update: Boring Overnight Main Chart
+
+The operator confirmed the new cache key `20261110-overnight-main-chart-metrics-v1` loaded successfully and supplied the following browser values:
+
+| Field | Observed | Displayed details |
+|---|---:|---|
+| 1M CLOSE | $35.8900 | Latest returned 1M bar; 2026-11-10 1:59 PM Arizona; Alpaca/IEX; historical only |
+| DAILY VWAP | $35.9837 | RTH 1M typical-price VWAP proxy; 2026-11-10 session; 285 volume bars |
+| ATR14 | $0.0314 | 1M simple average true range; 1,021 ranges available; 14-bar value |
+| RELATIVE VOLUME | NOT USED | Intraday same-time 5M RVOL intentionally not evaluated in Boring Overnight |
+| ATR EXTENSION | 2.98 ATR | Historical absolute close-to-RTH-VWAP distance divided by 1M ATR14; diagnostic only |
+
+Operator also confirmed:
+- Intraday Scanner Workbench is hidden in Boring Overnight mode.
+- Ctrl+F locates the exact **Intraday Scanner Workbench** heading in Intraday mode.
+
+**Status:** Boring Overnight five-metric browser acceptance and scanner visibility are COMPLETE. Detailed record: `docs/Validation/Boring-Overnight-Main-Chart-Acceptance-20261110.md`.
+
+### Important scope boundary
+
+This does not complete the full Boring Overnight workflow, prove Daily ATR14/TOS ATR parity, establish SIP coverage, qualify any symbol, or authorize an order. The displayed ATR14 is 1-minute-bar simple average true range; VWAP is an RTH 1M typical-price proxy; RVOL is NOT USED; ATR Extension is descriptive only.
+
+### Exact next operator sequence
+
+1. Run `git status --short --branch`, `git branch --show-current`, then `.\scripts\Get-Latest-And-Test.ps1` from the repository root. Stay on `feature/opportunity-quality-classification`; do not switch to master.
+2. Restart the API after the Release build passes.
+3. Verify the full Boring Overnight workflow: import the current scanner CSV, reconcile imported rows to source rows, review shortlist/top-20, fetch Daily + catalyst for four distinct Boring Top 4 symbols, and inspect each per-symbol evidence row.
+4. For CRBG, FG, IBN and HDB, record actual source-backed catalyst and Daily evidence. A zero-article response is UNKNOWN, not CLEAR; IEX_PARTIAL remains non-qualifying for consolidated coverage.
+5. Open Calculated Limit Sell for one candidate. In DevTools Network verify GET `/api/providers/status` followed by POST `/api/boring-overnight/sell-limit`; in the card expand the disclosure and verify every API-returned gate and explanation is visible. Expected overall result remains BLOCKED while SIP/history/ATR/parity gates fail. Do not use a numeric target or place an order.
+6. Check the Overnight evaluation clock against the actual exchange schedule on a standard-time date, daylight-time date and early-close date. Compare Arizona-local final-hour start and buy deadline to the true close; compare the next-session 7:00 AM–8:00 PM Eastern GTC_EXT window to the Schwab order ticket.
+7. Keep ATR V2 TOS compilation, 1m continuity, independent provider/TOS parity and SIP-dependent GTC_EXT qualification separate. Do not retry SIP absent a genuine entitlement change.
+8. Leave LYSDY/BNPQY DATA? unless an independently supported Daily source can be established. Do not retry unchanged IEX or backfill.
+9. Historical Opportunity Quality calibration requires time-separated source-qualified snapshots and outcomes. No calibration result is currently established.
+10. P2/P3 work remains broker reconciliation from actual fills, Schwab read-only OAuth approval/setup, deployment/recovery, and release governance.
+
+### Current priority/status snapshot
+
+- [x] Intraday CRBG five-metric browser acceptance.
+- [x] Boring Overnight five-metric browser acceptance and scanner visibility.
+- [ ] ATR V2 exact TOS compile; 1m continuity; independent provider/TOS OHLCV parity; SIP entitlement remains parked.
+- [ ] Daily/catalyst candidate reviews; LYSDY/BNPQY supported Daily data; Opportunity Quality calibration; full Boring Overnight workflow.
+- [ ] Calculated Limit Sell browser disclosure; Overnight evaluation clock runtime acceptance.
+- [ ] Broker reconciliation; Schwab read-only integration; deployment/recovery; release governance.
+
+[Uncertainties]
+- Browser values above are operator-reported. No raw Network HAR or screenshot was attached in this turn.
+- The source/feed remains Alpaca/IEX partial. The five displayed metric values do not establish consolidated-market coverage.
+- No source-qualified historical Opportunity Quality outcome dataset is available in the retrieved repository context.
+- TOS compile, Windows Release build/test, Calculated Limit Sell disclosure runtime, and clock-vs-Schwab-ticket comparison remain unverified.
