@@ -10,7 +10,7 @@ All eight active columns use the ThinkScript daily aggregation series. Define:
 
 `r[t] = open[t] / close[t-1] - 1`
 
-This is the current daily bar's Open relative to the previous daily bar's Close. The code itself does not specify a clock-time entry, 7:55 PM Arizona entry, after-hours low/high, premarket low/high, or a sell-window endpoint. Its real-world session interpretation therefore depends on the Thinkorswim aggregation/session settings and must be confirmed against exported TOS bars. Do not silently equate it with a custom buy-at-time return.
+This is the current daily bar's Open relative to the previous daily bar's Close. The code itself does not specify a clock-time entry, entry during the final regular-session hour, after-hours low/high, premarket low/high, or a sell-window endpoint. Its real-world session interpretation therefore depends on the Thinkorswim aggregation/session settings and must be confirmed against exported TOS bars. Do not silently equate it with a custom buy-at-time return.
 
 | Scanner order | Column | Exact computation | Interpretation |
 |---|---|---|---|
@@ -142,4 +142,4 @@ The inactive Boring Winner remains inactive pending approval and chronological s
 
 ## November 10 — Boring Winner daily OHLC export clarification
 
-The Boring Winner calculator consumes one row per completed Daily bar, with Date/Open/High/Low/Close. The ordinary ATR V2 1M/5M StrategyReport is not its input. A StrategyReport is acceptable only if it exports those exact daily OHLC rows and no order-event rows. Use Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, chart timezone America/Phoenix, and at least 21 completed daily bars (40–60 preferred). This reproduces the regular-session open versus previous regular-session close gap. Session semantics still require empirical TOS parity; Boring Winner remains RESEARCH ONLY.
+The Boring Winner calculator consumes one row per completed Daily bar, with Date/Open/High/Low/Close. The ordinary `MCC_OHLCV_ATR_V2.1` 1M/5M StrategyReport is not its input and does not automatically calculate Boring Winner. No dedicated Boring Winner Daily OHLC ThinkScript export study has been delivered yet. The importer currently requires a separate CSV with one completed daily OHLC row per date. Use Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, chart timezone America/Phoenix, and at least 21 completed daily bars (40–60 preferred). This reproduces the regular-session open versus previous regular-session close gap. Session semantics still require empirical TOS parity; Boring Winner remains RESEARCH ONLY.
