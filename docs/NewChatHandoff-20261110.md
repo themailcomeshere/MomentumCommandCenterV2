@@ -366,3 +366,44 @@ After hard refresh, a successful click should generate GET /api/providers/status
 - Calculated Limit Sell still needs operator browser acceptance after this fix.
 - The final-hour clock has boundary tests but no operator browser observation at the scheduled time.
 - Latest code-bearing commit 1f5275c9448eb3b1608fadee847d37ac855044e8 passed GitHub Actions: frontend JavaScript syntax validation, .NET Release build, and .NET tests. Documentation-only commits now advance the branch beyond that tested code SHA; their latest workflow is pending. Local Windows/API/browser acceptance remains pending.
+
+
+## November 10 — latest operator evidence and watchlist analysis
+
+### Provider and sell-limit result
+
+- Alpaca provider is configured=true, validated=true, status VALIDATED_DATA_RETURNED, configuredFeed=iex. Massive is NOT_CONFIGURED. Preserve IEX; no feed substitution.
+- The operator's Calculated Limit Sell click returned a large response containing the full gate list. This establishes that the assessment request completed and the API returned a decision. Browser rendering/Network acceptance still needs confirmation.
+- Gate result: BLOCKED SIP_REQUIRED and HISTORY_40_OF_40 because IEX is partial and cannot establish complete SIP coverage of all 40 GTC_EXT train/test windows. EXACT_REFERENCE_CLOSE passed at $10.71 from the exact 2026-11-09 20:59 UTC 1m bar. ATR settings/provenance, ATR parity, 99-observation 5m warm-up, same-source 5m OHLCV, current TOS ATR freshness and walk-forward validation are blocked. Numeric sell limit is correctly withheld.
+- Do not relax gates, impute timestamps/reference closes, or publish a target from partial evidence.
+
+### Cold JSONL index and warm EVR timings
+
+Operator measured:
+- indexLoaded=true; indexLoadCount=1; last index rebuild=16,521.1ms; 230,838 unique observation keys.
+- EVR client elapsed=428.7421ms; server total=311.3ms; provider fetch=269.3ms; 1m=156.5ms; 5m=270.8ms; WebSocket store read=4.1ms; persistence=3.9ms; calculation=26.9ms.
+- The index rebuild diagnostic is now proven and quantified. It is a one-time process-local rebuild, not necessarily performed during the EVR request. Treat 16.5s as a cold startup/load performance issue; warm assessment is ~0.43s client in this sample.
+- Next engineering work: profile the JSONL rebuild and optimize only with tests preserving correction/idempotency/latest-observation semantics. Avoid speculative cache/snapshot changes.
+
+### Uploaded scanner export
+
+- File: `2026-11-10-WatchListScanner_1138.csv`; 50 rows; sorted by Overnight Score.
+- Detailed review and exact MCC operating procedure: [Overnight Watchlist Analysis and MCC Diagnosis](Overnight-Watchlist-Analysis-and-MCC-Diagnosis-20261110.md).
+- SMX is a severe outlier and should be isolated for event/corporate-action/liquidity investigation. WRBY is the strongest balanced non-SMX score profile, with a negative current gap. SEZL/ETON have high recent momentum but low medians. ULCC has the strongest top-10 median. No CSV field proves tradability or READY.
+- Suggested first diagnostic comparison: WRBY, IRWD, STEP, ULCC; run SMX separately as an outlier investigation. This is a research cohort, not a trade recommendation.
+- The CSV lacks raw per-session returns, live quotes, spread, dollar volume, RVOL, catalyst coverage, halt status and execution evidence. Data not found in sources.
+
+### Next operator steps
+
+1. Pull latest `feature/opportunity-quality-classification`; verify branch and run `.scripts\Get-Latest-And-Test.ps1`; restart API and hard-refresh Dashboard.
+2. Confirm Calculated Limit Sell quick card has quantile default 50. Click once; in DevTools Network confirm GET `/api/providers/status` then POST `/api/boring-overnight/sell-limit`. Confirm all gate rows and explanations render in the quick disclosure. A BLOCKED result is expected with current IEX/TOS evidence.
+3. In BORING OVERNIGHT mode, import `2026-11-10-WatchListScanner_1138.csv`; confirm 50 rows. Use **Use Overnight Top 20** in Daily data audit, then click **Validate Daily data**. Inspect source/feed, missing sessions, freshness and adjustment provenance. Expect IEX not to pass SIP qualification.
+4. Run **Fetch Daily + catalyst for MCC Top 4** using a comparison cohort such as WRBY, IRWD, STEP, ULCC. Investigate SMX separately. Review each Daily/catalyst/exclusion/price/20D-volume field; UNKNOWN/DATA? is not CLEAR/PASS.
+5. Open each finalist in Main Chart while still in BORING OVERNIGHT mode. Confirm chart source/timestamps and independently verify current executable quote/spread/liquidity. Do not treat a historical IEX bar as a live quote.
+6. For the cold-load performance task, after a fresh API restart capture API process startup duration and first EVR request separately, then run a second EVR request. Confirm load count remains 1. The current diagnostics already measured a 16.521s rebuild; optimization is a separate task.
+7. Do not attempt to force a calculated limit sell while SIP, ATR parity, TOS 5m warm-up and walk-forward gates remain blocked. No order submission exists.
+
+[Uncertainties]
+- Exact browser Network sequence and disclosure rendering are not established solely by the pasted API response.
+- The 16.521s rebuild may have happened during API startup or first store access; current diagnostic intentionally reports most recent process-local rebuild rather than attributing it to the EVR request.
+- Scanner formulas are daily-gap calculations; matched TOS daily aggregation/session exports are still required to confirm the intended session interpretation.
