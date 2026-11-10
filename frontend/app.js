@@ -3,6 +3,7 @@
 const $=id=>document.getElementById(id);
 // Sequence guard must exist before the initial render can invoke the async refresh.
 let decisionRefreshSequence=0;
+const LIVE_ASSESSMENT_TIMEOUT_MS=20000;
 // Restore the selected workspace before any startup chart or live-assessment request can fire.
 try{const savedMode=localStorage.getItem("mcc.workspaceMode.v1");if(savedMode==="overnight"||savedMode==="momentum")$("mode").value=savedMode;}catch{}
 $("mode")?.addEventListener("change",()=>{try{localStorage.setItem("mcc.workspaceMode.v1",$("mode").value);}catch{}});
@@ -279,10 +280,19 @@ async function fetchLiveAssessment(symbol){
  if(liveAssessmentInFlight.has(ticker))return liveAssessmentInFlight.get(ticker);
  const request=(async()=>{
   const params=new URLSearchParams({symbol:ticker,providerName:"Alpaca"});
-  const response=await fetch("/api/market-data/live-assessment?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
-  const body=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
-  return body;
+  const controller=new AbortController();
+  let timeoutId=null;
+  try{
+   timeoutId=window.setTimeout(()=>controller.abort(),LIVE_ASSESSMENT_TIMEOUT_MS);
+   const response=await fetch("/api/market-data/live-assessment?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"},signal:controller.signal});
+   let body;
+   try{body=await response.json();}catch(error){if(controller.signal.aborted)throw error;body={};}
+   if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
+   return body;
+  }catch(error){
+   if(controller.signal.aborted)throw new Error("Live assessment timed out after "+(LIVE_ASSESSMENT_TIMEOUT_MS/1000)+" seconds. The request was cancelled; check API responsiveness and server diagnostics.");
+   throw error;
+  }finally{if(timeoutId!==null)window.clearTimeout(timeoutId);}
  })();
  liveAssessmentInFlight.set(ticker,request);
  try{return await request;}finally{if(liveAssessmentInFlight.get(ticker)===request)liveAssessmentInFlight.delete(ticker);}
