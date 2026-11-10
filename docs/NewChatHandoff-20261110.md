@@ -1,409 +1,449 @@
-# November 10, 2026 — Operator feedback and engineering handoff
+## November 10 — Operator feedback, price provenance, and blocker work
 
-**Repository:** `themailcomeshere/MomentumCommandCenterV2`  
+### Implemented on `feature/opportunity-quality-classification`
+
+- [x] Added a color-coded classification directly below the focused-symbol input. Intraday displays the separate Opportunity Quality diagnostic; Boring Overnight displays the imported Boring Winner PASS/FAIL as RESEARCH ONLY, or NOT CALCULATED. It never promotes the research flag to READY.
+- [x] Main Chart heading now resolves the instrument's display name from Alpaca asset metadata, with Yahoo Finance name fallback.
+- [x] Added Alpaca latest-trade REST retrieval on the configured feed and an optional Yahoo Finance extended-hours reference endpoint. The Overnight price card selects the newest timestamp among the returned bar, Alpaca trade and Yahoo post-market reference, and shows source/time/staleness. Neither provider trade nor Yahoo reference is NBBO or guaranteed executable.
+- [x] Replaced the incorrect implication that a latest 1M bar close is an after-hours quote. If no newer provider trade/reference exists, the card explicitly labels the old value as the last returned bar/trade and shows its age.
+- [x] Added an expandable failed-evidence list directly inside the focused Calculated Limit Sell card. The quick button still delegates to the existing evidence-gated API and submits no order.
+- [x] Overnight Scan & Analyze defaults to a five-calendar-day history window; Intraday retains the six-hour window. Results identify the actual provider/feed and explain that zero IEX bars are not proof of no market activity.
+- [x] Alpaca Daily response parsing now accepts either a normal bars array or a symbol-keyed `bars.{SYMBOL}` array. Explicit null/missing-symbol results become incomplete DATA? observations; unexpected JSON shapes still fail with a shape-specific error. Added regression coverage.
+- [x] Successful Alpaca stream authentication/subscription clears the previous connection error so a stale `connection limit exceeded` message is not shown as the current failure after a later successful connection.
+- [x] Boring Winner import UI now explains that the expected input is a Daily OHLC CSV with Date/Open/High/Low/Close, not the 1M/5M ATR parity report. Extended Hours defaults OFF; corporate-action adjustment defaults ON; chart timezone defaults to America/Phoenix.
+- [x] Added tests for timestamped Alpaca latest trades, symbol-keyed Daily bars, and Yahoo after-hours metadata.
+- [x] Fixed the Dashboard startup `decisionRefreshSequence` temporal-dead-zone error by initializing the counter before the first `render()`; bumped the `app.js` cache key so browsers request the corrected script.
+- [x] Restored Overnight candidate selection/purchase to the final 60 minutes of regular trading, with the buy deadline at the actual regular-session close. Added standard-time, daylight-time, after-hours, holiday, and early-close schedule tests.
+
+### Operator evidence from November 10
+
+- [x] API health returned OK and explicitly reported decision-support-only / order submission NOT IMPLEMENTED.
+- [x] Alpaca IEX provider status returned VALIDATED_DATA_RETURNED with 1,204 bars.
+- [x] Alpaca minute-bar stream reported a prior authentication `connection limit exceeded` error while its snapshot also reported SUBSCRIBED and zero received bars. A zero bar count after the U.S. extended session is not by itself proof of a broken stream; recheck during regular hours. Latest code clears stale error text after a successful reconnect.
+- [x] The historical RKLX bar shown by the UI was 11/9 2:46 PM Arizona at $9.7800. It was not a current after-hours quote.
+- [x] Scanner Workbench returned zero 1M/5M bars for the supplied 20-symbol set on the configured IEX feed/window. This is feed/window coverage evidence, not a claim that those securities had no market activity.
+- [x] Later regular-session stream acceptance: 10-minute operator test acknowledged SPY/RKLX/ASTX/XRPN at start and end; completed-bar deltas were SPY +10, RKLX +3, ASTX +3, XRPN +2. Collector cycles advanced 39→48 with zero cycle errors. This establishes delivery for these symbols in that interval, not full IEX coverage or TOS parity.
+- [x] Scanner follow-up: operator imported 50 local rows and completed Scan & Analyze (1M + 5M) on 20 candidates. All returned rows were OBSERVED · NOT QUALIFIED; 5M counts ranged 5–27 bars and 1M counts 6–75 bars. This is a completed diagnostic scan, not Overnight qualification or Boring Winner calculation.
+- [x] BAYRY Daily parser re-test completed: API returned 0 valid / 0 available sessions and all 20 expected dates missing (2026-10-13 through 2026-11-09). The parser fix is deployed but does not resolve missing provider observations; keep BAYRY blocked and do not backfill older sessions.
+- [x] Corrected countdown state wiring: assign the API's buy/sell timestamps and session dates. During REGULAR phase, the buy countdown now targets the actual regular-session close and applies escalating urgency colors. Final-hour evaluation still begins separately at the scheduled start.
+- [x] Corrected Main Chart instrument-name wiring: the metadata refresh function is now called when the focused chart refreshes. Operator UI acceptance is still pending.
+- [x] Corrected quick sell-limit evidence visibility: clicking the focused-symbol action opens the local disclosure and mirrors each API-returned PASS/BLOCKED gate with its explanation.
+- [x] Added server-side live-assessment stage timings to the response for separate 1m and 5m fetch durations/source paths, combined provider wall time, WebSocket store read, persistence, calculation and total elapsed time.
+- [ ] Operator reported approximately 51.8 seconds per live-assessment request for EVR/RKLX/ASTX/SPY. This is an unacceptable UX latency. The dominant stage is not yet established; use the new `performanceDiagnostics` breakdown before selecting an optimization.
+
+- [x] Implemented calendar-backed Overnight execution-window calculator: candidate research and buying are confined to the final 60 minutes of the regular session, ending at that session's actual close (including early closes). This preserves the intended Overnight measurement beginning at the close and including Buy Day after-hours plus Sell Day premarket. Next trading session GTC_EXT sell window remains 7:00 AM–8:00 PM Eastern. Arizona display times are derived from America/New_York and America/Phoenix with DST, Monday–Thursday buy-day selection, Friday exclusion, weekends and holidays handled by the versioned calendar. Schedule only; per-symbol GTC_EXT eligibility and actual fills remain unverified.
+- [ ] Validate the displayed schedule against the operator's Schwab order ticket for representative EST/EDT dates and early-close sessions.
+
+### Still blocked — do not fabricate or waive evidence
+
+- [ ] RKLX live/after-hours price source acceptance: verify local Yahoo post-market reference and Alpaca latest IEX trade timestamps against an independently observed quote. Yahoo is secondary indicative data; IEX is partial.
+- [ ] Sell-limit remains fail-closed on IEX. The 5-day 1M bars returned by `/api/market-data/bars` do not equal the required 40 complete GTC_EXT sessions, SIP feed, exact reference close, 119-bar 5M TOS ATR parity, exact provider/TOS OHLCV and walk-forward evidence. Use the new disclosure to record every blocked gate.
+- [ ] Scanner symbols with zero IEX observations require a properly entitled consolidated source or a clearly labelled alternate feed. Do not change the effective feed silently.
+- [x] BAYRY parser fix was re-tested locally; response contained 0/20 expected sessions. This is a genuine empty/incomplete observation result, not a parser exception. [ ] Find an independently supported Daily source or keep qualification blocked; do not retry the unchanged IEX request or backfill older sessions.
+- [ ] Run exact-head CI and operator Windows build/runtime/browser acceptance for the latest countdown/title/gate-visibility/performance-diagnostics commits.
+- [ ] Compile and verify the revised ThinkScript in Thinkorswim; source changes in GitHub do not prove TOS compilation.
+
+### Boring Winner import — precise input contract
+
+The Dashboard importer expects one CSV row per completed **Daily** bar and the columns `Date, Open, High, Low, Close`. The existing 1M/5M ATR StrategyReport is not the intended input. The current `MCC_OHLCV_ATR_V2.1` StrategyReport is NOT the Daily OHLC import and will not automatically calculate Boring Winner. No dedicated Boring Winner Daily OHLC export study has been delivered yet. The Dashboard importer currently requires a separate CSV with one completed daily bar per row and Date/Open/High/Low/Close columns.
+
+Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open is the regular-session open used by `open / close[1] - 1`; corporate-action adjustment ON; chart timezone America/Phoenix. Import at least 21 completed daily bars (40–60 is preferred for review). The import records these settings as provenance but does not independently prove TOS session semantics. Boring Winner remains RESEARCH ONLY.
+
+## Boring Overnight UI implementation — 2026-11-09
+
+- [x] Added Previous Regular-Session Close, Latest Price (identified as extended-hours when latest 1M bar is outside RTH), and Calculated Limit Sell to the focused-symbol panel.
+- [x] Price fields show Phoenix source timestamps; latest 1M close is not represented as a live quote. Previous Regular-Session Close excludes the in-progress RTH session; exact 16:00 ET wording is used only when the 15:59 ET bar is present.
+- [x] Added focused-symbol sell-limit action reusing the existing evidence-gated API and quantile. No duplicate calculator and no order submission.
+- [x] Moved 1M close / Daily VWAP / ATR14 / extension diagnostics into the collapsible Decision Explanation. They are calculated from returned 1M bars, labelled diagnostic-only, and carry provider/feed and timestamps. Red Zone hides those redundant metric paragraphs in Boring Overnight mode.
+- [x] Boring Overnight Red Zone now uses historical 5M bars and marks intraday 5M/1M gates NOT USED rather than displaying Intraday stale status.
+- [x] Manual pinned symbols are polled during Intraday Automatic mode; sound requires a known false-to-true EXECUTION READY transition and enabled sound. Boring Overnight currently has no READY state (the evaluator deliberately keeps READY at 0), so it must not emit an equivalent sound until a validated Overnight-ready definition exists.
+- [x] Scanner Workbench Symbols auto-populates with up to 20 unique imported Overnight symbols sorted by Overnight Score; manual Use Overnight Top 20 action is available. It does not submit a scan.
+- [x] Removed obsolete Red Zone static chip, redundant label ID, and obsolete explanatory paragraph. Preserved `.gate-warning` and Ticker placeholder.
+- [x] Decision Explanation and Timeframe Handoff are collapsible with pointer cursor. Timeframe Handoff is hidden in Boring Overnight mode.
+- [ ] Define a source-qualified Boring Overnight READY state and corresponding alert transition; current evaluator intentionally remains fail-closed at READY=0. Do not substitute Boring Winner PASS for READY.
+- [x] Latest code-bearing commit `aa60685580c266410df1149779d70d4bc15268ef` passed GitHub Actions JavaScript syntax validation, .NET Release build, and tests (run `42836168264`). The later cache-key-only commit `176b545dd5ef256cb7842e5bd414c5641f6f1f2a` was still running its own CI at the time this note was written.
+- [ ] Operator Windows build/run, browser verification, and API/runtime acceptance remain required.
+
+## Operator evidence and implementation — 2026-11-09 (Overnight top-20, mode isolation, TOS formula engine)
+
+- [x] Operator confirmed all eight scanner columns display after prior deployment; some HISTORY values remain DATA? while PRICE and 20D AVG VOL are populated. These evidence fields remain independent.
+- [x] Added automatic population of Daily data audit Symbols with the top 20 unique imported Overnight symbols, sorted by Overnight Score, on import and restored import.
+- [x] Added a manual **Use Overnight Top 20** action; audit accepts up to 20 symbols and runs no more than four Daily requests concurrently. Population does not automatically launch API requests.
+- [x] Made EXCLUSIONS disclosure summary visibly interactive with pointer cursor, hover affordance and keyboard focus outline.
+- [x] Persisted workspace mode and restore it before startup requests; Boring Overnight no longer starts the Intraday live-assessment path.
+- [x] In Boring Overnight mode, Main Chart uses 5-minute historical bars over a rolling five-day window, updates on selected-symbol changes, and refreshes while visible. Intraday permission/execution cards are hidden and status explicitly says NOT USED.
+- [x] Added versioned `MCC-TOS-DAILY-GAP-1.0` calculator reproducing all eight supplied Thinkorswim scanner formulas from explicit TOS daily OHLC bars.
+- [x] Added append-only TOS daily reference store, import/read API endpoints, CSV import UI, provenance fields (aggregation, extended-hours, adjustment, timezone), and per-column displayed-precision parity results.
+- [x] Added regression tests for all eight fields, score decomposition, insufficient history, duplicate dates and source metadata validation.
+- [ ] CI for this code set and operator local build/runtime acceptance are pending.
+- [ ] Import matched TOS OHLC exports and compare with scanner CSV for representative symbols; until then formula parity is implemented but empirical per-symbol parity is not yet demonstrated.
+- [ ] Exact V3 trade-window Boring Overnight study remains blocked on frozen Arizona-local buy timestamp, sell/measurement endpoint, and official auction vs first eligible trade semantics. Do not substitute daily-gap scanner formula for executable trade return.
+- [ ] BAYRY Daily response contract diagnosis remains open.
+- [ ] Remaining P0/P1/P2/P3 checklist below remains current; do not mark unresolved external data/entitlement/operator evidence tasks complete.
+
+## Operator evidence and implementation — 2026-11-09 (Overnight formulas + BAYRY)
+
+- [x] Operator supplied all eight active Overnight Scanner ThinkScript columns and the inactive Boring Winner formula in `docs/Column Formulas`; reviewed exact source.
+- [x] Documented formula definitions, Overnight Score weighting, Boring Winner gates, screenshot candidates, and a step-by-step MCC workflow in [Overnight Scanner Formula Audit and MCC Workflow](Overnight-Scanner-Formula-Audit-and-MCC-Workflow-20261109.md).
+- [x] Main Dashboard Overnight qualification table now displays all eight imported scanner metrics (ON Win %, AVG ON %, Median ON %, 5D ON %, ON Momentum, Current ON %, Above 20 SMA, Overnight Score).
+- [x] Historical row status now requires all eight source columns to be present; a missing Median/Momentum/Score field remains DATA?, not PASS or FAIL.
+- [x] API-backed EXCLUSIONS section is now collapsible via native details/summary; its refresh/add/remove controls and API behavior remain intact.
+- [x] Operator verified BAYRY stream subscription and live assessment both return 200 OK. Daily history request still returns 502 after CSV import and after clearing Red Zone; UI detail: `Alpaca Daily response did not contain a bars array.`
+- [ ] Diagnose BAYRY's HTTP-200 upstream payload shape (or unexpected response envelope) and handle valid empty/unsupported-symbol responses explicitly. Current retry handles transient transport/status failures only; it cannot repair a successful response with a missing/wrong bars shape.
+- [ ] Operator pull/build/test/restart and runtime verify the collapsible exclusions panel and all-eight-column table.
+- [ ] Confirm TOS daily aggregation/session setting: formulas are exactly `open / close[1] - 1`, but code does not specify whether daily `open` reflects regular-hours only or includes extended hours. Match exported TOS bars to MCC data before declaring overnight-window parity.
+- [x] Implemented the documented Boring Winner formula as a separate result in the TOS Daily OHLC reference calculator: 20-session win rate, mean return band, count of returns within +0.10%…+3.00%, sample standard deviation, and close above SMA20. Added unit coverage for a qualifying sample. RESEARCH ONLY; not connected to READY.
+- [ ] Validate Boring Winner on chronological source-qualified historical samples and confirm daily-bar session/extended-hours semantics before production use. No TOS V3 Boring Overnight study has been compiled.
+
+## Operator evidence — 2026-11-09 (Top-4, Daily provider, catalyst validation)
+
+- [x] Operator confirms MCC Top 4 made requests for exactly four symbols; the article queue currently shows only EWTX.
+- [x] Clarified that article cards are article-driven, not a four-symbol query roster. No returned article for another symbol is UNKNOWN, not CLEAR.
+- [x] Added a separate four-symbol evidence table so every selected ticker shows Daily outcome, feed/completeness, Daily error, catalyst outcome, article count, catalyst coverage and catalyst error.
+- [x] Operator reports BAYRY Daily API returned HTTP 502. Added bounded three-attempt retry for transient network/timeout/429/5xx responses and preserved provider HTTP status in exceptions. API maps provider 422 to 422, 429 to 503, and upstream 5xx to 502. Runtime retry behavior still needs operator verification.
+- [x] Operator catalyst validation now shows raw 7, eligible 0, excluded 7, conflicts 0, non-evaluable 2, superseded 3, inadequate evidence 2. No classifier metrics exist; this is correct fail-closed behavior.
+- [x] Latest EWTX assessment response establishes the actual triage ruleset as `MCC-CATALYST-TRIAGE-1.0` for the newly returned investor-conference article 117314249. It does not establish the ruleset stored with the older sale-exploration article 117008554.
+- [ ] The original EWTX sale-exploration article still requires source-backed adjudication; do not reuse the new conference article's metadata/label.
+
+## Overnight engineering audit — 2026-11-09
+
+- [x] Reviewed current Boring Overnight API, history calculator, evaluator, calendar, Dashboard, source scanner CSV and V3 column requirements.
+- [x] Confirmed the current 20-pair calculator computes prior regular-session close to next session 09:30 one-minute bar Open. It includes Day 1 after-hours and Day 2 premarket only in the *net endpoint interval*; it does not calculate the operator's actual buy-time entry or any path/extrema.
+- [x] Confirmed the 09:30 one-minute Open is explicitly a proxy, not a verified official opening-auction print.
+- [x] Confirmed the current calendar is an MCC-maintained holiday/early-close ruleset, not a live official exchange-calendar source.
+- [x] Preserved the scanner CSV's custom-expression subscription-limit messages as missing data, not historical FAIL. Latest operator import: 495 rows, 185 PASS / 14 FAIL / 296 DATA?, exclusions 56 loaded / 0 matches.
+- [ ] Exact intended Arizona-local buy-time and sell/measurement endpoints must be frozen against the original TOS scanner formula and operator's confirmed order workflow before replacing the current close/open research metric. The current calculator must not be relabelled as actual trade-window return.
+- [ ] Official auction print vs first eligible observed trade remains unverified; Alpaca minute-bar Open cannot certify the auction print. Obtain an authoritative auction/eligible-trade source with entitlement and timestamp semantics.
+- [ ] Complete independent RTO/EVR OHLCV parity; prior IEX comparison failed and IEX remains partial-exchange diagnostic data.
+- [ ] Qualified independent Daily source remains open. Alpaca SIP entitlement and corporate-action/adjustment equivalence must be established; BAYRY 502 requires operator runtime retry/error verification.
+- [ ] Catalyst representative dataset, reviewer agreement and classifier qualification remain open; do not synthesize labels.
+- [ ] Opportunity Quality historical calibration remains open; no time-separated outcome-labelled candidate dataset is present in reviewed sources.
+- [ ] Thinkorswim V3 Boring Overnight column/chart deliverable remains unimplemented/uncompiled. Do not claim it is done by writing a draft script without TOS compilation and parity.
+- [ ] 5M/1M installed-study authority and EOD verification remain operator-side evidence gates.
+
+- [x] Daily transient retry, per-symbol evidence table, and status mapping code/tests passed Release CI run [42659428224](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/42659428224) on code commit `59719e6263e7e51a3eafaacf86a0507817f3e2ef`.
+
+## Dashboard runtime follow-up
+
+- [x] Added all-four-symbol live evidence display independently of the catalyst article cards.
+- [x] Added transient retry and accurate upstream status mapping for Daily requests.
+- [ ] Operator must pull latest branch, build/test, restart API, and repeat MCC Top 4 fetch; verify all four rows populate and inspect BAYRY outcome.
+- [ ] Full browser/CDP acceptance, full Dashboard acceptance, regular-session WebSocket proof, collector recovery, and HAR performance measurement remain open.
+
+---
+
+# Momentum Command Center — Master To-Do
+
+**Updated:** 2026-11-09 (operator validation recheck, EWTX rationale hardening, MCC Top-4 distinct-symbol fix)  
 **Working branch:** `feature/opportunity-quality-classification`  
-**Authoritative Dashboard:** `frontend/index.html` served from the API root  
-**Scope:** Boring Overnight unless explicitly noted
+**Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
+**Current handoff:** [NewChatHandoff-20261109.md](NewChatHandoff-20261109.md)  
+**Detailed engineering acceptance criteria:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
+**Catalyst review procedure:** [Catalyst-Human-Review-Workflow.md](Catalyst-Human-Review-Workflow.md)  
+**Technical workflow:** [Technical-Workflow.md](Technical-Workflow.md)  
+**Runtime acceptance:** [Runtime-Acceptance-Runbook.md](Runtime-Acceptance-Runbook.md)  
+**Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)
 
-## Summary
+This is the current authoritative checklist. The detailed backlog contains implementation boundaries and acceptance criteria. Older historical checkbox states are archived and do not override the current statuses below. Continue on the feature branch; do not modify `master`. Main Dashboard only; do not return to PrototypeIndex.
 
-The November 10 operator run exposed a stale-price presentation issue, missing visibility into sell-limit evidence gates, zero-bar scanner results on IEX, a BAYRY Daily response-envelope failure, and a JavaScript startup temporal-dead-zone error. Fixes are committed to the feature branch. Do not merge to `master` as part of this work.
+## Current operator evidence — 2026-11-09
 
-## Implemented
+- [x] Operator confirmed the restored six-label catalyst legend looks good.
+- [x] Operator deployed the previous rationale guard and supplied validation: raw reviews 6; included unique 0; excluded 6; conflicts 0; training/holdout 0/0; non-evaluable labels 2; superseded reviews 3; inadequate evidence 1.
+- [x] This confirms the earlier assistant-appeal rationale is excluded. The validator is correctly withholding metrics.
+- [x] Operator supplied new EWTX review `fbc839fc9c2740c1ad87e6bc641e2a77`. It is not an acceptable correction: generic confirmation, not article-specific facts; supersedes `8405880...` rather than weak review `f496393...`; and uses the human-validation version as its `ruleSetVersion`.
+- [x] API/historical validator/UI now reject the observed generic confirmation phrases as well as short, placeholder and assistant-appeal rationales. Regression test includes the exact submitted notes. This is a heuristic, not proof of factual accuracy.
+- [x] MCC Top 4 now sorts rows by score and deduplicates by ticker, preserving the highest-scoring row per symbol. Duplicate rows can no longer occupy multiple Top-4 slots.
+- [ ] Operator pull/build/test/restart and runtime verification of the distinct-symbol Top 4 are pending.
+- [ ] EWTX still needs an independently researched correction superseding both active weak reviews `f496393...` and `fbc839...`; see P1.2 below.
 
-### Focused symbol dock
+## P0 — Data integrity and sell-limit qualification
 
-- A color-coded classification now appears immediately below `#symbol`.
-- Intraday mode shows the existing Opportunity Quality diagnostic classification and its color.
-- Boring Overnight mode reads the latest imported TOS Daily OHLC reference for the selected symbol and displays Boring Winner PASS / FAIL as **RESEARCH ONLY**. If no import exists, it displays NOT CALCULATED / DATA?.
-- Boring Winner does not grant READY, execution permission, or an order action.
+### ATR V2 / Thinkorswim parity
 
-### Main Chart instrument name
+- [x] ATR V2 StrategyReport import, provenance capture and persisted observations.
+- [x] Wilder ATR(14) recurrence and 5m parity comparison with 99-bar warm-up and 20-bar comparison window.
+- [x] Timestamp-gap diagnostics scoped to expected 04:00–20:00 ET chart-session slots.
+- [x] Exact operator-confirmed no-bar intervals encoded; no synthetic bars or imputation.
+- [x] Operator runtime parity: EVR 5m MATCH (327 observations, 20 compared, 0 unresolved gaps, 2 verified no-bar intervals; MAE 0.0000294330, max error 0.0000495349).
+- [x] Operator runtime parity: CBOE 5m MATCH (338 observations, 20 compared, 0 unresolved gaps, 1 verified no-bar interval; MAE 0.0000203866, max error 0.0000426076).
+- [ ] Compile the revised ThinkScript in Thinkorswim and retain compile/runtime evidence for the exact current source.
+- [ ] Complete independent 1m continuity; EVR 1m previously had 13 gaps. Keep 1m independent of the 5m authority gate.
+- [ ] Revalidate any future, previously unrecognized timestamp gaps against actual source/chart evidence. Existing verified no-bar windows do not authorize blanket gap suppression.
 
-- Main Chart heading and chart caption now include the instrument display name when metadata is returned.
-- Name lookup uses the Alpaca Trading API asset metadata endpoint; Yahoo Finance metadata is the fallback.
-- If neither source supplies a name, the ticker remains visible and the heading says the name is unavailable.
+### Provider/TOS OHLCV parity and sell-limit gate
 
-### Overnight price provenance
+- [x] Provider comparison orchestration and fail-closed sell-limit gates are implemented.
+- [x] Evidence runner distinguishes configured, response and row-level feed identity.
+- [ ] Obtain 119 exact provider/TOS 5m OHLCV matches, including exact volume, and the exact previous RTH close from the same qualified feed.
+- [ ] Keep sell-limit numeric output blocked until ATR, source provenance, continuity, exact provider/TOS comparison, reference close and all freshness/session gates pass.
+- [x] Walk-forward validator implementation exists.
+- [ ] Runtime qualify the validator only after a complete source-qualified 40-session dataset exists; report all train/test counts, exclusions and metrics.
 
-- Added `GET /api/market-data/latest-trade` using Alpaca's configured feed.
-- Added `GET /api/market-data/yahoo-extended-hours` as an optional secondary reference.
-- The price card compares the source timestamps of the last returned 1M bar, Alpaca latest trade and Yahoo post-market reference, then selects the newest available observation.
-- The card identifies the source, Arizona timestamp and age. Old observations are explicitly labelled stale.
-- Alpaca IEX is partial coverage. Yahoo post-market metadata is indicative secondary data. Neither source is an NBBO quote or a guaranteed executable price.
-- The old $9.7800 RKLX value came from the last returned IEX 1M bar at 2:46 PM Arizona on November 9. It was not a current after-hours quote.
+### SIP / GTC_EXT history — parked external blocker
 
-### Calculated Limit Sell
+- [x] SIP HTTP 403 entitlement denial is established by repeated operator evidence; effective Alpaca feed is IEX.
+- [x] IEX is diagnostic-only and is not substituted for SIP.
+- [ ] PARKED: no further SIP request, entitlement check, configuration change or capture unless the operator independently reports a genuine entitlement change.
+- [ ] If entitlement changes, collect 40 complete sell sessions (20 training + 20 unseen test), each with 780 exact 1m bar-start timestamps and exact previous RTH close; verify source/feed and persisted read-back.
+- [ ] Only then run walk-forward runtime qualification. No nearest-bar substitution or imputation.
 
-- The focused-symbol quick action still delegates to `POST /api/boring-overnight/sell-limit`.
-- Added a disclosure directly below the quick action showing each evidence gate and its PASS/BLOCKED detail.
-- No new calculator, order submission, or gate relaxation was introduced.
-- The orchestration reads persisted observations only. Five calendar days of 1M bars do not establish the 40 complete GTC_EXT sessions, SIP feed, exact previous-session close, ATR parity, same-source OHLCV, or walk-forward validation.
+## P1 — Market data, strategy correctness and dashboard
 
-### Overnight execution-window calculator
+### Daily market data and liquidity
 
-- Candidate research and buying take place only during the final 60 minutes of the regular session. The buy deadline is the actual regular-session close, derived from the exchange calendar; in November standard time this is 2:00 PM Arizona, with a 1:00 PM Arizona start on a normal session. During daylight time the normal-session window is noon–1:00 PM Arizona. Early-close days use the final hour before the shortened close. After-hours is part of the holding/measurement interval, not a time to initiate the purchase.
-- Buy sessions are Monday–Thursday only. The next sell session is the next exchange trading day, with the GTC_EXT eligible window 7:00 AM–8:00 PM Eastern.
-- The header clock now displays the date-specific buy and next-session sell windows in Arizona local time. It uses named time zones and the maintained calendar for weekends, holidays, DST and early closes.
-- This is a schedule calculator, not proof of per-symbol GTC_EXT eligibility or a fill. Schwab order-ticket confirmation remains required.
+- [x] Daily API returns completed-session close, SMA20, ADV20, expected/missing session dates, freshness and provenance.
+- [x] Daily Dashboard audit panel and PowerShell qualification/evidence runner implemented.
+- [x] 2026-11-06 RTO/EVR run passed internal 20-session arithmetic, coverage and freshness checks.
+- [x] Same run failed independent consolidated OHLCV parity for both symbols; Alpaca IEX correctly returned `IEX_PARTIAL`, `qualificationUsable=false`, and null qualification fields.
+- [ ] Do not repeat the unchanged IEX comparison. Find a genuinely independent, appropriately licensed source/feed or keep qualification blocked.
+- [ ] Capture browser screenshot showing the Daily audit UI matches its API evidence.
+- [ ] Recheck corporate-action adjustment equivalence before any new independent comparison.
 
-### Startup error correction
+### Catalyst human review and classifier validation
 
-- Fixed `ReferenceError: Cannot access 'decisionRefreshSequence' before initialization`. The sequence counter is now initialized at the top of `frontend/app.js`, before the initial `render()` can invoke `refreshDecisionExplanation()`.
-- Bumped the Dashboard script cache key in `frontend/index.html` to `20261110-decision-refresh-init-final-hour-buy-v1`; restart the API and hard-refresh so the browser does not keep the old cached script.
-- JavaScript syntax validation passed. The .NET build/test workflow passed for code-bearing commit `aa60685580c266410df1149779d70d4bc15268ef` (run `42836168264`). The latest cache-key-only commit has a separate workflow still running at handoff time.
+- [x] Ticker-scoped news retrieval and deterministic keyword triage exist; no automatic CLEAR is permitted.
+- [x] Append-only human review store, saved prediction capture, conflict diagnostics and explicit supersession exist.
+- [x] Chronological holdout validation endpoint and six-label Dashboard legend exist.
+- [x] Source/placeholder/short/assistant-appeal rationale guards and historical evidence exclusion exist.
+- [x] Latest operator validation correctly reports zero eligible reviews and zero conflicts.
+- [x] Generic EWTX affirmation submitted by operator is now explicitly rejected by the strengthened rationale heuristic.
+- [ ] Pull/build/restart latest branch and verify generic rationale rejection at runtime.
+- [ ] Independently open the original EWTX source article; identify concrete facts, original publisher, and the actual triage ruleset version saved with the prediction. Data not found in sources for the article body and exact saved triage version.
+- [ ] Append a source-backed EWTX correction superseding both currently active weak records `f496393535df431ab275231b57f8530a` and `fbc839fc9c2740c1ad87e6bc641e2a77`. Preserve prediction `UNCLASSIFIED` and categories `[]`; independently choose the label.
+- [ ] Re-query validation; require conflict=0 and inadequateReviewEvidence=0 for the active EWTX record.
+- [ ] Keep ENOV/ARDT and other unsupported articles UNCERTAIN; do not relabel to increase sample size.
+- [ ] Collect a substantially larger source-backed sample across MATERIAL_RISK, MATERIAL_EVENT, NON_MATERIAL and IRRELEVANT. Six eligible records is only a structural floor.
+- [ ] Double-review a subset, measure reviewer agreement, and ensure both truth classes occur in the chronological holdout.
+- [ ] Measure per-class precision/recall, false positives/negatives, source coverage and time-window coverage. No classifier promotion until representative evidence supports it.
 
-### Scanner Workbench
+### Opportunity Quality ranking
 
-- Boring Overnight Scan & Analyze now defaults to a five-calendar-day window. Intraday keeps the six-hour default.
-- The result summary includes actual provider/feed provenance.
-- A zero-bar result now explains that no observations were returned on the configured provider/feed/window; it does not claim that the security had no market activity.
-- IEX is partial exchange coverage. Do not silently switch the configured feed or interpret missing IEX observations as a market-wide no-trade result.
+- [x] Deterministic Opportunity Quality assessment and explicit-symbol API ranking endpoint (1–50 symbols).
+- [x] Dashboard top-50 diagnostic ranking control wired to imported scanner-score candidates.
+- [x] Candidate results disclose provisional classification/reasons; DATA? and BLOCKED are not promoted.
+- [ ] Audit current scanner-field availability by symbol and report missing-field denominators/source timestamps; last historical audit count of 296 missing custom-expression rows is stale.
+- [ ] Expand beyond bounded top-50 prefilter only after candidate-pool completeness is evidenced.
+- [ ] Calibrate thresholds/rank stability using time-separated candidate snapshots and outcomes; current ranking is diagnostic, not a calibrated probability or market-wide discovery engine.
+- [ ] Add full-pool complete/incomplete/stale/excluded deterministic fixtures and UI acceptance.
 
-### BAYRY Daily response diagnosis
+### Overnight boundary / Boring Overnight
 
-- Alpaca Daily parser accepts a normal `bars: []` array and a symbol-keyed `bars.{SYMBOL}` array.
-- Explicit `bars: null` or a missing requested symbol in a keyed envelope is treated as an empty/incomplete observation set.
-- Unexpected JSON kinds still produce a shape-specific error rather than being coerced.
-- Added regression coverage. The actual BAYRY runtime payload shape has not yet been independently captured; operator re-test is required.
+- [x] 09:30 1m open is explicitly labelled `ONE_MINUTE_BAR_OPEN_PROXY`; `officialOpeningAuctionVerified=false`.
+- [x] Close-to-next-open endpoint is documented as spanning Day 1 after-hours and Day 2 premarket; it does not reconstruct path/extrema.
+- [ ] Verify official auction print versus first eligible observed trade from a properly entitled source. IEX cannot certify consolidated/auction coverage.
+- [ ] Resolve exact historical buy/sell endpoints against the original Thinkorswim Overnight scanner formula.
+- [ ] Implement separate V3 Boring Overnight watchlist column only after endpoint/session semantics and source-backed metric fields are frozen. Keep it distinct from MCC Opportunity Quality.
+- [ ] Keep Overnight Edge and Boringness scores separate; validate score weights and hard gates against known fixtures before use.
 
-### Stream status
+### Thinkorswim 5m/1m authority and EOD
 
-- A successful Alpaca authentication/subscription clears a previous connection error so a stale `connection limit exceeded` message is not shown after a successful reconnect.
-- Recheck during regular market hours. An after-hours zero-bar count is not by itself proof of a broken stream.
+- [ ] Compile exact current 5m/1m studies in TOS.
+- [ ] Verify 5m Permission remains authoritative and 1m is execution timing only.
+- [ ] Export matched completed-bar state labels; OHLCV-only rows cannot prove Permission/READY/RUNNER/WANING/SWING/GET OUT.
+- [ ] Verify exact Arizona-local EOD cutoff using bars immediately before, at and after cutoff, including DST/standard-time cases.
 
-### Boring Winner Daily OHLC import
+### Dashboard, browser, WebSocket and collector
 
-- UI now explains the exact CSV contract: one row per completed Daily bar with `Date, Open, High, Low, Close`.
-- The existing 1M/5M ATR parity StrategyReport is not the intended input. The existing `MCC_OHLCV_ATR_V2.1` StrategyReport is NOT the required Daily OHLC input and will not automatically calculate Boring Winner. No dedicated Boring Winner Daily OHLC export study has been delivered yet. Use a separately prepared CSV with one completed daily bar per row until that study/export path is implemented.
-- Import defaults: Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, chart timezone America/Phoenix.
-- At least 21 completed daily bars are required; 40–60 is preferred for review.
-- These settings are recorded as provenance, not independently proven by the calculator. Boring Winner remains RESEARCH ONLY.
+- [x] Main Dashboard is the only supported UI; PrototypeIndex is retired.
+- [x] Edge discovery/launch diagnostics and browser CDP capture script implemented.
+- [x] Regular-session stream/collector evidence script implemented.
+- [x] Dashboard load/API latency instrumentation work was started; prior measurement showed a 10.24s live-assessment request and a pending WebSocket connection, so no overall performance pass is claimed.
+- [x] Four-symbol evidence table implemented; [ ] verify MCC Top 4 selects/fetches four distinct tickers after latest pull; if the imported file has fewer than four unique symbols, show the source-data limitation.
+- [x] Separate four-symbol evidence table implemented; [ ] verify the post-fetch status lists four distinct queried symbols and the evidence table shows each result. The human-review queue lists only symbols with returned articles, not every symbol queried.
+- [ ] Execute browser diagnostics on operator machine; retain screenshot, console exceptions and sanitized network evidence.
+- [ ] Complete full Dashboard acceptance: import/parity, Red Zone, exclusions, Morning Brief, replay, sell-limit gate explanations, responsive layout and CDP console/network health.
+- [ ] During a confirmed regular session, capture 5–10 minutes of SPY/RKLX/ASTX/XRPN stream/collector data. Verify per-symbol subscriptions, completed bars, timestamps, received/persisted deltas and watermarks.
+- [ ] Exercise restart, sleep/wake, network/provider failure, duplicate/replayed events, session boundaries and idempotent recovery.
+- [ ] Measure document/load/DOMContentLoaded/largest request/Fetch & Analyze durations from browser Network/HAR; compare to a baseline before claiming improvement.
 
-## Operator API evidence supplied November 10
+## P2 — Integrations, execution and deployment
 
-- `/api/health`: OK; decision-support-only; order submission NOT IMPLEMENTED.
-- Alpaca provider: IEX configured and validated; 1,204 bars in the most recent successful validation.
-- Massive: not configured.
-- Minute-bar stream snapshot: SUBSCRIBED, but zero received/persisted bars and a previous `connection limit exceeded` error were present. The last error may have been stale; latest code clears it on a successful reconnect.
-- Collector: six cycles completed without errors, but zero new observations were persisted during that after-hours window.
-- Scanner: 20 supplied symbols returned no 1M/5M bars on the tested IEX request window. This does not prove no trading occurred on other exchanges or feeds.
+- [ ] Implement a broker execution reconciliation ledger from actual broker order/fill records, including partial fills, quantities, fees, timestamps and cancel/correction lineage. Never infer fills from OHLCV.
+- [ ] Schwab read-only integration is blocked on developer approval, app registration, callback and secure OAuth setup. No order submission.
+- [ ] Document provider entitlement, scanner universe coverage, licensing, rate limits, retention and symbol/session coverage before production-source selection. Massive remains unconfigured.
+- [ ] Define packaging/startup, API lifecycle, local data backup/restore, log rotation, health monitoring and unattended collector recovery before choosing installer technology.
+- [ ] Keep order routing explicitly NOT IMPLEMENTED. MCC remains decision-support-only.
 
-## Why the calculated limit remains DATA? / NOT CALCULATED
+## P3 — Release governance and operating workflow
 
-The 1M bars endpoint returns and persists recent OHLCV. The sell-limit orchestrator has a different, stricter evidence contract:
+- [x] Main feature branch and technical workflow documented.
+- [x] Reliable pull/build/test sequence recorded in the handoff.
+- [ ] Operator must run the exact latest branch-head Release build/test and restart local API before runtime acceptance of new code.
+- [ ] Every code-bearing branch head must have passing CI; ThinkScript compilation, browser acceptance and operator runtime evidence are separate gates.
+- [ ] Update this checklist and the current handoff after each material implementation/evidence change.
+- [ ] Never mark external, operator-side or source-dependent work complete from code/CI alone.
 
-1. Consolidated SIP feed.
-2. Forty complete GTC_EXT sell windows (20 chronological training + 20 later unseen test), each with every required minute and exact prior regular-session close.
-3. Exact current reference close from the same provider/feed.
-4. Correct TOS ATR V2.1 provenance: ATR(14), Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON.
-5. Server Wilder ATR parity MATCH over the 119-bar 99-warm-up + 20-comparison window.
-6. 99 consecutive completed 5M TOS warm-up observations.
-7. Exact 119-bar provider/TOS OHLCV match.
-8. Fresh completed TOS 5M ATR observation.
-9. Walk-forward test pass on unseen sessions.
-10. Training-only target quantile calculation.
+## Immediate operator sequence
 
-IEX cannot pass the SIP gate. A recent 5-day 1M response cannot substitute for the 40-window history or the 5M ATR import. The new disclosure should show the exact local failed gate list after the operator runs the action.
-
-## Remaining P0/P1 roadmap — still open
-
-| Priority | Item | Why it remains open |
-|---|---|---|
-| P0 | Revised ThinkScript compile | Requires compile/reload in Thinkorswim and a new source export |
-| P0 | EVR 1M continuity | Requires exact source timestamps and verified missing-bar intervals |
-| P0 | 119 exact provider/TOS OHLCV matches | Requires matched 119-bar source observations; no interpolation |
-| P0 | Exact previous RTH close | IEX partial feed cannot certify consolidated/official close |
-| P1 | Overnight execution-window calculator | Exact Arizona-local buy and sell/measurement endpoints must be frozen first |
-| P1 | Separate V3 Boring Overnight study | Depends on frozen endpoints and source-backed metrics; do not invent a TOS study |
-| P1 | Official auction / eligible-trade verification | Requires authoritative entitled auction/trade data |
-| P1 | BAYRY Daily response diagnosis | Parser supports additional envelopes; local retest and actual sanitized payload shape remain open |
-| P1 | Independent consolidated Daily source | IEX is partial; SIP entitlement currently unavailable |
-| P1 | Catalyst representative dataset | Requires source-backed, independently reviewed labels |
-| P1 | Reviewer agreement / classifier qualification | Requires double-reviewed sample and measured agreement |
-| P1 | Opportunity Quality historical calibration | Requires chronological candidate snapshots and outcome labels |
-| P1 | Boring Winner chronological validation | Requires source-qualified TOS Daily OHLC samples and session parity |
-| P1 | Boring Overnight READY + alert | No validated Overnight READY definition exists; keep READY fail-closed |
-
-## Operator next steps
-
-1. Confirm clean working tree and branch:
-   ```powershell
-   git status --short
-   git branch --show-current
-   ```
-   Expected branch: `feature/opportunity-quality-classification`.
-
-2. Pull/build/test:
-   ```powershell
-   .\scripts\Get-Latest-And-Test.ps1
-   ```
-   Do not discard uncommitted local changes. Record the exact tested SHA and test summary.
-
-3. Stop duplicate API processes, restart the API, and hard-refresh the Dashboard.
-
-4. In Boring Overnight, select RKLX:
-   - Confirm Main Chart shows the ETF name.
-   - Confirm the dock shows Boring Winner research status or NOT CALCULATED.
-   - Confirm AFTER-HOURS PRICE only appears when a post-market observation is actually returned.
-   - Confirm source and timestamp identify Yahoo or Alpaca.
-   - Confirm stale observations are labelled stale and are not presented as live quotes.
-   - Compare the displayed value/time with the independent quote source you are using.
-
-5. Click **Assess calculated limit sell** and expand **Why is the limit unavailable?**. Copy the complete blocked gate codes and details. Do not treat the presence of many recent 1M bars as evidence that the sell-limit gates pass.
-
-6. Run Scan & Analyze on the Overnight top 20. Confirm the request window is five days and the result summary says Alpaca/IEX. If symbols still return zero bars, preserve the no-bars result; do not switch to SIP unless the provider entitlement genuinely changes.
-
-7. Re-run the BAYRY Daily audit. If it still errors, capture the sanitized JSON response shape and exact HTTP status only. Do not share API keys, secrets, or authorization headers.
-
-8. Recheck `/api/market-data/stream/status` during regular market hours. Confirm lastMessageUtc, lastBarUtc, receivedBars and persistedBars advance. If `connection limit exceeded` returns, stop any other MCC API instance or process using the same Alpaca stream account before retrying.
-
-9. For Boring Winner, export a TOS Daily OHLC CSV with Date/Open/High/Low/Close, Extended Hours OFF, corporate-action adjustment ON, chart timezone America/Phoenix, and at least 21 completed bars (preferably 40–60). Import one symbol first and report the eight-column parity plus Boring Winner result.
-
-10. Send the exact SHA/test output, RKLX price/source/timestamp, sell-limit blocked gate list, scanner feed/window results, BAYRY response, and Boring Winner import result. These are the inputs needed to close the remaining runtime and source-evidence tasks.
-
-## CI and acceptance status
-
-The Yahoo endpoint initially had a compile failure caused by a named-argument typo in its error response. That typo was corrected. Code-bearing head `436d0a53d10501f2053cce7b203f5f5ed1b7a689` passed GitHub Actions JavaScript syntax validation, .NET Release build (0 warnings / 0 errors), and all 266 tests (run `42751327218`). Later commits through the handoff are documentation-only; their exact-head workflow is queued. Local Windows build, browser acceptance, provider entitlement and market-hours stream tests remain pending.
+1. Run the PowerShell sequence in the current handoff from the repository root. Do not reset or discard local changes.
+2. Confirm the script reports the latest feature-branch SHA and all Release tests pass; restart the API from that build.
+3. In the Dashboard, confirm MCC Top 4 contains four distinct tickers. Click Fetch Daily + catalyst; verify four distinct queried symbols and inspect the per-symbol table. The article review queue may contain only EWTX if the other three returned no articles; no-news is UNKNOWN, not CLEAR.
+4. Query catalyst validation again. Expected from current six-record history: zero conflicts, zero included until EWTX is corrected; new generic record should be counted as inadequate evidence after deploying the latest guard.
+5. Independently review the EWTX article. Verify the original publisher and saved triage ruleset; append a correction superseding both weak active review IDs. Do not invent source facts or alter the saved prediction.
+6. Continue the remaining P0/P1 runtime and evidence tasks above. Do not request another SIP entitlement check.
 
 ## [Uncertainties]
 
-- Yahoo Finance post-market metadata may be delayed, stale, unavailable, or rate-limited. The UI labels it as a secondary reference and displays its source timestamp.
-- Alpaca IEX may not return trades for symbols whose activity is on other exchanges. Missing IEX observations are not market-wide absence.
-- The operator's RKLX values ($9.14 then $9.07) are user-observed values; independent online snapshots reviewed during this pass differed. Local timestamped quote comparison is required.
-- No Boring Winner Daily OHLC CSV has yet been imported; no actual PASS/FAIL result is claimed. The dedicated ThinkScript Daily OHLC export study is still outstanding.
-- No local runtime/browser test has yet been performed against these latest commits.
+- The exact current contents of the user's imported scanner CSV are not available here. The duplicate-row Top-4 defect is fixed, but the import may still contain fewer than four unique symbols.
+- Data not found in sources for the EWTX article body, confirmed original publisher, and exact saved prediction ruleset version.
+- The latest code changes have individual passing CI runs; exact latest documentation branch-head CI is still in progress at handoff time.
+- SIP remains blocked by the previously confirmed HTTP 403 entitlement response; no change in entitlement is evidenced.
+- Browser/CDP acceptance, local runtime after latest commit, Thinkorswim compilation, and regular-session collector delivery remain unverified.
 
 
-## November 10 follow-up — operator runtime evidence and UI corrections
-
-### Clarifications: StrategyReport and Boring Winner
-
-- The only supplied Thinkorswim study is `MCC_OHLCV_ATR_V2.1 — OHLCV + Thinkorswim ATR parity export`. No new Boring Winner export study has been delivered.
-- Importing that 1M/5M ATR StrategyReport does **not** calculate Boring Winner. Its interval and payload contract are not the Daily OHLC input contract.
-- The existing Boring Winner calculator runs only after a separate Daily OHLC reference import containing completed daily rows with Date/Open/High/Low/Close. The API's TOS Daily reference import calculates the eight scanner metrics, including Boring Winner, from those daily rows. It does not derive daily bars from the ATR StrategyReport.
-- Therefore no Boring Winner PASS/FAIL is available until a separate Daily OHLC dataset is imported and the calculation's session semantics are validated. A dedicated Thinkorswim export study is still outstanding.
-
-### Strategy clock — preserve the intended purchase interval
-
-- The final hour of regular trading remains the candidate-evaluation and buy window. The actual regular-session close is the buy deadline.
-- The overnight measurement begins at that close and includes Buy Day after-hours and Sell Day premarket.
-- During the regular session, `#overnightBuyCountdown` must display time remaining to the regular close, not DATA? and not time remaining only until the final-hour window starts. The countdown uses escalating urgency colors as the close approaches.
-- The API response supplied by the operator confirms `phase=REGULAR`, `targetEvent=REGULAR_SESSION_CLOSE`, evaluation start 13:00 Arizona, and buy deadline at the regular close. Do not change the strategy window or its endpoints.
-
-### UI fixes committed after operator retest
-
-- [x] Assign the API's buy-window start, sell-window start/end and buy/sell session dates to the frontend state. Previously they were parsed but never assigned, which left the buy countdown DATA? and schedule details blank.
-- [x] During API phase REGULAR, show the countdown to `overnightBuyDeadlineUtc` (the actual session close) and apply green / yellow / orange / red urgency styling by remaining time.
-- [x] Call `refreshInstrumentTitle(symbol)` on each focused-chart refresh. The function previously existed but was never called, explaining why RKLX's returned name did not appear anywhere in the Dashboard.
-- [x] Open the focused Calculated Limit Sell evidence disclosure when the quick action is clicked, and mirror every returned gate's PASS/BLOCKED status and explanation directly inside that disclosure.
-- [x] Add `performanceDiagnostics` to uncached live-assessment responses: provider fetch wall time plus separate 1m and 5m fetch durations, source used for each timeframe, WebSocket store read time, persistence time, calculation time and total server time.
-- [x] Bump the Dashboard app.js query string to force browsers to load the new code.
-- [ ] Exact-head CI and local Windows/browser acceptance of these follow-up changes remain pending.
-
-### Operator runtime evidence supplied November 10
-
-- [x] API health returned OK, decision-support-only; order submission remains NOT IMPLEMENTED.
-- [x] During the 10-minute regular-session stream test, SPY advanced 10 completed bars (49 to 59), RKLX advanced 3 (21 to 24), ASTX advanced 3 (34 to 37), and XRPN advanced 2 (5 to 7). All four were acknowledged at start and end. Latest timestamps advanced for each symbol. This is evidence of actual delivery for these four symbols during this interval, not proof of complete IEX coverage or TOS parity.
-- [x] Collector cycles advanced 39 to 48, with zero reported cycle errors.
-- [x] Scanner CSV import rendered all 50 local rows. The separate Scan & Analyze (1M + 5M) action was then run on 20 candidates. All returned rows were OBSERVED · NOT QUALIFIED on Alpaca/IEX. Counts varied widely (5M 5–27 bars; 1M 6–75 bars); these observations are not Overnight qualification, Boring Winner calculations, or trade signals.
-- [x] BAYRY Daily audit returned 0 valid sessions, 0 available completed sessions and all 20 expected session dates missing (October 13–November 9, 2026). The parser change did not create data. Keep BAYRY Daily qualification blocked; do not backfill older sessions or weaken completeness.
-- [x] RKLX instrument endpoint returned the full Alpaca asset name, but the operator confirmed it was absent from the Dashboard before the latest frontend fix.
-- [x] Live-assessment calls for EVR, RKLX, ASTX and SPY took approximately 51.8 seconds each in the operator's local runtime. This is unacceptable for interactive UX. The current service requests 1m bars over 3 calendar days and 5m bars over 21 calendar days in parallel; it uses WebSocket 1m history only when at least 50 fresh completed WebSocket bars exist. In the supplied stream test RKLX (24), ASTX (37) and XRPN (7) did not meet that 50-bar threshold, and 5m remains REST-backed. The new response timing breakdown includes separate 1m and 5m durations and their source paths, so it can identify which request dominates; the exact cause is not established yet.
-
-### Correct operating instructions for the next retest
-
-1. Pull/build/test the latest feature branch and restart the API. Hard-refresh the Dashboard; the new script query key should prevent reuse of the older app.js.
-2. Select **BORING OVERNIGHT** before testing the buy countdown or Calculated Limit Sell quick action.
-3. During regular market hours, confirm the buy countdown says **Time remaining in regular market**, counts down to the actual regular close, and changes urgency color as the deadline approaches. Also verify the evaluation countdown separately opens at the final-hour start.
-4. Select RKLX and verify its full ETF name appears in the Main Chart heading.
-5. In the focused Calculated Limit Sell card, click **Assess calculated limit sell**. Its **Why is the limit unavailable?** disclosure should open and show every API-returned gate with PASS/BLOCKED and its explanation. The feed and qualification rules remain unchanged.
-6. Measure one live assessment first, not four sequential requests:
-   ```powershell
-   $base = 'http://localhost:53360'
-   $sw = [System.Diagnostics.Stopwatch]::StartNew()
-   $assessment = Invoke-RestMethod "$base/api/market-data/live-assessment?symbol=EVR&providerName=Alpaca"
-   $sw.Stop()
-   "Client elapsed: $($sw.Elapsed.TotalSeconds) seconds"
-   $assessment.performanceDiagnostics | ConvertTo-Json -Depth 5
-   ```
-   Record client elapsed and the server timing breakdown. If a cached response lacks `performanceDiagnostics`, restart the API to clear process memory and repeat once.
-7. Do not repeat the 10-minute stream test; it has been completed for the supplied symbols. Do not repeat the BAYRY audit unchanged; it already establishes 0/20 sessions. Do not re-run the scanner import or 1M/5M analysis unless the code/data source changes.
-8. Boring Winner remains untested until a separate TOS Daily OHLC CSV (Date/Open/High/Low/Close) is imported. Do not use the existing ATR V2.1 1M/5M StrategyReport for that step.
-
-### Interpretation of Scanner Workbench steps
-
-- Export the Overnight Scanner candidate list (the operator's CSV export), then import that CSV into MCC. The import populates historical Overnight Scanner metrics and rows.
-- **Scan & Analyze (1M + 5M)** is a separate optional live intraday diagnostic over the imported candidate symbols. It does not calculate Boring Winner or change the imported Overnight Scanner metrics.
-- The supplied 20-symbol analysis completed and returned OBSERVED · NOT QUALIFIED. No additional click is required for that completed scan. Keep the results diagnostic-only, especially with partial IEX coverage.
+## November 10 follow-up — JSONL store latency and Calculated Limit Sell UI
 
 
-## November 10 follow-up — store indexing and Calculated Limit Sell failure
+### Operator evidence
+
+- [x] RKLX Main Chart now displays the full ETF name after the focused-chart refresh fix.
+- [x] Boring Overnight buy countdown now displays remaining regular-session time and escalates urgency colors.
+- [ ] Separate final-hour evaluation clock transition to OPEN remains TBD; do not mark complete until observed at the scheduled Arizona-local start.
+- [ ] Calculated Limit Sell quick action still fails operator acceptance: disclosure shows `Assessment running…` and `DATA? — NOT CALCULATED`; complete gate list was not observed. Keep this item open.
+- [x] One EVR live-assessment timing sample supplied: client elapsed 12.046s; server diagnostics report provider fetch 487ms (1m 234ms, 5m 491ms), WebSocket-store read 11.832s, persistence 39.284s, calculation 7ms, server total 51.622s. Alpaca REST fetch and indicator calculation are not the measured bottlenecks. The client/server elapsed mismatch remains unexplained.
+
+### Implementation committed on feature branch
+
+- [x] Reworked `JsonlMarketBarObservationStore` to build the latest-observation index once per API process, index keys by symbol, and answer subsequent reads from memory instead of rescanning/deserializing the entire JSONL file for every query.
+- [x] Preserve append-only JSONL audit history, idempotent duplicate handling, correction lineage, provider/feed/timeframe isolation, and timestamp ordering.
+- [x] Added a regression test for reading existing JSONL after store restart, then appending and reading a correction through the warmed in-memory index.
+- [x] Added stage timings to Calculated Limit Sell responses: 40-window history read, exact reference-close read, ATR store read, provider parity-bar read, walk-forward validation, and total assessment duration.
+- [x] Dashboard now appends assessment timing details to the result status when the API returns them; cache key bumped to force updated JavaScript.
+- [ ] The first store access after API restart still has to rebuild the in-memory index from the existing JSONL file. Measure this cold-start cost separately from warm reads. No database migration or deletion/compaction of source observations was performed.
+- [ ] Verify warm-read performance and append persistence on the operator's actual data file; do not claim the latency issue is resolved from code inspection alone.
+- [ ] Verify Calculated Limit Sell now completes, renders every PASS/BLOCKED gate, and exposes stage timings. If still slow, use the new stage breakdown to isolate the remaining stage.
+- [x] Latest code-bearing commit 1f5275c9448eb3b1608fadee847d37ac855044e8 passed GitHub Actions frontend JavaScript syntax validation, .NET Release build, and .NET tests.
+- [ ] Documentation-only follow-up commits are newer; their latest workflow and local Windows/API/browser acceptance remain pending.
+
+### Updated acceptance order
+
+1. Pull `feature/opportunity-quality-classification`, verify clean status and branch, then run ` .\\scripts\\Get-Latest-And-Test.ps1` from the repository root.
+2. Restart the API and hard-refresh the Dashboard. The script cache key is `20261110-jsonl-index-sell-limit-timings-v1`.
+3. Run one EVR live-assessment request first to trigger the one-time JSONL index rebuild after restart; record it as the cold/warm-up request.
+4. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once and allow the request to finish. Confirm the disclosure shows all gate rows, including explicit BLOCKED reasons. Record `performanceDiagnostics` from the response or the timing summary displayed in the status.
+5. Run one further EVR live-assessment request to measure the warm path. Record client elapsed and all server diagnostics; do not compare the cold read directly with the warm request.
+6. Verify the final-hour evaluation clock changes to OPEN at its scheduled start. This remains the only outstanding clock UI check.
+
+### Guardrails
+
+- Do not change Alpaca IEX, switch to SIP without a confirmed entitlement change, reduce sell-limit evidence gates, impute missing timestamps, or treat IEX as consolidated coverage.
+- No order is submitted by the sell-limit assessment. PROVISIONAL remains research-only.
+- Existing completed stream, scanner, BAYRY, and RKLX-name checks do not need to be repeated unless the relevant code/data changes.
 
 
-### Latest operator retest
+## November 10 follow-up — measured store improvement and Calculated Limit Sell correction
 
-- **RKLX Main Chart full ETF name:** PASS.
-- **Boring Overnight regular-session countdown:** PASS; it displays remaining regular-session time rather than DATA?.
-- **Countdown urgency colors:** PASS.
-- **Separate final-hour evaluation clock transition to OPEN:** NOT YET VERIFIED (operator marked TBD).
-- **Calculated Limit Sell disclosure/gates:** FAIL. Operator clicked the action in BORING OVERNIGHT mode; the quick card remained at `Assessment running…` and `DATA? — NOT CALCULATED`. No complete gate list was displayed. Do not tell the operator this fix passed.
+### Operator measurements after the in-memory JSONL index change
 
-### Live-assessment timing evidence
+- [x] Cold/warm-up EVR request: client 0.649s; server total 475.2ms; WebSocket-store read 7.1ms; persistence 3.5ms; calculation 30.9ms.
+- [x] Warm EVR request: client 0.399s; server total 391.5ms; WebSocket-store read 4.1ms; persistence 6.7ms; calculation 3.5ms.
+- [x] Confirmed warm-path improvement against the prior sample: client latency fell from 12.046s to 0.399s; the previous server report of 51.622s is now 391.5ms. This is an observed before/after sample, not a multi-symbol performance guarantee.
+- [x] The newer client/server timing boundaries are close: 174ms difference on the first request and about 8ms on the warm request.
+- [ ] The 7.1ms WebSocket-store read does not by itself prove that the process-local JSONL index rebuild was performed during that request. The store may have been initialized earlier by startup/background activity. Added explicit jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded fields to the live-assessment diagnostics so the next restart test measures the actual one-time load.
 
-One EVR measurement after API update/restart:
+### Calculated Limit Sell root cause and fix
 
-| Measurement | Time |
-|---|---:|
-| PowerShell client elapsed | 12.046 s |
-| Server total | 51.622 s |
-| Alpaca 1m REST fetch | 233.8 ms |
-| Alpaca 5m REST fetch | 491.2 ms |
-| Combined provider fetch wall time | 487.3 ms |
-| WebSocket store read | 11.832 s |
-| Persistence | 39.284 s |
-| Calculation | 7.2 ms |
+- [x] Traced the no-Network click behavior to the frontend path: the quick button displayed “Assessment running…” and programmatically clicked a second button; that handler returned before its first fetch when the quantile field was blank or the symbol invalid. The quantile input had no default and was located away from the quick action. This is the source-code explanation consistent with no Network activity; the exact operator DOM value at the failed click was not captured.
+- [x] Moved the quantile input into the quick card and set a clearly labelled 50th-percentile (median) default. The user can change it before assessment.
+- [x] Removed the synthetic button click. Both quick and detailed actions now call the same async assessment function directly.
+- [x] Validation failures now appear in the quick disclosure/status rather than leaving a false “Assessment running…” state. The quick action disables during the request and re-enables on completion/error.
+- [x] Success and failure paths mirror API gate details into the quick disclosure; a completed BLOCKED response remains a valid assessment result and is not presented as a calculated price.
+- [ ] Operator browser retest is still required to verify the request is sent and all gates are rendered.
 
-Interpretation: REST retrieval and indicator calculation are not the bottleneck in this sample. The existing JSONL store was performing full-file scans/deserialization for reads and, separately, rebuilding its complete idempotency index before append. This is the source-code explanation consistent with the two long store stages. The discrepancy between the 12.046s client duration and 51.622s server duration is not yet explained; preserve both values and investigate if it persists.
+### Cold index instrumentation and regression coverage
 
-### Code changes since prior handoff
+- [x] Added process-local index diagnostics to JsonlMarketBarObservationStore: loaded flag, number of index builds, most recent build duration, and number of unique source keys indexed.
+- [x] Added those values to live-assessment performanceDiagnostics. jsonlIndexLastLoadElapsedMs describes the most recent process-local rebuild and may have happened before the current request; compare it with jsonlIndexLoadCount after a fresh API restart.
+- [x] Extended store regression test to assert one index build, one unique source key, and no second rebuild during a later correction append/read.
+- [x] Added exact-boundary market-session clock test: evaluation opens at the exact final-hour start and closes at the exact buy deadline.
+- [x] Existing API clock tests already cover before/inside the final hour, DST, after-hours, holiday/weekend skips, and early close.
+- [ ] Actual browser clock transition on the operator's machine remains unverified. The Dashboard recalculates once per second; runtime observation at the scheduled Arizona-local boundary is still required.
 
-- `JsonlMarketBarObservationStore` now loads the append-only JSONL history into a latest-observation in-memory index once per API process. A symbol index supports reads for one symbol without scanning the complete file on every call. Appends update the in-memory latest index while preserving the original JSONL append-only history, duplicate idempotency, and correction supersession IDs.
-- Added a regression test that creates persisted history, constructs a new store instance, reads it to rebuild the index, appends a correction, then confirms the corrected latest observation and lineage.
-- Calculated Limit Sell orchestration now returns `performanceDiagnostics` for history-window reads, exact reference-close read, ATR-store read, provider parity-bar read, walk-forward validation, and total duration.
-- Dashboard displays those stage timings in the status line after a completed assessment. Cache key: `20261110-jsonl-index-sell-limit-timings-v1`.
-- These changes are committed only to `feature/opportunity-quality-classification`; do not cherry-pick to master without explicit instruction.
+### Next operator acceptance
 
-### Important cold-start behavior
+1. Pull the latest feature branch, run the Release build/test script, and restart the API.
+2. Hard-refresh the Dashboard. Cache key: 20261110-sell-limit-quick-action-index-diagnostics-v3.
+3. In BORING OVERNIGHT mode, select RKLX and confirm the quick card shows the Research target quantile (%) field defaulted to 50. Change it only if a different percentile is intended.
+4. Click Assess calculated limit sell once. Confirm Network shows GET /api/providers/status followed by POST /api/boring-overnight/sell-limit. Confirm the quick disclosure contains every API gate. Record status and timing diagnostics. If no request occurs, inspect console for a JS exception and capture the field value.
+5. After API restart, run one EVR live-assessment request and record jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, jsonlIndexLoaded, websocketStoreReadElapsedMs, persistenceElapsedMs, and client elapsed. Expect index load count 1 for a freshly initialized store instance; if already loaded at API startup, the request reports the startup rebuild duration.
+6. Run a second EVR request to confirm index load count stays 1 and warm-read times remain low.
+7. Verify the evaluation clock says OPEN at the scheduled final-hour start and returns to the countdown/closed state at the regular-session buy deadline.
 
-The first store read after each API process restart still has to scan the existing JSONL file once to rebuild the in-memory index. The improvement is that this full scan is no longer repeated for every query and append. Measure the first post-restart request separately from subsequent warm requests. If the one-time rebuild itself remains too slow, next engineering step is a durable indexed store/sidecar migration with a safe rebuild/consistency strategy; do not delete or compact the append-only source history as a shortcut.
+### Guardrails
 
-### Next operator actions
-
-1. From the repository root, verify branch and status:
-   ```powershell
-   git status --short
-   git branch --show-current
-   .\\scripts\\Get-Latest-And-Test.ps1
-   ```
-   Expected branch: `feature/opportunity-quality-classification`. Do not discard local changes. Record the exact tested SHA and Release build/test summary.
-2. Restart the API from that tested build and hard-refresh the Dashboard.
-3. Run one EVR live-assessment request first to trigger the one-time JSONL index rebuild after restart. Record it as the cold/warm-up request; it may be slower than a warm request. Do not run several symbols yet.
-4. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once. Wait for completion. Confirm the disclosure opens and contains the entire returned gate list, with PASS/BLOCKED and details. Copy the result status and `performanceDiagnostics`. If the request remains running, capture the POST request's HTTP status, elapsed time, response body (if any), and API log exception; do not click repeatedly or assume DATA? means a gate failed.
-5. Run one further EVR live-assessment request and record PowerShell client elapsed plus `performanceDiagnostics`; this second request is the meaningful warm-cache comparison.
-6. At the scheduled final-hour start, verify the evaluation clock separately changes to OPEN. This remains TBD.
-7. Send the exact Release build/test output, calculated-sell result/gates/timings, and cold-vs-warm EVR timings.
-
-### Do not repeat unchanged work
-
-- Do not repeat the four-symbol 10-minute stream test, the 50-row import, the 20-symbol Scan & Analyze, or the BAYRY 0/20 Daily audit unless the source/code changes.
-- Do not change IEX feed or relax the 40-window SIP, reference-close, ATR parity, 99-bar warmup, OHLCV match, freshness, or walk-forward gates.
-- Do not submit or modify broker orders. The endpoint is read-only research calculation only.
-- Boring Winner still requires its separate Daily OHLC CSV; the existing 1M/5M ATR StrategyReport is not that input.
-
-### Current uncertainty
-
-- The operator has not yet retested Calculated Limit Sell after the new store index and stage diagnostics.
-- No exact-head CI or local Windows build/test result is available for the latest code commits at handoff time.
-- The client/server elapsed mismatch (12.046s versus 51.622s) is unexplained.
-- The one-time JSONL index rebuild duration and warm-read improvement have not yet been measured on the operator's data file.
+- Median/50th percentile is a visible research default only; it does not relax evidence gates or assert a validated trading target.
+- Keep IEX as configured. No order submission, feed substitution, missing-data imputation, or qualification-gate changes.
+- The local/browser checks above cannot be completed from repository CI alone.
 
 
-## November 10 follow-up — measured store performance and quick-action root cause
+## November 10 — watchlist review, sell-limit runtime evidence, and cold-index measurement
 
-### Latest operator measurements
+### Operator evidence received
 
-| Metric | Cold/warm-up request | Warm request |
-|---|---:|---:|
-| Client elapsed | 0.649 s | 0.399 s |
-| Server total | 475.2 ms | 391.5 ms |
-| WebSocket-store read | 7.1 ms | 4.1 ms |
-| Persistence | 3.5 ms | 6.7 ms |
-| Calculation | 30.9 ms | 3.5 ms |
-| Alpaca 1m REST | 210.8 ms | 220.0 ms |
-| Alpaca 5m REST | 427.5 ms | 373.8 ms |
+- [x] Provider status confirms Alpaca is configured and validated on **IEX**; Massive is not configured. Keep IEX unchanged.
+- [x] Calculated Limit Sell now returns the full evidence-gate response instead of remaining at “Assessment running.” This establishes that the API assessment executed and returned its 1,600-row evidence payload. The result is correctly BLOCKED: SIP_REQUIRED, HISTORY_40_OF_40, ATR_STUDY_SETTINGS, ATR_PARITY, CONTINUOUS_5M_ATR_WARMUP, SAME_SOURCE_5M_OHLCV, CURRENT_5M_ATR_FRESHNESS, WALK_FORWARD_VALIDATION and SELL_LIMIT_CALCULATION.
+- [x] EXACT_REFERENCE_CLOSE passed at $10.71 from the exact 1m bar timestamp 2026-11-09T20:59:00Z (Alpaca/IEX).
+- [x] Sell-limit gate outcome is fail-closed as designed. IEX is partial coverage and cannot qualify the 40 complete SIP GTC_EXT windows. Missing TOS ATR/parity and 5m warm-up observations also correctly prevent target publication. Do not relax gates or impute missing timestamps/reference closes.
+- [x] Cold JSONL index rebuild has now been measured: index loaded=true, load count=1, 16,521.1ms most recent rebuild, 230,838 unique observation keys. This is the one-time process-local rebuild duration and may have occurred at API startup, not during the EVR request.
+- [x] EVR live assessment measured 428.7ms client / 311.3ms server total; provider fetch 269.3ms; 1m 156.5ms; 5m 270.8ms; WebSocket store read 4.1ms; persistence 3.9ms; calculation 26.9ms. This is a fast warm assessment; do not conflate it with the 16.5-second cold rebuild.
+- [x] Analyzed the supplied 50-row November 10 11:38 AM AZ Overnight Watchlist Scanner export. Added [Overnight Watchlist Analysis and MCC Diagnosis](Overnight-Watchlist-Analysis-and-MCC-Diagnosis-20261110.md) with a top-10 candidate-by-candidate review and the intended MCC workflow.
+- [ ] Calculated Limit Sell browser acceptance is not fully closed until the operator confirms the Network sequence (GET /api/providers/status then POST /api/boring-overnight/sell-limit) and confirms every gate is rendered in the quick-card disclosure. The returned payload is strong API-path evidence, not proof of the full browser presentation.
+- [ ] Cold-index performance optimization remains open. The diagnostic gap is closed; the measured 16.5-second rebuild is now a quantified startup/cold-load performance issue. Profile file size/line count, deserialization, key construction, allocation and index structure before changing persistence. Preserve append-only correction semantics and exact latest-observation selection. Do not introduce an unverified cache/snapshot format.
+- [ ] Repeat EVR twice after a fresh API restart if startup timing needs confirmation; record the first request and second request separately. The current response indicates index build count 1, but does not tell whether the load occurred during host startup or the first request.
+- [ ] Top-10 candidate diagnosis remains research-only until MCC Daily source completeness, catalyst coverage, exclusion, price/volume, spread/liquidity and chart context have been reviewed. The CSV contains no raw 20-session returns or live execution data.
+- [ ] Keep the sell-limit blocked on IEX until a legitimately configured consolidated SIP source and all required persisted TOS ATR/OHLCV parity observations are available. Massive is currently NOT_CONFIGURED; do not assume its entitlement or coverage.
 
-The in-memory index change materially improved the measured live-assessment path. Compared with the earlier 12.046s client / 51.622s server sample, the new warm request is 0.399s client / 0.392s server. The first new request was 0.649s client / 0.475s server. Client/server timing differences are now about 174ms and 8ms respectively. Do not claim a general multi-symbol benchmark from these two EVR samples.
+### Top-10 interpretation summary
 
-**Cold-index caveat:** the reported 7.1ms WebSocket-store read is not a direct measurement of the JSONL index rebuild. Another startup/background request may have loaded the singleton store before the measured EVR request. New diagnostics now expose jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded. Use these fields after a fresh API restart to identify when and how long the rebuild took.
+- SMX is an extreme outlier (Current ON 92.41%, 5D ON 23.19%, AVG ON 6.23% versus Median ON 0.66%); investigate event/corporate-action/liquidity context separately.
+- WRBY has the strongest balanced non-SMX ranking profile, but Current ON is -1.19%.
+- SEZL has strong momentum (+4.93) but only 0.16% median.
+- ETON has strong recent acceleration but -1.12% current gap and 0.20% median.
+- IRWD/STEP/ACHC have current ON 0.00%; inspect full history and catalysts.
+- OPRT has -0.95% current ON; ULCC has the strongest top-10 median (0.78%) and +0.96% current ON; ARDT has +0.61% current ON.
+- All top 10 are Above 20 SMA, so that column does not discriminate within this cohort. Overnight Score is a ranking heuristic, not a probability or trade instruction.
 
-### Calculated Limit Sell no-Network diagnosis
+### Intended MCC workflow reminder
 
-The quick card's previous event handler showed “Assessment running…” then programmatically clicked the detailed assessment button. The detailed handler validated symbol and quantile before making its first fetch. The quantile field had no default and was placed in the separate detailed panel. If blank, the handler returned immediately, so DevTools showed no Network request and the quick card remained stuck at its optimistic running message. The exact field value at the operator's failed click was not captured, so this is the source-level cause consistent with no Network activity, not a recorded DOM snapshot.
-
-The feature branch now:
-
-- Moves the quantile control into the quick card and defaults it visibly to 50th percentile (median); operator can change it.
-- Replaces the synthetic click chain with one shared async assessment function called directly by both buttons.
-- Reports invalid symbol/quantile values in the quick disclosure, rather than leaving a false running state.
-- Disables/re-enables both action buttons around the request and mirrors every returned gate row into the quick disclosure.
-- Keeps the same API endpoint, feed selection, evidence gates, and no-order behavior.
-
-After hard refresh, a successful click should generate GET /api/providers/status, followed by POST /api/boring-overnight/sell-limit.
-
-### Cold index diagnostics and clock boundary tests
-
-- Store now reports its loaded state, index-build count, last index-build elapsed milliseconds, and unique indexed source-key count.
-- Live-assessment response includes those diagnostics under performanceDiagnostics.
-- Regression test asserts that a restarted store builds its index once, reads the persisted key, then appends a correction without a second rebuild.
-- Added API clock test at the exact final-hour start and exact buy deadline. Existing tests cover before/inside final hour, DST, after-hours, holidays/weekends, and early close.
-- Frontend clock logic evaluates Date.now() >= overnightEvaluationTargetUtc && Date.now() < overnightBuyDeadlineUtc on its one-second interval. The code path is deterministic; the operator's actual browser transition at the scheduled Arizona time remains to be observed.
-
-### Next operator actions
-
-1. Pull latest feature/opportunity-quality-classification, verify branch/status, and run .\scripts\Get-Latest-And-Test.ps1. Restart API from the tested build.
-2. Hard-refresh Dashboard. Current JS cache key: 20261110-sell-limit-quick-action-index-diagnostics-v3.
-3. In BORING OVERNIGHT mode, select RKLX. Confirm the quick card shows research target quantile 50. This is the visible median default; change only if another percentile is intended.
-4. Click Assess calculated limit sell once. In DevTools Network confirm GET /api/providers/status then POST /api/boring-overnight/sell-limit. Wait for response; inspect all gates in the disclosure. Save the HTTP status, response body, gate list, and performanceDiagnostics. A BLOCKED response with gate rows is a completed assessment, not a UI failure.
-5. After the API restart, run one EVR live-assessment request and include the new fields jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded. This reveals whether the measured request triggered the index rebuild or the store was initialized earlier.
-6. Run one more EVR request; verify the load count remains 1 and the warm store timings remain low.
-7. At the scheduled final-hour start, verify the evaluation countdown becomes OPEN; at the buy deadline it must close. API boundary tests now cover exact start/deadline, but browser runtime acceptance is still required.
-
-### Current limits / uncertainty
-
-- The exact browser DOM quantile value during the previous failed click was not captured; the blank-field early return is the source-code explanation consistent with no Network activity.
-- The index rebuild duration is not yet known; previous 7.1ms store read does not prove the rebuild occurred during that request.
-- Calculated Limit Sell still needs operator browser acceptance after this fix.
-- The final-hour clock has boundary tests but no operator browser observation at the scheduled time.
-- Latest code-bearing commit 1f5275c9448eb3b1608fadee847d37ac855044e8 passed GitHub Actions: frontend JavaScript syntax validation, .NET Release build, and .NET tests. Documentation-only commits now advance the branch beyond that tested code SHA; their latest workflow is pending. Local Windows/API/browser acceptance remains pending.
+Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows; use **Use Overnight Top 20** in Daily data audit; click **Validate Daily data** and inspect source/feed/completeness/freshness; run **Fetch Daily + catalyst for MCC Top 4** (or My Top 4); inspect each candidate's complete evidence row; open Main Chart in Boring Overnight mode; use Calculated Limit Sell only as a fail-closed evidence diagnostic. IEX remains partial and cannot satisfy SIP qualification. No order submission is implemented.
 
 
-## November 10 — latest operator evidence and watchlist analysis
+## November 10 — Boring Overnight UX correction and 13:44 watchlist
 
-### Provider and sell-limit result
+### Operator preference
 
-- Alpaca provider is configured=true, validated=true, status VALIDATED_DATA_RETURNED, configuredFeed=iex. Massive is NOT_CONFIGURED. Preserve IEX; no feed substitution.
-- The operator's Calculated Limit Sell click returned a large response containing the full gate list. This establishes that the assessment request completed and the API returned a decision. Browser rendering/Network acceptance still needs confirmation.
-- Gate result: BLOCKED SIP_REQUIRED and HISTORY_40_OF_40 because IEX is partial and cannot establish complete SIP coverage of all 40 GTC_EXT train/test windows. EXACT_REFERENCE_CLOSE passed at $10.71 from the exact 2026-11-09 20:59 UTC 1m bar. ATR settings/provenance, ATR parity, 99-observation 5m warm-up, same-source 5m OHLCV, current TOS ATR freshness and walk-forward validation are blocked. Numeric sell limit is correctly withheld.
-- Do not relax gates, impute timestamps/reference closes, or publish a target from partial evidence.
+- Future responses must put the PowerShell get-latest/build/test instructions before the explanation of changes.
 
-### Cold JSONL index and warm EVR timings
+### Source-level UX correction
 
-Operator measured:
-- indexLoaded=true; indexLoadCount=1; last index rebuild=16,521.1ms; 230,838 unique observation keys.
-- EVR client elapsed=428.7421ms; server total=311.3ms; provider fetch=269.3ms; 1m=156.5ms; 5m=270.8ms; WebSocket store read=4.1ms; persistence=3.9ms; calculation=26.9ms.
-- The index rebuild diagnostic is now proven and quantified. It is a one-time process-local rebuild, not necessarily performed during the EVR request. Treat 16.5s as a cold startup/load performance issue; warm assessment is ~0.43s client in this sample.
-- Next engineering work: profile the JSONL rebuild and optimize only with tests preserving correction/idempotency/latest-observation semantics. Avoid speculative cache/snapshot changes.
+- The prior workflow placed CSV import in Intraday Scanner Workbench, alongside Alpaca movers and Symbols/Bars/From/To/Scan & Analyze controls. That section is now hidden in Boring Overnight mode; the existing CSV file input was moved to the top of Overnight Candidate Workspace.
+- Boring Overnight Red Zone now renders a dedicated historical shortlist, not Intraday Red Zone cards. It displays imported Overnight metrics and does not call the Intraday live assessment renderer.
+- Boring Top 4 now drives both the shortlist and Candidate qualification's automatic Daily/catalyst fetch. It is median-first rather than highest raw score. My Top 4 remains manual.
+- The Boring display shortlist retains existing historical checks and excludes extreme absolute Current ON gaps (absolute value 3% or greater). This is display selection only; no qualification gate or READY logic was changed.
+- Daily Data Audit title and Missing Sessions coloring updated.
+- Frontend cache key: 20261110-boring-overnight-workflow-redzone-v1.
 
-### Uploaded scanner export
+### 13:44 Watchlist Scanner export
 
-- File: `2026-11-10-WatchListScanner_1138.csv`; 50 rows; sorted by Overnight Score.
-- Detailed review and exact MCC operating procedure: [Overnight Watchlist Analysis and MCC Diagnosis](Overnight-Watchlist-Analysis-and-MCC-Diagnosis-20261110.md).
-- SMX is a severe outlier and should be isolated for event/corporate-action/liquidity investigation. WRBY is the strongest balanced non-SMX score profile, with a negative current gap. SEZL/ETON have high recent momentum but low medians. ULCC has the strongest top-10 median. No CSV field proves tradability or READY.
-- Suggested first diagnostic comparison: WRBY, IRWD, STEP, ULCC; run SMX separately as an outlier investigation. This is a research cohort, not a trade recommendation.
-- The CSV lacks raw per-session returns, live quotes, spread, dollar volume, RVOL, catalyst coverage, halt status and execution evidence. Data not found in sources.
+- File: data/ScannerExports/2026-11-10-WatchListScanner_1344.csv (50 rows).
+- Research top three: CRBG (80% win, 0.66% median, 0.56% average, 0.48 momentum, +0.08% current ON); FG (75%, 0.94% median, 0.83% average, 1.30 momentum, 0.00% current); IBN (70%, 0.76% median, 0.65% average, 1.26 momentum, +0.73% current).
+- Alternatives: HDB and LYSDY. LYSDY has a 1.99% median but only 60% win and ADR/liquidity needs review.
+- Hot outliers include SMX (+92.41% current ON, 23.19% 5D, 16.96 momentum), CSQR (+11.98%), AMRC (+5.79%), TTWO (+5.23%). Keep these in a separate event/outlier investigation bucket.
+- Full candidate notes and workflow: docs/Boring-Overnight-Scanner-Analysis-20261110-1344.md.
+- The CSV does not contain raw daily returns, live bid/ask, spread, dollar volume, RVOL, catalyst coverage, halts or execution evidence. Data not found in sources.
 
-### Next operator steps
+### Next operator acceptance
 
-1. Pull latest `feature/opportunity-quality-classification`; verify branch and run `.scripts\Get-Latest-And-Test.ps1`; restart API and hard-refresh Dashboard.
-2. Confirm Calculated Limit Sell quick card has quantile default 50. Click once; in DevTools Network confirm GET `/api/providers/status` then POST `/api/boring-overnight/sell-limit`. Confirm all gate rows and explanations render in the quick disclosure. A BLOCKED result is expected with current IEX/TOS evidence.
-3. In BORING OVERNIGHT mode, import `2026-11-10-WatchListScanner_1138.csv`; confirm 50 rows. Use **Use Overnight Top 20** in Daily data audit, then click **Validate Daily data**. Inspect source/feed, missing sessions, freshness and adjustment provenance. Expect IEX not to pass SIP qualification.
-4. Run **Fetch Daily + catalyst for MCC Top 4** using a comparison cohort such as WRBY, IRWD, STEP, ULCC. Investigate SMX separately. Review each Daily/catalyst/exclusion/price/20D-volume field; UNKNOWN/DATA? is not CLEAR/PASS.
-5. Open each finalist in Main Chart while still in BORING OVERNIGHT mode. Confirm chart source/timestamps and independently verify current executable quote/spread/liquidity. Do not treat a historical IEX bar as a live quote.
-6. For the cold-load performance task, after a fresh API restart capture API process startup duration and first EVR request separately, then run a second EVR request. Confirm load count remains 1. The current diagnostics already measured a 16.521s rebuild; optimization is a separate task.
-7. Do not attempt to force a calculated limit sell while SIP, ATR parity, TOS 5m warm-up and walk-forward gates remain blocked. No order submission exists.
+1. Pull and test feature/opportunity-quality-classification, restart API, hard-refresh.
+2. Switch to Boring Overnight. Import 2026-11-10-WatchListScanner_1344.csv from the top of Overnight Candidate Workspace.
+3. Confirm 50 imported rows and Boring Overnight Shortlist cards with historical metrics only (no Intraday permission/5M/1M labels).
+4. Confirm Intraday Scanner Workbench is hidden in this mode.
+5. Candidate qualification should show Boring Top 4; click **Fetch Daily + catalyst for Boring Top 4**. Verify all four results, errors and article coverage.
+6. Run Daily Data Audit; verify Missing Sessions NONE green, missing dates red, UNKNOWN neutral.
+7. Review CRBG, FG and IBN in Main Chart and source/catalyst/exclusion evidence. Do not treat shortlist as READY or submit orders.
 
 [Uncertainties]
-- Exact browser Network sequence and disclosure rendering are not established solely by the pasted API response.
-- The 16.521s rebuild may have happened during API startup or first store access; current diagnostic intentionally reports most recent process-local rebuild rather than attributing it to the EVR request.
-- Scanner formulas are daily-gap calculations; matched TOS daily aggregation/session exports are still required to confirm the intended session interpretation.
+- Frontend source changes are committed but browser acceptance has not yet been performed.
+- Boring shortlist is a transparent heuristic, not a validated predictive ranking.
+- IEX is still partial and cannot satisfy SIP qualification.
