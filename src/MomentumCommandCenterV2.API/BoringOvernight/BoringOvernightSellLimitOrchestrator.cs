@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using MomentumCommandCenterV2.API.MarketData;
 using MomentumCommandCenterV2.API.StrategyReports;
 
@@ -34,6 +35,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         if (asOfUtc == default || asOfUtc.Offset != TimeSpan.Zero || asOfUtc > DateTimeOffset.UtcNow.AddMinutes(1))
             throw new ArgumentException("asOfUtc must be a valid UTC timestamp no later than one minute in the future.", nameof(asOfUtc));
 
+        var totalStopwatch = Stopwatch.StartNew();
         var symbol = request.Symbol.Trim().ToUpperInvariant();
         var provider = request.ProviderName.Trim();
         var feed = request.Feed.Trim();
@@ -44,17 +46,21 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         else
             gates.Add(new("SIP_REQUIRED", true, "Requested evidence feed is SIP; stored observations are still checked independently below."));
 
+        var historyStopwatch = Stopwatch.StartNew();
         var history = await new BoringOvernightSellWindowHistoryService(barStore)
             .GetHistoryAsync(symbol, provider, feed, asOfUtc, cancellationToken);
+        historyStopwatch.Stop();
         gates.Add(new("HISTORY_40_OF_40", history.QualificationUsable,
             $"Complete eligible GTC_EXT windows: {history.CompleteWindowCount}/{history.RequiredWindow}; feed coverage: {history.FeedCoverage}. " +
             (history.QualificationUsable ? "Every 07:00–19:59 ET minute and exact prior-session close is present." : "All 40 windows (20 training + 20 later test) must be complete on SIP; missing timestamps and reference closes are not imputed.")));
 
         var referenceSession = GetLatestCompletedRegularSessionDate(asOfUtc);
         var referenceCloseTimestamp = ToUtc(referenceSession, UsEquitiesSessionCalendar.GetRegularClose(referenceSession).AddMinutes(-1));
+        var referenceStopwatch = Stopwatch.StartNew();
         var referenceRows = await barStore.GetLatestAsync(
             symbol, provider, referenceCloseTimestamp, referenceCloseTimestamp, 2,
             cancellationToken, "1m", feed);
+        referenceStopwatch.Stop();
         var referenceBar = referenceRows.Select(x => x.Bar)
             .SingleOrDefault(x => x.Timestamp == referenceCloseTimestamp &&
                 x.Provider.Equals(provider, StringComparison.OrdinalIgnoreCase) &&
@@ -66,9 +72,11 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 ? $"Missing exact {referenceCloseTimestamp:O} 1m {provider}/{feed} reference-close bar for session {referenceSession:yyyy-MM-dd}."
                 : $"Reference close is {referenceClose.GetValueOrDefault()} from exact 1m bar {referenceCloseTimestamp:O} ({provider}/{feed})."));
 
+        var atrStoreStopwatch = Stopwatch.StartNew();
         var atrRows = (await atrStore.GetLatestAsync(symbol, "5m", null, null, 10000, cancellationToken))
             .Where(x => x.Metadata.StudyVersion.Equals("MCC_OHLCV_ATR_V2.1", StringComparison.Ordinal))
             .ToArray();
+        atrStoreStopwatch.Stop();
         var orderedAtrRows = atrRows.OrderBy(x => x.Observation.SourceTimestampUtc).ToArray();
         var parityWindowRows = orderedAtrRows.TakeLast(ThinkorswimAtrParityService.DefaultWarmupBars +
             ThinkorswimAtrParityService.MinimumComparisonBars).ToArray();
@@ -100,6 +108,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         gates.Add(new("CONTINUOUS_5M_ATR_WARMUP", continuousWarmup,
             $"Need {AtrWarmupBars} consecutive completed 5m TOS observations; found {lastWarmupRows.Length} in the latest warm-up window."));
 
+        var providerBarsStopwatch = Stopwatch.StartNew();
         var providerAtrBars = Array.Empty<MarketBarObservation>();
         var providerBarsMatch = false;
         var providerMismatchCount = 0;
@@ -124,6 +133,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 providerMismatchCount == 0 &&
                 providerAtrBars.Length >= parityWindowRows.Length;
         }
+        providerBarsStopwatch.Stop();
         gates.Add(new("SAME_SOURCE_5M_OHLCV", providerBarsMatch,
             $"Exact 5m provider/TOS OHLCV matches over the latest parity window: {Math.Max(0, parityWindowRows.Length - providerMismatchCount)}/{AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars}; mismatches or missing timestamps: {providerMismatchCount}."));
 
@@ -135,9 +145,11 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 ? "No current 5m Thinkorswim ATR observation is persisted."
                 : $"Latest 5m ATR bar starts {latestAtr.Observation.SourceTimestampUtc:O}; completion is {latestAtr.Observation.SourceTimestampUtc.AddMinutes(5):O}; evaluated at {asOfUtc:O}."));
 
+        var walkForwardStopwatch = Stopwatch.StartNew();
         var walkForward = BoringOvernightWalkForwardValidator.Validate(
             history.CalculatorObservations, request.TargetQuantilePct,
             CalculatorTrainingWindow, WalkForwardTestWindow);
+        walkForwardStopwatch.Stop();
         gates.Add(new("WALK_FORWARD_VALIDATION", walkForward.Passed,
             walkForward.Explanation));
 
@@ -166,6 +178,14 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         }
 
         var approved = gates.All(x => x.Passed) && calculation?.CalculatedLimitSell is not null;
+        totalStopwatch.Stop();
+        var performanceDiagnostics = new SellLimitPerformanceDiagnostics(
+            Math.Round(historyStopwatch.Elapsed.TotalMilliseconds, 1),
+            Math.Round(referenceStopwatch.Elapsed.TotalMilliseconds, 1),
+            Math.Round(atrStoreStopwatch.Elapsed.TotalMilliseconds, 1),
+            Math.Round(providerBarsStopwatch.Elapsed.TotalMilliseconds, 1),
+            Math.Round(walkForwardStopwatch.Elapsed.TotalMilliseconds, 1),
+            Math.Round(totalStopwatch.Elapsed.TotalMilliseconds, 1));
         return new BoringOvernightSellLimitOrchestrationResult(
             approved ? "PROVISIONAL" : "BLOCKED",
             symbol, provider, feed, request.TargetQuantilePct, asOfUtc,
@@ -175,7 +195,8 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             history, walkForward, calculation, gates,
             approved
                 ? "A research-only sell-limit candidate passed the 20-session training / 20-session unseen-test walk-forward gate and matched current 5m ATR evidence. This is not a broker order, executable quote or actual fill."
-                : "No numeric sell limit is issued. Resolve every failed evidence gate; no data has been imputed and no order has been submitted.");
+                : "No numeric sell limit is issued. Resolve every failed evidence gate; no data has been imputed and no order has been submitted.",
+            performanceDiagnostics);
     }
 
     private static bool MatchesExactOhlcv(MarketBar provider, StrategyReportAtrObservation tos)
@@ -237,4 +258,13 @@ public sealed record BoringOvernightSellLimitOrchestrationResult(
     BoringOvernightWalkForwardResult WalkForward,
     BoringOvernightSellLimitResult? Calculation,
     IReadOnlyList<SellLimitEvidenceGate> Gates,
-    string Explanation);
+    string Explanation,
+    SellLimitPerformanceDiagnostics PerformanceDiagnostics);
+
+public sealed record SellLimitPerformanceDiagnostics(
+    double HistoryReadElapsedMs,
+    double ReferenceCloseReadElapsedMs,
+    double AtrStoreReadElapsedMs,
+    double ProviderParityBarsReadElapsedMs,
+    double WalkForwardElapsedMs,
+    double TotalElapsedMs);
