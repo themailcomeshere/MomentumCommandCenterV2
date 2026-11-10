@@ -134,10 +134,10 @@ Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open
 
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-09 (operator validation recheck, EWTX rationale hardening, MCC Top-4 distinct-symbol fix)  
+**Updated:** 2026-11-10 (Boring Overnight five-metric browser acceptance; P0/P1/P2/P3 status recheck)  
 **Working branch:** `feature/opportunity-quality-classification`  
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/`  
-**Current handoff:** [NewChatHandoff-20261109.md](NewChatHandoff-20261109.md)  
+**Current handoff:** [NewChatHandoff-20261110.md](NewChatHandoff-20261110.md)  
 **Detailed engineering acceptance criteria:** [Active-Engineering-Backlog-20261106.md](Active-Engineering-Backlog-20261106.md)  
 **Catalyst review procedure:** [Catalyst-Human-Review-Workflow.md](Catalyst-Human-Review-Workflow.md)  
 **Technical workflow:** [Technical-Workflow.md](Technical-Workflow.md)  
@@ -145,6 +145,15 @@ Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open
 **Historical checklist archive:** [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)
 
 This is the current authoritative checklist. The detailed backlog contains implementation boundaries and acceptance criteria. Older historical checkbox states are archived and do not override the current statuses below. Continue on the feature branch; do not modify `master`. Main Dashboard only; do not return to PrototypeIndex.
+
+## November 10 — Boring Overnight Main Chart acceptance received
+
+- [x] Operator confirmed the new `app.js` cache key `20261110-overnight-main-chart-metrics-v1`.
+- [x] Operator accepted all five Boring Overnight Main Chart metric fields: 1M CLOSE $35.8900; DAILY VWAP $35.9837 (2026-11-10 RTH, 285 volume bars); ATR14 $0.0314 (1,021 ranges available, 14-bar value); RELATIVE VOLUME NOT USED; ATR EXTENSION 2.98 ATR.
+- [x] Operator confirmed Intraday Scanner Workbench is hidden in Boring Overnight and searchable by its exact heading in Intraday mode.
+- [x] Five-metric and scanner-visibility browser acceptance is complete. Detailed evidence and limitations: [Boring Overnight Main Chart browser acceptance](Validation/Boring-Overnight-Main-Chart-Acceptance-20261110.md).
+- [ ] Full Boring Overnight workflow remains open: import/current CSV row reconciliation, shortlist/top-20, Boring Top 4 Daily/catalyst fetch, per-symbol evidence review, and Calculated Limit Sell disclosure.
+- [ ] P0 ATR/TOS, independent provider parity and SIP gates remain blocked by Thinkorswim/operator evidence and external feed entitlement; do not mark complete from this UI acceptance.
 
 ## Current operator evidence — 2026-11-09
 
@@ -444,7 +453,7 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - [x] Isolated V8 harness compiled the updated `fetchLiveAssessment()` function, simulated a stalled fetch/abort, observed the explicit 20-second timeout message, and verified the in-flight map entry is removed. This is a focused function-level check, not full browser, exact-head CI, or Windows runtime acceptance.
 - [ ] Exact-head GitHub Actions syntax/build/test verification.
 - [x] Operator browser acceptance: CRBG's five Main Chart metrics resolved successfully in Intraday mode.
-- [ ] Boring Overnight five-metric acceptance is tracked separately below; the first operator test showed all five fields stuck at Loading.
+- [x] Boring Overnight five-metric browser acceptance: operator confirms cache key loaded, all five cards populated (RVOL explicitly NOT USED), and Intraday Scanner Workbench mode visibility. See [acceptance evidence](Validation/Boring-Overnight-Main-Chart-Acceptance-20261110.md).
 - [ ] Verify a timeout for one symbol does not prevent a later retry or another symbol's assessment; confirm the aborted in-flight entry is removed and a successful subsequent request repopulates all five metrics.
 - [ ] If timeout reproduces, inspect the request duration and API `performanceDiagnostics`; do not treat the timeout as a root-cause fix for backend slowness.
 
@@ -477,7 +486,8 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - [x] Selected the latest completed RTH VWAP session using the current New York session clock, so a missing 16:00 ET after-hours bar does not incorrectly hide the just-completed session's VWAP.
 - [x] Kept the optional latest-trade and Yahoo reference requests separate from the five historical metrics. The five metrics are populated before those optional reference calls finish.
 - [x] Updated the metric helper text and frontend cache key to `20261110-overnight-main-chart-metrics-v1`.
-- [ ] Run full frontend syntax/build/test validation at the exact new branch head and operator Windows/browser acceptance.
+- [x] Operator browser acceptance: all five Boring Overnight Main Chart fields populated with expected provenance/limitations; scanner visibility verified in both modes.
+- [ ] Exact-head GitHub Actions and operator Windows Release build/test remain separate release gates.
 
 ### Next operator acceptance
 
@@ -503,3 +513,35 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - Do not compute or infer Overnight RVOL from missing same-time baselines; it is NOT USED in this workspace.
 - Do not promote any historical diagnostic to READY, execution permission, a quote, or a trade instruction.
 - Keep IEX_PARTIAL, SIP, TOS ATR parity, and provider/TOS OHLCV blockers unchanged.
+
+
+## November 10 operator acceptance — remaining work decomposition
+
+### Accepted in the latest browser run
+
+- [x] Boring Overnight Main Chart five-metric rendering and scanner visibility — see `docs/Validation/Boring-Overnight-Main-Chart-Acceptance-20261110.md`.
+- [x] The metric values and provenance are captured exactly as reported by the operator; no independent calculation or quote status is inferred.
+
+### P0 — external/operator evidence still required
+
+- [ ] ATR V2 exact Thinkorswim compile: open the exact revised study in TOS, compile, and preserve the editor/compiler result plus chart/runtime settings. GitHub source and CI cannot establish TOS compilation.
+- [ ] Independent provider/TOS OHLCV parity: use a genuinely independent, entitled source with exact symbol/session/timeframe/adjustment alignment. IEX is partial and the SIP 403 is already established. Do not retry SIP unless the operator reports an actual entitlement change.
+- [ ] 1m ATR continuity: preserve 1m as an independent gate; existing EVR 1m gap history remains a separate blocker.
+- [ ] GTC_EXT sell-limit remains blocked until qualified feed, 119 exact 5m OHLCV rows, ATR V2 settings/parity/warm-up, exact previous RTH close, complete 40-session eligible-window history and walk-forward validation all pass.
+
+### P1 — operator/source/data work still required
+
+- [ ] LYSDY and BNPQY Daily: configured IEX returned 0/20. Do not retry unchanged IEX or backfill. Identify a genuinely independent source only if available and document adjustment/session/coverage provenance; otherwise leave DATA?.
+- [ ] CRBG/FG/IBN/HDB: perform source-backed Daily/catalyst/price/volume/exclusion reviews. 20/20 expected sessions and FRESH do not upgrade IEX_PARTIAL; no returned articles remain UNKNOWN.
+- [ ] Opportunity Quality: refresh source-field availability denominators and timestamps, then obtain time-separated candidate snapshots/outcomes for calibration. No calibration dataset or measured out-of-sample results are currently present.
+- [ ] Full Boring Overnight workflow: verify current import row count, shortlist/top-20, four distinct Boring Top 4 requests, per-symbol Daily/catalyst evidence, and candidate review.
+- [ ] Calculated Limit Sell: verify browser Network sequence (provider status then sell-limit POST) and all returned PASS/BLOCKED gate rows in the disclosure. Existing API evidence is BLOCKED; this is not a usable price target.
+- [ ] Overnight evaluation clock: compare displayed final-60-minute start and buy deadline against actual exchange close for a standard-time date, daylight-time date, and early-close date; compare the next-session GTC_EXT 7:00–20:00 ET display to the Schwab ticket. Unit tests do not replace this runtime comparison.
+
+### P2/P3 — design, integration and release work
+
+- [ ] Broker reconciliation: define and implement only against actual broker order/fill records; include partial fills, fees and cancel/correction lineage. OHLCV touches are not fills.
+- [ ] Schwab read-only: wait for developer approval, app registration, callback and secure OAuth setup. No order submission.
+- [ ] Deployment/recovery: define package/startup, data backup/restore, log rotation, health monitoring, sleep/wake/network/provider recovery, and unattended collector behavior; test on the operator's Windows machine.
+- [ ] Release governance: exact branch-head GitHub Actions, local Release build/tests, runtime/browser acceptance, TOS compilation and source/entitlement evidence are separate required gates.
+
