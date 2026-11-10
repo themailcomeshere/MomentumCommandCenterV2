@@ -2010,22 +2010,28 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
  }
 });
 
-$("overnightQuickCalculateSellLimit")?.addEventListener("click",()=>{
- const symbol=String($("symbol")?.value||"").trim().toUpperCase();if(symbol&&$("overnightSymbol"))$("overnightSymbol").value=symbol;
- const evidence=$("overnightQuickSellLimitGateSummary");if(evidence){evidence.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"Assessment running…"}));}
- const disclosure=$("overnightQuickCalculateSellLimit")?.closest("article")?.querySelector(".quick-sell-evidence");if(disclosure)disclosure.open=true;
- $("overnightCalculateSellLimit")?.click();
-});
-$("overnightCalculateSellLimit")?.addEventListener("click", async () => {
+async function runCalculatedSellLimitAssessment() {
  const button=$("overnightCalculateSellLimit");
+ const quickButton=$("overnightQuickCalculateSellLimit");
  const status=$("overnightSellLimitAssessmentStatus");
  const gateList=$("overnightSellLimitEvidenceGates");
+ const quickGateSummary=$("overnightQuickSellLimitGateSummary");
  const symbol=($("overnightSymbol")?.value||"").trim().toUpperCase();
  const quantile=Number($("overnightSellLimitQuantile")?.value);
- if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){status.textContent="Enter a valid Overnight candidate symbol first.";return;}
- if(!Number.isInteger(quantile)||quantile<1||quantile>99){status.textContent="Choose a research target quantile from 1 to 99.";return;}
- button.disabled=true; gateList.replaceChildren();
- status.textContent="Reading effective provider/feed and evaluating persisted sell-limit evidence for "+symbol+"…";
+ const showValidationError=message=>{
+  if(status)status.textContent=message;
+  if(quickGateSummary)quickGateSummary.textContent=message;
+  if($("overnightQuickSellLimitDetail"))$("overnightQuickSellLimitDetail").textContent=message;
+ };
+ if(!/^[A-Z0-9.-]{1,8}$/.test(symbol)){showValidationError("Enter a valid Overnight candidate symbol first. No request was sent.");return;}
+ if(!Number.isInteger(quantile)||quantile<1||quantile>99){showValidationError("Choose a research target quantile from 1 to 99. No request was sent.");return;}
+ if(button)button.disabled=true;
+ if(quickButton)quickButton.disabled=true;
+ if(gateList)gateList.replaceChildren();
+ if(quickGateSummary)quickGateSummary.replaceChildren();
+ if(status)status.textContent="Reading effective provider/feed and evaluating persisted sell-limit evidence for "+symbol+"…";
+ if(quickGateSummary)quickGateSummary.textContent="Assessment running for "+symbol+" at the "+quantile+"th percentile…";
+ if($("overnightQuickSellLimitDetail"))$("overnightQuickSellLimitDetail").textContent="Assessment running · "+quantile+"th percentile";
  try{
   const providerResponse=await fetch("/api/providers/status",{cache:"no-store",headers:{Accept:"application/json"}});
   const providers=await providerResponse.json();
@@ -2039,38 +2045,49 @@ $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
   const data=await response.json();
   if(!response.ok)throw new Error(data.detail||data.title||data.error||("HTTP "+response.status));
   const calculation=data.calculation;
-  $("overnightSellLimitPrice").textContent=calculation?.calculatedLimitSell!=null
-   ? Number(calculation.calculatedLimitSell).toFixed(2) : "DATA? — NOT CALCULATED";
-  $("overnightSellLimitClose").textContent=data.referenceClose!=null?Number(data.referenceClose).toFixed(2):"DATA?";
-  $("overnightSellLimitMethod").textContent="Historical "+quantile+"th percentile · "+(data.atrParity?.status||"ATR DATA?");
-  $("overnightSellLimitValidation").textContent=data.status+" · "+(data.atrParity?.status||"ATR DATA?");
-  $("overnightSellLimitReason").textContent=data.explanation||"No sell-limit explanation was returned.";
+  if($("overnightSellLimitPrice"))$("overnightSellLimitPrice").textContent=calculation?.calculatedLimitSell!=null?Number(calculation.calculatedLimitSell).toFixed(2):"DATA? — NOT CALCULATED";
+  if($("overnightSellLimitClose"))$("overnightSellLimitClose").textContent=data.referenceClose!=null?Number(data.referenceClose).toFixed(2):"DATA?";
+  if($("overnightSellLimitMethod"))$("overnightSellLimitMethod").textContent="Historical "+quantile+"th percentile · "+(data.atrParity?.status||"ATR DATA?");
+  if($("overnightSellLimitValidation"))$("overnightSellLimitValidation").textContent=data.status+" · "+(data.atrParity?.status||"ATR DATA?");
+  if($("overnightSellLimitReason"))$("overnightSellLimitReason").textContent=data.explanation||"No sell-limit explanation was returned.";
   if($("overnightQuickSellLimit"))$("overnightQuickSellLimit").textContent=calculation?.calculatedLimitSell!=null?"$"+Number(calculation.calculatedLimitSell).toFixed(2):"DATA? — NOT CALCULATED";
   if($("overnightQuickSellLimitDetail"))$("overnightQuickSellLimitDetail").textContent=data.status+" · "+quantile+"th percentile · no order submitted";
   const gates=Array.isArray(data.gates)?data.gates:[];
-  const quickGateSummary=$("overnightQuickSellLimitGateSummary");
   if(quickGateSummary)quickGateSummary.replaceChildren();
   for(const gate of gates){
    const row=document.createElement("p");
    row.className=gate.passed?"muted":"upload-warning";
    row.textContent=(gate.passed?"PASS":"BLOCKED")+" · "+gate.code+" — "+gate.detail;
-   gateList.append(row);
+   if(gateList)gateList.append(row);
    if(quickGateSummary){const quickRow=document.createElement("p");quickRow.className=row.className;quickRow.textContent=row.textContent;quickGateSummary.append(quickRow);}
   }
   if(quickGateSummary&&!gates.length)quickGateSummary.textContent="The API returned no individual gate records. Check the assessment status below.";
   const timing=data.performanceDiagnostics;
   const timingSummary=timing
-   ?" · "+(timing.totalElapsedMs/1000).toFixed(1)+"s total (history "+(timing.historyReadElapsedMs/1000).toFixed(1)+"s; ATR store "+(timing.atrStoreReadElapsedMs/1000).toFixed(1)+"s; reference "+(timing.referenceCloseReadElapsedMs/1000).toFixed(1)+"s; provider parity "+(timing.providerParityBarsReadElapsedMs/1000).toFixed(1)+"s)"
+   ?" · "+(timing.totalElapsedMs/1000).toFixed(1)+"s total (history "+(timing.historyReadElapsedMs/1000).toFixed(1)+"s; ATR store "+(timing.atrStoreReadElapsedMs/1000)+"s; reference "+(timing.referenceCloseReadElapsedMs/1000)+"s; provider parity "+(timing.providerParityBarsReadElapsedMs/1000)+"s)"
    :"";
-  status.textContent=data.status+" · effective Alpaca feed "+feed.toUpperCase()+" · "+gates.filter(x=>x.passed).length+"/"+gates.length+" evidence gates passed"+timingSummary+" · no order submitted.";
+  const resultStatus=data.status+" · effective Alpaca feed "+feed.toUpperCase()+" · "+gates.filter(x=>x.passed).length+"/"+gates.length+" evidence gates passed"+timingSummary+" · no order submitted.";
+  if(status)status.textContent=resultStatus;
  }catch(error){
-  status.textContent="Sell-limit assessment failed: "+error.message+" No numeric limit was calculated.";
-  if($("overnightQuickSellLimitGateSummary"))$("overnightQuickSellLimitGateSummary").textContent=status.textContent;
-  $("overnightSellLimitPrice").textContent="DATA? — NOT CALCULATED";
+  const message="Sell-limit assessment failed: "+error.message+" No numeric limit was calculated.";
+  showValidationError(message);
+  if($("overnightSellLimitPrice"))$("overnightSellLimitPrice").textContent="DATA? — NOT CALCULATED";
   if($("overnightQuickSellLimit"))$("overnightQuickSellLimit").textContent="DATA? — NOT CALCULATED";
- }finally{button.disabled=false;}
+ }finally{
+  if(button)button.disabled=false;
+  if(quickButton)quickButton.disabled=false;
+ }
+}
+
+$("overnightCalculateSellLimit")?.addEventListener("click",runCalculatedSellLimitAssessment);
+$("overnightQuickCalculateSellLimit")?.addEventListener("click",()=>{
+ const chartSymbol=String($("symbol")?.value||"").trim().toUpperCase();
+ if(chartSymbol&&$("overnightSymbol"))$("overnightSymbol").value=chartSymbol;
+ const disclosure=$("overnightQuickCalculateSellLimit")?.closest("article")?.querySelector(".quick-sell-evidence");
+ if(disclosure)disclosure.open=true;
+ runCalculatedSellLimitAssessment();
 });
- 
+
 $("overnightBarsForm")?.addEventListener("submit", async event => {
  event.preventDefault();
  const button = $("overnightFetch"), status = $("overnightStatus");
