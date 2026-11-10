@@ -419,7 +419,7 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 
 - The prior workflow placed CSV import in Intraday Scanner Workbench, alongside Alpaca movers and Symbols/Bars/From/To/Scan & Analyze controls. That section is now hidden in Boring Overnight mode; the existing CSV file input was moved to the top of Overnight Candidate Workspace.
 - Boring Overnight Red Zone now renders a dedicated historical shortlist, not Intraday Red Zone cards. It displays imported Overnight metrics and does not call the Intraday live assessment renderer.
-- Boring Top 4 now drives both the shortlist and Candidate qualification's automatic Daily/catalyst fetch. It is median-first rather than highest raw score. My Top 4 remains manual.
+- Boring Top 4 now drives both the shortlist and Candidate qualification's automatic Daily/catalyst fetch. It is win-rate-first, then median, distribution consistency and lower absolute momentum rather than highest raw score. My Top 4 remains manual.
 - The Boring display shortlist retains existing historical checks and excludes extreme absolute Current ON gaps (absolute value 3% or greater). This is display selection only; no qualification gate or READY logic was changed.
 - Daily Data Audit title and Missing Sessions coloring updated.
 - Frontend cache key: 20261110-boring-overnight-workflow-redzone-v1.
