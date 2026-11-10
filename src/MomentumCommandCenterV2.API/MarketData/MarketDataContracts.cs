@@ -17,6 +17,9 @@ public sealed record MarketBar(
     string Timeframe = "UNKNOWN",
     string SourceTransport = "REST");
 
+public sealed record LatestTradeSnapshot(string Symbol, decimal Price, DateTimeOffset TimestampUtc, string? Exchange, string Feed, string Source);
+public sealed record InstrumentMetadata(string Symbol, string Name, string? Exchange, string? AssetClass, string? Status, string Source);
+
 /// <summary>
 /// PURPOSE: Server-side contract shared by provider adapters.
 /// WHEN CALLED: API comparison and Morning Brief requests.
