@@ -41,8 +41,29 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
 
         using var document = JsonDocument.Parse(body);
         var root = document.RootElement;
-        if (!root.TryGetProperty("bars", out var bars) || bars.ValueKind != JsonValueKind.Array)
-            throw new InvalidOperationException("Alpaca Daily response did not contain a bars array.");
+        if (!root.TryGetProperty("bars", out var bars))
+            throw new InvalidOperationException($"Alpaca Daily response is missing the 'bars' property (root JSON kind: {root.ValueKind}).");
+
+        // Alpaca's single-symbol response is normally an array. Some response envelopes
+        // key the array by symbol; accept only the requested symbol and preserve empty/null
+        // as an explicit no-observation result rather than converting it into an API 502.
+        if (bars.ValueKind == JsonValueKind.Object)
+        {
+            if (!bars.TryGetProperty(symbol.ToUpperInvariant(), out var symbolBars))
+                bars = JsonDocument.Parse("[]").RootElement.Clone();
+            else if (symbolBars.ValueKind == JsonValueKind.Array || symbolBars.ValueKind == JsonValueKind.Null)
+                bars = symbolBars;
+            else
+                throw new InvalidOperationException($"Alpaca Daily response bars.{symbol.ToUpperInvariant()} has unexpected JSON kind {symbolBars.ValueKind}.");
+        }
+        else if (bars.ValueKind == JsonValueKind.Null)
+        {
+            bars = JsonDocument.Parse("[]").RootElement.Clone();
+        }
+        else if (bars.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException($"Alpaca Daily response bars has unexpected JSON kind {bars.ValueKind} for symbol {symbol.ToUpperInvariant()}.");
+        }
 
         var parsed = bars.EnumerateArray().Select(item => new DailyBar(
                 item.GetProperty("t").GetDateTimeOffset(),
