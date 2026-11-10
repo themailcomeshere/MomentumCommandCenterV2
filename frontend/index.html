@@ -737,16 +737,16 @@
                 </div>
             </section>
             <section class="panel" aria-label="Thinkorswim daily gap reference import">
-                <div class="section-heading"><div><h3>Thinkorswim Daily OHLC reference</h3><p class="muted small">Import at least 21 daily OHLC bars for one symbol. MCC calculates the eight supplied scanner fields using MCC-TOS-DAILY-GAP-1.0 and compares them with the imported scanner row. No Alpaca/IEX substitution is performed.</p></div></div>
+                <div class="section-heading"><div><h3>Thinkorswim Daily OHLC reference</h3><p class="muted small">Import at least 21 daily OHLC bars for one symbol. Use the TOS chart Daily aggregation with Extended Hours OFF and corporate-action adjustment ON. This is a plain daily OHLC CSV, not the 1M/5M ATR StrategyReport; headers must be Date, Open, High, Low, Close. Chart timezone is recorded as America/Phoenix. MCC calculates the eight supplied scanner fields and separate Boring Winner research result. No Alpaca/IEX substitution is performed.</p></div></div>
                 <div class="watchlist-form">
                     <label for="tosDailyReferenceSymbol">Symbol</label><input id="tosDailyReferenceSymbol" maxlength="8" placeholder="e.g. WRBY">
                     <label for="tosDailyReferenceFile">TOS daily OHLC CSV</label><input id="tosDailyReferenceFile" type="file" accept=".csv,text/csv">
                     <label><input id="tosDailyExtendedHours" type="checkbox"> Extended hours ON</label>
-                    <label><input id="tosDailyAdjusted" type="checkbox"> Corporate-action adjusted</label>
+                    <label><input id="tosDailyAdjusted" type="checkbox" checked> Corporate-action adjusted ON</label>
                     <label for="tosDailyTimezone">Chart timezone</label><input id="tosDailyTimezone" value="America/Phoenix" maxlength="80">
                     <button id="tosDailyReferenceImport" type="button" class="quiet-button">Import &amp; calculate parity</button>
                 </div>
-                <p id="tosDailyReferenceStatus" class="muted small" role="status">No TOS daily reference imported. Required CSV headers: Date, Open, High, Low, Close. The symbol is entered above. Use the same TOS aggregation settings as the scanner.</p>
+                <p id="tosDailyReferenceStatus" class="muted small" role="status">No TOS daily reference imported. Required CSV headers: Date, Open, High, Low, Close. The symbol is entered above. Use a Daily chart export (not the 1M/5M ATR parity report). Extended Hours OFF keeps daily Open as the regular-session open; corporate-action adjustment ON is preselected. If using a StrategyReport, it must contain one row per daily bar with Date, Open, High, Low, Close.</p>
                 <p id="tosDailyBoringWinnerStatus" class="muted small" role="status">Boring Winner: NOT CALCULATED · import at least 21 source-qualified TOS daily OHLC bars. This is a separate research flag, not a READY gate.</p>
                 <div class="table-wrap"><table><thead><tr><th>Column</th><th>TOS scanner CSV</th><th>MCC from TOS OHLC</th><th>Parity</th></tr></thead><tbody id="tosDailyReferenceRows"><tr><td colspan="4">No parity result.</td></tr></tbody></table></div>
             </section>
