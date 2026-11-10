@@ -43,9 +43,15 @@ public sealed class MarketSessionClockTests
     {
         var standard = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-11-03T22:15:00Z"));
         Assert.Equal(DateTimeOffset.Parse("2026-11-04T00:55:00Z"), standard.OvernightBuyDeadlineUtc);
-        var daylight = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-10-30T19:15:00Z"));
-        Assert.Equal(new DateOnly(2026, 11, 2), daylight.OvernightBuySessionDate);
-        Assert.Equal(DateTimeOffset.Parse("2026-11-03T00:55:00Z"), daylight.OvernightBuyDeadlineUtc);
+        var daylight = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-10-29T20:15:00Z"));
+        Assert.Equal(new DateOnly(2026, 10, 29), daylight.OvernightBuySessionDate);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-29T22:00:00Z"), daylight.OvernightBuyWindowStartUtc);
+        Assert.Equal(DateTimeOffset.Parse("2026-10-29T23:55:00Z"), daylight.OvernightBuyDeadlineUtc);
+
+        // Friday is not a buy day; after the DST transition the next eligible session is Monday.
+        var friday = MarketSessionClock.GetSnapshot(DateTimeOffset.Parse("2026-10-30T19:15:00Z"));
+        Assert.Equal(new DateOnly(2026, 11, 2), friday.OvernightBuySessionDate);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-03T00:55:00Z"), friday.OvernightBuyDeadlineUtc);
     }
 
     [Fact]
