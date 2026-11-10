@@ -138,3 +138,8 @@ The disclosure summary now uses a pointer cursor, hover background, and keyboard
 The supplied active scanner formulas are fully specified and the independent calculator is implemented. They are daily-bar gap formulas, not an intraday entry/sell-window strategy. A separate V3 Boring Overnight trade column still requires the operator's exact Arizona-local buy timestamp and sell/measurement endpoint, the bar/session convention, and the official-auction versus first-eligible-trade rule. The new daily-gap calculator intentionally does not guess those values.
 
 The inactive Boring Winner remains inactive pending approval and chronological source-qualified validation.
+
+
+## November 10 — Boring Winner daily OHLC export clarification
+
+The Boring Winner calculator consumes one row per completed Daily bar, with Date/Open/High/Low/Close. The ordinary ATR V2 1M/5M StrategyReport is not its input. A StrategyReport is acceptable only if it exports those exact daily OHLC rows and no order-event rows. Use Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, chart timezone America/Phoenix, and at least 21 completed daily bars (40–60 preferred). This reproduces the regular-session open versus previous regular-session close gap. Session semantics still require empirical TOS parity; Boring Winner remains RESEARCH ONLY.
