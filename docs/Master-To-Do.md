@@ -12,6 +12,8 @@
 - [x] Successful Alpaca stream authentication/subscription clears the previous connection error so a stale `connection limit exceeded` message is not shown as the current failure after a later successful connection.
 - [x] Boring Winner import UI now explains that the expected input is a Daily OHLC CSV with Date/Open/High/Low/Close, not the 1M/5M ATR parity report. Extended Hours defaults OFF; corporate-action adjustment defaults ON; chart timezone defaults to America/Phoenix.
 - [x] Added tests for timestamped Alpaca latest trades, symbol-keyed Daily bars, and Yahoo after-hours metadata.
+- [x] Fixed the Dashboard startup `decisionRefreshSequence` temporal-dead-zone error by initializing the counter before the first `render()`; bumped the `app.js` cache key so browsers request the corrected script.
+- [x] Restored Overnight candidate selection/purchase to the final 60 minutes of regular trading, with the buy deadline at the actual regular-session close. Added standard-time, daylight-time, after-hours, holiday, and early-close schedule tests.
 
 ### Operator evidence from November 10
 
@@ -51,7 +53,7 @@ Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open
 - [x] Removed obsolete Red Zone static chip, redundant label ID, and obsolete explanatory paragraph. Preserved `.gate-warning` and Ticker placeholder.
 - [x] Decision Explanation and Timeframe Handoff are collapsible with pointer cursor. Timeframe Handoff is hidden in Boring Overnight mode.
 - [ ] Define a source-qualified Boring Overnight READY state and corresponding alert transition; current evaluator intentionally remains fail-closed at READY=0. Do not substitute Boring Winner PASS for READY.
-- [x] Latest code-bearing branch head `8a633674bf355c80bad0e7bd9779ddb49e8748e0` passed GitHub Actions JavaScript syntax validation, .NET Release build (0 warnings / 0 errors), and all 264 tests (run `42751987992`). Subsequent commits, if any, are documentation-only.
+- [x] Latest code-bearing commit `aa60685580c266410df1149779d70d4bc15268ef` passed GitHub Actions JavaScript syntax validation, .NET Release build, and tests (run `42836168264`). The later cache-key-only commit `176b545dd5ef256cb7842e5bd414c5641f6f1f2a` was still running its own CI at the time this note was written.
 - [ ] Operator Windows build/run, browser verification, and API/runtime acceptance remain required.
 
 ## Operator evidence and implementation — 2026-11-09 (Overnight top-20, mode isolation, TOS formula engine)
