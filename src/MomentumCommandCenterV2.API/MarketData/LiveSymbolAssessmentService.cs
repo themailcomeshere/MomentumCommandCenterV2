@@ -229,6 +229,7 @@ public sealed class LiveSymbolAssessmentService(
             }
 
             calculationStopwatch.Stop();
+            var jsonlStoreDiagnostics = (barStore as JsonlMarketBarObservationStore)?.GetDiagnostics();
             var result = new
             {
                 performanceDiagnostics = new
@@ -242,7 +243,11 @@ public sealed class LiveSymbolAssessmentService(
                     persistenceElapsedMs = Math.Round(persistenceMs, 1),
                     calculationElapsedMs = Math.Round(calculationStopwatch.Elapsed.TotalMilliseconds, 1),
                     totalElapsedMs = Math.Round(requestStopwatch.Elapsed.TotalMilliseconds, 1),
-                    note = "Server-side stage timings for this uncached assessment. Provider fetch duration covers 1m and 5m requests in parallel; it is not a provider-side timing breakdown."
+                    jsonlIndexLoaded = jsonlStoreDiagnostics?.IndexLoaded,
+                    jsonlIndexLoadCount = jsonlStoreDiagnostics?.IndexLoadCount,
+                    jsonlIndexLastLoadElapsedMs = jsonlStoreDiagnostics is null ? null : Math.Round(jsonlStoreDiagnostics.LastIndexLoadElapsedMs, 1),
+                    jsonlIndexUniqueObservationKeys = jsonlStoreDiagnostics?.IndexedUniqueKeyCount,
+                    note = "Server-side stage timings for this uncached assessment. JSONL index-load timing is the most recent one-time process-local rebuild, not necessarily work performed by this request. Provider fetch duration covers 1m and 5m requests in parallel; it is not a provider-side timing breakdown."
                 },
                 symbol = normalizedSymbol,
                 provider = provider.ProviderName,
