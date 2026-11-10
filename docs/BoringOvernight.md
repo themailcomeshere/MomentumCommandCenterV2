@@ -461,5 +461,5 @@ The current GTC_EXT UI capture control requires effective SIP and retrieves exac
 
 ### Boring Winner CSV settings
 
-Use a TOS Daily chart OHLC export with Date, Open, High, Low, Close columns, not the 1M/5M ATR parity StrategyReport. Initial settings: Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, America/Phoenix chart timezone, at least 21 completed bars (40–60 preferred). The importer stores the selected settings but does not prove session semantics. Boring Winner remains research-only until chronological validation.
+The Dashboard importer currently requires a separate TOS Daily OHLC CSV with Date, Open, High, Low, Close columns. The existing `MCC_OHLCV_ATR_V2.1 — OHLCV + Thinkorswim ATR parity export` is not this input and importing it will not calculate Boring Winner. No dedicated Boring Winner Daily OHLC export study has been delivered yet. Until that exists, a manually prepared Daily CSV is required. Initial settings: Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, America/Phoenix chart timezone, at least 21 completed bars (40–60 preferred). The importer stores the selected settings but does not prove session semantics. Boring Winner remains research-only until chronological validation.
 
