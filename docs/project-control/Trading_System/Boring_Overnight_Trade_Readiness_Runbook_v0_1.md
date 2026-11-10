@@ -4,7 +4,7 @@ Status: decision-support specification; not a validated strategy or automated tr
 
 ## 1. Objective and user-confirmed routine
 
-The target is a nominal +0.5% sell price, Monday–Thursday entries, no planned Friday entries. Research candidates 1:00–3:00 PM Arizona time. Intended limit-buy window is 3:00–5:00 PM Arizona time. After a confirmed fill, user currently sets a limit sell at regular-session end-of-day close +0.5%, described as GTC + Extended. Broker for execution is Schwab; Alpaca is currently a market-data/API test source, not the execution broker for this routine.
+The target is a nominal +0.5% sell price, Monday–Thursday entries, no planned Friday entries. Research candidates 1:00–3:00 PM Arizona time. The buy window opens at 3:00 PM Arizona and the latest buy cutoff is 7:55 PM Eastern (five minutes before the current 8:00 PM Eastern post-market end). This supersedes the older 5:00 PM Arizona cutoff. After a confirmed fill, the user currently sets a limit sell at regular-session end-of-day close +0.5%, described as GTC + Extended. Broker for execution is Schwab; Alpaca is currently a market-data/API test source, not the execution broker for this routine.
 
 A +0.5% target four nights a week is a performance objective to test, not a near-guaranteed outcome. Orders can fail to fill, gap against the position, or incur spread/slippage. MCC will not submit orders.
 
@@ -19,7 +19,7 @@ Official sources:
 
 ## 3. Arizona/Eastern time conversion
 
-Arizona does not observe daylight saving time. During Eastern Daylight Time, 3:00–5:00 PM Arizona = 6:00–8:00 PM Eastern. During Eastern Standard Time, it = 5:00–7:00 PM Eastern. Both fall within Eastern after-hours, but order mode, venue, symbol eligibility, and liquidity determine actual execution. Use named time zones and date-specific conversion; do not hardcode offsets.
+Arizona does not observe daylight saving time. During Eastern Daylight Time, 3:00–4:55 PM Arizona = 6:00–7:55 PM Eastern. During Eastern Standard Time, it = 5:00–7:00 PM Eastern. Both fall within Eastern after-hours, but order mode, venue, symbol eligibility, and liquidity determine actual execution. Use named time zones and date-specific conversion; do not hardcode offsets.
 
 ## 4. ADR fee clarification
 
