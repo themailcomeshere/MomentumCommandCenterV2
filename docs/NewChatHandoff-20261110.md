@@ -236,3 +236,73 @@ The Yahoo endpoint initially had a compile failure caused by a named-argument ty
 - Export the Overnight Scanner candidate list (the operator's CSV export), then import that CSV into MCC. The import populates historical Overnight Scanner metrics and rows.
 - **Scan & Analyze (1M + 5M)** is a separate optional live intraday diagnostic over the imported candidate symbols. It does not calculate Boring Winner or change the imported Overnight Scanner metrics.
 - The supplied 20-symbol analysis completed and returned OBSERVED · NOT QUALIFIED. No additional click is required for that completed scan. Keep the results diagnostic-only, especially with partial IEX coverage.
+
+
+## November 10 follow-up — store indexing and Calculated Limit Sell failure
+
+
+### Latest operator retest
+
+- **RKLX Main Chart full ETF name:** PASS.
+- **Boring Overnight regular-session countdown:** PASS; it displays remaining regular-session time rather than DATA?.
+- **Countdown urgency colors:** PASS.
+- **Separate final-hour evaluation clock transition to OPEN:** NOT YET VERIFIED (operator marked TBD).
+- **Calculated Limit Sell disclosure/gates:** FAIL. Operator clicked the action in BORING OVERNIGHT mode; the quick card remained at `Assessment running…` and `DATA? — NOT CALCULATED`. No complete gate list was displayed. Do not tell the operator this fix passed.
+
+### Live-assessment timing evidence
+
+One EVR measurement after API update/restart:
+
+| Measurement | Time |
+|---|---:|
+| PowerShell client elapsed | 12.046 s |
+| Server total | 51.622 s |
+| Alpaca 1m REST fetch | 233.8 ms |
+| Alpaca 5m REST fetch | 491.2 ms |
+| Combined provider fetch wall time | 487.3 ms |
+| WebSocket store read | 11.832 s |
+| Persistence | 39.284 s |
+| Calculation | 7.2 ms |
+
+Interpretation: REST retrieval and indicator calculation are not the bottleneck in this sample. The existing JSONL store was performing full-file scans/deserialization for reads and, separately, rebuilding its complete idempotency index before append. This is the source-code explanation consistent with the two long store stages. The discrepancy between the 12.046s client duration and 51.622s server duration is not yet explained; preserve both values and investigate if it persists.
+
+### Code changes since prior handoff
+
+- `JsonlMarketBarObservationStore` now loads the append-only JSONL history into a latest-observation in-memory index once per API process. A symbol index supports reads for one symbol without scanning the complete file on every call. Appends update the in-memory latest index while preserving the original JSONL append-only history, duplicate idempotency, and correction supersession IDs.
+- Added a regression test that creates persisted history, constructs a new store instance, reads it to rebuild the index, appends a correction, then confirms the corrected latest observation and lineage.
+- Calculated Limit Sell orchestration now returns `performanceDiagnostics` for history-window reads, exact reference-close read, ATR-store read, provider parity-bar read, walk-forward validation, and total duration.
+- Dashboard displays those stage timings in the status line after a completed assessment. Cache key: `20261110-jsonl-index-sell-limit-timings-v1`.
+- These changes are committed only to `feature/opportunity-quality-classification`; do not cherry-pick to master without explicit instruction.
+
+### Important cold-start behavior
+
+The first store read after each API process restart still has to scan the existing JSONL file once to rebuild the in-memory index. The improvement is that this full scan is no longer repeated for every query and append. Measure the first post-restart request separately from subsequent warm requests. If the one-time rebuild itself remains too slow, next engineering step is a durable indexed store/sidecar migration with a safe rebuild/consistency strategy; do not delete or compact the append-only source history as a shortcut.
+
+### Next operator actions
+
+1. From the repository root, verify branch and status:
+   ```powershell
+   git status --short
+   git branch --show-current
+   .\\scripts\\Get-Latest-And-Test.ps1
+   ```
+   Expected branch: `feature/opportunity-quality-classification`. Do not discard local changes. Record the exact tested SHA and Release build/test summary.
+2. Restart the API from that tested build and hard-refresh the Dashboard.
+3. In **BORING OVERNIGHT** mode, click **Assess calculated limit sell** once. Wait for completion. Confirm the disclosure opens and contains the entire returned gate list, with PASS/BLOCKED and details. Copy the result status and `performanceDiagnostics`. If the request remains running, capture the POST request's HTTP status, elapsed time, response body (if any), and API log exception; do not click repeatedly or assume DATA? means a gate failed.
+4. Measure the live-assessment warm path. The first EVR request after restart can rebuild the JSONL index; record it as the cold/warm-up request. Run one further EVR request and record PowerShell client elapsed plus `performanceDiagnostics`; this second request is the meaningful warm-cache comparison.
+5. At the scheduled final-hour start, verify the evaluation clock separately changes to OPEN. This remains TBD.
+6. Send the exact Release build/test output, calculated-sell result/gates/timings, and cold-vs-warm EVR timings.
+
+### Do not repeat unchanged work
+
+- Do not repeat the four-symbol 10-minute stream test, the 50-row import, the 20-symbol Scan & Analyze, or the BAYRY 0/20 Daily audit unless the source/code changes.
+- Do not change IEX feed or relax the 40-window SIP, reference-close, ATR parity, 99-bar warmup, OHLCV match, freshness, or walk-forward gates.
+- Do not submit or modify broker orders. The endpoint is read-only research calculation only.
+- Boring Winner still requires its separate Daily OHLC CSV; the existing 1M/5M ATR StrategyReport is not that input.
+
+### Current uncertainty
+
+- The operator has not yet retested Calculated Limit Sell after the new store index and stage diagnostics.
+- No exact-head CI or local Windows build/test result is available for the latest code commits at handoff time.
+- The client/server elapsed mismatch (12.046s versus 51.622s) is unexplained.
+- The one-time JSONL index rebuild duration and warm-read improvement have not yet been measured on the operator's data file.
