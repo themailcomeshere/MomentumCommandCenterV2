@@ -616,3 +616,11 @@ This does not complete the full Boring Overnight workflow, prove Daily ATR14/TOS
 - The source/feed remains Alpaca/IEX partial. The five displayed metric values do not establish consolidated-market coverage.
 - No source-qualified historical Opportunity Quality outcome dataset is available in the retrieved repository context.
 - TOS compile, Windows Release build/test, Calculated Limit Sell disclosure runtime, and clock-vs-Schwab-ticket comparison remain unverified.
+
+
+## Status reconciliation — November 10
+
+- The earlier note that the Calculated Limit Sell quick action stayed at `Assessment running…` is superseded by the later operator retest: the API returned the complete 1,600-row evidence payload and the expected BLOCKED gates. The **browser disclosure** still needs acceptance that every returned gate is rendered after GET `/api/providers/status` and POST `/api/boring-overnight/sell-limit`.
+- A prior 10-minute regular-session stream/collector run already showed acknowledged SPY/RKLX/ASTX/XRPN subscriptions, completed-bar deltas of +10/+3/+3/+2, and collector cycles 39→48 with zero errors. Do not ask for that same basic capture again. Recovery tests (restart, sleep/wake, network/auth failure, replay/idempotency) remain open.
+- The Overnight evaluation clock's unit tests cover the exact final-hour start/deadline, DST, weekends/holidays and early closes. Actual browser observation against the exchange schedule and Schwab ticket remains open.
+- The latest documentation branch head `86c2bb9fe32d5e810523cd6bc453f11e4e08550f` returned no GitHub status checks or PR-triggered workflow runs through the available status query. Exact-head CI is NOT VERIFIED. The operator's latest cache-key/browser acceptance does not independently prove the Windows Release build/test result.
