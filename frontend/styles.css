@@ -1725,6 +1725,7 @@ body.boring-overnight-mode #mcc-static-0087-article{display:none!important}
 
 /* Boring Overnight workflow: hide unrelated intraday scanner controls. */
 body.boring-overnight-mode #scanner-workbench{display:none!important}
+body.boring-overnight-mode #toggleRedZoneSound,body.boring-overnight-mode #rankOpportunityPool{display:none!important}
 body.boring-overnight-mode .overnight-import-strip{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;padding:14px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:rgba(35,57,83,.22)}
 body.boring-overnight-mode .overnight-import-strip>div p{margin:4px 0 0}
 body.boring-overnight-mode #overnightImportStatus{grid-column:1/-1}
