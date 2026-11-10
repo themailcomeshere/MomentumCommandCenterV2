@@ -5,6 +5,24 @@ const $=id=>document.getElementById(id);
 try{const savedMode=localStorage.getItem("mcc.workspaceMode.v1");if(savedMode==="overnight"||savedMode==="momentum")$("mode").value=savedMode;}catch{}
 $("mode")?.addEventListener("change",()=>{try{localStorage.setItem("mcc.workspaceMode.v1",$("mode").value);}catch{}});
 const feedbackKey="mcc.dashboardFeedback.v1";
+const instrumentMetadataCache=new Map();
+function symbolDisplayName(symbol){const item=instrumentMetadataCache.get(symbol);return item?.name?symbol+" — "+item.name:symbol;}
+async function refreshInstrumentTitle(symbol){
+ const heading=$("mainChartTitle");if(!heading)return;const ticker=String(symbol||"").trim().toUpperCase();if(!ticker)return;
+ const cached=instrumentMetadataCache.get(ticker);if(cached){heading.textContent=symbolDisplayName(ticker);return;}
+ heading.textContent=ticker+" — loading instrument name…";
+ try{const response=await fetch("/api/market-data/instrument?"+new URLSearchParams({symbol:ticker}),{cache:"no-store",headers:{Accept:"application/json"}});
+ const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.detail||data.error||("HTTP "+response.status));
+ instrumentMetadataCache.set(ticker,data);if(($("symbol")?.value||"").trim().toUpperCase()===ticker)heading.textContent=symbolDisplayName(ticker);
+ }catch{instrumentMetadataCache.set(ticker,{symbol:ticker,name:null});if(($("symbol")?.value||"").trim().toUpperCase()===ticker)heading.textContent=ticker+" — instrument name unavailable";}
+}
+function setDockClassification(label,kind="unknown"){const node=$("prototype-symbol-classification");if(node){node.textContent=label;node.className="prototype-symbol-classification classification-"+kind;}}
+function updateDockClassificationFromAssessment(data){
+ const classification=String(data?.opportunityQuality?.classification||"DataUnknown");
+ const map={ReadyHighOpportunity:["QUALITY — HIGH","high"],ReadyModerate:["QUALITY — MODERATE","moderate"],ReadyBoring:["QUALITY — LOW","boring"],ReadyExtended:["TIMING — EXTENDED","extended"],WatchDeveloping:["WATCH — DEVELOPING","watch"],Blocked:["BLOCKED","blocked"],DataUnknown:["DATA?","unknown"]};
+ const [label,kind]=map[classification]||["DATA?","unknown"];setDockClassification("OPPORTUNITY QUALITY · "+label,kind);
+}
+
 
 /// MODULE: Exchange session countdown
 /// PURPOSE: Render the API's calendar-backed next session transition in the header.
@@ -252,6 +270,7 @@ async function refreshDecisionExplanation(){
   const data=await fetchLiveAssessment(symbol);
   if(requestId!==decisionRefreshSequence)return;
   const one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
+   updateDockClassificationFromAssessment(data);
   const transportLabel=$("marketTransportLabel");
   if(transportLabel)transportLabel.textContent=one.sourceTransport==="ALPACA_WEBSOCKET_LATEST_BAR"?"ALPACA 1M WS / 5M REST · 15s UI REFRESH":"ALPACA REST · 15s UI REFRESH";
   const fiveMinutePermission=five.scoreBreakdown?.permission??decision?.fiveMinutePermission,permission=fiveMinutePermission===true?"YES":fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
@@ -309,7 +328,15 @@ async function refreshOvernightPriceSummary(symbol){
   const parts=ts=>Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));
   const local=ts=>new Date(ts).toLocaleString("en-US",{timeZone:"America/Phoenix",hour12:true});
   const last=bars.at(-1),lp=last?parts(last.timestamp):null,lastMinute=lp?Number(lp.hour)*60+Number(lp.minute):-1,lastDate=lp?lp.year+"-"+lp.month+"-"+lp.day:"";
-  const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
+  let latestTrade=null,latestTradeError=null;
+   try{const tradeResponse=await fetch("/api/market-data/latest-trade?"+new URLSearchParams({symbol}),{cache:"no-store",headers:{Accept:"application/json"}});const tradePayload=await tradeResponse.json();if(!tradeResponse.ok)throw Error(tradePayload.detail||tradePayload.error||("HTTP "+tradeResponse.status));latestTrade=tradePayload.trade||null;}catch(error){latestTradeError=error.message;}
+   const barTimestamp=last?new Date(last.timestamp).getTime():0,tradeTimestamp=latestTrade?new Date(latestTrade.timestampUtc).getTime():0;
+   const useTrade=latestTrade&&Number.isFinite(tradeTimestamp)&&tradeTimestamp>=barTimestamp;
+   const shownPrice=useTrade?Number(latestTrade.price):last?Number(last.close):null;
+   const tradeAgeMinutes=useTrade?Math.max(0,(Date.now()-tradeTimestamp)/60000):null;
+   const tradeParts=useTrade?parts(latestTrade.timestampUtc):null,tradeMinute=tradeParts?Number(tradeParts.hour)*60+Number(tradeParts.minute):-1;
+   const tradeSession=tradeMinute>=960&&tradeMinute<1200?"AFTER-HOURS":tradeMinute>=240&&tradeMinute<570?"PREMARKET":tradeMinute>=570&&tradeMinute<960?"REGULAR SESSION":"EXTENDED SESSION";
+   const rth=bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute),date=z.year+"-"+z.month+"-"+z.day;return !["Sat","Sun"].includes(z.weekday)&&m>=570&&m<960&&(date<lastDate||(lastMinute>=960&&date===lastDate));}).at(-1);
   const rthDate=rth?(()=>{const z=parts(rth.timestamp);return z.year+"-"+z.month+"-"+z.day;})():null;
   const sessionBars=rthDate?bars.filter(b=>{const z=parts(b.timestamp),m=Number(z.hour)*60+Number(z.minute);return z.year+"-"+z.month+"-"+z.day===rthDate&&m>=570&&m<960;}):[];
   const volumeBars=sessionBars.filter(b=>Number.isFinite(Number(b.volume))&&Number(b.volume)>0&&Number.isFinite(Number(b.high))&&Number.isFinite(Number(b.low)));
@@ -320,9 +347,9 @@ async function refreshOvernightPriceSummary(symbol){
   const extension=last&&dailyVwap!==null&&atr14!==null&&atr14>0?Math.abs(Number(last.close)-dailyVwap)/atr14:null;
   if(c)c.textContent=rth?"$"+Number(rth.close).toFixed(4):"DATA? — NO RTH BAR";
   if(ct){const z=rth?parts(rth.timestamp):null;ct.textContent=rth?"Last RTH 1M bar close · "+local(rth.timestamp)+" Arizona"+(z.hour==="15"&&z.minute==="59"?" · final 1M bar before 16:00 ET; official auction print not verified":" · exact session-close bar not established"):"Data not found in sources: no RTH 1M bar returned.";}
-  if(p)p.textContent=last?"$"+Number(last.close).toFixed(4):"DATA? — NO BAR";
-  if(pl&&last){const z=parts(last.timestamp),m=Number(z.hour)*60+Number(z.minute);pl.textContent=m>=960?"AFTER-HOURS PRICE":m<570?"PREMARKET / EXTENDED PRICE":"LATEST PRICE";}
-  if(pt)pt.textContent=last?"Latest returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: provider returned no 1M bars.";
+  if(p)p.textContent=shownPrice!==null?"$"+shownPrice.toFixed(4):"DATA? — NO TRADE OR BAR";
+  if(pl)pl.textContent=useTrade?(tradeSession==="AFTER-HOURS"?"AFTER-HOURS PRICE":tradeSession==="PREMARKET"?"PREMARKET PRICE":"LATEST PROVIDER TRADE"):"LAST RETURNED 1M BAR";
+  if(pt)pt.textContent=useTrade?"Alpaca latest "+tradeSession.toLowerCase()+" trade · "+local(latestTrade.timestampUtc)+" Arizona · "+latestTrade.feed.toUpperCase()+" · "+(tradeAgeMinutes<=5?"recent provider trade":"STALE "+tradeAgeMinutes.toFixed(0)+" minutes")+" · not NBBO / not guaranteed executable":last?"Last returned 1M bar close · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · "+(latestTradeError?"latest trade unavailable: "+latestTradeError:"no newer trade on configured feed")+" · not a live quote":"Data not found in sources: no 1M bars or latest trade returned.";
   const reasonList=$("reasons"),source=$("decisionSource"),score=$("decisionScore"),notice=$("mcc-static-0086-div");
   if(reasonList){const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);reasonList.replaceChildren(...[
    "1M close "+(last?"$"+fmt(last.close):"DATA?"),
@@ -342,7 +369,7 @@ async function refreshFocusedPriceChart(){
   void refreshOvernightPriceSummary(symbol);
   host.replaceChildren();
   const badge=$("mainChartSymbol");if(badge)badge.textContent=symbol||"NO SYMBOL";
-  const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 5-minute extended-hours research chart";host.append(title);
+  const title=document.createElement("div");title.className="chart-title";title.textContent=symbolDisplayName(symbol)+" · 5-minute extended-hours research chart";host.append(title);
   try{
    const to=new Date(),from=new Date(to.getTime()-5*86400000);
    const params=new URLSearchParams({symbol,timeframe:"5m",from:from.toISOString(),to:to.toISOString(),providerName:"Alpaca"});
@@ -350,7 +377,7 @@ async function refreshFocusedPriceChart(){
    const data=await response.json();if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
    const bars=(Array.isArray(data.bars)?data.bars:[]).filter(b=>Number.isFinite(Number(b.close))&&Number.isFinite(new Date(b.timestamp).getTime())).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
    drawPriceLine(host,bars,symbol);
-   const chartTitle=document.createElement("div");chartTitle.className="chart-title";chartTitle.textContent=symbol+" · 5-minute extended-hours research chart";host.prepend(chartTitle);
+   const chartTitle=document.createElement("div");chartTitle.className="chart-title";chartTitle.textContent=symbolDisplayName(symbol)+" · 5-minute extended-hours research chart";host.prepend(chartTitle);
    const last=bars.length?bars[bars.length-1]:null;
    const detail=document.createElement("p");detail.className="chart-meta";
    detail.textContent="Source "+(data.provider||"UNKNOWN")+"/"+(data.feed||"UNKNOWN")+" · "+bars.length+" returned 5M bars · latest source bar "+(last?new Date(last.timestamp).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" Arizona":"NOT AVAILABLE")+" · intraday permission NOT EVALUATED · no stale-permission status applies in Overnight mode.";
@@ -360,7 +387,7 @@ async function refreshFocusedPriceChart(){
  }
  void ensureMinuteBarSubscription(symbol);host.replaceChildren();
  const symbolBadge=$("mainChartSymbol");if(symbolBadge)symbolBadge.textContent=symbol||"NO SYMBOL";
- const title=document.createElement("div");title.className="chart-title";title.textContent=symbol+" · 1-minute OHLCV close · auto-refresh 15s";host.append(title);
+ const title=document.createElement("div");title.className="chart-title";title.textContent=symbolDisplayName(symbol)+" · 1-minute OHLCV close · auto-refresh 15s";host.append(title);
  try{
   const data=await fetchLiveAssessment(symbol);
   drawPriceLine(host,data.oneMinute?.chartBars||[],symbol);
@@ -1622,7 +1649,7 @@ function phoenixLocalToUtc(value) {
 }
 function summarizeBars(payload) {
  const bars=(Array.isArray(payload.bars)?payload.bars:[]).filter(b=>b&&Number.isFinite(new Date(b.timestamp).getTime())).sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
- if(!bars.length) return {count:0,latestAge:null,change:null,range:null,volume:null,first:null,last:null,feed:payload.feed||"unknown"};
+ if(!bars.length) return {count:0,latestAge:null,change:null,range:null,volume:null,first:null,last:null,feed:payload.feed||"unknown",provider:payload.provider||"Alpaca"};
  const first=bars[0],last=bars[bars.length-1];
  const enoughBars=bars.length>=2;
  const highs=bars.filter(b=>b.high!==null&&b.high!==undefined).map(b=>Number(b.high)).filter(Number.isFinite),lows=bars.filter(b=>b.low!==null&&b.low!==undefined).map(b=>Number(b.low)).filter(Number.isFinite);
@@ -1632,7 +1659,7 @@ function summarizeBars(payload) {
   count:bars.length,latestAge:Math.max(0,(Date.now()-new Date(last.timestamp).getTime())/60000),
   change:enoughBars&&Number.isFinite(Number(first.close))&&Number.isFinite(Number(last.close))&&Number(first.close)!==0?(Number(last.close)/Number(first.close)-1)*100:null,
   range:enoughBars&&min!==null&&max!==null&&Number(first.close)!==0?(max-min)/Number(first.close)*100:null,
-  volume,first:first.timestamp,last:last.timestamp,feed:payload.feed||"unknown"
+  volume,first:first.timestamp,last:last.timestamp,feed:payload.feed||"unknown",provider:payload.provider||"Alpaca"
  };
 }
 async function getBarsForScan(symbol,timeframe,fromUtc,toUtc) {
@@ -1686,12 +1713,13 @@ if(scanAnalyzeForm) {
      const sparse=[item.one.count===1?"1M returned only 1 bar; change/range unavailable":item.one.count===0?"1M returned no bars":"",item.five.count===1?"5M returned only 1 bar; change/range unavailable":item.five.count===0?"5M returned no bars":""].filter(Boolean);
      const status=bothPresent?"OBSERVED · NOT QUALIFIED":"INSUFFICIENT DATA";
     const formatArizonaTimestamp=value=>{const date=new Date(value);return Number.isNaN(date.getTime())?"DATA?":new Intl.DateTimeFormat("en-US",{timeZone:"America/Phoenix",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(date)+" Arizona";};
-     const summary=s=>s.count?(s.count+" bars; "+(s.change===null?"change unavailable (need ≥2 valid bars)":s.change.toFixed(2)+"% change")+"; "+(s.range===null?"range unavailable (need ≥2 valid bars)":s.range.toFixed(2)+"% range")+"; vol "+Math.round(s.volume)+"; latest "+formatArizonaTimestamp(s.last)):(s.error||"No bars returned");
+     const summary=s=>s.count?(s.count+" bars; "+(s.change===null?"change unavailable (need ≥2 valid bars)":s.change.toFixed(2)+"% change")+"; "+(s.range===null?"range unavailable (need ≥2 valid bars)":s.range.toFixed(2)+"% range")+"; vol "+Math.round(s.volume)+"; latest "+formatArizonaTimestamp(s.last)):(s.error||("No bars returned from "+(s.provider||"provider")+"/"+String(s.feed||"unknown").toUpperCase()+" in requested window; this is not proof of no market activity"));
      tr.append(cell(item.symbol),cell(item.five.change===null||item.five.change===undefined?"— (insufficient bars)":(item.five.change>=0?"+":"")+item.five.change.toFixed(2)+"% (5M)"),cell(status),cell("5M "+(item.five.range==null?"DATA? (need ≥2 bars)":item.five.range.toFixed(2)+"%")+" · 1M "+(item.one.range==null?"DATA? (need ≥2 bars)":item.one.range.toFixed(2)+"%")),cell("5M "+(item.five.latestAge==null?"UNKNOWN":item.five.latestAge.toFixed(1)+"m")+" · 1M "+(item.one.latestAge==null?"UNKNOWN":item.one.latestAge.toFixed(1)+"m")),cell("5M: "+summary(item.five)+" | 1M: "+summary(item.one)+(sparse.length?" | COVERAGE WARNING: "+sparse.join("; "):"")+(errors.length?" | Errors: "+errors.join("; "):"")),document.createElement("td"));
     const watch=document.createElement("button");watch.type="button";watch.className="row-action";watch.textContent="Watch";watch.addEventListener("click",()=>addWatch(item.symbol));tr.lastElementChild.append(watch);return tr;
    }));
    const errors=results.reduce((n,r)=>n+Number(Boolean(r.one.error))+Number(Boolean(r.five.error)),0);
-   source.textContent="Scan complete · "+results.length+" symbols · 1M + 5M · Alpaca · "+errors+" timeframe request errors · Arizona "+fromInput.value+" → "+toInput.value+" ("+fromUtc+" → "+toUtc+" UTC). OHLCV summaries only; qualification gates are not connected.";
+   const feeds=[...new Set(results.flatMap(x=>[x.one.feed,x.five.feed]).filter(Boolean))];
+    source.textContent="Scan complete · "+results.length+" symbols · 1M + 5M · Alpaca/"+(feeds.join(",")||"feed unknown").toUpperCase()+" · "+errors+" timeframe request errors · Arizona "+fromInput.value+" → "+toInput.value+" ("+fromUtc+" → "+toUtc+" UTC). IEX is partial exchange coverage; zero bars means no observations were returned on that feed/window, not that the symbol had no trading. OHLCV summaries only; qualification gates are not connected.";
    let option=document.querySelector('#scannerGroup option[value="scanAnalyze"]');
    if(!option){option=document.createElement("option");option.value="scanAnalyze";option.textContent="Scan & Analyze results";$("scannerGroup").append(option);}
    $("scannerGroup").value="scanAnalyze";
