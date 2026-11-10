@@ -97,6 +97,7 @@ public sealed class AlpacaMinuteBarStreamWorker(
                 await SendAsync(socket, new { action = "subscribe", bars = _symbols.Keys.ToArray() }, stoppingToken);
                 await ReceiveUntilSubscribedAsync(socket, stoppingToken);
                 _activeSocket = socket;
+                _lastError = null;
                 Volatile.Write(ref _connected, 1);
                 _state = "SUBSCRIBED";
                 delay = TimeSpan.FromSeconds(2);
