@@ -331,3 +331,6 @@ Catalyst validation now fails closed until at least six eligible unique reviews 
 
 
 The ATR import Swagger operation now declares its multipart file and metadata fields. A read-only `/api/strategy-report/atr-session-coverage` endpoint exposes persisted per-session coverage without re-importing. Latest supplied parity evidence: EVR 2 timestamp gaps and CBOE 1 timestamp gap; numeric errors are within tolerance but neither series qualifies as MATCH. See the Master To-Do and current handoff for exact intervals and operator steps.
+
+
+- November 10 follow-up: Candidate qualification independently queried CRBG/FG/IBN/HDB; all four returned 20/20 FRESH Daily sessions on IEX_PARTIAL, with catalyst coverage COMPLETE (FG one article; the other three zero articles remain UNKNOWN). LYSDY and BNPQY returned 0/20 and remain blocked. The five focused Main Chart metrics were source-traced to one shared live-assessment request with no timeout; the feature branch now adds a 20-second abort timeout and explicit fail-closed timeout messaging, plus a frontend cache-key bump. This prevents indefinite Loading but does not prove or fix the underlying server cause. Exact-head CI and operator browser acceptance are pending. See [November 10 handoff](docs/NewChatHandoff-20261110.md).
