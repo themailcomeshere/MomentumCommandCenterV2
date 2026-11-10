@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using MomentumCommandCenterV2.Core;
 using MomentumCommandCenterV2.Core.Models;
 using MomentumCommandCenterV2.Core.Models.Enums;
@@ -27,6 +28,10 @@ public sealed class LiveSymbolAssessmentService(
     /// </summary>
     public async Task<object> GetAsync(string symbol, string providerName, CancellationToken cancellationToken)
     {
+        var requestStopwatch = Stopwatch.StartNew();
+        var websocketStoreReadMs = 0d;
+        var providerFetchMs = 0d;
+        var persistenceMs = 0d;
         var normalizedSymbol = symbol.Trim().ToUpperInvariant();
         var provider = providers.FirstOrDefault(x =>
             string.Equals(x.ProviderName, providerName, StringComparison.OrdinalIgnoreCase));
@@ -57,8 +62,11 @@ public sealed class LiveSymbolAssessmentService(
                 streamWorker.IsSubscribed &&
                 string.Equals(streamWorker.Feed, configuredFeed, StringComparison.OrdinalIgnoreCase))
             {
+                var websocketStoreStopwatch = Stopwatch.StartNew();
                 var storedOneMinute = await barStore.GetLatestAsync(
                     normalizedSymbol, provider.ProviderName, now.AddDays(-3), now, 10000, cancellationToken, "1m");
+                websocketStoreStopwatch.Stop();
+                websocketStoreReadMs = websocketStoreStopwatch.Elapsed.TotalMilliseconds;
                 var streamBars = CompletedBars(
                     storedOneMinute
                         .Where(x => string.Equals(x.Bar.Feed, streamWorker.Feed, StringComparison.OrdinalIgnoreCase))
@@ -82,14 +90,21 @@ public sealed class LiveSymbolAssessmentService(
                     now.AddDays(-3), now, cancellationToken);
             var fiveMinuteTask = provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(5),
                 now.AddDays(-21), now, cancellationToken);
+            var providerFetchStopwatch = Stopwatch.StartNew();
             await Task.WhenAll(oneMinuteTask, fiveMinuteTask);
+            providerFetchStopwatch.Stop();
+            providerFetchMs = providerFetchStopwatch.Elapsed.TotalMilliseconds;
 
             if (!oneMinuteFromWebSocket)
                 oneMinute = CompletedBars(await oneMinuteTask, TimeSpan.FromMinutes(1), now);
             var fiveMinute = CompletedBars(await fiveMinuteTask, TimeSpan.FromMinutes(5), now);
+            var persistenceStopwatch = Stopwatch.StartNew();
             await barStore.AppendAsync(oneMinute, cancellationToken);
             await barStore.AppendAsync(fiveMinute, cancellationToken);
+            persistenceStopwatch.Stop();
+            persistenceMs = persistenceStopwatch.Elapsed.TotalMilliseconds;
 
+            var calculationStopwatch = Stopwatch.StartNew();
             var evaluatedAt = DateTimeOffset.UtcNow;
             var one = oneMinute.Count >= 50
                 ? LiveSymbolTechnicalCalculator.Calculate(oneMinute, oneMinute.Count - 1, TimeSpan.FromMinutes(1), 0m)
@@ -209,8 +224,18 @@ public sealed class LiveSymbolAssessmentService(
                 opportunityAssessment = new OpportunityQualityAssessor().Evaluate(opportunitySnapshot.Input);
             }
 
+            calculationStopwatch.Stop();
             var result = new
             {
+                performanceDiagnostics = new
+                {
+                    providerFetchElapsedMs = Math.Round(providerFetchMs, 1),
+                    websocketStoreReadElapsedMs = Math.Round(websocketStoreReadMs, 1),
+                    persistenceElapsedMs = Math.Round(persistenceMs, 1),
+                    calculationElapsedMs = Math.Round(calculationStopwatch.Elapsed.TotalMilliseconds, 1),
+                    totalElapsedMs = Math.Round(requestStopwatch.Elapsed.TotalMilliseconds, 1),
+                    note = "Server-side stage timings for this uncached assessment. Provider fetch duration covers 1m and 5m requests in parallel; it is not a provider-side timing breakdown."
+                },
                 symbol = normalizedSymbol,
                 provider = provider.ProviderName,
                 feed = oneLatest?.Feed ?? fiveLatest?.Feed,
