@@ -307,3 +307,62 @@ The first store read after each API process restart still has to scan the existi
 - No exact-head CI or local Windows build/test result is available for the latest code commits at handoff time.
 - The client/server elapsed mismatch (12.046s versus 51.622s) is unexplained.
 - The one-time JSONL index rebuild duration and warm-read improvement have not yet been measured on the operator's data file.
+
+
+## November 10 follow-up — measured store performance and quick-action root cause
+
+### Latest operator measurements
+
+| Metric | Cold/warm-up request | Warm request |
+|---|---:|---:|
+| Client elapsed | 0.649 s | 0.399 s |
+| Server total | 475.2 ms | 391.5 ms |
+| WebSocket-store read | 7.1 ms | 4.1 ms |
+| Persistence | 3.5 ms | 6.7 ms |
+| Calculation | 30.9 ms | 3.5 ms |
+| Alpaca 1m REST | 210.8 ms | 220.0 ms |
+| Alpaca 5m REST | 427.5 ms | 373.8 ms |
+
+The in-memory index change materially improved the measured live-assessment path. Compared with the earlier 12.046s client / 51.622s server sample, the new warm request is 0.399s client / 0.392s server. The first new request was 0.649s client / 0.475s server. Client/server timing differences are now about 174ms and 8ms respectively. Do not claim a general multi-symbol benchmark from these two EVR samples.
+
+**Cold-index caveat:** the reported 7.1ms WebSocket-store read is not a direct measurement of the JSONL index rebuild. Another startup/background request may have loaded the singleton store before the measured EVR request. New diagnostics now expose jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded. Use these fields after a fresh API restart to identify when and how long the rebuild took.
+
+### Calculated Limit Sell no-Network diagnosis
+
+The quick card's previous event handler showed “Assessment running…” then programmatically clicked the detailed assessment button. The detailed handler validated symbol and quantile before making its first fetch. The quantile field had no default and was placed in the separate detailed panel. If blank, the handler returned immediately, so DevTools showed no Network request and the quick card remained stuck at its optimistic running message. The exact field value at the operator's failed click was not captured, so this is the source-level cause consistent with no Network activity, not a recorded DOM snapshot.
+
+The feature branch now:
+
+- Moves the quantile control into the quick card and defaults it visibly to 50th percentile (median); operator can change it.
+- Replaces the synthetic click chain with one shared async assessment function called directly by both buttons.
+- Reports invalid symbol/quantile values in the quick disclosure, rather than leaving a false running state.
+- Disables/re-enables both action buttons around the request and mirrors every returned gate row into the quick disclosure.
+- Keeps the same API endpoint, feed selection, evidence gates, and no-order behavior.
+
+After hard refresh, a successful click should generate GET /api/providers/status, followed by POST /api/boring-overnight/sell-limit.
+
+### Cold index diagnostics and clock boundary tests
+
+- Store now reports its loaded state, index-build count, last index-build elapsed milliseconds, and unique indexed source-key count.
+- Live-assessment response includes those diagnostics under performanceDiagnostics.
+- Regression test asserts that a restarted store builds its index once, reads the persisted key, then appends a correction without a second rebuild.
+- Added API clock test at the exact final-hour start and exact buy deadline. Existing tests cover before/inside final hour, DST, after-hours, holidays/weekends, and early close.
+- Frontend clock logic evaluates Date.now() >= overnightEvaluationTargetUtc && Date.now() < overnightBuyDeadlineUtc on its one-second interval. The code path is deterministic; the operator's actual browser transition at the scheduled Arizona time remains to be observed.
+
+### Next operator actions
+
+1. Pull latest feature/opportunity-quality-classification, verify branch/status, and run .\scripts\Get-Latest-And-Test.ps1. Restart API from the tested build.
+2. Hard-refresh Dashboard. Current JS cache key: 20261110-sell-limit-quick-action-index-diagnostics-v3.
+3. In BORING OVERNIGHT mode, select RKLX. Confirm the quick card shows research target quantile 50. This is the visible median default; change only if another percentile is intended.
+4. Click Assess calculated limit sell once. In DevTools Network confirm GET /api/providers/status then POST /api/boring-overnight/sell-limit. Wait for response; inspect all gates in the disclosure. Save the HTTP status, response body, gate list, and performanceDiagnostics. A BLOCKED response with gate rows is a completed assessment, not a UI failure.
+5. After the API restart, run one EVR live-assessment request and include the new fields jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded. This reveals whether the measured request triggered the index rebuild or the store was initialized earlier.
+6. Run one more EVR request; verify the load count remains 1 and the warm store timings remain low.
+7. At the scheduled final-hour start, verify the evaluation countdown becomes OPEN; at the buy deadline it must close. API boundary tests now cover exact start/deadline, but browser runtime acceptance is still required.
+
+### Current limits / uncertainty
+
+- The exact browser DOM quantile value during the previous failed click was not captured; the blank-field early return is the source-code explanation consistent with no Network activity.
+- The index rebuild duration is not yet known; previous 7.1ms store read does not prove the rebuild occurred during that request.
+- Calculated Limit Sell still needs operator browser acceptance after this fix.
+- The final-hour clock has boundary tests but no operator browser observation at the scheduled time.
+- Latest branch-head CI is pending until the newest workflow completes.
