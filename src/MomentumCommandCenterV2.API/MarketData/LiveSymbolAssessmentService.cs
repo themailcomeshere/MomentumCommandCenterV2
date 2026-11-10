@@ -84,12 +84,16 @@ public sealed class LiveSymbolAssessmentService(
                 }
             }
 
-            var oneMinuteTask = oneMinuteFromWebSocket
+            var oneMinuteFetchStopwatch = Stopwatch.StartNew();
+            var oneMinuteFetchTask = oneMinuteFromWebSocket
                 ? Task.FromResult(oneMinute)
                 : provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(1),
                     now.AddDays(-3), now, cancellationToken);
-            var fiveMinuteTask = provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(5),
+            var oneMinuteTask = MeasureFetchAsync(oneMinuteFetchTask, oneMinuteFetchStopwatch);
+            var fiveMinuteFetchStopwatch = Stopwatch.StartNew();
+            var fiveMinuteFetchTask = provider.GetBarsAsync(normalizedSymbol, TimeSpan.FromMinutes(5),
                 now.AddDays(-21), now, cancellationToken);
+            var fiveMinuteTask = MeasureFetchAsync(fiveMinuteFetchTask, fiveMinuteFetchStopwatch);
             var providerFetchStopwatch = Stopwatch.StartNew();
             await Task.WhenAll(oneMinuteTask, fiveMinuteTask);
             providerFetchStopwatch.Stop();
@@ -230,6 +234,10 @@ public sealed class LiveSymbolAssessmentService(
                 performanceDiagnostics = new
                 {
                     providerFetchElapsedMs = Math.Round(providerFetchMs, 1),
+                    oneMinuteFetchElapsedMs = Math.Round(oneMinuteFetchStopwatch.Elapsed.TotalMilliseconds, 1),
+                    fiveMinuteFetchElapsedMs = Math.Round(fiveMinuteFetchStopwatch.Elapsed.TotalMilliseconds, 1),
+                    oneMinuteSource = oneMinuteFromWebSocket ? "WEBSOCKET_STORE" : "ALPACA_REST",
+                    fiveMinuteSource = "ALPACA_REST",
                     websocketStoreReadElapsedMs = Math.Round(websocketStoreReadMs, 1),
                     persistenceElapsedMs = Math.Round(persistenceMs, 1),
                     calculationElapsedMs = Math.Round(calculationStopwatch.Elapsed.TotalMilliseconds, 1),
@@ -361,6 +369,13 @@ public sealed class LiveSymbolAssessmentService(
         {
             gate.Release();
         }
+    }
+
+    private static async Task<IReadOnlyList<MarketBar>> MeasureFetchAsync(
+        Task<IReadOnlyList<MarketBar>> task, Stopwatch stopwatch)
+    {
+        try { return await task; }
+        finally { stopwatch.Stop(); }
     }
 
     private static IReadOnlyList<MarketBar> CompletedBars(
