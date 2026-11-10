@@ -196,7 +196,7 @@ A follow-up fix is merged in PR #2: nullable-symbol handling, actionable missing
 
 ### User's intended routine
 - Research 1:00–3:00 PM Arizona time.
-- Candidate limit-buy window 3:00–5:00 PM Arizona time, Monday–Thursday; after actual fill, user sets a limit sell at regular-session close +0.5%, currently described as GTC + Extended.
+- Candidate limit-buy window opens 3:00 PM Arizona and closes 7:55 PM Eastern, Monday–Thursday; after actual fill, user sets a limit sell at regular-session close +0.5%, currently described as GTC + Extended.
 - Priority is manually reviewed Boring Overnight decision support; no automated orders.
 
 ### Confirmed sell-session definition
