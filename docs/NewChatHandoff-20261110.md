@@ -523,6 +523,7 @@ After the script passes:
 - RELATIVE VOLUME: NOT USED in Boring Overnight; no synthetic value is generated.
 - ATR EXTENSION: absolute 1M close-to-RTH-VWAP distance divided by the 1M ATR14; descriptive only.
 - Added a 20-second historical-bars timeout, fail-closed states, stale-symbol protection, and cancellation of a previous summary request.
+- RTH VWAP session selection uses the current New York session clock; a missing 16:00 ET after-hours bar no longer causes the just-completed RTH session to be skipped.
 - Five metrics are populated before optional Alpaca latest-trade and Yahoo reference requests finish.
 - Updated helper labels and cache key: `20261110-overnight-main-chart-metrics-v1`.
 - Renamed the section heading to **Intraday Scanner Workbench**. Existing CSS already hides `#scanner-workbench` in Boring Overnight mode.
