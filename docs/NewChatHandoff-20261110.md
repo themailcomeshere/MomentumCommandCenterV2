@@ -43,7 +43,7 @@ The November 10 operator run exposed a stale-price presentation issue, missing v
 ### Overnight execution-window calculator
 
 - Research/evaluation window begins at 1:00 PM Arizona.
-- Buy window begins at 3:00 PM Arizona and hard-closes at 7:55 PM Eastern. During Eastern Standard Time this is 5:55 PM Arizona; during Eastern Daylight Time it is 4:55 PM Arizona. The 7:55 PM Eastern cutoff leaves five minutes before the current 8:00 PM Eastern post-market end.
+- Candidate research and buying take place only during the final 60 minutes of the regular session. The buy deadline is the actual regular-session close, derived from the exchange calendar; in November standard time this is 2:00 PM Arizona, with a 1:00 PM Arizona start on a normal session. During daylight time the normal-session window is noon–1:00 PM Arizona. Early-close days use the final hour before the shortened close. After-hours is part of the holding/measurement interval, not a time to initiate the purchase.
 - Buy sessions are Monday–Thursday only. The next sell session is the next exchange trading day, with the GTC_EXT eligible window 7:00 AM–8:00 PM Eastern.
 - The header clock now displays the date-specific buy and next-session sell windows in Arizona local time. It uses named time zones and the maintained calendar for weekends, holidays, DST and early closes.
 - This is a schedule calculator, not proof of per-symbol GTC_EXT eligibility or a fill. Schwab order-ticket confirmation remains required.
@@ -70,7 +70,7 @@ The November 10 operator run exposed a stale-price presentation issue, missing v
 ### Boring Winner Daily OHLC import
 
 - UI now explains the exact CSV contract: one row per completed Daily bar with `Date, Open, High, Low, Close`.
-- The existing 1M/5M ATR parity StrategyReport is not the intended input. A StrategyReport is acceptable only if it contains those exact daily OHLC rows and no order-event rows.
+- The existing 1M/5M ATR parity StrategyReport is not the intended input. The existing `MCC_OHLCV_ATR_V2.1` StrategyReport is NOT the required Daily OHLC input and will not automatically calculate Boring Winner. No dedicated Boring Winner Daily OHLC export study has been delivered yet. Use a separately prepared CSV with one completed daily bar per row until that study/export path is implemented.
 - Import defaults: Daily aggregation, Extended Hours OFF, corporate-action adjustment ON, chart timezone America/Phoenix.
 - At least 21 completed daily bars are required; 40–60 is preferred for review.
 - These settings are recorded as provenance, not independently proven by the calculator. Boring Winner remains RESEARCH ONLY.
@@ -166,5 +166,5 @@ The Yahoo endpoint initially had a compile failure caused by a named-argument ty
 - Yahoo Finance post-market metadata may be delayed, stale, unavailable, or rate-limited. The UI labels it as a secondary reference and displays its source timestamp.
 - Alpaca IEX may not return trades for symbols whose activity is on other exchanges. Missing IEX observations are not market-wide absence.
 - The operator's RKLX values ($9.14 then $9.07) are user-observed values; independent online snapshots reviewed during this pass differed. Local timestamped quote comparison is required.
-- No Boring Winner source CSV has yet been imported in this turn; no actual PASS/FAIL result is claimed.
+- No Boring Winner Daily OHLC CSV has yet been imported; no actual PASS/FAIL result is claimed. The dedicated ThinkScript Daily OHLC export study is still outstanding.
 - No local runtime/browser test has yet been performed against these latest commits.
