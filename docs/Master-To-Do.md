@@ -262,7 +262,7 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - [x] Separate four-symbol evidence table implemented; [ ] verify the post-fetch status lists four distinct queried symbols and the evidence table shows each result. The human-review queue lists only symbols with returned articles, not every symbol queried.
 - [ ] Execute browser diagnostics on operator machine; retain screenshot, console exceptions and sanitized network evidence.
 - [ ] Complete full Dashboard acceptance: import/parity, Red Zone, exclusions, Morning Brief, replay, sell-limit gate explanations, responsive layout and CDP console/network health.
-- [ ] During a confirmed regular session, capture 5–10 minutes of SPY/RKLX/ASTX/XRPN stream/collector data. Verify per-symbol subscriptions, completed bars, timestamps, received/persisted deltas and watermarks.
+- [x] Bounded 10-minute regular-session sample: SPY/RKLX/ASTX/XRPN subscriptions acknowledged; completed-bar deltas SPY +10, RKLX +3, ASTX +3, XRPN +2; collector cycles 39→48 with zero cycle errors. This is one interval only, not coverage or recovery certification.
 - [ ] Exercise restart, sleep/wake, network/provider failure, duplicate/replayed events, session boundaries and idempotent recovery.
 - [ ] Measure document/load/DOMContentLoaded/largest request/Fetch & Analyze durations from browser Network/HAR; compare to a baseline before claiming improvement.
 
@@ -296,9 +296,9 @@ This is the current authoritative checklist. The detailed backlog contains imple
 
 - The exact current contents of the user's imported scanner CSV are not available here. The duplicate-row Top-4 defect is fixed, but the import may still contain fewer than four unique symbols.
 - Data not found in sources for the EWTX article body, confirmed original publisher, and exact saved prediction ruleset version.
-- The latest code changes have individual passing CI runs; exact latest documentation branch-head CI is still in progress at handoff time.
+- No GitHub status checks or PR-triggered workflow runs were returned for the latest documentation branch head `86c2bb9fe32d5e810523cd6bc453f11e4e08550f`; exact-head CI is therefore NOT VERIFIED. Earlier code-bearing CI results do not automatically apply to later commits.
 - SIP remains blocked by the previously confirmed HTTP 403 entitlement response; no change in entitlement is evidenced.
-- Browser/CDP acceptance, local runtime after latest commit, Thinkorswim compilation, and regular-session collector delivery remain unverified.
+- Operator manually accepted the Boring Overnight five-metric cards and mode-specific scanner visibility on 2026-11-10. Full Dashboard/CDP acceptance remains open. A prior 10-minute regular-session stream/collector run showed SPY/RKLX/ASTX/XRPN completed-bar deltas and 9 error-free collector cycles; restart/sleep/wake/network/auth/replay recovery remains untested. Thinkorswim compilation remains unverified.
 
 
 ## November 10 follow-up — JSONL store latency and Calculated Limit Sell UI
@@ -309,7 +309,8 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - [x] RKLX Main Chart now displays the full ETF name after the focused-chart refresh fix.
 - [x] Boring Overnight buy countdown now displays remaining regular-session time and escalates urgency colors.
 - [ ] Separate final-hour evaluation clock transition to OPEN remains TBD; do not mark complete until observed at the scheduled Arizona-local start.
-- [ ] Calculated Limit Sell quick action still fails operator acceptance: disclosure shows `Assessment running…` and `DATA? — NOT CALCULATED`; complete gate list was not observed. Keep this item open.
+- [x] Subsequent operator retest: Calculated Limit Sell API assessment returned the full 1,600-row evidence payload and the expected BLOCKED gate set (SIP_REQUIRED, HISTORY_40_OF_40, ATR_STUDY_SETTINGS, ATR_PARITY, CONTINUOUS_5M_ATR_WARMUP, SAME_SOURCE_5M_OHLCV, CURRENT_5M_ATR_FRESHNESS, WALK_FORWARD_VALIDATION, SELL_LIMIT_CALCULATION). This supersedes the earlier no-Network / Assessment running observation.
+- [ ] Browser disclosure acceptance remains open: verify GET `/api/providers/status` then POST `/api/boring-overnight/sell-limit`, and confirm every returned gate is visible in the quick-card disclosure.
 - [x] One EVR live-assessment timing sample supplied: client elapsed 12.046s; server diagnostics report provider fetch 487ms (1m 234ms, 5m 491ms), WebSocket-store read 11.832s, persistence 39.284s, calculation 7ms, server total 51.622s. Alpaca REST fetch and indicator calculation are not the measured bottlenecks. The client/server elapsed mismatch remains unexplained.
 
 ### Implementation committed on feature branch
@@ -377,7 +378,7 @@ This is the current authoritative checklist. The detailed backlog contains imple
 4. Click Assess calculated limit sell once. Confirm Network shows GET /api/providers/status followed by POST /api/boring-overnight/sell-limit. Confirm the quick disclosure contains every API gate. Record status and timing diagnostics. If no request occurs, inspect console for a JS exception and capture the field value.
 5. After API restart, run one EVR live-assessment request and record jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, jsonlIndexLoaded, websocketStoreReadElapsedMs, persistenceElapsedMs, and client elapsed. Expect index load count 1 for a freshly initialized store instance; if already loaded at API startup, the request reports the startup rebuild duration.
 6. Run a second EVR request to confirm index load count stays 1 and warm-read times remain low.
-7. Verify the evaluation clock says OPEN at the scheduled final-hour start and returns to the countdown/closed state at the regular-session buy deadline.
+7. Verify the evaluation clock says OPEN at the scheduled final-hour start and returns to the countdown/closed state at the regular-session buy deadline. This remains a runtime acceptance item; it is not the only remaining dashboard or release gate.
 
 ### Guardrails
 
