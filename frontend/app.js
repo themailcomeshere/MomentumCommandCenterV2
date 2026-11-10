@@ -50,6 +50,11 @@ function updateDockClassificationFromAssessment(data){
 let marketSessionTargetUtc = null;
 let overnightEvaluationTargetUtc = null;
 let overnightBuyDeadlineUtc = null;
+let overnightBuyWindowStartUtc = null;
+let overnightSellWindowStartUtc = null;
+let overnightSellWindowEndUtc = null;
+let overnightBuySessionDate = null;
+let overnightSellSessionDate = null;
 let overnightEvaluationOpen = false;
 let marketSessionRefreshInFlight = false;
 async function refreshMarketSessionClock(){
@@ -64,7 +69,8 @@ async function refreshMarketSessionClock(){
   marketSessionTargetUtc=target.getTime();
   const evaluationTarget=new Date(data.overnightEvaluationStartUtc);
   const buyDeadline=new Date(data.overnightBuyDeadlineUtc);
-  if(Number.isNaN(evaluationTarget.getTime())||Number.isNaN(buyDeadline.getTime()))throw new Error("Invalid Overnight process schedule.");
+   const buyWindowStart=new Date(data.overnightBuyWindowStartUtc),sellWindowStart=new Date(data.overnightSellWindowStartUtc),sellWindowEnd=new Date(data.overnightSellWindowEndUtc);
+  if(Number.isNaN(evaluationTarget.getTime())||Number.isNaN(buyDeadline.getTime())||Number.isNaN(buyWindowStart.getTime())||Number.isNaN(sellWindowStart.getTime())||Number.isNaN(sellWindowEnd.getTime()))throw new Error("Invalid Overnight process schedule.");
   overnightEvaluationTargetUtc=evaluationTarget.getTime();
   overnightBuyDeadlineUtc=buyDeadline.getTime();
   overnightEvaluationOpen=data.overnightEvaluationOpen===true;
@@ -76,7 +82,7 @@ async function refreshMarketSessionClock(){
   marketSessionTargetUtc=null;
   if($("marketSessionLabel"))$("marketSessionLabel").textContent="Market session clock";
   if($("marketSessionCountdown"))$("marketSessionCountdown").textContent="DATA?";
-  overnightEvaluationTargetUtc=null;overnightBuyDeadlineUtc=null;overnightEvaluationOpen=false;
+  overnightEvaluationTargetUtc=null;overnightBuyDeadlineUtc=null;overnightBuyWindowStartUtc=null;overnightSellWindowStartUtc=null;overnightSellWindowEndUtc=null;overnightBuySessionDate=null;overnightSellSessionDate=null;overnightEvaluationOpen=false;
   if($("overnightEvaluationCountdown"))$("overnightEvaluationCountdown").textContent="DATA?";
   if($("overnightBuyCountdown"))$("overnightBuyCountdown").textContent="DATA?";
   if($("marketSessionDetail"))$("marketSessionDetail").textContent="Unavailable · "+error.message;
@@ -95,7 +101,16 @@ function renderMarketSessionCountdown(){
  const now=Date.now(),evaluationWindowOpen=overnightEvaluationTargetUtc!==null&&overnightBuyDeadlineUtc!==null&&now>=overnightEvaluationTargetUtc&&now<overnightBuyDeadlineUtc;
  if(evaluationLabel)evaluationLabel.textContent=evaluationWindowOpen?"Overnight candidate evaluation · OPEN":"Overnight candidate evaluation begins in";
  if(evaluationCountdown)evaluationCountdown.textContent=overnightEvaluationTargetUtc===null?"DATA?":(evaluationWindowOpen?"OPEN":formatCountdown(overnightEvaluationTargetUtc));
- if(buyCountdown)buyCountdown.textContent=overnightBuyDeadlineUtc===null?"DATA?":formatCountdown(overnightBuyDeadlineUtc);
+ if(buyCountdown){
+  if(overnightBuyDeadlineUtc===null||overnightBuyWindowStartUtc===null)buyCountdown.textContent="DATA?";
+  else if(now<overnightBuyWindowStartUtc)buyCountdown.textContent="Opens in "+formatCountdown(overnightBuyWindowStartUtc);
+  else if(now<overnightBuyDeadlineUtc)buyCountdown.textContent=formatCountdown(overnightBuyDeadlineUtc)+" remaining";
+  else buyCountdown.textContent="CLOSED";
+ }
+ const buySchedule=$("overnightBuyWindowSchedule"),sellSchedule=$("overnightSellWindowSchedule");
+ const azTime=stamp=>new Date(stamp).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"});
+ if(buySchedule&&overnightBuyWindowStartUtc!==null&&overnightBuyDeadlineUtc!==null)buySchedule.textContent="Buy window · "+(overnightBuySessionDate||"date unknown")+" · "+azTime(overnightBuyWindowStartUtc)+"–"+azTime(overnightBuyDeadlineUtc)+" Arizona";
+ if(sellSchedule&&overnightSellWindowStartUtc!==null&&overnightSellWindowEndUtc!==null)sellSchedule.textContent="GTC_EXT sell · "+(overnightSellSessionDate||"date unknown")+" · "+azTime(overnightSellWindowStartUtc)+"–"+azTime(overnightSellWindowEndUtc)+" Arizona";
 }
 void refreshMarketSessionClock();
 window.setInterval(renderMarketSessionCountdown,1000);
