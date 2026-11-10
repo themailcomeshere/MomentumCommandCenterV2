@@ -21,7 +21,7 @@
 - [x] The historical RKLX bar shown by the UI was 11/9 2:46 PM Arizona at $9.7800. It was not a current after-hours quote.
 - [x] Scanner Workbench returned zero 1M/5M bars for the supplied 20-symbol set on the configured IEX feed/window. This is feed/window coverage evidence, not a claim that those securities had no market activity.
 
-- [x] Implemented calendar-backed Overnight execution-window calculator in the header clock: research opens 1:00 PM Arizona; buy window opens 3:00 PM Arizona and closes 7:55 PM Eastern; next trading session GTC_EXT sell window is 7:00 AM–8:00 PM Eastern. All displayed schedule times are converted to Arizona local time, with DST, Monday–Thursday buy-day selection, Friday exclusion, weekends, holidays and next-session sell date handled by the versioned calendar. Added unit tests. This is a schedule only; per-symbol GTC_EXT eligibility and actual fills remain unverified.
+- [x] Implemented calendar-backed Overnight execution-window calculator: candidate research and buying are confined to the final 60 minutes of the regular session, ending at that session's actual close (including early closes). This preserves the intended Overnight measurement beginning at the close and including Buy Day after-hours plus Sell Day premarket. Next trading session GTC_EXT sell window remains 7:00 AM–8:00 PM Eastern. Arizona display times are derived from America/New_York and America/Phoenix with DST, Monday–Thursday buy-day selection, Friday exclusion, weekends and holidays handled by the versioned calendar. Schedule only; per-symbol GTC_EXT eligibility and actual fills remain unverified.
 - [ ] Validate the displayed schedule against the operator's Schwab order ticket for representative EST/EDT dates and early-close sessions.
 
 ### Still blocked — do not fabricate or waive evidence
@@ -35,7 +35,7 @@
 
 ### Boring Winner import — precise input contract
 
-The Dashboard importer expects one CSV row per completed **Daily** bar and the columns `Date, Open, High, Low, Close`. The existing 1M/5M ATR StrategyReport is not the intended input. A StrategyReport is usable only if it actually contains those daily-bar fields, one row per daily bar, without order-event rows or timestamp ambiguity.
+The Dashboard importer expects one CSV row per completed **Daily** bar and the columns `Date, Open, High, Low, Close`. The existing 1M/5M ATR StrategyReport is not the intended input. The current `MCC_OHLCV_ATR_V2.1` StrategyReport is NOT the Daily OHLC import and will not automatically calculate Boring Winner. No dedicated Boring Winner Daily OHLC export study has been delivered yet. The Dashboard importer currently requires a separate CSV with one completed daily bar per row and Date/Open/High/Low/Close columns.
 
 Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open is the regular-session open used by `open / close[1] - 1`; corporate-action adjustment ON; chart timezone America/Phoenix. Import at least 21 completed daily bars (40–60 is preferred for review). The import records these settings as provenance but does not independently prove TOS session semantics. Boring Winner remains RESEARCH ONLY.
 
