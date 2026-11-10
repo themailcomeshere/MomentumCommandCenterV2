@@ -4,7 +4,7 @@ Status: decision-support specification; not a validated strategy or automated tr
 
 ## 1. Objective and user-confirmed routine
 
-The target is a nominal +0.5% sell price, Monday–Thursday entries, no planned Friday entries. Research candidates 1:00–3:00 PM Arizona time. The buy window opens at 3:00 PM Arizona and the latest buy cutoff is 7:55 PM Eastern (five minutes before the current 8:00 PM Eastern post-market end). This supersedes the older 5:00 PM Arizona cutoff. After a confirmed fill, the user currently sets a limit sell at regular-session end-of-day close +0.5%, described as GTC + Extended. Broker for execution is Schwab; Alpaca is currently a market-data/API test source, not the execution broker for this routine.
+The target is a nominal +0.5% sell price, Monday–Thursday entries, no planned Friday entries. Candidate research and purchase are confined to the final 60 minutes of the regular session, ending at the actual regular-session close. On a normal session this is 1:00–2:00 PM Arizona during Eastern Standard Time and noon–1:00 PM Arizona during Eastern Daylight Time. Early-close sessions use the final hour before the shortened close. The Overnight measurement begins at that close and includes Buy Day after-hours and Sell Day premarket. This explicitly rejects a 7:55 PM Eastern buy cutoff: that would be after the Overnight interval has already begun. After a confirmed fill, the user currently sets a limit sell at regular-session end-of-day close +0.5%, described as GTC + Extended. Broker for execution is Schwab; Alpaca is currently a market-data/API test source, not the execution broker for this routine.
 
 A +0.5% target four nights a week is a performance objective to test, not a near-guaranteed outcome. Orders can fail to fill, gap against the position, or incur spread/slippage. MCC will not submit orders.
 
@@ -19,7 +19,7 @@ Official sources:
 
 ## 3. Arizona/Eastern time conversion
 
-Arizona does not observe daylight saving time. During Eastern Daylight Time, 3:00–4:55 PM Arizona = 6:00–7:55 PM Eastern. During Eastern Standard Time, it = 5:00–7:00 PM Eastern. Both fall within Eastern after-hours, but order mode, venue, symbol eligibility, and liquidity determine actual execution. Use named time zones and date-specific conversion; do not hardcode offsets.
+Arizona does not observe daylight saving time. Derive the final-hour buy window from the exchange's regular close in America/New_York, then display it in America/Phoenix. A normal session is 1:00–2:00 PM Arizona during Eastern Standard Time and noon–1:00 PM Arizona during Eastern Daylight Time. Early closes move both times earlier. After-hours is the holding period after the purchase, not the purchase window.
 
 ## 4. ADR fee clarification
 
