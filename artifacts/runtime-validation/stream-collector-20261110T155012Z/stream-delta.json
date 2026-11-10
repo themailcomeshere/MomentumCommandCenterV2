@@ -1,0 +1,54 @@
+﻿[
+    {
+        "symbol":  "SPY",
+        "acknowledgedAtStart":  true,
+        "acknowledgedAtEnd":  true,
+        "barCountStart":  49,
+        "barCountEnd":  59,
+        "completedBarCountDelta":  10,
+        "lastBarStartUtc":  "2026-11-10T15:49:00+00:00",
+        "lastBarEndUtc":  "2026-11-10T15:59:00+00:00",
+        "lastBarAdvanced":  true,
+        "receivedBarsDelta":  47,
+        "persistedBarsDelta":  47
+    },
+    {
+        "symbol":  "RKLX",
+        "acknowledgedAtStart":  true,
+        "acknowledgedAtEnd":  true,
+        "barCountStart":  21,
+        "barCountEnd":  24,
+        "completedBarCountDelta":  3,
+        "lastBarStartUtc":  "2026-11-10T15:49:00+00:00",
+        "lastBarEndUtc":  "2026-11-10T15:59:00+00:00",
+        "lastBarAdvanced":  true,
+        "receivedBarsDelta":  47,
+        "persistedBarsDelta":  47
+    },
+    {
+        "symbol":  "ASTX",
+        "acknowledgedAtStart":  true,
+        "acknowledgedAtEnd":  true,
+        "barCountStart":  34,
+        "barCountEnd":  37,
+        "completedBarCountDelta":  3,
+        "lastBarStartUtc":  "2026-11-10T15:49:00+00:00",
+        "lastBarEndUtc":  "2026-11-10T15:58:00+00:00",
+        "lastBarAdvanced":  true,
+        "receivedBarsDelta":  47,
+        "persistedBarsDelta":  47
+    },
+    {
+        "symbol":  "XRPN",
+        "acknowledgedAtStart":  true,
+        "acknowledgedAtEnd":  true,
+        "barCountStart":  5,
+        "barCountEnd":  7,
+        "completedBarCountDelta":  2,
+        "lastBarStartUtc":  "2026-11-10T15:49:00+00:00",
+        "lastBarEndUtc":  "2026-11-10T15:54:00+00:00",
+        "lastBarAdvanced":  true,
+        "receivedBarsDelta":  47,
+        "persistedBarsDelta":  47
+    }
+]

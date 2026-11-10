@@ -1,0 +1,75 @@
+﻿{
+    "sourceCommit":  "1b3926319c4e5b253dab708dfbaeb1ce30870412",
+    "capturedAtUtc":  "2026-11-10T16:01:31.9097213+00:00",
+    "baseUri":  "http://localhost:53360",
+    "initialEasternTime":  "2026-11-10T10:50:12.9377471-05:00",
+    "durationMinutes":  10,
+    "pollIntervalSeconds":  15,
+    "sampleCount":  41,
+    "symbols":  [
+                    "SPY",
+                    "RKLX",
+                    "ASTX",
+                    "XRPN"
+                ],
+    "configuredProviderStatus":  {
+                                     "value":  [
+                                                   {
+                                                       "provider":  "Alpaca",
+                                                       "configuredFeed":  "iex",
+                                                       "configuredFeedSource":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                                       "feedConfigurationSources":  [
+                                                                                        {
+                                                                                            "source":  "JsonConfigurationProvider for \u0027appsettings.json\u0027 (Optional)",
+                                                                                            "value":  "iex"
+                                                                                        },
+                                                                                        {
+                                                                                            "source":  "JsonConfigurationProvider for \u0027secrets.json\u0027 (Optional)",
+                                                                                            "value":  "iex"
+                                                                                        }
+                                                                                    ],
+                                                       "configured":  true,
+                                                       "validated":  true,
+                                                       "status":  "VALIDATED_DATA_RETURNED",
+                                                       "lastSuccessfulDataValidationUtc":  "2026-11-10T15:50:12.71+00:00",
+                                                       "lastSuccessfulDataValidationBarCount":  1214,
+                                                       "capabilities":  [
+                                                                            "Historical 1m/5m OHLCV bars",
+                                                                            "REST with bounded pagination and transient retries",
+                                                                            "Configured feed: iex",
+                                                                            "Extended-hours bars included only when provider returns them for this feed/entitlement",
+                                                                            "Scanner/movers discovery still depends on configured scanner source"
+                                                                        ],
+                                                       "credentialLocation":  "server environment / user secrets; never frontend"
+                                                   },
+                                                   {
+                                                       "provider":  "Massive",
+                                                       "configuredFeed":  null,
+                                                       "configuredFeedSource":  null,
+                                                       "feedConfigurationSources":  null,
+                                                       "configured":  false,
+                                                       "validated":  false,
+                                                       "status":  "NOT_CONFIGURED",
+                                                       "lastSuccessfulDataValidationUtc":  null,
+                                                       "lastSuccessfulDataValidationBarCount":  0,
+                                                       "capabilities":  [
+                                                                            "Historical 1m/5m OHLCV aggregates",
+                                                                            "REST only; no websocket yet",
+                                                                            "Scanner/movers endpoint not implemented",
+                                                                            "Plan/endpoint entitlements must be verified"
+                                                                        ],
+                                                       "credentialLocation":  "server environment / user secrets; never frontend"
+                                                   }
+                                               ],
+                                     "Count":  2
+                                 },
+    "streamStateAtStart":  "SUBSCRIBED",
+    "streamStateAtEnd":  "SUBSCRIBED",
+    "streamFeedAtStart":  "iex",
+    "streamFeedAtEnd":  "iex",
+    "streamReceivedBarsDelta":  47,
+    "streamPersistedBarsDelta":  47,
+    "collectorIntervalSeconds":  60,
+    "collectorCyclesDelta":  9,
+    "note":  "SUBSCRIBED is acknowledgement only. Per-symbol delivery requires acknowledged subscription plus advancing completed-bar count and lastBarUtc during this RTH window. Collector acceptance separately requires enabled state, advancing cycles/watermarks and no unexplained errors. Sparse IEX symbols are not automatically global stream failures."
+}

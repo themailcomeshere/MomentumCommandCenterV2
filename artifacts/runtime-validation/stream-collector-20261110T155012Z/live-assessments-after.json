@@ -1,0 +1,1751 @@
+﻿[
+    {
+        "symbol":  "SPY",
+        "status":  "ERROR",
+        "error":  "The operation has timed out."
+    },
+    {
+        "symbol":  "RKLX",
+        "status":  "ERROR",
+        "error":  "The operation has timed out."
+    },
+    {
+        "symbol":  "ASTX",
+        "status":  "OK",
+        "assessment":  {
+                           "symbol":  "ASTX",
+                           "provider":  "Alpaca",
+                           "feed":  "iex",
+                           "configuredFeed":  "iex",
+                           "evaluatedAtUtc":  "2026-11-10T16:01:18.0987699+00:00",
+                           "status":  "STALE",
+                           "evaluationStatus":  "STALE_MARKET_DATA",
+                           "evaluationReason":  "STALE_MARKET_DATA: 1m bar age 138s (limit 120s; source 2026-11-10T15:58:00.0000000+00:00; expected close 2026-11-10T15:59:00.0000000+00:00). Feed=iex. Permission and execution are not evaluated.",
+                           "dataFresh":  false,
+                           "freshnessDiagnostics":  {
+                                                        "oneMinute":  {
+                                                                          "isFresh":  false,
+                                                                          "ageSeconds":  138.0987699,
+                                                                          "limitSeconds":  120,
+                                                                          "sourceTimestampUtc":  "2026-11-10T15:58:00+00:00",
+                                                                          "expectedCloseUtc":  "2026-11-10T15:59:00+00:00"
+                                                                      },
+                                                        "fiveMinute":  {
+                                                                           "isFresh":  true,
+                                                                           "ageSeconds":  78.0987699,
+                                                                           "limitSeconds":  360,
+                                                                           "sourceTimestampUtc":  "2026-11-10T15:55:00+00:00",
+                                                                           "expectedCloseUtc":  "2026-11-10T16:00:00+00:00"
+                                                                       },
+                                                        "staleTimeframes":  [
+                                                                                "1m"
+                                                                            ]
+                                                    },
+                           "oneMinute":  {
+                                             "barCount":  144,
+                                             "sourceTransport":  "ALPACA_WEBSOCKET_LATEST_BAR",
+                                             "sourceTimestampUtc":  "2026-11-10T15:58:00+00:00",
+                                             "completedAtUtc":  "2026-11-10T15:59:00+00:00",
+                                             "ageSeconds":  138.0987699,
+                                             "freshness":  "STALE",
+                                             "feed":  "iex",
+                                             "close":  2.665,
+                                             "ema9":  2.7039757808645831688681243208,
+                                             "ema20":  2.7708145977978422573759574547,
+                                             "vwap":  2.9217053064817348067612737456,
+                                             "rsi":  26.622161001618521897003911777,
+                                             "macd":  -0.0758603606850676189700524482,
+                                             "macdSignal":  -0.0678692208972838988041052674,
+                                             "atr":  0.0239285714285714285714285714,
+                                             "extensionAtr":  10.727982957445633715396514754,
+                                             "chartBars":  [
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:30:00+00:00",
+                                                                   "open":  2.675,
+                                                                   "high":  2.68,
+                                                                   "low":  2.65,
+                                                                   "close":  2.65,
+                                                                   "volume":  3213
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:31:00+00:00",
+                                                                   "open":  2.555,
+                                                                   "high":  2.555,
+                                                                   "low":  2.555,
+                                                                   "close":  2.555,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:32:00+00:00",
+                                                                   "open":  2.57,
+                                                                   "high":  2.585,
+                                                                   "low":  2.55,
+                                                                   "close":  2.55,
+                                                                   "volume":  2500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:34:00+00:00",
+                                                                   "open":  2.63,
+                                                                   "high":  2.65,
+                                                                   "low":  2.63,
+                                                                   "close":  2.65,
+                                                                   "volume":  400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:35:00+00:00",
+                                                                   "open":  2.685,
+                                                                   "high":  2.685,
+                                                                   "low":  2.68,
+                                                                   "close":  2.68,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:36:00+00:00",
+                                                                   "open":  2.645,
+                                                                   "high":  2.645,
+                                                                   "low":  2.645,
+                                                                   "close":  2.645,
+                                                                   "volume":  2250
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:41:00+00:00",
+                                                                   "open":  2.755,
+                                                                   "high":  2.785,
+                                                                   "low":  2.74,
+                                                                   "close":  2.74,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:42:00+00:00",
+                                                                   "open":  2.76,
+                                                                   "high":  2.76,
+                                                                   "low":  2.68,
+                                                                   "close":  2.68,
+                                                                   "volume":  1800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:43:00+00:00",
+                                                                   "open":  2.68,
+                                                                   "high":  2.685,
+                                                                   "low":  2.68,
+                                                                   "close":  2.685,
+                                                                   "volume":  4204
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:44:00+00:00",
+                                                                   "open":  2.73,
+                                                                   "high":  2.73,
+                                                                   "low":  2.73,
+                                                                   "close":  2.73,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:45:00+00:00",
+                                                                   "open":  2.7,
+                                                                   "high":  2.7,
+                                                                   "low":  2.7,
+                                                                   "close":  2.7,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:48:00+00:00",
+                                                                   "open":  2.81,
+                                                                   "high":  2.81,
+                                                                   "low":  2.81,
+                                                                   "close":  2.81,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:50:00+00:00",
+                                                                   "open":  2.835,
+                                                                   "high":  2.835,
+                                                                   "low":  2.835,
+                                                                   "close":  2.835,
+                                                                   "volume":  102
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:51:00+00:00",
+                                                                   "open":  2.88,
+                                                                   "high":  2.88,
+                                                                   "low":  2.88,
+                                                                   "close":  2.88,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:54:00+00:00",
+                                                                   "open":  2.89,
+                                                                   "high":  2.89,
+                                                                   "low":  2.89,
+                                                                   "close":  2.89,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:55:00+00:00",
+                                                                   "open":  2.82,
+                                                                   "high":  2.82,
+                                                                   "low":  2.82,
+                                                                   "close":  2.82,
+                                                                   "volume":  800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:56:00+00:00",
+                                                                   "open":  2.86,
+                                                                   "high":  2.86,
+                                                                   "low":  2.86,
+                                                                   "close":  2.86,
+                                                                   "volume":  642
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:57:00+00:00",
+                                                                   "open":  2.9,
+                                                                   "high":  2.9,
+                                                                   "low":  2.9,
+                                                                   "close":  2.9,
+                                                                   "volume":  101
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:59:00+00:00",
+                                                                   "open":  2.87,
+                                                                   "high":  2.87,
+                                                                   "low":  2.87,
+                                                                   "close":  2.87,
+                                                                   "volume":  5700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:00:00+00:00",
+                                                                   "open":  2.86,
+                                                                   "high":  2.86,
+                                                                   "low":  2.86,
+                                                                   "close":  2.86,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:01:00+00:00",
+                                                                   "open":  2.91,
+                                                                   "high":  2.91,
+                                                                   "low":  2.91,
+                                                                   "close":  2.91,
+                                                                   "volume":  198
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:02:00+00:00",
+                                                                   "open":  2.905,
+                                                                   "high":  2.93,
+                                                                   "low":  2.905,
+                                                                   "close":  2.91,
+                                                                   "volume":  1600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:04:00+00:00",
+                                                                   "open":  2.91,
+                                                                   "high":  2.92,
+                                                                   "low":  2.91,
+                                                                   "close":  2.92,
+                                                                   "volume":  1600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:05:00+00:00",
+                                                                   "open":  2.92,
+                                                                   "high":  2.92,
+                                                                   "low":  2.92,
+                                                                   "close":  2.92,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:06:00+00:00",
+                                                                   "open":  2.915,
+                                                                   "high":  2.92,
+                                                                   "low":  2.915,
+                                                                   "close":  2.92,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:07:00+00:00",
+                                                                   "open":  2.93,
+                                                                   "high":  2.94,
+                                                                   "low":  2.93,
+                                                                   "close":  2.94,
+                                                                   "volume":  1400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:08:00+00:00",
+                                                                   "open":  2.95,
+                                                                   "high":  2.95,
+                                                                   "low":  2.95,
+                                                                   "close":  2.95,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:10:00+00:00",
+                                                                   "open":  3,
+                                                                   "high":  3,
+                                                                   "low":  3,
+                                                                   "close":  3,
+                                                                   "volume":  162
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:20:00+00:00",
+                                                                   "open":  3.035,
+                                                                   "high":  3.035,
+                                                                   "low":  3.035,
+                                                                   "close":  3.035,
+                                                                   "volume":  1854
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:21:00+00:00",
+                                                                   "open":  3.01,
+                                                                   "high":  3.01,
+                                                                   "low":  3.01,
+                                                                   "close":  3.01,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:24:00+00:00",
+                                                                   "open":  2.98,
+                                                                   "high":  2.98,
+                                                                   "low":  2.98,
+                                                                   "close":  2.98,
+                                                                   "volume":  2100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:25:00+00:00",
+                                                                   "open":  2.99,
+                                                                   "high":  2.99,
+                                                                   "low":  2.99,
+                                                                   "close":  2.99,
+                                                                   "volume":  800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:27:00+00:00",
+                                                                   "open":  3.05,
+                                                                   "high":  3.09,
+                                                                   "low":  3.05,
+                                                                   "close":  3.09,
+                                                                   "volume":  1600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:29:00+00:00",
+                                                                   "open":  3.08,
+                                                                   "high":  3.08,
+                                                                   "low":  3.08,
+                                                                   "close":  3.08,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:31:00+00:00",
+                                                                   "open":  3.11,
+                                                                   "high":  3.11,
+                                                                   "low":  3.11,
+                                                                   "close":  3.11,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:37:00+00:00",
+                                                                   "open":  3.125,
+                                                                   "high":  3.125,
+                                                                   "low":  3.125,
+                                                                   "close":  3.125,
+                                                                   "volume":  1858
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:38:00+00:00",
+                                                                   "open":  3.09,
+                                                                   "high":  3.09,
+                                                                   "low":  3.09,
+                                                                   "close":  3.09,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:39:00+00:00",
+                                                                   "open":  3.09,
+                                                                   "high":  3.09,
+                                                                   "low":  3.07,
+                                                                   "close":  3.08,
+                                                                   "volume":  2643
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:43:00+00:00",
+                                                                   "open":  3.11,
+                                                                   "high":  3.11,
+                                                                   "low":  3.11,
+                                                                   "close":  3.11,
+                                                                   "volume":  305
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:48:00+00:00",
+                                                                   "open":  3.12,
+                                                                   "high":  3.12,
+                                                                   "low":  3.12,
+                                                                   "close":  3.12,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:49:00+00:00",
+                                                                   "open":  3.14,
+                                                                   "high":  3.14,
+                                                                   "low":  3.14,
+                                                                   "close":  3.14,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:54:00+00:00",
+                                                                   "open":  3.26,
+                                                                   "high":  3.26,
+                                                                   "low":  3.26,
+                                                                   "close":  3.26,
+                                                                   "volume":  1680
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:56:00+00:00",
+                                                                   "open":  3.245,
+                                                                   "high":  3.245,
+                                                                   "low":  3.245,
+                                                                   "close":  3.245,
+                                                                   "volume":  1592
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:57:00+00:00",
+                                                                   "open":  3.285,
+                                                                   "high":  3.285,
+                                                                   "low":  3.285,
+                                                                   "close":  3.285,
+                                                                   "volume":  1914
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:58:00+00:00",
+                                                                   "open":  3.31,
+                                                                   "high":  3.31,
+                                                                   "low":  3.31,
+                                                                   "close":  3.31,
+                                                                   "volume":  1555
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:01:00+00:00",
+                                                                   "open":  3.34,
+                                                                   "high":  3.34,
+                                                                   "low":  3.34,
+                                                                   "close":  3.34,
+                                                                   "volume":  2100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:03:00+00:00",
+                                                                   "open":  3.385,
+                                                                   "high":  3.385,
+                                                                   "low":  3.385,
+                                                                   "close":  3.385,
+                                                                   "volume":  1854
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:08:00+00:00",
+                                                                   "open":  3.355,
+                                                                   "high":  3.355,
+                                                                   "low":  3.355,
+                                                                   "close":  3.355,
+                                                                   "volume":  3950
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:09:00+00:00",
+                                                                   "open":  3.335,
+                                                                   "high":  3.335,
+                                                                   "low":  3.3,
+                                                                   "close":  3.3,
+                                                                   "volume":  1880
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:11:00+00:00",
+                                                                   "open":  3.345,
+                                                                   "high":  3.345,
+                                                                   "low":  3.345,
+                                                                   "close":  3.345,
+                                                                   "volume":  2250
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:16:00+00:00",
+                                                                   "open":  3.31,
+                                                                   "high":  3.31,
+                                                                   "low":  3.31,
+                                                                   "close":  3.31,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:18:00+00:00",
+                                                                   "open":  3.34,
+                                                                   "high":  3.34,
+                                                                   "low":  3.34,
+                                                                   "close":  3.34,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:19:00+00:00",
+                                                                   "open":  3.33,
+                                                                   "high":  3.33,
+                                                                   "low":  3.33,
+                                                                   "close":  3.33,
+                                                                   "volume":  149
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:20:00+00:00",
+                                                                   "open":  3.3,
+                                                                   "high":  3.3,
+                                                                   "low":  3.3,
+                                                                   "close":  3.3,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:21:00+00:00",
+                                                                   "open":  3.33,
+                                                                   "high":  3.33,
+                                                                   "low":  3.33,
+                                                                   "close":  3.33,
+                                                                   "volume":  1500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:33:00+00:00",
+                                                                   "open":  3.29,
+                                                                   "high":  3.29,
+                                                                   "low":  3.29,
+                                                                   "close":  3.29,
+                                                                   "volume":  900
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:35:00+00:00",
+                                                                   "open":  3.275,
+                                                                   "high":  3.275,
+                                                                   "low":  3.275,
+                                                                   "close":  3.275,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:36:00+00:00",
+                                                                   "open":  3.28,
+                                                                   "high":  3.28,
+                                                                   "low":  3.28,
+                                                                   "close":  3.28,
+                                                                   "volume":  2000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:43:00+00:00",
+                                                                   "open":  3.28,
+                                                                   "high":  3.28,
+                                                                   "low":  3.28,
+                                                                   "close":  3.28,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:54:00+00:00",
+                                                                   "open":  3.245,
+                                                                   "high":  3.245,
+                                                                   "low":  3.245,
+                                                                   "close":  3.245,
+                                                                   "volume":  2500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:07:00+00:00",
+                                                                   "open":  3.22,
+                                                                   "high":  3.22,
+                                                                   "low":  3.22,
+                                                                   "close":  3.22,
+                                                                   "volume":  900
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:08:00+00:00",
+                                                                   "open":  3.22,
+                                                                   "high":  3.22,
+                                                                   "low":  3.22,
+                                                                   "close":  3.22,
+                                                                   "volume":  900
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:29:00+00:00",
+                                                                   "open":  3.205,
+                                                                   "high":  3.205,
+                                                                   "low":  3.205,
+                                                                   "close":  3.205,
+                                                                   "volume":  2000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:46:00+00:00",
+                                                                   "open":  3.21,
+                                                                   "high":  3.21,
+                                                                   "low":  3.21,
+                                                                   "close":  3.21,
+                                                                   "volume":  1522
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:50:00+00:00",
+                                                                   "open":  3.24,
+                                                                   "high":  3.24,
+                                                                   "low":  3.24,
+                                                                   "close":  3.24,
+                                                                   "volume":  900
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:58:00+00:00",
+                                                                   "open":  3.2,
+                                                                   "high":  3.2,
+                                                                   "low":  3.2,
+                                                                   "close":  3.2,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:48:00+00:00",
+                                                                   "open":  3.18,
+                                                                   "high":  3.18,
+                                                                   "low":  3.18,
+                                                                   "close":  3.18,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:10:00+00:00",
+                                                                   "open":  3.135,
+                                                                   "high":  3.135,
+                                                                   "low":  3.135,
+                                                                   "close":  3.135,
+                                                                   "volume":  1720
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:14:00+00:00",
+                                                                   "open":  3.14,
+                                                                   "high":  3.14,
+                                                                   "low":  3.14,
+                                                                   "close":  3.14,
+                                                                   "volume":  1400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:28:00+00:00",
+                                                                   "open":  3.13,
+                                                                   "high":  3.13,
+                                                                   "low":  3.13,
+                                                                   "close":  3.13,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:36:00+00:00",
+                                                                   "open":  3.15,
+                                                                   "high":  3.15,
+                                                                   "low":  3.15,
+                                                                   "close":  3.15,
+                                                                   "volume":  1700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:58:00+00:00",
+                                                                   "open":  3.23,
+                                                                   "high":  3.23,
+                                                                   "low":  3.23,
+                                                                   "close":  3.23,
+                                                                   "volume":  450
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:05:00+00:00",
+                                                                   "open":  3.19,
+                                                                   "high":  3.19,
+                                                                   "low":  3.19,
+                                                                   "close":  3.19,
+                                                                   "volume":  900
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:07:00+00:00",
+                                                                   "open":  3.2,
+                                                                   "high":  3.2,
+                                                                   "low":  3.2,
+                                                                   "close":  3.2,
+                                                                   "volume":  4100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:09:00+00:00",
+                                                                   "open":  3.21,
+                                                                   "high":  3.21,
+                                                                   "low":  3.21,
+                                                                   "close":  3.21,
+                                                                   "volume":  800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:15:00+00:00",
+                                                                   "open":  3.26,
+                                                                   "high":  3.26,
+                                                                   "low":  3.26,
+                                                                   "close":  3.26,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:22:00+00:00",
+                                                                   "open":  3.23,
+                                                                   "high":  3.23,
+                                                                   "low":  3.23,
+                                                                   "close":  3.23,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:40:00+00:00",
+                                                                   "open":  3.215,
+                                                                   "high":  3.215,
+                                                                   "low":  3.215,
+                                                                   "close":  3.215,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:43:00+00:00",
+                                                                   "open":  3.2,
+                                                                   "high":  3.2,
+                                                                   "low":  3.2,
+                                                                   "close":  3.2,
+                                                                   "volume":  1500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:49:00+00:00",
+                                                                   "open":  3.185,
+                                                                   "high":  3.19,
+                                                                   "low":  3.185,
+                                                                   "close":  3.19,
+                                                                   "volume":  3700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:53:00+00:00",
+                                                                   "open":  3.16,
+                                                                   "high":  3.16,
+                                                                   "low":  3.16,
+                                                                   "close":  3.16,
+                                                                   "volume":  175
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:59:00+00:00",
+                                                                   "open":  3.18,
+                                                                   "high":  3.18,
+                                                                   "low":  3.18,
+                                                                   "close":  3.18,
+                                                                   "volume":  525
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:30:00+00:00",
+                                                                   "open":  2.72,
+                                                                   "high":  2.76,
+                                                                   "low":  2.72,
+                                                                   "close":  2.76,
+                                                                   "volume":  501
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:32:00+00:00",
+                                                                   "open":  2.86,
+                                                                   "high":  2.99,
+                                                                   "low":  2.86,
+                                                                   "close":  2.94,
+                                                                   "volume":  1300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:33:00+00:00",
+                                                                   "open":  2.9,
+                                                                   "high":  2.925,
+                                                                   "low":  2.9,
+                                                                   "close":  2.925,
+                                                                   "volume":  1400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:34:00+00:00",
+                                                                   "open":  2.915,
+                                                                   "high":  2.915,
+                                                                   "low":  2.915,
+                                                                   "close":  2.915,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:35:00+00:00",
+                                                                   "open":  2.95,
+                                                                   "high":  2.95,
+                                                                   "low":  2.95,
+                                                                   "close":  2.95,
+                                                                   "volume":  1830
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:36:00+00:00",
+                                                                   "open":  2.94,
+                                                                   "high":  2.98,
+                                                                   "low":  2.94,
+                                                                   "close":  2.96,
+                                                                   "volume":  10200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:37:00+00:00",
+                                                                   "open":  2.91,
+                                                                   "high":  2.95,
+                                                                   "low":  2.91,
+                                                                   "close":  2.95,
+                                                                   "volume":  1900
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:38:00+00:00",
+                                                                   "open":  2.93,
+                                                                   "high":  2.94,
+                                                                   "low":  2.93,
+                                                                   "close":  2.94,
+                                                                   "volume":  1300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:39:00+00:00",
+                                                                   "open":  2.92,
+                                                                   "high":  2.94,
+                                                                   "low":  2.92,
+                                                                   "close":  2.94,
+                                                                   "volume":  4023
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:40:00+00:00",
+                                                                   "open":  3.02,
+                                                                   "high":  3.03,
+                                                                   "low":  3,
+                                                                   "close":  3,
+                                                                   "volume":  2000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:41:00+00:00",
+                                                                   "open":  3.005,
+                                                                   "high":  3.005,
+                                                                   "low":  2.99,
+                                                                   "close":  2.99,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:42:00+00:00",
+                                                                   "open":  3.02,
+                                                                   "high":  3.02,
+                                                                   "low":  3.02,
+                                                                   "close":  3.02,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:43:00+00:00",
+                                                                   "open":  3.105,
+                                                                   "high":  3.11,
+                                                                   "low":  3.105,
+                                                                   "close":  3.105,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:45:00+00:00",
+                                                                   "open":  3.045,
+                                                                   "high":  3.05,
+                                                                   "low":  3.045,
+                                                                   "close":  3.05,
+                                                                   "volume":  400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:46:00+00:00",
+                                                                   "open":  3.03,
+                                                                   "high":  3.03,
+                                                                   "low":  3.03,
+                                                                   "close":  3.03,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:48:00+00:00",
+                                                                   "open":  3,
+                                                                   "high":  3,
+                                                                   "low":  2.96,
+                                                                   "close":  2.96,
+                                                                   "volume":  894
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:49:00+00:00",
+                                                                   "open":  2.945,
+                                                                   "high":  2.945,
+                                                                   "low":  2.94,
+                                                                   "close":  2.94,
+                                                                   "volume":  2150
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:50:00+00:00",
+                                                                   "open":  2.97,
+                                                                   "high":  2.97,
+                                                                   "low":  2.97,
+                                                                   "close":  2.97,
+                                                                   "volume":  400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:51:00+00:00",
+                                                                   "open":  2.97,
+                                                                   "high":  2.98,
+                                                                   "low":  2.97,
+                                                                   "close":  2.98,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:53:00+00:00",
+                                                                   "open":  3.01,
+                                                                   "high":  3.01,
+                                                                   "low":  3.01,
+                                                                   "close":  3.01,
+                                                                   "volume":  2150
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:54:00+00:00",
+                                                                   "open":  3,
+                                                                   "high":  3,
+                                                                   "low":  3,
+                                                                   "close":  3,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:55:00+00:00",
+                                                                   "open":  3.02,
+                                                                   "high":  3.02,
+                                                                   "low":  3.02,
+                                                                   "close":  3.02,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:56:00+00:00",
+                                                                   "open":  3,
+                                                                   "high":  3.065,
+                                                                   "low":  3,
+                                                                   "close":  3.065,
+                                                                   "volume":  4123
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:57:00+00:00",
+                                                                   "open":  3.05,
+                                                                   "high":  3.05,
+                                                                   "low":  3.05,
+                                                                   "close":  3.05,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:00:00+00:00",
+                                                                   "open":  3.08,
+                                                                   "high":  3.15,
+                                                                   "low":  3.08,
+                                                                   "close":  3.14,
+                                                                   "volume":  1800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:01:00+00:00",
+                                                                   "open":  3.18,
+                                                                   "high":  3.18,
+                                                                   "low":  3.13,
+                                                                   "close":  3.13,
+                                                                   "volume":  800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:02:00+00:00",
+                                                                   "open":  3.095,
+                                                                   "high":  3.095,
+                                                                   "low":  3.06,
+                                                                   "close":  3.06,
+                                                                   "volume":  2216
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:03:00+00:00",
+                                                                   "open":  3.045,
+                                                                   "high":  3.045,
+                                                                   "low":  3,
+                                                                   "close":  3,
+                                                                   "volume":  3795
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:04:00+00:00",
+                                                                   "open":  3.005,
+                                                                   "high":  3.005,
+                                                                   "low":  3.005,
+                                                                   "close":  3.005,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:05:00+00:00",
+                                                                   "open":  3.035,
+                                                                   "high":  3.04,
+                                                                   "low":  3.035,
+                                                                   "close":  3.04,
+                                                                   "volume":  400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:06:00+00:00",
+                                                                   "open":  3.04,
+                                                                   "high":  3.04,
+                                                                   "low":  3,
+                                                                   "close":  3,
+                                                                   "volume":  3100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:07:00+00:00",
+                                                                   "open":  3,
+                                                                   "high":  3,
+                                                                   "low":  3,
+                                                                   "close":  3,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:08:00+00:00",
+                                                                   "open":  3.03,
+                                                                   "high":  3.03,
+                                                                   "low":  3.01,
+                                                                   "close":  3.01,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:10:00+00:00",
+                                                                   "open":  3.03,
+                                                                   "high":  3.03,
+                                                                   "low":  3.03,
+                                                                   "close":  3.03,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:11:00+00:00",
+                                                                   "open":  2.99,
+                                                                   "high":  2.99,
+                                                                   "low":  2.99,
+                                                                   "close":  2.99,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:12:00+00:00",
+                                                                   "open":  2.93,
+                                                                   "high":  2.93,
+                                                                   "low":  2.93,
+                                                                   "close":  2.93,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:13:00+00:00",
+                                                                   "open":  2.93,
+                                                                   "high":  2.95,
+                                                                   "low":  2.93,
+                                                                   "close":  2.95,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:15:00+00:00",
+                                                                   "open":  2.97,
+                                                                   "high":  2.97,
+                                                                   "low":  2.97,
+                                                                   "close":  2.97,
+                                                                   "volume":  1600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:16:00+00:00",
+                                                                   "open":  2.955,
+                                                                   "high":  2.955,
+                                                                   "low":  2.95,
+                                                                   "close":  2.95,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:17:00+00:00",
+                                                                   "open":  2.96,
+                                                                   "high":  2.96,
+                                                                   "low":  2.945,
+                                                                   "close":  2.945,
+                                                                   "volume":  2250
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:18:00+00:00",
+                                                                   "open":  2.95,
+                                                                   "high":  2.95,
+                                                                   "low":  2.95,
+                                                                   "close":  2.95,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:21:00+00:00",
+                                                                   "open":  2.96,
+                                                                   "high":  2.96,
+                                                                   "low":  2.96,
+                                                                   "close":  2.96,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:24:00+00:00",
+                                                                   "open":  2.88,
+                                                                   "high":  2.88,
+                                                                   "low":  2.85,
+                                                                   "close":  2.85,
+                                                                   "volume":  2512
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:25:00+00:00",
+                                                                   "open":  2.84,
+                                                                   "high":  2.87,
+                                                                   "low":  2.84,
+                                                                   "close":  2.87,
+                                                                   "volume":  2600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:26:00+00:00",
+                                                                   "open":  2.87,
+                                                                   "high":  2.87,
+                                                                   "low":  2.86,
+                                                                   "close":  2.86,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:27:00+00:00",
+                                                                   "open":  2.85,
+                                                                   "high":  2.85,
+                                                                   "low":  2.85,
+                                                                   "close":  2.85,
+                                                                   "volume":  600
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:28:00+00:00",
+                                                                   "open":  2.85,
+                                                                   "high":  2.85,
+                                                                   "low":  2.85,
+                                                                   "close":  2.85,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:29:00+00:00",
+                                                                   "open":  2.845,
+                                                                   "high":  2.845,
+                                                                   "low":  2.845,
+                                                                   "close":  2.845,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:30:00+00:00",
+                                                                   "open":  2.845,
+                                                                   "high":  2.845,
+                                                                   "low":  2.84,
+                                                                   "close":  2.84,
+                                                                   "volume":  700
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:31:00+00:00",
+                                                                   "open":  2.815,
+                                                                   "high":  2.82,
+                                                                   "low":  2.815,
+                                                                   "close":  2.82,
+                                                                   "volume":  2373
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:32:00+00:00",
+                                                                   "open":  2.83,
+                                                                   "high":  2.83,
+                                                                   "low":  2.83,
+                                                                   "close":  2.83,
+                                                                   "volume":  500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:33:00+00:00",
+                                                                   "open":  2.875,
+                                                                   "high":  2.875,
+                                                                   "low":  2.875,
+                                                                   "close":  2.875,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:35:00+00:00",
+                                                                   "open":  2.81,
+                                                                   "high":  2.81,
+                                                                   "low":  2.81,
+                                                                   "close":  2.81,
+                                                                   "volume":  1000
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:37:00+00:00",
+                                                                   "open":  2.765,
+                                                                   "high":  2.765,
+                                                                   "low":  2.76,
+                                                                   "close":  2.76,
+                                                                   "volume":  2300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:38:00+00:00",
+                                                                   "open":  2.74,
+                                                                   "high":  2.74,
+                                                                   "low":  2.74,
+                                                                   "close":  2.74,
+                                                                   "volume":  1200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:42:00+00:00",
+                                                                   "open":  2.72,
+                                                                   "high":  2.72,
+                                                                   "low":  2.72,
+                                                                   "close":  2.72,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:43:00+00:00",
+                                                                   "open":  2.7,
+                                                                   "high":  2.7,
+                                                                   "low":  2.685,
+                                                                   "close":  2.685,
+                                                                   "volume":  1400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:46:00+00:00",
+                                                                   "open":  2.67,
+                                                                   "high":  2.67,
+                                                                   "low":  2.67,
+                                                                   "close":  2.67,
+                                                                   "volume":  1400
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:49:00+00:00",
+                                                                   "open":  2.685,
+                                                                   "high":  2.69,
+                                                                   "low":  2.685,
+                                                                   "close":  2.69,
+                                                                   "volume":  800
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:52:00+00:00",
+                                                                   "open":  2.68,
+                                                                   "high":  2.68,
+                                                                   "low":  2.67,
+                                                                   "close":  2.67,
+                                                                   "volume":  2500
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:55:00+00:00",
+                                                                   "open":  2.665,
+                                                                   "high":  2.665,
+                                                                   "low":  2.665,
+                                                                   "close":  2.665,
+                                                                   "volume":  3150
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:58:00+00:00",
+                                                                   "open":  2.665,
+                                                                   "high":  2.665,
+                                                                   "low":  2.665,
+                                                                   "close":  2.665,
+                                                                   "volume":  100
+                                                               }
+                                                           ]
+                                         },
+                           "fiveMinute":  {
+                                              "barCount":  710,
+                                              "sourceTimestampUtc":  "2026-11-10T15:55:00+00:00",
+                                              "completedAtUtc":  "2026-11-10T16:00:00+00:00",
+                                              "ageSeconds":  78.0987699,
+                                              "freshness":  "FRESH",
+                                              "feed":  "iex",
+                                              "close":  2.665,
+                                              "ema9":  2.7652993592896518450180467094,
+                                              "ema20":  2.8813850398430106068327141568,
+                                              "vwap":  2.9219011026919005079282001261,
+                                              "rsi":  29.051711611624109567853039023,
+                                              "macd":  -0.1145882263651312493993335069,
+                                              "macdSignal":  -0.0842471976194655277047544290,
+                                              "atr":  0.0653571428571428571428571429,
+                                              "relativeVolume":  2.5354969574036511156186612576,
+                                              "relativeVolumeBaselineSamples":  10,
+                                              "scoreBreakdown":  {
+                                                                     "score":  1,
+                                                                     "maxScore":  6,
+                                                                     "permissionThreshold":  5,
+                                                                     "permission":  false,
+                                                                     "status":  "CURRENT",
+                                                                     "criteria":  [
+                                                                                      {
+                                                                                          "key":  "closeAboveVwap",
+                                                                                          "label":  "5M close \u003e VWAP",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "closeAboveEma9",
+                                                                                          "label":  "5M close \u003e EMA 9",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "ema9AboveEma20",
+                                                                                          "label":  "5M EMA 9 \u003e EMA 20",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "ema20AboveSma50",
+                                                                                          "label":  "5M EMA 20 \u003e SMA 50",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "rsiSupportive",
+                                                                                          "label":  "5M RSI \u003e= 50",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "rvolSupportive",
+                                                                                          "label":  "5M RVOL \u003e= 1.50",
+                                                                                          "passed":  true
+                                                                                      }
+                                                                                  ]
+                                                                 }
+                                          },
+                           "opportunityQuality":  {
+                                                      "status":  "DATA?",
+                                                      "classification":  "DataUnknown",
+                                                      "displayLabel":  "DATA?",
+                                                      "reasons":  [
+                                                                      "DataMissing"
+                                                                  ],
+                                                      "metrics":  null,
+                                                      "evaluatedAtUtc":  "2026-11-10T16:01:18.0987699+00:00",
+                                                      "thresholds":  "OpportunityQualityConfig.DiagnosticDefaults (provisional; not calibrated)",
+                                                      "executionEventBasis":  "Current V2 decision LongPermission / EntryAllowed snapshot; not independently verified Thinkorswim finite READY parity.",
+                                                      "note":  "Separate diagnostic ranking only. It cannot create or override V2 entry eligibility, execution state, HOLD, EXIT, or order actions. The 30-bar range and prior-high proximity are explicit research proxies, not calibrated predictors."
+                                                  },
+                           "decision":  null,
+                           "methodology":  {
+                                               "indicatorHistory":  "EMA9/EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP are calculated from provider OHLCV.",
+                                               "extension":  "1m absolute close-to-session-VWAP distance divided by the simple 14-bar average of True Range; intended to match the installed Thinkorswim 1M formula. Session VWAP parity must be confirmed on matched bars.",
+                                               "relativeVolume":  "5m current volume divided by average volume for the same regular-session 5m clock slot across prior sessions; minimum five prior samples. This is not a vendor-supplied consolidated RVOL field.",
+                                               "freshness":  "Age is measured from the expected bar close (bar timestamp + timeframe), not the bar-open timestamp.",
+                                               "limitations":  [
+                                                                   "1m execution bars are read from the confirmed Alpaca WebSocket append-only store; 5m permission bars remain historical REST.",
+                                                                   "Provider feed and entitlement determine coverage.",
+                                                                   "No catalyst, halt, spread, order-book, or Thinkorswim study data is inferred.",
+                                                                   "A true signal remains unavailable when history, freshness, or same-slot volume baseline is insufficient."
+                                                               ]
+                                           }
+                       }
+    },
+    {
+        "symbol":  "XRPN",
+        "status":  "OK",
+        "assessment":  {
+                           "symbol":  "XRPN",
+                           "provider":  "Alpaca",
+                           "feed":  "iex",
+                           "configuredFeed":  "iex",
+                           "evaluatedAtUtc":  "2026-11-10T16:01:31.2859159+00:00",
+                           "status":  "STALE",
+                           "evaluationStatus":  "INSUFFICIENT_HISTORY",
+                           "evaluationReason":  "Need at least 50 completed 1m bars and 51 completed 5m bars; received 39 1m and 431 5m.",
+                           "dataFresh":  false,
+                           "freshnessDiagnostics":  {
+                                                        "oneMinute":  {
+                                                                          "isFresh":  false,
+                                                                          "ageSeconds":  391.2859159,
+                                                                          "limitSeconds":  120,
+                                                                          "sourceTimestampUtc":  "2026-11-10T15:54:00+00:00",
+                                                                          "expectedCloseUtc":  "2026-11-10T15:55:00+00:00"
+                                                                      },
+                                                        "fiveMinute":  {
+                                                                           "isFresh":  false,
+                                                                           "ageSeconds":  391.2859159,
+                                                                           "limitSeconds":  360,
+                                                                           "sourceTimestampUtc":  "2026-11-10T15:50:00+00:00",
+                                                                           "expectedCloseUtc":  "2026-11-10T15:55:00+00:00"
+                                                                       },
+                                                        "staleTimeframes":  [
+                                                                                "1m",
+                                                                                "5m"
+                                                                            ]
+                                                    },
+                           "oneMinute":  {
+                                             "barCount":  39,
+                                             "sourceTransport":  "REST",
+                                             "sourceTimestampUtc":  "2026-11-10T15:54:00+00:00",
+                                             "completedAtUtc":  "2026-11-10T15:55:00+00:00",
+                                             "ageSeconds":  391.2859159,
+                                             "freshness":  "STALE",
+                                             "feed":  "iex",
+                                             "close":  8.35,
+                                             "ema9":  null,
+                                             "ema20":  null,
+                                             "vwap":  null,
+                                             "rsi":  null,
+                                             "macd":  null,
+                                             "macdSignal":  null,
+                                             "atr":  null,
+                                             "extensionAtr":  null,
+                                             "chartBars":  [
+                                                               {
+                                                                   "timestamp":  "2026-11-09T14:30:00+00:00",
+                                                                   "open":  10.415,
+                                                                   "high":  10.415,
+                                                                   "low":  10.275,
+                                                                   "close":  10.275,
+                                                                   "volume":  638
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:29:00+00:00",
+                                                                   "open":  9.94,
+                                                                   "high":  9.94,
+                                                                   "low":  9.94,
+                                                                   "close":  9.94,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:39:00+00:00",
+                                                                   "open":  10,
+                                                                   "high":  10,
+                                                                   "low":  10,
+                                                                   "close":  10,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:45:00+00:00",
+                                                                   "open":  10.165,
+                                                                   "high":  10.165,
+                                                                   "low":  10.165,
+                                                                   "close":  10.165,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:52:00+00:00",
+                                                                   "open":  10.41,
+                                                                   "high":  10.41,
+                                                                   "low":  10.41,
+                                                                   "close":  10.41,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:53:00+00:00",
+                                                                   "open":  10.62,
+                                                                   "high":  10.62,
+                                                                   "low":  10.62,
+                                                                   "close":  10.62,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T15:56:00+00:00",
+                                                                   "open":  10.56,
+                                                                   "high":  10.56,
+                                                                   "low":  10.56,
+                                                                   "close":  10.56,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:08:00+00:00",
+                                                                   "open":  10.625,
+                                                                   "high":  10.625,
+                                                                   "low":  10.625,
+                                                                   "close":  10.625,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:11:00+00:00",
+                                                                   "open":  10.65,
+                                                                   "high":  10.8,
+                                                                   "low":  10.65,
+                                                                   "close":  10.8,
+                                                                   "volume":  220
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:23:00+00:00",
+                                                                   "open":  10.76,
+                                                                   "high":  10.765,
+                                                                   "low":  10.76,
+                                                                   "close":  10.765,
+                                                                   "volume":  332
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:28:00+00:00",
+                                                                   "open":  10.395,
+                                                                   "high":  10.395,
+                                                                   "low":  10.395,
+                                                                   "close":  10.395,
+                                                                   "volume":  1200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T16:29:00+00:00",
+                                                                   "open":  10.425,
+                                                                   "high":  10.425,
+                                                                   "low":  10.425,
+                                                                   "close":  10.425,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:12:00+00:00",
+                                                                   "open":  10.405,
+                                                                   "high":  10.405,
+                                                                   "low":  10.405,
+                                                                   "close":  10.405,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:13:00+00:00",
+                                                                   "open":  10.405,
+                                                                   "high":  10.405,
+                                                                   "low":  10.405,
+                                                                   "close":  10.405,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T17:23:00+00:00",
+                                                                   "open":  10.405,
+                                                                   "high":  10.405,
+                                                                   "low":  10.405,
+                                                                   "close":  10.405,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:09:00+00:00",
+                                                                   "open":  10.24,
+                                                                   "high":  10.24,
+                                                                   "low":  10.24,
+                                                                   "close":  10.24,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:19:00+00:00",
+                                                                   "open":  10.21,
+                                                                   "high":  10.21,
+                                                                   "low":  10.21,
+                                                                   "close":  10.21,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:20:00+00:00",
+                                                                   "open":  10.11,
+                                                                   "high":  10.11,
+                                                                   "low":  10.11,
+                                                                   "close":  10.11,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:24:00+00:00",
+                                                                   "open":  10.13,
+                                                                   "high":  10.14,
+                                                                   "low":  10.13,
+                                                                   "close":  10.14,
+                                                                   "volume":  300
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:37:00+00:00",
+                                                                   "open":  10.185,
+                                                                   "high":  10.185,
+                                                                   "low":  10.185,
+                                                                   "close":  10.185,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T18:38:00+00:00",
+                                                                   "open":  10.185,
+                                                                   "high":  10.185,
+                                                                   "low":  10.185,
+                                                                   "close":  10.185,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:39:00+00:00",
+                                                                   "open":  10.365,
+                                                                   "high":  10.37,
+                                                                   "low":  10.365,
+                                                                   "close":  10.37,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:48:00+00:00",
+                                                                   "open":  10.405,
+                                                                   "high":  10.405,
+                                                                   "low":  10.405,
+                                                                   "close":  10.405,
+                                                                   "volume":  162
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:49:00+00:00",
+                                                                   "open":  10.31,
+                                                                   "high":  10.31,
+                                                                   "low":  10.31,
+                                                                   "close":  10.31,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T19:55:00+00:00",
+                                                                   "open":  10.315,
+                                                                   "high":  10.315,
+                                                                   "low":  10.315,
+                                                                   "close":  10.315,
+                                                                   "volume":  104
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:26:00+00:00",
+                                                                   "open":  10.33,
+                                                                   "high":  10.33,
+                                                                   "low":  10.33,
+                                                                   "close":  10.33,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:32:00+00:00",
+                                                                   "open":  10.3,
+                                                                   "high":  10.3,
+                                                                   "low":  10.3,
+                                                                   "close":  10.3,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:41:00+00:00",
+                                                                   "open":  10.315,
+                                                                   "high":  10.315,
+                                                                   "low":  10.315,
+                                                                   "close":  10.315,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-09T20:59:00+00:00",
+                                                                   "open":  10.405,
+                                                                   "high":  10.425,
+                                                                   "low":  10.39,
+                                                                   "close":  10.41,
+                                                                   "volume":  593
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:30:00+00:00",
+                                                                   "open":  9.925,
+                                                                   "high":  9.925,
+                                                                   "low":  9.925,
+                                                                   "close":  9.925,
+                                                                   "volume":  250
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:35:00+00:00",
+                                                                   "open":  9.57,
+                                                                   "high":  9.57,
+                                                                   "low":  9.57,
+                                                                   "close":  9.57,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T14:50:00+00:00",
+                                                                   "open":  9.285,
+                                                                   "high":  9.285,
+                                                                   "low":  9.285,
+                                                                   "close":  9.285,
+                                                                   "volume":  200
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:06:00+00:00",
+                                                                   "open":  9.04,
+                                                                   "high":  9.04,
+                                                                   "low":  9.04,
+                                                                   "close":  9.04,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:42:00+00:00",
+                                                                   "open":  8.81,
+                                                                   "high":  8.81,
+                                                                   "low":  8.8,
+                                                                   "close":  8.8,
+                                                                   "volume":  370
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:46:00+00:00",
+                                                                   "open":  8.6,
+                                                                   "high":  8.6,
+                                                                   "low":  8.6,
+                                                                   "close":  8.6,
+                                                                   "volume":  508
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:47:00+00:00",
+                                                                   "open":  8.5,
+                                                                   "high":  8.5,
+                                                                   "low":  8.5,
+                                                                   "close":  8.5,
+                                                                   "volume":  250
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:49:00+00:00",
+                                                                   "open":  8.45,
+                                                                   "high":  8.45,
+                                                                   "low":  8.45,
+                                                                   "close":  8.45,
+                                                                   "volume":  250
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:53:00+00:00",
+                                                                   "open":  8.34,
+                                                                   "high":  8.34,
+                                                                   "low":  8.34,
+                                                                   "close":  8.34,
+                                                                   "volume":  100
+                                                               },
+                                                               {
+                                                                   "timestamp":  "2026-11-10T15:54:00+00:00",
+                                                                   "open":  8.35,
+                                                                   "high":  8.35,
+                                                                   "low":  8.35,
+                                                                   "close":  8.35,
+                                                                   "volume":  114
+                                                               }
+                                                           ]
+                                         },
+                           "fiveMinute":  {
+                                              "barCount":  431,
+                                              "sourceTimestampUtc":  "2026-11-10T15:50:00+00:00",
+                                              "completedAtUtc":  "2026-11-10T15:55:00+00:00",
+                                              "ageSeconds":  391.2859159,
+                                              "freshness":  "STALE",
+                                              "feed":  "iex",
+                                              "close":  8.35,
+                                              "ema9":  9.149914302690566762266199765,
+                                              "ema20":  9.660569147887175462330001748,
+                                              "vwap":  8.83615967885816235504014273,
+                                              "rsi":  15.34749255326977105158458591,
+                                              "macd":  -0.468292102362427994897635325,
+                                              "macdSignal":  -0.2709402009871064664479974302,
+                                              "atr":  0.1803571428571428571428571429,
+                                              "relativeVolume":  null,
+                                              "relativeVolumeBaselineSamples":  4,
+                                              "scoreBreakdown":  {
+                                                                     "score":  null,
+                                                                     "maxScore":  6,
+                                                                     "permissionThreshold":  5,
+                                                                     "permission":  null,
+                                                                     "status":  "UNKNOWN",
+                                                                     "criteria":  [
+                                                                                      {
+                                                                                          "key":  "closeAboveVwap",
+                                                                                          "label":  "5M close \u003e VWAP",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "closeAboveEma9",
+                                                                                          "label":  "5M close \u003e EMA 9",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "ema9AboveEma20",
+                                                                                          "label":  "5M EMA 9 \u003e EMA 20",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "ema20AboveSma50",
+                                                                                          "label":  "5M EMA 20 \u003e SMA 50",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "rsiSupportive",
+                                                                                          "label":  "5M RSI \u003e= 50",
+                                                                                          "passed":  false
+                                                                                      },
+                                                                                      {
+                                                                                          "key":  "rvolSupportive",
+                                                                                          "label":  "5M RVOL \u003e= 1.50",
+                                                                                          "passed":  null
+                                                                                      }
+                                                                                  ]
+                                                                 }
+                                          },
+                           "opportunityQuality":  {
+                                                      "status":  "DATA?",
+                                                      "classification":  "DataUnknown",
+                                                      "displayLabel":  "DATA?",
+                                                      "reasons":  [
+                                                                      "DataMissing"
+                                                                  ],
+                                                      "metrics":  null,
+                                                      "evaluatedAtUtc":  "2026-11-10T16:01:31.2859159+00:00",
+                                                      "thresholds":  "OpportunityQualityConfig.DiagnosticDefaults (provisional; not calibrated)",
+                                                      "executionEventBasis":  "Current V2 decision LongPermission / EntryAllowed snapshot; not independently verified Thinkorswim finite READY parity.",
+                                                      "note":  "Separate diagnostic ranking only. It cannot create or override V2 entry eligibility, execution state, HOLD, EXIT, or order actions. The 30-bar range and prior-high proximity are explicit research proxies, not calibrated predictors."
+                                                  },
+                           "decision":  null,
+                           "methodology":  {
+                                               "indicatorHistory":  "EMA9/EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP are calculated from provider OHLCV.",
+                                               "extension":  "1m absolute close-to-session-VWAP distance divided by the simple 14-bar average of True Range; intended to match the installed Thinkorswim 1M formula. Session VWAP parity must be confirmed on matched bars.",
+                                               "relativeVolume":  "5m current volume divided by average volume for the same regular-session 5m clock slot across prior sessions; minimum five prior samples. This is not a vendor-supplied consolidated RVOL field.",
+                                               "freshness":  "Age is measured from the expected bar close (bar timestamp + timeframe), not the bar-open timestamp.",
+                                               "limitations":  [
+                                                                   "1m/5m decision bars are sourced through historical REST; the optional WebSocket is not currently subscribed or lacks a fresh 50-bar 1m history.",
+                                                                   "Provider feed and entitlement determine coverage.",
+                                                                   "No catalyst, halt, spread, order-book, or Thinkorswim study data is inferred.",
+                                                                   "A true signal remains unavailable when history, freshness, or same-slot volume baseline is insufficient."
+                                                               ]
+                                           }
+                       }
+    }
+]
