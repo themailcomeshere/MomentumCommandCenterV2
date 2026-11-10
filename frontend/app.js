@@ -57,6 +57,7 @@ let overnightSellWindowStartUtc = null;
 let overnightSellWindowEndUtc = null;
 let overnightBuySessionDate = null;
 let overnightSellSessionDate = null;
+let overnightMarketPhase = "UNKNOWN";
 let overnightEvaluationOpen = false;
 let marketSessionRefreshInFlight = false;
 async function refreshMarketSessionClock(){
@@ -75,6 +76,12 @@ async function refreshMarketSessionClock(){
   if(Number.isNaN(evaluationTarget.getTime())||Number.isNaN(buyDeadline.getTime())||Number.isNaN(buyWindowStart.getTime())||Number.isNaN(sellWindowStart.getTime())||Number.isNaN(sellWindowEnd.getTime()))throw new Error("Invalid Overnight process schedule.");
   overnightEvaluationTargetUtc=evaluationTarget.getTime();
   overnightBuyDeadlineUtc=buyDeadline.getTime();
+  overnightBuyWindowStartUtc=buyWindowStart.getTime();
+  overnightSellWindowStartUtc=sellWindowStart.getTime();
+  overnightSellWindowEndUtc=sellWindowEnd.getTime();
+  overnightBuySessionDate=data.overnightBuySessionDate||null;
+  overnightSellSessionDate=data.overnightSellSessionDate||null;
+  overnightMarketPhase=String(data.phase||"UNKNOWN").toUpperCase();
   overnightEvaluationOpen=data.overnightEvaluationOpen===true;
   const label=$("marketSessionLabel"),detail=$("marketSessionDetail");
   if(label)label.textContent=data.label||"Until Market opens";
@@ -84,7 +91,7 @@ async function refreshMarketSessionClock(){
   marketSessionTargetUtc=null;
   if($("marketSessionLabel"))$("marketSessionLabel").textContent="Market session clock";
   if($("marketSessionCountdown"))$("marketSessionCountdown").textContent="DATA?";
-  overnightEvaluationTargetUtc=null;overnightBuyDeadlineUtc=null;overnightBuyWindowStartUtc=null;overnightSellWindowStartUtc=null;overnightSellWindowEndUtc=null;overnightBuySessionDate=null;overnightSellSessionDate=null;overnightEvaluationOpen=false;
+  overnightEvaluationTargetUtc=null;overnightBuyDeadlineUtc=null;overnightBuyWindowStartUtc=null;overnightSellWindowStartUtc=null;overnightSellWindowEndUtc=null;overnightBuySessionDate=null;overnightSellSessionDate=null;overnightMarketPhase="UNKNOWN";overnightEvaluationOpen=false;
    if($("overnightBuyWindowSchedule"))$("overnightBuyWindowSchedule").textContent="Buy window · DATA?";if($("overnightSellWindowSchedule"))$("overnightSellWindowSchedule").textContent="GTC_EXT sell window · DATA?";
   if($("overnightEvaluationCountdown"))$("overnightEvaluationCountdown").textContent="DATA?";
   if($("overnightBuyCountdown"))$("overnightBuyCountdown").textContent="DATA?";
@@ -100,15 +107,26 @@ function renderMarketSessionCountdown(){
  node.textContent=(days?days+"d ":"")+pad(hours)+"h "+pad(minutes)+"m "+pad(seconds)+"s";
  if(remaining===0)void refreshMarketSessionClock();
  const formatCountdown=target=>{const seconds=Math.max(0,Math.ceil((target-Date.now())/1000));const d=Math.floor(seconds/86400),h=Math.floor((seconds%86400)/3600),m=Math.floor((seconds%3600)/60),s=seconds%60;return (d?d+"d ":"")+pad(h)+"h "+pad(m)+"m "+pad(s)+"s";};
- const evaluationLabel=$("overnightEvaluationLabel"),evaluationCountdown=$("overnightEvaluationCountdown"),buyCountdown=$("overnightBuyCountdown");
+ const evaluationLabel=$("overnightEvaluationLabel"),evaluationCountdown=$("overnightEvaluationCountdown"),buyLabel=$("overnightBuyCountdownLabel"),buyCountdown=$("overnightBuyCountdown");
  const now=Date.now(),evaluationWindowOpen=overnightEvaluationTargetUtc!==null&&overnightBuyDeadlineUtc!==null&&now>=overnightEvaluationTargetUtc&&now<overnightBuyDeadlineUtc;
  if(evaluationLabel)evaluationLabel.textContent=evaluationWindowOpen?"Overnight candidate evaluation · OPEN":"Overnight candidate evaluation begins in";
  if(evaluationCountdown)evaluationCountdown.textContent=overnightEvaluationTargetUtc===null?"DATA?":(evaluationWindowOpen?"OPEN":formatCountdown(overnightEvaluationTargetUtc));
  if(buyCountdown){
-  if(overnightBuyDeadlineUtc===null||overnightBuyWindowStartUtc===null)buyCountdown.textContent="DATA?";
-  else if(now<overnightBuyWindowStartUtc)buyCountdown.textContent="Opens in "+formatCountdown(overnightBuyWindowStartUtc);
-  else if(now<overnightBuyDeadlineUtc)buyCountdown.textContent=formatCountdown(overnightBuyDeadlineUtc)+" remaining";
-  else buyCountdown.textContent="CLOSED";
+  buyCountdown.classList.remove("countdown-normal","countdown-caution","countdown-urgent","countdown-critical","countdown-closed");
+  if(overnightMarketPhase==="REGULAR"&&overnightBuyDeadlineUtc!==null&&now<overnightBuyDeadlineUtc){
+   const secondsLeft=Math.max(0,Math.ceil((overnightBuyDeadlineUtc-now)/1000));
+   buyCountdown.textContent=formatCountdown(overnightBuyDeadlineUtc)+" remaining";
+   buyCountdown.classList.add(secondsLeft<=600?"countdown-critical":secondsLeft<=1800?"countdown-urgent":secondsLeft<=3600?"countdown-caution":"countdown-normal");
+   if(buyLabel)buyLabel.textContent="Time remaining in regular market";
+  }else if(overnightEvaluationTargetUtc!==null&&now<overnightEvaluationTargetUtc){
+   buyCountdown.textContent="Opens in "+formatCountdown(overnightEvaluationTargetUtc);
+   buyCountdown.classList.add("countdown-normal");
+   if(buyLabel)buyLabel.textContent="Final-hour Overnight evaluation begins in";
+  }else{
+   buyCountdown.textContent=overnightMarketPhase==="REGULAR"?"CLOSED":"Outside buy window";
+   buyCountdown.classList.add("countdown-closed");
+   if(buyLabel)buyLabel.textContent="Overnight buy window";
+  }
  }
  const buySchedule=$("overnightBuyWindowSchedule"),sellSchedule=$("overnightSellWindowSchedule");
  const azTime=stamp=>new Date(stamp).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"});
@@ -405,6 +423,7 @@ async function refreshOvernightPriceSummary(symbol){
 async function refreshFocusedPriceChart(){
  const host=$("focusPriceChart");if(!host)return;
  const symbol=($("symbol")?.value||"").trim().toUpperCase();
+ void refreshInstrumentTitle(symbol);
  if($("mode")?.value==="overnight"){
   void refreshOvernightPriceSummary(symbol);
   host.replaceChildren();
@@ -1993,6 +2012,8 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
 
 $("overnightQuickCalculateSellLimit")?.addEventListener("click",()=>{
  const symbol=String($("symbol")?.value||"").trim().toUpperCase();if(symbol&&$("overnightSymbol"))$("overnightSymbol").value=symbol;
+ const evidence=$("overnightQuickSellLimitGateSummary");if(evidence){evidence.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"Assessment running…"}));}
+ const disclosure=$("overnightQuickCalculateSellLimit")?.closest("article")?.querySelector(".quick-sell-evidence");if(disclosure)disclosure.open=true;
  $("overnightCalculateSellLimit")?.click();
 });
 $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
@@ -2027,15 +2048,20 @@ $("overnightCalculateSellLimit")?.addEventListener("click", async () => {
   if($("overnightQuickSellLimit"))$("overnightQuickSellLimit").textContent=calculation?.calculatedLimitSell!=null?"$"+Number(calculation.calculatedLimitSell).toFixed(2):"DATA? — NOT CALCULATED";
   if($("overnightQuickSellLimitDetail"))$("overnightQuickSellLimitDetail").textContent=data.status+" · "+quantile+"th percentile · no order submitted";
   const gates=Array.isArray(data.gates)?data.gates:[];
+  const quickGateSummary=$("overnightQuickSellLimitGateSummary");
+  if(quickGateSummary)quickGateSummary.replaceChildren();
   for(const gate of gates){
    const row=document.createElement("p");
    row.className=gate.passed?"muted":"upload-warning";
    row.textContent=(gate.passed?"PASS":"BLOCKED")+" · "+gate.code+" — "+gate.detail;
    gateList.append(row);
+   if(quickGateSummary){const quickRow=document.createElement("p");quickRow.className=row.className;quickRow.textContent=row.textContent;quickGateSummary.append(quickRow);}
   }
+  if(quickGateSummary&&!gates.length)quickGateSummary.textContent="The API returned no individual gate records. Check the assessment status below.";
   status.textContent=data.status+" · effective Alpaca feed "+feed.toUpperCase()+" · "+gates.filter(x=>x.passed).length+"/"+gates.length+" evidence gates passed · no order submitted.";
  }catch(error){
   status.textContent="Sell-limit assessment failed: "+error.message+" No numeric limit was calculated.";
+  if($("overnightQuickSellLimitGateSummary"))$("overnightQuickSellLimitGateSummary").textContent=status.textContent;
   $("overnightSellLimitPrice").textContent="DATA? — NOT CALCULATED";
   if($("overnightQuickSellLimit"))$("overnightQuickSellLimit").textContent="DATA? — NOT CALCULATED";
  }finally{button.disabled=false;}
