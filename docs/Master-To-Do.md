@@ -587,3 +587,11 @@ The detailed, evidence-gated implementation contract is now in [P2/P3 Engineerin
 - [ ] Do not build a Windows Service or unattended-after-sign-out operation.
 - [ ] Enumerate all durable LocalApplicationData files and path overrides before defining backup scope.
 - [ ] Verify sign-out stops the API; next login/start resumes collector watermarks without duplicate observations.
+
+
+### Deployment source audit — 2026-11-11
+- [x] Confirmed API hosted workers run inside the API process; interactive lifecycle can therefore stop collection by stopping the API process.
+- [x] Identified current default durable stores: market bars, collector watermarks, scanner discoveries, TOS ATR observations, catalyst human reviews, Boring Overnight snapshots, Morning Brief snapshots, and the exclusion watchlist under API `App_Data`.
+- [ ] Finish path inventory (exact Boring Overnight/Morning Brief filenames, remaining stores, logs, imported source files and environment overrides).
+- [ ] Implement single-instance interactive launcher and reliable graceful shutdown mechanism before adding stop command.
+- [ ] Build backup/restore only after path inventory is complete.
