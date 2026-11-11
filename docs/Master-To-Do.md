@@ -579,3 +579,11 @@ The detailed, evidence-gated implementation contract is now in [P2/P3 Engineerin
 - [x] Added the detailed P2/P3 plan on the feature branch (commit `551b2748b2913beb34982563c424709e92be68e3`).
 - [ ] Run/verify exact-head CI for the documentation update and record the resulting branch SHA.
 - [ ] Continue with broker reconciliation only after the actual redacted broker export is available; do not guess CSV columns or fee semantics.
+
+
+### Deployment decision — 2026-11-11
+- [x] Operator selected **interactive Windows operation**: MCC runs only while logged in.
+- [ ] Implement a user-session launcher with start/status/graceful-stop, browser launch, single-instance protection and visible startup failures.
+- [ ] Do not build a Windows Service or unattended-after-sign-out operation.
+- [ ] Enumerate all durable LocalApplicationData files and path overrides before defining backup scope.
+- [ ] Verify sign-out stops the API; next login/start resumes collector watermarks without duplicate observations.
