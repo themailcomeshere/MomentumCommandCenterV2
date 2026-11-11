@@ -689,3 +689,15 @@ The 267/267 local test result you supplied is accepted as operator evidence for 
 - Schwab developer approval/app/callback/read scopes are not verified in the current sources.
 - Windows interactive-only versus unattended lifecycle is not yet selected.
 - The GitHub status query returned no rows for the supplied SHA; the state of an exact-head workflow is not established by that response.
+
+
+## November 11 — deployment decision confirmed
+
+- [x] Operator chose **interactive Windows operation**: MCC runs only while logged in.
+- [ ] Build a user-session launcher (initially manual PowerShell launcher is preferred) with start/status/graceful-stop, browser launch, single-instance protection and visible failures.
+- [ ] Do not implement a Windows Service or unattended operation after sign-out.
+- [ ] Enumerate every durable store path and environment-variable override before implementing backup/restore. Current inspection confirms multiple JSONL stores and collector watermarks default to per-user `%LOCALAPPDATA%\\MomentumCommandCenterV2`; individual stores also expose distinct `MCC_*_PATH` overrides.
+- [ ] Acceptance: start once, reject duplicate start, graceful stop, sign-out stops process, log back in/start, then confirm watermarks resume without duplicates/gaps.
+
+### Next engineering action
+Audit all file-backed stores, environment-variable path overrides, app configuration and launch profiles. Use that inventory to define the backup manifest and a non-destructive restore validator before writing a backup script. Do not claim backup/restore complete merely because the collector checkpoint script copies one JSON file.
