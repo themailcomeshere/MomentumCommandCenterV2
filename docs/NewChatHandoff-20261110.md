@@ -624,3 +624,68 @@ This does not complete the full Boring Overnight workflow, prove Daily ATR14/TOS
 - A prior 10-minute regular-session stream/collector run already showed acknowledged SPY/RKLX/ASTX/XRPN subscriptions, completed-bar deltas of +10/+3/+3/+2, and collector cycles 39→48 with zero errors. Do not ask for that same basic capture again. Recovery tests (restart, sleep/wake, network/auth failure, replay/idempotency) remain open.
 - The Overnight evaluation clock's unit tests cover the exact final-hour start/deadline, DST, weekends/holidays and early closes. Actual browser observation against the exchange schedule and Schwab ticket remains open.
 - The latest documentation branch head `86c2bb9fe32d5e810523cd6bc453f11e4e08550f` returned no GitHub status checks or PR-triggered workflow runs through the available status query. Exact-head CI is NOT VERIFIED. The operator's latest cache-key/browser acceptance does not independently prove the Windows Release build/test result.
+
+
+# November 10 continuation — P2/P3 engineering projects
+
+## Repository checkpoint
+
+- Work branch: `feature/opportunity-quality-classification` only. Do not modify master.
+- Operator supplied local source SHA `8304f274724a2f1c0d2e9cb2eefbfc222e1ef2b8`; operator reports Release build succeeded and 267/267 tests passed (6.4s test duration; 6.7s build duration).
+- That SHA exists in GitHub. The available combined commit-status query returned no status rows, so exact-head GitHub CI is UNKNOWN / NOT VERIFIED by this check. Do not describe an empty status response as a pass.
+- Added [P2/P3 Engineering Execution Plan](Engineering/P2-P3-Execution-Plan-20261110.md), commit `551b2748b2913beb34982563c424709e92be68e3`, on the feature branch. It defines broker reconciliation, Schwab read-only, deployment/recovery, release governance, acceptance tests and blockers.
+- Existing source inspection found `SchwabTradeImporter` and `UnmatchedOrder`. The importer performs one-row/one-fill-price FIFO matching and retains unmatched sell quantity/open buy lots. It is not a full broker execution ledger: stable execution IDs, partial-fill event history, fees, correction/bust lineage and durable idempotency were not established by the inspected source.
+
+## What is done in this continuation
+
+- [x] Verified the intended branch name exists and fetched the README, current Master To-Do, current handoff, active engineering backlog and relevant Schwab importer/model source from that branch.
+- [x] Confirmed the existing Schwab CSV importer is a partial historical foundation, not full broker reconciliation.
+- [x] Added a detailed P2/P3 engineering plan with explicit no-order-submission safety boundary and fail-closed evidence rules.
+- [x] Updated the Master To-Do and this handoff with concrete implementation gates and current status.
+- [ ] No broker reconciliation runtime code, Schwab OAuth, or Windows deployment code is claimed complete in this documentation pass. These require real source contracts, external approval, and a repository/runtime audit before safe implementation.
+
+## What to do next — operator actions
+
+### 1. Broker reconciliation input
+
+Provide one **redacted** current Schwab Order History or Activity export. Keep the original header row and representative rows intact. Include examples of:
+- one order filled in multiple partial executions;
+- one order with fees/commission fields, if the export provides them;
+- a canceled order that had a partial fill;
+- a corrected/busted execution, if Schwab exposes such an event;
+- a buy followed by a partial sell and a later remaining sell.
+
+Remove account numbers, names, addresses and any other personal identifiers, but do not remove broker order IDs, execution IDs, timestamps, quantities, prices, fee column names/values or status/correction fields. If the export has no such fields, preserve that fact; do not create synthetic broker identifiers. This sample is the blocker to implementing the exact parser contract.
+
+### 2. Schwab API approval
+
+Do not send client secrets or tokens in chat. Once the developer approval is active, complete the Schwab app registration in your own developer portal and provide only the non-secret facts needed to configure MCC: app status, registered callback URI, approved product/API, granted read scopes, and whether positions and order history are enabled. No order-writing permission is requested.
+
+### 3. Deployment target decision
+
+Confirm whether MCC should run **only while you are logged into Windows** or must run **unattended after sign-out/reboot**. This determines whether we design an interactive launcher or a Windows service/task lifecycle. Do not install anything yet.
+
+### 4. Current exact-head verification
+
+The 267/267 local test result you supplied is accepted as operator evidence for SHA `8304f274724a2f1c0d2e9cb2eefbfc222e1ef2b8`. After pulling the documentation update, run the existing Get-Latest/Release workflow again and report the resulting full SHA, build/test totals, and any warnings/errors. Also confirm the GitHub Actions run for that exact SHA is green. Documentation changes do not substitute for CI.
+
+### 5. No repeat work
+
+- Do not repeat the known Alpaca SIP request; the prior HTTP 403 remains the entitlement blocker unless you independently report a subscription change.
+- Do not re-upload/re-import the same ATR exports.
+- Do not infer broker fills from OHLCV or Strategy Report rows.
+- Do not test PrototypeIndex; main `frontend/index.html` remains the only Dashboard target.
+
+## Engineering sequence after your input
+
+1. Implement and test the exact broker CSV/API execution schema and append-only reconciliation ledger.
+2. Implement Schwab GET-only OAuth and read endpoints after approval and callback/scope confirmation.
+3. Audit storage/worker lifecycle, then implement backup/restore, logging, monitoring and Windows recovery tests.
+4. Add exact-SHA release evidence capture and run the full release gate matrix.
+
+## [Uncertainties]
+
+- Actual Schwab export fee, execution-ID and correction fields are not established by repository evidence.
+- Schwab developer approval/app/callback/read scopes are not verified in the current sources.
+- Windows interactive-only versus unattended lifecycle is not yet selected.
+- The GitHub status query returned no rows for the supplied SHA; the state of an exact-head workflow is not established by that response.
