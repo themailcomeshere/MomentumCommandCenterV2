@@ -335,3 +335,13 @@ The ATR import Swagger operation now declares its multipart file and metadata fi
 
 
 - November 10 follow-up: Candidate qualification independently queried CRBG/FG/IBN/HDB; all four returned 20/20 FRESH Daily sessions on IEX_PARTIAL, with catalyst coverage COMPLETE (FG one article; the other three zero articles remain UNKNOWN). LYSDY and BNPQY returned 0/20 and remain blocked. The five focused Main Chart metrics were source-traced to one shared live-assessment request with no timeout; the feature branch now adds a 20-second abort timeout and explicit fail-closed timeout messaging, plus a frontend cache-key bump. This prevents indefinite Loading but does not prove or fix the underlying server cause. Exact-head CI and operator browser acceptance are pending. See [November 10 handoff](docs/NewChatHandoff-20261110.md).
+
+
+## P2/P3 engineering continuation — November 10, 2026
+
+- Detailed, current implementation contract and acceptance gates: [P2/P3 Engineering Execution Plan](docs/Engineering/P2-P3-Execution-Plan-20261110.md).
+- Current operator continuation and required inputs: [New Chat Handoff](docs/NewChatHandoff-20261110.md).
+- Canonical work checklist: [Master To-Do](docs/Master-To-Do.md).
+- Operator reports Release build + 267/267 tests passed at `8304f274724a2f1c0d2e9cb2eefbfc222e1ef2b8`. The available GitHub combined-status query returned no rows; exact-head CI is NOT VERIFIED by that query.
+- Existing `SchwabTradeImporter` is a partial CSV/FIFO importer, not a full order/execution ledger. Partial-fill event identity, fees, correction lineage and durable idempotency remain open. Actual broker source records are required before defining the exact parser schema.
+- Schwab OAuth remains blocked on developer approval, app registration, callback and read-only scopes. Deployment/recovery remains open pending Windows lifecycle decision and restore drill. No order submission is implemented or in scope.
