@@ -152,3 +152,25 @@ The supplied SHA `8304f274724a2f1c0d2e9cb2eefbfc222e1ef2b8` exists in GitHub. Th
 - Exact Schwab API scopes, OAuth parameters, token lifecycle and endpoint availability must be confirmed against current approved developer documentation after approval.
 - The target Windows deployment mode (interactive-only vs unattended) has not been frozen.
 - The available GitHub status endpoint returned no status rows for the supplied SHA; no inference about whether a workflow is pending, absent or inaccessible is safe.
+
+
+## Windows deployment decision — confirmed 2026-11-11
+
+**Operator selected interactive Windows operation:** MCC runs only while the operator is logged into Windows. Do not build a Windows Service or require background operation after sign-out.
+
+### Deployment architecture constraints
+- Use a user-session launcher (initially a PowerShell launcher) to start the API in the logged-in user's session and open the Dashboard in the default browser.
+- Provide explicit start, status and graceful stop operations. Prevent duplicate API instances; report the existing PID/URL rather than launching a second writer against the same JSONL files.
+- Keep startup failures visible and write structured logs to the MCC data directory; do not hide errors.
+- On sign-out or normal user-session shutdown, stop the API gracefully and allow hosted workers to observe cancellation. No service account, elevated privilege or always-on task is required.
+- Startup must verify the configured data root and required directories before workers begin. Health/liveness is not a substitute for collector/provider readiness.
+- Preserve durable files under the current per-user LocalApplicationData default unless a separately tested migration moves them. Existing stores have individual path overrides; enumerate every path before backup/restore is complete.
+- Prefer a manual launcher initially. A scheduled task is unnecessary for this interactive requirement.
+
+### Required interactive lifecycle acceptance
+- Start while logged in; verify one API process and browser launch.
+- Start a second time; verify no second API writer starts.
+- Stop gracefully; verify hosted workers stop and JSONL/checkpoint files are closed.
+- Sign out/reboot; verify the process does not continue running.
+- Log back in and start again; verify collector watermarks resume without duplicate observations or gaps.
+- Verify startup errors (port occupied, missing configuration/secrets, corrupt checkpoint) are visible and actionable.
