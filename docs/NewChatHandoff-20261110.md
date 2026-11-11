@@ -701,3 +701,14 @@ The 267/267 local test result you supplied is accepted as operator evidence for 
 
 ### Next engineering action
 Audit all file-backed stores, environment-variable path overrides, app configuration and launch profiles. Use that inventory to define the backup manifest and a non-destructive restore validator before writing a backup script. Do not claim backup/restore complete merely because the collector checkpoint script copies one JSON file.
+
+
+### November 11 — interactive deployment source audit
+
+- [x] Confirmed hosted collectors run inside the API process, so they are naturally scoped to the logged-in session when launched interactively.
+- [x] Identified current durable files and overrides: market bars, collector watermarks, scanner discovery events, TOS ATR observations, catalyst human reviews, Boring Overnight snapshots, Morning Brief snapshots, and `App_Data/exclusions-watchlist.json`.
+- [x] Confirmed the collector checkpoint already persists watermarks under LocalApplicationData and the WebSocket worker reconnects while the API process remains alive.
+- [ ] Complete exact filename/path inventory and all runtime data/override discovery before backup implementation.
+- [ ] Implement a safe single-instance launcher and graceful stop (not force-kill); then validate sign-out/login behavior.
+
+**Important:** `/api/health` is an API liveness endpoint, not proof that providers, streams or collectors are healthy. Operational readiness must separately inspect provider status, collector status and stream status.
