@@ -174,3 +174,25 @@ The supplied SHA `8304f274724a2f1c0d2e9cb2eefbfc222e1ef2b8` exists in GitHub. Th
 - Sign out/reboot; verify the process does not continue running.
 - Log back in and start again; verify collector watermarks resume without duplicate observations or gaps.
 - Verify startup errors (port occupied, missing configuration/secrets, corrupt checkpoint) are visible and actionable.
+
+
+### Storage inventory — source audit 2026-11-11 (feature branch)
+
+The API currently has multiple independent durable paths. These must be included in the backup/restore inventory; copying only the collector checkpoint is insufficient.
+
+| Store | Default location | Override / notes |
+|---|---|---|
+| Market bar observations | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\market-bars.jsonl` | `MCC_MARKET_BAR_STORE_PATH` |
+| Collector watermarks | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\collector-watermarks.json` | `MCC_MARKET_COLLECTOR_CHECKPOINT_PATH` |
+| Scanner discovery events | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\scanner-discoveries.jsonl` | `MCC_SCANNER_DISCOVERY_PATH` |
+| Thinkorswim ATR observations | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\thinkorswim-atr-observations.jsonl` | `MCC_TOS_ATR_STORE_PATH` |
+| Catalyst human reviews | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\catalyst-human-reviews.jsonl` | `MCC_CATALYST_REVIEW_PATH` |
+| Boring Overnight candidate snapshots | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\...` | `MCC_BORING_OVERNIGHT_SNAPSHOT_PATH` |
+| Morning Brief snapshots | `%LOCALAPPDATA%\\MomentumCommandCenterV2\\...` | `MCC_MORNING_BRIEF_SNAPSHOT_PATH` |
+| Exclusion watchlist | API content root `App_Data\\exclusions-watchlist.json` | Atomic temp-file replacement in store; not under LocalApplicationData by default |
+
+**Inventory is not yet complete:** source audit identified these explicit paths and overrides, but must still inspect all constructor-injected stores, environment-specific overrides, imported source-file retention, logs, secrets and any additional runtime-created files. The Boring Overnight/Morning Brief exact filenames must be read from their store implementations before a backup script hardcodes them. Keep secrets outside ordinary backup archives unless a separately approved encrypted secret-store procedure is defined.
+
+### Interactive operation implications
+
+The API currently registers hosted collection services in the API process. Interactive mode means those workers run only while the API process runs in the logged-in user's session. The collector already persists watermarks in a per-user JSON file and the stream worker reconnects while the process is alive. A launcher must not start a second API process against the same data files. The existing `/api/health` endpoint is liveness-only; it reports API status and must not be interpreted as provider or collector readiness.
