@@ -546,3 +546,36 @@ Use BORING OVERNIGHT mode. Import the exact scanner CSV; review 50 imported rows
 - [ ] Deployment/recovery: define package/startup, data backup/restore, log rotation, health monitoring, sleep/wake/network/provider recovery, and unattended collector behavior; test on the operator's Windows machine.
 - [ ] Release governance: exact branch-head GitHub Actions, local Release build/tests, runtime/browser acceptance, TOS compilation and source/entitlement evidence are separate required gates.
 
+
+## November 10 — P2/P3 engineering execution plan
+
+The detailed, evidence-gated implementation contract is now in [P2/P3 Engineering Execution Plan](Engineering/P2-P3-Execution-Plan-20261110.md). It supersedes the summary-only P2/P3 bullets above where detail or status differs.
+
+### Broker reconciliation
+- [ ] Extend the existing Schwab CSV importer into an append-only order/execution ledger; retain the current importer as a legacy input path until migration is tested.
+- [ ] Add stable order/execution identities, import batch hashes, idempotency, partial-fill aggregation, fee provenance, and append-only correction/bust/cancel lineage.
+- [ ] Preserve unmatched orders/executions and explicit reconciliation exceptions; derived FIFO lots must link to individual executions.
+- [ ] Keep OHLCV target touches and Strategy Report events outside the broker-fill ledger.
+- [ ] Obtain a redacted actual Schwab export with headers and representative partial-fill/fee/correction rows before fixing the provider schema. Data not found in sources: verified fee/execution/correction columns in a real export.
+
+### Schwab read-only API
+- [ ] Blocked pending developer approval, app registration, registered callback, and confirmed read-only scopes.
+- [ ] After approval, implement server-side OAuth/token lifecycle and GET-only positions/orders adapter; no trading-write scopes or order endpoints.
+- [ ] Verify token secrecy, expiry/revocation/rate-limit behavior, stale-data handling, and parity against the Schwab UI/export.
+
+### Deployment and recovery
+- [ ] Audit existing JSONL stores, hosted workers, startup and configuration before choosing a packaging/service design.
+- [ ] Implement data-root separation, manifest/hash-backed backup, staged restore with integrity checks, structured redacted rolling logs, readiness/health and collector watermark monitoring.
+- [ ] Test crash/restart, Windows sleep/wake, network/provider failures, disk-full/write failures, duplicate stream replay, backup during writes, and restore into a separate location.
+- [ ] Freeze interactive-only vs unattended Windows operation with the operator before selecting installer/service technology.
+
+### Release governance
+- [ ] Treat exact-head CI, operator local Release build/tests, API process SHA/health, browser acceptance, TOS compilation, independent data evidence, and backup/restore as separate gates.
+- [ ] Add an immutable per-release evidence bundle with exact SHA, workflow URL/status, local test totals, runtime SHA, browser diagnostics, TOS compile record, data provenance, backup/restore status and blockers.
+- [ ] Supplied SHA `8304f274724a2f1c0d2e9cb2eefbfc222e1ef2b8`: operator reports Release build + 267/267 tests PASS. GitHub combined-status query returned no records; exact-head CI remains UNKNOWN / NOT VERIFIED by that query.
+
+### Current branch checkpoint
+- [x] Confirmed target branch is `feature/opportunity-quality-classification`; no master writes were made.
+- [x] Added the detailed P2/P3 plan on the feature branch (commit `551b2748b2913beb34982563c424709e92be68e3`).
+- [ ] Run/verify exact-head CI for the documentation update and record the resulting branch SHA.
+- [ ] Continue with broker reconciliation only after the actual redacted broker export is available; do not guess CSV columns or fee semantics.
