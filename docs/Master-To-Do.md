@@ -1,3 +1,7 @@
+> **Priority directive — 2026-11-11:** Schwab integration is the lowest-priority workstream and is explicitly parked. Do not request a Schwab export, begin Schwab API/OAuth work, or let either block current MCC engineering. Broker execution reconciliation is also parked until broker-record work is deliberately reprioritized and real source records are available. Continue work that can improve or validate the existing MCC independently: (1) performance diagnosis and JSONL cold-index optimization, (2) complete Boring Overnight workflow and candidate evidence review, (3) Opportunity Quality data-quality/coverage audit and deterministic fixtures, (4) Thinkorswim study/formula parity using available operator exports, (5) runtime/browser/collector acceptance and interactive Windows deployment/recovery, and (6) exact-head CI/release evidence. Distinguish repository work we can perform now from operator-side evidence gates; do not mark the latter complete without evidence.
+
+---
+
 ## November 10 — Operator feedback, price provenance, and blocker work
 
 ### Implemented on `feature/opportunity-quality-classification`
