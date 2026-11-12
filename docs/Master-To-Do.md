@@ -861,3 +861,18 @@ Commits:
 - currentVolumeVsAverage is the live service's same-time-of-day 5M relative-volume ratio, requiring its baseline observations. It is not a raw exchange-wide volume field.
 - dailyRangePct is based on the latest completed SIP Daily bar, not an in-progress current-day range.
 - atrPct is a 14-session simple mean true range, not a Wilder ATR. Thinkorswim parity remains unverified.
+
+
+## November 12 — operator verification and strict feed provenance
+
+- [x] Operator ran `.\\scripts\\Get-Latest-And-Test.ps1` on exact source SHA `5268846a1a95ec799a352b74032469baf33569a8`: Release build succeeded; **280 total / 280 passed / 0 failed / 0 skipped**; 7.6s tests, 8.0s build.
+- [x] Added a capture-history guard requiring technical assessment provider, 1m feed and 5m feed to match the provider/feed used for the history capture. Missing or mismatched provenance withholds all mapped technical inputs from the evaluator snapshot and returns `TECHNICAL_FEED_MISMATCH`; observed feed labels remain visible for diagnosis.
+- [ ] Add isolated regression tests for the feed-match guard and the complete technical-input mapping. Current feed guard is source-implemented but not yet test-verified.
+- [ ] Verify exact API response and browser rendering on a fresh capture, including matched-feed flag, raw 1m/5m bar-start timestamps, freshness and explicit mismatch diagnostics.
+- [ ] Validate the live assessment behavior at the actual Overnight capture time. The V2 permission/execution decision is regular-session-only; do not carry forward a stale regular-session permission into after-hours or late-night capture.
+- [ ] Reconcile Daily range/ATR against the exact Thinkorswim study. The current ATR remains a 14-session simple mean true-range proxy, not Wilder ATR parity.
+- [ ] Keep 20 completed historical pairs and current interval separate; preserve exact-boundary and no-nearest-bar rules.
+- [ ] Keep IEX_PARTIAL non-qualifying, catalyst zero-news UNKNOWN, official opening-auction status unverified, and order submission disabled.
+
+Feed-provenance guard commit: `195be63c690920b86d4d624e1b078017bcf4e3a4`.
+Operator-verified parent SHA: `5268846a1a95ec799a352b74032469baf33569a8`.
