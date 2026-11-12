@@ -853,3 +853,20 @@ Audit all file-backed stores, environment-variable path overrides, app configura
 - [ ] Implement a safe single-instance launcher and graceful stop (not force-kill); then validate sign-out/login behavior.
 
 **Important:** `/api/health` is an API liveness endpoint, not proof that providers, streams or collectors are healthy. Operational readiness must separately inspect provider status, collector status and stream status.
+
+
+## November 12 — Overnight integration defect fixed; verification pending
+
+Reviewed data/ChatResponse.md. CRBG selected-window bars: 1m 339 bars/42 gaps/0 new writes; 5m 78 bars/0 reported gaps/0 new writes; both Alpaca IEX. Twenty-session capture: 6,676 fetched, 4,225 newly persisted, 13/20 valid pairs, 7 missing exact 09:30 ET opens. Daily was fresh 20/20 but IEX_PARTIAL and qualificationUsable=false. Catalyst was MATERIAL_EVENT_REVIEW. Four-symbol results: CRBG material review (1 article), FG zero articles UNKNOWN, CSQR zero articles UNKNOWN, INGM two unclassified articles requiring review.
+
+Code fixes committed on this branch:
+- DataFresh now copies DailyMarketMetrics.DataFresh; prior expression left it null for fresh data.
+- Catalyst mapping is fail-closed: RISK_PRESENT/MATERIAL_EVENT_REVIEW/UNCLASSIFIED_NEWS_REVIEW => RISK; CLEAR_WITH_SOURCE only with nonempty articles and complete coverage => CLEAR; otherwise UNKNOWN.
+- Added theory regression tests for these cases.
+
+Commits: f182d7495c1522a2278ea5ec56f1f45496816f25, b0510f8927a440016d53175bbe64183e61af6f11, f854adec0ec24b2fdd714dccdffb3af5a0ca97a5.
+
+Next: pull branch, run Release build/tests, then rerun capture and inspect saved snapshot. The capture still cannot qualify CRBG: seven exact open bars are missing; IEX is partial; catalyst review is pending; live 5M/1M/ATR inputs are not wired into this capture snapshot. Never substitute nearest open bars or mark zero-news as clear. See docs/Validation/Boring-Overnight-Integration-Audit-20261112.md for the full audit.
+
+[Uncertainties]
+No CI/local execution has yet verified these new commits. Independent SIP entitlement and official auction-print availability are not established.
