@@ -874,3 +874,65 @@ No CI/local execution has yet verified these new commits. Independent SIP entitl
 
 ### Saved Overnight evaluation refresh — implemented 2026-11-12
 The Refresh saved evaluations button now calls GET /api/boring-overnight/snapshots. The response retains the existing snapshots array and adds evaluations[] with snapshotId, symbol, asOfUtc, and a fresh BoringOvernightEvaluator result for each saved input snapshot. The Dashboard matches evaluations by snapshotId and displays status plus eligible flag. This is deterministic recalculation under current rules; it does not mutate the append-only input snapshots. Browser acceptance is still required.
+
+
+## November 12 — CRBG Overnight retest: current state and next work
+
+### Step 2 interpretation
+
+The operator confirmed the Step 2 table is the intended output. It is one saved evaluation row: the persisted source/input snapshot plus the evaluator's current recalculation. It is not an order, fill, or independent market-data table.
+
+Latest CRBG row:
+- 13/20 valid historical close/open pairs; 7 exact opening timestamps missing; INCOMPLETE.
+- Daily metrics are UNKNOWN for qualification; feed IEX_PARTIAL; qualificationUsable=false.
+- Catalyst has one article and complete news-window coverage; status MATERIAL_EVENT_REVIEW, persisted evaluator catalystStatus=RISK.
+- dataFresh=true is now correctly persisted.
+- 5M permission/structure and 1M state remain UNKNOWN.
+- Evaluation is DATA?, eligible=false. No order submitted.
+
+### Latest capture facts
+
+The 1-minute Alpaca/IEX request fetched 6,676 bars and persisted 0 new observations (the bars were already present). It requested 20 close/open pairs and returned 13 valid, 7 missing. Missing exact 09:30 ET opens: 2026-10-16, 2026-10-22, 2026-10-27, 2026-11-05, 2026-11-09, 2026-11-10 and 2026-11-12. Do not use nearest bars (offsets for the six historical gaps were +1 to +4 minutes).
+
+**Important semantic issue to fix before calling the 20-pair history complete:** the requested 20 slots include the current 2026-11-12 close-to-open interval. That interval is not a completed historical return. Treat it as a separate current interval with PENDING status until the exact next-session 09:30 bar-open proxy is available. Rolling win-rate/return metrics must use completed historical pairs only. The latest response does not demonstrate 20 completed historical pairs. Preserve the strict exact timestamp rule; never substitute a nearby bar.
+
+The 09:30 one-minute bar Open is explicitly ONE_MINUTE_BAR_OPEN_PROXY. officialOpeningAuctionVerified=false. Do not describe it as the official opening auction print.
+
+Daily response: 20/20 expected sessions, dataFresh=true, adjustment=all, but IEX_PARTIAL and qualificationUsable=false. Observed close 36.10, SMA20 35.09275, average daily volume 514,554.3 are diagnostics only. Qualification values remain null. Catalyst: Wells Fargo analyst-action headline, MATERIAL_EVENT_REVIEW, human review required.
+
+Detailed evidence: `docs/Validation/Boring-Overnight-CRBG-Retest-20261112.md`.
+
+### Next engineering work — do not ask the operator to repeat completed retrieval
+
+1. Audit the history builder/API contract and split the response into:
+   - last 20 **completed** historical close/open pairs;
+   - current Overnight interval (previous RTH close to current/next RTH 09:30 one-minute bar Open proxy), with PENDING/MISSING/OBSERVED state.
+   The current interval must not consume one of the 20 completed-history slots.
+2. Add regression tests: current interval absent; current interval present; one or more historical exact opens absent; DST transition; no nearest-bar substitution; rolling metrics use completed history only.
+3. Update UI/table labels so historical completeness and current interval state are distinct. Keep the existing evaluator fail-closed.
+4. Inspect the production capture path for actual source-qualified live 5M permission/structure and 1M state. Wire those plus extension ATR, volume-vs-average, daily range and ATR only with per-field source timestamps and freshness. Do not invent values from a different timeframe or IEX partial coverage.
+5. Preserve the new DataFresh and catalyst mapping behavior: fresh Daily -> dataFresh=true; MATERIAL_EVENT_REVIEW / UNCLASSIFIED_NEWS_REVIEW -> RISK; zero articles -> UNKNOWN; no automated CLEAR without nonempty articles, complete coverage and explicit source-backed clearance.
+6. Keep CRBG ineligible: IEX_PARTIAL is not consolidated coverage; material analyst-action article requires human/authoritative review; required technical inputs and complete history are missing.
+7. After code changes, run tests/CI on this branch and update the Master To-Do + handoff with exact SHA and workflow results. Then operator pulls the branch, runs `.\scripts\Get-Latest-And-Test.ps1`, restarts API, and verifies the refreshed evaluation row and current-vs-historical interval labels in the browser.
+
+### Operator next steps after the code fix
+
+1. Pull only `feature/opportunity-quality-classification`; verify branch and full SHA.
+2. Run `git status --short --branch`, `git branch --show-current`, then `.\scripts\Get-Latest-And-Test.ps1`. Report exact SHA, build result, test totals and warnings/errors.
+3. Restart the API and refresh saved Overnight evaluations. Verify CRBG remains DATA? / ineligible and now shows separate historical completeness and current interval state.
+4. Do not retry the same IEX history request expecting different coverage unless feed entitlement/request parameters change. Do not backfill older dates or substitute nearby opens.
+5. Human-review the CRBG analyst-action article and authoritative filings. Do not mark catalyst clear based only on the news endpoint.
+6. Do not submit orders. Calculated Limit Sell remains fail-closed until its separate SIP, ATR, parity, continuity and reference-close requirements pass.
+
+### Latest documentation commits
+
+- CRBG retest note: `e0675f351c0ed137e03b33235ac747e4e058ebac`
+- Master To-Do update: `1697158ff47ab2dca0f562cb79e358931adc41f1`
+- Handoff update is the next documentation commit in this sequence.
+
+[Uncertainties]
+- The provider response does not establish why exact IEX 09:30 bars are absent.
+- SIP/independent consolidated data entitlement and adjustment parity remain unverified.
+- Official opening-auction print is not available in the supplied evidence.
+- The API currently has not yet been changed to separate current interval from completed historical pairs; this is the next repository engineering task.
+
