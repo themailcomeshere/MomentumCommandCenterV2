@@ -167,4 +167,17 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.Equal(DateTimeOffset.Parse("2026-11-27T17:59:00Z"),
             window.CurrentIntervalBoundary.PreviousCloseBarTimestampUtc);
     }
+
+    [Fact]
+    public void CurrentWindowRollsForwardAtScheduledEarlyClose()
+    {
+        var asOf = DateTimeOffset.Parse("2026-11-27T18:01:00Z"); // 13:01 ET, after Thanksgiving Friday early close.
+        var window = UsEquitiesSessionCalendar.BuildCurrentHistoryWindow(asOf, 20);
+
+        Assert.Equal(new DateOnly(2026, 11, 27), window.HistoricalBoundaries[^1].NextSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 27), window.CurrentIntervalBoundary.PreviousSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 30), window.CurrentIntervalBoundary.NextSessionDate);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-27T17:59:00Z"),
+            window.CurrentIntervalBoundary.PreviousCloseBarTimestampUtc);
+    }
 }
