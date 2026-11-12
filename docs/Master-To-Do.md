@@ -752,3 +752,20 @@ Operator confirmed that the Step 2 table is the saved-evaluation row: persisted 
 
 **Latest CRBG result:** 13/20 valid, incomplete history; current interval pending; Daily IEX partial; catalyst risk; live technical inputs missing; DATA? / not eligible; no order submitted. Detailed evidence and interpretation are in the validation note linked above.
 
+
+
+## November 12 — Overnight capture runtime fix and top-10 research
+
+- [x] Fixed the reported `Capture failed: calc is not defined` frontend exception. The 20-session capture handler referenced `calc.boringWinnerPass`, `calc.boringWinnerInRangeCount` and `calc.boringWinnerSampleStdDevPct` without declaring `calc`. It now initializes a safe response-derived fallback (`data.calculation || history.calculation || {}`) before rendering. Missing optional calculation fields remain DATA?/insufficient history; this does not fabricate a Boring Winner result.
+- [x] Created `docs/Research/Overnight-Scanner-Top10-Debrief-20261112.md` from the uploaded 50-symbol scanner export. Includes the ranked top 10, deep dives on the top four by score, all ten catalyst notes, and comparison with MCC's CRBG/FB/CSQR/INGM Top 4.
+- [x] Recorded key event risk: ADXN's +59.17% current Overnight move is an extreme outlier despite its #1 score; it is separated as an event-risk watch, not blindly promoted as a preferred trade.
+- [x] Research surfaced recent company releases for CECO, SENS, AMD, CSQR, NET, STEP, HROW, DPC, INGM and CRBG. HSAI fresh earnings catalyst and FB instrument identity remain unverified.
+- [ ] Run branch CI for frontend fix and confirm no regressions. Browser acceptance of capture retry remains open until operator pulls the fix and retries.
+- [ ] Continue the history API semantic correction: 20 completed historical pairs must be separate from the current Overnight interval; add tests and UI labels.
+- [ ] Continue source-qualified 5M/1M technical wiring and missing ATR/volume/range inputs. Keep SIP/independent coverage requirement fail-closed.
+- [ ] Reconcile MCC Top 4 against scanner score ranking and record candidate-specific source evidence. Do not replace MCC selection based solely on this research note.
+
+Research note: `docs/Research/Overnight-Scanner-Top10-Debrief-20261112.md`.
+Frontend fix commit: `2876d1093d930fc1830b2953d101df9fc524d9e2`.
+Research report commit: `584e7579547ef60fb2bde8bb09e9f9f867ecedfd`.
+
