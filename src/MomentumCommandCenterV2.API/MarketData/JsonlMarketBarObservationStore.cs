@@ -26,13 +26,21 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     private long _indexLoadCount;
     private long _lastIndexLoadElapsedTicks;
     private long _indexedUniqueKeyCount;
+    private long _lastIndexLoadFileBytes;
+    private long _lastIndexLoadLinesRead;
+    private long _lastIndexLoadDeserializeTicks;
+    private long _lastIndexLoadIndexTicks;
 
     /// <summary>Snapshot of the one-time JSONL index rebuild for runtime diagnostics.</summary>
     public JsonlMarketBarObservationStoreDiagnostics GetDiagnostics() => new(
         _loaded,
         Interlocked.Read(ref _indexLoadCount),
         TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadElapsedTicks)).TotalMilliseconds,
-        Interlocked.Read(ref _indexedUniqueKeyCount));
+        Interlocked.Read(ref _indexedUniqueKeyCount),
+        Interlocked.Read(ref _lastIndexLoadFileBytes),
+        Interlocked.Read(ref _lastIndexLoadLinesRead),
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadDeserializeTicks)).TotalMilliseconds,
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadIndexTicks)).TotalMilliseconds);
 
     /// <summary>
     /// PURPOSE: Store bars while deduplicating identical source observations and retaining corrections.
@@ -145,20 +153,37 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     {
         if (_loaded) return;
         var stopwatch = Stopwatch.StartNew();
+        long fileBytes = 0;
+        long linesRead = 0;
+        long deserializeTicks = 0;
+        long indexTicks = 0;
         if (File.Exists(_path))
         {
+            fileBytes = new FileInfo(_path).Length;
             using var reader = new StreamReader(new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             while (await reader.ReadLineAsync(cancellationToken) is { } line)
             {
+                linesRead++;
                 if (string.IsNullOrWhiteSpace(line)) continue;
+                var deserializeStopwatch = Stopwatch.StartNew();
                 var observation = JsonSerializer.Deserialize<MarketBarObservation>(line, JsonOptions)
                     ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
+                deserializeStopwatch.Stop();
+                deserializeTicks += deserializeStopwatch.Elapsed.Ticks;
+
+                var indexStopwatch = Stopwatch.StartNew();
                 var key = CreateKey(observation.Bar);
                 IndexObservation(key, observation);
+                indexStopwatch.Stop();
+                indexTicks += indexStopwatch.Elapsed.Ticks;
             }
         }
         stopwatch.Stop();
         Interlocked.Exchange(ref _lastIndexLoadElapsedTicks, stopwatch.Elapsed.Ticks);
+        Interlocked.Exchange(ref _lastIndexLoadFileBytes, fileBytes);
+        Interlocked.Exchange(ref _lastIndexLoadLinesRead, linesRead);
+        Interlocked.Exchange(ref _lastIndexLoadDeserializeTicks, deserializeTicks);
+        Interlocked.Exchange(ref _lastIndexLoadIndexTicks, indexTicks);
         Interlocked.Increment(ref _indexLoadCount);
         _loaded = true;
     }
