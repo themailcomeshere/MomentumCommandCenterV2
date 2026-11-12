@@ -1133,3 +1133,23 @@ Commits:
 - Live Alpaca behavior, feed matching and freshness mapping are not yet operator-verified.
 - The Daily ATR calculation is a transparent simple-mean proxy, not verified Wilder ATR/TOS parity.
 - No broker fills, official auction prints, or execution eligibility are inferred.
+
+
+## November 12 — operator test confirmation and feed-consistency guard
+
+Operator verified exact source SHA `5268846a1a95ec799a352b74032469baf33569a8` with Release build succeeded and 280/280 tests passed (0 failed, 0 skipped). This verifies that tested revision; it does not verify the subsequent feed-guard change.
+
+Commit `195be63c690920b86d4d624e1b078017bcf4e3a4` adds strict provenance matching in `POST /api/boring-overnight/capture-history`: selected capture provider and actual capture feed must match the live assessment provider plus its separate 1m and 5m feed labels. If any label is missing or differs, all technical values are withheld from the evaluator snapshot, with a `TECHNICAL_FEED_MISMATCH` diagnostic. The response retains observed feed labels and a boolean match flag.
+
+### Still open
+- Run Release build/tests on the new guard commit; the 280/280 result predates it.
+- Add focused tests for provider/feed mismatch and the 5M permission/structure, 1M state/action, extension ATR, same-time-of-day RVOL, source timestamps, freshness and Daily SIP gating.
+- Verify one fresh capture in the browser and inspect the raw response/saved snapshot.
+- Validate late-night capture behavior. V2's permission/execution decision is evaluated only during regular session; do not reuse stale regular-session state after hours.
+- Match Daily ATR against the exact TOS study. The current 14-session simple mean true-range calculation is not Wilder ATR parity.
+- Keep IEX_PARTIAL diagnostic-only, zero news UNKNOWN, 09:30 one-minute Open proxy explicitly non-auction, and no order submission.
+
+[Uncertainties]
+- The feed-mismatch guard has not yet been compiled/tested on its own commit.
+- No operator capture response has yet confirmed the new match flag against live Alpaca/Massive payloads.
+- TOS Daily ATR parity and after-hours V2 state semantics remain unverified.
