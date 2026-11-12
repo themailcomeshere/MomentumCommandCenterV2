@@ -118,4 +118,53 @@ public sealed class UsEquitiesSessionCalendarTests
         Assert.All(earlyCloses, date => Assert.Equal(new TimeOnly(13, 0), UsEquitiesSessionCalendar.GetRegularClose(date)));
     }
 
+
+    [Fact]
+    public void CurrentWindowKeepsTodaysOpeningIntervalSeparateBeforeRegularClose()
+    {
+        var asOf = DateTimeOffset.Parse("2026-11-12T19:50:00Z"); // 14:50 ET, before 16:00 close.
+        var window = UsEquitiesSessionCalendar.BuildCurrentHistoryWindow(asOf, 20);
+
+        Assert.Equal(20, window.HistoricalBoundaries.Count);
+        Assert.Equal(new DateOnly(2026, 11, 11), window.HistoricalBoundaries[^1].NextSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 11), window.CurrentIntervalBoundary.PreviousSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 12), window.CurrentIntervalBoundary.NextSessionDate);
+        Assert.DoesNotContain(window.HistoricalBoundaries, x => x.NextSessionDate == new DateOnly(2026, 11, 12));
+    }
+
+    [Fact]
+    public void CurrentWindowRollsForwardAfterRegularClose()
+    {
+        var asOf = DateTimeOffset.Parse("2026-11-12T21:01:00Z"); // 16:01 ET.
+        var window = UsEquitiesSessionCalendar.BuildCurrentHistoryWindow(asOf, 20);
+
+        Assert.Equal(new DateOnly(2026, 11, 12), window.HistoricalBoundaries[^1].NextSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 12), window.CurrentIntervalBoundary.PreviousSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 13), window.CurrentIntervalBoundary.NextSessionDate);
+    }
+
+    [Fact]
+    public void CurrentWindowUsesDstAdjustedOpenAndCloseBoundaries()
+    {
+        var asOf = DateTimeOffset.Parse("2026-03-09T13:00:00Z"); // 09:00 EDT after spring-forward.
+        var window = UsEquitiesSessionCalendar.BuildCurrentHistoryWindow(asOf, 20);
+
+        Assert.Equal(DateTimeOffset.Parse("2026-03-06T20:59:00Z"),
+            window.CurrentIntervalBoundary.PreviousCloseBarTimestampUtc);
+        Assert.Equal(DateTimeOffset.Parse("2026-03-09T13:30:00Z"),
+            window.CurrentIntervalBoundary.NextOpenBarTimestampUtc);
+        Assert.Equal(new DateOnly(2026, 3, 6), window.HistoricalBoundaries[^1].NextSessionDate);
+    }
+
+    [Fact]
+    public void CurrentWindowUsesNextSessionAfterHolidayAndWeekend()
+    {
+        var asOf = DateTimeOffset.Parse("2026-11-28T17:00:00Z"); // Saturday after Thanksgiving.
+        var window = UsEquitiesSessionCalendar.BuildCurrentHistoryWindow(asOf, 20);
+
+        Assert.Equal(new DateOnly(2026, 11, 27), window.CurrentIntervalBoundary.PreviousSessionDate);
+        Assert.Equal(new DateOnly(2026, 11, 30), window.CurrentIntervalBoundary.NextSessionDate);
+        Assert.Equal(DateTimeOffset.Parse("2026-11-27T17:59:00Z"),
+            window.CurrentIntervalBoundary.PreviousCloseBarTimestampUtc);
+    }
 }
