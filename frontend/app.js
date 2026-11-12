@@ -1993,6 +1993,7 @@ $("overnightCapture20")?.addEventListener("click", async () => {
  try{
   const data=await overnightFetchJson("/api/boring-overnight/capture-history",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",requiredWindow:20})});
   const h=data.history||{};
+  const calc=data.calculation||h.calculation||{};
   const pct=v=>v===null||v===undefined?"DATA?":Number(v).toFixed(3)+"%";
   $("overnightHistoryPairs").textContent=(h.validPairCount??0)+" / "+(h.requiredWindow??20);
   $("overnightHistoryWinRate").textContent=pct(h.winRatePct20D);
