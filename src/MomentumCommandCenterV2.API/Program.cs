@@ -909,17 +909,14 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 
     try
     {
-        var eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-        var nowEastern = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, eastern);
-        var lastIncludedDate = DateOnly.FromDateTime(nowEastern.DateTime);
-        // The 09:30 bar is not complete until 09:31 ET. Before then, end on the prior session.
-        if (nowEastern.TimeOfDay < new TimeSpan(9, 31, 0))
-            lastIncludedDate = lastIncludedDate.AddDays(-1);
-
-        var boundaries = MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar
-            .BuildRecentBoundaries(lastIncludedDate, request.RequiredWindow);
+        var captureStartedAtUtc = DateTimeOffset.UtcNow;
+        var historyWindow = MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar
+            .BuildCurrentHistoryWindow(captureStartedAtUtc, request.RequiredWindow);
+        var boundaries = historyWindow.HistoricalBoundaries;
+        var currentIntervalBoundary = historyWindow.CurrentIntervalBoundary;
+        var captureBoundaries = boundaries.Concat(new[] { currentIntervalBoundary }).ToArray();
         var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
-        var toUtc = boundaries[^1].NextOpenBarTimestampUtc.AddMinutes(1);
+        var toUtc = captureBoundaries.Max(x => x.NextOpenBarTimestampUtc).AddMinutes(1);
         var fetched = new List<MarketBar>();
         var cursor = fromUtc;
         while (cursor < toUtc)
@@ -947,7 +944,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         if (observations.Count >= 10000)
         {
             observations.Clear();
-            foreach (var boundary in boundaries)
+            foreach (var boundary in captureBoundaries)
             {
                 var pairObservations = await barStore.GetLatestAsync(
                     request.Symbol, provider.ProviderName,
@@ -1038,6 +1035,33 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             ct);
         var evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest);
 
+        var currentCloseBar = observations.Select(x => x.Bar)
+            .FirstOrDefault(x => x.Timestamp == currentIntervalBoundary.PreviousCloseBarTimestampUtc);
+        var currentOpenBar = observations.Select(x => x.Bar)
+            .FirstOrDefault(x => x.Timestamp == currentIntervalBoundary.NextOpenBarTimestampUtc);
+        var currentIntervalEndpointAvailableAtUtc = currentIntervalBoundary.NextOpenBarTimestampUtc.AddMinutes(1);
+        var currentIntervalState = DateTimeOffset.UtcNow < currentIntervalEndpointAvailableAtUtc
+            ? "PENDING"
+            : currentCloseBar is not null && currentOpenBar is not null && currentCloseBar.Close > 0 && currentOpenBar.Open > 0
+                ? "OBSERVED"
+                : "MISSING";
+        var currentInterval = new
+        {
+            state = currentIntervalState,
+            previousSessionDate = currentIntervalBoundary.PreviousSessionDate,
+            nextSessionDate = currentIntervalBoundary.NextSessionDate,
+            previousCloseBarTimestampUtc = currentIntervalBoundary.PreviousCloseBarTimestampUtc,
+            nextOpenBarTimestampUtc = currentIntervalBoundary.NextOpenBarTimestampUtc,
+            expectedEndpointAvailableAtUtc = currentIntervalEndpointAvailableAtUtc,
+            previousClose = currentCloseBar?.Close,
+            nextOpen = currentOpenBar?.Open,
+            returnPct = currentCloseBar is not null && currentOpenBar is not null && currentCloseBar.Close > 0 && currentOpenBar.Open > 0
+                ? (decimal?)((currentOpenBar.Open / currentCloseBar.Close - 1d) * 100d)
+                : null,
+            referenceKind = "ONE_MINUTE_BAR_OPEN_PROXY",
+            officialOpeningAuctionVerified = false
+        };
+
         var providerBoundaryBars = fetchedBars.Where(x =>
             actualFeed is null || string.Equals(x.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
         var storedBoundaryBars = observations.Where(x =>
@@ -1068,7 +1092,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 status
             };
         }
-        var boundaryCoverageAudit = boundaries.SelectMany(boundary => new[]
+        var boundaryCoverageAudit = captureBoundaries.SelectMany(boundary => new[]
         {
             BuildBoundaryCoverage("PREVIOUS_SESSION_CLOSE", boundary.PreviousCloseBarTimestampUtc),
             BuildBoundaryCoverage("NEXT_SESSION_OPEN", boundary.NextOpenBarTimestampUtc)
@@ -1088,6 +1112,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             newlyPersistedObservationCount = persistedCount,
             boundaryCoverageAudit,
             history,
+            currentInterval,
             dailyMetrics,
             dailyError,
             catalystAssessment,
@@ -1106,7 +1131,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 })
 .WithName("CaptureBoringOvernightTwentySessionHistory")
 .WithSummary("Fetch, persist, and calculate the latest 20 regular close/open Overnight pairs")
-.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 session boundaries using the MCC_US_EQUITIES_CALENDAR_V2 ruleset, fetches the required history, persists raw observations, and returns win rate, mean, median, 5-pair mean, 20-pair mean, and any missing boundary pairs. The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
+.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 completed historical boundaries plus a separate current Overnight interval using MCC_US_EQUITIES_CALENDAR_V2, fetches and persists raw observations, and returns historical metrics/missing pairs plus current interval state (PENDING, MISSING or OBSERVED). The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
 .ProducesProblem(422)
 .ProducesProblem(503);
 
