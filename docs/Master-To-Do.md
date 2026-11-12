@@ -822,3 +822,42 @@ Commits in this implementation sequence:
 5. Keep IEX_PARTIAL non-qualifying, zero news UNKNOWN, and all execution/limit-sell gates fail-closed.
 
 Follow-up test coverage added: `f259051f4d7ba2cc086476621eb8a255b683b99b` verifies rollover at the scheduled Thanksgiving Friday early close (13:00 ET), in addition to the weekend/DST cases. Latest implementation branch head before this documentation update: `f259051f4d7ba2cc086476621eb8a255b683b99b`.
+
+## November 12 — Overnight calendar test correction and technical-input wiring
+
+### Implemented on feature branch
+
+- [x] Fixed the five reported CurrentWindow test failures. Root cause: BuildCurrentHistoryWindow called BuildRecentBoundaries(..., 1), but that historical builder intentionally enforces 5–40 pairs. The current single interval is now constructed directly from the immediately preceding and target trading sessions. The historical builder's validation remains unchanged.
+- [x] Capture-history now requests the same live 1m/5m technical assessment used by Main Chart, through LiveSymbolAssessmentService, and maps source-returned values into the Boring Overnight evaluator inputs:
+  - 5M permission from the independent five-minute score/permission output.
+  - 5M structure from the V2 decision's five-minute structure result.
+  - 1M state/action from the V2 decision.
+  - 1M extension ATR from the completed 1m technical calculation.
+  - 5M same-time-of-day relative volume from its provider-bar baseline.
+- [x] Added per-field source timestamps from the exact raw 1m/5m bar-start timestamps. The response now exposes source/feed, source transport, evaluation status, per-timeframe freshness and the mapped technical inputs.
+- [x] Added completed-session Daily range percentage and 14-session simple ATR percentage. Both are calculated only from a complete, fresh, qualification-usable SIP Daily sample. IEX is excluded from these inputs.
+- [x] Combined Daily and intraday freshness conservatively. If any required freshness evidence is absent, evaluator DataFresh remains null/unknown rather than being converted to false or true.
+- [x] Technical assessment failures are surfaced in the capture response and leave technical inputs missing; they are not backfilled from screenshots or user-entered values.
+
+Commits:
+- a54a0a5c0abe53744b6797919326345651fc7d10 direct construction of current interval boundary.
+- 81cae4eb5ebcdf7ed95d9a069eb7bf27fb9418a6 initial technical-input mapping and daily range/ATR calculation.
+- e0b799e5f87b068f266c93f27e3d7509db3e6e0a expose technical provenance and preserve unknown freshness.
+- 26380617f2a7d380a99b29d556b82813dffc5ba5 correct freshness-diagnostics JSON path and expose feed/transport/status.
+- 42ae6b6a471f8bd46f86c606cb9482bf461341fa record raw source bar-start timestamps.
+
+### Validation still required — not complete
+
+- [ ] Re-run Release build and all tests after pulling latest branch. The five reported failures are addressed in code, but no local test execution result is available to me.
+- [ ] Add API-level regression tests for capture-history technical mapping (5M permission/structure, 1M state, extension ATR, same-slot relative volume, per-field timestamps, stale/missing data).
+- [ ] Verify exact feed consistency between history capture and live assessment; do not allow mixed provider/feed data to become one qualified snapshot.
+- [ ] Confirm live assessment returns a fresh 1m/5m result during the actual final-hour Overnight capture window. Outside regular session, missing permission/structure/state must remain DATA?.
+- [ ] Confirm Daily range basis is latest completed session H-L divided by its close and ATR% is 14 completed-session simple mean true range divided by latest completed close. These are explicit proxies until matched against the exact Thinkorswim Daily study.
+- [ ] Browser acceptance: inspect technical-input provenance, source timestamps, stale states and missing states.
+- [ ] Preserve SIP-only Daily qualification; no IEX inference, no screenshot-derived values, no official-auction claims and no order submission.
+
+### Current technical-input semantics
+
+- currentVolumeVsAverage is the live service's same-time-of-day 5M relative-volume ratio, requiring its baseline observations. It is not a raw exchange-wide volume field.
+- dailyRangePct is based on the latest completed SIP Daily bar, not an in-progress current-day range.
+- atrPct is a 14-session simple mean true range, not a Wilder ATR. Thinkorswim parity remains unverified.
