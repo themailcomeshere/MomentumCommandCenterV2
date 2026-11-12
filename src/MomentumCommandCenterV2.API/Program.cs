@@ -1028,6 +1028,29 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             }
             return current;
         }
+        // The history capture and Main Chart assessment must describe the same provider/feed.
+        // LiveSymbolAssessmentService may serve a cached result, so compare its actual 1m and 5m
+        // feed labels against the feed attached to this capture before allowing any technical
+        // values into a persisted evaluator snapshot. Missing provenance is not a match.
+        var technicalAssessmentProvider = JsonPath(technicalAssessment, "provider")?.ToString();
+        var technicalOneMinuteFeed = JsonPath(technicalAssessment, "oneMinute", "feed")?.ToString();
+        var technicalFiveMinuteFeed = JsonPath(technicalAssessment, "fiveMinute", "feed")?.ToString();
+        var technicalFeedMatchesCapture =
+            technicalAssessment is not null &&
+            actualFeed is not null &&
+            string.Equals(technicalAssessmentProvider, provider.ProviderName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(technicalOneMinuteFeed, actualFeed, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(technicalFiveMinuteFeed, actualFeed, StringComparison.OrdinalIgnoreCase);
+        if (technicalAssessment is not null && !technicalFeedMatchesCapture)
+        {
+            technicalAssessmentError =
+                $"TECHNICAL_FEED_MISMATCH: capture provider/feed={provider.ProviderName}/{actualFeed ?? "UNKNOWN"}; " +
+                $"assessment provider/1m feed/5m feed={technicalAssessmentProvider ?? "UNKNOWN"}/" +
+                $"{technicalOneMinuteFeed ?? "UNKNOWN"}/{technicalFiveMinuteFeed ?? "UNKNOWN"}. " +
+                "Technical fields were withheld rather than combining observations from different sources.";
+            technicalAssessment = null;
+        }
+
         static double? JsonNumber(JsonElement? value) =>
             value is { ValueKind: JsonValueKind.Number } element && element.TryGetDouble(out var number) && double.IsFinite(number)
                 ? number : null;
@@ -1218,9 +1241,11 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             dailyError,
             technicalAssessment = new
             {
-                provider = provider.ProviderName,
-                feed = JsonPath(technicalAssessment, "oneMinute", "feed")?.ToString(),
+                provider = technicalAssessmentProvider ?? provider.ProviderName,
+                feed = technicalOneMinuteFeed,
+                fiveMinuteFeed = technicalFiveMinuteFeed,
                 configuredFeed = JsonPath(technicalAssessment, "configuredFeed")?.ToString(),
+                feedMatchesCapture = technicalFeedMatchesCapture,
                 sourceTransport = JsonPath(technicalAssessment, "oneMinute", "sourceTransport")?.ToString(),
                 evaluationStatus = JsonPath(technicalAssessment, "evaluationStatus")?.ToString(),
                 fiveMinutePermission,
