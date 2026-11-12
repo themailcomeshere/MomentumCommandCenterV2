@@ -916,7 +916,10 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var currentIntervalBoundary = historyWindow.CurrentIntervalBoundary;
         var captureBoundaries = boundaries.Concat(new[] { currentIntervalBoundary }).ToArray();
         var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
+        // Never request future bars: before the current 09:30 endpoint, the interval remains PENDING.
         var toUtc = captureBoundaries.Max(x => x.NextOpenBarTimestampUtc).AddMinutes(1);
+        if (toUtc > captureStartedAtUtc.AddMinutes(1))
+            toUtc = captureStartedAtUtc.AddMinutes(1);
         var fetched = new List<MarketBar>();
         var cursor = fromUtc;
         while (cursor < toUtc)
