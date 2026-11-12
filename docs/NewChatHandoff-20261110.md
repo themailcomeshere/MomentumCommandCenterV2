@@ -936,3 +936,60 @@ Detailed evidence: `docs/Validation/Boring-Overnight-CRBG-Retest-20261112.md`.
 - Official opening-auction print is not available in the supplied evidence.
 - The API currently has not yet been changed to separate current interval from completed historical pairs; this is the next repository engineering task.
 
+
+
+## November 12 — capture exception fix and scanner top-10 research
+
+### Capture failed: calc is not defined
+
+Root cause confirmed in `frontend/app.js`, in the click handler for `#overnightCaptureHistory` / `POST /api/boring-overnight/capture-history`. The handler read `calc.boringWinnerPass`, `calc.boringWinnerInRangeCount` and `calc.boringWinnerSampleStdDevPct` but had never declared `calc`. This ReferenceError interrupted UI rendering after the API returned; it did not establish that the provider fetch or persistence itself failed.
+
+Fix committed: `2876d1093d930fc1830b2953d101df9fc524d9e2`. Handler now initializes `const calc=data.calculation||h.calculation||{}` after reading `data.history`. If neither response object supplies calculation fields, UI remains DATA?/insufficient history. No values are synthesized.
+
+**Operator acceptance after pull:** retry CRBG 20-session capture. Confirm the UI no longer says `calc is not defined`, inspect API response and capture status, and confirm history metrics remain withheld if exact-pair completeness is false. This fix only removes the frontend ReferenceError; it does not repair missing IEX bars or the current-interval/history-window semantic issue.
+
+### Scanner export research
+
+Input: `data/ScannerExports/2026-11-12-WatchListScanner_1217.csv` (50 symbols). Report: `docs/Research/Overnight-Scanner-Top10-Debrief-20261112.md`.
+
+Top 10 by CSV Overnight Score:
+1. ADXN 201.58
+2. CECO 168.28
+3. SENS 108.04
+4. AMD 99.26
+5. CSQR 98.25
+6. NET 95.33
+7. STEP 89.95
+8. HSAI 88.21
+9. HROW 85.25
+10. DPC 83.29
+
+Qualitative preferred research list: CECO, SENS, AMD, CSQR. ADXN remains raw #1 but is separately flagged as an event-risk watch because current ON is +59.17% against a +5.26% average, and Addex owns only 8.5% of Neurosterix after its $105m financing; Addex itself did not receive that financing. This is not a trade instruction.
+
+Deep dives and cited company disclosures are in the research report. Summary:
+- CECO: Q3 orders +234%, backlog +205%, Adjusted EBITDA +202%; 2027 outlook introduced. Combined-company acquisition effect means growth is not all organic.
+- SENS: Q3 revenue +140%; raised FY2026 revenue guidance to $68–70m and gross-margin guidance to >60%; cash/investments $126.6m and debt principal $55m.
+- AMD: Q3 revenue +45%, Data Center +97%; Q4 revenue guide ~$17bn ±3%.
+- CSQR: Q3 revenue +25.6%, bookings +14th sequential quarter, EBITDA +44.3%; GAAP net loss and $620–640m growth capex are key caveats.
+- MCC Top 4 comparison: CSQR also #5 in export; INGM fundamentals strong despite export rank #24; CRBG Q3 operating EPS +27% but catalyst remains RISK pending human review; FB ticker identity unresolved and must be confirmed.
+
+HSAI current earnings catalyst not verified from retrieved sources. CSV has no sample counts/as-of metadata/score formula; scanner percentages are treated as supplied, not independently validated. No candidate marked READY.
+
+### Next engineering priorities
+
+1. Poll CI for the capture fix and current branch head; fix any failures before claiming validated.
+2. Operator pulls branch and retries capture; capture frontend should not throw ReferenceError.
+3. Fix history semantics: separate last 20 completed historical pairs from current in-progress Overnight interval. Add tests for missing historical opens, missing current endpoint, DST, no nearest-bar substitution and rolling metrics excluding current interval.
+4. Wire source-qualified 5M permission/structure and 1M state plus extension ATR, current volume-vs-average, daily range and ATR with per-field timestamps/freshness.
+5. Continue fail-closed SIP/independent consolidated coverage, catalyst human review and candidate qualification. No order submission.
+
+Latest documentation commits:
+- Research report: `584e7579547ef60fb2bde8bb09e9f9f867ecedfd`
+- Master To-Do: `4a1e74f4322496bfb8c080d4248a6c1fc217b57d`
+- Handoff update: commit to be recorded after this update.
+
+[Uncertainties]
+- Latest capture exception is confirmed by static source inspection, but runtime reproduction was not available in this session.
+- CI result for the fix is not yet verified.
+- HSAI fresh catalyst and FB instrument identity remain unresolved.
+- Scanner metric sample sizes and formula are absent from the CSV.
