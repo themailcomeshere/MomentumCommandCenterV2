@@ -876,3 +876,23 @@ Commits:
 
 Feed-provenance guard commit: `195be63c690920b86d4d624e1b078017bcf4e3a4`.
 Operator-verified parent SHA: `5268846a1a95ec799a352b74032469baf33569a8`.
+
+
+## November 12 — technical staleness audit and evaluator-input correction
+
+- [x] Audited operator's capture response: Alpaca IEX provenance matched across history/1m/5m (`feedMatchesCapture=true`), but live assessment status was `STALE_MARKET_DATA`; both 1m and 5m freshness flags were false.
+- [x] Confirmed null 5m permission, 5m structure and 1m state are correct for stale bars.
+- [x] Identified and fixed a qualification leak: stale 1m/5m-derived extension ATR and same-time-of-day RVOL were still being copied into the evaluator input. They are now withheld unless both bars are fresh and provider/feed provenance matches.
+- [x] Separated eligibility rules: numeric intraday indicators require matched fresh bars; V2 permission/structure/state additionally require `evaluationStatus=EVALUATED`. Outside-session, stale, insufficient-history and RVOL-baseline-insufficient statuses cannot provide V2 decision fields.
+- [x] Capture response now reports `intradayBarsUsable`, `v2DecisionUsable`, 1m/5m age seconds and freshness limits, alongside source timestamps and booleans.
+- [x] Added policy regression tests for feed mismatch, stale/unknown timeframe freshness, outside-session, stale, insufficient-history and RVOL-baseline states.
+- [x] Created validation note: `docs/Validation/Boring-Overnight-Technical-Staleness-Audit-20261112.md`.
+- [ ] Run Release build and full test suite on the latest branch head; no result is available for these new commits yet.
+- [ ] Regular-session browser retest: fresh matched bars should set `intradayBarsUsable=true`; V2 decision fields only if status is `EVALUATED`.
+- [ ] After-hours browser retest: V2 decision fields must remain null; stale numeric indicators must also be null.
+- [ ] Inspect the persisted snapshot/evaluation request, not just the response display, to confirm stale numeric values are actually absent.
+- [ ] Obtain separate qualification-usable SIP Daily data for Daily range/ATR; IEX remains diagnostic only.
+- [ ] Reconcile ATR formula against Thinkorswim and retain official-auction/READY gates.
+
+Implementation commits: `a5a089fb13bd63727c619ae335b9473ff4a25cfc`, `6e8248e664f6d40c51b5b1501cab0f6d86b44361`, `e4a6918a0b50a5421858316fb9e82f2b9e3bb235`, `a986e8107908bc626656732b7b03320a262b1170`, `58ade3a9651304d75440df766bc0dba1495e0616`, `e39cd406092795ac553a56bccce36c5a961ccc05`, `853fe72c6af3baa9187967d87b876eab78d2b264`.
+Validation note commit: `308853dcb077f0a473e5ef02d19b01a2912373bf`.
