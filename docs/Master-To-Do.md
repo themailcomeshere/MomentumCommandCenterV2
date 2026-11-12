@@ -733,3 +733,22 @@ Detailed evidence and exact code changes: docs/Validation/Boring-Overnight-Integ
 - [x] Dashboard refresh now displays each saved snapshot's current evaluation status and eligibility flag; its status text reports how many evaluations were recalculated.
 - [x] This remains a read/recalculate operation; it does not rewrite append-only snapshots, promote research-only Boring Winner results, or submit orders.
 - [ ] Verify in browser that Refresh saved evaluations returns one evaluation per snapshot and that the visible status matches the returned API result.
+
+
+## November 12 — CRBG Overnight retest and current-interval correction
+
+Operator confirmed that the Step 2 table is the saved-evaluation row: persisted input snapshot plus a fresh evaluator result, not a trade/order record.
+
+- [x] Recorded the latest CRBG 20-pair capture in `docs/Validation/Boring-Overnight-CRBG-Retest-20261112.md`.
+- [x] Confirmed 6,676 IEX 1-minute bars fetched; 0 newly persisted because the observations were already present; 13/20 valid exact close/open pairs; 7 missing exact opens.
+- [x] Confirmed the newly captured snapshot persists `dataFresh=true` and `catalystStatus=RISK` for a complete-coverage MATERIAL_EVENT_REVIEW article. Evaluator remains DATA? / eligible=false.
+- [x] Confirmed Daily 20/20 expected sessions is still IEX_PARTIAL and qualificationUsable=false; observed close/SMA/volume are diagnostics only, not qualification values.
+- [ ] **P1 correction:** separate the last 20 completed historical close/open pairs from the current Overnight interval. The current response counts the 2026-11-12 unfinished opening endpoint among 20 requested pair slots. It must be PENDING/current interval, not a completed historical missing return. Add API/UI distinction and regression tests; do not calculate rolling historical metrics using the current interval.
+- [ ] Preserve exact 09:30 ET boundary rule. Six earlier historical opening bars are missing; do not substitute nearby 09:31–09:34 bars. Current-day 2026-11-12 opening bar is also absent in this IEX response.
+- [ ] Wire source-qualified 5M permission/structure, 1M state, extension ATR, current volume-vs-average, daily range and ATR with per-field timestamps/freshness. Unknown remains fail-closed.
+- [ ] Human-review the CRBG Wells Fargo analyst-action article and authoritative filings/news before any possible clearance. MATERIAL_EVENT_REVIEW remains RISK; zero articles remains UNKNOWN.
+- [ ] Obtain independently validated consolidated Daily coverage and adjustment/session parity before populating qualification fields. IEX_PARTIAL remains diagnostic only.
+- [ ] Keep the 09:30 one-minute Open explicitly labelled as a proxy; official opening-auction print remains unverified.
+
+**Latest CRBG result:** 13/20 valid, incomplete history; current interval pending; Daily IEX partial; catalyst risk; live technical inputs missing; DATA? / not eligible; no order submitted. Detailed evidence and interpretation are in the validation note linked above.
+
