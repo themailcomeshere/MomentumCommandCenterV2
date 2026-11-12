@@ -1,4 +1,4 @@
-> **Superseded on 2026-11-06:** Use [NewChatHandoff-20261106.md](NewChatHandoff-20261106.md) for current project state and operator actions. This file is retained as historical/design context; do not treat its older unchecked items or implementation-status statements as current.
+> **Current handoff:** Use [NewChatHandoff-20261110.md](NewChatHandoff-20261110.md) for the refreshed November 12 engineering status, exact next operator steps and current blockers. Use [Master-To-Do.md](Master-To-Do.md) as the canonical checklist. This file is retained as historical/design context.
 >
 > ---
 >
