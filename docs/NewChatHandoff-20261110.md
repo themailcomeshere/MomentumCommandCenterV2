@@ -1042,3 +1042,44 @@ The user corrected prior "FB" typo: **FG = F&G Annuities & Life, Inc. (NYSE: FG)
 - Missing IEX opens' cause and consolidated feed entitlement remain unknown.
 - Official auction print versus first eligible trade semantics remain unresolved.
 - Screenshot states are point-in-time and not live.
+
+## November 12 — completed history/current Overnight interval split
+
+Implemented on `feature/opportunity-quality-classification` after reviewing the operator's CRBG capture showing 13/20 exact pairs and seven missing boundaries, including the current session open.
+
+### Code changes
+
+- `UsEquitiesSessionCalendar.BuildCurrentHistoryWindow(asOfUtc, 20)` now returns 20 historical boundaries ending at the prior completed session plus one separate current interval.
+- Before today's regular close, current interval = prior session close to today's 09:30 ET open. At/after regular close (including early closes), it rolls to today's close to the next trading session open. Non-trading dates roll to the next supported session.
+- Capture API computes the 20-pair rolling metrics only from the historical boundary list. The current interval is reported separately as PENDING, MISSING or OBSERVED.
+- Current interval includes exact boundary times, available close/open prices and return, and explicitly identifies the 09:30 one-minute bar Open as a proxy, not an official auction print.
+- Provider request end is bounded to current time + one minute; it does not request future observations.
+- Exact-boundary audit covers 42 timestamps: 40 historical plus 2 current-interval endpoints.
+- Dashboard adds a distinct Current Overnight interval field and clarifies the historical window/audit labels.
+- Added calendar tests for before-close separation, after-close rollover, DST-adjusted boundaries, and holiday/weekend rollover.
+
+### Commits (sequence)
+
+- `171ab05e4f617dafa78409e424c9b4fa4027e345`
+- `586f7b4a81881af96b6c0f0a4526a1c2759cf1ea`
+- `efb682386b106883111478f637cfd28f5858aab8`
+- `4bccd0df3884a54bfea71b1c79706175c8aad124`
+- `f13c9f539adcce3145c91472f36499fb63f5759a`
+- `895b734315205d4a1d54606a538a70154e497078`
+- `f9f89b28722b4455764f5a41eae5714b888e2fe4`
+- To-Do update: `6198315e096010973f88b92190246c96a705f118`
+
+Latest known feature-branch commit before this handoff update: `6198315e096010973f88b92190246c96a705f118`.
+
+### Verification still required
+
+- No local .NET build/tests or exact-head CI result has been obtained for this implementation in this session. Do not call it CI-passed.
+- Add direct tests for interval PENDING/MISSING/OBSERVED state calculation and no-nearest substitution.
+- Browser acceptance must confirm historical table has only 20 historical pairs and current interval is separate.
+- Retest CRBG after pull. Its prior 13 valid observations must not be re-labelled as a complete 20-pair sample; IEX_PARTIAL remains non-qualifying, and zero news remains UNKNOWN.
+- Next priority after validation: source-qualified 5M permission/structure, 1M state, extension ATR, volume ratio, Daily range/ATR with individual timestamps and freshness. Keep all unknowns fail-closed.
+
+[Uncertainties]
+- Provider behavior for future/current boundary bars has not been tested against a live Alpaca response in this session.
+- Official opening auction print remains unverified; the exact 09:30 one-minute bar Open is only a proxy.
+- Calendar ruleset is MCC-maintained, not a live exchange calendar feed.
