@@ -708,3 +708,21 @@ The active Dashboard source (frontend/index.html) and API route in src/MomentumC
 - [ ] Still trace the exact frontend request/response handlers for Fetch & analyze bars and Refresh saved evaluations before documenting their endpoint side effects.
 - [ ] During browser acceptance, record configured provider/feed, returned bar count, persisted count, valid/missing pair counts, Daily/catalyst errors and snapshot as-of timestamp.
 
+
+
+## November 12 — Overnight operator response audit and integration fix
+
+- [x] Reviewed data/ChatResponse.md, including the CRBG 1m/5m responses, 20-session capture, and four-symbol Daily/catalyst results.
+- [x] Identified capture snapshot bug: fresh Daily DataFresh was left null by the mapping expression.
+- [x] Fixed DataFresh mapping to preserve the provider's explicit freshness value; null remains null when Daily retrieval fails.
+- [x] Fixed catalyst status translation: MATERIAL_EVENT_REVIEW and UNCLASSIFIED_NEWS_REVIEW now map to RISK; RISK_PRESENT maps to RISK; only explicit CLEAR_WITH_SOURCE with nonempty articles and complete coverage can map to CLEAR; zero-news and incomplete/unknown evidence remain UNKNOWN.
+- [x] Added regression tests for catalyst mapping.
+- [ ] Run Release build and full tests on the latest branch head; do not claim the integration fix verified until CI/local tests pass.
+- [ ] Re-run CRBG 20-session capture with source coverage sufficient to return all 20 exact prior-close/next-open boundaries. Current response: 13/20 valid, 7 missing.
+- [ ] Replace IEX_PARTIAL qualification input with verified consolidated SIP or independent equivalent; Daily 20/20 freshness alone is not sufficient.
+- [ ] Complete human catalyst review for CRBG MATERIAL_EVENT_REVIEW; review INGM's two UNCLASSIFIED articles. Zero-article FG/CSQR remains UNKNOWN.
+- [ ] Wire timestamped live 5M permission/structure, 1M execution state, extension ATR, current volume-vs-average, daily range and ATR into snapshot evaluation; capture-history currently does not supply these.
+- [ ] Obtain current Overnight interval observation separately; do not reuse the last completed historical pair as current.
+- [ ] Decide whether official opening-auction data is required; the current 09:30 one-minute bar Open is only a proxy.
+
+Detailed evidence and exact code changes: docs/Validation/Boring-Overnight-Integration-Audit-20261112.md.
