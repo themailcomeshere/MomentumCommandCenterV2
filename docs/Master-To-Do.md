@@ -788,3 +788,35 @@ Research report commit: `584e7579547ef60fb2bde8bb09e9f9f867ecedfd`.
 Updated research report: `docs/Research/Overnight-Scanner-Top10-Debrief-20261112.md`.
 Research addendum commit: `f890a21bac4c55b3e49195912f29ec901dfc7c34`.
 CI run: `43289911750` SUCCESS. Branch head at CI: `d047af1c86826e94b587468924e2cec3015cd3be`.
+
+## November 12 — completed-history/current-interval separation implemented
+
+### Repository changes committed on `feature/opportunity-quality-classification`
+
+- [x] Added `UsEquitiesSessionCalendar.BuildCurrentHistoryWindow`: returns the latest 20 scheduled historical close/open boundaries ending at the prior completed session, plus a distinct current Overnight boundary.
+- [x] Current interval rolls forward to the next trading session at/after the current session's regular close; it respects the calendar's early-close time and skips weekends/holidays.
+- [x] Updated `POST /api/boring-overnight/capture-history` to calculate historical metrics from historical boundaries only. The current interval no longer consumes one of the 20 history slots.
+- [x] Added separate current interval response with `PENDING`, `MISSING` or `OBSERVED`, exact boundary timestamps, available endpoint prices/return, and explicit `ONE_MINUTE_BAR_OPEN_PROXY` / `officialOpeningAuctionVerified=false` provenance.
+- [x] Capture fetch range is bounded at the current time; it does not request future bars. Before the exact 09:30 bar is complete (09:31 ET), the current interval remains PENDING.
+- [x] Boundary audit now includes 40 historical close/open timestamps plus the two current-interval timestamps.
+- [x] Added Dashboard display for the current interval separately from the historical metrics and clarified the 42-row audit.
+- [x] Added calendar regression tests for pre-close separation, post-close rollover, spring DST UTC boundaries, and weekend/Thanksgiving rollover.
+
+Commits in this implementation sequence:
+- `171ab05e4f617dafa78409e424c9b4fa4027e345` calendar window split
+- `586f7b4a81881af96b6c0f0a4526a1c2759cf1ea` API integration
+- `efb682386b106883111478f637cfd28f5858aab8` calendar regression tests
+- `4bccd0df3884a54bfea71b1c79706175c8aad124` Dashboard current interval field
+- `f13c9f539adcce3145c91472f36499fb63f5759a` Dashboard response rendering
+- `895b734315205d4a1d54606a538a70154e497078` bound provider request to current time
+- `f9f89b28722b4455764f5a41eae5714b888e2fe4` UI audit/description correction
+
+**Verification status:** CI/local .NET build and tests have not been run in this session. Do not mark this change validated until exact-head CI or local Release build/tests pass. Browser acceptance and provider retest remain open.
+
+### Next engineering work
+
+1. Verify exact branch-head CI/build/tests and fix all failures.
+2. Add unit tests for current interval state transitions (PENDING before 09:31 ET; MISSING after endpoint if exact open absent; OBSERVED only with exact close and open). Preserve no-nearest-bar substitution.
+3. Verify UI renders current interval and historical history as separate sections; saved snapshot history audit must describe only the 20 historical pairs.
+4. Continue source-qualified 5M permission/structure and 1M state plus extension ATR, volume ratio, Daily range and ATR with per-field timestamps/freshness. Do not infer from screenshots or partial IEX.
+5. Keep IEX_PARTIAL non-qualifying, zero news UNKNOWN, and all execution/limit-sell gates fail-closed.
