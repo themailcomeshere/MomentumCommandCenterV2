@@ -1988,7 +1988,7 @@ $("overnightCapture20")?.addEventListener("click", async () => {
  const fields=["overnightHistoryPairs","overnightHistoryWinRate","overnightHistoryMean20","overnightHistoryMedian20","overnightHistoryMean5","overnightHistoryMissing","overnightHistoryProvider","overnightHistoryBars","overnightHistoryCalendar","overnightHistoryAsOf"];
  for(const id of fields){const el=$(id);if(el)el.textContent="REQUEST IN PROGRESS";}
  const rows=$("overnightHistoryRows"); rows.replaceChildren();
- button.disabled=true; const captureStartedAt=Date.now(); status.textContent="Fetching Alpaca 1-minute bars and calculating the latest 20 regular-session close/open pairs for "+symbol+"…";
+ button.disabled=true; const captureStartedAt=Date.now(); status.textContent="Fetching Alpaca 1-minute bars and calculating 20 completed historical close/open pairs plus the separate current Overnight interval for "+symbol+"…";
  const captureProgressTimer=setInterval(()=>{const elapsed=Math.floor((Date.now()-captureStartedAt)/1000),minutes=Math.floor(elapsed/60),seconds=elapsed%60;status.textContent="Still working · Alpaca 1-minute history capture for "+symbol+" · "+minutes+"m "+String(seconds).padStart(2,"0")+"s elapsed · waiting for provider fetch, persistence and exact-boundary calculation.";},10000);
  try{
   const data=await overnightFetchJson("/api/boring-overnight/capture-history",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",requiredWindow:20})});
@@ -2005,6 +2005,20 @@ $("overnightCapture20")?.addEventListener("click", async () => {
   $("overnightHistoryBars").textContent=(data.fetchedBarCount??0)+" fetched / "+(data.newlyPersistedObservationCount??0)+" newly stored";
   $("overnightHistoryCalendar").textContent=data.calendarVersion||"NOT REPORTED";
   $("overnightHistoryAsOf").textContent=h.calculatedAtUtc||data.retrievedAtUtc||"DATA?";
+  const current=data.currentInterval||{};
+  const currentState=current.state||"UNKNOWN";
+  const currentPct=current.returnPct;
+  const currentLabel=[
+   currentState,
+   (current.previousSessionDate||"DATA?")+" close → "+(current.nextSessionDate||"DATA?")+" open",
+   "expected open "+(current.nextOpenBarTimestampUtc||"DATA?"),
+   "previous close="+(current.previousClose??"DATA?"),
+   "next open="+(current.nextOpen??"DATA?"),
+   "return="+(currentPct==null?"DATA?":Number(currentPct).toFixed(3)+"%"),
+   "reference="+(current.referenceKind||"UNKNOWN")+"; official auction verified="+String(current.officialOpeningAuctionVerified===true)
+  ].join(" · ");
+  const currentEl=$("overnightCurrentInterval");
+  if(currentEl) currentEl.textContent=currentLabel;
   const returns=Array.isArray(h.returns)?h.returns:[];
   for(const item of returns){
    const tr=document.createElement("tr");
@@ -2040,7 +2054,7 @@ $("overnightCapture20")?.addEventListener("click", async () => {
   const audit=Array.isArray(data.boundaryCoverageAudit)?data.boundaryCoverageAudit:[];
   const providerExact=audit.filter(x=>x.providerReturnedExactBar===true).length;
   const storeExact=audit.filter(x=>x.storeHasExactBar===true).length;
-  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR CAPTURE COMPLETE. ":"HISTORY INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Exact boundary audit: provider "+providerExact+"/"+audit.length+", store "+storeExact+"/"+audit.length+". Calendar: "+(data.calendarVersion||"unknown")+". Input snapshot "+(data.snapshot?.snapshotId||"NOT RETURNED")+" saved; evaluator "+(data.evaluation?.status||"UNKNOWN")+". Current price, Daily liquidity, catalyst and chart gates remain UNKNOWN until supplied."; 
+  status.textContent=(h.allPairsComplete&&h.enoughHistory?"20-PAIR HISTORICAL CAPTURE COMPLETE. ":"HISTORICAL WINDOW INCOMPLETE — rolling metrics withheld. ")+(h.provenanceNote||data.note||"")+" Exact boundary audit: provider "+providerExact+"/"+audit.length+", store "+storeExact+"/"+audit.length+". Calendar: "+(data.calendarVersion||"unknown")+". Input snapshot "+(data.snapshot?.snapshotId||"NOT RETURNED")+" saved; evaluator "+(data.evaluation?.status||"UNKNOWN")+". Current price, Daily liquidity, catalyst and chart gates remain UNKNOWN until supplied."; 
   await refreshOvernightSnapshots();
  }catch(error){
   for(const id of fields){const el=$(id);if(el)el.textContent="DATA?";}
