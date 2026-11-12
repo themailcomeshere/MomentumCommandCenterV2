@@ -870,3 +870,7 @@ Next: pull branch, run Release build/tests, then rerun capture and inspect saved
 
 [Uncertainties]
 No CI/local execution has yet verified these new commits. Independent SIP entitlement and official auction-print availability are not established.
+
+
+### Saved Overnight evaluation refresh — implemented 2026-11-12
+The Refresh saved evaluations button now calls GET /api/boring-overnight/snapshots. The response retains the existing snapshots array and adds evaluations[] with snapshotId, symbol, asOfUtc, and a fresh BoringOvernightEvaluator result for each saved input snapshot. The Dashboard matches evaluations by snapshotId and displays status plus eligible flag. This is deterministic recalculation under current rules; it does not mutate the append-only input snapshots. Browser acceptance is still required.
