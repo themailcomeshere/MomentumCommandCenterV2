@@ -6,26 +6,48 @@ namespace MomentumCommandCenterV2.Tests;
 public sealed class BoringOvernightTechnicalInputPolicyTests
 {
     [Fact]
-    public void AcceptsInputsOnlyWhenBothTimeframesAreFreshAndV2Evaluated()
+    public void FreshMatchedBarsPermitNumericIntradayIndicators()
     {
-        Assert.True(BoringOvernightTechnicalInputPolicy.AreIntradayInputsUsable(
-            feedMatchesCapture: true, oneMinuteFresh: true, fiveMinuteFresh: true, evaluationStatus: "EVALUATED"));
+        Assert.True(BoringOvernightTechnicalInputPolicy.AreIntradayBarsUsable(true, true, true));
     }
 
     [Theory]
-    [InlineData(false, true, true, "EVALUATED")]
-    [InlineData(true, false, true, "EVALUATED")]
-    [InlineData(true, true, false, "EVALUATED")]
-    [InlineData(true, null, true, "EVALUATED")]
-    [InlineData(true, true, null, "EVALUATED")]
-    [InlineData(true, true, true, "STALE_MARKET_DATA")]
-    [InlineData(true, true, true, "OUTSIDE_REGULAR_SESSION")]
-    [InlineData(true, true, true, "RVOL_BASELINE_INSUFFICIENT")]
-    [InlineData(true, true, true, null)]
-    public void RejectsStaleUnknownMismatchedOrUnevaluatedEvidence(
-        bool feedMatchesCapture, bool? oneMinuteFresh, bool? fiveMinuteFresh, string? evaluationStatus)
+    [InlineData(false, true, true)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, null, true)]
+    [InlineData(true, true, null)]
+    public void StaleUnknownOrMismatchedBarsBlockNumericIntradayIndicators(
+        bool feedMatchesCapture, bool? oneMinuteFresh, bool? fiveMinuteFresh)
     {
-        Assert.False(BoringOvernightTechnicalInputPolicy.AreIntradayInputsUsable(
-            feedMatchesCapture, oneMinuteFresh, fiveMinuteFresh, evaluationStatus));
+        Assert.False(BoringOvernightTechnicalInputPolicy.AreIntradayBarsUsable(
+            feedMatchesCapture, oneMinuteFresh, fiveMinuteFresh));
+    }
+
+    [Fact]
+    public void FreshBarsOutsideRegularSessionDoNotAuthorizeV2DecisionFields()
+    {
+        var barsUsable = BoringOvernightTechnicalInputPolicy.AreIntradayBarsUsable(true, true, true);
+
+        Assert.True(barsUsable);
+        Assert.False(BoringOvernightTechnicalInputPolicy.IsV2DecisionUsable(barsUsable, "OUTSIDE_REGULAR_SESSION"));
+    }
+
+    [Theory]
+    [InlineData("STALE_MARKET_DATA")]
+    [InlineData("RVOL_BASELINE_INSUFFICIENT")]
+    [InlineData("OUTSIDE_REGULAR_SESSION")]
+    [InlineData("INSUFFICIENT_HISTORY")]
+    [InlineData(null)]
+    public void V2DecisionFieldsRequireExplicitSuccessfulEvaluation(string? status)
+    {
+        Assert.False(BoringOvernightTechnicalInputPolicy.IsV2DecisionUsable(true, status));
+    }
+
+    [Fact]
+    public void EvaluatedV2DecisionRequiresFreshMatchedBars()
+    {
+        Assert.True(BoringOvernightTechnicalInputPolicy.IsV2DecisionUsable(true, "EVALUATED"));
+        Assert.False(BoringOvernightTechnicalInputPolicy.IsV2DecisionUsable(false, "EVALUATED"));
     }
 }
