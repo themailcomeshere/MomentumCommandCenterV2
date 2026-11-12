@@ -1049,8 +1049,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var currentVolumeVsAverage = JsonNumber(JsonPath(technicalAssessment, "fiveMinute", "relativeVolume"));
         var oneMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "oneMinute", "completedAtUtc"));
         var fiveMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "fiveMinute", "completedAtUtc"));
-        var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshness", "oneMinute", "isFresh"));
-        var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshness", "fiveMinute", "isFresh"));
+        var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "isFresh"));
+        var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "isFresh"));
 
         // Daily range and ATR are calculated only from a complete, fresh SIP Daily sample.
         // ATR is a 14-session mean true range; no IEX or partial-session substitute is allowed.
@@ -1220,6 +1220,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             {
                 provider = provider.ProviderName,
                 feed = JsonPath(technicalAssessment, "oneMinute", "feed")?.ToString(),
+                configuredFeed = JsonPath(technicalAssessment, "configuredFeed")?.ToString(),
+                sourceTransport = JsonPath(technicalAssessment, "oneMinute", "sourceTransport")?.ToString(),
+                evaluationStatus = JsonPath(technicalAssessment, "evaluationStatus")?.ToString(),
                 fiveMinutePermission,
                 fiveMinuteStructure = captureInputs.FiveMinuteStructure,
                 oneMinuteState,
