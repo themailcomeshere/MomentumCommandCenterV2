@@ -1271,6 +1271,12 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 fiveMinuteSourceTimestampUtc = fiveMinuteTimestamp,
                 oneMinuteFresh,
                 fiveMinuteFresh,
+                oneMinuteAgeSeconds = JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "ageSeconds") is { } oneAge
+                    ? JsonNumber(oneAge) : null,
+                fiveMinuteAgeSeconds = JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "ageSeconds") is { } fiveAge
+                    ? JsonNumber(fiveAge) : null,
+                oneMinuteFreshnessLimitSeconds = JsonNumber(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "limitSeconds")),
+                fiveMinuteFreshnessLimitSeconds = JsonNumber(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "limitSeconds")),
                 error = technicalAssessmentError,
                 dailyRangePct = new { value = dailyRangePct, sourceTimestampUtc = dailyTechnicalTimestamp, basis = "latest completed SIP Daily session high-low divided by close" },
                 atrPct = new { value = atrPct, sourceTimestampUtc = dailyTechnicalTimestamp, basis = "14 completed-session simple mean true range divided by latest completed close" }
