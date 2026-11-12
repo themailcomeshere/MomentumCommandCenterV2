@@ -820,3 +820,5 @@ Commits in this implementation sequence:
 3. Verify UI renders current interval and historical history as separate sections; saved snapshot history audit must describe only the 20 historical pairs.
 4. Continue source-qualified 5M permission/structure and 1M state plus extension ATR, volume ratio, Daily range and ATR with per-field timestamps/freshness. Do not infer from screenshots or partial IEX.
 5. Keep IEX_PARTIAL non-qualifying, zero news UNKNOWN, and all execution/limit-sell gates fail-closed.
+
+Follow-up test coverage added: `f259051f4d7ba2cc086476621eb8a255b683b99b` verifies rollover at the scheduled Thanksgiving Friday early close (13:00 ET), in addition to the weekend/DST cases. Latest implementation branch head before this documentation update: `f259051f4d7ba2cc086476621eb8a255b683b99b`.
