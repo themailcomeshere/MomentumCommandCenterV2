@@ -1918,7 +1918,10 @@ async function refreshOvernightSnapshots() {
   if (/^[A-Z0-9.-]{1,8}$/.test(symbol)) params.set("symbol",symbol);
   const data = await overnightFetchJson("/api/boring-overnight/snapshots?"+params.toString());
   const snapshots = Array.isArray(data.snapshots) ? data.snapshots : [];
+  const evaluations = Array.isArray(data.evaluations) ? data.evaluations : [];
+  const evaluationBySnapshotId = new Map(evaluations.map(item => [item.snapshotId, item.evaluation]));
   rows.replaceChildren(...(snapshots.length ? snapshots.map(snapshot => {
+   const evaluation = evaluationBySnapshotId.get(snapshot.snapshotId || snapshot.SnapshotId) || {};
    const tr = document.createElement("tr");
    const request = snapshot.evaluationRequest || snapshot.EvaluationRequest || {};
    const history = snapshot.historicalCompleteness || snapshot.HistoricalCompleteness || {};
@@ -1963,7 +1966,7 @@ async function refreshOvernightSnapshots() {
     snapshot.asOfUtc || snapshot.AsOfUtc || "DATA?",
     snapshot.recordedAtUtc || snapshot.RecordedAtUtc || "DATA?",
     (snapshot.provider || snapshot.Provider || "DATA?")+" / "+(snapshot.feed || snapshot.Feed || "DATA?"),
-    "INPUT SNAPSHOT — NOT A DECISION",
+    evaluation.status ? ("EVALUATION · "+evaluation.status+" · eligible="+String(evaluation.eligible===true)) : "EVALUATION NOT RETURNED",
     historyLabel,
     dailyLabel,
     gateInputs
@@ -1971,7 +1974,7 @@ async function refreshOvernightSnapshots() {
    for (const value of values) { const td=document.createElement("td"); td.textContent=String(value); tr.append(td); }
    return tr;
   }) : [Object.assign(document.createElement("tr"),{innerHTML:"<td colspan='8'>No saved evaluations found for this query.</td>"})]));
-  status.textContent = "Loaded "+snapshots.length+" saved input snapshot(s); GET returns inputs, not the evaluator decision. "+(data.note||"");
+  status.textContent = "Loaded "+snapshots.length+" saved input snapshot(s) and recalculated "+evaluations.length+" current-rule evaluation(s). These are eligibility assessments, not orders. "+(data.note||"");
  } catch(error) {
   status.textContent = "Could not load saved evaluations: "+error.message;
  }
