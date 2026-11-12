@@ -769,3 +769,22 @@ Research note: `docs/Research/Overnight-Scanner-Top10-Debrief-20261112.md`.
 Frontend fix commit: `2876d1093d930fc1830b2953d101df9fc524d9e2`.
 Research report commit: `584e7579547ef60fb2bde8bb09e9f9f867ecedfd`.
 
+
+
+## November 12 — chart review, FG correction and capture runtime retest
+
+- [x] Verified CI for capture handler fix: workflow run [43289911750](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/43289911750) completed SUCCESS on branch head `d047af1c86826e94b587468924e2cec3015cd3be`; frontend JavaScript syntax validation, .NET build and test job all passed.
+- [x] Rechecked `frontend/app.js` on the feature branch: capture handler declares `const calc=data.calculation||h.calculation||{}` before the Boring Winner property reads.
+- [ ] **Browser acceptance remains OPEN:** operator still reports `Capture failed: calc is not defined`. Confirm local branch/SHA and that the dashboard is serving the new frontend asset after a full API/dashboard restart and hard refresh. Do not mark fixed for operator until a fresh capture completes without this exception.
+- [x] Calculated provisional CRBG valid-pair-only statistics from the 13 supplied returns: 12/13 positive (92.31%), mean +0.750%, median +1.031%, latest five valid observations mean +1.131%. Official 20-pair metrics remain DATA?; these provisional stats are not qualification inputs.
+- [x] Recorded 7 missing exact open endpoints (six historical dates plus Nov 12 current session). Current Nov 12 open is an in-progress interval and must not occupy one of the 20 completed historical pair slots.
+- [ ] **P1:** fix history semantics and UI/API contract: last 20 completed historical close/open pairs separate from current interval. Add missing historical open, missing current endpoint, DST, no nearest-bar substitution, and rolling calculations over scheduled completed intervals only.
+- [x] Reviewed uploaded Thinkorswim charts: CSQR has strongest current technical posture (5M permission YES, runner/bullish regime, 1M EXECUTION READY, but 5M PREPARE TO BUY and swing-buy environment NO); AMD and CECO are bullish but extended; SENS is bearish with 5M permission NO and 1M execution environment NO.
+- [x] Corrected MCC focused ticker typo: FG = F&G Annuities & Life (NYSE: FG), scanner rank #19 / score 71.42. Q3 adjusted earnings and sales declined despite higher AUM and record core retail sales; not an unqualified positive catalyst.
+- [ ] Continue source-qualified 5M/1M technical wiring with per-field timestamps/freshness; chart screenshots are not a substitute for API-backed source qualification.
+- [ ] Maintain SIP/independent consolidated coverage fail-closed; IEX_PARTIAL cannot qualify.
+- [ ] No candidate declared READY; no order submission.
+
+Updated research report: `docs/Research/Overnight-Scanner-Top10-Debrief-20261112.md`.
+Research addendum commit: `f890a21bac4c55b3e49195912f29ec901dfc7c34`.
+CI run: `43289911750` SUCCESS. Branch head at CI: `d047af1c86826e94b587468924e2cec3015cd3be`.
