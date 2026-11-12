@@ -632,3 +632,66 @@ The detailed, evidence-gated implementation contract is now in [P2/P3 Engineerin
 - [ ] Finish path inventory (exact Boring Overnight/Morning Brief filenames, remaining stores, logs, imported source files and environment overrides).
 - [ ] Implement single-instance interactive launcher and reliable graceful shutdown mechanism before adding stop command.
 - [ ] Build backup/restore only after path inventory is complete.
+
+
+## November 12 — operator performance evidence, CRBG sell-limit gates, and Boring Overnight workflow
+
+### Operator verification received
+- [x] Operator reports Release build succeeded in 12.2s and all 267 tests passed (0 failed, 0 skipped; test duration 9.2s). This is operator-reported local evidence; the exact source SHA for this run was not included in the report.
+- [x] Fresh-process JSONL diagnostics captured during EVR/RKLX/ASTX/SPY live assessments:
+  - JSONL file: 130,772,422 bytes; 261,010 lines read; 243,384 unique keys at initial rebuild.
+  - Cold index rebuild: 23,313.4ms total; deserialize 4,802.5ms; index insertion 1,106ms.
+  - Index load count remained 1 across all four assessments.
+  - Per-assessment total: EVR 391.6ms; RKLX 252.1ms; ASTX 240.4ms; SPY 586.2ms.
+  - Provider wall time: 364.7ms, 237.2ms, 223.9ms and 562.8ms respectively. SPY 1M used WEBSOCKET_STORE while 5M used ALPACA_REST.
+- [x] Interpretation: in this sample, the ~23.3s JSONL cold index rebuild is a one-time process-local cost, not repeated per-symbol assessment work. Normal assessment requests were 240–586ms. Do not describe the old ~51.8s operator latency as solved for all workloads; these four samples only establish the timings observed here.
+- [ ] Continue measuring startup/cold-load separately from warm reads and append/read-back persistence. Do not replace JSONL, compact, or introduce a cache/snapshot without a measured design and migration/recovery tests.
+
+### CRBG Calculated Limit Sell — current evidence
+- [x] Operator supplied the November 12, 2026 16:01 UTC CRBG response. Overall status BLOCKED; numeric sell limit correctly withheld; no order submitted.
+- [x] Exact prior-session reference close passed: $36.10 from the exact 1-minute bar at 2026-11-11 20:59 UTC.
+- [x] All qualification blockers remain explicit:
+  - SIP_REQUIRED: configured Alpaca IEX is partial-feed coverage, not consolidated SIP.
+  - HISTORY_40_OF_40: 0/40 complete eligible GTC_EXT windows; all 40 training/test sessions incomplete.
+  - ATR_STUDY_SETTINGS: required TOS ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON, MCC_OHLCV_ATR_V2.1 not evidenced.
+  - ATR_PARITY: NO_DATA; zero persisted TOS ATR observations and zero compared bars.
+  - CONTINUOUS_5M_ATR_WARMUP: 0/99 consecutive completed TOS 5M observations.
+  - SAME_SOURCE_5M_OHLCV: 0/119 exact provider/TOS matches.
+  - CURRENT_5M_ATR_FRESHNESS: no current TOS ATR observation.
+  - WALK_FORWARD_VALIDATION: 0/20 complete training sessions and 0/20 complete test sessions.
+  - SELL_LIMIT_CALCULATION remains blocked.
+- [x] Keep exact reference close PASS separate from the failed qualification gates. Do not impute missing bars, use IEX for consolidated-market qualification, publish a numeric target, or infer executable quote/touch/fill from OHLCV.
+
+### Boring Overnight workflow — operator-facing operating sequence
+The controls visible to the operator are Symbol, Bar interval, From, To, Fetch & analyze bars, Refresh saved evaluations, and Fetch / retry 20-session close/open history.
+
+1. Select one symbol and the intended bar interval.
+2. Set From/To to the period needed for the bar-based analysis. Do not assume this range automatically controls the separate 20-session close/open history request.
+3. Use Fetch & analyze bars to retrieve/analyze the selected symbol's bars. Inspect source/feed, returned interval, timestamps and completeness before relying on the result.
+4. Use Refresh saved evaluations after relevant bar/input changes to refresh evaluations against the latest persisted observations. Do not treat refresh as a data-fetch substitute.
+5. Use Fetch / retry 20-session close/open history when that separate close/open history is missing or incomplete. Inspect returned session count and missing dates. Retry only after a transient failure or when the source may now return missing observations; repeated retries do not fix unavailable feed coverage.
+6. Review the saved evaluation and its source-qualified gates. Boring Winner PASS is research-only; it is not Boring Overnight READY, execution permission, or a sell instruction.
+
+**Implementation-contract verification still needed:** the exact HTTP endpoints, whether each button persists results, whether Fetch & analyze bars automatically invokes Refresh saved evaluations, and exact date-range defaults were not verified from source in this documentation pass. Do not assume those side effects; capture browser Network requests and UI result timestamps during operator acceptance before changing button semantics.
+
+### Remaining Boring Overnight acceptance
+- [ ] Verify a single-symbol run end-to-end and record the Network request sequence for all three actions.
+- [ ] Confirm exact symbol, interval, From/To, provider/feed, returned bar count, missing intervals, persisted evaluation timestamp and 20-session history count.
+- [ ] Verify whether Refresh saved evaluations reads only persisted bars or also fetches provider data; document the observed contract.
+- [ ] Verify whether 20-session close/open history is a distinct data set from the selected bar interval/range; document its date window and session semantics.
+- [ ] Run import reconciliation, shortlist/top-20, four distinct Top 4 Daily/catalyst requests, candidate evidence review, and browser disclosure acceptance.
+- [ ] Do not promote Boring Winner PASS to READY. Production source-qualified READY inputs and READY alert transition remain unverified.
+
+### Next engineering priorities
+1. Add full-pool Opportunity Quality API/UI fixtures for complete, incomplete, stale and excluded candidate snapshots.
+2. Add a current scanner-field availability report with per-symbol source timestamps; historical missing-field counts are stale.
+3. Complete Boring Overnight UI/API workflow contract tracing and acceptance instrumentation without changing calculation gates.
+4. Finish interactive Windows launcher/recovery and durable path inventory; no Windows Service or unattended-after-sign-out mode.
+5. Keep TOS compile/parity, SIP, independent feed, and operator browser/runtime evidence as explicit external gates.
+6. Keep Schwab and broker reconciliation parked at the bottom priority.
+
+[Uncertainties]
+- Operator's 267/267 test and 12.2s build report did not include the exact source SHA in this message.
+- The four performance samples establish observed request timings, not a universal latency guarantee.
+- Button-to-endpoint/persistence side effects and default date-range behavior have not yet been verified from the implementation source or a Network capture.
+- No consolidated SIP history or persisted Thinkorswim ATR evidence was supplied for CRBG.
