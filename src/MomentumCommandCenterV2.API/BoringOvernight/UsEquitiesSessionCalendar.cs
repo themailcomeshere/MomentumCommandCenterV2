@@ -43,6 +43,36 @@ public static class UsEquitiesSessionCalendar
         return boundaries;
     }
 
+    /// <summary>
+    /// Splits the latest completed historical window from the currently forming Overnight interval.
+    /// Before the current session's regular close, the current interval ends at today's 09:30 ET open.
+    /// At/after the regular close (including early closes), it rolls forward to the next trading session.
+    /// </summary>
+    public static (IReadOnlyList<OvernightSessionBoundary> HistoricalBoundaries, OvernightSessionBoundary CurrentIntervalBoundary)
+        BuildCurrentHistoryWindow(DateTimeOffset asOfUtc, int requiredHistoricalPairs = 20)
+    {
+        if (requiredHistoricalPairs is < 5 or > 40)
+            throw new ArgumentOutOfRangeException(nameof(requiredHistoricalPairs), "Required pairs must be 5–40.");
+
+        var easternNow = TimeZoneInfo.ConvertTime(asOfUtc, Eastern);
+        var today = DateOnly.FromDateTime(easternNow.DateTime);
+        DateOnly currentTargetSession;
+        if (IsTradingSession(today) && TimeOnly.FromDateTime(easternNow.DateTime) < GetRegularClose(today))
+        {
+            currentTargetSession = today;
+        }
+        else
+        {
+            currentTargetSession = today.AddDays(1);
+            while (!IsTradingSession(currentTargetSession))
+                currentTargetSession = currentTargetSession.AddDays(1);
+        }
+
+        var currentBoundary = BuildRecentBoundaries(currentTargetSession, 1)[0];
+        var historical = BuildRecentBoundaries(currentBoundary.PreviousSessionDate, requiredHistoricalPairs);
+        return (historical, currentBoundary);
+    }
+
     public static bool IsTradingSession(DateOnly date) =>
         date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday) && !IsMarketHoliday(date);
 
