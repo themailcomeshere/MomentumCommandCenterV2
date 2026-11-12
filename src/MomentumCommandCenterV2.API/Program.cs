@@ -869,7 +869,14 @@ app.MapGet("/api/boring-overnight/snapshots", async (
         {
             count = snapshots.Count,
             snapshots,
-            note = "Append-only audit records. Source timestamps and provenance are caller-supplied and are not independently verified."
+            evaluations = snapshots.Select(snapshot => new
+            {
+                snapshotId = snapshot.SnapshotId,
+                symbol = snapshot.Symbol,
+                asOfUtc = snapshot.AsOfUtc,
+                evaluation = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest)
+            }).ToArray(),
+            note = "Append-only input snapshots plus fresh deterministic evaluations under the current rules. Source timestamps and provenance are caller-supplied and are not independently verified."
         });
     }
     catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
