@@ -68,8 +68,18 @@ public static class UsEquitiesSessionCalendar
                 currentTargetSession = currentTargetSession.AddDays(1);
         }
 
-        var currentBoundary = BuildRecentBoundaries(currentTargetSession, 1)[0];
-        var historical = BuildRecentBoundaries(currentBoundary.PreviousSessionDate, requiredHistoricalPairs);
+        // Build the single current interval directly. BuildRecentBoundaries is intentionally
+        // restricted to 5–40 historical pairs and must not be weakened for this use case.
+        var previousSession = currentTargetSession.AddDays(-1);
+        while (!IsTradingSession(previousSession))
+            previousSession = previousSession.AddDays(-1);
+
+        var currentBoundary = new OvernightSessionBoundary(
+            previousSession,
+            currentTargetSession,
+            ToUtc(previousSession, GetRegularClose(previousSession).AddMinutes(-1)),
+            ToUtc(currentTargetSession, new TimeOnly(9, 30)));
+        var historical = BuildRecentBoundaries(previousSession, requiredHistoricalPairs);
         return (historical, currentBoundary);
     }
 
