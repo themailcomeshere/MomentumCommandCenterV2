@@ -695,3 +695,16 @@ The controls visible to the operator are Symbol, Bar interval, From, To, Fetch &
 - The four performance samples establish observed request timings, not a universal latency guarantee.
 - Button-to-endpoint/persistence side effects and default date-range behavior have not yet been verified from the implementation source or a Network capture.
 - No consolidated SIP history or persisted Thinkorswim ATR evidence was supplied for CRBG.
+
+
+### Boring Overnight control contract — source-verified follow-up (2026-11-12)
+
+The active Dashboard source (frontend/index.html) and API route in src/MomentumCommandCenterV2.API/Program.cs were inspected after the initial operating note. This resolves part of the prior uncertainty:
+
+- [x] Bar interval offers exactly 1 minute and 5 minutes. From / To are labelled Arizona-local inputs and are required for the Fetch & analyze bars form.
+- [x] Fetch / retry 20-session close/open history is separate from the selected bar interval/date range. The UI explicitly says it fetches 1-minute provider bars, persists them, and calculates the 20 most recent regular close/open pairs.
+- [x] API contract: POST /api/boring-overnight/capture-history; request must specify exactly 20 pairs and a configured provider (Alpaca or Massive). The server derives the 20 session boundaries from the U.S. equities calendar, requests 1-minute bars in chunks, de-duplicates by timestamp, persists returned bars, calculates close/open history, independently requests Daily metrics and catalyst assessment, then appends a timestamped candidate snapshot and evaluates it.
+- [x] The capture also checks the exclusion watchlist and stores history audit, Daily evidence and catalyst evidence in the snapshot. Caller/source provenance is recorded; it is not independent verification of provider entitlement or completeness.
+- [ ] Still trace the exact frontend request/response handlers for Fetch & analyze bars and Refresh saved evaluations before documenting their endpoint side effects.
+- [ ] During browser acceptance, record configured provider/feed, returned bar count, persisted count, valid/missing pair counts, Daily/catalyst errors and snapshot as-of timestamp.
+
