@@ -1061,19 +1061,31 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             value is { ValueKind: JsonValueKind.String } element && element.TryGetDateTimeOffset(out var timestamp) && timestamp.Offset == TimeSpan.Zero
                 ? timestamp : null;
 
-        var fiveMinutePermission = JsonBoolean(JsonPath(technicalAssessment, "fiveMinute", "scoreBreakdown", "permission"));
-        var fiveMinuteStructureBull = JsonBoolean(JsonPath(technicalAssessment, "decision", "fiveMinuteStructureBull"));
+        var rawFiveMinutePermission = JsonBoolean(JsonPath(technicalAssessment, "fiveMinute", "scoreBreakdown", "permission"));
+        var rawFiveMinuteStructureBull = JsonBoolean(JsonPath(technicalAssessment, "decision", "fiveMinuteStructureBull"));
         var oneMinuteStateValue = JsonPath(technicalAssessment, "decision", "state");
         var oneMinuteActionValue = JsonPath(technicalAssessment, "decision", "action");
-        var oneMinuteState = oneMinuteStateValue is { ValueKind: JsonValueKind.String } stateElement
+        var rawOneMinuteState = oneMinuteStateValue is { ValueKind: JsonValueKind.String } stateElement
             ? stateElement.GetString() + (oneMinuteActionValue is { ValueKind: JsonValueKind.String } actionElement ? "/" + actionElement.GetString() : string.Empty)
             : null;
-        var extensionAtr = JsonNumber(JsonPath(technicalAssessment, "oneMinute", "extensionAtr"));
-        var currentVolumeVsAverage = JsonNumber(JsonPath(technicalAssessment, "fiveMinute", "relativeVolume"));
+        var rawExtensionAtr = JsonNumber(JsonPath(technicalAssessment, "oneMinute", "extensionAtr"));
+        var rawCurrentVolumeVsAverage = JsonNumber(JsonPath(technicalAssessment, "fiveMinute", "relativeVolume"));
         var oneMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "oneMinute", "sourceTimestampUtc"));
         var fiveMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "fiveMinute", "sourceTimestampUtc"));
         var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "isFresh"));
         var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "isFresh"));
+        var technicalEvaluationStatus = JsonPath(technicalAssessment, "evaluationStatus")?.ToString();
+        var technicalInputsUsable = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightTechnicalInputPolicy
+            .AreIntradayInputsUsable(technicalFeedMatchesCapture, oneMinuteFresh, fiveMinuteFresh, technicalEvaluationStatus);
+
+        // Keep raw diagnostic values out of the evaluator when either timeframe is stale,
+        // provenance is mismatched, freshness is unknown, or the V2 regular-session engine
+        // did not evaluate this exact live assessment.
+        var fiveMinutePermission = technicalInputsUsable ? rawFiveMinutePermission : null;
+        var fiveMinuteStructureBull = technicalInputsUsable ? rawFiveMinuteStructureBull : null;
+        var oneMinuteState = technicalInputsUsable ? rawOneMinuteState : null;
+        var extensionAtr = technicalInputsUsable ? rawExtensionAtr : null;
+        var currentVolumeVsAverage = technicalInputsUsable ? rawCurrentVolumeVsAverage : null;
 
         // Daily range and ATR are calculated only from a complete, fresh SIP Daily sample.
         // ATR is a 14-session mean true range; no IEX or partial-session substitute is allowed.
@@ -1246,8 +1258,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 fiveMinuteFeed = technicalFiveMinuteFeed,
                 configuredFeed = JsonPath(technicalAssessment, "configuredFeed")?.ToString(),
                 feedMatchesCapture = technicalFeedMatchesCapture,
+                intradayInputsUsable = technicalInputsUsable,
                 sourceTransport = JsonPath(technicalAssessment, "oneMinute", "sourceTransport")?.ToString(),
-                evaluationStatus = JsonPath(technicalAssessment, "evaluationStatus")?.ToString(),
+                evaluationStatus = technicalEvaluationStatus,
                 fiveMinutePermission,
                 fiveMinuteStructure = captureInputs.FiveMinuteStructure,
                 oneMinuteState,
