@@ -1153,3 +1153,35 @@ Commit `195be63c690920b86d4d624e1b078017bcf4e3a4` adds strict provenance matchin
 - The feed-mismatch guard has not yet been compiled/tested on its own commit.
 - No operator capture response has yet confirmed the new match flag against live Alpaca/Massive payloads.
 - TOS Daily ATR parity and after-hours V2 state semantics remain unverified.
+
+
+## November 12 — operator technicalAssessment staleness finding and correction
+
+Operator supplied a fresh capture payload with Alpaca/IEX matching across history and both timeframes, but `evaluationStatus=STALE_MARKET_DATA`, 1m freshness false and 5m freshness false. The 1m bar-start was 20:59Z; the 5m bar-start was 20:55Z. Permission/structure/state were null as expected. However, extension ATR (2.7281) and 5m same-time-of-day RVOL (0.7608) were still populated despite stale source bars. This was a real qualification-input leak: numeric indicators could be stale but still copied into the saved evaluator input.
+
+Correction on feature branch:
+- `BoringOvernightTechnicalInputPolicy.AreIntradayBarsUsable`: true only when provider/feed match and both freshness flags are explicitly true.
+- `BoringOvernightTechnicalInputPolicy.IsV2DecisionUsable`: additionally requires exact `EVALUATED` status.
+- Extension ATR and RVOL now require fresh matched bars.
+- 5m permission, 5m structure and 1m state/action additionally require V2 decision evaluation. Outside regular session, stale data, insufficient history or insufficient RVOL baseline cannot populate decision fields.
+- Capture response adds `intradayBarsUsable`, `v2DecisionUsable`, age seconds and freshness thresholds.
+- Regression tests added for stale, false, null, feed mismatch, outside session, insufficient history and RVOL baseline statuses.
+
+Commits: `a5a089fb13bd63727c619ae335b9473ff4a25cfc`, `6e8248e664f6d40c51b5b1501cab0f6d86b44361`, `e4a6918a0b50a5421858316fb9e82f2b9e3bb235`, `a986e8107908bc626656732b7b03320a262b1170`, `58ade3a9651304d75440df766bc0dba1495e0616`, `e39cd406092795ac553a56bccce36c5a961ccc05`, `853fe72c6af3baa9187967d87b876eab78d2b264`.
+
+Detailed audit: `docs/Validation/Boring-Overnight-Technical-Staleness-Audit-20261112.md`.
+
+### Next operator verification
+1. Pull the latest `feature/opportunity-quality-classification`.
+2. Run `.scripts\Get-Latest-And-Test.ps1` and report exact SHA/build/test totals.
+3. During regular session, capture one symbol. Confirm `intradayBarsUsable=true`; if `evaluationStatus=EVALUATED`, confirm `v2DecisionUsable=true` and decision inputs have values only when returned by V2.
+4. Capture after regular session. Confirm V2 decision fields remain null and `v2DecisionUsable=false`. If the 1m/5m completed bars exceed their freshness thresholds, extension ATR and RVOL must also be null.
+5. Inspect the saved snapshot's `EvaluationRequest` fields, not just the API response. Confirm stale numeric fields were not persisted.
+6. Report `oneMinuteAgeSeconds`, `fiveMinuteAgeSeconds`, both limits, source timestamps, `evaluationStatus`, `intradayBarsUsable` and `v2DecisionUsable`.
+7. Do not change IEX to SIP by configuration assumption. Qualification Daily range/ATR require actual complete fresh SIP Daily evidence.
+
+[Uncertainties]
+- The operator response omitted `evaluatedAtUtc`, actual age seconds and freshness thresholds, so exact elapsed stale time cannot be calculated.
+- Capture timing relative to regular-session close is not confirmed.
+- No latest-head Release build/test result or browser retest exists for the correction yet.
+- IEX is partial exchange coverage; Daily qualification fields correctly remain null without SIP.
