@@ -1,5 +1,16 @@
 # November 12 — latest operator evidence and immediate actions
 
+### Boring Overnight implementation details — source-verified
+
+The Dashboard exposes a separate 20-session capture button. It is not controlled by the From/To range or the 1m/5m selector. The form's interval selector has exactly 1m and 5m options; From/To are Arizona-local required fields for the separate Fetch & analyze bars form.
+
+The 20-session action calls POST /api/boring-overnight/capture-history. The API requires RequiredWindow=20 and a configured Alpaca or Massive provider. It calculates 20 recent U.S. equity session boundaries, fetches 1-minute bars across the exact prior-close-to-next-open boundary range, deduplicates timestamps, persists fetched bars, calculates the 20 close/open pairs, fetches Daily metrics and catalyst assessment independently, and appends a Boring Overnight candidate snapshot with provenance/history audit/Daily/catalyst evidence. It then evaluates that snapshot. It also applies the exclusion watchlist. A persisted snapshot is an audit record; caller/source metadata is not independent proof of feed entitlement or market-wide completeness.
+
+Use the 20-session button when its valid/required pair count or missing-pair count shows the history is incomplete, or when you deliberately want a fresh capture. Do not repeatedly retry unchanged IEX expecting it to become SIP. The action can persist zero new bars and still evaluate available stored history; inspect fetched/persisted counts and valid/missing pairs.
+
+Still not source-verified in this pass: the exact frontend endpoint/side effects for Fetch & analyze bars and Refresh saved evaluations. Capture their Network requests before treating them as fetch/persist/recalculate equivalents.
+
+
 ## Verified operator results
 - Local Release build: succeeded in 12.2s; tests 267/267 passed, 0 failed, 0 skipped, test duration 9.2s. Exact SHA was not included in the report.
 - Live assessment: JSONL cold index rebuilt once in 23,313.4ms from 261,010 lines / 130,772,422 bytes. Deserialize 4,802.5ms; index insertion 1,106ms. The load count remained 1.
