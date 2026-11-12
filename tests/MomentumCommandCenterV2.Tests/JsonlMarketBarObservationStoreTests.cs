@@ -289,6 +289,10 @@ public sealed class JsonlMarketBarObservationStoreTests
             Assert.Equal(1, coldLoadDiagnostics.IndexLoadCount);
             Assert.Equal(1, coldLoadDiagnostics.IndexedUniqueKeyCount);
             Assert.True(coldLoadDiagnostics.LastIndexLoadElapsedMs >= 0);
+            Assert.True(coldLoadDiagnostics.LastIndexLoadFileBytes > 0);
+            Assert.Equal(1, coldLoadDiagnostics.LastIndexLoadLinesRead);
+            Assert.True(coldLoadDiagnostics.LastIndexLoadDeserializeMs >= 0);
+            Assert.True(coldLoadDiagnostics.LastIndexLoadIndexMs >= 0);
 
             var corrected = original with { High = 11.2, Close = 10.8 };
             Assert.Equal(1, await restartedStore.AppendAsync(new[] { corrected }, CancellationToken.None));
