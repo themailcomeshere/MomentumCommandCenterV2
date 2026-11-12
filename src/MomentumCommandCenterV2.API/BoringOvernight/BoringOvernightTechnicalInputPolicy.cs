@@ -2,19 +2,20 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 
 /// <summary>
 /// Qualification policy for live intraday technical inputs. Diagnostic calculations may still
-/// be present in the live-assessment response when their source bars are stale, but they must
-/// not be copied into an evaluator snapshot unless both timeframes are fresh, provenance matches,
-/// and the V2 engine actually evaluated the current regular-session bars.
+/// be present when source bars are stale. Numeric indicators require matched, fresh source bars;
+/// V2 permission/structure/state additionally require a successful regular-session V2 evaluation.
 /// </summary>
 public static class BoringOvernightTechnicalInputPolicy
 {
-    public static bool AreIntradayInputsUsable(
+    public static bool AreIntradayBarsUsable(
         bool feedMatchesCapture,
         bool? oneMinuteFresh,
-        bool? fiveMinuteFresh,
+        bool? fiveMinuteFresh) =>
+        feedMatchesCapture && oneMinuteFresh == true && fiveMinuteFresh == true;
+
+    public static bool IsV2DecisionUsable(
+        bool intradayBarsUsable,
         string? evaluationStatus) =>
-        feedMatchesCapture &&
-        oneMinuteFresh == true &&
-        fiveMinuteFresh == true &&
+        intradayBarsUsable &&
         string.Equals(evaluationStatus, "EVALUATED", StringComparison.OrdinalIgnoreCase);
 }
