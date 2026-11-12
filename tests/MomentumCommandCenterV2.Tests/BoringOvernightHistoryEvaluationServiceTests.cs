@@ -71,6 +71,22 @@ public sealed class BoringOvernightHistoryEvaluationServiceTests
             BoringOvernightHistoryEvaluationService.ApplyHistory(Request(), history));
     }
 
+    [Theory]
+    [InlineData("RISK_PRESENT", 1, true, "RISK")]
+    [InlineData("MATERIAL_EVENT_REVIEW", 1, true, "RISK")]
+    [InlineData("UNCLASSIFIED_NEWS_REVIEW", 2, true, "RISK")]
+    [InlineData("UNKNOWN", 0, true, "UNKNOWN")]
+    [InlineData("UNKNOWN", 0, false, "UNKNOWN")]
+    [InlineData("CLEAR_WITH_SOURCE", 1, true, "CLEAR")]
+    [InlineData("CLEAR_WITH_SOURCE", 0, true, "UNKNOWN")]
+    [InlineData("CLEAR_WITH_SOURCE", 1, false, "UNKNOWN")]
+    public void CatalystStatusRequiresExplicitCompleteSourceBackedClearance(
+        string? status, int articleCount, bool coverageComplete, string expected)
+    {
+        Assert.Equal(expected,
+            BoringOvernightHistoryEvaluationService.ResolveCatalystStatus(status, articleCount, coverageComplete));
+    }
+
     private static BoringOvernightEvaluationRequest Request() => new(
         "TEST", true, 100, 90, 1_000_000, null, null, null, null, 0.2,
         false, "UNKNOWN", true, "BULLISH", "EXECUTION READY", 0.5, 1, 1.2, 1.1);
