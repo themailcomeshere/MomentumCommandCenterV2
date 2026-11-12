@@ -106,12 +106,12 @@ November 12 Q2 release: revenue $308.1 million (+39.2% YoY); GAAP net income $31
 
 This is a qualitative research order, not a recalculated Overnight Score. ADXN remains the CSV rank #1; I would keep it on a separate event-risk watch rather than blindly selecting it as the top trade.
 
-### MCC's supplied Top 4: CRBG, FB, CSQR, INGM
+### MCC's supplied Top 4: CRBG, FG, CSQR, INGM
 
 - **CSQR:** also appears in my top-10 and ranks #5 by CSV score; its Q3 business metrics are strong, with material capex and GAAP loss caveats.
 - **INGM:** latest Q3 release is strong: net sales $15.2B (+20.8%), non-GAAP EPS $0.91 (+26.4%), operating income +31.4%, operating cash flow $251M; Q4 sales guidance $17.5–$17.9B and non-GAAP EPS $1.05–$1.15. Stronger fundamentals than its CSV rank implies; it was #24 in this scanner file, score 66.88.
 - **CRBG:** Q3 net income $1.4B; adjusted after-tax operating income $545M; operating EPS $1.22; operating EPS +27%; premiums/deposits $8.8B; returned $295M including $185M buybacks. But MCC's latest CRBG snapshot carries one MATERIAL_EVENT_REVIEW analyst-action article and correctly maps catalyst to RISK; human review required.
-- **FB:** ticker identity is ambiguous in the supplied context. The CSV does not contain FB. Confirm the intended instrument/exchange before attributing news or earnings; no identity assumed.
+- **FG:** confirmed as F&G Annuities & Life, Inc. (NYSE: FG). It ranks #19 in this scanner export (score 71.42), not in the top 10. Its Q3 release is mixed-to-negative on adjusted earnings and sales despite strong AUM and core retail annuity sales; see the November 12 chart/catalyst addendum below.
 
 MCC Top 4 is a different candidate-generation/selection result from simply taking the highest scanner scores. I would not overwrite it based on this research alone; instead reconcile its selection inputs and capture the same evidence for all four before qualification.
 
@@ -149,3 +149,58 @@ No candidate is declared READY. No orders are authorized or submitted.
 - HSAI's current earnings/news catalyst was not verified in retrieved sources.
 - FB instrument identity is unresolved.
 - None of these fundamental findings establishes intraday technical qualification, consolidated feed coverage, or expected overnight return.
+
+
+## November 12 addendum — chart review, corrected FG identity and live technical ranking
+
+### Corrected MCC focused symbol: FG — F&G Annuities & Life
+
+The operator clarified that the earlier "FB" reference was a typo; the focused instrument is **FG — F&G Annuities & Life, Inc.** The scanner export places FG at rank #19 of 50, not in the top 10:
+
+- Overnight Score 71.42
+- Overnight win rate 75%
+- Average Overnight return +0.87%; median +0.94%
+- 5D Overnight return +1.45%; Overnight momentum +0.58
+- Current Overnight +1.05%; above 20 SMA = 1
+
+F&G's November 5 Q3 2026 release is mixed, not an unambiguously positive earnings catalyst. Reported net earnings were $736m ($5.48/share), but included $648m of favorable mark-to-market effects. Adjusted net earnings were $96m ($0.74/share), down from $165m ($1.22/share) a year earlier. Gross sales fell to $3.0b from $4.238b and net sales to $1.405b from $2.8b. Offsetting positives: AUM before reinsurance rose 7% to $76.2b; core retail sales reached a record $2.1b; management emphasized pricing discipline and capital allocation. This makes FG a mixed fundamental/catalyst profile. The reported GAAP EPS is materially distorted by mark-to-market effects; adjusted earnings are the more useful comparison.
+
+Primary source: F&G Q3 2026 results, November 5, 2026: https://investors.fglife.com/news/news-details/2026/FG-Annuities--Life-Reports-Third-Quarter-2026-Results/default.aspx
+
+### Chart review — uploaded Thinkorswim screenshots, November 12 around 12:40–12:43 p.m. ET
+
+These are observations from the screenshots, not a live API read. Labels are transcribed from the displayed MCC study headers; chart state can change immediately.
+
+| Symbol | 5M state / permission | 5M structure / regime | 1M state / execution | Extension / participation | Read |
+|---|---|---|---|---|---|
+| CSQR | RUNNER RISING / YES | RUNNER; bullish regime established | EXECUTION READY; 1M execution environment YES; 5M prepare-to-buy | 5M extension ~0.15 ATR; RVOL ~0.55; 1M RVOL ~1.88 and extension ~0.31 ATR | Best immediate technical posture of these four at the screenshot timestamp, but 5M is still PREPARE TO BUY and swing-buy environment is NO. Not an order/entry authorization. |
+| AMD | RUNNER RISING / YES | BULLISH; bullish regime established | 1M execution environment YES; lower chart is not a clean fresh 5M buy trigger | 5M extension ~5.03 ATR; RVOL ~0.28; RSI ~59.9 | Trend is bullish but materially extended with low relative volume at the snapshot. Avoid chasing; wait for reset/base and fresh confirmation. |
+| CECO | RUNNER RISING / YES | BULLISH; bullish regime established | 1M execution environment YES; 1M state PREPARE | 5M extension ~2.95 ATR; 1M extension ~6.46 ATR; 5M RVOL ~0.66; RSI ~53.7 | Bullish recovery/runner state, but price is extended on both timeframes and momentum is marked DEVELOPING. Not a clean fresh entry. |
+| SENS | WAIT / NO | BEARISH; bullish regime not established | SELL / SELL-BREAKDOWN; 1M execution environment NO | 5M RVOL ~0.10; RSI ~34.2; extension ~3.72 ATR | Clear technical rejection. Exclude from current long candidates despite strong Q3 fundamentals. |
+
+**Updated technical ordering at the screenshot time:** CSQR first; AMD and CECO are bullish but too extended to chase; SENS is blocked. CSQR's 1M EXECUTION READY label does not override the 5M PREPARE TO BUY state, the NO swing-buy environment, the absence of independent consolidated-feed qualification, or other fail-closed MCC gates. None is declared READY by this chart review.
+
+### Separate research ranking versus intraday timing
+
+The fundamental/research ranking remains CECO, SENS, AMD, CSQR (with ADXN on a separate event-risk watch). The screenshot-based timing ranking is different: CSQR, AMD/CECO (extended), then SENS (bearish/permission denied). Do not conflate business quality with a current entry setup.
+
+### Overnight history — provisional calculations from 13 supplied valid pairs
+
+The 13 valid returns supplied by the operator calculate to:
+- 12 positive / 13 valid = **92.31% provisional win rate**
+- Arithmetic mean = **+0.750%**
+- Median = **+1.031%**
+- Latest five valid observations (Nov 2, 3, 4, 6, 11) mean = **+1.131%**
+
+These are explicitly **valid-observation-only diagnostics**, not the official 20-pair metrics. Official 20-pair win rate/mean/median remain DATA? because only 13/20 exact pairs exist. Seven missing endpoints include six prior-session opens and the Nov 12 current-session open. The current Nov 12 endpoint must be represented as a current/in-progress interval, not as a completed historical pair. Do not skip missing sessions when defining the latest five completed scheduled pairs.
+
+### Capture exception — runtime status
+
+The branch handler includes `const calc=data.calculation||h.calculation||{}` before reading optional Boring Winner fields. CI run 43289911750 completed successfully on branch head `d047af1c86826e94b587468924e2cec3015cd3be` (frontend syntax validation, .NET build and tests all passed). Since the operator still sees `calc is not defined`, browser/runtime acceptance is **not passed**. Most likely explanation is that the running dashboard serves stale frontend assets or is running an older checkout; this remains a hypothesis until branch/SHA, process restart, and served asset are checked. The fix does not solve missing IEX bars or history-window semantics.
+
+## [Uncertainties] — addendum
+
+- Chart values/states are screenshot observations at approximately 12:40–12:43 p.m. ET on Nov 12, not live or persistent market state.
+- The provisional Overnight metrics use only the 13 returned exact pairs; missing observations may alter the full 20-pair distribution.
+- FG consensus-estimate revisions were not independently verified; company-reported results and guidance are used here.
+- The cause of the operator's repeated frontend exception is not runtime-confirmed.
