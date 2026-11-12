@@ -1,3 +1,48 @@
+## November 12 — Current handoff update
+
+**Working branch:** `feature/opportunity-quality-classification`  
+**Current source head at this update:** `b4dd7aeee8e3e35880f78c429287c8c29c8f7e2e` (later documentation commits update the branch head).  
+**Priority:** Schwab integration and broker execution reconciliation remain parked. Continue existing MCC work. Do not modify `master`.
+
+### Repository work completed
+- Added JSONL cold-index diagnostics for file bytes, lines scanned, deserialize time, index insertion time, total load time, unique keys and load count.
+- Added those fields to `/api/market-data/live-assessment` `performanceDiagnostics`.
+- Added regression assertions to the JSONL store tests.
+- CI for the initial instrumentation commits failed during .NET Build because the diagnostics record declaration still had the old four-field shape. That compile-contract omission was fixed in commit `b4dd7ae`. The exact-head CI result for the corrected branch head must be checked before local deployment.
+- Audited Opportunity Quality: the assessor is diagnostic-only and applies missing/stale/future-data and eligibility gates; the pool ranker is deterministic but not calibrated. Unit tests exist for isolated states. Full candidate-pool/API/browser fixtures and current scanner-field denominators remain open.
+- Audited Boring Overnight: the pure evaluator supports READY if all supplied inputs pass, but production source qualification and READY alert wiring remain unverified. Boring Winner PASS remains RESEARCH ONLY.
+- Audited Alpaca Daily parsing: array, symbol-keyed envelope, null/empty observations and transient retry cases have tests. BAYRY still returned 0/20 expected sessions on IEX; no parser fix can manufacture missing observations.
+
+### CI status and caution
+Earlier instrumentation commits `71c39fd` and `0b039c4` failed GitHub Actions at the .NET Build step. Do not treat those runs as a pass. Commit `b4dd7ae` fixes the missing diagnostics record properties; a new workflow run for the corrected head is required. If it fails, inspect the build log before asking the operator to pull.
+
+### Next operator steps — in order
+1. Wait for and verify GitHub Actions on the exact latest branch SHA. Confirm JavaScript validation, .NET Release build and all tests pass.
+2. On Windows, fetch only `feature/opportunity-quality-classification`; verify `git rev-parse HEAD` matches the latest branch SHA shown in GitHub. Do not pull `master`.
+3. Run Release build and the complete test suite. Record total/succeeded/failed/skipped and duration.
+4. Restart the API from a fresh process. This is required to measure cold-index behavior. Do not delete, truncate, compact or migrate `market-bars.jsonl`.
+5. Call live assessment for EVR/RKLX/ASTX/SPY. Save the complete response, especially `performanceDiagnostics`: total, provider wall time, 1m and 5m fetch durations/source paths, WebSocket store read, persistence, calculation, JSONL load count/state, file bytes, lines read, total cold-load time, deserialization time and index insertion time.
+6. Repeat the same assessment without restarting. Compare first request vs warm request. This distinguishes process-local cold-load cost from provider/assessment latency. Record whether load count increments only once.
+7. Verify a normal bar append persists and appears in a subsequent read; do not infer durability solely from an in-memory result.
+8. Continue the Boring Overnight acceptance: reconcile imported CSV row count, use top 20, run Top 4, verify four distinct queried symbols and review every Daily/catalyst result. Zero articles remains UNKNOWN. Capture the sell-limit request sequence and all PASS/BLOCKED disclosure rows; it must remain blocked on IEX.
+9. Complete browser/CDP acceptance and save screenshot, console exceptions and sanitized Network/HAR timings.
+10. Separately compile exact ATR V2 ThinkScript in TOS and compare matched TOS OHLC export rows with scanner CSV. GitHub CI cannot compile ThinkScript.
+11. Keep CRBG/FG/IBN/HDB reviews evidence-based; IEX_PARTIAL is not SIP coverage. Keep BAYRY/LYSDY/BNPQY blocked where expected sessions are absent.
+12. Do not request Schwab exports or start OAuth work. Schwab remains bottom priority.
+
+### What remains engineering-owned
+- Add full-pool Opportunity Quality fixtures (complete, incomplete, stale, excluded) and API/UI acceptance; refresh actual scanner-field availability denominators and timestamps.
+- Diagnose performance from the newly instrumented runtime measurements before changing JSONL storage.
+- Complete durable-file path inventory before backup/restore implementation.
+- Complete current branch-head CI and maintain exact-SHA release evidence.
+
+### What remains operator/source-gated
+- Fresh-process and warm-request performance measurements on the actual local JSONL file.
+- Windows Release build/test/runtime/browser acceptance.
+- TOS compile and matched-bar parity.
+- Independently supported Daily source/feed evidence and source-backed candidate reviews.
+- Overnight schedule/order-ticket comparison and official auction/first-eligible-trade semantics.
+
 ## November 10 — Operator feedback, price provenance, and blocker work
 
 ### Implemented on `feature/opportunity-quality-classification`
