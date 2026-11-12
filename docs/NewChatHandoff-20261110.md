@@ -993,3 +993,52 @@ Latest documentation commits:
 - CI result for the fix is not yet verified.
 - HSAI fresh catalyst and FB instrument identity remain unresolved.
 - Scanner metric sample sizes and formula are absent from the CSV.
+
+
+## November 12 — verified CI, operator still sees capture exception, chart review
+
+### Branch and CI status
+
+- Branch: `feature/opportunity-quality-classification`.
+- CI workflow [43289911750](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/43289911750): **SUCCESS**, head SHA `d047af1c86826e94b587468924e2cec3015cd3be`. Job steps included frontend JavaScript syntax validation, .NET restore/build and tests.
+- Static inspection of current `frontend/app.js` confirms capture handler now declares `const calc=data.calculation||h.calculation||{}` before reading optional calculation fields.
+- Operator nevertheless reports `Capture failed: calc is not defined`. Treat browser acceptance as FAILED/OPEN. Likely stale served frontend asset or older local checkout, but not confirmed. Do not claim operator-side resolution.
+
+### Operator's latest CRBG capture evidence
+
+- 6,676 fetched / 0 newly stored; provider/feed Alpaca / IEX; calendar `MCC_US_EQUITIES_CALENDAR_V2`; calculated 2026-11-12 19:50:15 UTC.
+- 13/20 exact pairs valid; 7 missing. Six are historical missing exact 09:30 ET open bars; the seventh is the current Nov 12 expected open at 14:30 UTC.
+- Valid-pair-only descriptive calculations: 12/13 positive = 92.31%; mean +0.750%; median +1.031%; latest five valid observed pairs (Nov 2, 3, 4, 6, 11) mean +1.131%. Do not present these as 20-pair qualification metrics. Official 20-pair win rate/mean/median remain DATA?.
+- Important semantic defect remains: Nov 12 is a current/in-progress interval, not a completed historical pair. Correct API/UI to report last 20 completed historical pairs separately from current interval. Preserve exact-boundary rule; never substitute nearby opens.
+
+### Uploaded chart review (Nov 12 approx. 12:40–12:43 p.m. ET)
+
+- CSQR: 5M RUNNER RISING, permission YES, runner structure, bullish regime; 1M EXECUTION READY and 1M execution environment YES. But 5M state says PREPARE TO BUY and swing-buy environment NO. 5M extension ~0.15 ATR; 1M extension ~0.31 ATR; 1M RVOL ~1.88. Best technical posture among the four at screenshot time, not an order signal.
+- AMD: 5M runner rising / permission YES / bullish regime, 1M environment YES; extension ~5.03 ATR, RVOL ~0.28. Bullish but extended; do not chase.
+- CECO: 5M runner rising / permission YES / bullish regime, 1M environment YES; 5M extension ~2.95 ATR and 1M extension ~6.46 ATR; momentum developing. Bullish but materially extended.
+- SENS: 5M WAIT / permission NO / bearish structure / bullish regime not established; 1M SELL/SELL-BREAKDOWN and execution environment NO; RVOL ~0.10, RSI ~34.2. Exclude from current long candidates.
+- Fundamental research ordering remains CECO, SENS, AMD, CSQR; screenshot timing ordering is CSQR, AMD/CECO (extended), SENS (blocked). These are separate rankings.
+
+### Corrected focused ticker FG
+
+The user corrected prior "FB" typo: **FG = F&G Annuities & Life, Inc. (NYSE: FG)**. CSV rank #19, score 71.42; ON win 75%, average +0.87%, median +0.94%, 5D +1.45%, current ON +1.05%. Q3 2026 release: net earnings $736m included $648m favorable MTM; adjusted net earnings $96m / $0.74 vs $165m / $1.22 prior year; gross sales $3.0b vs $4.238b; net sales $1.405b vs $2.8b; AUM before reinsurance +7% to $76.2b; core retail sales record $2.1b. Mixed catalyst, not a clean positive earnings surprise based on adjusted earnings/sales. Primary source: https://investors.fglife.com/news/news-details/2026/FG-Annuities--Life-Reports-Third-Quarter-2026-Results/default.aspx
+
+### Updated documentation
+
+- Research report with chart review + FG correction: `f890a21bac4c55b3e49195912f29ec901dfc7c34`.
+- Master To-Do chart/runtime update: `bede6990f500e8dece87dc92bab30b5a774c98d1`.
+- This handoff update follows those commits; verify branch head after commit.
+
+### Next engineering actions
+
+1. Verify operator local branch and SHA; pull the feature branch. Fully stop API/dashboard processes, restart from that checkout, and hard-refresh the browser. Inspect served `frontend/app.js` response for the `const calc=data.calculation||h.calculation||{}` line. If the exact error persists with the new asset, capture the full console stack and API response; search other frontend code paths for undeclared `calc`.
+2. Fix history API semantics: 20 most recent completed scheduled overnight pairs only; current interval separate/pending. Missing exact historical opens remain missing.
+3. Add regression tests for current interval exclusion, missing historical open, DST, no nearest-bar substitution and latest-five scheduled-pair semantics.
+4. Wire source-qualified 5M permission/structure, 1M execution state, extension ATR, volume ratio, daily range and ATR with field timestamps/freshness.
+5. Keep IEX_PARTIAL non-qualifying; use SIP/independent consolidated coverage before qualification. No orders.
+
+[Uncertainties]
+- Cause of repeated `calc is not defined` remains unconfirmed; stale frontend/checkout is the leading hypothesis.
+- Missing IEX opens' cause and consolidated feed entitlement remain unknown.
+- Official auction print versus first eligible trade semantics remain unresolved.
+- Screenshot states are point-in-time and not live.
