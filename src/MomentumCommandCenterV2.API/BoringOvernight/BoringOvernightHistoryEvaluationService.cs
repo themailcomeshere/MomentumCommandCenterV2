@@ -8,6 +8,24 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public static class BoringOvernightHistoryEvaluationService
 {
+    /// <summary>
+    /// Converts provisional catalyst triage into the evaluator's fail-closed vocabulary.
+    /// Only explicit, source-backed clearance can map to CLEAR.
+    /// </summary>
+    public static string ResolveCatalystStatus(string? status, int? articleCount, bool? coverageComplete)
+    {
+        if (string.Equals(status, "RISK_PRESENT", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(status, "MATERIAL_EVENT_REVIEW", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(status, "UNCLASSIFIED_NEWS_REVIEW", StringComparison.OrdinalIgnoreCase))
+            return "RISK";
+
+        if (string.Equals(status, "CLEAR_WITH_SOURCE", StringComparison.OrdinalIgnoreCase) &&
+            articleCount is > 0 && coverageComplete == true)
+            return "CLEAR";
+
+        return "UNKNOWN";
+    }
+
     public static BoringOvernightEvaluationRequest ApplyHistory(
         BoringOvernightEvaluationRequest request,
         BoringOvernightHistoryResult history)
