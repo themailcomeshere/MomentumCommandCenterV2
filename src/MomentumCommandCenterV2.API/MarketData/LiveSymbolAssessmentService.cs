@@ -247,7 +247,11 @@ public sealed class LiveSymbolAssessmentService(
                     jsonlIndexLoadCount = jsonlStoreDiagnostics?.IndexLoadCount,
                     jsonlIndexLastLoadElapsedMs = jsonlStoreDiagnostics is null ? (double?)null : Math.Round(jsonlStoreDiagnostics.LastIndexLoadElapsedMs, 1),
                     jsonlIndexUniqueObservationKeys = jsonlStoreDiagnostics?.IndexedUniqueKeyCount,
-                    note = "Server-side stage timings for this uncached assessment. JSONL index-load timing is the most recent one-time process-local rebuild, not necessarily work performed by this request. Provider fetch duration covers 1m and 5m requests in parallel; it is not a provider-side timing breakdown."
+                    jsonlIndexFileBytes = jsonlStoreDiagnostics?.LastIndexLoadFileBytes,
+                    jsonlIndexLinesRead = jsonlStoreDiagnostics?.LastIndexLoadLinesRead,
+                    jsonlIndexDeserializeElapsedMs = jsonlStoreDiagnostics is null ? (double?)null : Math.Round(jsonlStoreDiagnostics.LastIndexLoadDeserializeMs, 1),
+                    jsonlIndexIndexElapsedMs = jsonlStoreDiagnostics is null ? (double?)null : Math.Round(jsonlStoreDiagnostics.LastIndexLoadIndexMs, 1),
+                    note = "Server-side stage timings for this uncached assessment. JSONL index-load timing is the most recent one-time process-local rebuild, not necessarily work performed by this request. File bytes and lines are captured during that rebuild. Deserialize and index timings are measured separately and may not sum exactly to total due to loop and I/O overhead. Provider fetch duration covers 1m and 5m requests in parallel; it is not a provider-side timing breakdown."
                 },
                 symbol = normalizedSymbol,
                 provider = provider.ProviderName,
