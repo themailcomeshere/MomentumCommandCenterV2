@@ -1047,8 +1047,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             : null;
         var extensionAtr = JsonNumber(JsonPath(technicalAssessment, "oneMinute", "extensionAtr"));
         var currentVolumeVsAverage = JsonNumber(JsonPath(technicalAssessment, "fiveMinute", "relativeVolume"));
-        var oneMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "oneMinute", "completedAtUtc"));
-        var fiveMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "fiveMinute", "completedAtUtc"));
+        var oneMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "oneMinute", "sourceTimestampUtc"));
+        var fiveMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "fiveMinute", "sourceTimestampUtc"));
         var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "isFresh"));
         var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "isFresh"));
 
