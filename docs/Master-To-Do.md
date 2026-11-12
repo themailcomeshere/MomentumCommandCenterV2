@@ -2,6 +2,39 @@
 
 ---
 
+## November 12 — Engineering progress and next acceptance gates
+
+### Implemented in repository on `feature/opportunity-quality-classification`
+
+- [x] Added JSONL cold-index stage instrumentation: file bytes, lines scanned, total elapsed time, deserialization elapsed time, index insertion elapsed time, unique indexed keys and load count.
+- [x] Exposed the new measurements in live-assessment `performanceDiagnostics`; timings describe the most recent process-local index rebuild, not necessarily work performed by the request reporting them.
+- [x] Added store regression assertions for the measured file/line counts and stage timings.
+- [x] Corrected the diagnostics record contract after the first CI build exposed a missing record-property update. The initial instrumentation commits failed CI at compilation; the contract fix is now committed and a fresh exact-head CI run is required.
+- [x] Re-audited Opportunity Quality implementation: it is a diagnostic overlay over existing entry eligibility, with missing/stale/future timestamps classified DATA? and ineligible candidates BLOCKED. Pool ranking is deterministic and explicitly uncalibrated. Existing unit tests cover several isolated states.
+- [x] Re-audited Boring Overnight evaluator: its pure evaluator can return READY only when all supplied fields satisfy its gates. This does not prove that the production workflow supplies source-qualified inputs or that a READY alert transition is wired. Keep those integration/evidence tasks open.
+- [x] Re-audited Alpaca Daily handling: normal array, symbol-keyed array, null/empty observations and transient HTTP retry paths have tests. BAYRY's actual IEX result remains 0/20 expected sessions; a parser change cannot create missing provider data.
+
+### Still open — repository work we can continue without Schwab
+
+- [ ] Add end-to-end Opportunity Quality fixtures that pass complete, incomplete, stale and excluded candidate snapshots through the actual API/UI workflow; current unit tests are not full-pool/browser acceptance.
+- [ ] Refresh scanner-field availability denominators and per-symbol source timestamps from a current candidate pool. Historical count of 296 missing custom-expression rows is stale; no current denominator was found in the reviewed sources.
+- [ ] Profile the actual local JSONL file and assessment stages after a fresh API restart. The new instrumentation has not yet been measured against the operator's file.
+- [ ] Measure warm reads, append persistence and first-request/host-startup cold-load behavior separately. Do not change the append-only persistence format until the profile supports a safe design.
+- [ ] Complete the Boring Overnight workflow and candidate evidence review, including import row reconciliation, shortlist/top-20, four distinct Top 4 requests, Daily/catalyst outcomes and sell-limit gate disclosure.
+- [ ] Complete browser/CDP, WebSocket, collector recovery and interactive Windows start/second-start/graceful-stop acceptance.
+- [ ] Finish the durable-path inventory before implementing backup/restore; exact snapshot filenames, imported source retention, logs and all overrides must be verified.
+- [ ] Add exact-head release evidence after CI; local Windows build/runtime, browser, TOS compile and independent feed evidence remain separate gates.
+
+### Operator/source gates — do not mark complete from repository code
+
+- [ ] Pull the latest feature branch and run the detailed validation sequence in the current handoff below.
+- [ ] Capture one fresh-process live-assessment response including the complete `performanceDiagnostics` object.
+- [ ] Review CRBG, FG, IBN and HDB Daily/catalyst/price/volume/exclusion evidence; IEX_PARTIAL is not consolidated coverage and zero articles is UNKNOWN.
+- [ ] Keep BAYRY, LYSDY and BNPQY qualification blocked until a genuinely supported source supplies validated expected sessions with documented provenance.
+- [ ] Compile the exact current ATR V2 studies in Thinkorswim and retain compile/chart-settings evidence; compare matched TOS OHLC exports to MCC scanner values.
+- [ ] Verify Overnight clock schedule against the operator's actual order ticket for standard time, daylight time and early close; do not infer fills or official auction prints from bars.
+- [ ] Keep sell-limit output fail-closed until all source, feed, ATR, OHLCV, continuity, reference-close, 40-session and walk-forward requirements pass.
+
 ## November 10 — Operator feedback, price provenance, and blocker work
 
 ### Implemented on `feature/opportunity-quality-classification`
@@ -64,7 +97,7 @@ Initial comparison settings: Daily aggregation; Extended Hours OFF so daily Open
 - [x] Scanner Workbench Symbols auto-populates with up to 20 unique imported Overnight symbols sorted by Overnight Score; manual Use Overnight Top 20 action is available. It does not submit a scan.
 - [x] Removed obsolete Red Zone static chip, redundant label ID, and obsolete explanatory paragraph. Preserved `.gate-warning` and Ticker placeholder.
 - [x] Decision Explanation and Timeframe Handoff are collapsible with pointer cursor. Timeframe Handoff is hidden in Boring Overnight mode.
-- [ ] Define a source-qualified Boring Overnight READY state and corresponding alert transition; current evaluator intentionally remains fail-closed at READY=0. Do not substitute Boring Winner PASS for READY.
+- [ ] Wire and validate a source-qualified Boring Overnight READY workflow and alert transition. The pure evaluator can return READY when all caller-supplied gates pass, but production input provenance and alert wiring are not yet evidenced. Never substitute Boring Winner PASS for READY.
 - [x] Latest code-bearing commit `aa60685580c266410df1149779d70d4bc15268ef` passed GitHub Actions JavaScript syntax validation, .NET Release build, and tests (run `42836168264`). The later cache-key-only commit `176b545dd5ef256cb7842e5bd414c5641f6f1f2a` was still running its own CI at the time this note was written.
 - [ ] Operator Windows build/run, browser verification, and API/runtime acceptance remain required.
 
@@ -354,7 +387,7 @@ This is the current authoritative checklist. The detailed backlog contains imple
 - [x] Warm EVR request: client 0.399s; server total 391.5ms; WebSocket-store read 4.1ms; persistence 6.7ms; calculation 3.5ms.
 - [x] Confirmed warm-path improvement against the prior sample: client latency fell from 12.046s to 0.399s; the previous server report of 51.622s is now 391.5ms. This is an observed before/after sample, not a multi-symbol performance guarantee.
 - [x] The newer client/server timing boundaries are close: 174ms difference on the first request and about 8ms on the warm request.
-- [ ] The 7.1ms WebSocket-store read does not by itself prove that the process-local JSONL index rebuild was performed during that request. The store may have been initialized earlier by startup/background activity. Added explicit jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs, jsonlIndexUniqueObservationKeys, and jsonlIndexLoaded fields to the live-assessment diagnostics so the next restart test measures the actual one-time load.
+- [x] The 7.1ms WebSocket-store read did not prove whether the process-local JSONL index rebuild occurred during that request. Added index-load count/state, elapsed time, unique keys, file bytes, lines scanned, deserialization time and index-insertion time to live-assessment diagnostics. [ ] Operator must measure these after a fresh API restart.
 
 ### Calculated Limit Sell root cause and fix
 
