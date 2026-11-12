@@ -1083,3 +1083,7 @@ Latest known feature-branch commit before this handoff update: `6198315e09601097
 - Provider behavior for future/current boundary bars has not been tested against a live Alpaca response in this session.
 - Official opening auction print remains unverified; the exact 09:30 one-minute bar Open is only a proxy.
 - Calendar ruleset is MCC-maintained, not a live exchange calendar feed.
+
+Follow-up regression test: `f259051f4d7ba2cc086476621eb8a255b683b99b` verifies current-interval rollover at the scheduled 13:00 ET Thanksgiving Friday early close. Latest implementation head before this handoff update: `f259051f4d7ba2cc086476621eb8a255b683b99b`. To-Do update commit: `8f2d5ce661f82b89017312488629028396d7312a`.
+
+No CI or local .NET test result has been obtained for this series. The GitHub connector in this session exposes PR-triggered workflow lookup only and returned no run for the direct branch commit; this is not evidence of a successful build. Verify with the repository's standard exact-head CI or the operator's Release build/test script before deployment.
