@@ -1087,3 +1087,49 @@ Latest known feature-branch commit before this handoff update: `6198315e09601097
 Follow-up regression test: `f259051f4d7ba2cc086476621eb8a255b683b99b` verifies current-interval rollover at the scheduled 13:00 ET Thanksgiving Friday early close. Latest implementation head before this handoff update: `f259051f4d7ba2cc086476621eb8a255b683b99b`. To-Do update commit: `8f2d5ce661f82b89017312488629028396d7312a`.
 
 No CI or local .NET test result has been obtained for this series. The GitHub connector in this session exposes PR-triggered workflow lookup only and returned no run for the direct branch commit; this is not evidence of a successful build. Verify with the repository's standard exact-head CI or the operator's Release build/test script before deployment.
+
+## November 12 — calendar test failure correction and technical-input integration
+
+### Operator-reported failure
+Operator ran Get-Latest-And-Test.ps1 and reported 280 total tests, 275 passed, 5 failed. All five failures were the new BuildCurrentHistoryWindow tests. Stack trace showed BuildCurrentHistoryWindow calling BuildRecentBoundaries(..., 1), which correctly rejects fewer than five pairs.
+
+### Fix committed
+- Commit a54a0a5c0abe53744b6797919326345651fc7d10 constructs the one current boundary directly from the previous and target trading sessions using the existing session close/open UTC conversion helpers. The 5–40 historical-pair guard remains intact.
+- This is a code correction only. It has NOT yet been verified by a new operator test run.
+
+### Source-qualified technical-input wiring added
+Capture-history now invokes LiveSymbolAssessmentService using the selected market-data provider and maps the live service's own completed-bar evidence into the Boring Overnight evaluator:
+- 5M permission from fiveMinute.scoreBreakdown.permission.
+- 5M structure from decision.fiveMinuteStructureBull.
+- 1M state/action from decision.state/action.
+- 1M extension ATR from oneMinute.extensionAtr.
+- Current volume versus baseline from fiveMinute.relativeVolume (same-time-of-day 5M relative volume, not raw market-wide volume).
+- Per-field source timestamps from oneMinute.sourceTimestampUtc and fiveMinute.sourceTimestampUtc.
+- Freshness is read from freshnessDiagnostics.oneMinute/fiveMinute. Missing freshness remains null; stale evidence remains false.
+- Daily range% is the latest completed SIP Daily session (high-low)/close.
+- ATR% is the simple mean true range over 14 completed SIP Daily sessions divided by latest completed close. This is not Wilder ATR and has not been matched to the TOS Daily study.
+- Daily range/ATR values are null unless the Daily result is complete, fresh and qualification-usable SIP. IEX remains diagnostic only.
+- API response exposes technical source/feed/transport/status, values, timestamps, freshness and any live-assessment error.
+
+Commits:
+- a54a0a5c0abe53744b6797919326345651fc7d10 calendar boundary fix
+- 81cae4eb5ebcdf7ed95d9a069eb7bf27fb9418a6 initial live technical and Daily range/ATR mapping
+- e0b799e5f87b068f266c93f27e3d7509db3e6e0a response provenance + null freshness
+- 26380617f2a7d380a99b29d556b82813dffc5ba5 corrected JSON freshness path
+- 42ae6b6a471f8bd46f86c606cb9482bf461341fa raw bar-start timestamps
+- 1bfd4c38ed84484d030d1fecd4537bbcfd1abd21 To-Do update
+
+### Mandatory next validation
+1. Pull latest feature branch and run Release build plus all tests. Report exact counts and commit SHA. Do not assume the five calendar tests pass until this is run.
+2. Add API-level tests proving technical input mapping and source timestamps, including missing/stale assessment, 5M permission false, non-bullish structure, 1M SELL/BLOCK state, missing RVOL baseline and incomplete Daily SIP.
+3. Check that history capture and live technical assessment use the same provider/feed. Do not combine mismatched feed observations into a qualified snapshot.
+4. Confirm freshness diagnostics field names and returned payload against a live capture. The current mapping expects freshnessDiagnostics, not freshness.
+5. Verify the current interval remains separate from the 20 completed historical pairs.
+6. Browser acceptance for the current interval and technical evidence details.
+7. Match Daily range/ATR calculations against the exact TOS study; replace simple ATR only after verified parity evidence.
+
+[Uncertainties]
+- No CI or local build/test run has been performed after the latest commits.
+- Live Alpaca behavior, feed matching and freshness mapping are not yet operator-verified.
+- The Daily ATR calculation is a transparent simple-mean proxy, not verified Wilder ATR/TOS parity.
+- No broker fills, official auction prints, or execution eligibility are inferred.
