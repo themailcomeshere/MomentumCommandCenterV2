@@ -196,3 +196,32 @@ The API currently has multiple independent durable paths. These must be included
 ### Interactive operation implications
 
 The API currently registers hosted collection services in the API process. Interactive mode means those workers run only while the API process runs in the logged-in user's session. The collector already persists watermarks in a per-user JSON file and the stream worker reconnects while the process is alive. A launcher must not start a second API process against the same data files. The existing `/api/health` endpoint is liveness-only; it reports API status and must not be interpreted as provider or collector readiness.
+
+
+## November 12 engineering update — JSONL profiling instrumentation
+
+The prior live-assessment reports showed a large end-to-end delay and a separately measured JSONL cold-index rebuild. The cause of the end-to-end delay was not established. Do not treat the store read duration as the cold-load duration: the process may have loaded the index during startup or an earlier request.
+
+### Implemented
+- `JsonlMarketBarObservationStore` now records file bytes, lines scanned, total rebuild duration, deserialization duration and index-insertion duration, alongside load count, loaded state and unique key count.
+- `LiveSymbolAssessmentService` exposes these values through `performanceDiagnostics`.
+- Store tests assert that a one-line fixture records non-zero file bytes, one line and non-negative stage durations.
+- The initial instrumentation commits failed CI because the diagnostics record retained its prior four-field declaration. Commit `b4dd7ae` completed the record contract. The corrected exact-head workflow must pass before deployment.
+
+### Measurement protocol
+1. Restart the API process without altering the JSONL file.
+2. Capture first live-assessment response and all diagnostic fields.
+3. Capture a second equivalent request without restart.
+4. Compare cold-load count/timing with provider, persistence and calculation durations.
+5. Verify append and read-back persistence.
+6. Repeat after another restart only if the first measurements are inconsistent.
+
+No JSONL compaction, database migration, cache file or snapshot format has been introduced. Preserve append-only correction history and latest-observation selection until measurements justify a separately tested design.
+
+### Opportunity Quality and Boring Overnight audit
+- Opportunity Quality assessor is diagnostic-only; missing, stale and future-dated required inputs yield DATA?, and failed existing eligibility yields BLOCKED. The pool ranker is deterministic but not calibrated. Isolated unit tests exist; complete/incomplete/stale/excluded full-pool API/UI fixtures and current scanner-field denominators remain open.
+- The pure Boring Overnight evaluator can return READY when all caller-supplied fields pass. This is not evidence that production inputs are source-qualified or that READY alert transitions are wired. Keep integration and operator acceptance open.
+- Alpaca Daily client tests cover array and symbol-keyed bar envelopes, empty results and transient retries. BAYRY's observed IEX response remains 0/20 expected sessions; unsupported/absent data must remain DATA?, not be inferred from parser success.
+
+### Priority reaffirmation
+Schwab API/OAuth and broker execution reconciliation remain parked at the bottom of the priority list. Do not request broker exports or let Schwab prerequisites block performance, Boring Overnight, Opportunity Quality, TOS parity, runtime acceptance or release governance.
