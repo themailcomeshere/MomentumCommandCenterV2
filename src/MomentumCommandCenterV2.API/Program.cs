@@ -1000,8 +1000,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             Price = dailyMetrics?.Price,
             Sma20 = dailyMetrics?.Sma20,
             AverageDailyVolume20 = dailyMetrics?.AverageDailyVolume20,
-            DataFresh = dailyMetrics is not null && !dailyMetrics.DataFresh ? false : captureInputs.DataFresh,
-            CatalystStatus = catalystAssessment?.Status == "RISK_PRESENT" ? "RISK" : "UNKNOWN"
+            DataFresh = dailyMetrics?.DataFresh,
+            CatalystStatus = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService.ResolveCatalystStatus(
+                catalystAssessment?.Status, catalystAssessment?.ArticleCount, catalystAssessment?.CoverageComplete)
         };
         var captureSourceTimestamps = new Dictionary<string, DateTimeOffset>
         {
