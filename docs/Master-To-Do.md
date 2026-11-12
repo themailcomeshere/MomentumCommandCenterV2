@@ -726,3 +726,10 @@ The active Dashboard source (frontend/index.html) and API route in src/MomentumC
 - [ ] Decide whether official opening-auction data is required; the current 09:30 one-minute bar Open is only a proxy.
 
 Detailed evidence and exact code changes: docs/Validation/Boring-Overnight-Integration-Audit-20261112.md.
+
+
+### November 12 — saved Overnight evaluation refresh completed
+- [x] Corrected the saved-evaluation refresh contract: GET /api/boring-overnight/snapshots now returns immutable input snapshots plus a freshly recalculated evaluation for each snapshot under the current evaluator rules.
+- [x] Dashboard refresh now displays each saved snapshot's current evaluation status and eligibility flag; its status text reports how many evaluations were recalculated.
+- [x] This remains a read/recalculate operation; it does not rewrite append-only snapshots, promote research-only Boring Winner results, or submit orders.
+- [ ] Verify in browser that Refresh saved evaluations returns one evaluation per snapshot and that the visible status matches the returned API result.
