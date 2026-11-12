@@ -1083,7 +1083,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             Price = dailyMetrics?.Price,
             Sma20 = dailyMetrics?.Sma20,
             AverageDailyVolume20 = dailyMetrics?.AverageDailyVolume20,
-            DataFresh = dailyMetrics?.DataFresh == true && intradayFresh,
+            DataFresh = dailyMetrics is null || oneMinuteFresh is null || fiveMinuteFresh is null
+                ? null
+                : dailyMetrics.DataFresh && intradayFresh,
             CatalystStatus = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService.ResolveCatalystStatus(
                 catalystAssessment?.Status, catalystAssessment?.ArticleCount, catalystAssessment?.CoverageComplete),
             FiveMinutePermission = fiveMinutePermission,
@@ -1122,7 +1124,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 
         var snapshot = await snapshotStore.AppendAsync(
             new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
-                request.Symbol, DateTimeOffset.UtcNow, "Alpaca 1m bar capture (09:30 ET bar-open proxy)",
+                request.Symbol, DateTimeOffset.UtcNow, provider.ProviderName + " 1m history + live 1m/5m technical assessment",
                 provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
                 captureSourceTimestamps, captureInputs,
                 new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
@@ -1214,6 +1216,23 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             currentInterval,
             dailyMetrics,
             dailyError,
+            technicalAssessment = new
+            {
+                provider = provider.ProviderName,
+                feed = JsonPath(technicalAssessment, "oneMinute", "feed")?.ToString(),
+                fiveMinutePermission,
+                fiveMinuteStructure = captureInputs.FiveMinuteStructure,
+                oneMinuteState,
+                extensionAtr,
+                currentVolumeVsAverage,
+                oneMinuteSourceTimestampUtc = oneMinuteTimestamp,
+                fiveMinuteSourceTimestampUtc = fiveMinuteTimestamp,
+                oneMinuteFresh,
+                fiveMinuteFresh,
+                error = technicalAssessmentError,
+                dailyRangePct = new { value = dailyRangePct, sourceTimestampUtc = dailyTechnicalTimestamp, basis = "latest completed SIP Daily session high-low divided by close" },
+                atrPct = new { value = atrPct, sourceTimestampUtc = dailyTechnicalTimestamp, basis = "14 completed-session simple mean true range divided by latest completed close" }
+            },
             catalystAssessment,
             catalystError,
             snapshot,
