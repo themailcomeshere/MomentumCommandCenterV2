@@ -1,3 +1,88 @@
+# November 12 — latest operator evidence and immediate actions
+
+## Verified operator results
+- Local Release build: succeeded in 12.2s; tests 267/267 passed, 0 failed, 0 skipped, test duration 9.2s. Exact SHA was not included in the report.
+- Live assessment: JSONL cold index rebuilt once in 23,313.4ms from 261,010 lines / 130,772,422 bytes. Deserialize 4,802.5ms; index insertion 1,106ms. The load count remained 1.
+- Warm per-symbol assessment totals: EVR 391.6ms, RKLX 252.1ms, ASTX 240.4ms, SPY 586.2ms. Provider fetch dominated each sample. SPY used WebSocket store for 1M and Alpaca REST for 5M.
+- Do not claim all historical latency is fixed. These measurements show a one-time cold-index rebuild and sub-second request timings for these four samples.
+
+## CRBG sell-limit result — BLOCKED, as intended
+Operator's CRBG response evaluated at 2026-11-12T16:01:03Z:
+- Exact 2026-11-11 20:59 UTC prior-session reference close $36.10: PASS.
+- SIP_REQUIRED: BLOCKED; configured feed is IEX partial.
+- HISTORY_40_OF_40: 0/40 complete eligible windows.
+- ATR settings provenance: BLOCKED.
+- TOS ATR parity: NO_DATA, zero persisted observations / zero compared bars.
+- Continuous 5M TOS ATR warm-up: 0/99.
+- Same-source 5M provider/TOS OHLCV: 0/119 matches.
+- Current TOS 5M ATR freshness: BLOCKED.
+- Walk-forward: 0/20 complete training sessions and 0/20 complete test sessions.
+- Numeric sell limit withheld. No imputation, order submission, or fill inference.
+
+Keep the reference-close PASS distinct from the independent failed evidence gates. No numeric CRBG sell target is available.
+
+## Boring Overnight controls — safe operating sequence
+Visible controls: Symbol, Bar interval, From, To, Fetch & analyze bars, Refresh saved evaluations, Fetch / retry 20-session close/open history.
+
+1. Select one symbol and the interval required for the bar analysis.
+2. Set From/To for the bar-history analysis window.
+3. Click Fetch & analyze bars. Inspect provider/feed, returned timestamps, count and completeness.
+4. After new bars or changed inputs, click Refresh saved evaluations. Treat this as a saved-evaluation refresh, not as a substitute for fetching missing data.
+5. Use Fetch / retry 20-session close/open history when that distinct history is missing/incomplete. Inspect returned session count and missing dates. Retry only for transient failures or when source availability has changed.
+6. Review each evaluation's provenance and gates. Boring Winner PASS is research-only and is not READY, execution permission, or a sell instruction.
+
+**Do not infer unverified button side effects.** The exact endpoint sequence, persistence behavior, whether Fetch & analyze bars automatically refreshes evaluations, and default date ranges still need source/Network verification. Capture those during the next browser acceptance and update this contract from evidence.
+
+## Next operator actions — detailed
+
+### A. Pin the local source and rerun status
+1. On the feature branch, run:
+   `git status --short --branch`
+   `git branch --show-current`
+   `git rev-parse HEAD`
+2. Confirm branch is `feature/opportunity-quality-classification`; do not switch to master.
+3. Record the full SHA associated with the reported 267/267 test run.
+4. Pull latest feature branch and run `.\scripts\Get-Latest-And-Test.ps1` if the documentation update changes the head. Record resulting SHA, build/test totals and warnings.
+5. Verify GitHub Actions for that exact SHA; do not substitute a previous commit's green run.
+
+### B. Capture the Boring Overnight action contract
+1. Hard-refresh the main Dashboard and open DevTools Network; preserve the log.
+2. Select one symbol (CRBG is suitable for exercising the fail-closed sell-limit gates), select the intended interval and explicit From/To.
+3. Click **Fetch & analyze bars** once. Record request URL/method, query/body, status, duration, response provider/feed, first/last bar timestamps, returned count, missing intervals, and the visible result.
+4. Click **Refresh saved evaluations** once. Record the same Network details plus the evaluation's as-of timestamp. Establish whether it reads persisted observations only or makes a provider request.
+5. Click **Fetch / retry 20-session close/open history** once. Record requested session count, actual date range, source/feed, number of valid sessions, missing dates, and whether any prior evaluation is recalculated automatically.
+6. Repeat only the action that failed transiently. Do not use repeated retries to work around IEX partial-feed limitations.
+7. Send the three request/response summaries and screenshots of the resulting UI. Do not include credentials or tokens.
+
+### C. Complete the Boring Overnight candidate path
+1. Reconcile the imported CSV row count against the source file row count; report duplicates, rejected rows and accepted rows separately.
+2. Review the imported shortlist and top 20; confirm symbol uniqueness and score ordering.
+3. Run four distinct Top 4 Daily + catalyst requests (one per selected group/request); preserve the symbol list and each request's source/feed/as-of status.
+4. Review each candidate's Daily sessions, price/volume, catalyst articles, exclusions and freshness. Zero news articles remains UNKNOWN, not CLEAR. IEX_PARTIAL is not consolidated coverage.
+5. Keep Boring Winner PASS as research-only. Do not treat it as Boring Overnight READY.
+6. Open Calculated Limit Sell and verify every returned PASS/BLOCKED gate is visible. CRBG should remain BLOCKED until SIP/history/TOS evidence gates pass. Do not use a numeric target or submit an order.
+
+### D. TOS and feed evidence
+1. Compile the exact current ATR V2 study in Thinkorswim.
+2. Confirm ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON and study/version identity.
+3. Export matched 5M OHLCV/ATR observations and import them into MCC; provide enough consecutive completed bars for the 99-bar warm-up and 119-bar parity window.
+4. Preserve exact timestamps and source metadata. Do not manually fill missing observations.
+5. Do not retry SIP unless entitlement has genuinely changed; IEX cannot satisfy the consolidated-history gate.
+
+### E. Remaining engineering work
+- Engineering can continue full-pool Opportunity Quality API/UI fixtures and current scanner-field coverage reporting without waiting for Schwab.
+- Engineering should trace and document Boring Overnight button-to-endpoint/persistence contracts before modifying workflow behavior.
+- Interactive Windows launcher, duplicate-process prevention, graceful stop, startup error visibility and recovery acceptance remain open. Do not implement a Windows Service or unattended-after-sign-out operation.
+- Complete durable file path inventory before backup/restore implementation.
+- Schwab API/OAuth and broker reconciliation remain parked at the bottom priority.
+
+[Uncertainties]
+- Exact source SHA for the operator's latest local build/test is absent.
+- The Boring Overnight controls' exact API and persistence semantics need Network/source verification.
+- No SIP history, TOS ATR observations, or provider/TOS parity evidence has been supplied for CRBG.
+
+---
+
 ## November 12 — Current handoff update
 
 **Working branch:** `feature/opportunity-quality-classification`  
