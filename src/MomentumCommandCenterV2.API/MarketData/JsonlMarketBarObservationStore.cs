@@ -256,4 +256,8 @@ public sealed record JsonlMarketBarObservationStoreDiagnostics(
     bool IndexLoaded,
     long IndexLoadCount,
     double LastIndexLoadElapsedMs,
-    long IndexedUniqueKeyCount);
+    long IndexedUniqueKeyCount,
+    long LastIndexLoadFileBytes,
+    long LastIndexLoadLinesRead,
+    double LastIndexLoadDeserializeMs,
+    double LastIndexLoadIndexMs);
