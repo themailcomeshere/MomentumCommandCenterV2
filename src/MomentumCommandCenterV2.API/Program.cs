@@ -1075,17 +1075,18 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "isFresh"));
         var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "isFresh"));
         var technicalEvaluationStatus = JsonPath(technicalAssessment, "evaluationStatus")?.ToString();
-        var technicalInputsUsable = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightTechnicalInputPolicy
-            .AreIntradayInputsUsable(technicalFeedMatchesCapture, oneMinuteFresh, fiveMinuteFresh, technicalEvaluationStatus);
+        var intradayBarsUsable = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightTechnicalInputPolicy
+            .AreIntradayBarsUsable(technicalFeedMatchesCapture, oneMinuteFresh, fiveMinuteFresh);
+        var v2DecisionUsable = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightTechnicalInputPolicy
+            .IsV2DecisionUsable(intradayBarsUsable, technicalEvaluationStatus);
 
-        // Keep raw diagnostic values out of the evaluator when either timeframe is stale,
-        // provenance is mismatched, freshness is unknown, or the V2 regular-session engine
-        // did not evaluate this exact live assessment.
-        var fiveMinutePermission = technicalInputsUsable ? rawFiveMinutePermission : null;
-        var fiveMinuteStructureBull = technicalInputsUsable ? rawFiveMinuteStructureBull : null;
-        var oneMinuteState = technicalInputsUsable ? rawOneMinuteState : null;
-        var extensionAtr = technicalInputsUsable ? rawExtensionAtr : null;
-        var currentVolumeVsAverage = technicalInputsUsable ? rawCurrentVolumeVsAverage : null;
+        // Numeric indicators require fresh, same-feed bars. Permission/structure/state also
+        // require the V2 engine to have evaluated the current regular-session observations.
+        var fiveMinutePermission = v2DecisionUsable ? rawFiveMinutePermission : null;
+        var fiveMinuteStructureBull = v2DecisionUsable ? rawFiveMinuteStructureBull : null;
+        var oneMinuteState = v2DecisionUsable ? rawOneMinuteState : null;
+        var extensionAtr = intradayBarsUsable ? rawExtensionAtr : null;
+        var currentVolumeVsAverage = intradayBarsUsable ? rawCurrentVolumeVsAverage : null;
 
         // Daily range and ATR are calculated only from a complete, fresh SIP Daily sample.
         // ATR is a 14-session mean true range; no IEX or partial-session substitute is allowed.
@@ -1258,7 +1259,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 fiveMinuteFeed = technicalFiveMinuteFeed,
                 configuredFeed = JsonPath(technicalAssessment, "configuredFeed")?.ToString(),
                 feedMatchesCapture = technicalFeedMatchesCapture,
-                intradayInputsUsable = technicalInputsUsable,
+                intradayBarsUsable,\n                v2DecisionUsable,
                 sourceTransport = JsonPath(technicalAssessment, "oneMinute", "sourceTransport")?.ToString(),
                 evaluationStatus = technicalEvaluationStatus,
                 fiveMinutePermission,
