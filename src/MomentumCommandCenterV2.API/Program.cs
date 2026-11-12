@@ -893,6 +893,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
     MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
     AlpacaDailyMarketDataClient dailyClient,
     AlpacaCatalystAssessmentClient catalystClient,
+    LiveSymbolAssessmentService liveAssessmentService,
     CancellationToken ct) =>
 {
     if (!IsValidSymbol(request.Symbol))
@@ -1002,25 +1003,120 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             catalystError = $"{ex.GetType().Name}: {ex.Message}";
         }
 
+        // Retrieve the same source-qualified 1m/5m technical assessment used by Main Chart.
+        // Missing/stale observations remain null; no screenshot/manual values are inferred.
+        JsonElement? technicalAssessment = null;
+        string? technicalAssessmentError = null;
+        try
+        {
+            technicalAssessment = JsonSerializer.SerializeToElement(
+                await liveAssessmentService.GetAsync(request.Symbol, provider.ProviderName, ct));
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException or ArgumentException)
+        {
+            technicalAssessmentError = $"{ex.GetType().Name}: {ex.Message}";
+        }
+
+        static JsonElement? JsonPath(JsonElement? root, params string[] path)
+        {
+            if (root is null) return null;
+            var current = root.Value;
+            foreach (var segment in path)
+            {
+                if (current.ValueKind != JsonValueKind.Object || !current.TryGetProperty(segment, out current))
+                    return null;
+            }
+            return current;
+        }
+        static double? JsonNumber(JsonElement? value) =>
+            value is { ValueKind: JsonValueKind.Number } element && element.TryGetDouble(out var number) && double.IsFinite(number)
+                ? number : null;
+        static bool? JsonBoolean(JsonElement? value) =>
+            value is { ValueKind: JsonValueKind.True } ? true :
+            value is { ValueKind: JsonValueKind.False } ? false : null;
+        static DateTimeOffset? JsonTimestamp(JsonElement? value) =>
+            value is { ValueKind: JsonValueKind.String } element && element.TryGetDateTimeOffset(out var timestamp) && timestamp.Offset == TimeSpan.Zero
+                ? timestamp : null;
+
+        var fiveMinutePermission = JsonBoolean(JsonPath(technicalAssessment, "fiveMinute", "scoreBreakdown", "permission"));
+        var fiveMinuteStructureBull = JsonBoolean(JsonPath(technicalAssessment, "decision", "fiveMinuteStructureBull"));
+        var oneMinuteStateValue = JsonPath(technicalAssessment, "decision", "state");
+        var oneMinuteActionValue = JsonPath(technicalAssessment, "decision", "action");
+        var oneMinuteState = oneMinuteStateValue is { ValueKind: JsonValueKind.String } stateElement
+            ? stateElement.GetString() + (oneMinuteActionValue is { ValueKind: JsonValueKind.String } actionElement ? "/" + actionElement.GetString() : string.Empty)
+            : null;
+        var extensionAtr = JsonNumber(JsonPath(technicalAssessment, "oneMinute", "extensionAtr"));
+        var currentVolumeVsAverage = JsonNumber(JsonPath(technicalAssessment, "fiveMinute", "relativeVolume"));
+        var oneMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "oneMinute", "completedAtUtc"));
+        var fiveMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "fiveMinute", "completedAtUtc"));
+        var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshness", "oneMinute", "isFresh"));
+        var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshness", "fiveMinute", "isFresh"));
+
+        // Daily range and ATR are calculated only from a complete, fresh SIP Daily sample.
+        // ATR is a 14-session mean true range; no IEX or partial-session substitute is allowed.
+        double? dailyRangePct = null;
+        double? atrPct = null;
+        DateTimeOffset? dailyTechnicalTimestamp = null;
+        if (dailyMetrics is { QualificationUsable: true, DataFresh: true } &&
+            dailyMetrics.Sessions.Count >= 15)
+        {
+            var dailySessions = dailyMetrics.Sessions.OrderBy(x => x.SessionDate).ToArray();
+            var latestDaily = dailySessions[^1];
+            if (latestDaily.Close > 0)
+            {
+                dailyRangePct = (latestDaily.High - latestDaily.Low) / latestDaily.Close * 100d;
+                var trueRanges = dailySessions.TakeLast(14).Select((session, index) =>
+                {
+                    var previousClose = dailySessions[dailySessions.Length - 14 + index - 1].Close;
+                    return Math.Max(session.High - session.Low,
+                        Math.Max(Math.Abs(session.High - previousClose), Math.Abs(session.Low - previousClose)));
+                }).ToArray();
+                if (trueRanges.Length == 14 && trueRanges.All(double.IsFinite))
+                    atrPct = trueRanges.Average() / latestDaily.Close * 100d;
+                dailyTechnicalTimestamp = latestDaily.TimestampUtc;
+            }
+        }
+
+        var intradayFresh = oneMinuteFresh == true && fiveMinuteFresh == true;
         captureInputs = captureInputs with
         {
             Price = dailyMetrics?.Price,
             Sma20 = dailyMetrics?.Sma20,
             AverageDailyVolume20 = dailyMetrics?.AverageDailyVolume20,
-            DataFresh = dailyMetrics?.DataFresh,
+            DataFresh = dailyMetrics?.DataFresh == true && intradayFresh,
             CatalystStatus = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService.ResolveCatalystStatus(
-                catalystAssessment?.Status, catalystAssessment?.ArticleCount, catalystAssessment?.CoverageComplete)
+                catalystAssessment?.Status, catalystAssessment?.ArticleCount, catalystAssessment?.CoverageComplete),
+            FiveMinutePermission = fiveMinutePermission,
+            FiveMinuteStructure = fiveMinuteStructureBull == true ? "BULLISH" :
+                fiveMinuteStructureBull == false ? "NOT_BULLISH" : null,
+            OneMinuteState = oneMinuteState,
+            ExtensionAtr = extensionAtr,
+            CurrentVolumeVsAverage = currentVolumeVsAverage,
+            DailyRangePct = dailyRangePct,
+            AtrPct = atrPct
         };
         var captureSourceTimestamps = new Dictionary<string, DateTimeOffset>
         {
             ["overnightHistoryCalculatedAtUtc"] = history.CalculatedAtUtc
         };
+        if (oneMinuteTimestamp.HasValue) captureSourceTimestamps["oneMinuteTechnicalInputs"] = oneMinuteTimestamp.Value;
+        if (fiveMinuteTimestamp.HasValue) captureSourceTimestamps["fiveMinuteTechnicalInputs"] = fiveMinuteTimestamp.Value;
+        if (dailyTechnicalTimestamp.HasValue)
+        {
+            captureSourceTimestamps["dailyRangePct"] = dailyTechnicalTimestamp.Value;
+            captureSourceTimestamps["atrPct"] = dailyTechnicalTimestamp.Value;
+        }
         if (dailyMetrics?.LatestCompletedSessionTimestampUtc is { } dailyTimestamp)
         {
             captureSourceTimestamps["price"] = dailyTimestamp;
             captureSourceTimestamps["sma20"] = dailyTimestamp;
             captureSourceTimestamps["averageDailyVolume20"] = dailyTimestamp;
         }
+        if (oneMinuteTimestamp.HasValue) captureSourceTimestamps["extensionAtr"] = oneMinuteTimestamp.Value;
+        if (fiveMinuteTimestamp.HasValue) captureSourceTimestamps["fiveMinutePermission"] = fiveMinuteTimestamp.Value;
+        if (fiveMinuteTimestamp.HasValue) captureSourceTimestamps["fiveMinuteStructure"] = fiveMinuteTimestamp.Value;
+        if (fiveMinuteTimestamp.HasValue) captureSourceTimestamps["currentVolumeVsAverage"] = fiveMinuteTimestamp.Value;
+        if (oneMinuteTimestamp.HasValue) captureSourceTimestamps["oneMinuteState"] = oneMinuteTimestamp.Value;
         if (catalystAssessment is not null)
             captureSourceTimestamps["catalystAssessmentRetrievedAt"] = catalystAssessment.RetrievedAtUtc;
 
