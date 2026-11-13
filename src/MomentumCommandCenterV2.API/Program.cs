@@ -1203,6 +1203,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             actualFeed is null || string.Equals(x.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
         var storedBoundaryBars = observations.Where(x =>
             actualFeed is null || string.Equals(x.Bar.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var boundaryAuditAtUtc = DateTimeOffset.UtcNow;
         object BuildBoundaryCoverage(string boundaryType, DateTimeOffset expectedTimestampUtc)
         {
             var providerExact = providerBoundaryBars.Any(x => x.Timestamp == expectedTimestampUtc);
@@ -1213,13 +1214,15 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             var nearestOffset = nearest is null
                 ? (double?)null
                 : Math.Round((nearest.Timestamp - expectedTimestampUtc).TotalMinutes, 2);
-            var status = providerExact
-                ? storeExact ? "COVERED" : "PROVIDER_BAR_NOT_FOUND_IN_STORE"
-                : storeExact ? "STORE_ONLY_NO_PROVIDER_REFRESH_BAR" : "PROVIDER_RESPONSE_MISSING_EXACT_BAR";
+            var endpointAvailableAtUtc = expectedTimestampUtc.AddMinutes(1);
+            var status = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightBoundaryAuditPolicy.GetStatus(
+                providerExact, storeExact, endpointAvailableAtUtc, boundaryAuditAtUtc);
             return new
             {
                 boundaryType,
                 expectedTimestampUtc,
+                endpointAvailableAtUtc,
+                auditedAtUtc = boundaryAuditAtUtc,
                 providerReturnedExactBar = providerExact,
                 storeHasExactBar = storeExact,
                 nearestProviderBarTimestampUtc = nearest?.Timestamp,
