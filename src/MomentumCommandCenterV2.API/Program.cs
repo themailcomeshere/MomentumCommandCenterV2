@@ -3,6 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Any;
+using MomentumCommandCenterV2.API.Hosting;
 using MomentumCommandCenterV2.API.MarketData;
 using MomentumCommandCenterV2.API.MorningBrief;
 using MomentumCommandCenterV2.Application.Interfaces;
@@ -126,16 +127,39 @@ if (Directory.Exists(frontendPath))
     });
 }
 
+var processStartedAtUtc = DateTimeOffset.UtcNow;
 app.MapGet("/api/health", () => Results.Ok(new
 {
     service = "MomentumCommandCenterV2.API",
     status = "OK",
     mode = "decision-support-only",
     orderSubmission = "NOT IMPLEMENTED",
-    timestampUtc = DateTimeOffset.UtcNow
+    timestampUtc = DateTimeOffset.UtcNow,
+    processId = Environment.ProcessId,
+    processStartedAtUtc,
+    // Set by scripts/MCC.ps1 from `git rev-parse HEAD`; UNKNOWN when started another way.
+    sourceSha = Environment.GetEnvironmentVariable("MCC_SOURCE_SHA") ?? "UNKNOWN",
+    launchedBy = Environment.GetEnvironmentVariable("MCC_LAUNCHED_BY") ?? "UNKNOWN",
+    gracefulShutdownEnabled = LocalShutdownPolicy.Evaluate(
+        Environment.GetEnvironmentVariable(LocalShutdownPolicy.TokenEnvironmentVariable), null, System.Net.IPAddress.Loopback)
+        != LocalShutdownDecision.Disabled
 }))
 .WithSummary("Check API liveness")
-.WithDescription("Example response: { \"status\": \"OK\", \"mode\": \"decision-support-only\", \"orderSubmission\": \"NOT IMPLEMENTED\" }.");
+.WithDescription("Example response: { \"status\": \"OK\", \"mode\": \"decision-support-only\", \"orderSubmission\": \"NOT IMPLEMENTED\", \"processId\": 1234, \"sourceSha\": \"<git sha or UNKNOWN>\" }.");
+
+app.MapPost("/api/admin/shutdown", (HttpContext context, IHostApplicationLifetime lifetime) =>
+{
+    var decision = LocalShutdownPolicy.Evaluate(
+        Environment.GetEnvironmentVariable(LocalShutdownPolicy.TokenEnvironmentVariable),
+        context.Request.Headers[LocalShutdownPolicy.TokenHeader].FirstOrDefault(),
+        context.Connection.RemoteIpAddress);
+    if (decision == LocalShutdownDecision.Disabled) return Results.NotFound();
+    if (decision == LocalShutdownDecision.Forbidden) return Results.StatusCode(StatusCodes.Status403Forbidden);
+    // Stop after the response is sent; hosted workers receive their normal StopAsync cancellation.
+    _ = Task.Run(async () => { await Task.Delay(250); lifetime.StopApplication(); });
+    return Results.Accepted(value: new { status = "STOPPING", processId = Environment.ProcessId });
+})
+.ExcludeFromDescription();
 
 app.MapPost("/api/overnight-scanner/thinkorswim-daily-bars", async (
     MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapImport request,
