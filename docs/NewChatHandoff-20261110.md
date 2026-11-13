@@ -1231,3 +1231,40 @@ Commits:
 - Regular-session technical-input behavior remains unverified by runtime capture.
 - Alpaca IEX omissions at the seven historical opening boundaries have not been explained; the payload establishes only exact-bar absence in provider response and store.
 - SIP qualification, official opening-auction print, and Thinkorswim parity remain unverified.
+
+
+## November 13 — mode isolation fix and exact operator retrieval steps
+
+### Latest implementation
+- Branch: `feature/opportunity-quality-classification` (do not deploy `master`).
+- Fixed the Boring Overnight qualification section leaking into Intraday Momentum mode. `#overnight-qualification` is a sibling of `#overnightPanel`, not a child, so the old mode toggle hid the workspace but left the qualification section visible. `render()` now applies its own `.hidden` toggle to that section. This is a presentation/mode-isolation correction only; evaluator rules are unchanged.
+- UI fix commit: `e4f2a65f55a2efaa2f92143cf94db8489456166f`.
+- To-Do update commit: `b7f0a22455b81fd9ab3a2ac2532922389cedc1a9`.
+- Exact-head build/test and browser verification are not yet available.
+
+### Step 3 — retrieve the fresh regular-session technical assessment
+1. Pull the feature branch and start MCC/API as usual.
+2. Set mode to **Intraday Momentum** and choose a liquid test symbol (SPY is suitable for checking the endpoint wiring; it does not guarantee all technical gates pass).
+3. During regular market hours, wait for the focused-symbol refresh cycle (the dashboard refreshes live assessment automatically every 15 seconds while the tab is visible). Alternatively, open browser Developer Tools → **Network**, enable **Preserve log**, filter for `live-assessment`, and change the focused symbol or wait for the next refresh.
+4. Open the request `GET /api/market-data/live-assessment?symbol=SYMBOL&providerName=Alpaca` and copy its **Response** JSON. The same endpoint can be opened directly in a browser by replacing SYMBOL, e.g. `http://localhost:53360/api/market-data/live-assessment?symbol=SPY&providerName=Alpaca` (use the actual local API port shown by your running app).
+5. Preserve the full `technicalAssessment` object if present, especially `feedMatchesCapture`, `intradayBarsUsable`, `v2DecisionUsable`, `evaluationStatus`, `oneMinuteFresh`, `fiveMinuteFresh`, source timestamps, bar ages/thresholds, and mapped technical fields. Also preserve `performanceDiagnostics` for the separate performance workstream.
+6. A good test of the gate is not “must be READY”; it is that fresh, matched bars are recognized as usable and stale/mismatched bars remain withheld. V2 decision fields additionally require `evaluationStatus=EVALUATED`.
+
+### Step 4 — retrieve the future NEXT_SESSION_OPEN boundary audit
+1. Switch to **Boring Overnight** mode. In the **Overnight Candidate Workspace**, find the button **Fetch / retry 20-session close/open history** (HTML control `#overnightCapture20`). This is the exact 20-pair capture action; it is separate from the From/To historical-bars form and its 1m/5m selector.
+2. Enter/confirm the ticker in the Overnight symbol field, then click the 20-session button and wait for the status to finish.
+3. In the same workspace, open **Show exact boundary coverage audit (42 rows)**. Find the final row for the current/future `NEXT_SESSION_OPEN` endpoint. The table columns include expected timestamp, provider exact bar, store exact bar, nearest provider bar and audit result.
+4. Before the one-minute bar endpoint (expected bar start + 1 minute), the status should be `PENDING_NOT_YET_AVAILABLE`; record `endpointAvailableAtUtc` and `auditedAtUtc`. After endpoint availability, if neither provider nor store has the exact expected timestamp, a provider-missing result is appropriate. Never substitute the nearest bar.
+5. To retain the complete response rather than transcribe the table: in Developer Tools → Network, filter `capture-history`, open the `POST /api/boring-overnight/capture-history` request and copy the Response JSON. The request body is `{ symbol, providerName: "Alpaca", requiredWindow: 20 }`.
+6. The response also includes history pair counts, current interval, provider/feed, fetched/newly-persisted bar counts and boundary audit rows. Zero newly persisted bars can mean the fetched bars were already in the store; it does not by itself mean capture failed.
+
+### Acceptance after the UI fix
+- [ ] Intraday Momentum: `#overnight-qualification` is hidden and no Boring Overnight qualification heading/table is visible.
+- [ ] Boring Overnight: the qualification section is visible again.
+- [ ] Run ` .\\scripts\\Get-Latest-And-Test.ps1` (without the leading space) after pulling; report exact `git rev-parse HEAD`, Release build result and test totals.
+- [ ] Capture Step 3 and Step 4 evidence as described above.
+
+[Uncertainties]
+- The UI mode-isolation change has been committed but has not yet been built or browser-tested at the exact latest branch head.
+- Step 3 technical fields may remain unavailable if the configured feed lacks coverage, the symbol has stale bars, or the V2 evaluator does not reach EVALUATED; the test is correct gating, not a promised positive signal.
+- IEX remains partial coverage and cannot satisfy SIP/consolidated qualification.
