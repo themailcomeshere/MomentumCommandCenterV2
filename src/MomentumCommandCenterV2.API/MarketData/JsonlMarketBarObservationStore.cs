@@ -30,6 +30,9 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     private long _lastIndexLoadLinesRead;
     private long _lastIndexLoadDeserializeTicks;
     private long _lastIndexLoadIndexTicks;
+    private long _lastIndexLoadReadTicks;
+    private long _lastIndexLoadOpenTicks;
+    private long _lastIndexLoadGateWaitTicks;
 
     /// <summary>Snapshot of the one-time JSONL index rebuild for runtime diagnostics.</summary>
     public JsonlMarketBarObservationStoreDiagnostics GetDiagnostics() => new(
@@ -40,7 +43,10 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         Interlocked.Read(ref _lastIndexLoadFileBytes),
         Interlocked.Read(ref _lastIndexLoadLinesRead),
         TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadDeserializeTicks)).TotalMilliseconds,
-        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadIndexTicks)).TotalMilliseconds);
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadIndexTicks)).TotalMilliseconds,
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadReadTicks)).TotalMilliseconds,
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadOpenTicks)).TotalMilliseconds,
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadGateWaitTicks)).TotalMilliseconds);
 
     /// <summary>
     /// PURPOSE: Store bars while deduplicating identical source observations and retaining corrections.
@@ -49,10 +55,12 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     public async Task<int> AppendAsync(IReadOnlyCollection<MarketBar> bars, CancellationToken cancellationToken)
     {
         if (bars.Count == 0) return 0;
+        var gateWait = Stopwatch.StartNew();
         await _gate.WaitAsync(cancellationToken);
+        gateWait.Stop();
         try
         {
-            await EnsureIndexLoadedAsync(cancellationToken);
+            await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed);
             // Validate the entire batch before opening the append stream. A malformed later
             // bar must not leave a partially written batch of otherwise valid observations.
             foreach (var bar in bars) Validate(bar);
@@ -119,10 +127,12 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         var normalizedTimeframe = timeframe is null ? null : NormalizeTimeframe(timeframe);
         var normalizedFeed = string.IsNullOrWhiteSpace(feed) ? null : feed.Trim();
 
+        var gateWait = Stopwatch.StartNew();
         await _gate.WaitAsync(cancellationToken);
+        gateWait.Stop();
         try
         {
-            await EnsureIndexLoadedAsync(cancellationToken);
+            await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed);
             if (!_keysBySymbol.TryGetValue(normalizedSymbol, out var symbolKeys))
                 return Array.Empty<MarketBarObservation>();
 
@@ -149,44 +159,62 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     /// WHEN CALLED: The first read or append after process start.
     /// IMPORTANT: This is the only full-file scan in a process lifetime.
     /// </summary>
-    private async Task EnsureIndexLoadedAsync(CancellationToken cancellationToken)
+    private Task EnsureIndexLoadedAsync(CancellationToken cancellationToken, TimeSpan gateWait)
     {
-        if (_loaded) return;
+        if (_loaded) return Task.CompletedTask;
         var stopwatch = Stopwatch.StartNew();
         long fileBytes = 0;
         long linesRead = 0;
+        long readTicks = 0;
         long deserializeTicks = 0;
         long indexTicks = 0;
+        long openTicks = 0;
         if (File.Exists(_path))
         {
+            // Synchronous sequential read with a 1 MiB buffer. The previous ReadLineAsync loop over a
+            // non-asynchronous FileStream issued one thread-pool hop per 4 KiB buffer, which is the
+            // overhead not covered by the deserialize/index stage timings. Stage timings use raw
+            // Stopwatch timestamps to avoid two allocations per line.
+            var openStart = Stopwatch.GetTimestamp();
             fileBytes = new FileInfo(_path).Length;
-            using var reader = new StreamReader(new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
-            while (await reader.ReadLineAsync(cancellationToken) is { } line)
+            using var stream = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite,
+                1 << 20, FileOptions.SequentialScan);
+            using var reader = new StreamReader(stream, new UTF8Encoding(false), true, 1 << 20);
+            openTicks = Stopwatch.GetTimestamp() - openStart;
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                var readStart = Stopwatch.GetTimestamp();
+                var line = reader.ReadLine();
+                var deserializeStart = Stopwatch.GetTimestamp();
+                readTicks += deserializeStart - readStart;
+                if (line is null) break;
                 linesRead++;
                 if (string.IsNullOrWhiteSpace(line)) continue;
-                var deserializeStopwatch = Stopwatch.StartNew();
                 var observation = JsonSerializer.Deserialize<MarketBarObservation>(line, JsonOptions)
                     ?? throw new InvalidDataException("Market bar JSONL contains an empty observation.");
-                deserializeStopwatch.Stop();
-                deserializeTicks += deserializeStopwatch.Elapsed.Ticks;
-
-                var indexStopwatch = Stopwatch.StartNew();
-                var key = CreateKey(observation.Bar);
-                IndexObservation(key, observation);
-                indexStopwatch.Stop();
-                indexTicks += indexStopwatch.Elapsed.Ticks;
+                var indexStart = Stopwatch.GetTimestamp();
+                deserializeTicks += indexStart - deserializeStart;
+                IndexObservation(CreateKey(observation.Bar), observation);
+                indexTicks += Stopwatch.GetTimestamp() - indexStart;
             }
         }
         stopwatch.Stop();
         Interlocked.Exchange(ref _lastIndexLoadElapsedTicks, stopwatch.Elapsed.Ticks);
         Interlocked.Exchange(ref _lastIndexLoadFileBytes, fileBytes);
         Interlocked.Exchange(ref _lastIndexLoadLinesRead, linesRead);
-        Interlocked.Exchange(ref _lastIndexLoadDeserializeTicks, deserializeTicks);
-        Interlocked.Exchange(ref _lastIndexLoadIndexTicks, indexTicks);
+        Interlocked.Exchange(ref _lastIndexLoadReadTicks, ToTimeSpanTicks(readTicks));
+        Interlocked.Exchange(ref _lastIndexLoadOpenTicks, ToTimeSpanTicks(openTicks));
+        Interlocked.Exchange(ref _lastIndexLoadDeserializeTicks, ToTimeSpanTicks(deserializeTicks));
+        Interlocked.Exchange(ref _lastIndexLoadIndexTicks, ToTimeSpanTicks(indexTicks));
+        Interlocked.Exchange(ref _lastIndexLoadGateWaitTicks, gateWait.Ticks);
         Interlocked.Increment(ref _indexLoadCount);
         _loaded = true;
+        return Task.CompletedTask;
     }
+
+    private static long ToTimeSpanTicks(long stopwatchTicks) =>
+        (long)(stopwatchTicks * ((double)TimeSpan.TicksPerSecond / Stopwatch.Frequency));
 
     private void IndexObservation(
         (string Provider, string Symbol, string Timeframe, string Feed, DateTimeOffset Timestamp) key,
@@ -260,4 +288,7 @@ public sealed record JsonlMarketBarObservationStoreDiagnostics(
     long LastIndexLoadFileBytes,
     long LastIndexLoadLinesRead,
     double LastIndexLoadDeserializeMs,
-    double LastIndexLoadIndexMs);
+    double LastIndexLoadIndexMs,
+    double LastIndexLoadReadMs,
+    double LastIndexLoadOpenMs,
+    double LastIndexLoadGateWaitMs);
