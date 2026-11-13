@@ -15,7 +15,7 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 ## Git
 
 - ALWAYS work on `feature/opportunity-quality-classification`. NEVER commit to or modify `master`.
-- Commit or push ONLY when the user asks. "Commit" = commit only; "commit and push" = both.
+- Commit and Push every time.
 - NEVER reset, discard or overwrite the user's local changes.
 
 ## Build and test

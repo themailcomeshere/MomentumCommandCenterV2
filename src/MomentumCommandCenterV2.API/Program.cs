@@ -1017,101 +1017,18 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             technicalAssessmentError = $"{ex.GetType().Name}: {ex.Message}";
         }
 
-        static JsonElement? JsonPath(JsonElement? root, params string[] path)
-        {
-            if (root is null) return null;
-            var current = root.Value;
-            foreach (var segment in path)
-            {
-                if (current.ValueKind != JsonValueKind.Object || !current.TryGetProperty(segment, out current))
-                    return null;
-            }
-            return current;
-        }
-        // The history capture and Main Chart assessment must describe the same provider/feed.
-        // LiveSymbolAssessmentService may serve a cached result, so compare its actual 1m and 5m
-        // feed labels against the feed attached to this capture before allowing any technical
-        // values into a persisted evaluator snapshot. Missing provenance is not a match.
-        var technicalAssessmentProvider = JsonPath(technicalAssessment, "provider")?.ToString();
-        var technicalOneMinuteFeed = JsonPath(technicalAssessment, "oneMinute", "feed")?.ToString();
-        var technicalFiveMinuteFeed = JsonPath(technicalAssessment, "fiveMinute", "feed")?.ToString();
-        var technicalFeedMatchesCapture =
-            technicalAssessment is not null &&
-            actualFeed is not null &&
-            string.Equals(technicalAssessmentProvider, provider.ProviderName, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(technicalOneMinuteFeed, actualFeed, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(technicalFiveMinuteFeed, actualFeed, StringComparison.OrdinalIgnoreCase);
-        if (technicalAssessment is not null && !technicalFeedMatchesCapture)
-        {
-            technicalAssessmentError =
-                $"TECHNICAL_FEED_MISMATCH: capture provider/feed={provider.ProviderName}/{actualFeed ?? "UNKNOWN"}; " +
-                $"assessment provider/1m feed/5m feed={technicalAssessmentProvider ?? "UNKNOWN"}/" +
-                $"{technicalOneMinuteFeed ?? "UNKNOWN"}/{technicalFiveMinuteFeed ?? "UNKNOWN"}. " +
-                "Technical fields were withheld rather than combining observations from different sources.";
-            technicalAssessment = null;
-        }
-
-        static double? JsonNumber(JsonElement? value) =>
-            value is { ValueKind: JsonValueKind.Number } element && element.TryGetDouble(out var number) && double.IsFinite(number)
-                ? number : null;
-        static bool? JsonBoolean(JsonElement? value) =>
-            value is { ValueKind: JsonValueKind.True } ? true :
-            value is { ValueKind: JsonValueKind.False } ? false : null;
-        static DateTimeOffset? JsonTimestamp(JsonElement? value) =>
-            value is { ValueKind: JsonValueKind.String } element && element.TryGetDateTimeOffset(out var timestamp) && timestamp.Offset == TimeSpan.Zero
-                ? timestamp : null;
-
-        var rawFiveMinutePermission = JsonBoolean(JsonPath(technicalAssessment, "fiveMinute", "scoreBreakdown", "permission"));
-        var rawFiveMinuteStructureBull = JsonBoolean(JsonPath(technicalAssessment, "decision", "fiveMinuteStructureBull"));
-        var oneMinuteStateValue = JsonPath(technicalAssessment, "decision", "state");
-        var oneMinuteActionValue = JsonPath(technicalAssessment, "decision", "action");
-        var rawOneMinuteState = oneMinuteStateValue is { ValueKind: JsonValueKind.String } stateElement
-            ? stateElement.GetString() + (oneMinuteActionValue is { ValueKind: JsonValueKind.String } actionElement ? "/" + actionElement.GetString() : string.Empty)
-            : null;
-        var rawExtensionAtr = JsonNumber(JsonPath(technicalAssessment, "oneMinute", "extensionAtr"));
-        var rawCurrentVolumeVsAverage = JsonNumber(JsonPath(technicalAssessment, "fiveMinute", "relativeVolume"));
-        var oneMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "oneMinute", "sourceTimestampUtc"));
-        var fiveMinuteTimestamp = JsonTimestamp(JsonPath(technicalAssessment, "fiveMinute", "sourceTimestampUtc"));
-        var oneMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "isFresh"));
-        var fiveMinuteFresh = JsonBoolean(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "isFresh"));
-        var technicalEvaluationStatus = JsonPath(technicalAssessment, "evaluationStatus")?.ToString();
-        var intradayBarsUsable = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightTechnicalInputPolicy
-            .AreIntradayBarsUsable(technicalFeedMatchesCapture, oneMinuteFresh, fiveMinuteFresh);
-        var v2DecisionUsable = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightTechnicalInputPolicy
-            .IsV2DecisionUsable(intradayBarsUsable, technicalEvaluationStatus);
-
-        // Numeric indicators require fresh, same-feed bars. Permission/structure/state also
-        // require the V2 engine to have evaluated the current regular-session observations.
-        var fiveMinutePermission = v2DecisionUsable ? rawFiveMinutePermission : null;
-        var fiveMinuteStructureBull = v2DecisionUsable ? rawFiveMinuteStructureBull : null;
-        var oneMinuteState = v2DecisionUsable ? rawOneMinuteState : null;
-        var extensionAtr = intradayBarsUsable ? rawExtensionAtr : null;
-        var currentVolumeVsAverage = intradayBarsUsable ? rawCurrentVolumeVsAverage : null;
-
-        // Daily range and ATR are calculated only from a complete, fresh SIP Daily sample.
-        // ATR is a 14-session mean true range; no IEX or partial-session substitute is allowed.
-        double? dailyRangePct = null;
-        double? atrPct = null;
-        DateTimeOffset? dailyTechnicalTimestamp = null;
-        if (dailyMetrics is { QualificationUsable: true, DataFresh: true } &&
-            dailyMetrics.Sessions.Count >= 15)
-        {
-            var dailySessions = dailyMetrics.Sessions.OrderBy(x => x.SessionDate).ToArray();
-            var latestDaily = dailySessions[^1];
-            if (latestDaily.Close > 0)
-            {
-                dailyRangePct = (latestDaily.High - latestDaily.Low) / latestDaily.Close * 100d;
-                var trueRanges = dailySessions.TakeLast(14).Select((session, index) =>
-                {
-                    var previousClose = dailySessions[dailySessions.Length - 14 + index - 1].Close;
-                    return Math.Max(session.High - session.Low,
-                        Math.Max(Math.Abs(session.High - previousClose), Math.Abs(session.Low - previousClose)));
-                }).ToArray();
-                if (trueRanges.Length == 14 && trueRanges.All(double.IsFinite))
-                    atrPct = trueRanges.Average() / latestDaily.Close * 100d;
-                dailyTechnicalTimestamp = latestDaily.TimestampUtc;
-            }
-        }
+        // Fail-closed technical/Daily mapping lives in BoringOvernightCaptureInputMapper (unit-tested).
+        var technical = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureInputMapper
+            .MapTechnicalInputs(technicalAssessment, provider.ProviderName, actualFeed, technicalAssessmentError);
+        var oneMinuteFresh = technical.OneMinuteFresh;
+        var fiveMinuteFresh = technical.FiveMinuteFresh;
+        var oneMinuteTimestamp = technical.OneMinuteSourceTimestampUtc;
+        var fiveMinuteTimestamp = technical.FiveMinuteSourceTimestampUtc;
+        var dailyTechnicals = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureInputMapper
+            .CalculateDailyTechnicals(dailyMetrics);
+        var dailyRangePct = dailyTechnicals.DailyRangePct;
+        var atrPct = dailyTechnicals.AtrPct;
+        var dailyTechnicalTimestamp = dailyTechnicals.SourceTimestampUtc;
 
         var intradayFresh = oneMinuteFresh == true && fiveMinuteFresh == true;
         captureInputs = captureInputs with
@@ -1124,12 +1041,11 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 : dailyMetrics.DataFresh && intradayFresh,
             CatalystStatus = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService.ResolveCatalystStatus(
                 catalystAssessment?.Status, catalystAssessment?.ArticleCount, catalystAssessment?.CoverageComplete),
-            FiveMinutePermission = fiveMinutePermission,
-            FiveMinuteStructure = fiveMinuteStructureBull == true ? "BULLISH" :
-                fiveMinuteStructureBull == false ? "NOT_BULLISH" : null,
-            OneMinuteState = oneMinuteState,
-            ExtensionAtr = extensionAtr,
-            CurrentVolumeVsAverage = currentVolumeVsAverage,
+            FiveMinutePermission = technical.FiveMinutePermission,
+            FiveMinuteStructure = technical.FiveMinuteStructure,
+            OneMinuteState = technical.OneMinuteState,
+            ExtensionAtr = technical.ExtensionAtr,
+            CurrentVolumeVsAverage = technical.CurrentVolumeVsAverage,
             DailyRangePct = dailyRangePct,
             AtrPct = atrPct
         };
@@ -1176,25 +1092,19 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             .FirstOrDefault(x => x.Timestamp == currentIntervalBoundary.PreviousCloseBarTimestampUtc);
         var currentOpenBar = observations.Select(x => x.Bar)
             .FirstOrDefault(x => x.Timestamp == currentIntervalBoundary.NextOpenBarTimestampUtc);
-        var currentIntervalEndpointAvailableAtUtc = currentIntervalBoundary.NextOpenBarTimestampUtc.AddMinutes(1);
-        var currentIntervalState = DateTimeOffset.UtcNow < currentIntervalEndpointAvailableAtUtc
-            ? "PENDING"
-            : currentCloseBar is not null && currentOpenBar is not null && currentCloseBar.Close > 0 && currentOpenBar.Open > 0
-                ? "OBSERVED"
-                : "MISSING";
+        var currentIntervalResult = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureInputMapper
+            .ClassifyCurrentInterval(currentIntervalBoundary, currentCloseBar, currentOpenBar, DateTimeOffset.UtcNow);
         var currentInterval = new
         {
-            state = currentIntervalState,
+            state = currentIntervalResult.State,
             previousSessionDate = currentIntervalBoundary.PreviousSessionDate,
             nextSessionDate = currentIntervalBoundary.NextSessionDate,
             previousCloseBarTimestampUtc = currentIntervalBoundary.PreviousCloseBarTimestampUtc,
             nextOpenBarTimestampUtc = currentIntervalBoundary.NextOpenBarTimestampUtc,
-            expectedEndpointAvailableAtUtc = currentIntervalEndpointAvailableAtUtc,
-            previousClose = currentCloseBar?.Close,
-            nextOpen = currentOpenBar?.Open,
-            returnPct = currentCloseBar is not null && currentOpenBar is not null && currentCloseBar.Close > 0 && currentOpenBar.Open > 0
-                ? (decimal?)((currentOpenBar.Open / currentCloseBar.Close - 1d) * 100d)
-                : null,
+            expectedEndpointAvailableAtUtc = currentIntervalResult.EndpointAvailableAtUtc,
+            previousClose = currentIntervalResult.PreviousClose,
+            nextOpen = currentIntervalResult.NextOpen,
+            returnPct = currentIntervalResult.ReturnPct,
             referenceKind = "ONE_MINUTE_BAR_OPEN_PROXY",
             officialOpeningAuctionVerified = false
         };
@@ -1257,31 +1167,29 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             dailyError,
             technicalAssessment = new
             {
-                provider = technicalAssessmentProvider ?? provider.ProviderName,
-                feed = technicalOneMinuteFeed,
-                fiveMinuteFeed = technicalFiveMinuteFeed,
-                configuredFeed = JsonPath(technicalAssessment, "configuredFeed")?.ToString(),
-                feedMatchesCapture = technicalFeedMatchesCapture,
-                intradayBarsUsable,
-                v2DecisionUsable,
-                sourceTransport = JsonPath(technicalAssessment, "oneMinute", "sourceTransport")?.ToString(),
-                evaluationStatus = technicalEvaluationStatus,
-                fiveMinutePermission,
-                fiveMinuteStructure = captureInputs.FiveMinuteStructure,
-                oneMinuteState,
-                extensionAtr,
-                currentVolumeVsAverage,
+                provider = technical.AssessmentProvider ?? provider.ProviderName,
+                feed = technical.OneMinuteFeed,
+                fiveMinuteFeed = technical.FiveMinuteFeed,
+                configuredFeed = technical.ConfiguredFeed,
+                feedMatchesCapture = technical.FeedMatchesCapture,
+                intradayBarsUsable = technical.IntradayBarsUsable,
+                v2DecisionUsable = technical.V2DecisionUsable,
+                sourceTransport = technical.SourceTransport,
+                evaluationStatus = technical.EvaluationStatus,
+                fiveMinutePermission = technical.FiveMinutePermission,
+                fiveMinuteStructure = technical.FiveMinuteStructure,
+                oneMinuteState = technical.OneMinuteState,
+                extensionAtr = technical.ExtensionAtr,
+                currentVolumeVsAverage = technical.CurrentVolumeVsAverage,
                 oneMinuteSourceTimestampUtc = oneMinuteTimestamp,
                 fiveMinuteSourceTimestampUtc = fiveMinuteTimestamp,
                 oneMinuteFresh,
                 fiveMinuteFresh,
-                oneMinuteAgeSeconds = JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "ageSeconds") is { } oneAge
-                    ? JsonNumber(oneAge) : null,
-                fiveMinuteAgeSeconds = JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "ageSeconds") is { } fiveAge
-                    ? JsonNumber(fiveAge) : null,
-                oneMinuteFreshnessLimitSeconds = JsonNumber(JsonPath(technicalAssessment, "freshnessDiagnostics", "oneMinute", "limitSeconds")),
-                fiveMinuteFreshnessLimitSeconds = JsonNumber(JsonPath(technicalAssessment, "freshnessDiagnostics", "fiveMinute", "limitSeconds")),
-                error = technicalAssessmentError,
+                oneMinuteAgeSeconds = technical.OneMinuteAgeSeconds,
+                fiveMinuteAgeSeconds = technical.FiveMinuteAgeSeconds,
+                oneMinuteFreshnessLimitSeconds = technical.OneMinuteFreshnessLimitSeconds,
+                fiveMinuteFreshnessLimitSeconds = technical.FiveMinuteFreshnessLimitSeconds,
+                error = technical.Error,
                 dailyRangePct = new { value = dailyRangePct, sourceTimestampUtc = dailyTechnicalTimestamp, basis = "latest completed SIP Daily session high-low divided by close" },
                 atrPct = new { value = atrPct, sourceTimestampUtc = dailyTechnicalTimestamp, basis = "14 completed-session simple mean true range divided by latest completed close" }
             },
