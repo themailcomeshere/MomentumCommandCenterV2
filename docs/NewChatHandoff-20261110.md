@@ -1185,3 +1185,49 @@ Detailed audit: `docs/Validation/Boring-Overnight-Technical-Staleness-Audit-2026
 - Capture timing relative to regular-session close is not confirmed.
 - No latest-head Release build/test result or browser retest exists for the correction yet.
 - IEX is partial exchange coverage; Daily qualification fields correctly remain null without SIP.
+
+---
+
+## November 13 — CRBG runtime verification and future-boundary audit fix
+
+### Working branch
+`feature/opportunity-quality-classification`. Do not modify `master`.
+
+### Operator capture findings
+The operator supplied a complete CRBG capture-history response calculated at approximately 2026-11-13 03:06:58 UTC.
+
+- Technical assessment: Alpaca/IEX matched; 1m and 5m freshness false; age 22,018.6 seconds for each; thresholds 120 and 360 seconds. `intradayBarsUsable=false`, `v2DecisionUsable=false`.
+- Permission, structure, 1m state, extension ATR and RVOL were all null. The persisted `snapshot.evaluationRequest` also had all five technical inputs null. This confirms the stale after-hours technical-input leak is closed for this capture.
+- Historical Overnight: 20 pairs requested, 13 valid, 7 missing exact 09:30 ET opens, `allPairsComplete=false`, `enoughHistory=false`, and all rolling statistics null. Current Nov 12→Nov 13 interval was separately PENDING.
+- Daily: 20 expected sessions complete and fresh, but IEX_PARTIAL and `qualificationUsable=false`; observed metrics remain diagnostic and qualification fields null.
+- Catalyst: one analyst-action article; `MATERIAL_EVENT_REVIEW` maps to RISK. Evaluator returned DATA? / ineligible.
+- 09:30 bar Open remains a proxy, not verified official auction. No order submitted.
+
+### Engineering correction committed
+The payload exposed one real audit-label defect: the future Nov 13 09:30 ET bar was reported as `PROVIDER_RESPONSE_MISSING_EXACT_BAR` even though the capture occurred more than 11 hours before the bar could exist.
+
+Implemented on the feature branch:
+- `BoringOvernightBoundaryAuditPolicy.GetStatus` returns `PENDING_NOT_YET_AVAILABLE` while audited time is earlier than the expected one-minute bar endpoint (bar start + one minute).
+- At/after endpoint availability, the existing exact provider/store distinctions remain: COVERED, PROVIDER_BAR_NOT_FOUND_IN_STORE, STORE_ONLY_NO_PROVIDER_REFRESH_BAR, PROVIDER_RESPONSE_MISSING_EXACT_BAR.
+- Each audit record now includes `endpointAvailableAtUtc` and `auditedAtUtc`.
+- Added tests covering all provider/store combinations before availability, all four statuses after availability, and the exact endpoint boundary.
+
+Commits:
+- `1f7893dec93672166045ebcfff163cfd83e410cc` — Program.cs audit classification integration.
+- `93c4776cfe7f23b9ac75b41297dec4426215fe20` — boundary policy.
+- `7d46ed66e8bdcd101b516c352abbe1e75890e014` — boundary policy tests.
+- To-Do and this handoff are updated in subsequent documentation commits.
+
+### Exact next steps
+1. Pull latest `feature/opportunity-quality-classification`; record full `git rev-parse HEAD`.
+2. Run `.\scripts\Get-Latest-And-Test.ps1`. Report SHA, Release build status, passed/failed/skipped totals and duration. The commits above have not yet been locally built/tested by the operator.
+3. During regular market hours, capture one symbol and report the full `technicalAssessment` plus saved snapshot `evaluationRequest`. Confirm fresh matched bars yield `intradayBarsUsable=true`; V2 decision fields are only populated when status is EVALUATED.
+4. Inspect the future boundary audit before endpoint availability: expected `PENDING_NOT_YET_AVAILABLE`. Recheck after endpoint availability to verify exact provider-missing status only then.
+5. Do not relax exact timestamp matching, backfill older sessions, or substitute nearest bars.
+6. Continue to keep IEX Daily diagnostic-only. SIP feed entitlement/source coverage and TOS ATR parity remain independent gates.
+
+[Uncertainties]
+- This change has not yet been validated by an exact-head CI run or the operator's local Release build/test.
+- Regular-session technical-input behavior remains unverified by runtime capture.
+- Alpaca IEX omissions at the seven historical opening boundaries have not been explained; the payload establishes only exact-bar absence in provider response and store.
+- SIP qualification, official opening-auction print, and Thinkorswim parity remain unverified.
