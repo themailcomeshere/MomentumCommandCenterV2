@@ -1,3 +1,5 @@
+> **Superseded:** the current handoff is [NewChatHandoff-20261113.md](NewChatHandoff-20261113.md). This file is retained as history through 2026-11-13 morning.
+
 # November 12 — latest operator evidence and immediate actions
 
 ### Boring Overnight implementation details — source-verified

@@ -1,4 +1,4 @@
-> **Current handoff:** Use [NewChatHandoff-20261110.md](NewChatHandoff-20261110.md) for the refreshed November 12 engineering status, exact next operator steps and current blockers. Use [Master-To-Do.md](Master-To-Do.md) as the canonical checklist. This file is retained as historical/design context.
+> **Current handoff:** Use [NewChatHandoff-20261113.md](NewChatHandoff-20261113.md) for the current engineering status, exact next operator steps and current blockers. Use [Master-To-Do.md](Master-To-Do.md) as the canonical checklist. This file is retained as historical/design context.
 >
 > ---
 >
