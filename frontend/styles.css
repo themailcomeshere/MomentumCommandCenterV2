@@ -1743,3 +1743,9 @@ body.boring-overnight-mode #overnightImportStatus{grid-column:1/-1}
 .audit-status-unknown{color:var(--muted)!important}
 @media(max-width:900px){.overnight-workflow-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.overnight-workflow-steps{grid-template-columns:1fr}.overnight-import-strip{grid-template-columns:1fr}}
+/* Scanner field-availability report (2026-11-13). */
+.field-availability{grid-column:1/-1;margin-top:4px}
+.field-availability>summary{cursor:pointer;font-weight:600}
+.field-availability-table{width:100%;max-width:560px;border-collapse:collapse;margin:8px 0;font-size:.85rem}
+.field-availability-table th,.field-availability-table td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:left}
+.field-availability-table td:not(:first-child),.field-availability-table th:not(:first-child){text-align:right}

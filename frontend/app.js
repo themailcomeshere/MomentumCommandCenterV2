@@ -144,6 +144,9 @@ window.setInterval(()=>{if(document.visibilityState==="visible")void refreshMark
 
 /// PURPOSE: Track dynamic WebSocket subscription requests before any startup refresh can run.
 const requestedMinuteBarSymbols=new Set();
+/// PURPOSE: Per-symbol live-assessment de-duplication. Declared before the first render() so the
+/// startup Intraday assessment does not hit a temporal-dead-zone ReferenceError.
+const liveAssessmentInFlight=new Map();
 function render(){
  const overnight=$("mode")?.value==="overnight";
  document.body.classList.toggle("boring-overnight-mode",overnight);
@@ -279,7 +282,6 @@ function drawPriceLine(container,bars,label){
  const meta=document.createElement("div");meta.className="chart-meta";meta.textContent=bars.length+" × 1m bars · "+new Date(bars[0].timestamp).toLocaleTimeString()+"–"+new Date(bars[bars.length-1].timestamp).toLocaleTimeString()+" · latest $"+values[values.length-1].toFixed(2);
  container.append(svg,meta);
 }
-const liveAssessmentInFlight=new Map();
 async function fetchLiveAssessment(symbol){
  const ticker=String(symbol||"").trim().toUpperCase();
  if(liveAssessmentInFlight.has(ticker))return liveAssessmentInFlight.get(ticker);
@@ -919,6 +921,36 @@ function parseCsvLine(line,delimiter=","){
  for(let i=0;i<line.length;i++){const char=line[i];if(char==='"'){if(quoted&&line[i+1]==='"'){buffer.push('"');i++;}else quoted=!quoted;}else if(char===delimiter&&!quoted){fields.push(buffer.join(""));buffer.length=0;}else buffer.push(char);}
  fields.push(buffer.join(""));return fields;
 }
+/// PURPOSE: Report scanner custom-field availability for an imported Watchlist Scanner CSV.
+/// WHEN CALLED: After a scanner import or a restored import.
+/// IMPORTANT: Missing/placeholder/non-numeric custom-expression output (e.g. a subscription-limit message)
+/// counts as unavailable. Denominators are the rows in THIS import only; earlier counts are not reused.
+const scannerAvailabilityFields=[["ON Win %","onWin"],["AVG ON %","avgOn"],["Median ON %","medianOn"],["5D ON %","fiveDayOn"],["ON Momentum","onMomentum"],["Current ON %","currentOn"],["Above 20 SMA","above20Sma"],["Overnight Score","score"]];
+function scannerFieldValue(row,key){return key==="score"?row?.score:row?.overnightMetrics?.[key];}
+function isScannerFieldAvailable(value){const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return false;return Number.isFinite(Number(raw.replace("%","").replace(/,/g,"").trim()));}
+function computeScannerFieldAvailability(rows,source){
+ const list=Array.isArray(rows)?rows:[];
+ const fields=scannerAvailabilityFields.map(([label,key])=>{const available=list.filter(row=>isScannerFieldAvailable(scannerFieldValue(row,key))).length;return {label,key,available,total:list.length,missing:list.length-available,pct:list.length?available/list.length*100:null};});
+ const symbols=list.map(row=>({symbol:String(row?.symbol||"").toUpperCase(),missing:scannerAvailabilityFields.filter(([,key])=>!isScannerFieldAvailable(scannerFieldValue(row,key))).map(([label])=>label)}));
+ const complete=symbols.filter(x=>!x.missing.length).length;
+ return {sourceFile:source?.filename||"UNKNOWN",sourceFeed:"THINKORSWIM_WATCHLIST_SCANNER_CSV",importedAtUtc:source?.importedAtUtc||null,rowCount:list.length,completeRowCount:complete,incompleteRowCount:list.length-complete,fields,symbolsWithMissingFields:symbols.filter(x=>x.missing.length)};
+}
+function renderScannerFieldAvailability(rows,source){
+ const host=$("scannerFieldAvailability");if(!host)return null;
+ const report=computeScannerFieldAvailability(rows,source);
+ const stamp=report.importedAtUtc?new Date(report.importedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" AZ":"UNKNOWN";
+ const summary=document.createElement("summary");summary.textContent="Field availability: "+report.completeRowCount+"/"+report.rowCount+" rows complete · "+report.sourceFile+" · imported "+stamp;
+ const table=document.createElement("table");table.className="field-availability-table";
+ const head=document.createElement("tr");for(const text of ["Field","Available","Missing","Denominator","%"]){const th=document.createElement("th");th.textContent=text;head.append(th);}
+ table.append(head);
+ for(const field of report.fields){const tr=document.createElement("tr");for(const text of [field.label,field.available,field.missing,field.total,field.pct==null?"DATA?":field.pct.toFixed(1)+"%"]){const td=document.createElement("td");td.textContent=String(text);tr.append(td);}table.append(tr);}
+ const note=document.createElement("p");note.className="muted small";note.textContent="Source "+report.sourceFeed+". Denominator = rows in this import. Missing custom-expression output (blank, DATA?, n/a or non-numeric text such as a subscription-limit message) is unavailable, never a failed gate.";
+ const missing=document.createElement("p");missing.className="small";missing.textContent=report.symbolsWithMissingFields.length?"Rows with missing fields: "+report.symbolsWithMissingFields.map(x=>x.symbol+" ("+x.missing.join(", ")+")").join(" · "):"No rows have missing fields.";
+ const exportButton=document.createElement("button");exportButton.type="button";exportButton.className="quiet-button";exportButton.textContent="Export availability JSON";
+ exportButton.addEventListener("click",()=>{const blob=new Blob([JSON.stringify({...report,generatedAtUtc:new Date().toISOString()},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mcc-scanner-field-availability.json";a.click();URL.revokeObjectURL(url);});
+ host.replaceChildren(summary,table,note,missing,exportButton);host.hidden=false;
+ return report;
+}
 function normalizeCsvHeader(value){
  return String(value??"").replace(/^\uFEFF/,"").trim().replace(/^"(.*)"$/,"$1").trim().toLowerCase().replace(/\s+/g,"").replace(/[^a-z0-9/]/g,"");
 }
@@ -979,8 +1011,10 @@ $("scannerFile").addEventListener("change",event=>{
   const dismissalResetCount=previouslyDismissed-redZoneState.dismissed.length;
   writeRedZoneState(redZoneState);
   let persistenceNote="";
-  try{localStorage.setItem("mcc.scannerImport.v1",JSON.stringify({filename:file.name,importedAtUtc:new Date().toISOString(),rows:imported}));}
+  const importedAtUtc=new Date().toISOString();
+  try{localStorage.setItem("mcc.scannerImport.v1",JSON.stringify({filename:file.name,importedAtUtc,rows:imported}));}
   catch(error){persistenceNote=" · browser storage unavailable: "+error.message;}
+  renderScannerFieldAvailability(imported,{filename:file.name,importedAtUtc});
   const groupSelect=$("scannerGroup");const option=groupSelect.querySelector('option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)groupSelect.append(option);groupSelect.value="imported";renderScanner();renderMorningReport();
   const renderedRows=$("scannerRows")?.querySelectorAll("tr").length??0;
   const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
@@ -997,6 +1031,7 @@ if(restoredScannerImport?.rows?.length){
  option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)$("scannerGroup").append(option);
  $("scannerGroup").value="imported";renderScanner();renderMorningReport();void renderOvernightQualification();
  const stamp=restoredScannerImport.importedAtUtc?new Date(restoredScannerImport.importedAtUtc).toLocaleString():"previous session";
+ renderScannerFieldAvailability(restoredScannerImport.rows,restoredScannerImport);
  $("scannerSource").textContent=`Restored ${restoredScannerImport.rows.length} local rows from ${restoredScannerImport.filename||"CSV"} · imported ${stamp}`;
 }
 
@@ -1300,10 +1335,13 @@ $("rankOpportunityPool")?.addEventListener("click",async()=>{
    const value=x=>x==null?"DATA?":Number(x).toFixed(2);
    metrics.textContent="RVOL "+value(item.relativeVolume)+" · 30×1M range/ATR "+value(item.recentRangeInAtr)+" · prior-high distance/ATR "+value(item.resistanceDistanceInAtr)+" · 1M entry "+(item.entryAllowed==null?"UNKNOWN":item.entryAllowed?"READY":"NOT READY");
    const reasons=document.createElement("p");reasons.className="small";reasons.textContent=(item.reasons||[]).join(" · ")||"No reason codes returned.";
-   card.append(title,metrics,reasons);return card;
+   const stamp=x=>x?new Date(x).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit",second:"2-digit"})+" AZ":"UNKNOWN";
+   const provenance=document.createElement("p");provenance.className="muted small";
+   provenance.textContent="Source "+(item.provider||"UNKNOWN")+" / "+(item.feed||"UNKNOWN")+" · 1M bar "+stamp(item.oneMinuteSourceTimestampUtc)+" · 5M bar "+stamp(item.fiveMinuteSourceTimestampUtc)+" · evaluated "+stamp(item.evaluatedAtUtc)+(item.excluded?" · EXCLUSION WATCHLIST — BLOCKED":"");
+   card.append(title,metrics,reasons,provenance);return card;
   });
   if(host)host.replaceChildren(...(cards.length?cards:[Object.assign(document.createElement("p"),{className:"muted small",textContent:"No ranking results returned."})]));
-  if(status)status.textContent="Ranked "+ranked.length+" of "+imported.length+" imported symbols. Pool scope: top "+symbols.length+" by imported Overnight Score. Diagnostic ordering only; not calibrated, not market-wide, and never overrides 5M/1M eligibility. DATA? candidates remain visible.";
+  if(status)status.textContent="Ranked "+ranked.length+" of "+imported.length+" imported symbols ("+(payload.excludedCount??0)+" excluded, "+(payload.dataUnknownCount??0)+" DATA?"+(payload.exclusionListChecked===false?"; EXCLUSION LIST NOT CHECKED: "+(payload.exclusionError||"unknown error"):"")+"). Pool scope: top "+symbols.length+" by imported Overnight Score. Diagnostic ordering only; not calibrated, not market-wide, and never overrides 5M/1M eligibility. DATA? candidates remain visible.";
  }catch(error){if(status)status.textContent="Opportunity Quality ranking failed: "+error.message;}
  finally{if(button)button.disabled=false;}
 });

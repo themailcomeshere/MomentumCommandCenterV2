@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261102-main-chart-layout-v2" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261113-field-availability-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -594,7 +594,7 @@
         </section>
         <section id="overnightPanel" data-section-id="overnight-analysis" class="panel hidden">
             <div class="section-heading" id="mcc-static-0124-div"><div id="mcc-static-0125-div"><div class="eyebrow" id="mcc-static-0126-div">BORING OVERNIGHT · WORKFLOW</div><h2 id="mcc-static-0127-h2">Overnight Candidate Workspace</h2></div><span class="chip" id="mcc-static-0128-span">Research only · no orders</span></div>
-            <div class="overnight-import-strip"><div><strong>1 · Import the Watchlist Scanner export</strong><p class="muted small">Starting point for this workflow. Import your Thinkorswim Watchlist Scanner CSV here; MCC populates the shortlist, qualification table and Daily audit symbols.</p></div><label class="file-button" for="scannerFile">Import Overnight CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"><span id="overnightImportStatus" class="muted small" role="status">No Overnight Scanner CSV imported in this session.</span></div>
+            <div class="overnight-import-strip"><div><strong>1 · Import the Watchlist Scanner export</strong><p class="muted small">Starting point for this workflow. Import your Thinkorswim Watchlist Scanner CSV here; MCC populates the shortlist, qualification table and Daily audit symbols.</p></div><label class="file-button" for="scannerFile">Import Overnight CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"><span id="overnightImportStatus" class="muted small" role="status">No Overnight Scanner CSV imported in this session.</span><details id="scannerFieldAvailability" class="field-availability" hidden></details></div>
             <ol class="overnight-workflow-steps"><li><strong>Import</strong><span>Load the Watchlist Scanner export.</span></li><li><strong>Shortlist</strong><span>Review boring-profile candidates; extreme current gaps are excluded from the shortlist.</span></li><li><strong>Validate</strong><span>Run Daily Data Audit and fetch Daily + catalyst evidence for Boring Top 4.</span></li><li><strong>Diagnose</strong><span>Review Main Chart and evidence gates. Missing or partial data stays UNKNOWN/BLOCKED.</span></li></ol>
             <p class="notice" id="mcc-static-0129-p">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
             <form id="overnightBarsForm" class="overnight-controls">
@@ -868,7 +868,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261110-overnight-main-chart-metrics-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261113-field-availability-pool-provenance-v2" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

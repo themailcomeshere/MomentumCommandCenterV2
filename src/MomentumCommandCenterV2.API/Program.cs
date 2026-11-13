@@ -483,6 +483,7 @@ app.MapGet("/api/market-data/opportunity-quality/rank", async (
     string symbols,
     string? providerName,
     LiveSymbolAssessmentService assessmentService,
+    MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore exclusionStore,
     CancellationToken cancellationToken) =>
 {
     var requested = symbols.Split(new[] { ',', ';', ' ', '\t', '\r', '\n' },
@@ -493,50 +494,33 @@ app.MapGet("/api/market-data/opportunity-quality/rank", async (
 
     var selectedProvider = providerName ?? "Alpaca";
     var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    // Exclusion-watchlist symbols are hard-blocked in the pool. If the list cannot be read,
+    // the ranking is still returned but flagged so no row is mistaken for exclusion-checked.
+    HashSet<string>? excludedSymbols = null;
+    string? exclusionError = null;
+    try
+    {
+        excludedSymbols = (await exclusionStore.GetAsync(cancellationToken))
+            .Select(x => x.Symbol.Trim().ToUpperInvariant()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+    catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+    {
+        exclusionError = $"{ex.GetType().Name}: {ex.Message}";
+    }
     using var throttle = new SemaphoreSlim(4, 4);
     var assessments = await Task.WhenAll(requested.Select(async symbol =>
     {
+        var excluded = excludedSymbols?.Contains(symbol) == true;
         await throttle.WaitAsync(cancellationToken);
         try
         {
             var assessment = await assessmentService.GetAsync(symbol, selectedProvider, cancellationToken);
             var root = JsonSerializer.SerializeToElement(assessment, jsonOptions);
-            var quality = root.GetProperty("opportunityQuality");
-            var metrics = quality.TryGetProperty("metrics", out var metricElement) &&
-                metricElement.ValueKind == JsonValueKind.Object ? metricElement : default;
-            decimal? Metric(string name) =>
-                metrics.ValueKind == JsonValueKind.Object &&
-                metrics.TryGetProperty(name, out var value) &&
-                value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out var number)
-                    ? number : null;
-            bool? entryAllowed = root.TryGetProperty("decision", out var decision) &&
-                decision.ValueKind == JsonValueKind.Object &&
-                decision.TryGetProperty("entryAllowed", out var entry) &&
-                entry.ValueKind is JsonValueKind.True or JsonValueKind.False
-                    ? entry.GetBoolean() : null;
-            var reasons = quality.TryGetProperty("reasons", out var reasonArray) &&
-                reasonArray.ValueKind == JsonValueKind.Array
-                    ? reasonArray.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String)
-                        .Select(x => x.GetString()!).ToArray()
-                    : Array.Empty<string>();
-            return new OpportunityQualityPoolCandidate(
-                symbol,
-                quality.TryGetProperty("status", out var status) ? status.GetString() ?? "DATA?" : "DATA?",
-                quality.TryGetProperty("classification", out var classification) ? classification.GetString() ?? "DataUnknown" : "DataUnknown",
-                quality.TryGetProperty("displayLabel", out var label) ? label.GetString() ?? "QUALITY — UNKNOWN" : "QUALITY — UNKNOWN",
-                Metric("relativeVolume"),
-                Metric("recentRangeInAtr"),
-                Metric("resistanceDistanceInAtr"),
-                entryAllowed,
-                root.TryGetProperty("dataFresh", out var fresh) && fresh.ValueKind == JsonValueKind.True,
-                reasons);
+            return OpportunityQualityPoolCandidateMapper.FromAssessment(symbol, root, excluded);
         }
         catch (Exception ex) when (ex is ArgumentException or ProviderNotConfiguredException or HttpRequestException or TaskCanceledException or InvalidOperationException or JsonException)
         {
-            return new OpportunityQualityPoolCandidate(
-                symbol, "DATA?", "DataUnknown", "QUALITY — UNKNOWN",
-                null, null, null, null, false,
-                new[] { "ASSESSMENT_FAILED", ex.GetType().Name });
+            return OpportunityQualityPoolCandidateMapper.FromFailure(symbol, ex, excluded, selectedProvider);
         }
         finally
         {
@@ -552,8 +536,12 @@ app.MapGet("/api/market-data/opportunity-quality/rank", async (
         rankingVersion = OpportunityQualityPoolRanker.Version,
         scope = "EXPLICIT_USER_SUPPLIED_POOL",
         candidateCount = ranked.Count,
+        excludedCount = ranked.Count(x => x.Excluded),
+        dataUnknownCount = ranked.Count(x => x.Status == "DATA?"),
+        exclusionListChecked = exclusionError is null,
+        exclusionError,
         ranked,
-        note = "Ranks every symbol supplied in this request. Ordering uses the existing diagnostic classification, then raw 5M RVOL, 30-bar 1M range/ATR, and prior-high distance; no weighted score or calibrated probability is invented. V2 eligibility/execution remain separate and unchanged. Missing/stale evidence sorts last as DATA?. This is not a market-wide scanner or order instruction."
+        note = "Exclusion-watchlist symbols are hard-BLOCKED with reason EXCLUDED_WATCHLIST. Each row carries provider, feed and 1m/5m source timestamps. Ranks every symbol supplied in this request. Ordering uses the existing diagnostic classification, then raw 5M RVOL, 30-bar 1M range/ATR, and prior-high distance; no weighted score or calibrated probability is invented. V2 eligibility/execution remain separate and unchanged. Missing/stale evidence sorts last as DATA?. This is not a market-wide scanner or order instruction."
     });
 })
 .WithName("RankOpportunityQualityPool")

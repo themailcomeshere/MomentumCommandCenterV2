@@ -44,7 +44,15 @@ public static class OpportunityQualityPoolRanker
                 candidate.ResistanceDistanceInAtr,
                 candidate.EntryAllowed,
                 candidate.DataFresh,
-                candidate.Reasons))
+                candidate.Reasons)
+            {
+                Provider = candidate.Provider,
+                Feed = candidate.Feed,
+                OneMinuteSourceTimestampUtc = candidate.OneMinuteSourceTimestampUtc,
+                FiveMinuteSourceTimestampUtc = candidate.FiveMinuteSourceTimestampUtc,
+                EvaluatedAtUtc = candidate.EvaluatedAtUtc,
+                Excluded = candidate.Excluded
+            })
             .ToArray();
     }
 
@@ -76,7 +84,17 @@ public sealed record OpportunityQualityPoolCandidate(
     decimal? ResistanceDistanceInAtr,
     bool? EntryAllowed,
     bool DataFresh,
-    IReadOnlyList<string> Reasons);
+    IReadOnlyList<string> Reasons)
+{
+    /// <summary>Per-symbol provenance; null when the assessment did not return it.</summary>
+    public string? Provider { get; init; }
+    public string? Feed { get; init; }
+    public DateTimeOffset? OneMinuteSourceTimestampUtc { get; init; }
+    public DateTimeOffset? FiveMinuteSourceTimestampUtc { get; init; }
+    public DateTimeOffset? EvaluatedAtUtc { get; init; }
+    /// <summary>True when the symbol is on the exclusion watchlist; it is then hard-blocked.</summary>
+    public bool Excluded { get; init; }
+}
 
 public sealed record OpportunityQualityPoolRankedCandidate(
     int Rank,
@@ -89,4 +107,14 @@ public sealed record OpportunityQualityPoolRankedCandidate(
     decimal? ResistanceDistanceInAtr,
     bool? EntryAllowed,
     bool DataFresh,
-    IReadOnlyList<string> Reasons);
+    IReadOnlyList<string> Reasons)
+{
+    /// <summary>Per-symbol provenance; null when the assessment did not return it.</summary>
+    public string? Provider { get; init; }
+    public string? Feed { get; init; }
+    public DateTimeOffset? OneMinuteSourceTimestampUtc { get; init; }
+    public DateTimeOffset? FiveMinuteSourceTimestampUtc { get; init; }
+    public DateTimeOffset? EvaluatedAtUtc { get; init; }
+    /// <summary>True when the symbol is on the exclusion watchlist; it is then hard-blocked.</summary>
+    public bool Excluded { get; init; }
+}
