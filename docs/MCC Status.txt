@@ -1,0 +1,253 @@
+# **Momentum Command Center — Situation Report**
+
+**As of November 13, 2026**
+
+## **1. Executive status**
+
+MCC has made substantial progress on its data-integrity, fail-closed evaluation, and diagnostic infrastructure. The biggest remaining problem is not whether the application can calculate indicators. It is whether the system can consistently obtain, qualify, timestamp, and preserve the exact inputs needed to make a trustworthy candidate decision.
+
+**My assessment: MCC is in an advanced testing and integration stage, not a finished, production-validated decision-support system.**
+
+The recent work has improved the system's ability to say *“I don't have enough trustworthy data”* instead of producing a misleading READY result. That is important progress. But it also means several candidate evaluations are still DATA?, BLOCKED, or otherwise ineligible.
+
+There is no defensible single percentage-complete figure in the project evidence. The remaining work spans multiple independent systems, and the project does not yet have a verified end-to-end acceptance score.
+
+## **2. What is working, and what remains**
+
+| Area                              | Current status                             | Remaining work                                               |
+| --------------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Repository / engineering workflow | Established                                | Continue branch-specific verification and regression testing |
+| Build and automated tests         | Previously passed                          | Re-run against the latest commits                            |
+| Scanner ingestion and analysis    | Working in tested cases                    | Validate broader capture coverage and score interpretation   |
+| Daily Data Audit                  | Implemented improvements                   | Finish UI/data validation and operational checks             |
+| Catalyst classification           | Fail-closed mapping implemented            | Validate complete coverage and source evidence               |
+| Technical input capture           | Provider/feed-qualified wiring implemented | Runtime validation across market conditions                  |
+| Technical staleness policy        | Corrected and regression-tested            | Confirm live behavior after latest changes                   |
+| Overnight historical evaluator    | Fail-closed logic implemented              | Resolve missing exact session-opening bars                   |
+| Current overnight interval        | Boundary logic implemented                 | Validate current interval transitions and persistence        |
+| Opportunity Quality               | Diagnostic classification exists           | Full-pool, per-symbol, calibration, and acceptance work      |
+| Saved evaluations                 | Persistence/API/UI work implemented        | Verify snapshots and field-source provenance                 |
+| Production readiness              | Not established                            | Complete end-to-end acceptance and operational validation    |
+
+## **3. The most important current findings**
+
+### **A. Boring Overnight — the largest known data-quality blocker**
+
+Your November 13 CRBG capture is particularly useful because it demonstrates both successful safeguards and unresolved data gaps.
+
+- The historical evaluator requires 20 completed overnight pairs.
+- Only **13 of 20** pairs were valid in the capture.
+- **Seven historical next-session opening bars** were missing at the exact required 09:30 timestamp.
+- The evaluator correctly withheld rolling statistics rather than substituting a nearby minute.
+- The November 13 current opening bar was also missing after its expected availability time.
+- The 09:30 one-minute bar's Open is only a proxy; it is not verified as the official opening-auction print.
+
+The boundary-audit correction is now visible in the running application: it distinguishes a future endpoint that is not yet available from an endpoint that should exist but is missing.
+
+**What remains:** determine why those seven exact opening bars are absent, whether the provider can reliably supply them, and whether the store can preserve them. Do not weaken the exact-boundary requirement just to make the evaluator READY.
+
+There is a second unresolved question: the capture fetched **6,976 bars but persisted zero new observations**. That may simply mean all observations were already present, but the evidence does not establish that. We need to inspect the persistence and deduplication accounting.
+
+### **B. Technical assessment — safeguards improved, candidate still fails**
+
+The staleness defect was corrected: stale intraday bars can no longer supply technical numeric indicators or V2 decision fields.
+
+In the November 13 CRBG capture, the later technical assessment had:
+
+- Matched Alpaca/IEX provenance.
+- Fresh 1-minute and 5-minute bars.
+- `intradayBarsUsable=true`.
+- `v2DecisionUsable=true`.
+- 5-minute permission false.
+- 1-minute state `NoTrade/NONE`.
+- Extension ATR approximately 2.09.
+
+That means the data passed the technical usability checks, but the setup still did not qualify. This distinction is correct: *usable inputs do not mean a tradable setup.*
+
+Daily qualification values also remained unavailable because IEX coverage is partial. A complete and fresh 20-session Daily history is not sufficient to make that history qualification-usable when the feed does not meet the required coverage.
+
+### **C. Catalyst — correctly conservative, but still needs validation**
+
+The November 12 CRBG evidence contained a Wells Fargo analyst-action headline classified as `MATERIAL_EVENT_REVIEW`.
+
+The later November 13 capture had zero articles and therefore returned `UNKNOWN`, not `CLEAR`.
+
+That is the correct fail-closed behavior. Zero articles cannot establish that there is no catalyst risk. The remaining work is to validate news coverage completeness, source failures, time windows, and classification across a wider candidate set.
+
+### **D. Opportunity Quality — not yet a calibrated ranking system**
+
+The current Opportunity Quality work is a diagnostic classification layer. It is not a calibrated probability of success.
+
+Outstanding work includes:
+
+- Full scanner-pool fixture coverage.
+- Mapping every required source field.
+- Per-symbol timestamp and freshness verification.
+- Calibration against a sufficiently large outcome dataset.
+- Explicit acceptance criteria for classifications.
+
+Until those are complete, the score/classification should not be treated as a statistically validated probability or standalone trading signal.
+
+## **4. Engineering work already completed**
+
+The recent feature-branch work includes:
+
+1. Boring Overnight historical/current interval calendar separation.
+2. Boring Overnight API integration and UI rendering.
+3. Provider request bounded to the current time.
+4. Boundary audit status policy, including `PENDING_NOT_YET_AVAILABLE`.
+5. Regression tests for boundary availability and provider/store combinations.
+6. Source-qualified technical input mapping from the live assessment.
+7. Provider/feed consistency checks.
+8. Intraday staleness gates for numeric and V2 decision inputs.
+9. Catalyst status mapping and regression tests.
+10. Daily freshness and catalyst persistence work.
+11. Saved evaluation API and frontend work.
+12. JSONL storage performance diagnostics.
+13. November 12 scanner research and documentation.
+14. Master To-Do and handoff documentation updates.
+
+These are implemented engineering changes, not proof that every runtime workflow has passed acceptance.
+
+**Important verification boundary:** the last specifically reported local Release build and test result was 293 passed, 0 failed, 0 skipped, on commit `92a33dee4b4e46010fc8633e95a5ef41a8e00e19`. That result does not verify the later boundary-audit commits or subsequent work. The latest boundary commits were confirmed on the feature branch, but no passing CI run was verified for that correction in the evidence available here.
+
+## **5. How much is left?**
+
+I would divide the remaining work into five completion gates.
+
+**Gate 1 — Establish a verified engineering baseline**
+
+Not yet verified on latest revision
+
+- Pull the latest feature branch.
+- Run Release build and all automated tests.
+- Record the exact SHA and test totals.
+- Resolve any failures before adding more changes.
+
+**Gate 2 — Complete Overnight data integrity**
+
+Major outstanding blocker
+
+- Investigate the seven missing historical opening bars.
+- Investigate 6,976 fetched / zero newly persisted.
+- Verify the current interval transitions from PENDING to the correct missing/observed state.
+- Re-run the 20-pair evaluator and verify it only becomes usable with 20 valid pairs.
+
+**Gate 3 — Complete qualification-input validation**
+
+Partially implemented
+
+- Establish qualification-usable Daily data from an appropriate source.
+- Validate Daily range, ATR, price, SMA, and volume.
+- Validate technical inputs across fresh, stale, missing, and mismatched-feed conditions.
+- Validate catalyst coverage and classification.
+- Confirm saved evaluation snapshots preserve correct values and provenance.
+
+**Gate 4 — Complete scanner and Opportunity Quality validation**
+
+Not fully validated
+
+- Test the entire scanner pool, not just selected symbols.
+- Verify every required scanner field and timestamp.
+- Validate candidate qualification and ranking behavior.
+- Establish outcome-based calibration and acceptance criteria.
+
+**Gate 5 — End-to-end operational acceptance**
+
+Not established
+
+- Test the complete workflow from scanner capture through candidate evaluation.
+- Verify Daily Data Audit, catalyst, technical inputs, Overnight, Red Zone, and saved evaluations.
+- Test regular session, after-hours, weekends, holidays, and early closes.
+- Verify that unavailable or incomplete data never produces an unjustified READY.
+- Document the final known limitations and operational procedures.
+
+**My conclusion:** Gates 1–3 are the immediate engineering priorities. Gates 4–5 are necessary before calling MCC complete. I cannot responsibly translate this into a percentage or number of days without estimating work that has not been measured.
+
+# **6. Your instructions — what to do next**
+
+We should not start another broad feature-development cycle yet. First establish the latest code baseline, then work through the data blockers.
+
+### **Step 1 — Update your local repository**
+
+Open PowerShell in your MCC repository and run:
+
+```
+git switch feature/opportunity-quality-classification
+git pull --ff-only origin feature/opportunity-quality-classification
+
+git status --short
+git rev-parse HEAD
+```
+
+Send me the output.
+
+### **Step 2 — Run the complete verification script**
+
+Run:
+
+```
+.\scripts\Get-Latest-And-Test.ps1
+```
+
+Send me the complete output, particularly:
+
+- Verified source SHA.
+- Release build result.
+- Total tests.
+- Failed tests.
+- Skipped tests.
+
+Do not proceed if the build or tests fail. Send me the failure output and I will work on the underlying defect.
+
+### **Step 3 — Re-run the CRBG Overnight capture**
+
+After the latest code passes verification:
+
+1. Open CRBG in MCC.
+2. Run the Boring Overnight capture-history workflow for the same historical period used in your November 13 test.
+3. Run the boundary audit.
+4. Run the saved evaluation.
+5. Export or copy the complete response.
+
+I want to compare the new output against your November 13 capture, especially:
+
+- The seven missing historical opening timestamps.
+- The current session opening timestamp.
+- `newlyPersistedObservationCount`.
+- `history.validPairCount`.
+- `history.missingPairCount`.
+- `currentInterval` status.
+- `endpointAvailableAtUtc` and `auditedAtUtc`.
+
+### **Step 4 — Send me the results**
+
+I will then investigate and implement the next set of corrections on `feature/opportunity-quality-classification`, including updating:
+
+- `docs/Master-To-Do.md`
+- `docs/NewChatHandoff-20261110.md`
+- Supporting validation documentation.
+
+We will not mark the Overnight evaluator complete just because the code builds. It must demonstrate that it can obtain and retain the exact required historical observations.
+
+## **7. What I recommend we prioritize after that**
+
+My recommended engineering order is:
+
+1. **Resolve Overnight exact-opening-bar availability and persistence.**
+2. **Resolve qualification-usable Daily data.**
+3. **Finish technical and catalyst end-to-end validation.**
+4. **Validate the entire scanner pool and Opportunity Quality classifications.**
+5. **Complete the full MCC workflow acceptance test.**
+
+I would not spend time polishing secondary UI details while these data-integrity issues remain unresolved. The quality of MCC's decisions depends on the quality and provenance of its inputs.
+
+## **[Uncertainties]**
+
+- I have not verified the current GitHub branch head live in this response.
+- The latest boundary-audit correction has runtime evidence in your uploaded capture, but its latest automated build/test status is not established.
+- The cause of the seven missing opening bars is unknown.
+- The cause of zero newly persisted observations is unknown.
+- The full remaining effort cannot be quantified until the outstanding work is broken into verified acceptance criteria.
+
+**Your next action is Step 1 and Step 2.** Send me the exact SHA and verification output. Then I can work against a known revision rather than guessing which code you are running.
