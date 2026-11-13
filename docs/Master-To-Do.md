@@ -921,3 +921,26 @@ Operator-verified parent SHA: `5268846a1a95ec799a352b74032469baf33569a8`.
 
 Implementation commits: `a5a089fb13bd63727c619ae335b9473ff4a25cfc`, `6e8248e664f6d40c51b5b1501cab0f6d86b44361`, `e4a6918a0b50a5421858316fb9e82f2b9e3bb235`, `a986e8107908bc626656732b7b03320a262b1170`, `58ade3a9651304d75440df766bc0dba1495e0616`, `e39cd406092795ac553a56bccce36c5a961ccc05`, `853fe72c6af3baa9187967d87b876eab78d2b264`.
 Validation note commit: `308853dcb077f0a473e5ef02d19b01a2912373bf`.
+
+
+## November 13 — mode isolation and operator capture instructions
+
+### Implemented on `feature/opportunity-quality-classification`
+- [x] Fixed Boring Overnight qualification visibility in Intraday Momentum mode. The qualification section is a sibling of the already-hidden Overnight workspace; `render()` now independently hides `#overnight-qualification` unless mode is `overnight`.
+- [x] Confirmed the Intraday decision path remains separate: Intraday uses live assessment / Opportunity Quality; Overnight uses the historical qualification workspace. No evaluator or eligibility logic was changed.
+- [x] Source-verified the exact operator controls and endpoints for the remaining capture checks; detailed click-by-click retrieval instructions are in the current handoff.
+
+### Still open — prioritized engineering
+- [ ] Add full-pool Opportunity Quality API fixtures covering complete, incomplete, stale, excluded and mixed candidate populations; assert deterministic ranks, DATA?/BLOCKED semantics and per-symbol provenance.
+- [ ] Add scanner custom-field availability reporting with explicit numerator, denominator, capture timestamp and source feed; do not reuse the historical 296-row count as current.
+- [ ] Profile JSONL cold start, warm assessment, append persistence and first request separately on the operator's current data file; only optimize storage after measuring the actual bottleneck.
+- [ ] Complete Boring Overnight operator acceptance: exact 20 completed pairs, current interval separation, boundary pending/missing transitions, Daily/catalyst review and saved-evaluation traceability.
+- [ ] Complete browser/CDP, WebSocket/collector recovery, interactive Windows start/second-start/graceful-stop and durable-path inventory.
+- [ ] Add exact-head CI and local Release evidence for the mode-isolation change and remaining branch commits.
+- [ ] Keep TOS parity and SIP entitlement/coverage as independent evidence gates; keep Schwab and broker reconciliation parked.
+
+### Operator verification
+- [ ] Switch MCC to Intraday Momentum and confirm the entire `BORING OVERNIGHT · QUALIFICATION` section is absent; switch to Boring Overnight and confirm it returns.
+- [ ] Run a regular-session focused-symbol refresh and capture the `GET /api/market-data/live-assessment?symbol=SYMBOL&providerName=Alpaca` response.
+- [ ] Run the Overnight 20-session capture and inspect the final row in the exact-boundary coverage audit; retain `auditStatus`, `endpointAvailableAtUtc` and `auditedAtUtc`.
+
