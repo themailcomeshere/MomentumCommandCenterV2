@@ -1,3 +1,28 @@
+## November 13 — CRBG capture audit and future-boundary correction
+
+### Implemented on `feature/opportunity-quality-classification`
+- [x] Confirmed after-hours technical gating from the operator's CRBG capture: matched Alpaca/IEX provenance, both intraday freshness flags false, both ages approximately 22,019 seconds against 120s/360s limits, and all five technical evaluator inputs null in the persisted snapshot.
+- [x] Confirmed the current Overnight interval is separate from the 20 completed historical pairs: current interval PENDING; historical window 13/20 exact pairs, 7 missing, no rolling statistics emitted.
+- [x] Corrected capture-history boundary audit classification: a next-session 09:30 one-minute bar is not considered missing until its one-minute endpoint availability time (bar start + 1 minute). Before then, status is `PENDING_NOT_YET_AVAILABLE`, regardless of the absence of a provider/store bar.
+- [x] Added `endpointAvailableAtUtc` and stable `auditedAtUtc` to each boundary audit record so the classification is explainable and reproducible.
+- [x] Added a pure boundary-audit policy and regression tests for all four provider/store exact-bar combinations before availability, all four outcomes after availability, and the exact availability boundary.
+- [ ] Run exact-head CI and operator Release build/tests; repository writes are complete, but compilation/test success is not yet established.
+
+### CRBG runtime evidence recorded
+- [x] Stale after-hours 1m/5m technical fields are withheld from both response and saved evaluator request.
+- [x] IEX Daily has 20/20 expected calendar sessions and is fresh, but `feedCoverage=IEX_PARTIAL` and `qualificationUsable=false`; observed metrics remain diagnostic only.
+- [x] Catalyst result is `MATERIAL_EVENT_REVIEW` with one analyst-action article; evaluator maps this to RISK and returns DATA? / ineligible.
+- [x] Historical close/open pairs remain fail-closed: 13 valid, 7 exact opening bars missing, no rolling statistics. No nearest-bar substitution.
+- [ ] Future endpoint audit status must be verified in a new capture after pulling this correction.
+- [ ] Obtain a fresh regular-session capture to verify usable matched bars and the regular-session V2 decision path.
+
+### Next operator actions
+1. Pull `feature/opportunity-quality-classification` and record `git rev-parse HEAD`.
+2. Run ` .\scripts\Get-Latest-And-Test.ps1` (without the leading space) and report exact SHA, Release build result, and test totals.
+3. During a regular session, capture CRBG (or another test symbol) with matched provider/feed labels. Report `intradayBarsUsable`, `v2DecisionUsable`, evaluation status, source timestamps, ages and limits, and the five technical evaluator fields.
+4. In the same or next capture, inspect the final future NEXT_SESSION_OPEN audit row. Before its endpoint, expect `PENDING_NOT_YET_AVAILABLE`; after endpoint availability, an absent exact bar may be classified as provider-missing.
+5. Keep IEX qualification blocked. SIP entitlement/coverage and TOS parity are separate unresolved gates.
+
 > **Priority directive — 2026-11-11:** Schwab integration is the lowest-priority workstream and is explicitly parked. Do not request a Schwab export, begin Schwab API/OAuth work, or let either block current MCC engineering. Broker execution reconciliation is also parked until broker-record work is deliberately reprioritized and real source records are available. Continue work that can improve or validate the existing MCC independently: (1) performance diagnosis and JSONL cold-index optimization, (2) complete Boring Overnight workflow and candidate evidence review, (3) Opportunity Quality data-quality/coverage audit and deterministic fixtures, (4) Thinkorswim study/formula parity using available operator exports, (5) runtime/browser/collector acceptance and interactive Windows deployment/recovery, and (6) exact-head CI/release evidence. Distinguish repository work we can perform now from operator-side evidence gates; do not mark the latter complete without evidence.
 
 ---
