@@ -148,6 +148,8 @@ function render(){
  const overnight=$("mode")?.value==="overnight";
  document.body.classList.toggle("boring-overnight-mode",overnight);
  $("overnightPanel")?.classList.toggle("hidden",!overnight);
+ // The qualification section is a sibling of overnightPanel, so it needs its own mode gate.
+ $("overnight-qualification")?.classList.toggle("hidden",!overnight);
  $("overnight-opportunity-status")?.classList.toggle("hidden",!overnight);
  if(overnight&&$("overnightSymbol")&&$("symbol")?.value)$("overnightSymbol").value=$("symbol").value.trim().toUpperCase();
  const eyebrow=document.querySelector(".hero-card .eyebrow");
