@@ -9,10 +9,10 @@
 
 | Item | Value |
 |---|---|
-| Latest code head | `e48b4d2` (delayed-SIP 1m for GTC_EXT history), CI run `43636134528` SUCCESS; local Release 366/366 (Claude) |
+| Latest code head | `0b4fbc1` (NO_TRADE minutes), CI run `43636822164` SUCCESS; local Release 369/369 (Claude). Previous: `e48b4d2`, CI `43636134528` |
 | Previous heads | `0596df6` catalyst queue, CI `43635497154`; `5f1d5d1` delayed-SIP Daily, CI `43634828257`; `6a547c3` DATA? reasons, CI `43630951781` |
 | Last operator-verified head | `4c743a1`, 302/302 |
-| Dashboard cache key | `app.js?v=20261114-sip-delayed-minutes-v1` |
+| Dashboard cache key | `app.js?v=20261114-no-trade-minutes-v1` |
 | Session times (standard time, Nov–Mar) | Regular 07:30–14:00 Arizona; buy window 13:00–14:00 AZ; GTC_EXT sell window 05:00–18:00 AZ |
 
 ## What changed on 2026-11-14
@@ -21,7 +21,8 @@
 |---|---|
 | `6a547c3` | DATA? reasons: `DataStale` / `OutsideRegularSession` instead of always `DataMissing`. `MCC.ps1 warmup`. |
 | `5f1d5d1` | `DailyFeed=sip_delayed`: SIP Daily bars with end ≥ 16 min old. A refusal falls back to IEX, labelled, never usable. Massive Daily client, `DailySourceCrossCheck`, `GET /api/market-data/daily/cross-check`. The Daily audit shows the SIP status. |
-| `e48b4d2` | Delayed historical SIP 1m bars for the GTC_EXT sell-window history (operator approved). RTO: 15,201 SIP bars, 0/40 complete windows because no-trade minutes have no bar. Decision pending (READY question 6). |
+| `e48b4d2` | Delayed historical SIP 1m bars for the GTC_EXT sell-window history (operator approved). RTO: 15,201 SIP bars, 0/40 complete windows at first, because no-trade minutes have no bar. |
+| `0b4fbc1` | NO_TRADE minutes (operator approved). On SIP, a no-bar minute is counted, never priced, when the reference close and regular-session bars are present. RTO is 40/40 complete. Sell limit still BLOCKED: TOS ATR gates and walk-forward adverse excursion. |
 | `0596df6` | `catalyst-assessment?lookbackHours=`; `New-CatalystReviewQueue.ps1` (stratified sheet); `Submit-CatalystReviews.ps1` (dry run, `-Submit`). |
 | docs | [READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md), [Catalyst sample plan](Validation/Catalyst-Sample-Plan-20261114.md), SIP evidence `artifacts/daily-data-qualification/20261114T195621Z-sip-delayed/`. |
 
@@ -76,7 +77,8 @@
 
 ## Open blockers
 
-- READY: five open questions (unfilled limit at 20:00 ET, catalyst gate, Daily parity tolerance, sizing, no-trade minutes). Historical SIP minute bars were approved and built.
+- READY: four open questions (unfilled limit at 20:00 ET, catalyst gate, Daily parity tolerance, sizing). Historical SIP minute bars and NO_TRADE minutes were approved and built.
+- Sell limit: needs Thinkorswim 5m ATR observations saved (warm-up, parity, current ATR) and a passing adverse-excursion walk-forward.
 - TOS compile and parity not evidenced.
 - Catalyst sample too small (7 records, no negatives).
 - Schwab and broker reconciliation parked.

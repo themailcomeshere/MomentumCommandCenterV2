@@ -19,8 +19,9 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `6a547c3` (DATA? reasons + `MCC.ps1 warmup`): local Release tests run by Claude: 351/351 passed. Exact-head CI run `43630951781` SUCCESS.
 - [x] `5f1d5d1` (delayed-SIP Daily + Massive cross-check): local 362/362. Exact-head CI run `43634828257` SUCCESS.
 - [x] `0596df6` (catalyst review queue): local 363/363. Exact-head CI run `43635497154` SUCCESS.
-- [x] `e48b4d2` (latest code head, delayed-SIP 1m for GTC_EXT history): local Release tests run by Claude: **366/366** passed. Exact-head CI run `43636134528` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 366+ tests.
+- [x] `e48b4d2` (delayed-SIP 1m for GTC_EXT history): local 366/366. Exact-head CI run `43636134528` SUCCESS.
+- [x] `0b4fbc1` (latest code head, NO_TRADE minutes): local Release tests run by Claude: **369/369** passed. Exact-head CI run `43636822164` SUCCESS.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 369+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -94,7 +95,8 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Operator]** Freeze buy time and exit (2026-11-14): buy **any time in the final regular hour** (15:00–16:00 ET; 13:00–14:00 AZ in standard time; the hour before an early close). Exit is a **GTC_EXT limit sell, Day 2 07:00–20:00 ET**; a touch is not a fill. `MarketSessionClock` already implements both windows.
 - [x] **[Operator]** Official opening-auction data: **not required** (2026-11-14). The exit is a limit in the extended window; the 09:30 close/open capture stays a separately named research series.
 - [x] **[Operator]** Historical SIP minute bars for the 40-window sell history: **allowed** (2026-11-14). Implemented in `e48b4d2`.
-- [ ] **[Operator]** Answer the remaining open questions in the decision record: unfilled limit at 20:00 ET; catalyst gate (manual attestation?); Daily parity tolerance; READY vs position sizing; **no-trade minutes** (new, see §6).
+- [x] **[Operator]** No-trade minutes: **NO_TRADE accepted with safeguards** (2026-11-14, Claude's recommendation). Implemented in `0b4fbc1`.
+- [ ] **[Operator]** Answer the remaining open questions in the decision record: unfilled limit at 20:00 ET; catalyst gate (manual attestation?); Daily parity tolerance; READY vs position sizing.
 - [ ] **[Repo — blocked]** Wire a source-qualified Boring Overnight READY workflow and alert transition after those answers. Never substitute Boring Winner PASS; no sound until READY is validated.
 - [ ] **[Repo — blocked]** Build the V3 Boring Overnight watchlist column/study after the open questions are answered. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
@@ -134,7 +136,9 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Repo]** Runtime evidence (Claude, operator machine, 2026-11-14): RTO, EVR, CRBG → `feed=sip`, `CONSOLIDATED_SIP`, `SIP_DELAYED_HISTORICAL_OK`, 20/20, fresh, `qualificationUsable=true`, on the free account. Against the independent S&P Global/Stock Analysis reference (15 overlapping sessions), volume ratio is 1.0000–1.0011, O/H/L within 0.005, and 14/15 closes exact. 2026-11-06 closes differ (RTO −0.02, EVR +0.18); that reference row was captured 53 min after that close. Evidence: `artifacts/daily-data-qualification/20261114T195621Z-sip-delayed/`.
 - [x] **[Repo]** Delayed historical SIP 1m bars for the GTC_EXT sell-window history (`e48b4d2`, 3 tests). `AllowDelayedHistoricalSipMinutes=true`; every request ends ≥ 16 min before now, and anything newer is refused without a request. The sell-window capture uses it for `feed=sip` on an IEX configuration. `/api/providers/status` exposes `delayedHistoricalSipMinutes`; the Dashboard capture and sell-limit controls use SIP when it is enabled.
 - [x] **[Repo]** Runtime (Claude, operator machine, 2026-11-14): the RTO capture fetched and persisted 15,201 SIP 1m bars in 3.8 s, `CONSOLIDATED_SIP`, with reference close present for all 40 windows. **0/40 complete windows**: only 302–424 of 780 minutes per window are present. On 2026-11-12, regular hours were nearly full, but 07h–08h had 5 bars, 16h had 1 and 17h–19h had 0. Alpaca omits minutes without trades. Evidence: `artifacts/gtc-ext-sell-window/20261114T201053Z-sip-delayed/`.
-- [ ] **[Operator]** Decide no-trade minutes. Should a minute with no bar inside a successful, consolidated SIP response be classified `NO_TRADE` (counted and shown, never given a price), so a window can be complete? Under the current rule (every minute must have a bar), 40/40 is effectively unreachable for symbols with thin extended-hours trading.
+- [x] **[Repo]** NO_TRADE classification (`0b4fbc1`, operator decision 2026-11-14). On consolidated SIP, a minute with no bar is `NO_TRADE`: counted, never priced. It applies only when the window's exact reference close is present and the sell session's regular session has bars; otherwise the minute stays `MISSING`. IEX empty minutes are always `MISSING`. Each window reports `noTradeIntervalCount` and `noTradeRule`; complete means zero MISSING. 4 tests.
+- [x] **[Repo]** Runtime (Claude, operator machine, 2026-11-14): RTO re-audit **40/40 complete**, qualification usable. 14,910 minutes with a bar, 16,290 NO_TRADE, 0 MISSING; the Dashboard capture button shows the same. Sell limit at P50 is still **BLOCKED**. Passing: SIP, 40/40 history, reference close 23.90. Failing: the TOS ATR gates (no Thinkorswim ATR observations saved) and walk-forward adverse excursion (unseen max 5.85% vs training P95 3.36%). Touch rate passed: target +0.77%, test 65% (13/20) vs training 55%. Research only.
+- [ ] **[Operator]** To unblock the sell limit: export and save Thinkorswim 5m ATR observations (99-bar warm-up, 119 OHLCV matches, current ATR). The adverse-excursion gate depends on the symbol's history and may keep failing for RTO.
 - [ ] **[Operator]** Decide the Daily parity tolerance (current rule ±$0.0001 and exact volume, so strictly still FAIL). Proposal: ±$0.005 and ±0.2% volume. Re-download the reference 2026-11-06 row to check the close difference.
 - [ ] **[Operator]** Optional cross-check: create a free Massive account (EOD only, 5 calls/min, 2 years), set `MarketData:Massive:ApiKey` in user secrets, run `/api/market-data/daily/cross-check?symbol=RTO` and report the verdict.
 - [ ] **[Operator]** Review Alpaca's market-data terms for storing and displaying historical SIP Daily bars on the free plan (not found in repository sources).
@@ -195,7 +199,8 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Recently completed (summary — details in commits and the archive)
 
-- **Nov 14 late afternoon:** `e48b4d2` delayed-SIP 1m for the GTC_EXT sell history; RTO 15,201 SIP bars captured, 0/40 complete because no-trade minutes have no bar (decision pending).
+- **Nov 14 evening:** `0b4fbc1` NO_TRADE minutes: RTO GTC_EXT history 40/40 complete on SIP. First walk-forward run: touch rate pass, adverse excursion fail; sell limit still blocked on the TOS ATR gates.
+- **Nov 14 late afternoon:** `e48b4d2` delayed-SIP 1m for the GTC_EXT sell history; RTO 15,201 SIP bars captured, 0/40 complete because no-trade minutes have no bar.
 - **Nov 14 afternoon:** READY buy/exit/auction decisions frozen; `5f1d5d1` delayed-SIP Daily (20/20 consolidated on the free account) + Massive cross-check; `0596df6` catalyst review queue; first 60-article review sheet generated.
 - **Nov 14:** `6a547c3` DATA? reasons (`DataStale` / `OutsideRegularSession`) and `MCC.ps1 warmup`; Claude pre-checked launcher, warm-up (2.2 s background, first request 387 ms), exclusion BLOCKED and Network order on the operator machine.
 - **Nov 13 evening:** `d6d52ab` JSONL index warm-up at startup; operator cold rebuild measured at 7.3 s (from 23.3 s).

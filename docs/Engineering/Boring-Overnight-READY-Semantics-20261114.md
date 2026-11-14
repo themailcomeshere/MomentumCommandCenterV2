@@ -25,7 +25,7 @@
 3. ~~Historical SIP minute bars~~: **answered 2026-11-14, allowed.** Implemented in `e48b4d2`. The first RTO capture got 15,201 SIP bars but 0/40 complete windows, which leads to question 6.
 4. **Daily parity tolerance.** SIP Daily matches the independent reference within $0.005 on prices (reference rounds to 2 decimals) and within 0.11% on volume. The current rule is ±$0.0001 and exact volume, so it still FAILs. Accept ±$0.005 and ±0.2% volume?
 5. **Position size / ZERO POSITION.** BoringOvernight.md lists ZERO POSITION as a valid outcome. Is a READY candidate always bought, or is READY one input to your own sizing decision?
-6. **No-trade minutes (new).** Alpaca returns no 1m bar for a minute without trades. RTO extended hours have only a few bars per hour, so "all 780 minutes present" is effectively unreachable. May a minute with no bar inside a successful consolidated SIP response count as `NO_TRADE`? It would be counted and shown, never given a price. A minute with no trade cannot touch a limit. Evidence: `artifacts/gtc-ext-sell-window/20261114T201053Z-sip-delayed/`.
+6. **Answered 2026-11-14: NO_TRADE accepted with safeguards** (`0b4fbc1`; RTO is now 40/40 complete). Original question: Alpaca returns no 1m bar for a minute without trades. RTO extended hours have only a few bars per hour, so "all 780 minutes present" is effectively unreachable. May a minute with no bar inside a successful consolidated SIP response count as `NO_TRADE`? It would be counted and shown, never given a price. A minute with no trade cannot touch a limit. Evidence: `artifacts/gtc-ext-sell-window/20261114T201053Z-sip-delayed/`.
 
 ## What READY will require once the questions are answered (gate list)
 
