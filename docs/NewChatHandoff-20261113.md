@@ -1,4 +1,4 @@
-# New Chat Handoff — 2026-11-13
+﻿# New Chat Handoff — 2026-11-13
 
 **Branch:** `feature/opportunity-quality-classification` (never `master`)
 **Checklist:** [Master-To-Do.md](Master-To-Do.md) — the single authoritative list
@@ -9,8 +9,9 @@
 
 | Item | Value |
 |---|---|
-| Latest code head | `d6d52ab` (JSONL startup warm-up); previous code head `e7c0810` — CI run `43504399098` SUCCESS |
-| Local Release tests (Claude, this machine) | 345 / 345 passed on `d6d52ab` |
+| Latest code head | `6a547c3` (DATA? reasons + `MCC.ps1 warmup`) — CI run `43630951781` SUCCESS; previous `d6d52ab` (JSONL startup warm-up) — CI run `43551329653` SUCCESS |
+| Local Release tests (Claude, this machine) | 351 / 351 passed on `6a547c3` |
+| Claude pre-check on the operator machine (2026-11-14, after hours) | Launcher start / refused second start / status / graceful stop OK; warm-up `STARTUP_WARMUP` 2230 ms, first EVR request 387 ms; GGAL (excluded) BLOCKED; Network order for Fetch & analyze and Refresh matches the control contract. Not operator sign-off. |
 | Operator cold-rebuild measurement (2026-11-13) | 7.3 s (read 0.9 s, deserialize 5.4 s, gate wait 0), down from 23.3 s |
 | Last operator-verified head | `4c743a1` — 302 / 302 |
 | Dashboard cache keys | `app.js?v=20261113-field-availability-pool-provenance-v2`, `styles.css?v=20261113-field-availability-v1` |
@@ -23,6 +24,7 @@
 | `8445c4e` | JSONL cold rebuild: read/open/gate-wait timings in `performanceDiagnostics`; synchronous 1 MiB buffered read replaces per-buffer async hops. |
 | `b5a3283` | Opportunity Quality: the pool mapper hard-blocks exclusion-watchlist symbols and carries per-symbol provenance; 8 full-pool fixture tests; Dashboard field-availability report; provenance on ranking cards; **startup `ReferenceError` fix** (`liveAssessmentInFlight` was declared after the first `render()`). |
 | `d6d52ab` | `JsonlMarketBarIndexWarmupService` builds the index in the background at API start; `performanceDiagnostics` adds `jsonlIndexLoadTrigger` and `jsonlIndexLoadCompletedAtUtc`. A source-generated JSON context was benchmarked and rejected (no gain). |
+| `6a547c3` | DATA? rows report `DataStale` and/or `OutsideRegularSession` instead of always `DataMissing` (`OpportunityQualityUnavailableReasons`, 6 tests). `MCC.ps1 warmup` replaces the long step-3 command and explains when the launcher did not start the API. |
 | `e7c0810` | `scripts/MCC.ps1` launcher; `POST /api/admin/shutdown` (token + loopback only); `/api/health` reports PID and `sourceSha`; `Backup-MccData.ps1` / `Restore-MccData.ps1`; data inventory. |
 | docs | [Control contract](Engineering/Boring-Overnight-Control-Contract-20261113.md), [Provider runtime inventory](Engineering/Market-Data-Provider-Runtime-Inventory-20261113.md), [Interactive Windows operation](Engineering/Interactive-Windows-Operation.md), `scripts/New-ReleaseEvidence.ps1`. |
 
@@ -31,6 +33,10 @@
 A copy of the operator's `market-bars.jsonl` (138.6 MB, 276,441 lines) loads in **~1.5 s** in an isolated process: read 0.2 s, deserialize 1.1 s, index 0.2 s. The 23.3 s seen in the API on Nov 12 is therefore startup contention, not file size. The new timings show which part remains after the read-path change.
 
 ## Operator sequence (do in order)
+
+Steps 1–4 and 6–8 work while the market is closed. Only step 5 and the non-DATA? ranking check need the regular session (Monday 06:30–13:00 Arizona). After hours every ranking row is DATA? with `DataStale, OutsideRegularSession`; that is correct, not a fault.
+
+On 2026-11-13 step 3 failed with `Cannot bind argument to parameter 'Path' because it is null`. The cause: `MCC.ps1 start` had not run, so the run folder had no launcher log. Step 3 needs step 2; use `.\scripts\MCC.ps1 warmup` instead of the long command.
 
 **1. Update and verify the build**
 ```powershell
@@ -50,9 +56,7 @@ If `start` says the port is in use, something else is still on 53360. The messag
 
 **3. Startup warm-up check.** Wait about 15 seconds after `start`, then run:
 ```powershell
-Get-Content (Get-ChildItem "$env:LOCALAPPDATA\MomentumCommandCenterV2\run\api-*.out.log" | Sort-Object LastWriteTime | Select-Object -Last 1).FullName | Select-String "JSONL market-bar index"
-$d = (Invoke-RestMethod "http://localhost:53360/api/market-data/live-assessment?symbol=EVR&providerName=Alpaca").performanceDiagnostics
-$d | Select-Object totalElapsedMs, jsonlIndexLoadTrigger, jsonlIndexLastLoadElapsedMs, jsonlIndexReadElapsedMs, jsonlIndexDeserializeElapsedMs, jsonlIndexGateWaitBeforeLoadMs, jsonlIndexLoadCount
+.\scripts\MCC.ps1 warmup
 ```
 Expected: the log line reads `JSONL market-bar index ready: trigger STARTUP_WARMUP ...`, `jsonlIndexLoadTrigger` is `STARTUP_WARMUP`, `jsonlIndexLoadCount` is 1, and `totalElapsedMs` is well under 1000. Paste the output.
 
@@ -90,6 +94,6 @@ SIP entitlement (403); no independent consolidated Daily/OHLCV source; TOS compi
 
 ## Uncertainties
 
-- Operator measured 7.3 s in-API after the read-path change; the startup warm-up (`d6d52ab`) is not yet measured on the operator machine.
-- The launcher and backup were verified in isolation (Production environment, temp data), not with Development secrets or the real 315 MB data set.
+- Operator measured 7.3 s in-API after the read-path change. Claude measured the startup warm-up on the operator machine after hours (2.2 s); a regular-session measurement may differ.
+- The launcher was run with Development secrets and real data by Claude; backup/restore only with temp data.
 - `calc is not defined` resolution is inferred, not confirmed.

@@ -1,6 +1,6 @@
-# Momentum Command Center — Master To-Do
+﻿# Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-13 (afternoon) — repository work pass: capture-mapping tests, JSONL profiling, Opportunity Quality pool fixtures, field availability, launcher, backup/restore, release evidence.
+**Updated:** 2026-11-14 — after-hours pass: DATA? reasons distinguish stale/after-hours from missing; `MCC.ps1 warmup`; launcher, warm-up, exclusion and Network order pre-checked by Claude on the operator machine.
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
 **Current handoff:** [NewChatHandoff-20261113.md](NewChatHandoff-20261113.md)
@@ -15,8 +15,9 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 
 - [x] `4c743a1`: operator Get-Latest + Release build + tests PASSED, 302/302; CI run `43493475779` SUCCESS.
 - [x] `e7c0810`: CI run `43504399098` SUCCESS (JS syntax, .NET build, tests). Local Release tests run by Claude: 344/344 passed.
-- [x] `d6d52ab` (latest code head, JSONL startup warm-up): local Release tests run by Claude: **345/345** passed. Exact-head CI run `43551329653` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 345+ tests.
+- [x] `d6d52ab` (JSONL startup warm-up): local Release tests run by Claude: 345/345 passed. Exact-head CI run `43551329653` SUCCESS.
+- [x] `6a547c3` (latest code head, DATA? reasons + `MCC.ps1 warmup`): local Release tests run by Claude: **351/351** passed. Exact-head CI run `43630951781` SUCCESS.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 351+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -36,13 +37,15 @@ Schwab and broker reconciliation stay parked at the bottom.
 
 The full, click-by-click sequence is in the [current handoff](NewChatHandoff-20261113.md).
 
-1. Stop the API you started from Visual Studio or `dotnet run`. Pull, run `.\scripts\Get-Latest-And-Test.ps1`, then `.\scripts\MCC.ps1 start`.
-2. Run `.\scripts\MCC.ps1 status`. It must show `RUNNING`, a real SHA and the log paths, not `source SHA UNKNOWN`.
-3. Make the first EVR live-assessment request and record `jsonlIndexLoadTrigger` (expect `STARTUP_WARMUP`) and `totalElapsedMs`.
-4. Dashboard (Ctrl+F5): use the Field availability export; run **Rank quality pool · top 50** in Red Zone; do the exclusion test; check the Network order in DevTools (F12 → Network).
-5. During the regular session, run the CRBG capture and the live-assessment checks (Section 2).
-6. Run `MCC.ps1 stop`, `Backup-MccData.ps1`, a staged `Restore-MccData.ps1`, then the sign-out test.
-7. Run `.\scripts\New-ReleaseEvidence.ps1` and commit the bundle.
+**Weekend (market closed; all of these work after hours):**
+1. Pull, run `.\scripts\Get-Latest-And-Test.ps1`, then `.\scripts\MCC.ps1 start`, `start` again (refused), `status`.
+2. About 15 s later run `.\scripts\MCC.ps1 warmup`. Expect `trigger STARTUP_WARMUP` and a first request well under 1 s. (The 2026-11-13 step 3 error happened because the launcher had not started the API, so no launcher log existed; `warmup` now says that in plain words.)
+3. Dashboard (Ctrl+F5): Field availability export; **Rank quality pool · top 50** (after hours every row is DATA? with `DataStale, OutsideRegularSession`, which is correct); exclusion test; Network order for **Fetch & analyze bars** and **Refresh saved evaluations**.
+4. `MCC.ps1 stop`, `Backup-MccData.ps1`, staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle.
+
+**Monday regular session (06:30–13:00 Arizona):**
+5. Ranking again: rows should now classify instead of DATA?.
+6. CRBG live assessment and **Fetch / retry 20-session** capture (Section 2), including the capture-history POST Network check.
 
 ---
 
@@ -54,7 +57,7 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 - [x] **[Repo]** First cold-load optimization: a synchronous sequential read with 1 MiB buffers and no per-line allocations. Format, append semantics, corrections and latest-observation selection are unchanged; all store tests pass.
 - [x] **[Operator]** Restart measurement on `8445c4e` or later (2026-11-13): cold rebuild **7.3 s** (`jsonlIndexLastLoadElapsedMs` 7306.1; read 900.4; deserialize 5367.8; gate wait 0), down from 23.3 s. Deserialization dominates, about 2.5× slower than in an isolated process, which points to CPU contention from the other startup workers.
 - [x] **[Repo]** Tested a source-generated JSON context on the real file: 1.9 s vs 2.0 s with identical results, so no meaningful gain and not adopted. Added `JsonlMarketBarIndexWarmupService` (`d6d52ab`): the index now builds in the background at API startup, so a Dashboard request no longer pays for it. `performanceDiagnostics` adds `jsonlIndexLoadTrigger` (`STARTUP_WARMUP` / `READ` / `APPEND`) and `jsonlIndexLoadCompletedAtUtc`. Isolated in-API run on a copy of the real file: `STARTUP_WARMUP`, 2.4 s, 278,445 lines.
-- [ ] **[Operator]** After the next restart, confirm `jsonlIndexLoadTrigger = STARTUP_WARMUP` on the first EVR request and that the API log contains `JSONL market-bar index ready`. Record `totalElapsedMs` for the first request; it should be well under 1 s if the warm-up finished first.
+- [ ] **[Operator]** After the next restart, confirm `jsonlIndexLoadTrigger = STARTUP_WARMUP` on the first EVR request and that the API log contains `JSONL market-bar index ready`. Record `totalElapsedMs` for the first request; it should be well under 1 s if the warm-up finished first. Run `.\scripts\MCC.ps1 warmup`. Pre-check by Claude on the operator machine, 2026-11-14, launcher start on `a52fe97`+DIRTY (the `6a547c3` changes), Development secrets, real file: `trigger STARTUP_WARMUP, total 2230 ms (read 215, deserialize 1740, index 262), 347524 lines, 325119 keys`; first EVR request `totalElapsedMs` 387.2, load count 1, gate wait 0.1 ms.
 - [ ] **[Operator]** Measure warm reads and append/read-back persistence separately on the operator's current file.
 - [ ] **[Operator]** Verify the 20s live-assessment timeout: a timed-out symbol does not block a later retry or another symbol.
 - [ ] **[Operator]** Browser Network/HAR: document load, DOMContentLoaded, largest request, Fetch & Analyze durations against a baseline.
@@ -73,7 +76,7 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 ### Workflow and UI contract
 - [x] **[Repo]** Traced **Fetch & analyze bars**: `GET /api/market-data/bars` (appends bars to `market-bars.jsonl`), then automatically `GET /api/boring-overnight/snapshots`. It never creates a snapshot. See the [control contract](Engineering/Boring-Overnight-Control-Contract-20261113.md). Note: the default From of 13:00 AZ is 15:00 ET during standard time.
 - [x] **[Repo]** Fixed a Dashboard startup `ReferenceError`. `liveAssessmentInFlight` was declared after the first `render()`, so the first Intraday assessment after every page load failed until the 15 s refresh (`b5a3283`).
-- [ ] **[Operator]** Network check of the three controls as listed in the control contract (bars → snapshots; snapshots only; capture-history POST).
+- [ ] **[Operator]** Network check of the three controls as listed in the control contract (bars → snapshots; snapshots only; capture-history POST). Pre-check by Claude in the app browser pane, 2026-11-14, symbol RTO: **Fetch & analyze bars** → `GET bars?symbol=RTO…` first, `GET snapshots?limit=50&symbol=RTO` last (background `clock`, `live-assessment`, `stream/status` in between); **Refresh saved evaluations** → only `GET snapshots`. No console errors. The capture-history POST was not exercised, to avoid writing an after-hours capture into the evidence store.
 - [ ] **[Operator]** Intraday mode, hard refresh: the Main Chart cards fill on the first load instead of waiting ~15 s.
 - [ ] **[Operator]** Full workflow acceptance: import row reconciliation, import placement, shortlist cards, top-20, four **distinct** Boring Top 4 Daily/catalyst requests with the per-symbol evidence table, and candidate review.
 - [ ] **[Operator]** Calculated Limit Sell browser disclosure: Network shows `GET /api/providers/status` then `POST /api/boring-overnight/sell-limit`; every gate and stage timing is rendered in the quick card.
@@ -93,7 +96,8 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 - [x] **[Repo]** Rank endpoint gaps fixed: exclusion-watchlist symbols were ignored and are now hard-BLOCKED with `EXCLUDED_WATCHLIST`. Each row carries provider, feed, 1m/5m source timestamps and `evaluatedAtUtc`. The response adds `excludedCount`, `dataUnknownCount` and `exclusionListChecked`. The Dashboard cards show the provenance.
 - [x] **[Repo]** Scanner field-availability report: after each import or restore, the Dashboard shows available, missing and denominator for all eight fields, the rows with missing fields, the source file, the import timestamp, and a JSON export. A subscription-limit message, blank, `DATA?` or `n/a` counts as unavailable. Logic verified in the browser.
 - [ ] **[Operator]** Import the current scanner CSV and export the availability JSON. This replaces the stale "296 missing rows" figure.
-- [ ] **[Operator]** Run the ranking and confirm the provenance line on each card and BLOCKED for any excluded symbol. The **Rank quality pool · top 50** button is in the Red Zone header; results appear directly under it. The exclusion list is the collapsible **EXCLUSIONS · API-BACKED — MCC exclusion watchlist** panel lower on the page.
+- [x] **[Repo]** DATA? rows no longer say `DataMissing` for every cause (`6a547c3`). `OpportunityQualityUnavailableReasons` maps `STALE_MARKET_DATA` → `DataStale`, adds the new `OutsideRegularSession` reason outside regular hours, and keeps `DataMissing` for insufficient history, missing RVOL baseline and unknown statuses. 6 tests.
+- [ ] **[Operator]** Run the ranking and confirm the provenance line on each card and BLOCKED for any excluded symbol. The **Rank quality pool · top 50** button is in the Red Zone header; results appear directly under it. The exclusion list is the collapsible **EXCLUSIONS · API-BACKED — MCC exclusion watchlist** panel lower on the page. Operator run 2026-11-14 03:46 UTC (Friday after the close, JSON pasted): 50 candidates, `exclusionListChecked` true, 0 excluded, 50 DATA? (`dataFresh` false; last 1m bar 20:59 UTC). 48 rows carry `Alpaca / iex` and 1m/5m timestamps; SBGSY and SMERY have no feed or timestamps (no IEX bars). Card visuals and the exclusion test are not yet reported. Pre-check by Claude on `6a547c3` code, 2026-11-14: pool CRBG, EVR, GGAL, SBGSY → GGAL (already on the list) `BLOCKED`, `QUALITY — EXCLUDED`, reasons `EXCLUDED_WATCHLIST, DataStale, OutsideRegularSession`; CRBG/EVR `DataStale, OutsideRegularSession`; SBGSY `DataMissing, OutsideRegularSession`. A regular-session run is still needed for non-DATA? classifications.
 - [ ] **[Repo — blocked]** Expand beyond the top-50 prefilter only after candidate-pool completeness is evidenced.
 - [ ] **[Operator]** Collect time-separated candidate snapshots with outcomes for calibration. The ranking remains diagnostic and uncalibrated.
 
@@ -141,7 +145,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 - [x] **[Repo]** Durable-path inventory: nine stores, their `MCC_*_PATH` overrides, secrets, browser storage keys and logs (`scripts/lib/MccDataInventory.ps1`).
 - [x] **[Repo]** Launcher `scripts/MCC.ps1 start|status|stop|open`: single instance, visible startup failure, per-start log files, graceful stop through the token-guarded loopback `POST /api/admin/shutdown` (`LocalShutdownPolicy`, 8 tests). `/api/health` now reports PID, start time and `sourceSha`. Verified in an isolated PS 5.1 run.
 - [x] **[Repo]** `Backup-MccData.ps1` / `Restore-MccData.ps1`: SHA-256 manifest; staged restore by default; `-ToLive` moves the live files aside first; secrets are never copied. Tamper detection and live restore were verified in a temp data root.
-- [ ] **[Operator]** On the real machine: start, a refused second start, status, a graceful stop. Then sign out and back in, start again, and confirm the watermarks resume with no duplicates. Note from 2026-11-13: `status` reported `source SHA UNKNOWN - graceful stop False`. That output means the running API was started outside the launcher (Visual Studio or `dotnet run`), so the launcher itself has not yet run on this machine. Stop that API first, then use `MCC.ps1 start`. The operator plans the sign-out test for later on 2026-11-13.
+- [ ] **[Operator]** On the real machine: start, a refused second start, status, a graceful stop. Then sign out and back in, start again, and confirm the watermarks resume with no duplicates. Note from 2026-11-13: `status` reported `source SHA UNKNOWN - graceful stop False`. That output means the running API was started outside the launcher (Visual Studio or `dotnet run`), so the launcher itself has not yet run on this machine. Stop that API first, then use `MCC.ps1 start`. Pre-check by Claude on this machine, 2026-11-14 (Development secrets, real data): start OK with SHA, second start refused ("already running"), status RUNNING with PID and both log paths, `stop` → "stopped gracefully", status NOT RUNNING. The sign-out test and the operator's own run are still open.
 - [ ] **[Operator]** Back up the real data set (~315 MB) and do a staged restore.
 - [ ] **[Operator]** Recovery drills: crash (kill the PID), sleep/wake, network/provider failure, disk full, duplicate stream replay, session boundaries.
 - [ ] **[Operator]** Browser/CDP diagnostics on the operator machine: screenshot, console exceptions, sanitized network evidence.
@@ -173,6 +177,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Recently completed (summary — details in commits and the archive)
 
+- **Nov 14:** `6a547c3` DATA? reasons (`DataStale` / `OutsideRegularSession`) and `MCC.ps1 warmup`; Claude pre-checked launcher, warm-up (2.2 s background, first request 387 ms), exclusion BLOCKED and Network order on the operator machine.
 - **Nov 13 evening:** `d6d52ab` JSONL index warm-up at startup; operator cold rebuild measured at 7.3 s (from 23.3 s).
 - **Nov 13 afternoon:** `4ac53f7` capture mapper + 26 tests · `8445c4e` JSONL timing attribution and buffered read · `b5a3283` Opportunity Quality pool fixtures, exclusion blocking, provenance, field availability, startup ReferenceError fix · `e7c0810` launcher, graceful shutdown, inventory, backup/restore · docs: control contract, provider inventory, release evidence script.
 - **Nov 13 morning:** after-hours technical gating confirmed on CRBG; boundary audit `PENDING_NOT_YET_AVAILABLE`; Overnight qualification hidden in Intraday mode.
@@ -182,7 +187,8 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 ## Uncertainties
 
 - The operator's 7.3 s measurement came from an API not started by the launcher; the exact SHA it ran is Data not found in sources. Because the new read timing was present, it must have been built from `8445c4e` or later.
-- The warm-up was verified only in an isolated process without API keys (2.4 s). With live workers it may take longer, but it no longer blocks the first request unless that request arrives before the warm-up finishes. In that case the request waits on the gate, and the wait is reported.
+- The warm-up was measured once with live workers on the operator machine, after hours (2.2 s). During the regular session, with the stream and collector busier, it may take longer; a request that arrives before it finishes waits on the gate, and the wait is reported.
+- Claude's 2026-11-14 pre-checks ran on the operator machine but are not operator sign-off; the [Operator] items stay open until the operator repeats them.
 - The `calc is not defined` browser fix is inferred, not explicitly confirmed.
-- The launcher and backup were verified with isolated ports and temp data, not with the operator's Development secrets or the real 315 MB data set.
+- The launcher was run by Claude with the operator's Development secrets and real data on 2026-11-14. Backup/restore were verified only with temp data, not the real 315 MB data set.
 - No consolidated SIP history, persisted TOS ATR evidence or TOS compile record exists for any symbol.
