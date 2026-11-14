@@ -89,6 +89,9 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCen
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapReferenceStore>();
+builder.Services.AddSingleton(_ => new MomentumCommandCenterV2.API.BoringOvernight.CatalystAttestationStore());
+builder.Services.AddSingleton(_ => new MomentumCommandCenterV2.API.BoringOvernight.ReadyShadowLogStore());
+builder.Services.AddTransient<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightReadyService>();
 builder.Services.AddSingleton<MorningBriefSnapshotStore>();
 builder.Services.AddHttpClient<YahooFinanceQuoteClient>(client =>
 {
@@ -1274,6 +1277,49 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 .WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 completed historical boundaries plus a separate current Overnight interval using MCC_US_EQUITIES_CALENDAR_V2, fetches and persists raw observations, and returns historical metrics/missing pairs plus current interval state (PENDING, MISSING or OBSERVED). The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
 .ProducesProblem(422)
 .ProducesProblem(503);
+
+// ---- Boring Overnight READY (decision record docs/Engineering/Boring-Overnight-READY-Semantics-20261114.md) ----
+app.MapPost("/api/boring-overnight/ready/evaluate", async (
+    MomentumCommandCenterV2.API.BoringOvernight.ReadyEvaluateRequest request,
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightReadyService readyService,
+    CancellationToken ct) =>
+{
+    if (!IsValidSymbol(request.Symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    return Results.Ok(await readyService.EvaluateAsync(request.Symbol, DateTimeOffset.UtcNow, ct));
+})
+.WithName("EvaluateBoringOvernightReady")
+.WithSummary("Evaluate the Boring Overnight READY signal for one symbol")
+.WithDescription("POST { \"symbol\": \"RTO\" }. Uses the latest capture-history snapshot (must be at most 10 minutes old), the exclusion list, catalyst reviews and today's operator sign-off, the SIP sell-window evidence and the latest trade. In-window evaluations are logged to the shadow log. Decision support only; no order is submitted.");
+
+app.MapGet("/api/boring-overnight/ready/shadow-log", async (
+    MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightReadyService readyService,
+    CancellationToken ct) => Results.Ok(await readyService.GetShadowSummaryAsync(DateTimeOffset.UtcNow, ct)))
+.WithName("GetBoringOvernightReadyShadowLog")
+.WithSummary("READY shadow log with Day 2 outcomes");
+
+app.MapPost("/api/boring-overnight/catalyst-attestations", async (
+    MomentumCommandCenterV2.API.BoringOvernight.CatalystAttestationInput input,
+    MomentumCommandCenterV2.API.BoringOvernight.CatalystAttestationStore store,
+    CancellationToken ct) =>
+{
+    try { return Results.Ok(await store.AppendAsync(input, DateTimeOffset.UtcNow, ct)); }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+})
+.WithName("AddCatalystAttestation")
+.WithSummary("Record the operator's catalyst sign-off for today's buy session")
+.WithDescription("POST { \"symbol\": \"RTO\", \"sourcesChecked\": [\"SCHWAB_NEWS\",\"SEC_EDGAR\"], \"note\": \"optional\" }. Sources: SCHWAB_NEWS, SEC_EDGAR, COMPANY_IR, OTHER (OTHER needs a note). Valid only on the buy-session day; expires at the buy deadline. Shown as OPERATOR-ATTESTED, never CLEAR.");
+
+app.MapGet("/api/boring-overnight/catalyst-attestations", async (
+    string? symbol,
+    MomentumCommandCenterV2.API.BoringOvernight.CatalystAttestationStore store,
+    CancellationToken ct) =>
+{
+    if (!string.IsNullOrWhiteSpace(symbol) && !IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
+    return Results.Ok(await store.GetAsync(symbol, 100, ct));
+})
+.WithName("GetCatalystAttestations");
 
 app.MapPost("/api/boring-overnight/capture-sell-window-history", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightSellWindowCaptureRequest request,
