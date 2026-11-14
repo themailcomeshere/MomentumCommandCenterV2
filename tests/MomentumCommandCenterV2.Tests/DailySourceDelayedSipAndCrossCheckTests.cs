@@ -171,7 +171,7 @@ public sealed class DailySourceDelayedSipAndCrossCheckTests
         var pass = DailySourceCrossCheck.Compare(dates, primary, dates.Select(d => Obs(d, 10, 100)).ToArray());
         Assert.Equal("PASS_EXACT_DATES_OHLCV_WITHIN_TOLERANCE", pass.Verdict);
 
-        var reference = new[] { Obs(dates[0], 10, 100), Obs(dates[1], 10.01, 100), Obs(dates[2], 10, 90) };
+        var reference = new[] { Obs(dates[0], 10.005, 100), Obs(dates[1], 10.02, 100), Obs(dates[2], 10, 90) };
         var fail = DailySourceCrossCheck.Compare(dates, primary, reference);
         Assert.Equal("FAIL", fail.Verdict);
         Assert.Equal(new[] { "MATCH", "PRICE_MISMATCH", "VOLUME_MISMATCH", "MISSING_REFERENCE" }, fail.Rows.Select(r => r.Status));
@@ -183,17 +183,33 @@ public sealed class DailySourceDelayedSipAndCrossCheckTests
 
     /// <summary>
     /// METHOD: CrossCheckVolumeToleranceIsRelative
-    /// PURPOSE: A 0.5% volume difference passes with a 1% tolerance and fails at the exact default.
+    /// PURPOSE: Default tolerance (0.5%) passes a 0.5% volume difference and fails 1%; an explicit 2% tolerance passes 1%;
+    /// a zero tolerance restores the old exact rule.
     /// WHEN CALLED: Run by xUnit.
     /// </summary>
     [Fact]
     public void CrossCheckVolumeToleranceIsRelative()
     {
         var dates = new[] { new DateOnly(2026, 11, 2) };
-        var p = new[] { Obs(dates[0], 10, 1005) };
         var r = new[] { Obs(dates[0], 10, 1000) };
-        Assert.Equal("FAIL", DailySourceCrossCheck.Compare(dates, p, r).Verdict);
-        Assert.Equal("PASS_EXACT_DATES_OHLCV_WITHIN_TOLERANCE", DailySourceCrossCheck.Compare(dates, p, r, volumeRelativeTolerance: 0.01).Verdict);
+        Assert.Equal("PASS_EXACT_DATES_OHLCV_WITHIN_TOLERANCE", DailySourceCrossCheck.Compare(dates, new[] { Obs(dates[0], 10, 1005) }, r).Verdict);
+        Assert.Equal("FAIL", DailySourceCrossCheck.Compare(dates, new[] { Obs(dates[0], 10, 1010) }, r).Verdict);
+        Assert.Equal("PASS_EXACT_DATES_OHLCV_WITHIN_TOLERANCE", DailySourceCrossCheck.Compare(dates, new[] { Obs(dates[0], 10, 1010) }, r, volumeRelativeTolerance: 0.02).Verdict);
+        Assert.Equal("FAIL", DailySourceCrossCheck.Compare(dates, new[] { Obs(dates[0], 10, 1005) }, r, priceTolerance: 0, volumeRelativeTolerance: 0).Verdict);
+    }
+
+    /// <summary>
+    /// METHOD: CrossCheckPriceToleranceIsOneCentByDefault
+    /// PURPOSE: A one-cent difference passes (2-decimal rounding); two cents fails.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public void CrossCheckPriceToleranceIsOneCentByDefault()
+    {
+        var dates = new[] { new DateOnly(2026, 11, 2) };
+        var r = new[] { Obs(dates[0], 296.35, 1000) };
+        Assert.Equal("PASS_EXACT_DATES_OHLCV_WITHIN_TOLERANCE", DailySourceCrossCheck.Compare(dates, new[] { Obs(dates[0], 296.36, 1000) }, r).Verdict);
+        Assert.Equal("FAIL", DailySourceCrossCheck.Compare(dates, new[] { Obs(dates[0], 296.37, 1000) }, r).Verdict);
     }
 
     private static DailySessionObservation Obs(DateOnly date, double close, long volume) =>

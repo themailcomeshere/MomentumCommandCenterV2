@@ -31,3 +31,14 @@ Earlier, with IEX on the same window, volume was a fraction of the consolidated 
 - **2026-11-06 close differences:** the reference was captured at 2026-11-06 21:53 UTC, 53 minutes after that session closed. The final official close may not have been published yet. This explanation is unconfirmed: re-download the 2026-11-06 row from the reference and compare.
 - Under the existing strict rule (price ±0.0001, volume exact), this is still **FAIL**. Whether a rounding tolerance (±0.005) and a volume tolerance (for example ±0.2%) are acceptable is an operator decision.
 - This is source-parity evidence only. It does not make any candidate READY.
+
+## Update — fresh reference download and operator-approved tolerance (2026-11-14)
+
+A fresh download of the same reference (S&P Global via Stock Analysis), 2026-11-03 … 11-13, is in `RTO-reference-refetch-20261114.csv` and `EVR-reference-refetch-20261114.csv`. Compared with the SIP Daily rows in this folder:
+
+| Symbol | Sessions | Max abs O/H/L/C diff | Volume ratio API/reference |
+|---|---|---|---|
+| RTO | 9 | 0.005 | 1.00003 – 1.00017 |
+| EVR | 9 | 0.005 | 1.00012 – 1.00021 |
+
+The 2026-11-06 close differences are gone (both closes now match exactly), which confirms that the old reference row was captured before the final close. Tolerance adopted: **±$0.01 per OHLC price, ±0.5% volume**. All 18 sessions pass.

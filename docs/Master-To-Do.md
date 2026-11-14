@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-14 (afternoon) — READY semantics partly frozen by the operator; delayed historical SIP Daily works (20/20 consolidated, volume within 0.11% of the independent reference); Massive Daily cross-check; catalyst review queue with a first 60-article sheet.
+**Updated:** 2026-11-14 (evening). All READY questions are answered: GTC carries over, catalyst attestation, Daily tolerance ±$0.01 / ±0.5%, READY as a clear go signal. Delayed SIP Daily and 1m history work; RTO sell history is 40/40; a catalyst review queue exists. The next repo step is READY wiring (shadow mode).
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
 **Current handoff:** [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md)
@@ -96,9 +96,14 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Operator]** Official opening-auction data: **not required** (2026-11-14). The exit is a limit in the extended window; the 09:30 close/open capture stays a separately named research series.
 - [x] **[Operator]** Historical SIP minute bars for the 40-window sell history: **allowed** (2026-11-14). Implemented in `e48b4d2`.
 - [x] **[Operator]** No-trade minutes: **NO_TRADE accepted with safeguards** (2026-11-14, Claude's recommendation). Implemented in `0b4fbc1`.
-- [ ] **[Operator]** Answer the remaining open questions in the decision record: unfilled limit at 20:00 ET; catalyst gate (manual attestation?); Daily parity tolerance; READY vs position sizing.
-- [ ] **[Repo — blocked]** Wire a source-qualified Boring Overnight READY workflow and alert transition after those answers. Never substitute Boring Winner PASS; no sound until READY is validated.
-- [ ] **[Repo — blocked]** Build the V3 Boring Overnight watchlist column/study after the open questions are answered. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
+- [x] **[Operator]** Remaining questions answered (2026-11-14), recorded as decisions 6–9:
+  - Unfilled limit: the GTC_EXT order carries over; measurement stays Day 2 only.
+  - Catalyst: an operator attestation counts, under rules; zero news is never CLEAR.
+  - Daily tolerance: ±$0.01 / ±0.5%.
+  - READY: a clear go signal; size stays the operator's decision.
+- [ ] **[Operator]** Confirm two recommendations in the decision record: (a) a human-labelled MATERIAL_EVENT blocks READY; (b) shadow mode for 20 sessions before the live READY signal and sound.
+- [ ] **[Repo]** Wire the Boring Overnight READY workflow to the gate list in the decision record: catalyst attestation store, shadow logging with automatic Day 2 outcomes, and the go signal. Never substitute Boring Winner PASS; no sound until shadow validation is reviewed.
+- [ ] **[Repo]** Build the V3 Boring Overnight watchlist column/study. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
 
 ## 3. Opportunity Quality
@@ -139,7 +144,7 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Repo]** NO_TRADE classification (`0b4fbc1`, operator decision 2026-11-14). On consolidated SIP, a minute with no bar is `NO_TRADE`: counted, never priced. It applies only when the window's exact reference close is present and the sell session's regular session has bars; otherwise the minute stays `MISSING`. IEX empty minutes are always `MISSING`. Each window reports `noTradeIntervalCount` and `noTradeRule`; complete means zero MISSING. 4 tests.
 - [x] **[Repo]** Runtime (Claude, operator machine, 2026-11-14): RTO re-audit **40/40 complete**, qualification usable. 14,910 minutes with a bar, 16,290 NO_TRADE, 0 MISSING; the Dashboard capture button shows the same. Sell limit at P50 is still **BLOCKED**. Passing: SIP, 40/40 history, reference close 23.90. Failing: the TOS ATR gates (no Thinkorswim ATR observations saved) and walk-forward adverse excursion (unseen max 5.85% vs training P95 3.36%). Touch rate passed: target +0.77%, test 65% (13/20) vs training 55%. Research only.
 - [ ] **[Operator]** To unblock the sell limit: export and save Thinkorswim 5m ATR observations (99-bar warm-up, 119 OHLCV matches, current ATR). The adverse-excursion gate depends on the symbol's history and may keep failing for RTO.
-- [ ] **[Operator]** Decide the Daily parity tolerance (current rule ±$0.0001 and exact volume, so strictly still FAIL). Proposal: ±$0.005 and ±0.2% volume. Re-download the reference 2026-11-06 row to check the close difference.
+- [x] **[Operator]** Daily parity tolerance: **±$0.01 per OHLC price, ±0.5% volume** (2026-11-14, Claude's recommendation). Applied in `DailySourceCrossCheck` and `Test-DailyMarketDataQualification.ps1`. Fresh reference download, RTO and EVR, 2026-11-03 … 11-13 (18 sessions): prices within $0.005 and volume within 0.021%, so all pass. The old 2026-11-06 close difference is gone; the old reference row was captured before the final close.
 - [ ] **[Operator]** Optional cross-check: create a free Massive account (EOD only, 5 calls/min, 2 years), set `MarketData:Massive:ApiKey` in user secrets, run `/api/market-data/daily/cross-check?symbol=RTO` and report the verdict.
 - [ ] **[Operator]** Review Alpaca's market-data terms for storing and displaying historical SIP Daily bars on the free plan (not found in repository sources).
 - [ ] **[Operator]** Obtain 119 exact provider/TOS 5m OHLCV matches plus the exact previous RTH close from the same qualified feed.
@@ -192,13 +197,14 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 - Keep Alpaca on IEX for intraday/live/stream data; IEX_PARTIAL is diagnostic only and never consolidated coverage. Exceptions: completed Daily bars (`DailyFeed=sip_delayed`) and GTC_EXT sell-window 1m history (`AllowDelayedHistoricalSipMinutes`) via delayed historical SIP.
 - No imputation of missing bars, sessions, prices, timestamps, ATR observations, reference closes or catalyst facts; no nearest-bar substitution.
-- Zero news is UNKNOWN, not CLEAR. MATERIAL_EVENT_REVIEW / UNCLASSIFIED map to RISK.
+- Zero news is UNKNOWN, not CLEAR. MATERIAL_EVENT_REVIEW / UNCLASSIFIED map to RISK. READY may pass the catalyst gate only on a recorded, expiring operator attestation (`CATALYST: OPERATOR-ATTESTED`), never by relabelling UNKNOWN as CLEAR.
 - Overnight 1M ATR14 is a 1-minute simple ATR, not daily ATR. Overnight RVOL is NOT USED.
 - Boring Winner PASS and research defaults are research-only — never READY, a quote, or a trade instruction.
 - MCC is decision-support-only; order submission is NOT IMPLEMENTED. The new shutdown endpoint only stops the local process.
 
 ## Recently completed (summary — details in commits and the archive)
 
+- **Nov 14 night:** READY decisions 6–9 recorded; Daily tolerance ±$0.01 / ±0.5% applied; fresh reference download confirms SIP Daily parity on 18 sessions.
 - **Nov 14 evening:** `0b4fbc1` NO_TRADE minutes: RTO GTC_EXT history 40/40 complete on SIP. First walk-forward run: touch rate pass, adverse excursion fail; sell limit still blocked on the TOS ATR gates.
 - **Nov 14 late afternoon:** `e48b4d2` delayed-SIP 1m for the GTC_EXT sell history; RTO 15,201 SIP bars captured, 0/40 complete because no-trade minutes have no bar.
 - **Nov 14 afternoon:** READY buy/exit/auction decisions frozen; `5f1d5d1` delayed-SIP Daily (20/20 consolidated on the free account) + Massive cross-check; `0596df6` catalyst review queue; first 60-article review sheet generated.

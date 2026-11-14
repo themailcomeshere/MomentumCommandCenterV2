@@ -9,11 +9,11 @@ namespace MomentumCommandCenterV2.API.MarketData;
 /// </summary>
 public static class DailySourceCrossCheck
 {
-    /// <summary>Default absolute price tolerance, matching the existing Daily qualification script.</summary>
-    public const double DefaultPriceTolerance = 0.0001;
+    /// <summary>Default absolute price tolerance in dollars per OHLC field (operator-approved 2026-11-14; covers 2-decimal rounding).</summary>
+    public const double DefaultPriceTolerance = 0.01;
 
-    /// <summary>Default relative volume tolerance (0 = exact, matching the existing Daily qualification script).</summary>
-    public const double DefaultVolumeRelativeTolerance = 0.0;
+    /// <summary>Default relative volume tolerance (operator-approved 2026-11-14: 0.5%, covering late-reported trades between vendors).</summary>
+    public const double DefaultVolumeRelativeTolerance = 0.005;
 
     /// <summary>
     /// METHOD: Compare
@@ -50,7 +50,8 @@ public static class DailySourceCrossCheck
             var close = p.Close - r.Close;
             var volumeDiff = p.Volume - r.Volume;
             double? volumeRel = r.Volume == 0 ? null : (double)volumeDiff / r.Volume;
-            var priceOk = new[] { open, high, low, close }.All(d => Math.Abs(d) <= priceTolerance);
+            // Small epsilon so a difference of exactly the tolerance passes despite binary floating point.
+            var priceOk = new[] { open, high, low, close }.All(d => Math.Abs(d) <= priceTolerance + 1e-9);
             var volumeOk = volumeDiff == 0 || (volumeRel is not null && Math.Abs(volumeRel.Value) <= volumeRelativeTolerance);
             var status = priceOk && volumeOk ? "MATCH" : !priceOk && !volumeOk ? "PRICE_AND_VOLUME_MISMATCH" : !priceOk ? "PRICE_MISMATCH" : "VOLUME_MISMATCH";
             rows.Add(new DailyCrossCheckRow(date, status, p, r, open, high, low, close, volumeDiff, volumeRel));

@@ -6,7 +6,12 @@ param(
     [string]$ReferenceProvider,
     [string]$ReferenceAdjustment = "split-adjusted",
     [switch]$ConfirmWindowAdjustmentEquivalence,
-    [string]$OutputDirectory
+    [string]$OutputDirectory,
+    # Daily parity tolerance (operator-approved 2026-11-14): absolute price difference in dollars per OHLC field,
+    # and relative volume difference. Reference sources publish 2-decimal prices; consolidated volume can differ
+    # slightly between vendors because of late-reported trades. Set both to 0 for the old strict rule.
+    [double]$PriceTolerance = 0.01,
+    [double]$VolumeRelativeTolerance = 0.005
 )
 
 $ErrorActionPreference = "Stop"
@@ -87,7 +92,9 @@ foreach ($symbolInput in $Symbols) {
 
     $feed = [string]$payload.feed
     if ($payload.provider -ne "Alpaca") { $internalErrors += "Unexpected Daily provider '$($payload.provider)'." }
-    if ($feed -ne $configuredFeed) { $internalErrors += "Daily response feed '$feed' does not match configured provider feed '$configuredFeed'." }
+    # Delayed historical SIP Daily (DailyFeed=sip_delayed) legitimately differs from the intraday configured feed.
+    $delayedSipDaily = $feed -eq "sip" -and [string]$payload.sipRequestStatus -eq "SIP_DELAYED_HISTORICAL_OK"
+    if ($feed -ne $configuredFeed -and -not $delayedSipDaily) { $internalErrors += "Daily response feed '$feed' does not match configured provider feed '$configuredFeed'." }
     if ([string]::IsNullOrWhiteSpace([string]$payload.retrievedAtUtc)) { $internalErrors += "retrievedAtUtc is missing." }
     if ($null -eq $payload.latestCompletedSessionTimestampUtc) { $internalErrors += "Latest completed session timestamp is missing." }
     if ($feed -eq "sip") {
@@ -151,11 +158,14 @@ foreach ($symbolInput in $Symbols) {
                         try {
                             $apiValue = $apiRow.PSObject.Properties[$field.ToLowerInvariant()].Value
                             $referenceValue = $ref.PSObject.Properties[$field].Value
-                            Assert-Near ([double]$apiValue) ([double]$referenceValue) 0.0001 "$symbol $($ref.SessionDate) $field"
+                            Assert-Near ([double]$apiValue) ([double]$referenceValue) ($PriceTolerance + 1e-9) "$symbol $($ref.SessionDate) $field"
                         } catch { $independentMismatches += $_.Exception.Message }
                     }
-                    if ([long]$apiRow.volume -ne [long]$ref.Volume) {
-                        $independentMismatches += "$symbol $($ref.SessionDate) Volume mismatch: API=$($apiRow.volume) reference=$($ref.Volume)."
+                    $refVolume = [double]$ref.Volume
+                    $volumeDiff = [double]$apiRow.volume - $refVolume
+                    $volumeOk = $volumeDiff -eq 0 -or ($refVolume -gt 0 -and [math]::Abs($volumeDiff / $refVolume) -le $VolumeRelativeTolerance)
+                    if (-not $volumeOk) {
+                        $independentMismatches += "$symbol $($ref.SessionDate) Volume mismatch: API=$($apiRow.volume) reference=$($ref.Volume) tolerance=$($VolumeRelativeTolerance * 100)%."
                     }
                 }
             }

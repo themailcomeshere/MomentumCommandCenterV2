@@ -77,7 +77,7 @@
 
 ## Open blockers
 
-- READY: four open questions (unfilled limit at 20:00 ET, catalyst gate, Daily parity tolerance, sizing). Historical SIP minute bars and NO_TRADE minutes were approved and built.
+- READY: all questions answered (decision record, decisions 6–9). Two recommendations await an operator yes: MATERIAL_EVENT blocks READY, and 20 shadow sessions before the live signal. Next repo step: wire READY in shadow mode.
 - Sell limit: needs Thinkorswim 5m ATR observations saved (warm-up, parity, current ATR) and a passing adverse-excursion walk-forward.
 - TOS compile and parity not evidenced.
 - Catalyst sample too small (7 records, no negatives).
