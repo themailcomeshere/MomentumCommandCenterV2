@@ -208,7 +208,7 @@ public sealed class LiveSymbolAssessmentService(
                 opportunityAssessment = new OpportunityQualityAssessment(
                     normalizedSymbol,
                     OpportunityClassification.DataUnknown,
-                    new[] { OpportunityReason.DataMissing },
+                    OpportunityQualityUnavailableReasons.For(evaluationStatus, regularSession),
                     evaluatedAt);
             }
             else

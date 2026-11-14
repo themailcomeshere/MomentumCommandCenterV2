@@ -10,6 +10,8 @@
       stop   - graceful stop through the token-protected loopback endpoint; hosted workers get their
                normal shutdown. Force-kills only after the timeout, and says so.
       open   - opens the Dashboard in the default browser.
+      warmup - startup check: prints the JSONL warm-up log line from the newest launcher log and the
+               index timings from one live assessment (-Symbol, default EVR). Requires a launcher start.
 
     No Windows Service and no unattended-after-sign-out mode is created. No order is ever submitted.
     Build first with .\scripts\Get-Latest-And-Test.ps1 (start uses the existing Release build output).
@@ -22,7 +24,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("start", "status", "stop", "open")]
+    [ValidateSet("start", "status", "stop", "open", "warmup")]
     [string]$Command = "status",
 
     [int]$Port = 53360,
@@ -38,7 +40,10 @@ param(
     # Directory for the PID file, shutdown token and logs. Defaults to the MCC data folder.
     [string]$RunDirectory = (Join-Path $env:LOCALAPPDATA "MomentumCommandCenterV2\run"),
 
-    [int]$KeepLogFiles = 10
+    [int]$KeepLogFiles = 10,
+
+    # Symbol used by the warmup command's live-assessment request.
+    [string]$Symbol = "EVR"
 )
 
 $ErrorActionPreference = "Stop"
@@ -109,6 +114,44 @@ switch ($Command) {
     "status" { exit (Write-Status) }
 
     "open" { Open-Dashboard; exit 0 }
+
+    "warmup" {
+        $instance = Get-RecordedInstance
+        if ($null -eq $instance) {
+            $health = Get-Health
+            if ($null -eq $health) {
+                Write-Host "MCC API is NOT RUNNING. Run .\scripts\MCC.ps1 start first, wait about 15 s, then run warmup." -ForegroundColor Yellow
+            }
+            else {
+                Write-Host "An API is running on port $Port but this launcher did not start it, so there is no launcher log to read." -ForegroundColor Yellow
+                Write-Host "Stop that API (Visual Studio Shift+F5, or close its dotnet window), then run start and warmup." -ForegroundColor Yellow
+            }
+            exit 1
+        }
+
+        $log = $instance.Record.stdoutLog
+        Write-Host "Log: $log"
+        $lines = @(Get-Content $log -ErrorAction SilentlyContinue | Select-String "JSONL market-bar index")
+        if ($lines.Count -eq 0) {
+            Write-Host "  No 'JSONL market-bar index' line yet. The warm-up may still be running; retry in a few seconds." -ForegroundColor Yellow
+        }
+        else {
+            $lines | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
+        }
+
+        try {
+            $assessment = Invoke-RestMethod -Uri "$baseUrl/api/market-data/live-assessment?symbol=$([uri]::EscapeDataString($Symbol))&providerName=Alpaca" -TimeoutSec 120 -ErrorAction Stop
+        }
+        catch {
+            Write-Host "Live assessment for $Symbol failed: $($_.Exception.Message)" -ForegroundColor Red
+            exit 1
+        }
+        $assessment.performanceDiagnostics |
+            Select-Object totalElapsedMs, jsonlIndexLoadTrigger, jsonlIndexLoadCount, jsonlIndexLastLoadElapsedMs,
+                jsonlIndexReadElapsedMs, jsonlIndexDeserializeElapsedMs, jsonlIndexGateWaitBeforeLoadMs, jsonlIndexLoadCompletedAtUtc |
+            Format-List
+        exit 0
+    }
 
     "start" {
         New-Item -ItemType Directory -Force -Path $RunDirectory | Out-Null

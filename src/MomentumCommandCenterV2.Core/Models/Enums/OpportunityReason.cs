@@ -18,6 +18,7 @@
         EntryExtended,
         StrongParticipation,
         MomentumConfirmed,
-        AdequateMovementCapacity
+        AdequateMovementCapacity,
+        OutsideRegularSession
     }
 }
