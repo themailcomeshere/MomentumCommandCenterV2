@@ -32,15 +32,24 @@ public sealed class AlpacaCatalystAssessmentClient(HttpClient client, IConfigura
         ("ANALYST_ACTION", new[] { "price target", "upgraded", "downgraded", "initiated coverage" })
     };
 
-    public async Task<CatalystAssessment> AssessAsync(string symbol, DateTimeOffset nowUtc, CancellationToken ct)
+    /// <summary>
+    /// METHOD: AssessAsync
+    /// PURPOSE: Fetches ticker-linked news for the lookback window ending now and applies the fixed triage rules.
+    /// The default 24-hour window is the live candidate check; longer windows (up to 720 h) are only for
+    /// building human-review samples and do not change the triage rules.
+    /// WHEN CALLED: Catalyst assessment endpoint (Dashboard Top 4 fetch and New-CatalystReviewQueue.ps1).
+    /// </summary>
+    public async Task<CatalystAssessment> AssessAsync(string symbol, DateTimeOffset nowUtc, CancellationToken ct, int lookbackHours = 24)
     {
         if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret))
             throw new ProviderNotConfiguredException("Catalyst news requires server-side Alpaca API credentials.");
         if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
             !symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
             throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
+        if (lookbackHours is < 1 or > 720)
+            throw new ArgumentOutOfRangeException(nameof(lookbackHours), "lookbackHours must be 1-720.");
 
-        var from = nowUtc.AddHours(-24);
+        var from = nowUtc.AddHours(-lookbackHours);
         var articles = new List<CatalystNewsArticle>();
         string? pageToken = null;
         var pages = 0;

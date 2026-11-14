@@ -58,6 +58,35 @@ public sealed class AlpacaCatalystAssessmentClientTests
         Assert.Contains("never emits CLEAR_WITH_SOURCE", result.Note);
     }
 
+    /// <summary>
+    /// METHOD: AssessAsync_LookbackHoursSetsWindowStartAndIsBounded
+    /// PURPOSE: Default stays 24 h; a review-sample lookback of 336 h moves the start back 14 days; values outside 1-720 throw.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task AssessAsync_LookbackHoursSetsWindowStartAndIsBounded()
+    {
+        var now = new DateTimeOffset(2026, 11, 14, 20, 0, 0, TimeSpan.Zero);
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("""{"news":[],"next_page_token":null}""") });
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "key",
+            ["MarketData:Alpaca:ApiSecret"] = "secret"
+        }).Build();
+        var client = new AlpacaCatalystAssessmentClient(http, config);
+
+        var defaultWindow = await client.AssessAsync("EVR", now, CancellationToken.None);
+        Assert.Equal(now.AddHours(-24), defaultWindow.WindowStartUtc);
+
+        var sample = await client.AssessAsync("EVR", now, CancellationToken.None, lookbackHours: 336);
+        Assert.Equal(now.AddDays(-14), sample.WindowStartUtc);
+        Assert.Contains("start=" + Uri.EscapeDataString(now.AddDays(-14).UtcDateTime.ToString("O")), handler.Request!.RequestUri!.ToString());
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => client.AssessAsync("EVR", now, CancellationToken.None, lookbackHours: 721));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => client.AssessAsync("EVR", now, CancellationToken.None, lookbackHours: 0));
+    }
+
     private sealed class RecordingHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory) : HttpMessageHandler
     {
         public HttpRequestMessage? Request { get; private set; }

@@ -274,13 +274,15 @@ app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketData
 .WithSummary("Get adjusted Daily close, SMA20 and 20-session average volume")
 .WithDescription("Uses Alpaca 1Day bars with adjustment=all. SMA20 and average daily volume use the latest 20 completed regular sessions; the current session is excluded until 16:00 America/New_York. Fewer than 20 completed sessions returns null metrics. Feed entitlement, source coverage and adjustment parity require runtime validation.");
 
-app.MapGet("/api/market-data/catalyst-assessment", async (string symbol, AlpacaCatalystAssessmentClient catalystClient, CancellationToken ct) =>
+app.MapGet("/api/market-data/catalyst-assessment", async (string symbol, int? lookbackHours, AlpacaCatalystAssessmentClient catalystClient, CancellationToken ct) =>
 {
     if (!IsValidSymbol(symbol))
         return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (lookbackHours is < 1 or > 720)
+        return Results.BadRequest(new { error = "lookbackHours must be 1-720 (default 24)." });
     try
     {
-        var assessment = await catalystClient.AssessAsync(symbol, DateTimeOffset.UtcNow, ct);
+        var assessment = await catalystClient.AssessAsync(symbol, DateTimeOffset.UtcNow, ct, lookbackHours ?? 24);
         return Results.Ok(assessment);
     }
     catch (ProviderNotConfiguredException ex)
