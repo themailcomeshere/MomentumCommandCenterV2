@@ -1,5 +1,9 @@
 # New Chat Handoff — 2026-11-13
 
+> **Superseded by [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md).** Two corrections apply to this file:
+> - The **Rank quality pool · top 50** button exists only in **INTRADAY MOMENTUM** mode.
+> - Session times below say 06:30–13:00 Arizona. That is daylight time; in standard time (Nov–Mar) the session is **07:30–14:00 Arizona**.
+
 **Branch:** `feature/opportunity-quality-classification` (never `master`)
 **Checklist:** [Master-To-Do.md](Master-To-Do.md) — the single authoritative list
 **Rules:** [CLAUDE.md](../CLAUDE.md) (commit and push every change; Markdown and data guardrails)

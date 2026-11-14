@@ -29,6 +29,8 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 - Tag every To-Do item **[Repo]** or **[Operator]**. NEVER mark operator-side, Thinkorswim, browser or provider-evidence items complete from code or CI alone.
 - Use `- [ ]` / `- [x]` checklists. Dates as `YYYY-MM-DD`. Cite exact SHAs and CI run IDs as evidence.
 - Missing data is written as "Data not found in sources." — never estimated.
+- Operator click-path instructions MUST name the Dashboard WORKSPACE mode (INTRADAY MOMENTUM / BORING OVERNIGHT) for every step, and every named control MUST be checked as visible in that mode (some are hidden by `body.boring-overnight-mode` CSS). Added 2026-11-14 after the rank button was unreachable from the steps given.
+- Arizona times MUST be converted from America/New_York for the date in question (Arizona has no DST: regular session is 06:30–13:00 AZ in daylight time, 07:30–14:00 AZ in standard time). State which applies. Added 2026-11-14.
 - <!-- Add your additional Markdown rules here. -->
 
 ## Trading-data guardrails

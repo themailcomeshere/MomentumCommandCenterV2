@@ -1,9 +1,9 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-14 — after-hours pass: DATA? reasons distinguish stale/after-hours from missing; `MCC.ps1 warmup`; launcher, warm-up, exclusion and Network order pre-checked by Claude on the operator machine.
+**Updated:** 2026-11-14 (afternoon) — READY semantics partly frozen by the operator; delayed historical SIP Daily works (20/20 consolidated, volume within 0.11% of the independent reference); Massive Daily cross-check; catalyst review queue with a first 60-article sheet.
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
-**Current handoff:** [NewChatHandoff-20261113.md](NewChatHandoff-20261113.md)
+**Current handoff:** [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md)
 **Full dated history (Nov 6 – Nov 13 morning):** [Master-To-Do-History-20261113.md](archive/Master-To-Do-History-20261113.md) · older: [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)
 **Detail:** [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md) · [P2/P3 Execution Plan](Engineering/P2-P3-Execution-Plan-20261110.md) · [Interactive Windows Operation](Engineering/Interactive-Windows-Operation.md) · [Boring Overnight Control Contract](Engineering/Boring-Overnight-Control-Contract-20261113.md) · [Provider Runtime Inventory](Engineering/Market-Data-Provider-Runtime-Inventory-20261113.md) · [Technical Workflow](Technical-Workflow.md) · [Runtime Acceptance Runbook](Runtime-Acceptance-Runbook.md) · [Catalyst Human Review](Catalyst-Human-Review-Workflow.md)
 
@@ -16,8 +16,10 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `4c743a1`: operator Get-Latest + Release build + tests PASSED, 302/302; CI run `43493475779` SUCCESS.
 - [x] `e7c0810`: CI run `43504399098` SUCCESS (JS syntax, .NET build, tests). Local Release tests run by Claude: 344/344 passed.
 - [x] `d6d52ab` (JSONL startup warm-up): local Release tests run by Claude: 345/345 passed. Exact-head CI run `43551329653` SUCCESS.
-- [x] `6a547c3` (latest code head, DATA? reasons + `MCC.ps1 warmup`): local Release tests run by Claude: **351/351** passed. Exact-head CI run `43630951781` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 351+ tests.
+- [x] `6a547c3` (DATA? reasons + `MCC.ps1 warmup`): local Release tests run by Claude: 351/351 passed. Exact-head CI run `43630951781` SUCCESS.
+- [x] `5f1d5d1` (delayed-SIP Daily + Massive cross-check): local 362/362. Exact-head CI run `43634828257` SUCCESS.
+- [x] `0596df6` (latest code head, catalyst review queue): local Release tests run by Claude: **363/363** passed. Exact-head CI run `43635497154` SUCCESS.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 363+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -35,17 +37,20 @@ Schwab and broker reconciliation stay parked at the bottom.
 
 ## Next operator actions
 
-The full, click-by-click sequence is in the [current handoff](NewChatHandoff-20261113.md).
+The full, click-by-click sequence is in the [current handoff](NewChatHandoff-20261114.md).
 
 **Weekend (market closed; all of these work after hours):**
-1. Pull, run `.\scripts\Get-Latest-And-Test.ps1`, then `.\scripts\MCC.ps1 start`, `start` again (refused), `status`.
-2. About 15 s later run `.\scripts\MCC.ps1 warmup`. Expect `trigger STARTUP_WARMUP` and a first request well under 1 s. (The 2026-11-13 step 3 error happened because the launcher had not started the API, so no launcher log existed; `warmup` now says that in plain words.)
-3. Dashboard (Ctrl+F5): Field availability export; **Rank quality pool · top 50** (after hours every row is DATA? with `DataStale, OutsideRegularSession`, which is correct); exclusion test; Network order for **Fetch & analyze bars** and **Refresh saved evaluations**.
-4. `MCC.ps1 stop`, `Backup-MccData.ps1`, staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle.
+1. Answer the five open READY questions in [READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md).
+2. Pull, run `.\scripts\Get-Latest-And-Test.ps1`, then `.\scripts\MCC.ps1 start`, `start` again (refused), `status`, and about 15 s later `.\scripts\MCC.ps1 warmup`.
+3. Dashboard (Ctrl+F5). The **Rank quality pool · top 50** button exists **only in INTRADAY MOMENTUM** (it is hidden in Boring Overnight, `styles.css:1728`), so switch the WORKSPACE first. Run the ranking (after hours every row is DATA? with `DataStale, OutsideRegularSession`); do the exclusion test; Field availability export (Boring Overnight); Network order.
+4. Daily audit: confirm the panel now shows `Alpaca / sip · delayed historical SIP` and `QUALIFICATION USABLE` for RTO, EVR, CRBG.
+5. Catalyst batch 1: label the 60-row sheet `Documents\MCC-Reviews\catalyst-queue-20261114-200253.csv`, dry-run, then `-Submit` ([sample plan](Validation/Catalyst-Sample-Plan-20261114.md)).
+6. Optional: create a free Massive account, add the key to user secrets, and run `GET /api/market-data/daily/cross-check?symbol=RTO`.
+7. `MCC.ps1 stop`, `Backup-MccData.ps1`, staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle.
 
-**Monday regular session (06:30–13:00 Arizona):**
-5. Ranking again: rows should now classify instead of DATA?.
-6. CRBG live assessment and **Fetch / retry 20-session** capture (Section 2), including the capture-history POST Network check.
+**Monday regular session (07:30–14:00 Arizona in standard time; the buy window is 13:00–14:00):**
+8. Ranking again (Intraday Momentum): rows should classify instead of DATA?.
+9. CRBG live assessment and **Fetch / retry 20-session** capture (Section 2), including the capture-history POST Network check.
 
 ---
 
@@ -83,11 +88,13 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 - [ ] **[Operator]** Evaluation clock: observe OPEN at the scheduled final-hour start and closed/countdown at the buy deadline.
 - [ ] **[Operator]** Compare the displayed final-60-minute window, buy deadline and next-session GTC_EXT 7:00–20:00 ET window with the operator's actual order ticket (standard time, daylight time, early close).
 
-### READY definition and V3 study (blocked on frozen semantics)
-- [ ] **[Repo — blocked]** Wire a source-qualified Boring Overnight READY workflow and alert transition. This is blocked until the item below freezes the semantics. Never substitute Boring Winner PASS; no sound until READY is validated.
-- [ ] **[Operator]** Freeze the Arizona-local buy time, the sell/measurement endpoint, and the choice between the official auction print and the first eligible trade, against the TOS scanner formula and the order workflow.
-- [ ] **[Operator]** Decide whether official opening-auction data is required. If it is, obtain an entitled source.
-- [ ] **[Repo — blocked]** Build the V3 Boring Overnight watchlist column/study after the semantics are frozen. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
+### READY definition and V3 study
+Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Boring-Overnight-READY-Semantics-20261114.md).
+- [x] **[Operator]** Freeze buy time and exit (2026-11-14): buy **any time in the final regular hour** (15:00–16:00 ET; 13:00–14:00 AZ in standard time; the hour before an early close). Exit is a **GTC_EXT limit sell, Day 2 07:00–20:00 ET**; a touch is not a fill. `MarketSessionClock` already implements both windows.
+- [x] **[Operator]** Official opening-auction data: **not required** (2026-11-14). The exit is a limit in the extended window; the 09:30 close/open capture stays a separately named research series.
+- [ ] **[Operator]** Answer the five open questions in the decision record: unfilled limit at 20:00 ET; catalyst gate (manual attestation?); historical SIP minute bars for the 40-window sell history; Daily parity tolerance; READY vs position sizing.
+- [ ] **[Repo — blocked]** Wire a source-qualified Boring Overnight READY workflow and alert transition after those answers. Never substitute Boring Winner PASS; no sound until READY is validated.
+- [ ] **[Repo — blocked]** Build the V3 Boring Overnight watchlist column/study after the open questions are answered. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
 
 ## 3. Opportunity Quality
@@ -97,7 +104,7 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 - [x] **[Repo]** Scanner field-availability report: after each import or restore, the Dashboard shows available, missing and denominator for all eight fields, the rows with missing fields, the source file, the import timestamp, and a JSON export. A subscription-limit message, blank, `DATA?` or `n/a` counts as unavailable. Logic verified in the browser.
 - [ ] **[Operator]** Import the current scanner CSV and export the availability JSON. This replaces the stale "296 missing rows" figure.
 - [x] **[Repo]** DATA? rows no longer say `DataMissing` for every cause (`6a547c3`). `OpportunityQualityUnavailableReasons` maps `STALE_MARKET_DATA` → `DataStale`, adds the new `OutsideRegularSession` reason outside regular hours, and keeps `DataMissing` for insufficient history, missing RVOL baseline and unknown statuses. 6 tests.
-- [ ] **[Operator]** Run the ranking and confirm the provenance line on each card and BLOCKED for any excluded symbol. The **Rank quality pool · top 50** button is in the Red Zone header; results appear directly under it. The exclusion list is the collapsible **EXCLUSIONS · API-BACKED — MCC exclusion watchlist** panel lower on the page. Operator run 2026-11-14 03:46 UTC (Friday after the close, JSON pasted): 50 candidates, `exclusionListChecked` true, 0 excluded, 50 DATA? (`dataFresh` false; last 1m bar 20:59 UTC). 48 rows carry `Alpaca / iex` and 1m/5m timestamps; SBGSY and SMERY have no feed or timestamps (no IEX bars). Card visuals and the exclusion test are not yet reported. Pre-check by Claude on `6a547c3` code, 2026-11-14: pool CRBG, EVR, GGAL, SBGSY → GGAL (already on the list) `BLOCKED`, `QUALITY — EXCLUDED`, reasons `EXCLUDED_WATCHLIST, DataStale, OutsideRegularSession`; CRBG/EVR `DataStale, OutsideRegularSession`; SBGSY `DataMissing, OutsideRegularSession`. A regular-session run is still needed for non-DATA? classifications.
+- [ ] **[Operator]** Run the ranking and confirm the provenance line on each card and BLOCKED for any excluded symbol. The **Rank quality pool · top 50** button is in the Red Zone header **in INTRADAY MOMENTUM mode only**; it is hidden in Boring Overnight (`styles.css:1728`). On 2026-11-14 the operator could not find it because the handoff had them switch to Boring Overnight first. Results appear directly under it. The exclusion list is the collapsible **EXCLUSIONS · API-BACKED — MCC exclusion watchlist** panel lower on the page. Operator run 2026-11-14 03:46 UTC (Friday after the close, JSON pasted): 50 candidates, `exclusionListChecked` true, 0 excluded, 50 DATA? (`dataFresh` false; last 1m bar 20:59 UTC). 48 rows carry `Alpaca / iex` and 1m/5m timestamps; SBGSY and SMERY have no feed or timestamps (no IEX bars). Card visuals and the exclusion test are not yet reported. Pre-check by Claude on `6a547c3` code, 2026-11-14: pool CRBG, EVR, GGAL, SBGSY → GGAL (already on the list) `BLOCKED`, `QUALITY — EXCLUDED`, reasons `EXCLUDED_WATCHLIST, DataStale, OutsideRegularSession`; CRBG/EVR `DataStale, OutsideRegularSession`; SBGSY `DataMissing, OutsideRegularSession`. A regular-session run is still needed for non-DATA? classifications.
 - [ ] **[Repo — blocked]** Expand beyond the top-50 prefilter only after candidate-pool completeness is evidenced.
 - [ ] **[Operator]** Collect time-separated candidate snapshots with outcomes for calibration. The ranking remains diagnostic and uncalibrated.
 
@@ -121,7 +128,11 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 ## 6. Data sources, parity and sell-limit gate
 
 - [x] **[Repo]** Provider runtime inventory: wired endpoints, feeds, retry policy, runtime evidence and the gaps that block production-source selection. See [Market-Data-Provider-Runtime-Inventory-20261113.md](Engineering/Market-Data-Provider-Runtime-Inventory-20261113.md).
-- [ ] **[Operator]** Find a genuinely independent, licensed Daily/OHLCV source, or keep qualification blocked. Recheck corporate-action adjustment first.
+- [x] **[Repo]** Daily source path (operator decision 2026-11-14: delayed historical SIP for Daily, plus Massive free as cross-check). `MarketData:Alpaca:DailyFeed=sip_delayed` requests completed Daily bars on SIP with end ≥ 16 min old. A SIP refusal falls back to IEX, is labelled (`sipRequestStatus`) and is never usable. Also new: `MassiveDailyMarketDataClient`, `DailySourceCrossCheck` and `GET /api/market-data/daily/cross-check` (both split-adjusted). The Daily audit shows the SIP status (`5f1d5d1`, 11 tests, CI `43634828257`).
+- [x] **[Repo]** Runtime evidence (Claude, operator machine, 2026-11-14): RTO, EVR, CRBG → `feed=sip`, `CONSOLIDATED_SIP`, `SIP_DELAYED_HISTORICAL_OK`, 20/20, fresh, `qualificationUsable=true`, on the free account. Against the independent S&P Global/Stock Analysis reference (15 overlapping sessions), volume ratio is 1.0000–1.0011, O/H/L within 0.005, and 14/15 closes exact. 2026-11-06 closes differ (RTO −0.02, EVR +0.18); that reference row was captured 53 min after that close. Evidence: `artifacts/daily-data-qualification/20261114T195621Z-sip-delayed/`.
+- [ ] **[Operator]** Decide the Daily parity tolerance (current rule ±$0.0001 and exact volume, so strictly still FAIL). Proposal: ±$0.005 and ±0.2% volume. Re-download the reference 2026-11-06 row to check the close difference.
+- [ ] **[Operator]** Optional cross-check: create a free Massive account (EOD only, 5 calls/min, 2 years), set `MarketData:Massive:ApiKey` in user secrets, run `/api/market-data/daily/cross-check?symbol=RTO` and report the verdict.
+- [ ] **[Operator]** Review Alpaca's market-data terms for storing and displaying historical SIP Daily bars on the free plan (not found in repository sources).
 - [ ] **[Operator]** Obtain 119 exact provider/TOS 5m OHLCV matches plus the exact previous RTH close from the same qualified feed.
 - [ ] **[Operator]** Runtime-qualify walk-forward only after a complete source-qualified 40-session dataset exists.
 - [ ] **[Operator]** RKLX price-source acceptance against an independently observed quote.
@@ -135,7 +146,9 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 - [ ] **[Operator]** EWTX: open the original article (117008554), then append a source-backed correction that supersedes `f496393535df431ab275231b57f8530a` and `fbc839fc9c2740c1ad87e6bc641e2a77`. Re-query and expect conflict=0 and inadequateReviewEvidence=0.
 - [ ] **[Operator]** Verify generic-rationale rejection at runtime on the latest build.
 - [ ] **[Operator]** Keep ENOV/ARDT and other unsupported articles UNCERTAIN.
-- [ ] **[Operator]** Build a larger source-backed sample across all four truth classes; double-review a subset; make sure both truth classes appear in the holdout.
+- [x] **[Repo]** Sample tooling (`0596df6`): `catalyst-assessment?lookbackHours=` (1–720, default 24 unchanged); `scripts/New-CatalystReviewQueue.ps1` (many symbols, skips reviewed articles, deterministic stratified sample); `scripts/Submit-CatalystReviews.ps1` (local dry run, `-Submit` appends). Plan and targets: [Catalyst-Sample-Plan-20261114.md](Validation/Catalyst-Sample-Plan-20261114.md).
+- [ ] **[Operator]** Batch 1: label `Documents\MCC-Reviews\catalyst-queue-20261114-200253.csv` (60 articles, 51 symbols, 14 days; predicted RISK 11 / MATERIAL 25 / UNCLASSIFIED 24), then submit. Targets: ≥ 120 evaluable labels, ≥ 40 positive, ≥ 40 negative, ≥ 3 weekly batches. The current store has 7 records and no negatives.
+- [ ] **[Repo]** Blind re-review mode for intra-rater agreement, so a second label by the same reviewer is stored separately and not as a conflict.
 - [ ] **[Repo — blocked]** Per-class precision/recall, FP/FN and coverage, once that sample exists.
 
 ## 8. Runtime, browser and interactive Windows deployment
@@ -160,7 +173,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## 10. Parked (lowest priority — do not start)
 
-- **SIP / GTC_EXT history:** HTTP 403 entitlement denial is established; the effective feed is IEX. No further SIP request unless the operator reports an entitlement change.
+- **Recent SIP / GTC_EXT history:** recent-SIP HTTP 403 is established; the intraday feed is IEX. Delayed historical SIP is now allowed for **Daily only** (2026-11-14). Using it for historical minute bars (the 40-window sell history) is open READY question 3.
 - **Schwab read-only API:** blocked on developer approval, app registration, callback and read-only scopes. Never order endpoints.
 - **Broker execution reconciliation ledger:** only from real redacted broker order/fill records. Never infer fills from OHLCV.
 
@@ -168,7 +181,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Guardrails (apply to every item)
 
-- Keep Alpaca on IEX; IEX_PARTIAL is diagnostic only and never consolidated coverage.
+- Keep Alpaca on IEX for intraday/live/stream data; IEX_PARTIAL is diagnostic only and never consolidated coverage. Exception: completed Daily bars via delayed historical SIP (`DailyFeed=sip_delayed`).
 - No imputation of missing bars, sessions, prices, timestamps, ATR observations, reference closes or catalyst facts; no nearest-bar substitution.
 - Zero news is UNKNOWN, not CLEAR. MATERIAL_EVENT_REVIEW / UNCLASSIFIED map to RISK.
 - Overnight 1M ATR14 is a 1-minute simple ATR, not daily ATR. Overnight RVOL is NOT USED.
@@ -177,6 +190,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Recently completed (summary — details in commits and the archive)
 
+- **Nov 14 afternoon:** READY buy/exit/auction decisions frozen; `5f1d5d1` delayed-SIP Daily (20/20 consolidated on the free account) + Massive cross-check; `0596df6` catalyst review queue; first 60-article review sheet generated.
 - **Nov 14:** `6a547c3` DATA? reasons (`DataStale` / `OutsideRegularSession`) and `MCC.ps1 warmup`; Claude pre-checked launcher, warm-up (2.2 s background, first request 387 ms), exclusion BLOCKED and Network order on the operator machine.
 - **Nov 13 evening:** `d6d52ab` JSONL index warm-up at startup; operator cold rebuild measured at 7.3 s (from 23.3 s).
 - **Nov 13 afternoon:** `4ac53f7` capture mapper + 26 tests · `8445c4e` JSONL timing attribution and buffered read · `b5a3283` Opportunity Quality pool fixtures, exclusion blocking, provenance, field availability, startup ReferenceError fix · `e7c0810` launcher, graceful shutdown, inventory, backup/restore · docs: control contract, provider inventory, release evidence script.
@@ -191,4 +205,6 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 - Claude's 2026-11-14 pre-checks ran on the operator machine but are not operator sign-off; the [Operator] items stay open until the operator repeats them.
 - The `calc is not defined` browser fix is inferred, not explicitly confirmed.
 - The launcher was run by Claude with the operator's Development secrets and real data on 2026-11-14. Backup/restore were verified only with temp data, not the real 315 MB data set.
-- No consolidated SIP history, persisted TOS ATR evidence or TOS compile record exists for any symbol.
+- Consolidated SIP **Daily** history now exists (RTO, EVR, CRBG, 2026-11-14). There is still no consolidated intraday/GTC_EXT history, persisted TOS ATR evidence or TOS compile record.
+- Massive daily timestamps are assumed to be Eastern-midnight milliseconds (tested with fixtures only). The Massive client has not run against the live API because no key is configured.
+- With `DailyFeed=sip_delayed`, Daily qualification fields are now populated wherever they are used (Boring Overnight evaluation, capture technicals). READY is still not wired, and the sell limit stays fail-closed on `HISTORY_40_OF_40`.
