@@ -33,6 +33,8 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     private long _lastIndexLoadReadTicks;
     private long _lastIndexLoadOpenTicks;
     private long _lastIndexLoadGateWaitTicks;
+    private string _lastIndexLoadTrigger = "NOT_LOADED";
+    private DateTimeOffset? _lastIndexLoadCompletedAtUtc;
 
     /// <summary>Snapshot of the one-time JSONL index rebuild for runtime diagnostics.</summary>
     public JsonlMarketBarObservationStoreDiagnostics GetDiagnostics() => new(
@@ -46,7 +48,23 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadIndexTicks)).TotalMilliseconds,
         TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadReadTicks)).TotalMilliseconds,
         TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadOpenTicks)).TotalMilliseconds,
-        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadGateWaitTicks)).TotalMilliseconds);
+        TimeSpan.FromTicks(Interlocked.Read(ref _lastIndexLoadGateWaitTicks)).TotalMilliseconds,
+        Volatile.Read(ref _lastIndexLoadTrigger),
+        _lastIndexLoadCompletedAtUtc);
+
+    /// <summary>
+    /// PURPOSE: Build the in-memory index before any request needs it.
+    /// WHEN CALLED: Once at API startup by JsonlMarketBarIndexWarmupService. Requests that arrive while
+    /// the build is running wait on the same gate (reported as gate wait); none triggers a second build.
+    /// </summary>
+    public async Task WarmUpAsync(CancellationToken cancellationToken)
+    {
+        var gateWait = Stopwatch.StartNew();
+        await _gate.WaitAsync(cancellationToken);
+        gateWait.Stop();
+        try { await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed, "STARTUP_WARMUP"); }
+        finally { _gate.Release(); }
+    }
 
     /// <summary>
     /// PURPOSE: Store bars while deduplicating identical source observations and retaining corrections.
@@ -60,7 +78,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         gateWait.Stop();
         try
         {
-            await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed);
+            await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed, "APPEND");
             // Validate the entire batch before opening the append stream. A malformed later
             // bar must not leave a partially written batch of otherwise valid observations.
             foreach (var bar in bars) Validate(bar);
@@ -132,7 +150,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         gateWait.Stop();
         try
         {
-            await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed);
+            await EnsureIndexLoadedAsync(cancellationToken, gateWait.Elapsed, "READ");
             if (!_keysBySymbol.TryGetValue(normalizedSymbol, out var symbolKeys))
                 return Array.Empty<MarketBarObservation>();
 
@@ -159,7 +177,7 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
     /// WHEN CALLED: The first read or append after process start.
     /// IMPORTANT: This is the only full-file scan in a process lifetime.
     /// </summary>
-    private Task EnsureIndexLoadedAsync(CancellationToken cancellationToken, TimeSpan gateWait)
+    private Task EnsureIndexLoadedAsync(CancellationToken cancellationToken, TimeSpan gateWait, string trigger)
     {
         if (_loaded) return Task.CompletedTask;
         var stopwatch = Stopwatch.StartNew();
@@ -208,6 +226,8 @@ public sealed class JsonlMarketBarObservationStore : IMarketBarObservationStore
         Interlocked.Exchange(ref _lastIndexLoadDeserializeTicks, ToTimeSpanTicks(deserializeTicks));
         Interlocked.Exchange(ref _lastIndexLoadIndexTicks, ToTimeSpanTicks(indexTicks));
         Interlocked.Exchange(ref _lastIndexLoadGateWaitTicks, gateWait.Ticks);
+        Volatile.Write(ref _lastIndexLoadTrigger, trigger);
+        _lastIndexLoadCompletedAtUtc = DateTimeOffset.UtcNow;
         Interlocked.Increment(ref _indexLoadCount);
         _loaded = true;
         return Task.CompletedTask;
@@ -291,4 +311,6 @@ public sealed record JsonlMarketBarObservationStoreDiagnostics(
     double LastIndexLoadIndexMs,
     double LastIndexLoadReadMs,
     double LastIndexLoadOpenMs,
-    double LastIndexLoadGateWaitMs);
+    double LastIndexLoadGateWaitMs,
+    string LastIndexLoadTrigger,
+    DateTimeOffset? LastIndexLoadCompletedAtUtc);

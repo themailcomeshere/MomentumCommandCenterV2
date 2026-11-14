@@ -46,6 +46,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddSingleton<CatalystHumanReviewStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.StrategyReports.IThinkorswimAtrObservationStore, MomentumCommandCenterV2.API.StrategyReports.JsonlThinkorswimAtrObservationStore>();
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
+// Registered first so the one-time index rebuild starts before the other hosted workers.
+builder.Services.AddHostedService<JsonlMarketBarIndexWarmupService>();
 builder.Services.AddSingleton<LiveSymbolAssessmentService>();
 builder.Services.AddSingleton<AlpacaMinuteBarStreamWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaMinuteBarStreamWorker>());

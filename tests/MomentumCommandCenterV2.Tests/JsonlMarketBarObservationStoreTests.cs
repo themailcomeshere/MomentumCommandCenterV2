@@ -296,6 +296,8 @@ public sealed class JsonlMarketBarObservationStoreTests
             Assert.True(coldLoadDiagnostics.LastIndexLoadReadMs >= 0);
             Assert.True(coldLoadDiagnostics.LastIndexLoadOpenMs >= 0);
             Assert.True(coldLoadDiagnostics.LastIndexLoadGateWaitMs >= 0);
+            Assert.Equal("READ", coldLoadDiagnostics.LastIndexLoadTrigger);
+            Assert.NotNull(coldLoadDiagnostics.LastIndexLoadCompletedAtUtc);
             Assert.True(coldLoadDiagnostics.LastIndexLoadReadMs + coldLoadDiagnostics.LastIndexLoadDeserializeMs + coldLoadDiagnostics.LastIndexLoadIndexMs <= coldLoadDiagnostics.LastIndexLoadElapsedMs + 1);
 
             var corrected = original with { High = 11.2, Close = 10.8 };
@@ -308,6 +310,42 @@ public sealed class JsonlMarketBarObservationStoreTests
             Assert.Equal(1, restartedStore.GetDiagnostics().IndexLoadCount);
             Assert.Equal(1, restartedStore.GetDiagnostics().IndexedUniqueKeyCount);
             Assert.Equal(2, (await File.ReadAllLinesAsync(path)).Length);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", previousPath);
+            if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task StartupWarmUpBuildsIndexOnceAndLaterReadsReuseIt()
+    {
+        var previousPath = Environment.GetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH");
+        var directory = Path.Combine(Path.GetTempPath(), "mcc-bar-store-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(directory, "bars.jsonl");
+        try
+        {
+            Environment.SetEnvironmentVariable("MCC_MARKET_BAR_STORE_PATH", path);
+            var original = CreateBar();
+            Assert.Equal(1, await new JsonlMarketBarObservationStore().AppendAsync(new[] { original }, CancellationToken.None));
+
+            var restartedStore = new JsonlMarketBarObservationStore();
+            Assert.Equal("NOT_LOADED", restartedStore.GetDiagnostics().LastIndexLoadTrigger);
+            await restartedStore.WarmUpAsync(CancellationToken.None);
+            await restartedStore.WarmUpAsync(CancellationToken.None);
+
+            var diagnostics = restartedStore.GetDiagnostics();
+            Assert.True(diagnostics.IndexLoaded);
+            Assert.Equal(1, diagnostics.IndexLoadCount);
+            Assert.Equal("STARTUP_WARMUP", diagnostics.LastIndexLoadTrigger);
+
+            var read = await restartedStore.GetLatestAsync(
+                "TEST", "TestProvider", original.Timestamp, original.Timestamp, 10, CancellationToken.None);
+            Assert.Single(read);
+            Assert.Equal(10.5, read[0].Bar.Close);
+            Assert.Equal(1, restartedStore.GetDiagnostics().IndexLoadCount);
+            Assert.Equal("STARTUP_WARMUP", restartedStore.GetDiagnostics().LastIndexLoadTrigger);
         }
         finally
         {
