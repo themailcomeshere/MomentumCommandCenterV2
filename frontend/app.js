@@ -2123,11 +2123,12 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
   const alpaca=Array.isArray(providers)?providers.find(x=>String(x.provider||"").toLowerCase()==="alpaca"):null;
   if(!alpaca)throw new Error("Alpaca provider status was not returned; capture was not started.");
   const effectiveFeed=String(alpaca.configuredFeed||"").trim().toLowerCase();
-  if(effectiveFeed!=="sip"){
-   status.textContent="NOT RUN — effective Alpaca feed is "+(effectiveFeed.toUpperCase()||"UNKNOWN")+". GTC_EXT qualification research requires SIP. No provider history request was made and no bars were persisted. Resolve SIP entitlement/configuration, restart MCC, and verify /api/providers/status before retrying.";
+  const delayedSip=alpaca.delayedHistoricalSipMinutes===true;
+  if(effectiveFeed!=="sip"&&!delayedSip){
+   status.textContent="NOT RUN — effective Alpaca feed is "+(effectiveFeed.toUpperCase()||"UNKNOWN")+" and delayed historical SIP is disabled. GTC_EXT qualification research requires SIP. No provider history request was made and no bars were persisted.";
    return;
   }
-  status.textContent="SIP confirmed as the effective configured feed. Fetching 40 exact GTC_EXT sell windows for "+symbol+"…";
+  status.textContent=(effectiveFeed==="sip"?"SIP confirmed as the effective configured feed.":"Using delayed historical SIP (completed windows only, request end at least 16 minutes old).")+" Fetching 40 exact GTC_EXT sell windows for "+symbol+"…";
   const response=await fetch("/api/boring-overnight/capture-sell-window-history",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({symbol,providerName:"Alpaca",feed:"sip"})});
   const data=await response.json();
   if(!response.ok)throw new Error(data.detail||data.title||data.error||("HTTP "+response.status));
@@ -2177,7 +2178,9 @@ async function runCalculatedSellLimitAssessment() {
   if(!providerResponse.ok)throw new Error(providers.detail||providers.title||("Provider status HTTP "+providerResponse.status));
   const alpaca=Array.isArray(providers)?providers.find(x=>String(x.provider||"").toLowerCase()==="alpaca"):null;
   if(!alpaca)throw new Error("Alpaca provider status was not returned; no sell-limit assessment was submitted.");
-  const feed=String(alpaca.configuredFeed||"").trim().toLowerCase();
+  const configured=String(alpaca.configuredFeed||"").trim().toLowerCase();
+  // Historical GTC_EXT evidence is captured on SIP when delayed historical SIP is enabled; evaluate that evidence.
+  const feed=alpaca.delayedHistoricalSipMinutes===true?"sip":configured;
   if(!feed)throw new Error("Alpaca effective feed is unknown; no sell-limit assessment was submitted.");
   const response=await fetch("/api/boring-overnight/sell-limit",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
    body:JSON.stringify({symbol,providerName:"Alpaca",feed,targetQuantilePct:quantile})});

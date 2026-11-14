@@ -197,6 +197,111 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         });
     }
 
+    /// <summary>
+    /// METHOD: DelayedSipCaptureUsesSipOnlyForCompletedWindowsOlderThanTheCutoff
+    /// PURPOSE: With Feed=iex and delayed historical SIP enabled, a capture at 20:10 ET requests only feed=sip, never
+    /// asks for data newer than now - 16 min, treats the previous session as the latest completed window, and
+    /// produces a usable 40/40 SIP audit from synthetic bars.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task DelayedSipCaptureUsesSipOnlyForCompletedWindowsOlderThanTheCutoff()
+    {
+        var asOf = ToUtc(new DateOnly(2026, 10, 30), new TimeOnly(20, 10));
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 10, 29), 40);
+        var handler = new AlpacaBarsHandler(BuildBars(boundaries));
+        var provider = new AlpacaMarketDataAdapter(new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") },
+            AlpacaConfig(allowDelayedSip: true));
+        var store = new InMemoryStore(new List<MarketBar>());
+
+        var result = await new BoringOvernightSellWindowHistoryService(store)
+            .CaptureHistoryAsync(provider, "RTO", "sip", asOf, CancellationToken.None);
+
+        Assert.NotEmpty(handler.Requests);
+        Assert.All(handler.Requests, uri =>
+        {
+            Assert.Contains("feed=sip", uri);
+            var end = DateTimeOffset.Parse(Uri.UnescapeDataString(uri.Split("&end=")[1].Split('&')[0]));
+            Assert.True(end <= asOf - AlpacaDailyMarketDataClient.SipDelay, $"request end {end:O} is newer than the SIP cutoff");
+        });
+        Assert.Equal(new DateOnly(2026, 10, 29), result.Windows[^1].SellSessionDate);
+        Assert.True(result.AllWindowsComplete);
+        Assert.True(result.QualificationUsable);
+        Assert.All(store.Bars, bar => Assert.Equal("sip", bar.Feed));
+    }
+
+    /// <summary>
+    /// METHOD: DelayedSipCaptureIsRefusedWhenTheModeIsDisabled
+    /// PURPOSE: Without AllowDelayedHistoricalSipMinutes, a SIP capture on an IEX configuration still fails before any request.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task DelayedSipCaptureIsRefusedWhenTheModeIsDisabled()
+    {
+        var handler = new AlpacaBarsHandler(new List<MarketBar>());
+        var provider = new AlpacaMarketDataAdapter(new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") },
+            AlpacaConfig(allowDelayedSip: false));
+        var store = new InMemoryStore(new List<MarketBar>());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => new BoringOvernightSellWindowHistoryService(store)
+            .CaptureHistoryAsync(provider, "RTO", "sip", ToUtc(new DateOnly(2026, 10, 30), new TimeOnly(20, 30)), CancellationToken.None));
+        Assert.Empty(handler.Requests);
+        Assert.Empty(store.Bars);
+    }
+
+    /// <summary>
+    /// METHOD: AdapterRefusesDelayedSipRequestsNewerThanTheCutoff
+    /// PURPOSE: The adapter guard rejects an end time within 16 minutes of now, and rejects everything when disabled; no request is sent.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task AdapterRefusesDelayedSipRequestsNewerThanTheCutoff()
+    {
+        var now = DateTimeOffset.Parse("2026-11-14T20:00:00Z");
+        var handler = new AlpacaBarsHandler(new List<MarketBar>());
+        var http = new HttpClient(handler) { BaseAddress = new Uri("https://data.alpaca.markets/") };
+        var enabled = new AlpacaMarketDataAdapter(http, AlpacaConfig(allowDelayedSip: true));
+        var disabled = new AlpacaMarketDataAdapter(http, AlpacaConfig(allowDelayedSip: false));
+
+        await Assert.ThrowsAsync<ArgumentException>(() => enabled.GetDelayedSipBarsAsync("RTO", TimeSpan.FromMinutes(1), now.AddHours(-2), now.AddMinutes(-15), now, CancellationToken.None));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => disabled.GetDelayedSipBarsAsync("RTO", TimeSpan.FromMinutes(1), now.AddHours(-2), now.AddHours(-1), now, CancellationToken.None));
+        Assert.Empty(handler.Requests);
+
+        await enabled.GetDelayedSipBarsAsync("RTO", TimeSpan.FromMinutes(1), now.AddHours(-2), now.AddMinutes(-16), now, CancellationToken.None);
+        Assert.Contains("feed=sip", Assert.Single(handler.Requests));
+    }
+
+    private static IConfiguration AlpacaConfig(bool allowDelayedSip) => new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["MarketData:Alpaca:ApiKey"] = "test-key",
+            ["MarketData:Alpaca:ApiSecret"] = "test-secret",
+            ["MarketData:Alpaca:Feed"] = "iex",
+            ["MarketData:Alpaca:AllowDelayedHistoricalSipMinutes"] = allowDelayedSip ? "true" : "false"
+        })
+        .Build();
+
+    /// <summary>
+    /// TYPE: AlpacaBarsHandler
+    /// PURPOSE: Fake Alpaca bars endpoint: records request URIs and returns the synthetic bars inside each request's start/end.
+    /// WHEN CALLED: By AlpacaMarketDataAdapter under test.
+    /// </summary>
+    private sealed class AlpacaBarsHandler(List<MarketBar> bars) : HttpMessageHandler
+    {
+        public List<string> Requests { get; } = new();
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var uri = request.RequestUri!.ToString();
+            Requests.Add(uri);
+            var start = DateTimeOffset.Parse(Uri.UnescapeDataString(uri.Split("&start=")[1].Split('&')[0]));
+            var end = DateTimeOffset.Parse(Uri.UnescapeDataString(uri.Split("&end=")[1].Split('&')[0]));
+            var items = bars.Where(b => b.Timestamp >= start && b.Timestamp <= end)
+                .Select(b => $$"""{"t":"{{b.Timestamp.UtcDateTime:yyyy-MM-ddTHH:mm:ssZ}}","o":{{b.Open}},"h":{{b.High}},"l":{{b.Low}},"c":{{b.Close}},"v":{{b.Volume}}}""");
+            var body = """{"bars":[""" + string.Join(",", items) + """],"next_page_token":null}""";
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent(body) });
+        }
+    }
+
     private static List<MarketBar> BuildBars(IReadOnlyList<OvernightSessionBoundary> boundaries, string feed = "sip")
     {
         var bars = new List<MarketBar>(boundaries.Count * 781);

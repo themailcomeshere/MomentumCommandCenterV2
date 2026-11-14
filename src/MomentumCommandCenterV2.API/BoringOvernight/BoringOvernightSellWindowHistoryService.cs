@@ -43,7 +43,13 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         // Fail before making a multi-week provider request when the requested feed differs
         // from the provider's effective configuration. This is especially important for
         // SIP-only GTC_EXT qualification: silently fetching IEX cannot satisfy that contract.
-        if (provider is AlpacaMarketDataAdapter alpaca &&
+        // Delayed historical SIP (operator decision 2026-11-14): when SIP is requested, the running feed is not SIP
+        // and the mode is enabled, fetch completed windows on SIP with every request ending >= 16 min before now.
+        var delayedSip = provider is AlpacaMarketDataAdapter delayedAlpaca &&
+            string.Equals(feed?.Trim(), "sip", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(delayedAlpaca.ConfiguredFeed, "sip", StringComparison.OrdinalIgnoreCase) &&
+            delayedAlpaca.DelayedHistoricalSipMinutesAllowed;
+        if (provider is AlpacaMarketDataAdapter alpaca && !delayedSip &&
             !string.Equals(alpaca.ConfiguredFeed, feed?.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
@@ -56,7 +62,9 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         if (asOfUtc == default || asOfUtc.Offset != TimeSpan.Zero || asOfUtc > DateTimeOffset.UtcNow)
             throw new ArgumentException("asOfUtc must be a non-default UTC timestamp no later than now.", nameof(asOfUtc));
 
-        var latestSession = GetLatestCompletedSellSessionDate(asOfUtc);
+        // In delayed-SIP mode a window counts as completed only once its 20:00 ET end is older than the SIP delay.
+        var effectiveAsOfUtc = delayedSip ? asOfUtc - AlpacaDailyMarketDataClient.SipDelay : asOfUtc;
+        var latestSession = GetLatestCompletedSellSessionDate(effectiveAsOfUtc);
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(latestSession, RequiredWindow);
         var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
         var toUtc = ToUtc(boundaries[^1].NextSessionDate, new TimeOnly(20, 0));
@@ -65,8 +73,11 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         while (cursor < toUtc)
         {
             var chunkEnd = cursor.AddDays(7) < toUtc ? cursor.AddDays(7) : toUtc;
-            var chunk = await provider.GetBarsAsync(
-                symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, cancellationToken);
+            var chunk = delayedSip
+                ? await ((AlpacaMarketDataAdapter)provider).GetDelayedSipBarsAsync(
+                    symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, asOfUtc, cancellationToken)
+                : await provider.GetBarsAsync(
+                    symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, cancellationToken);
             fetched.AddRange(chunk);
             cursor = chunkEnd;
         }
@@ -84,7 +95,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
         var normalized = fetched.GroupBy(x => x.Timestamp).Select(group => group.First())
             .OrderBy(x => x.Timestamp).ToArray();
         var persisted = normalized.Length == 0 ? 0 : await store.AppendAsync(normalized, cancellationToken);
-        var audit = await GetHistoryAsync(symbol, provider.ProviderName, feed, asOfUtc, cancellationToken);
+        var audit = await GetHistoryAsync(symbol, provider.ProviderName, feed, effectiveAsOfUtc, cancellationToken);
         return audit with
         {
             CapturePerformed = true,

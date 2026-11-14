@@ -326,6 +326,7 @@ app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers,
         {
             provider = p.ProviderName,
             configuredFeed = alpaca?.ConfiguredFeed,
+            delayedHistoricalSipMinutes = alpaca?.DelayedHistoricalSipMinutesAllowed,
             configuredFeedSource = string.Equals(p.ProviderName, "Alpaca", StringComparison.OrdinalIgnoreCase)
                 ? effectiveFeedSource
                 : null,

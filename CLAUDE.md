@@ -36,7 +36,7 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 ## Trading-data guardrails
 
 - Keep Alpaca on IEX for intraday, live and stream data; IEX_PARTIAL is diagnostic only, never consolidated coverage. No recent-SIP requests unless the operator reports an entitlement change.
-- Exception (operator decision 2026-11-14): completed **Daily** bars may be requested on SIP as a delayed historical query (request end ≥ 16 minutes old, `MarketData:Alpaca:DailyFeed=sip_delayed`). A SIP refusal falls back to IEX and is labelled; it never becomes qualification-usable.
+- Exception (operator decisions 2026-11-14): completed **Daily** bars (`MarketData:Alpaca:DailyFeed=sip_delayed`) and completed historical **1m bars for the GTC_EXT sell-window history** (`MarketData:Alpaca:AllowDelayedHistoricalSipMinutes=true`) may be requested on SIP as delayed historical queries (request end ≥ 16 minutes old). Live, stream and recent requests stay on IEX. A Daily SIP refusal falls back to IEX and is labelled; it never becomes qualification-usable.
 - NEVER impute missing bars, sessions, prices, timestamps, ATR observations, reference closes or catalyst facts; no nearest-bar substitution.
 - Zero news is UNKNOWN, not CLEAR. Research results (Boring Winner PASS, research quantiles) are never READY, a quote, or a trade instruction.
 - Schwab integration and broker reconciliation are parked; do not start them.

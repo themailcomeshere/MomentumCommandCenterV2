@@ -21,6 +21,31 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
 
     public string ProviderName => "Alpaca";
     public string ConfiguredFeed => _feed;
+
+    /// <summary>
+    /// True when MarketData:Alpaca:AllowDelayedHistoricalSipMinutes is true (operator decision 2026-11-14):
+    /// completed 1m/5m bars may be requested on SIP when the request end is at least
+    /// <see cref="AlpacaDailyMarketDataClient.SipDelay"/> old. Live, stream and recent requests stay on the configured feed.
+    /// </summary>
+    public bool DelayedHistoricalSipMinutesAllowed =>
+        bool.TryParse(configuration["MarketData:Alpaca:AllowDelayedHistoricalSipMinutes"], out var allowed) && allowed;
+
+    /// <summary>
+    /// METHOD: GetDelayedSipBarsAsync
+    /// PURPOSE: Fetches completed historical bars on the SIP feed. Refuses (ArgumentException) unless the mode is enabled
+    /// and <paramref name="to"/> is at least 16 minutes before <paramref name="nowUtc"/>; it never falls back to another feed.
+    /// Returned bars carry feed "sip".
+    /// WHEN CALLED: By the GTC_EXT sell-window history capture when feed=sip is requested while the configured feed is not SIP.
+    /// </summary>
+    public Task<IReadOnlyList<MarketBar>> GetDelayedSipBarsAsync(
+        string symbol, TimeSpan timeframe, DateTimeOffset from, DateTimeOffset to, DateTimeOffset nowUtc, CancellationToken cancellationToken)
+    {
+        if (!DelayedHistoricalSipMinutesAllowed)
+            throw new InvalidOperationException("Delayed historical SIP minute bars are disabled (MarketData:Alpaca:AllowDelayedHistoricalSipMinutes is not true). No request was made.");
+        if (to > nowUtc - AlpacaDailyMarketDataClient.SipDelay)
+            throw new ArgumentException($"Delayed historical SIP requires the request end ({to:O}) to be at least {AlpacaDailyMarketDataClient.SipDelay.TotalMinutes:0} minutes before now ({nowUtc:O}). No request was made.", nameof(to));
+        return GetBarsForFeedAsync(symbol, timeframe, from, to, "sip", cancellationToken);
+    }
     public bool IsConfigured => !string.IsNullOrWhiteSpace(_key) && !string.IsNullOrWhiteSpace(_secret);
     public DateTimeOffset? LastSuccessfulDataValidationUtc
     {
@@ -49,8 +74,12 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
         "Scanner/movers discovery still depends on configured scanner source"
     };
 
-    public async Task<IReadOnlyList<MarketBar>> GetBarsAsync(
+    public Task<IReadOnlyList<MarketBar>> GetBarsAsync(
         string symbol, TimeSpan timeframe, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
+        => GetBarsForFeedAsync(symbol, timeframe, from, to, _feed, cancellationToken);
+
+    private async Task<IReadOnlyList<MarketBar>> GetBarsForFeedAsync(
+        string symbol, TimeSpan timeframe, DateTimeOffset from, DateTimeOffset to, string feed, CancellationToken cancellationToken)
     {
         if (!IsConfigured) throw new ProviderNotConfiguredException("Set MarketData:Alpaca:ApiKey and ApiSecret (or ALPACA_API_KEY / ALPACA_API_SECRET).");
         var minutes = timeframe == TimeSpan.FromMinutes(1) ? 1 : timeframe == TimeSpan.FromMinutes(5) ? 5 : 0;
@@ -66,7 +95,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
             var query = $"v2/stocks/{Uri.EscapeDataString(symbol.ToUpperInvariant())}/bars?timeframe={minutes}Min" +
                 $"&start={Uri.EscapeDataString(from.UtcDateTime.ToString("O"))}" +
                 $"&end={Uri.EscapeDataString(to.UtcDateTime.ToString("O"))}" +
-                $"&limit={PageSize}&feed={Uri.EscapeDataString(_feed)}&sort=asc" +
+                $"&limit={PageSize}&feed={Uri.EscapeDataString(feed)}&sort=asc" +
                 (string.IsNullOrWhiteSpace(pageToken) ? "" : $"&page_token={Uri.EscapeDataString(pageToken)}");
             using var response = await SendWithRetryAsync(query, cancellationToken);
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -94,7 +123,7 @@ public sealed class AlpacaMarketDataAdapter(HttpClient httpClient, IConfiguratio
                 result.Add(new MarketBar(symbol.ToUpperInvariant(), timestamp,
                     item.GetProperty("o").GetDouble(), item.GetProperty("h").GetDouble(),
                     item.GetProperty("l").GetDouble(), item.GetProperty("c").GetDouble(),
-                    item.GetProperty("v").GetInt64(), ProviderName, _feed, $"{minutes}m"));
+                    item.GetProperty("v").GetInt64(), ProviderName, feed, $"{minutes}m"));
             }
 
             pageToken = root.TryGetProperty("next_page_token", out var next) && next.ValueKind == JsonValueKind.String
