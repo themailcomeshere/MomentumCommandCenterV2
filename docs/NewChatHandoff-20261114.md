@@ -9,7 +9,7 @@
 
 | Item | Value |
 |---|---|
-| Latest code head | `0b4fbc1` (NO_TRADE minutes), CI run `43636822164` SUCCESS; local Release 369/369 (Claude). Previous: `e48b4d2`, CI `43636134528` |
+| Latest code head | `b3ca453` (Daily tolerance), CI run `43642242199` SUCCESS; local Release 370/370 (Claude). Previous: `0b4fbc1` NO_TRADE, CI `43636822164` |
 | Previous heads | `0596df6` catalyst queue, CI `43635497154`; `5f1d5d1` delayed-SIP Daily, CI `43634828257`; `6a547c3` DATA? reasons, CI `43630951781` |
 | Last operator-verified head | `4c743a1`, 302/302 |
 | Dashboard cache key | `app.js?v=20261114-no-trade-minutes-v1` |

@@ -20,8 +20,9 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `5f1d5d1` (delayed-SIP Daily + Massive cross-check): local 362/362. Exact-head CI run `43634828257` SUCCESS.
 - [x] `0596df6` (catalyst review queue): local 363/363. Exact-head CI run `43635497154` SUCCESS.
 - [x] `e48b4d2` (delayed-SIP 1m for GTC_EXT history): local 366/366. Exact-head CI run `43636134528` SUCCESS.
-- [x] `0b4fbc1` (latest code head, NO_TRADE minutes): local Release tests run by Claude: **369/369** passed. Exact-head CI run `43636822164` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 369+ tests.
+- [x] `0b4fbc1` (NO_TRADE minutes): local 369/369. Exact-head CI run `43636822164` SUCCESS.
+- [x] `b3ca453` (latest code head, Daily tolerance): local Release tests run by Claude: **370/370** passed. Exact-head CI run `43642242199` SUCCESS.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 370+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
