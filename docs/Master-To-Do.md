@@ -15,7 +15,7 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 
 - [x] `4c743a1`: operator Get-Latest + Release build + tests PASSED, 302/302; CI run `43493475779` SUCCESS.
 - [x] `e7c0810`: CI run `43504399098` SUCCESS (JS syntax, .NET build, tests). Local Release tests run by Claude: 344/344 passed.
-- [x] `d6d52ab` (latest code head, JSONL startup warm-up): local Release tests run by Claude: **345/345** passed. Exact-head CI: check `gh run list` before relying on it.
+- [x] `d6d52ab` (latest code head, JSONL startup warm-up): local Release tests run by Claude: **345/345** passed. Exact-head CI run `43551329653` SUCCESS.
 - [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 345+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
