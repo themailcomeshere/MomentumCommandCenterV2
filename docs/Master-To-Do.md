@@ -18,8 +18,9 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `d6d52ab` (JSONL startup warm-up): local Release tests run by Claude: 345/345 passed. Exact-head CI run `43551329653` SUCCESS.
 - [x] `6a547c3` (DATA? reasons + `MCC.ps1 warmup`): local Release tests run by Claude: 351/351 passed. Exact-head CI run `43630951781` SUCCESS.
 - [x] `5f1d5d1` (delayed-SIP Daily + Massive cross-check): local 362/362. Exact-head CI run `43634828257` SUCCESS.
-- [x] `0596df6` (latest code head, catalyst review queue): local Release tests run by Claude: **363/363** passed. Exact-head CI run `43635497154` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 363+ tests.
+- [x] `0596df6` (catalyst review queue): local 363/363. Exact-head CI run `43635497154` SUCCESS.
+- [x] `e48b4d2` (latest code head, delayed-SIP 1m for GTC_EXT history): local Release tests run by Claude: **366/366** passed. Exact-head CI run `43636134528` SUCCESS.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 366+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -92,7 +93,8 @@ Profile on a copy of the operator's file (138.6 MB, 276,441 lines, 254,048 keys)
 Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Boring-Overnight-READY-Semantics-20261114.md).
 - [x] **[Operator]** Freeze buy time and exit (2026-11-14): buy **any time in the final regular hour** (15:00–16:00 ET; 13:00–14:00 AZ in standard time; the hour before an early close). Exit is a **GTC_EXT limit sell, Day 2 07:00–20:00 ET**; a touch is not a fill. `MarketSessionClock` already implements both windows.
 - [x] **[Operator]** Official opening-auction data: **not required** (2026-11-14). The exit is a limit in the extended window; the 09:30 close/open capture stays a separately named research series.
-- [ ] **[Operator]** Answer the five open questions in the decision record: unfilled limit at 20:00 ET; catalyst gate (manual attestation?); historical SIP minute bars for the 40-window sell history; Daily parity tolerance; READY vs position sizing.
+- [x] **[Operator]** Historical SIP minute bars for the 40-window sell history: **allowed** (2026-11-14). Implemented in `e48b4d2`.
+- [ ] **[Operator]** Answer the remaining open questions in the decision record: unfilled limit at 20:00 ET; catalyst gate (manual attestation?); Daily parity tolerance; READY vs position sizing; **no-trade minutes** (new, see §6).
 - [ ] **[Repo — blocked]** Wire a source-qualified Boring Overnight READY workflow and alert transition after those answers. Never substitute Boring Winner PASS; no sound until READY is validated.
 - [ ] **[Repo — blocked]** Build the V3 Boring Overnight watchlist column/study after the open questions are answered. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
@@ -130,6 +132,9 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Repo]** Provider runtime inventory: wired endpoints, feeds, retry policy, runtime evidence and the gaps that block production-source selection. See [Market-Data-Provider-Runtime-Inventory-20261113.md](Engineering/Market-Data-Provider-Runtime-Inventory-20261113.md).
 - [x] **[Repo]** Daily source path (operator decision 2026-11-14: delayed historical SIP for Daily, plus Massive free as cross-check). `MarketData:Alpaca:DailyFeed=sip_delayed` requests completed Daily bars on SIP with end ≥ 16 min old. A SIP refusal falls back to IEX, is labelled (`sipRequestStatus`) and is never usable. Also new: `MassiveDailyMarketDataClient`, `DailySourceCrossCheck` and `GET /api/market-data/daily/cross-check` (both split-adjusted). The Daily audit shows the SIP status (`5f1d5d1`, 11 tests, CI `43634828257`).
 - [x] **[Repo]** Runtime evidence (Claude, operator machine, 2026-11-14): RTO, EVR, CRBG → `feed=sip`, `CONSOLIDATED_SIP`, `SIP_DELAYED_HISTORICAL_OK`, 20/20, fresh, `qualificationUsable=true`, on the free account. Against the independent S&P Global/Stock Analysis reference (15 overlapping sessions), volume ratio is 1.0000–1.0011, O/H/L within 0.005, and 14/15 closes exact. 2026-11-06 closes differ (RTO −0.02, EVR +0.18); that reference row was captured 53 min after that close. Evidence: `artifacts/daily-data-qualification/20261114T195621Z-sip-delayed/`.
+- [x] **[Repo]** Delayed historical SIP 1m bars for the GTC_EXT sell-window history (`e48b4d2`, 3 tests). `AllowDelayedHistoricalSipMinutes=true`; every request ends ≥ 16 min before now, and anything newer is refused without a request. The sell-window capture uses it for `feed=sip` on an IEX configuration. `/api/providers/status` exposes `delayedHistoricalSipMinutes`; the Dashboard capture and sell-limit controls use SIP when it is enabled.
+- [x] **[Repo]** Runtime (Claude, operator machine, 2026-11-14): the RTO capture fetched and persisted 15,201 SIP 1m bars in 3.8 s, `CONSOLIDATED_SIP`, with reference close present for all 40 windows. **0/40 complete windows**: only 302–424 of 780 minutes per window are present. On 2026-11-12, regular hours were nearly full, but 07h–08h had 5 bars, 16h had 1 and 17h–19h had 0. Alpaca omits minutes without trades. Evidence: `artifacts/gtc-ext-sell-window/20261114T201053Z-sip-delayed/`.
+- [ ] **[Operator]** Decide no-trade minutes. Should a minute with no bar inside a successful, consolidated SIP response be classified `NO_TRADE` (counted and shown, never given a price), so a window can be complete? Under the current rule (every minute must have a bar), 40/40 is effectively unreachable for symbols with thin extended-hours trading.
 - [ ] **[Operator]** Decide the Daily parity tolerance (current rule ±$0.0001 and exact volume, so strictly still FAIL). Proposal: ±$0.005 and ±0.2% volume. Re-download the reference 2026-11-06 row to check the close difference.
 - [ ] **[Operator]** Optional cross-check: create a free Massive account (EOD only, 5 calls/min, 2 years), set `MarketData:Massive:ApiKey` in user secrets, run `/api/market-data/daily/cross-check?symbol=RTO` and report the verdict.
 - [ ] **[Operator]** Review Alpaca's market-data terms for storing and displaying historical SIP Daily bars on the free plan (not found in repository sources).
@@ -173,7 +178,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## 10. Parked (lowest priority — do not start)
 
-- **Recent SIP / GTC_EXT history:** recent-SIP HTTP 403 is established; the intraday feed is IEX. Delayed historical SIP is now allowed for **Daily only** (2026-11-14). Using it for historical minute bars (the 40-window sell history) is open READY question 3.
+- **Recent SIP:** recent-SIP HTTP 403 is established; live, stream and intraday decisions stay on IEX. Delayed historical SIP is allowed for completed Daily bars and for the GTC_EXT sell-window 1m history (2026-11-14).
 - **Schwab read-only API:** blocked on developer approval, app registration, callback and read-only scopes. Never order endpoints.
 - **Broker execution reconciliation ledger:** only from real redacted broker order/fill records. Never infer fills from OHLCV.
 
@@ -181,7 +186,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Guardrails (apply to every item)
 
-- Keep Alpaca on IEX for intraday/live/stream data; IEX_PARTIAL is diagnostic only and never consolidated coverage. Exception: completed Daily bars via delayed historical SIP (`DailyFeed=sip_delayed`).
+- Keep Alpaca on IEX for intraday/live/stream data; IEX_PARTIAL is diagnostic only and never consolidated coverage. Exceptions: completed Daily bars (`DailyFeed=sip_delayed`) and GTC_EXT sell-window 1m history (`AllowDelayedHistoricalSipMinutes`) via delayed historical SIP.
 - No imputation of missing bars, sessions, prices, timestamps, ATR observations, reference closes or catalyst facts; no nearest-bar substitution.
 - Zero news is UNKNOWN, not CLEAR. MATERIAL_EVENT_REVIEW / UNCLASSIFIED map to RISK.
 - Overnight 1M ATR14 is a 1-minute simple ATR, not daily ATR. Overnight RVOL is NOT USED.
@@ -190,6 +195,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Recently completed (summary — details in commits and the archive)
 
+- **Nov 14 late afternoon:** `e48b4d2` delayed-SIP 1m for the GTC_EXT sell history; RTO 15,201 SIP bars captured, 0/40 complete because no-trade minutes have no bar (decision pending).
 - **Nov 14 afternoon:** READY buy/exit/auction decisions frozen; `5f1d5d1` delayed-SIP Daily (20/20 consolidated on the free account) + Massive cross-check; `0596df6` catalyst review queue; first 60-article review sheet generated.
 - **Nov 14:** `6a547c3` DATA? reasons (`DataStale` / `OutsideRegularSession`) and `MCC.ps1 warmup`; Claude pre-checked launcher, warm-up (2.2 s background, first request 387 ms), exclusion BLOCKED and Network order on the operator machine.
 - **Nov 13 evening:** `d6d52ab` JSONL index warm-up at startup; operator cold rebuild measured at 7.3 s (from 23.3 s).
@@ -205,6 +211,6 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 - Claude's 2026-11-14 pre-checks ran on the operator machine but are not operator sign-off; the [Operator] items stay open until the operator repeats them.
 - The `calc is not defined` browser fix is inferred, not explicitly confirmed.
 - The launcher was run by Claude with the operator's Development secrets and real data on 2026-11-14. Backup/restore were verified only with temp data, not the real 315 MB data set.
-- Consolidated SIP **Daily** history now exists (RTO, EVR, CRBG, 2026-11-14). There is still no consolidated intraday/GTC_EXT history, persisted TOS ATR evidence or TOS compile record.
+- Consolidated SIP Daily history exists (RTO, EVR, CRBG) and SIP 1m GTC_EXT history exists for RTO (2026-11-14). There is no persisted TOS ATR evidence or TOS compile record. That a missing minute means "no trade" is inferred from the hourly pattern; Alpaca does not label it.
 - Massive daily timestamps are assumed to be Eastern-midnight milliseconds (tested with fixtures only). The Massive client has not run against the live API because no key is configured.
 - With `DailyFeed=sip_delayed`, Daily qualification fields are now populated wherever they are used (Boring Overnight evaluation, capture technicals). READY is still not wired, and the sell limit stays fail-closed on `HISTORY_40_OF_40`.

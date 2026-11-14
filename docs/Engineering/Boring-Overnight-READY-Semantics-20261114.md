@@ -22,9 +22,10 @@
 
 1. **Unfilled limit at 20:00 ET.** What do you do: cancel and hold, re-enter on Day 3, or sell at market? Data not found in sources.
 2. **Catalyst gate.** Zero news is UNKNOWN and can never be CLEAR. Should READY accept your manual attestation ("I checked; nothing material"), recorded with your note and timestamp, as the catalyst pass? If not, READY can never pass on a no-news symbol.
-3. **Historical SIP minute bars.** Delayed historical SIP works for Daily on the free account (2026-11-14 evidence). The 40-window GTC_EXT sell history needs consolidated **minute** bars. May MCC request those the same way (end ≥ 16 min old, completed windows only)? Today's rule allows Daily only.
+3. ~~Historical SIP minute bars~~: **answered 2026-11-14, allowed.** Implemented in `e48b4d2`. The first RTO capture got 15,201 SIP bars but 0/40 complete windows, which leads to question 6.
 4. **Daily parity tolerance.** SIP Daily matches the independent reference within $0.005 on prices (reference rounds to 2 decimals) and within 0.11% on volume. The current rule is ±$0.0001 and exact volume, so it still FAILs. Accept ±$0.005 and ±0.2% volume?
 5. **Position size / ZERO POSITION.** BoringOvernight.md lists ZERO POSITION as a valid outcome. Is a READY candidate always bought, or is READY one input to your own sizing decision?
+6. **No-trade minutes (new).** Alpaca returns no 1m bar for a minute without trades. RTO extended hours have only a few bars per hour, so "all 780 minutes present" is effectively unreachable. May a minute with no bar inside a successful consolidated SIP response count as `NO_TRADE`? It would be counted and shown, never given a price. A minute with no trade cannot touch a limit. Evidence: `artifacts/gtc-ext-sell-window/20261114T201053Z-sip-delayed/`.
 
 ## What READY will require once the questions are answered (gate list)
 
