@@ -693,7 +693,8 @@ async function fetchDailyDataAudit(){
    tr.className="qualification-pending";return tr;
   }
   const d=result.payload||{},complete=d.validSessionCount===20&&Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length===0;
-  const feedLabel=(d.provider||"UNKNOWN")+" / "+(d.feed||"UNKNOWN");
+  const sipStatus=typeof d.sipRequestStatus==="string"?d.sipRequestStatus:"";
+  const feedLabel=(d.provider||"UNKNOWN")+" / "+(d.feed||"UNKNOWN")+(sipStatus==="SIP_DELAYED_HISTORICAL_OK"?" · delayed historical SIP":sipStatus?" · SIP refused, fell back":"");
   const latest=(d.latestExpectedSessionDate||"EXPECTED UNKNOWN")+" · actual "+(d.latestCompletedSessionTimestampUtc||"MISSING");
   const sessionLabel=(d.validSessionCount??0)+"/20";
   const missing=Array.isArray(d.missingSessionDates)&&d.missingSessionDates.length?d.missingSessionDates.join(", "):complete?"NONE":"UNKNOWN";

@@ -71,6 +71,11 @@ builder.Services.AddHttpClient<AlpacaDailyMarketDataClient>(client =>
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
     client.Timeout = TimeSpan.FromSeconds(20);
 });
+builder.Services.AddHttpClient<MassiveDailyMarketDataClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.massive.com/");
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
 builder.Services.AddHttpClient<AlpacaCatalystAssessmentClient>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -191,6 +196,46 @@ app.MapGet("/api/overnight-scanner/thinkorswim-daily-bars", async (
     catch (ArgumentOutOfRangeException ex) { return Results.BadRequest(new { error = ex.Message }); }
 })
 .WithSummary("Read imported Thinkorswim daily-gap reference calculations");
+
+// Daily source cross-check: Alpaca Daily (split-adjusted, so the basis matches Massive adjusted=true)
+// against Massive Daily over the same exact expected sessions. Diagnostic evidence only; it never
+// changes qualification fields. Missing sessions are reported, never filled.
+app.MapGet("/api/market-data/daily/cross-check", async (string symbol, AlpacaDailyMarketDataClient dailyClient, MassiveDailyMarketDataClient massiveClient, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (!massiveClient.IsConfigured)
+        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Massive not configured",
+            detail: "Set MarketData:Massive:ApiKey (user secrets) or MASSIVE_API_KEY to run the Daily cross-check.");
+    var now = DateTimeOffset.UtcNow;
+    try
+    {
+        var alpaca = await dailyClient.GetMetricsAsync(symbol, now, ct, adjustment: "split");
+        var massive = await massiveClient.GetSessionsAsync(symbol, alpaca.ExpectedSessionDates[0], alpaca.ExpectedSessionDates[^1], now, ct);
+        var comparison = DailySourceCrossCheck.Compare(alpaca.ExpectedSessionDates, alpaca.Sessions, massive.Sessions);
+        return Results.Ok(new
+        {
+            symbol = alpaca.Symbol,
+            retrievedAtUtc = now,
+            primary = new { alpaca.Provider, alpaca.Feed, alpaca.FeedCoverage, alpaca.Adjustment, alpaca.SipRequestStatus, alpaca.ValidSessionCount, alpaca.MissingSessionDates },
+            reference = new { massive.Provider, massive.Adjustment, sessionCount = massive.Sessions.Count },
+            comparison.Verdict,
+            comparison.PriceTolerance,
+            comparison.VolumeRelativeTolerance,
+            comparison.StatusCounts,
+            comparison.Rows,
+            note = "Primary = Alpaca, reference = Massive; differences are primary minus reference. Both are split-adjusted for this comparison. Massive Basic publishes a session only after midnight Eastern, so the latest session can be MISSING_REFERENCE until then. A PASS is source-parity evidence only; it is not READY and not a quote."
+        });
+    }
+    catch (ProviderNotConfiguredException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Daily provider not configured", detail: ex.Message);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily cross-check provider error", detail: ex.Message);
+    }
+}).WithName("GetDailySourceCrossCheck");
 
 app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
 {
