@@ -2,17 +2,17 @@
 
 **Branch:** `feature/opportunity-quality-classification` (never `master`)
 **Checklist:** [Master-To-Do.md](Master-To-Do.md), the single authoritative list
-**Rules:** [CLAUDE.md](../CLAUDE.md). The SIP rule was amended 2026-11-14: delayed historical SIP for Daily only.
+**Rules:** [CLAUDE.md](../CLAUDE.md). The SIP rule was amended 2026-11-14: delayed historical SIP for completed Daily bars and for the GTC_EXT sell-window 1m history.
 **Previous handoff:** [NewChatHandoff-20261113.md](NewChatHandoff-20261113.md) (launcher, warm-up, Dashboard checks 4a–4e in full detail)
 
 ## State at hand-off
 
 | Item | Value |
 |---|---|
-| Latest code head | `b3ca453` (Daily tolerance), CI run `43642242199` SUCCESS; local Release 370/370 (Claude). Previous: `0b4fbc1` NO_TRADE, CI `43636822164` |
+| Latest code head | `02e88a3` (READY panel), CI run `43644529920` SUCCESS; local Release 392/392 (Claude). Previous: `b3ca453` Daily tolerance, CI `43642242199`; `0b4fbc1` NO_TRADE, CI `43636822164` |
 | Previous heads | `0596df6` catalyst queue, CI `43635497154`; `5f1d5d1` delayed-SIP Daily, CI `43634828257`; `6a547c3` DATA? reasons, CI `43630951781` |
 | Last operator-verified head | `4c743a1`, 302/302 |
-| Dashboard cache key | `app.js?v=20261114-no-trade-minutes-v1` |
+| Dashboard cache keys | `app.js?v=20261114-ready-signal-v1`, `styles.css?v=20261114-ready-signal-v1` |
 | Session times (standard time, Nov–Mar) | Regular 07:30–14:00 Arizona; buy window 13:00–14:00 AZ; GTC_EXT sell window 05:00–18:00 AZ |
 
 ## What changed on 2026-11-14
@@ -23,24 +23,24 @@
 | `5f1d5d1` | `DailyFeed=sip_delayed`: SIP Daily bars with end ≥ 16 min old. A refusal falls back to IEX, labelled, never usable. Massive Daily client, `DailySourceCrossCheck`, `GET /api/market-data/daily/cross-check`. The Daily audit shows the SIP status. |
 | `e48b4d2` | Delayed historical SIP 1m bars for the GTC_EXT sell-window history (operator approved). RTO: 15,201 SIP bars, 0/40 complete windows at first, because no-trade minutes have no bar. |
 | `0b4fbc1` | NO_TRADE minutes (operator approved). On SIP, a no-bar minute is counted, never priced, when the reference close and regular-session bars are present. RTO is 40/40 complete. Sell limit still BLOCKED: TOS ATR gates and walk-forward adverse excursion. |
-| `0596df6` | `catalyst-assessment?lookbackHours=`; `New-CatalystReviewQueue.ps1` (stratified sheet); `Submit-CatalystReviews.ps1` (dry run, `-Submit`). |
+| `b3ca453` | Daily parity tolerance ±$0.01 / ±0.5% (operator approved); a fresh reference download confirms 18/18 sessions. | `catalyst-assessment?lookbackHours=`; `New-CatalystReviewQueue.ps1` (stratified sheet); `Submit-CatalystReviews.ps1` (dry run, `-Submit`). |
 | docs | [READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md), [Catalyst sample plan](Validation/Catalyst-Sample-Plan-20261114.md), SIP evidence `artifacts/daily-data-qualification/20261114T195621Z-sip-delayed/`. |
 
 ### Operator decisions recorded
 
 - Buy: any time in the final regular hour. Exit: GTC_EXT limit sell, Day 2 07:00–20:00 ET. Official opening auction: not required.
-- Daily source: delayed historical Alpaca SIP, plus Massive free as the cross-check.
+- Daily source: delayed historical Alpaca SIP, plus Massive free as the cross-check. Daily tolerance: ±$0.01 / ±0.5%.
 
 ### Key findings
 
 - **Rank button not visible:** it only exists in **INTRADAY MOMENTUM** (`styles.css:1728` hides it in Boring Overnight). The 2026-11-13 handoff sent the operator to Boring Overnight first.
 - **Delayed SIP Daily works on the free account.** RTO, EVR and CRBG: 20/20 `CONSOLIDATED_SIP`, `qualificationUsable=true`. Volume is within 0.11% of the independent reference; IEX was a fraction of it.
-- **Session-time correction:** earlier messages said "06:30–13:00 AZ". That is the daylight-time mapping. In November it is 07:30–14:00 AZ.
+- **IEX close/open history gap blocks READY:** RTO 14/20 and CRBG 13/20 pairs. Qualification stays DATA? until that history uses SIP, which needs operator approval. earlier messages said "06:30–13:00 AZ". That is the daylight-time mapping. In November it is 07:30–14:00 AZ.
 
 ## Operator sequence
 
 **Weekend**
-1. Answer the five open questions at the end of the [READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md) record.
+1. Decide whether the 20-pair close/open history may use delayed SIP (the "Open question" at the end of the [READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md) record).
 2. Update and start:
    ```powershell
    .\scripts\Get-Latest-And-Test.ps1
@@ -73,12 +73,12 @@
 
 **Monday, regular session (07:30–14:00 AZ)**
 9. Ranking in INTRADAY MOMENTUM: cards should classify instead of DATA?.
-10. CRBG live assessment and **Fetch / retry 20-session close/open history**. Report the fields listed in the [2026-11-13 handoff](NewChatHandoff-20261113.md) step 5, plus the capture-history POST in Network.
+10. **READY check (13:00–14:00 AZ):** BORING OVERNIGHT, **READY check** panel near the top. Enter your candidates, click **Check READY now**, review each card, tick the sources you checked and click **Sign off: nothing material**, then tick **Re-check every 2 min**. Expect `READY (SHADOW — not yet validated)` only if every gate passes. Until the close/open history uses SIP, qualification stays DATA?. and **Fetch / retry 20-session close/open history**. Report the fields listed in the [2026-11-13 handoff](NewChatHandoff-20261113.md) step 5, plus the capture-history POST in Network.
 
 ## Open blockers
 
-- READY: all questions answered (decision record, decisions 6–9). Two recommendations await an operator yes: MATERIAL_EVENT blocks READY, and 20 shadow sessions before the live signal. Next repo step: wire READY in shadow mode.
-- Sell limit: needs Thinkorswim 5m ATR observations saved (warm-up, parity, current ATR) and a passing adverse-excursion walk-forward.
+- READY is built (shadow mode). It cannot fire until the 20-pair close/open history is complete; that needs the SIP decision above.
+- Sell limit: Thinkorswim ATR is no longer required. RTO and CRBG fail the walk-forward gates.
 - TOS compile and parity not evidenced.
 - Catalyst sample too small (7 records, no negatives).
 - Schwab and broker reconciliation parked.

@@ -1,6 +1,6 @@
 # Boring Overnight READY semantics — decision record
 
-**Created:** 2026-11-14. **Status:** all operator questions answered on 2026-11-14. Two items carry Claude's recommendation pending a final operator yes: MATERIAL_EVENT blocking, and shadow mode before the live signal. READY is not wired yet; this record is its specification.
+**Created:** 2026-11-14. **Status:** all decisions made 2026-11-14 and **built** (`4eafc9b`, `8365f7e`, `02e88a3`), running in shadow mode. One blocker found while building: the 20-pair close/open history is incomplete on IEX (see "Open question" at the end).
 
 ## Frozen by the operator (2026-11-14)
 
@@ -22,20 +22,17 @@ MCC has two separate measurements:
 - **Close → next 09:30 open** (the 20-pair capture-history). This is a research series about the overnight gap. It is not your exit.
 - **Day 2, 07:00–20:00 ET sell window.** This is what the calculated limit sell is tested on: did the price reach the limit at any time from 07:00 to 20:00 ET on Day 2? It covers premarket, regular session and after-hours, not just the open.
 
-### Catalyst gate rules (decision 7)
+### Catalyst gate rules (decision 7, revised 2026-11-14 on Claude's recommendation and built in `8365f7e`)
 
 | Situation | Result |
 |---|---|
-| Triage `RISK_PRESENT`, or any article human-labelled `MATERIAL_RISK` | **BLOCKED.** An attestation cannot override it. |
-| Any article human-labelled `MATERIAL_EVENT` (earnings, guidance, M&A, FDA, major contract) | **BLOCKED** (Claude's recommendation: a known event makes the overnight not "boring"). *Operator to confirm.* |
-| Articles only `NON_MATERIAL` / `IRRELEVANT` / `DUPLICATE` after human review, or zero articles (UNKNOWN) | **Passes only with an operator attestation**, recorded as `CATALYST: OPERATOR-ATTESTED`, never `CLEAR`. |
-| Any article still unreviewed (`UNCLASSIFIED` / `MATERIAL` triage without a human label) | **Not ready.** Review the article first. |
+| Any article human-labelled `MATERIAL_RISK`, or an **unreviewed** article with a triage risk phrase | **BLOCKED.** A sign-off cannot override it. A `NON_MATERIAL` / `IRRELEVANT` review lifts a risk-phrase article. |
+| Human `MATERIAL_EVENT` that is **earnings/guidance or FDA/clinical**, or whose event type is unknown | **BLOCKED.** These are scheduled overnight events. |
+| Human `MATERIAL_EVENT` that is **M&A, a contract, or an analyst action** | **Allowed with sign-off**; the card shows a yellow EVENT warning with the headline. |
+| Any article unreviewed (other than risk phrase) or labelled `UNCERTAIN` | **Not ready.** Review it first. |
+| Only `NON_MATERIAL` / `IRRELEVANT` / `DUPLICATE`, or zero news (UNKNOWN) | **Passes only with today's sign-off**, shown as `CATALYST: OPERATOR-ATTESTED`, never `CLEAR`. |
 
-An attestation must:
-- name the symbol and buy session;
-- include a note of at least 40 characters listing the sources checked (for example "Checked Schwab news, SEC EDGAR filings, company IR page — no news since last close");
-- be timestamped, append-only, and expire at that session's buy deadline.
-
+**Sign-off:** tick at least one source you checked: Schwab news, SEC EDGAR, company IR, or Other (Other needs a note). The note is otherwise optional. It is accepted only on the buy-session day, expires at the buy deadline, and is append-only (`catalyst-attestations.jsonl`).
 ### Daily tolerance evidence (decision 8)
 
 The tolerance has to cover rounding (reference sites publish 2 decimals) and small vendor volume differences (late-reported trades). It must still catch a wrong source or wrong session. A 10% tolerance would hide real data problems; a missing day or a wrong day typically differs by whole percent.
@@ -46,22 +43,25 @@ Measured 2026-11-14 (`artifacts/daily-data-qualification/20261114T195621Z-sip-de
 
 The earlier 2026-11-06 close differences are gone: that older reference row had been captured before the final close was published. All 18 pass at ±$0.01 / ±0.5%.
 
-### READY signal (decision 9), recommended rollout (*operator to confirm*)
+### READY signal (decision 9, built)
 
-1. **Shadow mode first.** MCC computes READY every session and logs it with all gate evidence. It shows the signal as `READY (SHADOW — not yet validated)`, with no sound. Next-day outcomes (limit touched on Day 2 or not) are recorded automatically from SIP history.
-2. **Go live** after 20 shadow sessions with outcomes reviewed: the signal becomes `READY — BUY WINDOW OPEN` with the sound alert.
+- **Shadow mode, open-ended, minimum 10 sessions.** READY is computed and logged on every in-window check and shown as `READY (SHADOW — not yet validated)`, with no sound. Each signal's Day 2 outcome (limit touched or not on the SIP 07:00–20:00 ET window) is resolved automatically in **Shadow log and Day 2 outcomes**.
+- **Going live:** set `BoringOvernight:ReadySignalMode` to `live` (for example `dotnet user-secrets set "BoringOvernight:ReadySignalMode" "live" --project src\MomentumCommandCenterV2.API`) and restart. MCC honours it only after **10 distinct buy sessions** are in the shadow log. Then the label is `READY — BUY WINDOW OPEN`, and a sound plays on a new READY if you clicked **Enable READY sound**.
 
-## READY gate list (all must pass, evaluated inside the buy window)
+## READY gate list (as built; all must pass inside the buy window)
 
-1. Daily qualification usable: consolidated SIP, 20/20 sessions, fresh (`DailyFeed=sip_delayed`).
-2. Scanner and history thresholds as already specified (5D > 20D mean, ADV20 ≥ 500K, price/SMA rules).
-3. Exclusion watchlist not matched.
-4. Catalyst gate per decision 7.
-5. Inside the buy window (decision 1), with fresh intraday data.
-6. Calculated limit sell issued: 40/40 SIP history, walk-forward touch-rate and adverse-excursion gates, and TOS ATR parity gates. If no limit can be issued, the result is **not READY**. It shows the failing gate; it never shows a guessed limit.
+1. **BUY_WINDOW:** final regular hour (`MarketSessionClock`).
+2. **QUALIFICATION_SNAPSHOT:** a capture-history snapshot at most 10 minutes old. The READY panel runs the capture before each check.
+3. **QUALIFICATION:** the existing qualification evaluator must return READY (not WATCH): price above $5 and above SMA20, ADV20 ≥ 500K, overnight win rate 60–100%, 20D average ≥ +0.10%, 5D > 20D, 5M permission YES, 5M structure BULLISH, 1M state not SELL/GET OUT/BLOCK, fresh Daily and intraday data, no warnings (extension ≥ 2 ATR, volume ≥ 3×, range > 1.5 ATR, current overnight ≥ 3%).
+4. **EXCLUSION:** not on the exclusion watchlist.
+5. **CATALYST:** per decision 7.
+6. **SELL_LIMIT (revised 2026-11-14):** requires the SIP 40-window history, the reference close and the walk-forward gates (touch rate and adverse excursion). The four Thinkorswim ATR gates are **informational** (`4eafc9b`); ATR never changed the price. During the buy window the day's close does not exist yet, so the tested target % is applied to the **latest trade (at most 2 minutes old)**: limit = latest trade × (1 + target %). Re-check it against your actual fill.
 
-Boring Winner PASS is never READY. MCC never submits an order.
+Status precedence: BLOCKED, then DATA?, then NOT_READY, then OUTSIDE_BUY_WINDOW, then READY. Boring Winner PASS is never READY. MCC never submits an order.
 
+## Open question (found while building, 2026-11-14)
+
+**The 20-pair close/open history is incomplete on IEX** (RTO 14/20, CRBG 13/20 pairs). IEX often has no trade in the exact 15:59 or 09:30 minute. Without 20/20 pairs, the overnight win rate and averages are DATA?, so **QUALIFICATION can never pass and READY can never fire**. The SIP 1m bars for those exact minutes are already stored by the sell-window capture. Using delayed historical SIP for the close/open history needs operator approval: the current exception covers the sell-window history only.
 ## Engineering defaults (unchanged)
 
 - **Research entry reference:** the regular-session close (last regular 1m bar), labelled `ENTRY_PROXY_REGULAR_CLOSE`, plus the final-hour high as a conservative worst case. Neither is a fill price.
