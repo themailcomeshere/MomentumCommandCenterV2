@@ -2358,3 +2358,134 @@ $("historicalReplayForm")?.addEventListener("submit",async event=>{
  }catch(error){status.textContent="Replay failed: "+error.message;host.textContent="No decision returned. Check that the API is current and stored-bar history exists.";}
  finally{button.disabled=false;}
 });
+
+
+/// MODULE: Boring Overnight READY signal (decision record docs/Engineering/Boring-Overnight-READY-Semantics-20261114.md)
+/// PURPOSE: For each symbol: run the 20-session capture (fresh qualification snapshot), then POST /ready/evaluate and
+/// render the signal, the limit, every gate, warnings, required actions and the catalyst sign-off form.
+/// SAFETY: Decision support only. Sound plays only in effective LIVE mode, only on a new READY, and only after the
+/// operator enabled it with a click. No order is submitted.
+const readyState={soundEnabled:false,audio:null,lastStatus:{},autoTimer:null,running:false};
+function readyEl(tag,cls,text){const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined&&text!==null)node.textContent=String(text);return node;}
+function readyAz(iso){if(!iso)return "DATA?";try{return new Date(iso).toLocaleString("en-US",{timeZone:"America/Phoenix",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+" AZ";}catch{return String(iso);}}
+function readySymbols(){
+ const raw=($("overnightReadySymbols")?.value||"").trim()||($("overnightSymbol")?.value||"").trim();
+ return [...new Set(raw.split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(x=>/^[A-Z0-9.-]{1,8}$/.test(x)))].slice(0,8);
+}
+function playReadyAlert(){
+ if(!readyState.soundEnabled)return;
+ try{
+  const AudioContextType=window.AudioContext||window.webkitAudioContext;if(!AudioContextType)return;
+  readyState.audio=readyState.audio||new AudioContextType();if(readyState.audio.state==="suspended")void readyState.audio.resume();
+  const now=readyState.audio.currentTime;
+  [660,880,1320].forEach((frequency,index)=>{const osc=readyState.audio.createOscillator(),gain=readyState.audio.createGain(),start=now+index*.2;osc.type="sine";osc.frequency.value=frequency;gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.18,start+.02);gain.gain.exponentialRampToValueAtTime(.0001,start+.16);osc.connect(gain);gain.connect(readyState.audio.destination);osc.start(start);osc.stop(start+.18);});
+ }catch(error){const b=$("overnightReadySound");if(b)b.title="Sound unavailable: "+error.message;}
+}
+$("overnightReadySound")?.addEventListener("click",async()=>{
+ readyState.soundEnabled=!readyState.soundEnabled;
+ const b=$("overnightReadySound");
+ if(b){b.textContent=readyState.soundEnabled?"READY sound: ON (live mode only)":"Enable READY sound";b.setAttribute("aria-pressed",String(readyState.soundEnabled));}
+ if(readyState.soundEnabled){const A=window.AudioContext||window.webkitAudioContext;if(A){readyState.audio=readyState.audio||new A();if(readyState.audio.state==="suspended")await readyState.audio.resume();}}
+});
+async function readyPost(url,body){
+ const response=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(body)});
+ let data=null;try{data=await response.json();}catch{data=null;}
+ if(!response.ok)throw new Error((data&&(data.error||data.detail||data.title))||("HTTP "+response.status));
+ return data;
+}
+function renderReadyCard(result,captureNote){
+ const card=readyEl("article","ready-card ready-"+String(result.status||"DATA").replace(/[^A-Z_]/gi,""));
+ card.dataset.symbol=result.symbol;
+ const head=readyEl("div","ready-head");
+ head.append(readyEl("strong","ready-symbol",result.symbol),readyEl("span","ready-label",result.signalLabel||result.status));
+ card.append(head);
+ const limit=result.calculatedLimitSell!=null
+  ?"Limit sell (GTC_EXT): $"+Number(result.calculatedLimitSell).toFixed(2)+" · from latest trade $"+Number(result.referencePrice).toFixed(2)+" + "+Number(result.targetReturnPct).toFixed(2)+"% · re-check against your fill"
+  :"Limit sell: DATA? — not issued";
+ card.append(readyEl("p","ready-limit",limit));
+ card.append(readyEl("p","muted small","Buy session "+result.buySessionDate+" · window "+readyAz(result.buyWindowStartUtc)+" – "+readyAz(result.buyDeadlineUtc)+" · sell session "+result.sellSessionDate+" · checked "+readyAz(result.evaluatedAtUtc)+(captureNote?" · "+captureNote:"")));
+ const gates=readyEl("ul","ready-gates");
+ (result.gates||[]).forEach(g=>{const li=readyEl("li","ready-gate gate-"+String(g.state).replace(/[^A-Z_]/gi,""));li.append(readyEl("span","gate-state",g.state),readyEl("span","gate-code",g.code),readyEl("span","gate-detail",g.detail));gates.append(li);});
+ card.append(gates);
+ if((result.warnings||[]).length){const w=readyEl("ul","ready-warnings");result.warnings.forEach(x=>w.append(readyEl("li",null,"⚠ "+x)));card.append(w);}
+ if((result.requiredActions||[]).length){const a=readyEl("ul","ready-actions");result.requiredActions.forEach(x=>a.append(readyEl("li",null,"→ "+x)));card.append(a);}
+ if(result.catalystState!=="OPERATOR_ATTESTED"&&result.catalystState!=="BLOCKED"){
+  const form=readyEl("form","ready-signoff");
+  form.append(readyEl("strong",null,"Catalyst sign-off for "+result.buySessionDate+" — tick what you checked:"));
+  [["SCHWAB_NEWS","Schwab news"],["SEC_EDGAR","SEC EDGAR filings"],["COMPANY_IR","Company investor relations"],["OTHER","Other (name it in the note)"]].forEach(([value,label])=>{
+   const l=readyEl("label","inline-check");const box=document.createElement("input");box.type="checkbox";box.value=value;l.append(box,document.createTextNode(" "+label));form.append(l);});
+  const note=document.createElement("input");note.placeholder="Optional note (required for Other)";note.maxLength=300;note.className="ready-note";
+  const submit=readyEl("button",null,"Sign off: nothing material");submit.type="submit";
+  const msg=readyEl("span","muted small","");
+  form.append(note,submit,msg);
+  form.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const sources=[...form.querySelectorAll("input[type=checkbox]:checked")].map(x=>x.value);
+   submit.disabled=true;msg.textContent="Saving sign-off…";
+   try{
+    await readyPost("/api/boring-overnight/catalyst-attestations",{symbol:result.symbol,sourcesChecked:sources,note:note.value});
+    msg.textContent="Saved. Re-checking…";
+    const updated=await readyPost("/api/boring-overnight/ready/evaluate",{symbol:result.symbol});
+    handleReadyResult(updated,"sign-off saved");
+   }catch(error){msg.textContent="Not saved: "+error.message;submit.disabled=false;}
+  });
+  card.append(form);
+ }
+ card.append(readyEl("p","muted small",result.modeNote||""));
+ return card;
+}
+function handleReadyResult(result,captureNote){
+ const host=$("overnightReadyCards");if(!host)return;
+ const card=renderReadyCard(result,captureNote);
+ const existing=[...host.children].find(x=>x.dataset.symbol===result.symbol);
+ if(existing)existing.replaceWith(card);else host.append(card);
+ const mode=$("overnightReadyMode");
+ if(mode)mode.textContent="Mode: "+String(result.effectiveMode||"shadow").toUpperCase()+(result.requestedMode==="live"&&result.effectiveMode!=="live"?" (live requested)":"")+" · "+result.loggedShadowSessions+"/10 shadow sessions logged";
+ const previous=readyState.lastStatus[result.symbol];
+ readyState.lastStatus[result.symbol]=result.status;
+ if(result.status==="READY"&&previous!=="READY"&&result.effectiveMode==="live")playReadyAlert();
+}
+async function runReadyCheck(){
+ if(readyState.running)return;
+ const symbols=readySymbols();const status=$("overnightReadyStatus");
+ if(!symbols.length){if(status)status.textContent="Enter at least one valid symbol.";return;}
+ readyState.running=true;const button=$("overnightReadyEvaluate");if(button)button.disabled=true;
+ let ready=0;
+ try{
+  for(const symbol of symbols){
+   if(status)status.textContent="Capturing 20-session history and live inputs for "+symbol+"…";
+   let captureNote="capture OK";
+   try{await readyPost("/api/boring-overnight/capture-history",{symbol,providerName:"Alpaca",requiredWindow:20});}
+   catch(error){captureNote="capture failed: "+error.message;}
+   if(status)status.textContent="Checking READY for "+symbol+"…";
+   try{const result=await readyPost("/api/boring-overnight/ready/evaluate",{symbol});if(result.status==="READY")ready++;handleReadyResult(result,captureNote);}
+   catch(error){const host=$("overnightReadyCards");if(host){const c=readyEl("article","ready-card ready-DATA");c.dataset.symbol=symbol;c.append(readyEl("strong",null,symbol+" — check failed: "+error.message));const old=[...host.children].find(x=>x.dataset.symbol===symbol);if(old)old.replaceWith(c);else host.append(c);}}
+  }
+  if(status)status.textContent="Checked "+symbols.length+" symbol(s) at "+readyAz(new Date().toISOString())+": "+ready+" READY. No order was sent.";
+ }finally{readyState.running=false;if(button)button.disabled=false;}
+}
+$("overnightReadyEvaluate")?.addEventListener("click",()=>void runReadyCheck());
+$("overnightReadyAuto")?.addEventListener("change",event=>{
+ if(readyState.autoTimer){clearInterval(readyState.autoTimer);readyState.autoTimer=null;}
+ if(!event.target.checked)return;
+ readyState.autoTimer=setInterval(async()=>{
+  try{const r=await fetch("/api/market-session/clock",{cache:"no-store",headers:{Accept:"application/json"}});const clock=await r.json();if(clock&&clock.overnightBuyWindowOpen===true)await runReadyCheck();}catch{}
+ },120000);
+});
+$("overnightReadyShadowRefresh")?.addEventListener("click",async()=>{
+ const body=$("overnightReadyShadowBody");if(!body)return;
+ body.textContent="Loading shadow log (may fetch Day 2 SIP history)…";
+ try{
+  const response=await fetch("/api/boring-overnight/ready/shadow-log",{cache:"no-store",headers:{Accept:"application/json"}});
+  const data=await response.json();if(!response.ok)throw new Error(data.detail||data.title||("HTTP "+response.status));
+  body.replaceChildren();
+  body.append(readyEl("p",null,"Mode requested: "+data.requestedMode+" · logged sessions "+data.loggedSessions+"/"+data.minimumSessionsForLive+" · signalled "+data.signalledSessions+" · resolved "+data.resolvedSignals+" · limit touched on Day 2: "+data.touchedSignals+(data.resolvedSignals?" ("+Math.round(100*data.touchedSignals/data.resolvedSignals)+"%)":"")));
+  const table=readyEl("table","ready-shadow-table");const headRow=readyEl("tr");
+  ["Buy day","Symbol","Checks","Signalled","Limit","Last status","Day 2 outcome","Day 2 high"].forEach(h=>headRow.append(readyEl("th",null,h)));
+  const thead=readyEl("thead");thead.append(headRow);table.append(thead);const tbody=readyEl("tbody");
+  (data.rows||[]).forEach(r=>{const tr=readyEl("tr");[r.buySessionDate,r.symbol,r.evaluations,r.signalled?"READY "+readyAz(r.firstReadyAtUtc):"no",r.limitAtFirstReady!=null?Number(r.limitAtFirstReady).toFixed(2):"—",r.lastStatus,r.outcome,r.day2High!=null?Number(r.day2High).toFixed(2):"—"].forEach(v=>tr.append(readyEl("td",null,v)));tbody.append(tr);});
+  table.append(tbody);body.append(table);
+  if((data.errors||[]).length)body.append(readyEl("p","notice","Errors: "+data.errors.join(" | ")));
+  body.append(readyEl("p","muted small",data.note));
+ }catch(error){body.textContent="Shadow log failed: "+error.message;}
+});

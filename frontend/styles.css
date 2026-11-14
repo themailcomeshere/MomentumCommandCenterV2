@@ -1749,3 +1749,35 @@ body.boring-overnight-mode #overnightImportStatus{grid-column:1/-1}
 .field-availability-table{width:100%;max-width:560px;border-collapse:collapse;margin:8px 0;font-size:.85rem}
 .field-availability-table th,.field-availability-table td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:left}
 .field-availability-table td:not(:first-child),.field-availability-table th:not(:first-child){text-align:right}
+
+/* Boring Overnight READY signal panel (2026-11-14) */
+.overnight-ready{margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(35,57,83,.18)}
+.overnight-ready h3{margin:2px 0 0}
+.overnight-ready .inline-check{display:inline-flex;align-items:center;gap:6px;margin-right:12px}
+.overnight-ready-cards{display:grid;gap:12px;margin-top:10px}
+.ready-card{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel)}
+.ready-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px}
+.ready-symbol{font-size:1.1rem}
+.ready-label{font-size:1.25rem;font-weight:700;letter-spacing:.02em}
+.ready-READY{border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset}
+.ready-READY .ready-label{color:var(--green)}
+.ready-BLOCKED .ready-label{color:var(--red)}
+.ready-NOT_READY .ready-label,.ready-OUTSIDE_BUY_WINDOW .ready-label{color:var(--yellow)}
+.ready-DATA .ready-label{color:var(--muted)}
+.ready-limit{font-weight:600;margin:6px 0}
+.ready-gates{list-style:none;padding:0;margin:8px 0;display:grid;gap:4px}
+.ready-gate{display:grid;grid-template-columns:76px 170px minmax(0,1fr);gap:8px;font-size:.88rem;align-items:start}
+.ready-gate .gate-state{font-weight:700}
+.gate-PASS .gate-state{color:var(--green)}
+.gate-FAIL .gate-state,.gate-NOT_YET .gate-state{color:var(--yellow)}
+.gate-BLOCKED .gate-state{color:var(--red)}
+.gate-DATA .gate-state{color:var(--muted)}
+.ready-gate .gate-detail{color:var(--muted);overflow-wrap:anywhere}
+.ready-warnings,.ready-actions{margin:6px 0;padding-left:18px;font-size:.88rem}
+.ready-warnings{color:var(--yellow)}
+.ready-signoff{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.ready-signoff strong{flex-basis:100%}
+.ready-note{min-width:220px;flex:1 1 220px}
+.ready-shadow-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+.ready-shadow-table th,.ready-shadow-table td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+@media (max-width:640px){.ready-gate{grid-template-columns:64px minmax(0,1fr)}.ready-gate .gate-detail{grid-column:1/-1}}
