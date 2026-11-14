@@ -143,6 +143,23 @@ public static class BoringOvernightCaptureInputMapper
         return new BoringOvernightCurrentIntervalResult(state, endpointAvailableAtUtc, exactCloseBar?.Close, exactOpenBar?.Open, returnPct);
     }
 
+    /// <summary>
+    /// METHOD: LatestCompletedOvernightPct
+    /// PURPOSE: The scanner's "Current ON %" = latest session's open vs the previous close, i.e. the return of the most
+    /// recent completed close/open pair. Returns that pair's return and its open-bar timestamp only when the exact pair
+    /// ending on <paramref name="latestCompletedBoundary"/>'s next session is present; otherwise null (never estimated).
+    /// WHEN CALLED: By capture-history to fill CurrentOvernightPct (previously always left null, which kept the
+    /// qualification at DATA?).
+    /// </summary>
+    public static (decimal? ReturnPct, DateTimeOffset? OpenBarTimestampUtc) LatestCompletedOvernightPct(
+        IReadOnlyList<OvernightReturnObservation> returns, OvernightSessionBoundary latestCompletedBoundary)
+    {
+        var pair = returns.LastOrDefault(r =>
+            r.PreviousSessionDate == latestCompletedBoundary.PreviousSessionDate &&
+            r.NextSessionDate == latestCompletedBoundary.NextSessionDate);
+        return pair is null ? (null, null) : (pair.ReturnPct, latestCompletedBoundary.NextOpenBarTimestampUtc);
+    }
+
     private static JsonElement? JsonPath(JsonElement? root, params string[] path)
     {
         if (root is null) return null;

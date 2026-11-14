@@ -982,17 +982,34 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var currentIntervalBoundary = historyWindow.CurrentIntervalBoundary;
         var captureBoundaries = boundaries.Concat(new[] { currentIntervalBoundary }).ToArray();
         var fromUtc = boundaries[0].PreviousCloseBarTimestampUtc;
+        // Operator decision 2026-11-14: the 20-pair close/open history uses delayed historical SIP 1m bars when the
+        // running feed is not SIP and AllowDelayedHistoricalSipMinutes is on. IEX often has no trade in the exact
+        // 15:59 / 09:30 minute, which left the history incomplete (RTO 14/20, CRBG 13/20). Live 1m/5m technical
+        // inputs stay on the configured (IEX) feed. In SIP mode every request ends >= 16 min before now, and the
+        // current interval is judged as of now - 16 min so a not-yet-available open bar is PENDING, not MISSING.
+        var historyAlpaca = provider as AlpacaMarketDataAdapter;
+        var feedPlan = historyAlpaca is null
+            ? MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryFeedPolicy.Resolve("", false, captureStartedAtUtc)
+            : MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryFeedPolicy.Resolve(
+                historyAlpaca.ConfiguredFeed, historyAlpaca.DelayedHistoricalSipMinutesAllowed, captureStartedAtUtc);
+        var useDelayedSip = feedPlan.UseDelayedSip;
+        var historyAsOfUtc = feedPlan.HistoryAsOfUtc;
         // Never request future bars: before the current 09:30 endpoint, the interval remains PENDING.
         var toUtc = captureBoundaries.Max(x => x.NextOpenBarTimestampUtc).AddMinutes(1);
         if (toUtc > captureStartedAtUtc.AddMinutes(1))
             toUtc = captureStartedAtUtc.AddMinutes(1);
+        if (toUtc > feedPlan.MaxRequestEndUtc)
+            toUtc = feedPlan.MaxRequestEndUtc;
         var fetched = new List<MarketBar>();
         var cursor = fromUtc;
         while (cursor < toUtc)
         {
             var chunkEnd = cursor.AddDays(30) < toUtc ? cursor.AddDays(30) : toUtc;
-            var chunk = await provider.GetBarsAsync(
-                request.Symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, ct);
+            var chunk = useDelayedSip
+                ? await historyAlpaca!.GetDelayedSipBarsAsync(
+                    request.Symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, captureStartedAtUtc, ct)
+                : await provider.GetBarsAsync(
+                    request.Symbol.Trim().ToUpperInvariant(), TimeSpan.FromMinutes(1), cursor, chunkEnd, ct);
             fetched.AddRange(chunk);
             cursor = chunkEnd;
         }
@@ -1008,8 +1025,10 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         // Prefer one JSONL scan for the complete history window. The store caps a query at
         // 10,000 observations; if this symbol/feed has a denser extended-hours history, fall
         // back to exact per-pair reads so older requested boundaries cannot be truncated.
+        // Filter by feed in the store (before the 10,000-row cap) when the history feed is known.
+        var historyFeedFilter = feedPlan.HistoryFeed ?? actualFeed;
         var observations = (await barStore.GetLatestAsync(
-            request.Symbol, provider.ProviderName, fromUtc, toUtc, 10000, ct, "1m")).ToList();
+            request.Symbol, provider.ProviderName, fromUtc, toUtc, 10000, ct, "1m", historyFeedFilter)).ToList();
         if (observations.Count >= 10000)
         {
             observations.Clear();
@@ -1018,7 +1037,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 var pairObservations = await barStore.GetLatestAsync(
                     request.Symbol, provider.ProviderName,
                     boundary.PreviousCloseBarTimestampUtc, boundary.NextOpenBarTimestampUtc,
-                    10000, ct, "1m");
+                    10000, ct, "1m", historyFeedFilter);
                 observations.AddRange(pairObservations);
             }
         }
@@ -1030,6 +1049,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             return Results.Problem("No provider bars were returned and persisted boundary observations span multiple feeds. Select/refresh a single feed; no mixed-feed calculation was performed.", statusCode: 422);
         if (actualFeed is null && storedFeeds.Length == 1 && !string.IsNullOrWhiteSpace(storedFeeds[0]))
             actualFeed = storedFeeds[0];
+        if (useDelayedSip && actualFeed is null)
+            actualFeed = "sip";
 
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
@@ -1083,8 +1104,11 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         }
 
         // Fail-closed technical/Daily mapping lives in BoringOvernightCaptureInputMapper (unit-tested).
+        // Technical inputs must all come from one declared feed: the history feed normally, or the live configured
+        // feed when the history uses delayed SIP (live/intraday decisions stay on IEX by rule).
+        var technicalExpectedFeed = feedPlan.TechnicalFeed ?? actualFeed;
         var technical = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureInputMapper
-            .MapTechnicalInputs(technicalAssessment, provider.ProviderName, actualFeed, technicalAssessmentError);
+            .MapTechnicalInputs(technicalAssessment, provider.ProviderName, technicalExpectedFeed, technicalAssessmentError);
         var oneMinuteFresh = technical.OneMinuteFresh;
         var fiveMinuteFresh = technical.FiveMinuteFresh;
         var oneMinuteTimestamp = technical.OneMinuteSourceTimestampUtc;
@@ -1096,8 +1120,11 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var dailyTechnicalTimestamp = dailyTechnicals.SourceTimestampUtc;
 
         var intradayFresh = oneMinuteFresh == true && fiveMinuteFresh == true;
+        var (currentOvernightPct, currentOvernightTimestamp) = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureInputMapper
+            .LatestCompletedOvernightPct(history.Returns, boundaries[^1]);
         captureInputs = captureInputs with
         {
+            CurrentOvernightPct = currentOvernightPct is null ? null : (double)currentOvernightPct.Value,
             Price = dailyMetrics?.Price,
             Sma20 = dailyMetrics?.Sma20,
             AverageDailyVolume20 = dailyMetrics?.AverageDailyVolume20,
@@ -1118,6 +1145,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         {
             ["overnightHistoryCalculatedAtUtc"] = history.CalculatedAtUtc
         };
+        if (currentOvernightTimestamp.HasValue) captureSourceTimestamps["currentOvernightPct"] = currentOvernightTimestamp.Value;
         if (oneMinuteTimestamp.HasValue) captureSourceTimestamps["oneMinuteTechnicalInputs"] = oneMinuteTimestamp.Value;
         if (fiveMinuteTimestamp.HasValue) captureSourceTimestamps["fiveMinuteTechnicalInputs"] = fiveMinuteTimestamp.Value;
         if (dailyTechnicalTimestamp.HasValue)
@@ -1141,7 +1169,10 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 
         var snapshot = await snapshotStore.AppendAsync(
             new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotInput(
-                request.Symbol, DateTimeOffset.UtcNow, provider.ProviderName + " 1m history + live 1m/5m technical assessment",
+                request.Symbol, DateTimeOffset.UtcNow,
+                useDelayedSip
+                    ? provider.ProviderName + " delayed historical SIP 1m close/open history + live " + historyAlpaca!.ConfiguredFeed + " 1m/5m technical assessment"
+                    : provider.ProviderName + " 1m history + live 1m/5m technical assessment",
                 provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
                 captureSourceTimestamps, captureInputs,
                 new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
@@ -1158,7 +1189,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var currentOpenBar = observations.Select(x => x.Bar)
             .FirstOrDefault(x => x.Timestamp == currentIntervalBoundary.NextOpenBarTimestampUtc);
         var currentIntervalResult = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCaptureInputMapper
-            .ClassifyCurrentInterval(currentIntervalBoundary, currentCloseBar, currentOpenBar, DateTimeOffset.UtcNow);
+            .ClassifyCurrentInterval(currentIntervalBoundary, currentCloseBar, currentOpenBar,
+                useDelayedSip ? historyAsOfUtc : DateTimeOffset.UtcNow);
         var currentInterval = new
         {
             state = currentIntervalResult.State,
@@ -1178,7 +1210,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             actualFeed is null || string.Equals(x.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
         var storedBoundaryBars = observations.Where(x =>
             actualFeed is null || string.Equals(x.Bar.Feed, actualFeed, StringComparison.OrdinalIgnoreCase)).ToArray();
-        var boundaryAuditAtUtc = DateTimeOffset.UtcNow;
+        var boundaryAuditAtUtc = useDelayedSip ? DateTimeOffset.UtcNow - AlpacaDailyMarketDataClient.SipDelay : DateTimeOffset.UtcNow;
         object BuildBoundaryCoverage(string boundaryType, DateTimeOffset expectedTimestampUtc)
         {
             var providerExact = providerBoundaryBars.Any(x => x.Timestamp == expectedTimestampUtc);
@@ -1218,6 +1250,9 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             symbol = request.Symbol.Trim().ToUpperInvariant(),
             provider = provider.ProviderName,
             feed = actualFeed,
+            historyFeedMode = feedPlan.Mode,
+            historyAsOfUtc,
+            technicalFeed = technicalExpectedFeed,
             timeframe = "1m",
             calendarVersion = MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar.Version,
             requestedFromUtc = fromUtc,
