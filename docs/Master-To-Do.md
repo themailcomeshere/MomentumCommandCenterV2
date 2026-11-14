@@ -1,4 +1,4 @@
-﻿# Momentum Command Center — Master To-Do
+# Momentum Command Center — Master To-Do
 
 **Updated:** 2026-11-14 — after-hours pass: DATA? reasons distinguish stale/after-hours from missing; `MCC.ps1 warmup`; launcher, warm-up, exclusion and Network order pre-checked by Claude on the operator machine.
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)

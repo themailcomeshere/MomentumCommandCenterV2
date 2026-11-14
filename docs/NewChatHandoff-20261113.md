@@ -1,4 +1,4 @@
-﻿# New Chat Handoff — 2026-11-13
+# New Chat Handoff — 2026-11-13
 
 **Branch:** `feature/opportunity-quality-classification` (never `master`)
 **Checklist:** [Master-To-Do.md](Master-To-Do.md) — the single authoritative list
