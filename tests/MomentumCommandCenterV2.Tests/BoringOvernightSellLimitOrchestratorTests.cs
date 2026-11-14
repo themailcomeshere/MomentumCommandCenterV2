@@ -56,8 +56,38 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
         Assert.Contains(result.Gates, x => x.Code == "ATR_PARITY" && !x.Passed);
     }
 
+    /// <summary>
+    /// METHOD: MissingThinkorswimAtrNoLongerBlocksTheLimit
+    /// PURPOSE: Operator decision 2026-11-14: with complete SIP history and a passing walk-forward, no saved TOS ATR still
+    /// issues the limit; the four ATR gates are shown as failed but not required, and the ATR distance is null.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
     [Fact]
-    public async Task ProviderBarMismatchBlocksOtherwiseCompleteSellLimitEvidence()
+    public async Task MissingThinkorswimAtrNoLongerBlocksTheLimit()
+    {
+        var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 42));
+        var orchestrator = new BoringOvernightSellLimitOrchestrator(
+            new MemoryMarketBarStore(BuildCompleteSIPBars(asOf)),
+            new MemoryAtrStore(Array.Empty<ThinkorswimAtrStoredObservation>()));
+
+        var result = await orchestrator.CalculateAsync(
+            new BoringOvernightSellLimitRequest("EVR", "Alpaca", "sip", 75), asOf, CancellationToken.None);
+
+        Assert.Equal("PROVISIONAL", result.Status);
+        Assert.NotNull(result.Calculation?.CalculatedLimitSell);
+        Assert.Null(result.Calculation!.TargetDistanceAtr);
+        foreach (var code in new[] { "ATR_STUDY_SETTINGS", "ATR_PARITY", "CONTINUOUS_5M_ATR_WARMUP", "SAME_SOURCE_5M_OHLCV", "CURRENT_5M_ATR_FRESHNESS" })
+            Assert.Contains(result.Gates, g => g.Code == code && !g.Passed && !g.Required);
+        Assert.All(result.Gates.Where(g => g.Required), g => Assert.True(g.Passed, g.Code + ": " + g.Detail));
+    }
+
+    /// <summary>
+    /// METHOD: ProviderBarMismatchIsInformationalOnly
+    /// PURPOSE: A TOS/provider 5m OHLCV mismatch is reported (gate failed, not required) but no longer withholds the limit.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task ProviderBarMismatchIsInformationalOnly()
     {
         var asOf = EasternUtc(new DateOnly(2026, 11, 5), new TimeOnly(16, 42));
         var bars = BuildCompleteSIPBars(asOf).ToList();
@@ -74,9 +104,9 @@ public sealed class BoringOvernightSellLimitOrchestratorTests
             new BoringOvernightSellLimitRequest("EVR", "Alpaca", "sip", 75),
             asOf, CancellationToken.None);
 
-        Assert.Equal("BLOCKED", result.Status);
-        Assert.Contains(result.Gates, x => x.Code == "SAME_SOURCE_5M_OHLCV" && !x.Passed);
-        Assert.Null(result.Calculation?.CalculatedLimitSell);
+        Assert.Equal("PROVISIONAL", result.Status);
+        Assert.Contains(result.Gates, x => x.Code == "SAME_SOURCE_5M_OHLCV" && !x.Passed && !x.Required);
+        Assert.NotNull(result.Calculation?.CalculatedLimitSell);
     }
 
     private static IReadOnlyList<MarketBarObservation> BuildCompleteSIPBars(DateTimeOffset receivedAt)

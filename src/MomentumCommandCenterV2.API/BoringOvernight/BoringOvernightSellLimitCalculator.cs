@@ -7,11 +7,18 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public static class BoringOvernightSellLimitCalculator
 {
+    /// <summary>
+    /// METHOD: Calculate
+    /// PURPOSE: limit = reference close × (1 + training-quantile favourable return). ATR does not affect the price.
+    /// Operator decision 2026-11-14: Thinkorswim ATR evidence is informational. When a positive ATR with a UTC timestamp
+    /// and MATCH parity is supplied, the limit's distance in ATR units is reported; otherwise that distance is null.
+    /// WHEN CALLED: By BoringOvernightSellLimitOrchestrator after the required evidence gates pass.
+    /// </summary>
     public static BoringOvernightSellLimitResult Calculate(
         decimal currentReferenceClose,
-        decimal currentAtr,
-        DateTimeOffset atrAsOfUtc,
-        string atrParityStatus,
+        decimal? currentAtr,
+        DateTimeOffset? atrAsOfUtc,
+        string? atrParityStatus,
         IReadOnlyList<BoringOvernightSellWindowObservation> history,
         int targetQuantilePct,
         int requiredWindow = 20)
@@ -21,11 +28,10 @@ public static class BoringOvernightSellLimitCalculator
             throw new ArgumentOutOfRangeException(nameof(requiredWindow), "Sell-limit research requires at least 20 sessions.");
         if (targetQuantilePct is < 1 or > 99)
             throw new ArgumentOutOfRangeException(nameof(targetQuantilePct), "Target quantile must be between 1 and 99.");
-        if (currentReferenceClose <= 0 || currentAtr <= 0 || atrAsOfUtc == default || atrAsOfUtc.Offset != TimeSpan.Zero)
-            return Missing("Current reference close, positive ATR, and a UTC ATR timestamp are required.");
-        if (!string.Equals(atrParityStatus, "MATCH", StringComparison.OrdinalIgnoreCase))
-            return new("NOT VERIFIED", null, null, null, null, 0, history.Count, 0,
-                "Exact ATR/Thinkorswim parity is not MATCH; numeric limit withheld.");
+        if (currentReferenceClose <= 0)
+            return Missing("A positive current reference close is required.");
+        var atrUsable = currentAtr is > 0 && atrAsOfUtc is { } atrTime && atrTime != default && atrTime.Offset == TimeSpan.Zero &&
+            string.Equals(atrParityStatus, "MATCH", StringComparison.OrdinalIgnoreCase);
 
         if (history.Count < requiredWindow)
             return Missing($"Need {requiredWindow} complete eligible-window sessions; received {history.Count}.", history.Count);
@@ -54,11 +60,12 @@ public static class BoringOvernightSellLimitCalculator
         }
 
         var limit = decimal.Round(currentReferenceClose * (1m + targetReturnPct / 100m), 2, MidpointRounding.AwayFromZero);
-        var atrDistance = (limit - currentReferenceClose) / currentAtr;
+        decimal? atrDistance = atrUsable ? (limit - currentReferenceClose) / currentAtr!.Value : null;
 
         return new("PROVISIONAL", limit, targetReturnPct, touchRate, atrDistance,
             selected.Length, selected.Length, 0,
-            "Historical maximum-favorable-price quantile over complete eligible windows. Touch rate is an in-sample descriptive statistic, not a fill probability. Walk-forward validation and actual execution records are still required.");
+            "Historical maximum-favorable-price quantile over complete eligible windows. Touch rate is an in-sample descriptive statistic, not a fill probability. Walk-forward validation and actual execution records are still required." +
+            (atrUsable ? string.Empty : " ATR distance is DATA? (no matched Thinkorswim ATR); ATR does not affect the limit price."));
     }
 
     private static BoringOvernightSellLimitResult Missing(string reason, int supplied = 0, int incomplete = 0) =>

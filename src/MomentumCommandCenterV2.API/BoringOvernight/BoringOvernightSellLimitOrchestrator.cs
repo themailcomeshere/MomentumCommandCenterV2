@@ -95,11 +95,11 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         gates.Add(new("ATR_STUDY_SETTINGS", settingsValid,
             settingsValid
                 ? "ATR(14) Wilder; Phoenix timezone; extended-hours ON; corporate-action adjustment ON; MCC_OHLCV_ATR_V2.1."
-                : "ATR provenance must be ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON and MCC_OHLCV_ATR_V2.1."));
+                : "ATR provenance must be ATR(14) Wilder, Phoenix timezone, extended-hours ON, corporate-action adjustment ON and MCC_OHLCV_ATR_V2.1.", Required: false));
 
         var parityMatched = parity.Status == "MATCH";
         gates.Add(new("ATR_PARITY", parityMatched,
-            $"Timestamp-matched server Wilder ATR status: {parity.Status}; compared bars: {parity.ComparedBarCount}; mean absolute error: {parity.MeanAbsoluteError?.ToString("0.000000") ?? "DATA?"}; maximum absolute error: {parity.MaximumAbsoluteError?.ToString("0.000000") ?? "DATA?"}. {parity.Explanation}"));
+            $"Timestamp-matched server Wilder ATR status: {parity.Status}; compared bars: {parity.ComparedBarCount}; mean absolute error: {parity.MeanAbsoluteError?.ToString("0.000000") ?? "DATA?"}; maximum absolute error: {parity.MaximumAbsoluteError?.ToString("0.000000") ?? "DATA?"}. {parity.Explanation}", Required: false));
 
         var lastWarmupRows = orderedAtrRows.TakeLast(AtrWarmupBars).ToArray();
         var continuousWarmup = lastWarmupRows.Length == RequiredProviderAtrBars &&
@@ -107,7 +107,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 right.Observation.SourceTimestampUtc - left.Observation.SourceTimestampUtc)
                 .All(delta => delta == TimeSpan.FromMinutes(5));
         gates.Add(new("CONTINUOUS_5M_ATR_WARMUP", continuousWarmup,
-            $"Need {AtrWarmupBars} consecutive completed 5m TOS observations; found {lastWarmupRows.Length} in the latest warm-up window."));
+            $"Need {AtrWarmupBars} consecutive completed 5m TOS observations; found {lastWarmupRows.Length} in the latest warm-up window.", Required: false));
 
         var providerBarsStopwatch = Stopwatch.StartNew();
         var providerAtrBars = Array.Empty<MarketBarObservation>();
@@ -136,7 +136,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         }
         providerBarsStopwatch.Stop();
         gates.Add(new("SAME_SOURCE_5M_OHLCV", providerBarsMatch,
-            $"Exact 5m provider/TOS OHLCV matches over the latest parity window: {Math.Max(0, parityWindowRows.Length - providerMismatchCount)}/{AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars}; mismatches or missing timestamps: {providerMismatchCount}."));
+            $"Exact 5m provider/TOS OHLCV matches over the latest parity window: {Math.Max(0, parityWindowRows.Length - providerMismatchCount)}/{AtrWarmupBars + ThinkorswimAtrParityService.MinimumComparisonBars}; mismatches or missing timestamps: {providerMismatchCount}.", Required: false));
 
         var atrTimestampValid = latestAtr is not null &&
             latestAtr.Observation.SourceTimestampUtc.AddMinutes(5) <= asOfUtc &&
@@ -144,7 +144,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         gates.Add(new("CURRENT_5M_ATR_FRESHNESS", atrTimestampValid,
             latestAtr is null
                 ? "No current 5m Thinkorswim ATR observation is persisted."
-                : $"Latest 5m ATR bar starts {latestAtr.Observation.SourceTimestampUtc:O}; completion is {latestAtr.Observation.SourceTimestampUtc.AddMinutes(5):O}; evaluated at {asOfUtc:O}."));
+                : $"Latest 5m ATR bar starts {latestAtr.Observation.SourceTimestampUtc:O}; completion is {latestAtr.Observation.SourceTimestampUtc.AddMinutes(5):O}; evaluated at {asOfUtc:O}.", Required: false));
 
         var walkForwardStopwatch = Stopwatch.StartNew();
         var walkForward = BoringOvernightWalkForwardValidator.Validate(
@@ -154,14 +154,17 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         gates.Add(new("WALK_FORWARD_VALIDATION", walkForward.Passed,
             walkForward.Explanation));
 
-        var allPassed = gates.All(x => x.Passed);
+        // Operator decision 2026-11-14: the four Thinkorswim ATR gates are informational (Required=false).
+        // The limit price comes from the SIP history and walk-forward evidence; ATR only adds a distance-in-ATR figure.
+        var allPassed = gates.Where(x => x.Required).All(x => x.Passed);
         BoringOvernightSellLimitResult? calculation = null;
-        if (allPassed && referenceClose is > 0 && latestAtr is not null)
+        if (allPassed && referenceClose is > 0)
         {
+            var atrForDistance = atrTimestampValid && settingsValid ? latestAtr : null;
             calculation = BoringOvernightSellLimitCalculator.Calculate(
                 referenceClose.GetValueOrDefault(),
-                latestAtr.Observation.Atr,
-                latestAtr.Observation.SourceTimestampUtc,
+                atrForDistance?.Observation.Atr,
+                atrForDistance?.Observation.SourceTimestampUtc,
                 parity.Status,
                 history.CalculatorObservations.OrderBy(x => x.SessionDate)
                     .Take(CalculatorTrainingWindow).ToArray(),
@@ -178,7 +181,7 @@ public sealed class BoringOvernightSellLimitOrchestrator(
                 "Numeric sell limit withheld because one or more upstream evidence gates failed."));
         }
 
-        var approved = gates.All(x => x.Passed) && calculation?.CalculatedLimitSell is not null;
+        var approved = gates.Where(x => x.Required).All(x => x.Passed) && calculation?.CalculatedLimitSell is not null;
         totalStopwatch.Stop();
         var performanceDiagnostics = new SellLimitPerformanceDiagnostics(
             Math.Round(historyStopwatch.Elapsed.TotalMilliseconds, 1),
@@ -195,8 +198,8 @@ public sealed class BoringOvernightSellLimitOrchestrator(
             parity, lastWarmupRows.Length, parityWindowRows.Length, providerAtrBars.Length, providerMismatchCount,
             history, walkForward, calculation, gates,
             approved
-                ? "A research-only sell-limit candidate passed the 20-session training / 20-session unseen-test walk-forward gate and matched current 5m ATR evidence. This is not a broker order, executable quote or actual fill."
-                : "No numeric sell limit is issued. Resolve every failed evidence gate; no data has been imputed and no order has been submitted.",
+                ? "A research-only sell-limit candidate passed the SIP 40-window history and the 20-session training / 20-session unseen-test walk-forward gates. Thinkorswim ATR gates are informational and do not affect the price. This is not a broker order, executable quote or actual fill."
+                : "No numeric sell limit is issued. Resolve every failed required evidence gate (Thinkorswim ATR gates are informational); no data has been imputed and no order has been submitted.",
             performanceDiagnostics);
     }
 
@@ -236,7 +239,8 @@ public sealed record BoringOvernightSellLimitRequest(
     string Feed,
     int TargetQuantilePct);
 
-public sealed record SellLimitEvidenceGate(string Code, bool Passed, string Detail);
+/// <summary>One sell-limit evidence gate. Required=false gates are shown for context but do not block the limit.</summary>
+public sealed record SellLimitEvidenceGate(string Code, bool Passed, string Detail, bool Required = true);
 
 public sealed record BoringOvernightSellLimitOrchestrationResult(
     string Status,

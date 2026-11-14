@@ -70,17 +70,31 @@ public sealed class BoringOvernightSellLimitCalculatorTests
         Assert.Equal(1, result.IncompleteSessionCount);
     }
 
+    /// <summary>
+    /// METHOD: UnverifiedOrMissingAtrStillIssuesLimitButNoAtrDistance
+    /// PURPOSE: Operator decision 2026-11-14: ATR is informational. Without MATCH parity (or without any ATR) the same
+    /// limit is issued from the history, and the ATR distance is null; with MATCH parity the distance is reported.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
     [Fact]
-    public void UnverifiedAtrParityWithholdsNumericLimit()
+    public void UnverifiedOrMissingAtrStillIssuesLimitButNoAtrDistance()
     {
         var history = Enumerable.Range(0, 20).Select(i => new BoringOvernightSellWindowObservation(
             new DateOnly(2026, 9, 1).AddDays(i), 100m, 101m, true, 0)).ToArray();
+        var asOf = DateTimeOffset.Parse("2026-10-30T20:00:00Z");
 
-        var result = BoringOvernightSellLimitCalculator.Calculate(
-            100m, 1m, DateTimeOffset.Parse("2026-10-30T20:00:00Z"), "NOT VERIFIED", history, 25);
+        var unverified = BoringOvernightSellLimitCalculator.Calculate(100m, 1m, asOf, "NOT VERIFIED", history, 25);
+        var noAtr = BoringOvernightSellLimitCalculator.Calculate(100m, null, null, null, history, 25);
+        var matched = BoringOvernightSellLimitCalculator.Calculate(100m, 1m, asOf, "MATCH", history, 25);
 
-        Assert.Equal("NOT VERIFIED", result.Status);
-        Assert.Null(result.CalculatedLimitSell);
+        Assert.Equal("PROVISIONAL", unverified.Status);
+        Assert.Equal(101m, unverified.CalculatedLimitSell);
+        Assert.Null(unverified.TargetDistanceAtr);
+        Assert.Equal(101m, noAtr.CalculatedLimitSell);
+        Assert.Null(noAtr.TargetDistanceAtr);
+        Assert.Contains("ATR distance is DATA?", noAtr.Explanation);
+        Assert.Equal(101m, matched.CalculatedLimitSell);
+        Assert.Equal(1m, matched.TargetDistanceAtr);
     }
 
     [Fact]
