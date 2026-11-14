@@ -1,6 +1,6 @@
 # Boring Overnight READY semantics — decision record
 
-**Created:** 2026-11-14. **Status:** all decisions made 2026-11-14 and **built** (`4eafc9b`, `8365f7e`, `02e88a3`), running in shadow mode. One blocker found while building: the 20-pair close/open history is incomplete on IEX (see "Open question" at the end).
+**Created:** 2026-11-14. **Status:** all decisions made 2026-11-14 and **built** (`4eafc9b`, `8365f7e`, `02e88a3`), running in shadow mode. The IEX close/open history gap found while building was fixed with delayed SIP (`6fe6446`).
 
 ## Frozen by the operator (2026-11-14)
 
@@ -59,9 +59,13 @@ The earlier 2026-11-06 close differences are gone: that older reference row had 
 
 Status precedence: BLOCKED, then DATA?, then NOT_READY, then OUTSIDE_BUY_WINDOW, then READY. Boring Winner PASS is never READY. MCC never submits an order.
 
-## Open question (found while building, 2026-11-14)
+## Answered 2026-11-14: close/open history on delayed SIP (`6fe6446`)
 
-**The 20-pair close/open history is incomplete on IEX** (RTO 14/20, CRBG 13/20 pairs). IEX often has no trade in the exact 15:59 or 09:30 minute. Without 20/20 pairs, the overnight win rate and averages are DATA?, so **QUALIFICATION can never pass and READY can never fire**. The SIP 1m bars for those exact minutes are already stored by the sell-window capture. Using delayed historical SIP for the close/open history needs operator approval: the current exception covers the sell-window history only.
+The 20-pair close/open history was incomplete on IEX (RTO 14/20, CRBG 13/20). It now uses delayed historical SIP 1m bars, with live 1M/5M inputs staying on IEX. Result: **RTO 20/20 and CRBG 20/20**.
+
+Also fixed: the capture never set `currentOvernightPct`, so qualification was always DATA?. It is now the latest completed pair's return (the scanner's Current ON %).
+
+On 2026-11-14 (Saturday) both symbols fail a real rule, *5-day average must exceed the 20-day average*: RTO 0.12% vs 0.44%, CRBG 0.68% vs 0.72%. The only DATA? inputs left are the live 1M/5M fields, which exist only during the session.
 ## Engineering defaults (unchanged)
 
 - **Research entry reference:** the regular-session close (last regular 1m bar), labelled `ENTRY_PROXY_REGULAR_CLOSE`, plus the final-hour high as a conservative worst case. Neither is a fill price.

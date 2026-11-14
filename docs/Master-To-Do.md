@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-14 (late night). **READY is built** and running in shadow mode: evaluator, catalyst sign-off, shadow log with Day 2 outcomes, and a Dashboard panel. Thinkorswim ATR is informational. Blocker found: the 20-pair close/open history is incomplete on IEX, so qualification cannot pass until that history uses SIP (operator decision pending).
+**Updated:** 2026-11-14 (late night). **READY is built** and running in shadow mode: evaluator, catalyst sign-off, shadow log with Day 2 outcomes, and a Dashboard panel. Thinkorswim ATR is informational. The 20-pair close/open history now uses delayed SIP: RTO and CRBG are 20/20 (they were 14/20 and 13/20 on IEX).
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
 **Current handoff:** [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md)
@@ -22,8 +22,9 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `e48b4d2` (delayed-SIP 1m for GTC_EXT history): local 366/366. Exact-head CI run `43636134528` SUCCESS.
 - [x] `0b4fbc1` (NO_TRADE minutes): local 369/369. Exact-head CI run `43636822164` SUCCESS.
 - [x] `b3ca453` (Daily tolerance): local 370/370. Exact-head CI run `43642242199` SUCCESS.
-- [x] `02e88a3` (latest code head, READY backend `8365f7e` + Dashboard panel; ATR informational `4eafc9b`): local Release tests run by Claude: **392/392** passed. Exact-head CI run `43644529920` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 392+ tests.
+- [x] `02e88a3` (READY backend `8365f7e` + Dashboard panel; ATR informational `4eafc9b`): local 392/392. Exact-head CI run `43644529920` SUCCESS.
+- [x] `6fe6446` (latest code head, close/open history on SIP): local Release tests run by Claude: **398/398** passed. Exact-head CI run `43646185327` SUCCESS.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 398+ tests.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -109,7 +110,8 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
   - `02e88a3`: Dashboard **READY check** panel in the Overnight workspace.
   - The limit is the latest trade (at most 2 min old) × the tested target %, because the day's close does not exist during the buy window.
   - Browser check, 2026-11-14 (Saturday), RTO and CRBG: BUY_WINDOW NOT_YET, QUALIFICATION DATA?, catalyst needs sign-off, sell limit walk-forward FAIL; no console errors.
-- [ ] **[Operator]** Decide: may the 20-pair close/open history use delayed historical SIP 1m bars? On IEX it is RTO 14/20 and CRBG 13/20 pairs, so qualification is always DATA? and READY can never fire. The SIP bars for those exact minutes are already stored.
+- [x] **[Operator]** Close/open history on delayed SIP: **approved** 2026-11-14.
+- [x] **[Repo]** `6fe6446`: capture-history uses delayed SIP for the 20 pairs, while live 1M/5M stays on IEX and is checked against that feed. The current interval is judged as of now − 16 min. Bug fix: `currentOvernightPct` was never filled (it is now the latest completed pair's return). 6 tests. Runtime 2026-11-14: RTO 20/20 (win rate 60%, 20D +0.44%, 5D +0.12%) and CRBG 20/20 (80%, +0.72%, +0.68%). Both fail "5D > 20D"; the remaining DATA? inputs are live-session fields only.
 - [ ] **[Operator]** In-session READY run (Monday 13:00–14:00 AZ): check READY for your candidates, sign off the catalyst check, and confirm the cards. Shadow sessions start counting from that day.
 - [ ] **[Repo]** Build the V3 Boring Overnight watchlist column/study. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
@@ -212,6 +214,7 @@ Decision (2026-11-11): **interactive Windows only**. Details: [Interactive-Windo
 
 ## Recently completed (summary — details in commits and the archive)
 
+- **Nov 14, after midnight UTC:** `6fe6446` close/open history on delayed SIP (RTO/CRBG 20/20); currentOvernightPct fix.
 - **Nov 14 late night:** READY built in shadow mode (`4eafc9b` ATR informational, `8365f7e` backend, `02e88a3` Dashboard panel); IEX close/open history gap found (14/20, 13/20).
 - **Nov 14 night:** READY decisions 6–9 recorded; Daily tolerance ±$0.01 / ±0.5% applied; fresh reference download confirms SIP Daily parity on 18 sessions.
 - **Nov 14 evening:** `0b4fbc1` NO_TRADE minutes: RTO GTC_EXT history 40/40 complete on SIP. First walk-forward run: touch rate pass, adverse excursion fail; sell limit still blocked on the TOS ATR gates.
