@@ -45,6 +45,17 @@ $baseUrl = "http://localhost:$Port"
 try { Invoke-RestMethod "$baseUrl/api/health" -TimeoutSec 3 | Out-Null }
 catch { Write-Host "MCC API is not running on port $Port. Run .\scripts\MCC.ps1 start first." -ForegroundColor Red; exit 1 }
 
+function ConvertTo-IsoUtc([string]$value) {
+    # The sheet stores UTC ISO-8601 text. Excel may re-save it as e.g. "11/10/2026 14:32"; that clock time is still UTC.
+    if ([string]::IsNullOrWhiteSpace($value)) { return $null }
+    $styles = [Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
+    $parsed = [DateTimeOffset]::MinValue
+    foreach ($culture in [Globalization.CultureInfo]::InvariantCulture, [Globalization.CultureInfo]::GetCultureInfo("en-US"), [Globalization.CultureInfo]::CurrentCulture) {
+        if ([DateTimeOffset]::TryParse($value.Trim(), $culture, $styles, [ref]$parsed)) { return $parsed.ToUniversalTime().ToString("o") }
+    }
+    return $null
+}
+
 $ok = 0; $rejected = 0
 foreach ($row in $labelled) {
     $categories = @(([string]$row.PredictedCategories) -split ';' | Where-Object { $_ })
@@ -53,7 +64,7 @@ foreach ($row in $labelled) {
         articleId           = $row.ArticleId
         headline            = $row.Headline
         url                 = $row.Url
-        publishedAtUtc      = $row.PublishedAtUtc
+        publishedAtUtc      = (ConvertTo-IsoUtc $row.PublishedAtUtc)
         source              = $row.Source
         label               = $row.Label.Trim().ToUpperInvariant()
         ruleSetVersion      = $row.RuleSetVersion
