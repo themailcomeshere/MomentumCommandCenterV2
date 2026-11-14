@@ -52,7 +52,8 @@ public sealed class BoringOvernightSellLimitOrchestrator(
         historyStopwatch.Stop();
         gates.Add(new("HISTORY_40_OF_40", history.QualificationUsable,
             $"Complete eligible GTC_EXT windows: {history.CompleteWindowCount}/{history.RequiredWindow}; feed coverage: {history.FeedCoverage}. " +
-            (history.QualificationUsable ? "Every 07:00–19:59 ET minute and exact prior-session close is present." : "All 40 windows (20 training + 20 later test) must be complete on SIP; missing timestamps and reference closes are not imputed.")));
+            $"Minutes with a bar: {history.Windows.Sum(w => w.ObservedIntervalCount)}; NO_TRADE minutes (no bar on SIP, never priced): {history.Windows.Sum(w => w.NoTradeIntervalCount)}; MISSING minutes: {history.Windows.Sum(w => w.MissingIntervalCount)}. " +
+            (history.QualificationUsable ? "Every window has its exact prior-session close and zero MISSING minutes." : "All 40 windows (20 training + 20 later test) must be complete on SIP; missing timestamps and reference closes are not imputed.")));
 
         var referenceSession = GetLatestCompletedRegularSessionDate(asOfUtc);
         var referenceCloseTimestamp = ToUtc(referenceSession, UsEquitiesSessionCalendar.GetRegularClose(referenceSession).AddMinutes(-1));

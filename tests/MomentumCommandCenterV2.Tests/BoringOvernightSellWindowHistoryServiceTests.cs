@@ -36,19 +36,24 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         Assert.All(result.CalculatorObservations, observation => Assert.True(observation.CoverageComplete));
     }
 
+    /// <summary>
+    /// METHOD: MissingExactMinuteOnPartialFeedRemainsAnExplicitGapAndInvalidatesThatWindow
+    /// PURPOSE: On IEX (partial feed) an empty minute may hide a trade elsewhere, so it stays MISSING and invalidates the window.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
     [Fact]
-    public async Task MissingExactMinuteRemainsAnExplicitGapAndInvalidatesThatWindow()
+    public async Task MissingExactMinuteOnPartialFeedRemainsAnExplicitGapAndInvalidatesThatWindow()
     {
         var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(
             new DateOnly(2026, 10, 30), 40);
-        var bars = BuildBars(boundaries);
+        var bars = BuildBars(boundaries, "iex");
         var lastWindow = boundaries[^1];
         var missingTimestamp = ToUtc(lastWindow.NextSessionDate, new TimeOnly(8, 17));
         bars.RemoveAll(bar => bar.Timestamp == missingTimestamp);
         var service = new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars));
 
         var result = await service.GetHistoryAsync(
-            "RTO", "Alpaca", "sip",
+            "RTO", "Alpaca", "iex",
             DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
 
         Assert.False(result.AllWindowsComplete);
@@ -57,8 +62,92 @@ public sealed class BoringOvernightSellWindowHistoryServiceTests
         Assert.False(incomplete.CoverageComplete);
         Assert.Equal(779, incomplete.ObservedIntervalCount);
         Assert.Equal(1, incomplete.MissingIntervalCount);
+        Assert.Equal(0, incomplete.NoTradeIntervalCount);
+        Assert.Equal("NOT_APPLIED_PARTIAL_FEED", incomplete.NoTradeRule);
         Assert.Contains(missingTimestamp, incomplete.MissingIntervalSampleUtc);
         Assert.False(result.CalculatorObservations.Single(x => x.SessionDate == lastWindow.NextSessionDate).CoverageComplete);
+    }
+
+    /// <summary>
+    /// METHOD: SipEmptyExtendedHoursMinutesAreNoTradeWhenSafeguardsHold
+    /// PURPOSE: On SIP, with the reference close and regular-session bars present, empty minutes (here all of 16:00-19:59
+    /// plus 07:00-09:29) are NO_TRADE: counted, never priced, and the window is complete. The highest price comes only from real bars.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task SipEmptyExtendedHoursMinutesAreNoTradeWhenSafeguardsHold()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 10, 30), 40);
+        var bars = BuildBars(boundaries);
+        var last = boundaries[^1];
+        var regularOpen = ToUtc(last.NextSessionDate, new TimeOnly(9, 30));
+        var regularClose = ToUtc(last.NextSessionDate, new TimeOnly(16, 0));
+        var windowStart = ToUtc(last.NextSessionDate, new TimeOnly(7, 0));
+        bars.RemoveAll(b => b.Timestamp >= windowStart && (b.Timestamp < regularOpen || b.Timestamp >= regularClose));
+
+        var result = await new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars)).GetHistoryAsync(
+            "RTO", "Alpaca", "sip", DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
+
+        var window = Assert.Single(result.Windows, x => x.SellSessionDate == last.NextSessionDate);
+        Assert.Equal(390, window.ObservedIntervalCount);
+        Assert.Equal(390, window.NoTradeIntervalCount);
+        Assert.Equal(0, window.MissingIntervalCount);
+        Assert.Equal("APPLIED", window.NoTradeRule);
+        Assert.True(window.CoverageComplete);
+        Assert.Equal(101m, window.HighestEligiblePrice);
+        Assert.Equal(40, result.CompleteWindowCount);
+        Assert.True(result.QualificationUsable);
+    }
+
+    /// <summary>
+    /// METHOD: SipWindowWithoutRegularSessionBarsKeepsEmptyMinutesMissing
+    /// PURPOSE: If the sell session's regular session has no bars at all, data delivery for that day is unproven, so empty minutes stay MISSING.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task SipWindowWithoutRegularSessionBarsKeepsEmptyMinutesMissing()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 10, 30), 40);
+        var bars = BuildBars(boundaries);
+        var last = boundaries[^1];
+        var regularOpen = ToUtc(last.NextSessionDate, new TimeOnly(9, 30));
+        var regularClose = ToUtc(last.NextSessionDate, new TimeOnly(16, 0));
+        bars.RemoveAll(b => b.Timestamp >= regularOpen && b.Timestamp < regularClose);
+
+        var result = await new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars)).GetHistoryAsync(
+            "RTO", "Alpaca", "sip", DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
+
+        var window = Assert.Single(result.Windows, x => x.SellSessionDate == last.NextSessionDate);
+        Assert.Equal("NOT_APPLIED_NO_REGULAR_SESSION_BARS", window.NoTradeRule);
+        Assert.Equal(390, window.MissingIntervalCount);
+        Assert.Equal(0, window.NoTradeIntervalCount);
+        Assert.False(window.CoverageComplete);
+        Assert.Equal(39, result.CompleteWindowCount);
+        Assert.False(result.QualificationUsable);
+    }
+
+    /// <summary>
+    /// METHOD: SipWindowWithoutReferenceCloseKeepsEmptyMinutesMissing
+    /// PURPOSE: A missing exact reference-close bar blocks NO_TRADE classification and the window stays incomplete.
+    /// WHEN CALLED: Run by xUnit.
+    /// </summary>
+    [Fact]
+    public async Task SipWindowWithoutReferenceCloseKeepsEmptyMinutesMissing()
+    {
+        var boundaries = UsEquitiesSessionCalendar.BuildRecentBoundaries(new DateOnly(2026, 10, 30), 40);
+        var bars = BuildBars(boundaries);
+        var last = boundaries[^1];
+        bars.RemoveAll(b => b.Timestamp == last.PreviousCloseBarTimestampUtc ||
+                            b.Timestamp == ToUtc(last.NextSessionDate, new TimeOnly(7, 5)));
+
+        var result = await new BoringOvernightSellWindowHistoryService(new InMemoryStore(bars)).GetHistoryAsync(
+            "RTO", "Alpaca", "sip", DateTimeOffset.Parse("2026-10-31T00:30:00Z"), CancellationToken.None);
+
+        var window = Assert.Single(result.Windows, x => x.SellSessionDate == last.NextSessionDate);
+        Assert.Null(window.ReferenceClose);
+        Assert.Equal("NOT_APPLIED_REFERENCE_CLOSE_MISSING", window.NoTradeRule);
+        Assert.Equal(1, window.MissingIntervalCount);
+        Assert.False(window.CoverageComplete);
     }
 
     [Fact]

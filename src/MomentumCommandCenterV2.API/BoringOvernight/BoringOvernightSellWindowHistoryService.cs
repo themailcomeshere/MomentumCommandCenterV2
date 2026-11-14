@@ -171,12 +171,31 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
                 .Where(x => x.Timestamp >= windowStartUtc && x.Timestamp < windowEndUtc)
                 .ToDictionary(x => x.Timestamp, x => x);
 
-            var missing = new List<DateTimeOffset>();
+            var empty = new List<DateTimeOffset>();
             for (var minute = 0; minute < MinutesPerEligibleWindow; minute++)
             {
                 var expected = windowStartUtc.AddMinutes(minute);
-                if (!barsByTimestamp.ContainsKey(expected)) missing.Add(expected);
+                if (!barsByTimestamp.ContainsKey(expected)) empty.Add(expected);
             }
+
+            // NO_TRADE rule (operator decision 2026-11-14). A minute without a bar is NO_TRADE, never priced, only when:
+            //  1. the feed is consolidated SIP (on IEX an empty minute may hide a trade on another venue);
+            //  2. the exact reference-close bar is present; and
+            //  3. the sell session's regular session has at least one bar, which shows data was delivered for that day.
+            // SIP bars are persisted only by the sell-window capture, which writes nothing unless every provider request
+            // succeeded without truncation, so an accepted window comes from clean responses. Otherwise empty minutes stay MISSING.
+            var regularOpenUtc = ToUtc(sessionDate, new TimeOnly(9, 30));
+            var regularCloseUtc = ToUtc(sessionDate, UsEquitiesSessionCalendar.GetRegularClose(sessionDate));
+            var regularSessionHasBars = barsByTimestamp.Keys.Any(t => t >= regularOpenUtc && t < regularCloseUtc);
+            var consolidated = feed.Trim().Equals("sip", StringComparison.OrdinalIgnoreCase);
+            string noTradeRule;
+            if (empty.Count == 0) noTradeRule = "NOT_NEEDED";
+            else if (!consolidated) noTradeRule = "NOT_APPLIED_PARTIAL_FEED";
+            else if (referenceBar is null) noTradeRule = "NOT_APPLIED_REFERENCE_CLOSE_MISSING";
+            else if (!regularSessionHasBars) noTradeRule = "NOT_APPLIED_NO_REGULAR_SESSION_BARS";
+            else noTradeRule = "APPLIED";
+            var noTradeCount = noTradeRule == "APPLIED" ? empty.Count : 0;
+            var missing = noTradeRule == "APPLIED" ? new List<DateTimeOffset>() : empty;
 
             var observedBars = barsByTimestamp.Values.OrderBy(x => x.Timestamp).ToArray();
             var highest = observedBars.Length == 0 ? (decimal?)null : observedBars.Max(x => (decimal)x.High);
@@ -197,7 +216,12 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
                 observedBars.LastOrDefault()?.Timestamp,
                 highest,
                 complete)
-            { LowestEligiblePrice = lowest });
+            {
+                LowestEligiblePrice = lowest,
+                NoTradeIntervalCount = noTradeCount,
+                NoTradeRule = noTradeRule,
+                NoTradeIntervalSampleUtc = noTradeRule == "APPLIED" ? empty.Take(10).ToArray() : Array.Empty<DateTimeOffset>()
+            });
         }
 
         var completeCount = windows.Count(x => x.CoverageComplete);
@@ -216,7 +240,7 @@ public sealed class BoringOvernightSellWindowHistoryService(IMarketBarObservatio
             feed.Trim().Equals("sip", StringComparison.OrdinalIgnoreCase) ? "CONSOLIDATED_SIP" : "PARTIAL_FEED",
             completeCount == RequiredWindow && feed.Trim().Equals("sip", StringComparison.OrdinalIgnoreCase),
             windows, calculatorObservations,
-            "Uses persisted 1-minute bars only. Each sell window requires all 780 exact bar-start timestamps from 07:00 through 19:59 America/New_York plus the exact prior regular-session close bar. Missing minutes and missing reference closes are not imputed. IEX is partial-exchange coverage and is never marked qualification-usable even if every timestamp exists; SIP is required for consolidated market-wide target research. Coverage is not proof of executable quotes, a limit touch, or an actual fill.");
+            "Uses persisted 1-minute bars only. Each sell window covers the 780 bar-start minutes from 07:00 through 19:59 America/New_York plus the exact prior regular-session close bar. On consolidated SIP, a minute with no bar is NO_TRADE (counted, never priced) when the reference close is present and the sell session's regular session has bars; otherwise it is MISSING. A window is complete only with zero MISSING minutes. NO_TRADE minutes cannot touch a limit; if one were really a lost bar, touch research would be conservative (understated), never overstated. Missing minutes and missing reference closes are not imputed. IEX is partial-exchange coverage and is never marked qualification-usable even if every timestamp exists; SIP is required for consolidated market-wide target research. Coverage is not proof of executable quotes, a limit touch, or an actual fill.");
     }
 
     private static DateTimeOffset ToUtc(DateOnly date, TimeOnly time)
@@ -243,6 +267,15 @@ public sealed record BoringOvernightSellWindowAudit(
     bool CoverageComplete)
 {
     public decimal? LowestEligiblePrice { get; init; }
+
+    /// <summary>Minutes without a bar classified NO_TRADE (consolidated SIP, reference close present, regular-session bars present). Never priced.</summary>
+    public int NoTradeIntervalCount { get; init; }
+
+    /// <summary>Why NO_TRADE was or was not applied: APPLIED, NOT_NEEDED, NOT_APPLIED_PARTIAL_FEED, NOT_APPLIED_REFERENCE_CLOSE_MISSING, NOT_APPLIED_NO_REGULAR_SESSION_BARS.</summary>
+    public string NoTradeRule { get; init; } = "NOT_NEEDED";
+
+    /// <summary>Up to ten NO_TRADE minute timestamps for audit.</summary>
+    public IReadOnlyList<DateTimeOffset> NoTradeIntervalSampleUtc { get; init; } = Array.Empty<DateTimeOffset>();
 }
 
 public sealed record BoringOvernightSellWindowHistoryResult(

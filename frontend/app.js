@@ -2134,10 +2134,11 @@ $("overnightCaptureSellWindow")?.addEventListener("click", async () => {
   if(!response.ok)throw new Error(data.detail||data.title||data.error||("HTTP "+response.status));
   const windows=Array.isArray(data.windows)?data.windows:[];
   const missing=windows.reduce((sum,item)=>sum+(Number(item.missingIntervalCount)||0)+(item.referenceClose===null?1:0),0);
+  const noTrade=windows.reduce((sum,item)=>sum+(Number(item.noTradeIntervalCount)||0),0);
   const complete=data.completeWindowCount??0,required=data.requiredWindow??40;
   const samples=windows.flatMap(item=>(item.missingIntervalSampleUtc||[]).map(ts=>item.sellSessionDate+": "+ts)).slice(0,5);
   const qualification=data.qualificationUsable===true&&data.allWindowsComplete===true;
-  status.textContent="Capture finished for "+symbol+" · "+complete+"/"+required+" complete windows · "+missing+" missing minute/reference observations · "+(data.fetchedBarCount??0)+" fetched / "+(data.newlyPersistedBarCount??0)+" newly stored · feed coverage "+(data.feedCoverage||"UNKNOWN")+" · qualification "+(qualification?"USABLE":"NOT USABLE")+". "+(samples.length?"Missing examples: "+samples.join(" | "):"No missing-minute samples were reported.")+" "+(data.note||"");
+  status.textContent="Capture finished for "+symbol+" · "+complete+"/"+required+" complete windows · "+missing+" missing minute/reference observations · "+noTrade+" NO_TRADE minutes (no bar on SIP; counted, never priced) · "+(data.fetchedBarCount??0)+" fetched / "+(data.newlyPersistedBarCount??0)+" newly stored · feed coverage "+(data.feedCoverage||"UNKNOWN")+" · qualification "+(qualification?"USABLE":"NOT USABLE")+". "+(samples.length?"Missing examples: "+samples.join(" | "):"No missing-minute samples were reported.")+" "+(data.note||"");
   const reason=$("overnightSellLimitReason");
   if(reason)reason.textContent=qualification
    ?"GTC_EXT SIP coverage is complete. The numeric target remains NOT CALCULATED until ATR parity is MATCH and walk-forward target-touch/adverse-excursion validation is complete. Coverage is not proof of executable quotes or fills."
