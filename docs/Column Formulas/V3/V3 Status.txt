@@ -32,15 +32,6 @@
 # DATA?: fewer than 21 daily bars loaded.
 # ============================================================
 
-script Lerp {
-    input x = 0.0;
-    input x0 = 0.0;
-    input y0 = 0.0;
-    input x1 = 1.0;
-    input y1 = 0.0;
-    plot value = y0 + (y1 - y0) * (x - x0) / (x1 - x0);
-}
-
 def r = open / close[1] - 1;
 def enoughHistory = !IsNaN(close[20]) and !IsNaN(volume[20]);
 
@@ -61,59 +52,57 @@ def consistencyPct = Average(if r >= 0 and r <= 0.02 then 1 else 0, 20) * 100;
 def volatilityPct = Sqrt(Max(0, Average(r * r, 20) - avg20 * avg20)) * 100;
 def price = close;
 
+# Point maps as clamped segment sums: no helper script and no if-chains, so the
+# column stays under Thinkorswim's real-time complexity limit. Each term adds
+# slope * (portion of x inside that segment). Same values as the C# reference.
 def ptsWin =
-    if winPct <= 60 then 0
-    else if winPct <= 70 then Lerp(winPct, 60, 0, 70, 10)
-    else if winPct <= 80 then Lerp(winPct, 70, 10, 80, 18)
-    else if winPct <= 90 then Lerp(winPct, 80, 18, 90, 25)
-    else 25;
+    1.0 * (Max(60, Min(70, winPct)) - 60)
+    + 0.8 * (Max(70, Min(80, winPct)) - 70)
+    + 0.7 * (Max(80, Min(90, winPct)) - 80);
+
 def ptsMedian =
-    if medianPct <= 0 then 0
-    else if medianPct <= 0.10 then Lerp(medianPct, 0, 0, 0.10, 8)
-    else if medianPct <= 0.25 then Lerp(medianPct, 0.10, 8, 0.25, 14)
-    else if medianPct <= 0.50 then Lerp(medianPct, 0.25, 14, 0.50, 20)
-    else 20;
+    80 * (Max(0, Min(0.10, medianPct)) - 0)
+    + 40 * (Max(0.10, Min(0.25, medianPct)) - 0.10)
+    + 24 * (Max(0.25, Min(0.50, medianPct)) - 0.25);
+
 def ptsMean =
     if meanPct < 0.10 then 0
-    else if meanPct <= 0.25 then Lerp(meanPct, 0.10, 5, 0.25, 10)
-    else if meanPct <= 0.50 then Lerp(meanPct, 0.25, 10, 0.50, 15)
-    else if meanPct <= 1.00 then Lerp(meanPct, 0.50, 15, 1.00, 10)
-    else if meanPct <= 1.50 then Lerp(meanPct, 1.00, 10, 1.50, 5)
-    else if meanPct <= 2.00 then Lerp(meanPct, 1.50, 5, 2.00, 0)
-    else 0;
+    else 5
+    + (5 / 0.15) * (Max(0.10, Min(0.25, meanPct)) - 0.10)
+    + 20 * (Max(0.25, Min(0.50, meanPct)) - 0.25)
+    - 10 * (Max(0.50, Min(2.00, meanPct)) - 0.50);
+
 def ptsFiveDay =
     if diffPp <= 0 then 0
-    else if diffPp <= 0.10 then Lerp(diffPp, 0, 5, 0.10, 7)
-    else if diffPp <= 0.50 then Lerp(diffPp, 0.10, 7, 0.50, 10)
-    else if diffPp <= 1.00 then Lerp(diffPp, 0.50, 10, 1.00, 7)
-    else if diffPp <= 3.00 then Lerp(diffPp, 1.00, 7, 3.00, 3)
-    else if diffPp <= 5.00 then Lerp(diffPp, 3.00, 3, 5.00, 0)
-    else 0;
+    else 5
+    + 20 * (Max(0, Min(0.10, diffPp)) - 0)
+    + 7.5 * (Max(0.10, Min(0.50, diffPp)) - 0.10)
+    - 6 * (Max(0.50, Min(1.00, diffPp)) - 0.50)
+    - 2 * (Max(1.00, Min(3.00, diffPp)) - 1.00)
+    - 1.5 * (Max(3.00, Min(5.00, diffPp)) - 3.00);
+
 def ptsConsistency =
-    if consistencyPct <= 60 then 0
-    else if consistencyPct <= 70 then Lerp(consistencyPct, 60, 0, 70, 5)
-    else if consistencyPct <= 80 then Lerp(consistencyPct, 70, 5, 80, 8)
-    else if consistencyPct <= 90 then Lerp(consistencyPct, 80, 8, 90, 10)
-    else 10;
+    0.5 * (Max(60, Min(70, consistencyPct)) - 60)
+    + 0.3 * (Max(70, Min(80, consistencyPct)) - 70)
+    + 0.2 * (Max(80, Min(90, consistencyPct)) - 80);
+
 def ptsVolatility =
-    if volatilityPct <= 0.25 then 10
-    else if volatilityPct <= 0.50 then Lerp(volatilityPct, 0.25, 10, 0.50, 8)
-    else if volatilityPct <= 1.00 then Lerp(volatilityPct, 0.50, 8, 1.00, 5)
-    else if volatilityPct <= 1.50 then Lerp(volatilityPct, 1.00, 5, 1.50, 2)
-    else if volatilityPct <= 2.00 then Lerp(volatilityPct, 1.50, 2, 2.00, 0)
-    else 0;
+    10
+    - 8 * (Max(0.25, Min(0.50, volatilityPct)) - 0.25)
+    - 6 * (Max(0.50, Min(1.50, volatilityPct)) - 0.50)
+    - 4 * (Max(1.50, Min(2.00, volatilityPct)) - 1.50);
+
 def ptsVolume =
     if avgVolumePrior20 < 500000 then 0
-    else if avgVolumePrior20 <= 750000 then Lerp(avgVolumePrior20, 500000, 1, 750000, 2)
-    else if avgVolumePrior20 <= 1000000 then Lerp(avgVolumePrior20, 750000, 2, 1000000, 3)
-    else if avgVolumePrior20 <= 2000000 then Lerp(avgVolumePrior20, 1000000, 3, 2000000, 5)
-    else 5;
+    else 1
+    + (Max(500000, Min(1000000, avgVolumePrior20)) - 500000) / 250000
+    + (Max(1000000, Min(2000000, avgVolumePrior20)) - 1000000) / 500000;
+
 def ptsPrice =
-    if price <= 5 then 0
-    else if price <= 10 then Lerp(price, 5, 0, 10, 1)
-    else if price <= 25 then Lerp(price, 10, 1, 25, 3)
-    else if price <= 50 then Lerp(price, 25, 3, 50, 5)
-    else 5;
+    0.2 * (Max(5, Min(10, price)) - 5)
+    + (2 / 15) * (Max(10, Min(25, price)) - 10)
+    + 0.08 * (Max(25, Min(50, price)) - 25);
+
 def boringness = ptsWin + ptsMedian + ptsMean + ptsFiveDay
     + ptsConsistency + ptsVolatility + ptsVolume + ptsPrice;
 

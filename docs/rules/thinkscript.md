@@ -67,3 +67,12 @@ Do not claim a fix, runtime success, or signal improvement without the correspon
 - A scan/watchlist column must not be described as equivalent to a chart study unless its aggregation and required secondary data have been verified.
 - Keep current state, historical event, entry eligibility, opportunity quality, and position-management state visibly distinct.
 - Keep diagnostic text concise enough to read on the chart, and document abbreviations/codes in the source or companion documentation.
+
+## 8. Watchlist column complexity limit (added 2026-11-16)
+
+Thinkorswim rejects custom watchlist columns whose expression graph is too large with `TooComplexException: The complexity of the expression suggests that it may not be reliable with real-time data.` This happened to the first V3 Boringness and V3 Status columns, which called a `script` helper about 30 times with arguments derived from 20-bar averages.
+
+- NEVER call a user `script` repeatedly in a watchlist column. Thinkorswim inlines the script and its argument expressions at every call, so the cost multiplies.
+- ALWAYS write piecewise-linear maps as clamped segment sums: `slope * (Max(lo, Min(hi, x)) - lo)` per segment. Do not use long `if … else if` chains.
+- ALWAYS compute each rolling statistic once in a `def` and reuse the `def`.
+- ALWAYS hand the operator one column at a time when complexity is uncertain, and state that a repository file is not proof of compilation.

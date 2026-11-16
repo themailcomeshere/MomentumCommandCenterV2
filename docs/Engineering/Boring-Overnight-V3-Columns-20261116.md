@@ -92,7 +92,12 @@
 - **My interpretation, to be confirmed by you:** the contract's "≥ +3.00 pp = 0–3 points" for the 5D component is implemented as 3 at +3.00 pp, falling to 0 at +5.00 pp.
 - **Price gate (decided 2026-11-16):** exactly $5.00 passes, only prices below $5 block. Applied to the V3 columns, the C# reference, MCC's READY evaluator and the Dashboard Daily gate.
 - **Watchlist sorting with labels:** whether Thinkorswim sorts by the plot value or the label text is Data not found in sources. Check by sorting the column.
-- **Thinkorswim functions used:** `Median`, `TrueRange`, `AsText` with `NumberFormat.TWO_DECIMAL_PLACES`, a `script` helper (`Lerp`) and `AssignBackgroundColor`. All are standard ThinkScript, but compilation has not been run.
+- **Thinkorswim functions used:** `Median`, `TrueRange`, `Max`/`Min`, `Sqrt`, `AsText` with `NumberFormat.TWO_DECIMAL_PLACES` and `AssignBackgroundColor`.
+- **Compile history (operator, 2026-11-16):**
+  - The first V3 Boringness and V3 Status failed with `TooComplexException`, because about 30 calls to a `Lerp` helper script were each inlined.
+  - Both were rewritten with clamped segment sums (no helper, no if-chains). The values are identical: checked against the anchor maps on a 20,001-point grid per component, maximum difference 1.8e-15.
+  - V3 Edge was not reported as failing.
+  - Rule added: `docs/rules/thinkscript.md` §8.
 - **Not in Thinkorswim:**
   - catalyst/news, the exclusion list, data freshness, 5M permission and the buy window (MCC READY check);
   - the GTC_EXT sell-limit history (MCC's sell-limit gate).
