@@ -119,8 +119,9 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 ## 2a. Repository location (moved 2026-11-16)
 
 - [x] **[Repo]** Copied the repository to `D:\source\repos\MomentumCommandCenterV2` (bin/obj excluded) and `MCC-Backups` (3 backups, 1.93 GB) and `MCC-Reviews` to `D:\source\repos\`. SHA-256 check: 1,600 repo files, 51 backup files and 1 review file identical. Same HEAD `1e48dd7`, clean status, `git fsck` OK, 423/423 tests from D:. Not copied: 5 locked Visual Studio index files in `.vs` (rebuilt by Visual Studio). `Backup-MccData.ps1` and `New-CatalystReviewQueue.ps1` now default to the `MCC-Backups` / `MCC-Reviews` folders next to the repository folder.
-- [ ] **[Operator]** Close Visual Studio, reopen the solution from `D:\source\repos\MomentumCommandCenterV2`, and start MCC from there (`.\scripts\MCC.ps1 start`).
-- [ ] **[Operator]** After confirming D: works, approve removal of the C: copies (`C:\Users\jampo\source\repos\MomentumCommandCenterV2`, `C:\Users\jampo\OneDrive\Documentos\MCC-Backups`, `C:\Users\jampo\OneDrive\Documentos\MCC-Reviews`).
+- [x] **[Operator]** D: tested by the operator 2026-11-16 ("D: works"); Visual Studio now has the D: solution open.
+- [x] **[Repo]** 2026-11-16: `C:\Users\jampo\OneDrive\Documentos\MCC-Backups` and `\MCC-Reviews` sent to the Recycle Bin (operator approval). Not permanently deleted; OneDrive keeps its own recycle-bin copy.
+- [ ] **[Operator]** Remove `C:\Users\jampo\source\repos\MomentumCommandCenterV2`: the Recycle Bin move failed with "in use" because the Claude session working in that folder holds it open (about 4 files had already gone to the Recycle Bin). Close that session, then delete the folder in File Explorer (it goes to the Recycle Bin). Empty the Recycle Bin to free the space on C:.
 
 ## 2b. Intraday workflow alignment (operator walkthrough 2026-11-16)
 
