@@ -40,3 +40,4 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 - NEVER impute missing bars, sessions, prices, timestamps, ATR observations, reference closes or catalyst facts; no nearest-bar substitution.
 - Zero news is UNKNOWN, not CLEAR. Research results (Boring Winner PASS, research quantiles) are never READY, a quote, or a trade instruction.
 - Schwab integration and broker reconciliation are parked; do not start them.
+- NEVER reuse an intraday momentum gate (5M permission/structure, 1M execution) as a hard gate for a Boring Overnight decision without an explicit operator decision. Before calling a multi-gate signal "built", replay it on at least one real candidate snapshot and show which gates would pass or fail. Added 2026-11-16 after READY blocked every boring candidate on "5M permission NO".
