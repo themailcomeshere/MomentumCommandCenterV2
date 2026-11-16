@@ -74,6 +74,22 @@ public sealed class BoringOvernightEvaluatorTests
         Assert.Contains("symbol", result.MissingInputs);
     }
 
+    /// <summary>
+    /// PURPOSE: Price gate boundary (operator decision 2026-11-16): exactly $5.00 passes, $4.99 blocks.
+    /// The SMA20 is set below both prices so only the price gate is tested.
+    /// WHEN CALLED: By xUnit once per row.
+    /// </summary>
+    [Theory]
+    [InlineData(5.00, "READY")]
+    [InlineData(4.99, "BLOCKED")]
+    public void PriceGateBoundary_FiveDollarsPasses(double price, string expectedStatus)
+    {
+        var result = BoringOvernightEvaluator.Evaluate(ReadyRequest() with { Price = price, Sma20 = 4.90 });
+
+        Assert.Equal(expectedStatus, result.Status);
+        Assert.Equal(price < 5, result.Blockers.Any(x => x.Contains("at least $5", StringComparison.Ordinal)));
+    }
+
     private static BoringOvernightEvaluationRequest ReadyRequest() => new(
         "TEST", true, 25, 24, 1_000_000, 75, 0.45, 0.65, 0.40, 0.25,
         false, "CLEAR", true, "BULLISH", "EXECUTION READY", 0.8, 1.2, 1.8, 1.5);

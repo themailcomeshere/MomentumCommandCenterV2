@@ -108,7 +108,7 @@ public sealed class BoringOvernightV3CalculatorTests
         Assert.Equal(plain.OvernightEdgeScore, withExtra.OvernightEdgeScore);
     }
 
-    /// <summary>PURPOSE: Price at or below $5 blocks (MCC evaluator rule: price must be above $5). WHEN CALLED: By xUnit.</summary>
+    /// <summary>PURPOSE: A price below $5 blocks. WHEN CALLED: By xUnit.</summary>
     [Fact]
     public void LowPrice_Blocks()
     {
@@ -116,6 +116,20 @@ public sealed class BoringOvernightV3CalculatorTests
 
         Assert.Equal("BLOCKED", r.Status);
         Assert.Contains("GATE_PRICE_BELOW_MIN", r.Reasons);
+    }
+
+    /// <summary>
+    /// PURPOSE: Price gate boundary (operator decision 2026-11-16): $5.00 passes, $4.99 blocks; $5.00 scores 0 price points.
+    /// WHEN CALLED: By xUnit once per row.
+    /// </summary>
+    [Theory]
+    [InlineData(5.00, false)]
+    [InlineData(4.99, true)]
+    [InlineData(5.01, false)]
+    public void PriceGate_FiveDollarsPasses(double price, bool blocks)
+    {
+        Assert.Equal(blocks, BoringOvernightV3Calculator.PriceGateBlocks((decimal)price));
+        Assert.Equal(0m, BoringOvernightV3Calculator.PricePoints(5.00m));
     }
 
     /// <summary>PURPOSE: Average volume below 500,000 blocks and scores 0 volume points. WHEN CALLED: By xUnit.</summary>

@@ -13,7 +13,7 @@
 # exclusion list, data freshness, 5M permission, buy window). Not an order.
 #
 # BLOCKED (hard gates, checked in this order):
-#   PRICE<=5     close is $5.00 or less (MCC evaluator: price must be above $5)
+#   PRICE<5      close below $5.00 (exactly $5.00 passes; operator decision 2026-11-16)
 #   AVGVOL<500K  average volume of the prior 20 sessions below 500,000
 #   WIN<60       fewer than 60% of the last 20 overnight returns were > 0
 #   AVG<0.10     20-session mean overnight return below +0.10%
@@ -123,7 +123,7 @@ def rangePct = (high - low) / close[1] * 100;
 def volumeRatio = volume / avgVolumePrior20;
 
 # ---------- Gates and cautions ----------
-def gPrice = close <= 5;
+def gPrice = close < 5;
 def gVolume = avgVolumePrior20 < 500000;
 def gWin = win20 < 0.60;
 def gMean = avg20 < 0.001;
@@ -151,7 +151,7 @@ plot StatusValue = statusCode;
 AddLabel(yes,
     (if statusCode == 0 then "DATA? <21 BARS"
      else if statusCode == 1 then "BLOCKED " +
-        (if gPrice then "PRICE<=5"
+        (if gPrice then "PRICE<5"
          else if gVolume then "AVGVOL<500K"
          else if gWin then "WIN<60"
          else if gMean then "AVG<0.10"

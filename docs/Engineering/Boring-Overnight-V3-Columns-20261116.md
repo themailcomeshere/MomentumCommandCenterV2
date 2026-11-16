@@ -30,7 +30,7 @@
   - mean (20 and 5) and median (20) of `r`.
 - **Edge gates:** win rate ≥ 60%, 20D mean ≥ +0.10%, and 5D mean strictly above the 20D mean.
 - **Other hard gates:**
-  - close above $5 (MCC's evaluator rule; the data contract says ≥ $5);
+  - close at least $5.00 (exactly $5.00 passes; operator decision 2026-11-16, same in MCC's evaluator);
   - average volume of the **prior** 20 sessions ≥ 500,000;
   - close above the 20-session SMA.
 - **Boringness points** (`BORING-0.1-PROVISIONAL`, contract §10A), interpolated linearly between anchors:
@@ -90,7 +90,7 @@
 
 - **Provisional numbers.** The point maps and bands come from the 2026-10-23 contract and aren't calibrated. Freeze them only after labelled historical cases (contract §12.2).
 - **My interpretation, to be confirmed by you:** the contract's "≥ +3.00 pp = 0–3 points" for the 5D component is implemented as 3 at +3.00 pp, falling to 0 at +5.00 pp.
-- **Price gate:** MCC's evaluator blocks at **≤ $5** while the contract says **≥ $5** passes. V3 follows MCC. Tell me if $5.00 exactly should pass.
+- **Price gate (decided 2026-11-16):** exactly $5.00 passes, only prices below $5 block. Applied to the V3 columns, the C# reference, MCC's READY evaluator and the Dashboard Daily gate.
 - **Watchlist sorting with labels:** whether Thinkorswim sorts by the plot value or the label text is Data not found in sources. Check by sorting the column.
 - **Thinkorswim functions used:** `Median`, `TrueRange`, `AsText` with `NumberFormat.TWO_DECIMAL_PLACES`, a `script` helper (`Lerp`) and `AssignBackgroundColor`. All are standard ThinkScript, but compilation has not been run.
 - **Not in Thinkorswim:**

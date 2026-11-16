@@ -52,7 +52,7 @@ The earlier 2026-11-06 close differences are gone: that older reference row had 
 
 1. **BUY_WINDOW:** final regular hour (`MarketSessionClock`).
 2. **QUALIFICATION_SNAPSHOT:** a capture-history snapshot at most 10 minutes old. The READY panel runs the capture before each check.
-3. **QUALIFICATION:** the existing qualification evaluator must return READY (not WATCH): price above $5 and above SMA20, ADV20 ≥ 500K, overnight win rate 60–100%, 20D average ≥ +0.10%, 5D > 20D, 5M permission YES, 5M structure BULLISH, 1M state not SELL/GET OUT/BLOCK, fresh Daily and intraday data, no warnings (extension ≥ 2 ATR, volume ≥ 3×, range > 1.5 ATR, current overnight ≥ 3%).
+3. **QUALIFICATION:** the existing qualification evaluator must return READY (not WATCH): price at least $5 (exactly $5.00 passes, decided 2026-11-16) and above SMA20, ADV20 ≥ 500K, overnight win rate 60–100%, 20D average ≥ +0.10%, 5D > 20D, 5M permission YES, 5M structure BULLISH, 1M state not SELL/GET OUT/BLOCK, fresh Daily and intraday data, no warnings (extension ≥ 2 ATR, volume ≥ 3×, range > 1.5 ATR, current overnight ≥ 3%).
 4. **EXCLUSION:** not on the exclusion watchlist.
 5. **CATALYST:** per decision 7.
 6. **SELL_LIMIT (revised 2026-11-14):** requires the SIP 40-window history, the reference close and the walk-forward gates (touch rate and adverse excursion). The four Thinkorswim ATR gates are **informational** (`4eafc9b`); ATR never changed the price. During the buy window the day's close does not exist yet, so the tested target % is applied to the **latest trade (at most 2 minutes old)**: limit = latest trade × (1 + target %). Re-check it against your actual fill.

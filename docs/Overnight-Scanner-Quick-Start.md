@@ -28,7 +28,7 @@ Use `docs/BoringOvernight.md` as the strategy definition. The current provisiona
 - 20-session average overnight return at least +0.10%.
 - 5-session average overnight return strictly greater than the 20-session average under the current cheat-sheet rule.
 - Median overnight return positive and reasonably close to the mean; a high mean with a weak median can be an outlier effect.
-- Price above $5.
+- Price at least $5 (exactly $5.00 passes).
 - 20-session average daily volume at least 500,000 shares.
 - Price above the 20-day SMA.
 - Not on the maintained Schwab exclusion/unavailable lists.

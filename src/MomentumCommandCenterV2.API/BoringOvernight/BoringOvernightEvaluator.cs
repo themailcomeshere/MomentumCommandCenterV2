@@ -56,7 +56,8 @@ public static class BoringOvernightEvaluator
 
         if (r.Price is null) missing.Add("price");
         else if (r.Price.Value <= 0) blockers.Add("Price is invalid.");
-        else if (r.Price.Value <= 5) blockers.Add("Price must be above $5.");
+        // Operator decision 2026-11-16: a price of exactly $5.00 passes (data contract: price >= $5.00).
+        else if (r.Price.Value < 5) blockers.Add("Price must be at least $5.");
 
         if (r.Sma20 is null or <= 0) missing.Add("sma20");
         if (r.Price is > 0 && r.Sma20 is > 0 && r.Price.Value <= r.Sma20.Value)

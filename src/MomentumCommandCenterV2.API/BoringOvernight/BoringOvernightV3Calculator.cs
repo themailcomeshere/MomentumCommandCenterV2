@@ -129,7 +129,7 @@ public static class BoringOvernightV3Calculator
         var band = Band(boringness);
 
         var blocked = new List<string>();
-        if (close <= 5m) blocked.Add("GATE_PRICE_BELOW_MIN");
+        if (PriceGateBlocks(close)) blocked.Add("GATE_PRICE_BELOW_MIN");
         if (avgVolumePrior < 500_000m) blocked.Add("GATE_AVG_VOLUME_BELOW_MIN");
         if (winRate < 0.60m) blocked.Add("GATE_ON_WIN_RATE_BELOW_MIN");
         if (avg20 < 0.001m) blocked.Add("GATE_ON_MEAN_BELOW_MIN");
@@ -154,6 +154,13 @@ public static class BoringOvernightV3Calculator
             close, sma20, aboveSma, avgVolumePrior, consistency * 100m, volatilityPct, rangePct, atrPct, volumeRatio,
             boringness, band, components, Note);
     }
+
+    /// <summary>
+    /// PURPOSE: Price hard gate: blocks only below $5.00; exactly $5.00 passes (operator decision 2026-11-16,
+    /// data contract price >= $5.00). Same rule as BoringOvernightEvaluator.
+    /// WHEN CALLED: By <see cref="Calculate"/> and tests.
+    /// </summary>
+    public static bool PriceGateBlocks(decimal price) => price < 5m;
 
     /// <summary>PURPOSE: Win-rate points: 60%=0, 70%=10, 80%=18, 90%+=25. WHEN CALLED: By <see cref="Calculate"/> and tests.</summary>
     public static decimal WinPoints(decimal winPct) => Piecewise(winPct, (60m, 0m), (70m, 10m), (80m, 18m), (90m, 25m));

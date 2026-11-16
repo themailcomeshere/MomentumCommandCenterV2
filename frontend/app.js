@@ -915,7 +915,7 @@ async function renderOvernightQualification(){
   const dailyUsable=daily?.qualificationUsable===true;
   const price=dailyUsable&&daily.price!==null&&daily.price!==undefined&&Number.isFinite(Number(daily.price))?Number(daily.price):null;
   const averageVolume=dailyUsable&&daily.averageDailyVolume20!==null&&daily.averageDailyVolume20!==undefined&&Number.isFinite(Number(daily.averageDailyVolume20))?Number(daily.averageDailyVolume20):null;
-  const dailyGate=price!==null&&averageVolume!==null?(price<=5||averageVolume<500000?"FAIL":"PASS"):"DATA?";
+  const dailyGate=price!==null&&averageVolume!==null?(price<5||averageVolume<500000?"FAIL":"PASS"):"DATA?";
   const catalystStatus=catalyst?.status||"UNKNOWN";
   const catalystLabel=live.catalystError?"ERROR · "+live.catalystError:!catalyst?(live.dailyError||live.daily?"NOT LOADED":"NOT FETCHED"):catalystStatus+(catalyst.coverageComplete===false?" · COVERAGE INCOMPLETE":"");
   const catalystRisk=catalystStatus==="RISK_PRESENT";
