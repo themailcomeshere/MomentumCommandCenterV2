@@ -119,7 +119,7 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 ## 2b. Intraday workflow alignment (operator walkthrough 2026-11-16)
 
 Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md).
-- [x] **[Repo]** Step numbers on the Dashboard for both modes (INTRADAY 0–7, OVERNIGHT 0–6). They are `data-step-*` attributes; each mode shows only its own badges. Verified in the browser pane (static preview): 18 intraday and 21 overnight badges render, in page order.
+- [x] **[Repo]** (`6b74cdf`, CI `43889621585` SUCCESS, 398/398) Step numbers on the Dashboard for both modes (INTRADAY 0–7, OVERNIGHT 0–6). They are `data-step-*` attributes; each mode shows only its own badges. Verified in the browser pane (static preview): 18 intraday and 21 overnight badges render, in page order.
 - [ ] **[Repo]** Make the TOS watchlist CSV import available in INTRADAY MOMENTUM (step 2.d). Today the only import is inside Boring Overnight.
 - [ ] **[Repo]** Reorder both layouts by step number (Red Zone at the top in Intraday), and hide intraday-only panels in Boring Overnight.
 - [ ] **[Repo]** Red Zone state colours matching the TOS studies (WAIT grey, PREPARE yellow, EXECUTION READY green, RUNNER WANING / PREPARE TO SELL yellow, SWING orange, SELL / GET OUT red), plus alerts on state transitions.
