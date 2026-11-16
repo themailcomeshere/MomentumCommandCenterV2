@@ -19,9 +19,10 @@ How to read a number: `2` is a phase, `2.1` a step inside it, and `2.a` / `2.b` 
 | 1.1 | Morning brief (dialog) | Header button **Morning Command Brief** | 07:30 | Partial |
 | 1.2 | Morning snapshot (collapsed panel) | **Morning Command Brief** panel, top of page | 07:30 | Partial |
 | **2** | **Load candidates** (choose any) | | | |
-| 2.a | Import your TOS Watchlist CSV | **Import a Thinkorswim CSV** bar, near the top | after your TOS scans, any time | **Built 2026-11-16** (shared with Overnight step 1) |
-| 2.b | Alpaca top movers / API symbol scan | **Discovery tools** (collapsed) → **SCANNER WORKBENCH** | optional | Partial: top-50 movers only |
-| 2.c | Local watchlist | **Discovery tools** → **WATCHLIST** | optional | Built (browser only) |
+| 2.a | MCC automatic scan (your scans 1, 2A, 2B, Pivot, D on free data); **Feed Red Zone** sends the top flagged symbols to the Red Zone | **Automatic momentum scan** panel, near the top | runs every 2 min, 07:30–14:00 AZ | **Built 2026-11-16** ([design and limits](MCC-Auto-Scanner-20261116.md)) |
+| 2.b | Import your TOS Watchlist CSV (also records the side-by-side comparison with 2.a) | **Import a Thinkorswim CSV** bar | after your TOS scans, any time | Built (shared with Overnight step 1) |
+| 2.c | Alpaca top movers / API symbol scan | **Discovery tools** (collapsed) → **SCANNER WORKBENCH** | optional | Partial: top-50 movers only |
+| 2.d | Local watchlist | **Discovery tools** → **WATCHLIST** | optional | Built (browser only) |
 | **3** | **Exclusions** | **EXCLUSIONS · API-BACKED** (collapsed) | as needed | Built |
 | **4** | **Red Zone: best 1–4, auto-refreshing** | **TOP CANDIDATES · Red Zone** | during session | Built: automatic mode takes the first four imported symbols (by a Score column if present, otherwise TOS watchlist order); cards refresh every 15 s |
 | 4.1 | Live ranking of the imported pool | **Rank quality pool · top 50** | during session | Built |
@@ -41,7 +42,7 @@ How to read a number: `2` is a phase, `2.1` a step inside it, and `2.a` / `2.b` 
 | Step | What | Where on the Dashboard | When (AZ) | Status |
 |---|---|---|---|---|
 | **0** | **Setup** (header; the clock shows the buy window and the next GTC_EXT sell window) | 0.1–0.3 | | Built |
-| **1** | **Import the TOS Overnight scanner CSV** | **Import a Thinkorswim CSV** bar (same bar as Intraday 2.a) | before 13:00 | Built |
+| **1** | **Import the TOS Overnight scanner CSV** | **Import a Thinkorswim CSV** bar (same bar as Intraday 2.b) | before 13:00 | Built |
 | **2** | **Shortlist and qualify** | | | |
 | 2.1 | Historical shortlist | Red Zone (labelled **BORING OVERNIGHT · HISTORICAL SHORTLIST**) | after import | Built |
 | 2.2 | Exclusion watchlist | **EXCLUSIONS** | as needed | Built |
@@ -54,7 +55,7 @@ How to read a number: `2` is a phase, `2.1` a step inside it, and `2.a` / `2.b` 
 | **5** | **Act in Schwab**: buy in the final hour; GTC_EXT limit sell at MCC's limit | Schwab | 13:00–14:00 | Manual by design |
 | **6** | **Optional research** (6.1 SPY control test, 6.2 TOS Daily OHLC parity, 6.3 Provider comparison) | after READY | rarely | Built |
 
-Hidden in Boring Overnight (intraday-only): morning snapshot, Discovery tools, decision explanation, timeframe handoff, intraday metric cards. The Overnight field-availability report is hidden in Intraday.
+Hidden in Boring Overnight (intraday-only): morning snapshot, automatic scan, Discovery tools, decision explanation, timeframe handoff, intraday metric cards. The Overnight field-availability report is hidden in Intraday.
 ## Layout problems the numbering exposed (2026-11-16) and their status
 
 1. **No import in Intraday:** fixed. The import is a shared bar, Intraday 2.a / Overnight 1.
@@ -67,7 +68,7 @@ Hidden in Boring Overnight (intraday-only): morning snapshot, Discovery tools, d
 
 | You want | MCC today | Gap |
 |---|---|---|
-| MCC scans for you (scanners 1, 2A, 2B, Momentum Pivot, D) and builds the watchlist | Candidates come from your TOS watchlist CSV import (now in both modes), Alpaca's top-50 movers list, or symbols you type | Your scanner formulas (`docs/Scanners/`) are **not** implemented in MCC, and MCC has no market-wide universe to run them over |
+| MCC scans for you (scanners 1, 2A, 2B, Momentum Pivot, D) and builds the watchlist | **Built 2026-11-16 (free data):** your five scans run every 2 min over Alpaca's most-active and top-gainer lists | Not market-wide (only those lists); volume-surge checks use IEX volume. A 5-session side-by-side with your TOS imports measures the gap |
 | Red Zone = best 4 right now, auto-refreshing | Automatic mode exists; it ranks the imported scanner score or Alpaca discoveries, and cards refresh every 15 s | Good mechanics; the input quality is limited by the gap above |
 | Clear colour-coded states: heating up / EXECUTION READY / winding down / sell now | **Built 2026-11-16:** cards coloured like the TOS labels, with transition sounds; sell-side states need **Mark holding**. Before that, MCC computed 9 states (`SignalState`: NoTrade, PrepareBuy, Buy, Runner, RunnerWaning, PrepareSell, ConfirmedWeakness, Breakdown, Exit) and shows them as text, with 3 generic colours | Your TOS studies colour each state. 1M: WAIT grey, PREPARE yellow, EXECUTION READY green, EXECUTION EXPIRED yellow, SWING RECLAIM orange, PREPARE TO SELL yellow, all SELL/GET OUT states red. 5M: RUNNER RISING/RUNNER green, RUNNER WANING yellow, SWING ZONE orange. MCC does not mirror those colours, and does not alert per state change |
 | States match your installed TOS studies | MCC's V2 engine reproduces the studies' logic from Alpaca bars | Parity with the installed 1M/5M studies is **not evidenced** (To-Do §5) |
@@ -80,7 +81,7 @@ Hidden in Boring Overnight (intraday-only): morning snapshot, Discovery tools, d
 1. ~~Intraday import~~: done 2026-11-16.
 2. ~~Reorder both layouts~~: done 2026-11-16.
 3. ~~State colours and alerts on Red Zone cards~~: done 2026-11-16 (`8a27531`). Not mirrored: SWING RECLAIM / SWING ZONE (orange) and EXECUTION EXPIRED, which the V2 engine does not compute.
-4. **Automatic scanning:** implement scanners 1, 2A, 2B, Momentum Pivot and D as MCC rules. This first needs a decision on the live data source, because IEX cannot reproduce TOS volume-based scans.
+4. ~~Automatic scanning (free data)~~: done 2026-11-16 (`a942074`). Next: 5-session side-by-side, then the data-source and rule-improvement decisions ([MCC-Auto-Scanner-20261116.md](MCC-Auto-Scanner-20261116.md)).
 5. **1M/5M parity evidence** against the installed studies.
 
 Boring Overnight keeps running in shadow mode in the meantime.

@@ -60,7 +60,7 @@
 - The operator's **daily core is INTRADAY MOMENTUM from 07:30 AZ**: TOS scanners 1, 2A, 2B, Momentum Pivot and D → Watchlist → charts → act on states in Schwab. The goal is for MCC to scan automatically, keep a 1–4 symbol Red Zone, and show colour-coded states. Boring Overnight is the secondary, nightly workflow.
 - Added: step-number badges in both modes, colour-coded ranking reasons, and [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md), a numbered map that lists the layout problems and gaps with a proposed order of work.
 - Key gaps: no TOS CSV import in Intraday mode; layout order runs backwards; states are not coloured like the TOS studies; scanners not implemented; live data is IEX only.
-- Later on 2026-11-16: shared TOS import bar and reordered layouts (`037a9ce`); Red Zone state colours, HOLDING toggle and transition sounds (`8a27531`). The live engine had always run with `hasPosition=false`, so sell states never showed; `heldPositionDecision` fixes that for cards marked HOLDING. Cache keys `?v=20261116-state-colors-v1`.
+- Later on 2026-11-16: shared TOS import bar and reordered layouts (`037a9ce`); Red Zone state colours, HOLDING toggle and transition sounds (`8a27531`). The live engine had always run with `hasPosition=false`, so sell states never showed; `heldPositionDecision` fixes that for cards marked HOLDING. Automatic scanner on free data (`a942074`, Intraday step 2.a; TOS import renumbered 2.b): [MCC-Auto-Scanner-20261116.md](Engineering/MCC-Auto-Scanner-20261116.md). Cache keys `?v=20261116-auto-scan-v1`.
 - Operator Step 3 result: the exclusion test passed (the `EXCLUDED_WATCHLIST` reason appeared, and disappeared after removal).
 
 ## Operator sequence
