@@ -1906,3 +1906,8 @@ body.boring-overnight-mode #redZoneStateLegend,body.boring-overnight-mode #redZo
 /* READY late window: operator-entered after-hours price (2026-11-16) */
 .ready-operator-price{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
 .ready-operator-price .ready-price{width:110px}
+
+/* READY card: inline catalyst review (2026-11-16) */
+.ready-review{display:grid;gap:6px;margin:8px 0;padding:8px;border:1px dashed var(--line);border-radius:8px}
+.ready-review-head a{color:var(--blue);margin:0 4px}
+.ready-review-notes{width:100%;min-height:44px}

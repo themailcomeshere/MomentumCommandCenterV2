@@ -212,7 +212,8 @@ public static class BoringOvernightReadyEvaluator
             input.Clock.OvernightBuyWindowStartUtc, input.Clock.OvernightBuyDeadlineUtc,
             limit, referenceClose, targetPct, catalyst.State, gates, warnings.Distinct().ToArray(), actions.Distinct().ToArray(),
             "READY is decision support only. MCC never submits an order; position size is the operator's decision. A tested limit is a research target from SIP history; an UNTESTED limit is the operator's heuristic. A touch is not a fill.",
-            entryWindow, input.Clock.OvernightLateBuyDeadlineUtc, limitBasis, qualificationNotes.Distinct().ToArray());
+            entryWindow, input.Clock.OvernightLateBuyDeadlineUtc, limitBasis, qualificationNotes.Distinct().ToArray(),
+            catalyst.ReviewArticles ?? Array.Empty<ReadyReviewArticle>());
     }
 
     /// <summary>Gate states.</summary>
@@ -261,6 +262,7 @@ public static class ReadyCatalystGate
 
         var blocked = new List<string>();
         var needsReview = new List<string>();
+        var reviewArticles = new List<ReadyReviewArticle>();
         var warnings = new List<string>();
         foreach (var article in evidence.Articles)
         {
@@ -289,17 +291,21 @@ public static class ReadyCatalystGate
                         blocked.Add($"Unreviewed risk-phrase article: \"{headline}\" (a NON_MATERIAL/IRRELEVANT review lifts this).");
                     else
                         needsReview.Add(headline);
+                    // Every unreviewed or UNCERTAIN article can be labelled directly on the READY card.
+                    if (label is null or "UNCERTAIN")
+                        reviewArticles.Add(new ReadyReviewArticle(article.Id, article.Headline, article.Url, article.PublishedAtUtc,
+                            article.Severity, article.Categories ?? Array.Empty<string>(), evidence.Provider, evidence.RuleSetVersion, label));
                     break;
             }
         }
 
         if (blocked.Count > 0)
             return new("BLOCKED", BoringOvernightReadyEvaluator.GateBlocked, string.Join(" ", blocked), warnings,
-                Array.Empty<string>());
+                Array.Empty<string>(), reviewArticles);
         if (needsReview.Count > 0)
             return new("NEEDS_REVIEW", BoringOvernightReadyEvaluator.GateFail,
                 $"{needsReview.Count} article(s) need a human review label first.", warnings,
-                needsReview.Select(h => $"Review and label: \"{h}\".").ToArray());
+                needsReview.Select(h => $"Review and label: \"{h}\" (label it on this card).").ToArray(), reviewArticles);
 
         var newsSummary = evidence.Articles.Count == 0
             ? "No news returned in the window (UNKNOWN, not CLEAR)."
@@ -368,7 +374,16 @@ public sealed record ReadyGate(string Code, string State, string Detail);
 /// WHEN CALLED: Produced by ReadyCatalystGate.
 /// </summary>
 public sealed record ReadyCatalystResult(string State, string GateState, string Detail,
-    IReadOnlyList<string> Warnings, IReadOnlyList<string> Actions);
+    IReadOnlyList<string> Warnings, IReadOnlyList<string> Actions, IReadOnlyList<ReadyReviewArticle>? ReviewArticles = null);
+
+/// <summary>
+/// TYPE: ReadyReviewArticle
+/// PURPOSE: An article on a READY card that still needs a human label (unreviewed or UNCERTAIN), with what the
+/// Dashboard needs to post the review to /api/market-data/catalyst-reviews.
+/// WHEN CALLED: Produced by ReadyCatalystGate; rendered by the READY card (added 2026-11-16).
+/// </summary>
+public sealed record ReadyReviewArticle(string? Id, string Headline, string? Url, DateTimeOffset? PublishedAtUtc,
+    string Severity, IReadOnlyList<string> Categories, string Source, string RuleSetVersion, string? CurrentLabel);
 
 /// <summary>
 /// TYPE: ReadyEvaluation
@@ -399,4 +414,5 @@ public sealed record ReadyEvaluation(
     string EntryWindow = "CLOSED",
     DateTimeOffset LateBuyDeadlineUtc = default,
     string? LimitBasis = null,
-    IReadOnlyList<string>? QualificationNotes = null);
+    IReadOnlyList<string>? QualificationNotes = null,
+    IReadOnlyList<ReadyReviewArticle>? ArticlesToReview = null);

@@ -215,6 +215,24 @@ public sealed class BoringOvernightReadyTests
         Assert.Null(r.CalculatedLimitSell);
     }
 
+    /// <summary>
+    /// Inline review (2026-11-16): unreviewed and UNCERTAIN articles are listed for labelling on the READY card;
+    /// articles with a final label are not.
+    /// </summary>
+    [Fact]
+    public void CatalystGate_ListsArticlesToReview()
+    {
+        var evidence = Evidence(Article("u1", "UNCLASSIFIED"), Article("u2", "MATERIAL"), Article("done", "UNCLASSIFIED"));
+        var reviews = new[] { Review("u2", "UNCERTAIN"), Review("done", "NON_MATERIAL") };
+
+        var result = ReadyCatalystGate.Evaluate(evidence, reviews, Signoff(), "TEST", BuyDay, InWindow);
+
+        Assert.Equal("NEEDS_REVIEW", result.State);
+        Assert.Equal(new[] { "u1", "u2" }, result.ReviewArticles!.Select(a => a.Id).ToArray());
+        Assert.Equal("UNCERTAIN", result.ReviewArticles!.Single(a => a.Id == "u2").CurrentLabel);
+        Assert.Equal("https://example.test/u1", result.ReviewArticles![0].Url);
+    }
+
     /// <summary>After close + 60 minutes the window is closed and the buy session moves to the next day.</summary>
     [Fact]
     public void AfterLateDeadline_WindowIsClosed()

@@ -2535,6 +2535,34 @@ function renderReadyCard(result,captureNote){
   card.append(pf);
  }
  if((result.requiredActions||[]).length){const a=readyEl("ul","ready-actions");result.requiredActions.forEach(x=>a.append(readyEl("li",null,"→ "+x)));card.append(a);}
+ // Inline catalyst review (2026-11-16): label each unreviewed article here instead of the 2.6 queue,
+ // which only lists articles for the active top-four group. Labels are append-only research data.
+ (result.articlesToReview||[]).forEach(article=>{
+  const f=readyEl("form","ready-review");
+  const head=readyEl("div","ready-review-head");
+  const link=document.createElement("a");link.textContent=article.headline;link.target="_blank";link.rel="noopener noreferrer";if(article.url)link.href=article.url;
+  head.append(readyEl("strong",null,"Label this article: "),link,readyEl("span","muted small"," · "+(article.source||"source unknown")+" · "+(article.publishedAtUtc?readyAz(article.publishedAtUtc):"time unknown")+" · triage "+(article.severity||"?")+(article.currentLabel?" · current label "+article.currentLabel:"")));
+  const select=document.createElement("select");
+  [["","Choose a label…"],["NON_MATERIAL","NON_MATERIAL — routine, unlikely to matter overnight"],["IRRELEVANT","IRRELEVANT — not about this company"],["DUPLICATE","DUPLICATE — repeat of a reviewed article"],["MATERIAL_EVENT","MATERIAL_EVENT — significant but not adverse"],["MATERIAL_RISK","MATERIAL_RISK — specifically adverse"],["UNCERTAIN","UNCERTAIN — cannot tell from the source"]].forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;select.append(o);});
+  const notes=document.createElement("textarea");notes.rows=2;notes.maxLength=2000;notes.placeholder="What the article says and why that supports the label (at least 40 characters). Open and read the source first.";notes.className="ready-review-notes";
+  const save=readyEl("button",null,"Save label");save.type="submit";
+  const msg=readyEl("span","muted small","");
+  f.append(head,select,notes,save,msg);
+  f.addEventListener("submit",async event=>{
+   event.preventDefault();
+   if(!select.value){msg.textContent=" Choose a label.";return;}
+   if(notes.value.trim().length<40){msg.textContent=" Notes need at least 40 characters of article facts.";return;}
+   if(!article.url){msg.textContent=" This article has no URL, so it cannot be reviewed here.";return;}
+   save.disabled=true;msg.textContent=" Saving…";
+   try{
+    await readyPost("/api/market-data/catalyst-reviews",{symbol:result.symbol,articleId:article.id,headline:article.headline,url:article.url,publishedAtUtc:article.publishedAtUtc,source:article.source,label:select.value,ruleSetVersion:article.ruleSetVersion,notes:notes.value.trim(),predictedSeverity:["RISK","MATERIAL","UNCLASSIFIED"].includes(String(article.severity||"").toUpperCase())?String(article.severity).toUpperCase():null,predictedCategories:article.categories&&article.categories.length?article.categories:null});
+    msg.textContent=" Saved. Re-checking…";
+    const updated=await readyPost("/api/boring-overnight/ready/evaluate",{symbol:result.symbol,operatorPrice:readyState.operatorPrices[result.symbol]??null});
+    handleReadyResult(updated,"label saved");
+   }catch(error){msg.textContent=" Not saved: "+error.message;save.disabled=false;}
+  });
+  card.append(f);
+ });
  if(result.catalystState!=="OPERATOR_ATTESTED"&&result.catalystState!=="BLOCKED"){
   const form=readyEl("form","ready-signoff");
   form.append(readyEl("strong",null,"Catalyst sign-off for "+result.buySessionDate+" — tick what you checked:"));
