@@ -14,6 +14,9 @@
 | 6 | **Unfilled limit at 20:00 ET: the GTC_EXT order stays working** | The order is Good-Till-Cancelled, so it carries into Day 3 and later sessions. **Measurement stays Day 2 only:** a Day 2 touch counts as success, and no touch on Day 2 counts as a miss. Days 3+ are not modelled. A carried order is a multi-day position, outside the overnight edge MCC measures. | No change needed. |
 | 7 | **Catalyst: an operator attestation counts**, with the rules below | Zero news stays UNKNOWN and is never relabelled CLEAR. READY may pass the catalyst gate on a recorded attestation. | Not built (READY wiring). |
 | 8 | **Daily parity tolerance: ±$0.01 per OHLC price, ±0.5% volume** | Data-quality check between two sources, not a trading parameter. | `DailySourceCrossCheck` defaults and `Test-DailyMarketDataQualification.ps1` (`-PriceTolerance`, `-VolumeRelativeTolerance`). |
+| 10 | **5M momentum is informational for READY** (2026-11-16) | The 13:00–14:00 AZ run blocked PRU, AFL, VOYA and MET on "5M permission NO / 5M structure NOT_BULLISH" while every overnight gate passed. READY now shows 5M permission/structure as notes. A real 1M SELL still blocks; the V2 end-of-day `Exit/SELL` (from 15:55 ET) is a clock rule and shows as a note. Other screens keep the original rule (`Full` mode). | `d2eebe4` |
+| 11 | **Untested sell limit no longer blocks READY** (2026-11-16) | Without a tested target (40-window history + walk-forward), READY applies the operator's **+0.5% heuristic** to the latest trade (≤ 2 min) and labels it **LIMIT UNTESTED** with a warning. A tested target is used when available (`LimitBasis`). Setting `BoringOvernight:UntestedLimitPct`. | `d2eebe4` |
+| 12 | **Late buy window until close + 60 min** (2026-11-16) | Normal day: 16:00–17:00 ET = **14:00–15:00 Arizona in standard time** (13:00–14:00 AZ in daylight time). Supersedes the 2026-10-25 note that after-hours is not an entry window, and extends decision 1. Guard: READY only if the after-hours trade (≤ 2 min) is **at or below the regular close** (last regular-session 1m bar on the same feed); otherwise **WATCH — AFTER-HOURS UP x%**. Use a **LMT EXT** order. Only Daily data must be fresh; intraday checks are notes. Catalyst sign-off is valid until the late deadline. The historical edge is still measured from the regular close. | `d2eebe4` |
 | 9 | **READY is a clear go signal** | When every gate passes inside the buy window, MCC shows one unambiguous **READY — BUY WINDOW OPEN** state for that symbol, with the calculated limit sell. Position size stays the operator's decision. MCC never submits orders. | Not built. |
 
 ### Clarification on decision 6
@@ -50,11 +53,12 @@ The earlier 2026-11-06 close differences are gone: that older reference row had 
 
 ## READY gate list (as built; all must pass inside the buy window)
 
-1. **BUY_WINDOW:** final regular hour (`MarketSessionClock`).
+1. **BUY_WINDOW:** final regular hour, or the late window until close + 60 min (decision 12, `MarketSessionClock.LateBuyWindow`).
 2. **QUALIFICATION_SNAPSHOT:** a capture-history snapshot at most 10 minutes old. The READY panel runs the capture before each check.
-3. **QUALIFICATION:** the existing qualification evaluator must return READY (not WATCH): price at least $5 (exactly $5.00 passes, decided 2026-11-16) and above SMA20, ADV20 ≥ 500K, overnight win rate 60–100%, 20D average ≥ +0.10%, 5D > 20D, 5M permission YES, 5M structure BULLISH, 1M state not SELL/GET OUT/BLOCK, fresh Daily and intraday data, no warnings (extension ≥ 2 ATR, volume ≥ 3×, range > 1.5 ATR, current overnight ≥ 3%).
+3. **QUALIFICATION:** the existing qualification evaluator must return READY (not WATCH): price at least $5 (exactly $5.00 passes, decided 2026-11-16) and above SMA20, ADV20 ≥ 500K, overnight win rate 60–100%, 20D average ≥ +0.10%, 5D > 20D, 1M state not SELL/GET OUT/BLOCK (the end-of-day `Exit/SELL` excepted), fresh data (final hour: Daily and intraday; late window: Daily only), no warnings (extension ≥ 2 ATR, volume ≥ 3×, range > 1.5 ATR, current overnight ≥ 3%). 5M permission and structure are notes (decision 10).
 4. **EXCLUSION:** not on the exclusion watchlist.
-5. **CATALYST:** per decision 7.
+5. **CATALYST:** per decision 7; the sign-off is valid until the late deadline.
+5a. **LATE_ENTRY_PRICE** (late window only, decision 12): the after-hours trade must be at or below the regular close.
 6. **SELL_LIMIT (revised 2026-11-14):** requires the SIP 40-window history, the reference close and the walk-forward gates (touch rate and adverse excursion). The four Thinkorswim ATR gates are **informational** (`4eafc9b`); ATR never changed the price. During the buy window the day's close does not exist yet, so the tested target % is applied to the **latest trade (at most 2 minutes old)**: limit = latest trade × (1 + target %). Re-check it against your actual fill.
 
 Status precedence: BLOCKED, then DATA?, then NOT_READY, then OUTSIDE_BUY_WINDOW, then READY. Boring Winner PASS is never READY. MCC never submits an order.

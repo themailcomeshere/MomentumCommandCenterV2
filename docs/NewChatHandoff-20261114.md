@@ -63,6 +63,7 @@
 - Key gaps: no TOS CSV import in Intraday mode; layout order runs backwards; states are not coloured like the TOS studies; scanners not implemented; live data is IEX only.
 - Later on 2026-11-16: shared TOS import bar and reordered layouts (`037a9ce`); Red Zone state colours, HOLDING toggle and transition sounds (`8a27531`). The live engine had always run with `hasPosition=false`, so sell states never showed; `heldPositionDecision` fixes that for cards marked HOLDING. Automatic scanner on free data (`a942074`, Intraday step 2.a; TOS import renumbered 2.b): [MCC-Auto-Scanner-20261116.md](Engineering/MCC-Auto-Scanner-20261116.md). Cache keys `?v=20261116-auto-scan-v1`.
 - V3 Boring Overnight Thinkorswim columns (`bb8db35`, CI `43933040879`): V3 Edge, V3 Boringness, V3 Status, C# reference and `GET /api/boring-overnight/v3-column`. Not compiled in Thinkorswim yet: [Boring-Overnight-V3-Columns-20261116.md](Engineering/Boring-Overnight-V3-Columns-20261116.md).
+- READY decisions 10–12 (`d2eebe4`, CI `43962877084`): 5M momentum informational, LIMIT UNTESTED +0.5% heuristic, late buy window to 15:00 AZ (standard time) with the after-hours ≤ regular-close guard. Restart MCC to use them. Cache keys `?v=20261116-ready-late-v1`.
 - Operator Step 3 result: the exclusion test passed (the `EXCLUDED_WATCHLIST` reason appeared, and disappeared after removal).
 
 ## Operator sequence
