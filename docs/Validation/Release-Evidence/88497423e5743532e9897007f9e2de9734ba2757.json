@@ -1,0 +1,51 @@
+﻿{
+    "bundleVersion":  1,
+    "createdAtUtc":  "2026-11-16T14:37:50.0043432Z",
+    "branch":  "feature/opportunity-quality-classification",
+    "sha":  "88497423e5743532e9897007f9e2de9734ba2757",
+    "workingTree":  "CLEAN",
+    "gates":  {
+                  "exactHeadCi":  {
+                                      "status":  "PASS",
+                                      "runId":  43887268930,
+                                      "conclusion":  "success",
+                                      "url":  "https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/43887268930",
+                                      "workflow":  ".NET build and test"
+                                  },
+                  "localReleaseTests":  {
+                                            "status":  "PASS",
+                                            "failed":  0,
+                                            "passed":  398,
+                                            "skipped":  0,
+                                            "total":  398,
+                                            "note":  "Ran against the existing Release build (--no-build). Build first with Get-Latest-And-Test.ps1."
+                                        },
+                  "apiRuntimeSha":  {
+                                        "status":  "DIFFERENT_OR_UNKNOWN",
+                                        "reportedSha":  "UNKNOWN",
+                                        "processId":  33412,
+                                        "startedAtUtc":  "2026-11-16T14:35:27.6642344+00:00",
+                                        "launchedBy":  "UNKNOWN"
+                                    },
+                  "browserAcceptance":  {
+                                            "status":  "NOT_PROVIDED"
+                                        },
+                  "thinkorswimCompile":  {
+                                             "status":  "NOT_PROVIDED"
+                                         },
+                  "dataProvenance":  {
+                                         "status":  "NOT_PROVIDED"
+                                     },
+                  "backupRestore":  {
+                                        "status":  "PROVIDED",
+                                        "path":  "C:\\Users\\jampo\\OneDrive\\Documentos\\MCC-Backups\\mcc-backup-20261116-143127\\manifest.json",
+                                        "bytes":  6927,
+                                        "sha256":  "CE782AC5E1722DFD4D904BEE6FF10F15C36C6152DF76EB87DDEEEFD0DCE83CEF",
+                                        "note":  "Provided by operator; content not validated by this script."
+                                    }
+              },
+    "blockers":  [
+
+                 ],
+    "rule":  "Each gate is independent. NOT_PROVIDED is not PASS. Operator, Thinkorswim and data-source gates cannot be closed by CI or tests."
+}
