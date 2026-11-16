@@ -137,6 +137,9 @@ public sealed class LiveSymbolAssessmentService(
             var regularSession = LiveSymbolTechnicalCalculator.IsRegularSession(evaluatedAt);
 
             SignalDecision? decision = null;
+            // Operator-declared holding: the same snapshot evaluated with hasPosition=true so the Dashboard can show
+            // RUNNER / RUNNER WANING / PREPARE TO SELL / SELL states. MCC has no broker position data (Schwab parked).
+            SignalDecision? heldDecision = null;
             string evaluationStatus;
             string evaluationReason;
             if (one is null || five is null || previousFive is null)
@@ -172,6 +175,7 @@ public sealed class LiveSymbolAssessmentService(
                     MarketPhase.RegularSession,
                     previousFive);
                 decision = new V2SignalEngine().Evaluate(snapshot, false);
+                heldDecision = new V2SignalEngine().Evaluate(snapshot, true);
                 evaluationStatus = "EVALUATED";
                 evaluationReason = "Calculated from completed Alpaca OHLCV bars using the existing V2SignalEngine. This is decision support, not an order instruction.";
             }
@@ -335,24 +339,9 @@ public sealed class LiveSymbolAssessmentService(
                     executionEventBasis = "Current V2 decision LongPermission / EntryAllowed snapshot; not independently verified Thinkorswim finite READY parity.",
                     note = "Separate diagnostic ranking only. It cannot create or override V2 entry eligibility, execution state, HOLD, EXIT, or order actions. The 30-bar range and prior-high proximity are explicit research proxies, not calibrated predictors."
                 },
-                decision = decision is null ? null : new
-                {
-                    state = decision.State.ToString(),
-                    action = decision.Action.ToString(),
-                    score = decision.Score,
-                    fiveMinutePermission = decision.LongPermission,
-                    fiveMinuteStructureBull = decision.Evaluation?.FiveMinuteStructureBull,
-                    oneMinuteStructureBull = decision.Evaluation?.OneMinuteStructureBull,
-                    oneMinuteMomentumPositive = decision.Evaluation?.OneMinuteMomentumPositive,
-                    oneMinuteExecution = decision.EntryAllowed ? "CONFIRMED" :
-                        decision.LongPermission ? "WAITING_FOR_1M_CONFIRMATION" : "BLOCKED_BY_5M_PERMISSION",
-                    entryAllowed = decision.EntryAllowed,
-                    runnerAllowed = decision.RunnerAllowed,
-                    exitWarning = decision.ExitWarning,
-                    hardExit = decision.HardExit,
-                    atrExtension = decision.Evaluation?.AtrExtension,
-                    reason = decision.Reason
-                },
+                decision = LiveDecisionProjection.Project(decision),
+                heldPositionDecision = LiveDecisionProjection.Project(heldDecision),
+                heldPositionNote = "heldPositionDecision evaluates the same bars as if the operator holds a long position. It is used only when the operator marks the symbol as HOLDING on the Dashboard; MCC has no broker position data.",
                 methodology = new
                 {
                     indicatorHistory = "EMA9/EMA20, SMA50, RSI14, MACD(12,26,9), ATR14 and session VWAP are calculated from provider OHLCV.",

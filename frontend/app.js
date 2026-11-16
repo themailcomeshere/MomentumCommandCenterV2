@@ -213,8 +213,53 @@ const scannerData={
 /// MODULE STATE: Declare Red Zone state before startup refreshes or restored imports can render it.
 let redZoneAssessmentRefreshers=[];
 let redZoneSoundEnabled=false,redZoneAudioContext=null,previousRedZoneSymbols=null,suppressNextRedZoneAlert=false;
-const previousRedZoneReadiness=new Map();
-function observeRedZoneReadiness(symbol,decision){const key=String(symbol||"").toUpperCase(),ready=decision?.entryAllowed===true,prior=previousRedZoneReadiness.get(key);if(ready&&prior===false&&redZoneSoundEnabled)playRedZoneAlert();if(typeof decision?.entryAllowed==="boolean")previousRedZoneReadiness.set(key,decision.entryAllowed);}
+/// RED ZONE STATE COLOURS (2026-11-16): last displayed tone per symbol, used to detect state transitions.
+const previousRedZoneTone=new Map();
+const redZoneStateLog=[];
+const HELD_SYMBOLS_KEY="mcc.heldSymbols.v1";
+/// <summary>Reads the operator-declared HOLDING symbols (browser only; MCC has no broker position data). Called by every state view.</summary>
+function readHeldSymbols(){try{const value=JSON.parse(localStorage.getItem(HELD_SYMBOLS_KEY)||"[]");return new Set(Array.isArray(value)?value.map(x=>String(x).toUpperCase()):[]);}catch{return new Set();}}
+/// <summary>Marks or clears HOLDING for one symbol and forgets its last tone so the switch itself does not sound an alert. Called by the card toggle.</summary>
+function setHeldSymbol(symbol,held){const ticker=String(symbol||"").toUpperCase(),set=readHeldSymbols();if(held)set.add(ticker);else set.delete(ticker);try{localStorage.setItem(HELD_SYMBOLS_KEY,JSON.stringify([...set]));}catch{/* storage blocked: toggle lasts until reload */}previousRedZoneTone.delete(ticker);}
+const RED_ZONE_TONE_HINTS={
+ wait:"Wait · no setup yet.",
+ prepare:"Heating up · 5M permission; waiting for 1M confirmation.",
+ ready:"Step 6.a · 5M permission + 1M confirmation. Your call: limit buy in Schwab.",
+ runner:"Holding · 5M trend intact.",
+ waning:"Step 6.b · Winding down. Plan or place your limit sell.",
+ sell:"Step 6.c · Sell state. Get out.",
+ data:"No live state · data stale, missing, or outside the regular session (07:30–14:00 AZ in standard time)."
+};
+/// <summary>
+/// Chooses the decision to display for a live assessment: the held-position decision when the operator marked the
+/// symbol HOLDING, otherwise the no-position decision. Returns the TOS-style label, tone and hint. Called by the Red
+/// Zone cards and the focused classification on every refresh.
+/// </summary>
+function liveStateView(symbol,data){
+ const held=readHeldSymbols().has(String(symbol||"").toUpperCase());
+ const decision=held&&data?.heldPositionDecision?data.heldPositionDecision:(data?.decision||null);
+ if(!decision)return{label:humanizeSignalState(data?.evaluationStatus||data?.status||"DATA?"),tone:"data",held,decision:null,hint:RED_ZONE_TONE_HINTS.data};
+ const tone=decision.stateTone||(decision.entryAllowed===true?"ready":"data");
+ return{label:decision.stateLabel||humanizeSignalState(decision.state),tone,held,decision,hint:RED_ZONE_TONE_HINTS[tone]||""};
+}
+/// <summary>
+/// Records a state transition and sounds the matching alert. No alert on the first observation or when leaving DATA?
+/// (so page load and the session open stay quiet). Alerts: PREPARE TO BUY, EXECUTION READY, RUNNER WANING / PREPARE TO
+/// SELL, SELL / GET OUT. Returns true when the tone changed. Called after every card refresh and for off-screen pins.
+/// </summary>
+function observeRedZoneState(symbol,view){
+ const key=String(symbol||"").toUpperCase(),prior=previousRedZoneTone.get(key);
+ previousRedZoneTone.set(key,view.tone);
+ if(prior===undefined||prior===view.tone)return false;
+ if(prior!=="data"&&["prepare","ready","waning","sell"].includes(view.tone)){
+  playRedZoneAlert(view.tone);
+  const time=new Date().toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true});
+  redZoneStateLog.unshift(time+" AZ · "+key+" → "+view.label+(view.held?" (HOLDING)":""));
+  redZoneStateLog.length=Math.min(redZoneStateLog.length,6);
+  const log=$("redZoneStateLog");if(log)log.textContent="State changes: "+redZoneStateLog.join(" · ");
+ }
+ return true;
+}
 
 let restoredScannerImport=null;
 try{
@@ -346,8 +391,9 @@ async function refreshDecisionExplanation(){
   const transportLabel=$("marketTransportLabel");
   if(transportLabel)transportLabel.textContent=one.sourceTransport==="ALPACA_WEBSOCKET_LATEST_BAR"?"ALPACA 1M WS / 5M REST · 15s UI REFRESH":"ALPACA REST · 15s UI REFRESH";
   const fiveMinutePermission=five.scoreBreakdown?.permission??decision?.fiveMinutePermission,permission=fiveMinutePermission===true?"YES":fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
-  classification.textContent=ready?"EXECUTION READY":decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||"DATA UNAVAILABLE");
-  classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch");
+  const focusedView=liveStateView(symbol,data);
+  classification.textContent=focusedView.label+(focusedView.held?" · HOLDING":"");
+  classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch")+" state-tone-"+focusedView.tone;
   if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(5);
   const oneMinuteTimestamp=$("oneMinuteTimestamp");
@@ -1082,17 +1128,20 @@ function readRedZoneState(){
 }
 function writeRedZoneState(state){localStorage.setItem("mcc.redZoneState.v1",JSON.stringify(state));renderMorningReport();}
 
-function playRedZoneAlert(){
+/// <summary>Plays a short tone pattern per state: prepare = one soft tone, ready = rising pair twice, waning = falling pair, sell = low alternating. Called by observeRedZoneState and the sound toggle.</summary>
+function playRedZoneAlert(kind="ready"){
  if(!redZoneSoundEnabled)return;
+ const patterns={prepare:{type:"sine",notes:[660]},ready:{type:"sine",notes:[880,1175,880,1175]},waning:{type:"triangle",notes:[784,523]},sell:{type:"square",notes:[440,330,440,330]}};
+ const pattern=patterns[kind]||patterns.ready;
  const AudioContextType=window.AudioContext||window.webkitAudioContext;
  if(!AudioContextType)return;
  try{
   redZoneAudioContext=redZoneAudioContext||new AudioContextType();
   if(redZoneAudioContext.state==="suspended")void redZoneAudioContext.resume();
   const now=redZoneAudioContext.currentTime;
-  [880,1175].forEach((frequency,index)=>{
+  pattern.notes.forEach((frequency,index)=>{
    const oscillator=redZoneAudioContext.createOscillator(),gain=redZoneAudioContext.createGain(),start=now+index*.18;
-   oscillator.type="sine";oscillator.frequency.value=frequency;
+   oscillator.type=pattern.type;oscillator.frequency.value=frequency;
    gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.16,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+.13);
    oscillator.connect(gain);gain.connect(redZoneAudioContext.destination);oscillator.start(start);oscillator.stop(start+.14);
   });
@@ -1121,8 +1170,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   }
   const data=await fetchLiveAssessment(symbol),one=data.oneMinute||{},five=data.fiveMinute||{},decision=data.decision||null;
   extensionNode.hidden=false;freshnessNode.hidden=false;participationNode.hidden=false;
-   observeRedZoneReadiness(symbol,decision);
-  statusNode.textContent=decision?humanizeSignalState(decision.state):humanizeSignalState(data.evaluationStatus||data.status||"DATA?");
+  applyRedZoneCardState(symbol,statusNode,liveStateView(symbol,data));
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   const money=value=>value!==null&&value!==undefined&&Number.isFinite(Number(value))?"$"+Number(value).toFixed(3):"DATA?";
   extensionNode.textContent="1M close "+money(one.close)+" · Daily VWAP "+money(one.vwap)+" · ATR14 "+money(one.atr)+" · Extension "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?");
@@ -1153,7 +1201,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
    " · 1M execution: "+(decision?.oneMinuteExecution||"UNKNOWN");
   drawPriceLine(chartNode,one.chartBars||[],symbol);
  }catch(error){
-  statusNode.textContent="DATA UNAVAILABLE";
+  applyRedZoneCardState(symbol,statusNode,{label:"DATA UNAVAILABLE",tone:"data",held:readHeldSymbols().has(String(symbol||"").toUpperCase()),decision:null,hint:"Live request failed · "+error.message});
   setV2ScoreDisplay(scoreNode,null,null,"REQUEST FAILED");
   extensionNode.textContent="Extension: DATA? · live request failed";
   freshnessNode.textContent="Freshness: UNKNOWN · "+error.message;
@@ -1164,12 +1212,24 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   chartNode.textContent="Live price unavailable";
  }
 }
+/// <summary>Colours one Red Zone card, its state banner and chip from a state view, and pulses the card on a transition. Called by updateRedZoneCardAssessment.</summary>
+function applyRedZoneCardState(symbol,statusNode,view){
+ const card=statusNode.closest(".redzone-card");
+ statusNode.textContent=view.held?"HOLDING":"WATCHING";
+ statusNode.className="chip state-chip "+(view.held?"state-tone-runner":"state-tone-wait");
+ if(!card)return;
+ for(const name of [...card.classList])if(name.startsWith("card-tone-"))card.classList.remove(name);
+ card.classList.add("card-tone-"+view.tone);
+ const banner=card.querySelector(".redzone-state-banner");
+ if(banner){banner.className="redzone-state-banner state-tone-"+view.tone;banner.querySelector("strong").textContent=view.label;banner.querySelector("span").textContent=view.hint;}
+ if(observeRedZoneState(symbol,view)){card.classList.remove("state-changed");void card.offsetWidth;card.classList.add("state-changed");}
+}
 async function refreshRedZoneAssessments(){
  await Promise.allSettled(redZoneAssessmentRefreshers.map(refresh=>refresh()));
  const state=readRedZoneState();
  if(state.mode==="automatic"&&$("mode")?.value!=="overnight"){
   const shown=new Set((scannerData[$("scannerGroup")?.value||"momentum"]||[]).slice(0,4).map(x=>String(x.symbol||"").toUpperCase()));
-  await Promise.allSettled(state.pinned.filter(s=>!shown.has(String(s).toUpperCase())).map(async s=>{try{const d=await fetchLiveAssessment(s);observeRedZoneReadiness(s,d.decision||null);}catch{/* unknown data does not alert */}}));
+  await Promise.allSettled(state.pinned.filter(s=>!shown.has(String(s).toUpperCase())).map(async s=>{try{const d=await fetchLiveAssessment(s);observeRedZoneState(s,liveStateView(s,d));}catch{/* unknown data does not alert */}}));
  }
 }
 function boringMetric(value){const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const parsed=Number(raw.replace(/,/g,"").replace("%","").trim());return Number.isFinite(parsed)?parsed:null;}
@@ -1243,6 +1303,9 @@ function renderMorningReport(){
   const status=document.createElement("span");status.className="chip";status.textContent=item.status||"DATA?";
   top.append(rank,status);
   const symbol=document.createElement("h3");symbol.textContent=item.symbol||"UNKNOWN";
+  const banner=document.createElement("div");banner.className="redzone-state-banner state-tone-data";banner.setAttribute("aria-live","polite");
+  const bannerLabel=document.createElement("strong");bannerLabel.textContent="LOADING STATE…";const bannerHint=document.createElement("span");bannerHint.textContent="Requesting live 1M/5M assessment.";banner.append(bannerLabel,bannerHint);
+  card.classList.add("card-tone-data");
   const score=document.createElement("div");score.className="redzone-score score-unknown";score.textContent="V2 5M score: LOADING live assessment…";
   const ext=document.createElement("p");ext.textContent="Extension: loading live 1M bars…";
   const fresh=document.createElement("p");fresh.textContent="Freshness: requesting 1M/5M source timestamps…";
@@ -1260,8 +1323,19 @@ function renderMorningReport(){
    else current.dismissed=[...new Set([...current.dismissed,ticker])];
    writeRedZoneState(current);
   });
-  actions.append(focusButton,manageButton);
-  card.append(top,symbol,score,ext,fresh,participation,reason,chart,gate,actions);
+  const heldButton=document.createElement("button");heldButton.type="button";heldButton.className="quiet-button held-toggle";
+  const heldNow=readHeldSymbols().has(String(item.symbol||"").toUpperCase());
+  heldButton.textContent=heldNow?"HOLDING · click to clear":"Mark holding";heldButton.setAttribute("aria-pressed",String(heldNow));
+  heldButton.title="Tell MCC you hold this stock so the card shows sell-side states (RUNNER, RUNNER WANING, PREPARE TO SELL, SELL). Stored in this browser only; MCC has no broker position data.";
+  heldButton.addEventListener("click",event=>{
+   event.stopPropagation();
+   const next=heldButton.getAttribute("aria-pressed")!=="true";
+   setHeldSymbol(item.symbol,next);
+   heldButton.textContent=next?"HOLDING · click to clear":"Mark holding";heldButton.setAttribute("aria-pressed",String(next));
+   void updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,participation,reason,gate,chart);
+  });
+  actions.append(heldButton,focusButton,manageButton);
+  card.append(top,symbol,banner,score,ext,fresh,participation,reason,chart,gate,actions);
   redZoneAssessmentRefreshers.push(()=>updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,participation,reason,gate,chart));
   void updateRedZoneCardAssessment(item.symbol,status,score,ext,fresh,participation,reason,gate,chart);
   card.tabIndex=0;card.setAttribute("role","button");card.setAttribute("aria-label","Focus "+(item.symbol||"candidate")+" price chart");

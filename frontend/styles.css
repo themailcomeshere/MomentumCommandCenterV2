@@ -1848,3 +1848,35 @@ body:not(.boring-overnight-mode) #scannerFieldAvailability{display:none!importan
 .discovery-tools>summary:before{content:"+";font-weight:700;color:var(--blue)}
 .discovery-tools[open]>summary:before{content:"−"}
 .discovery-tools #scanner-workbench{margin:0 14px 14px}
+/* Red Zone state colours (2026-11-16): mirror the installed Thinkorswim 1M/5M study label colours.
+   WAIT grey · PREPARE TO BUY yellow · EXECUTION READY green · RUNNER green · RUNNER WANING / PREPARE TO SELL yellow ·
+   SELL / GET OUT red · DATA? dashed (no live state). Sell-side states need the operator's HOLDING toggle. */
+.redzone-state-legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 10px;font-size:11px}
+.redzone-state-legend .legend-title,.redzone-state-legend .legend-note{color:var(--muted)}
+body.boring-overnight-mode #redZoneStateLegend,body.boring-overnight-mode #redZoneStateLog{display:none}
+.redzone-state-log{margin:10px 0 0;overflow-wrap:anywhere}
+.state-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 9px;font-weight:800;font-size:11px;white-space:nowrap}
+.state-tone-wait{background:rgba(152,168,192,.14);border-color:#7b889c;color:#c4cede}
+.state-tone-prepare,.state-tone-waning{background:rgba(242,203,118,.16);border-color:var(--yellow);color:var(--yellow)}
+.state-tone-ready{background:var(--green);border-color:var(--green);color:#06210f}
+.state-tone-runner{background:rgba(105,216,163,.18);border-color:var(--green);color:var(--green)}
+.state-tone-sell{background:var(--red);border-color:var(--red);color:#2a0606}
+.state-tone-data{background:transparent;border-style:dashed;border-color:#5c6b82;color:var(--muted)}
+.redzone-state-banner{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0}
+.redzone-state-banner strong{display:block;font-size:18px;letter-spacing:.02em;line-height:1.2}
+.redzone-state-banner span{display:block;font-size:12px;margin-top:3px;opacity:.92}
+.redzone-card.card-tone-wait{border-left:6px solid #7b889c}
+.redzone-card.card-tone-prepare,.redzone-card.card-tone-waning{border-left:6px solid var(--yellow)}
+.redzone-card.card-tone-ready{border-left:6px solid var(--green);background:#0d2219}
+.redzone-card.card-tone-runner{border-left:6px solid var(--green)}
+.redzone-card.card-tone-sell{border-left:6px solid var(--red);background:#2a1014}
+.redzone-card.card-tone-data{border-left:6px dashed #5c6b82}
+.redzone-card .held-toggle[aria-pressed="true"]{background:rgba(131,184,255,.18);border-color:var(--blue);color:var(--blue);font-weight:800}
+.redzone-card.state-changed{animation:mccStatePulse 1s ease-in-out 8}
+@keyframes mccStatePulse{0%,100%{box-shadow:0 0 0 0 rgba(131,184,255,0)}50%{box-shadow:0 0 0 4px rgba(131,184,255,.55)}}
+@media (prefers-reduced-motion:reduce){.redzone-card.state-changed{animation:none;outline:3px solid var(--blue)}}
+.classification.state-tone-ready,.classification.state-tone-sell{border-radius:8px;padding:2px 8px;display:inline-block}
+.classification.state-tone-prepare,.classification.state-tone-waning{color:var(--yellow);background:none}
+.classification.state-tone-runner{color:var(--green);background:none}
+.classification.state-tone-wait{color:#c4cede;background:none}
+.classification.state-tone-data{color:var(--muted);background:none;border:0}
