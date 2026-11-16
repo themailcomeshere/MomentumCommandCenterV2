@@ -1045,6 +1045,7 @@ $("scannerFile").addEventListener("change",event=>{
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;
+  if($("mode")?.value!=="overnight")void recordAutoScanComparison(imported.map(item=>item.symbol),file.name);
   const importStatus=$("overnightImportStatus");if(importStatus)importStatus.textContent="Imported "+imported.length+" symbols from "+file.name+" at "+new Date().toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ ("+($("mode")?.value==="overnight"?"BORING OVERNIGHT":"INTRADAY MOMENTUM")+" workspace). Red Zone, quality-ranking pool, Boring shortlist and Daily audit symbols updated.";
   overnightLiveEvidence.clear();
   populateDailyAuditFromOvernightTop20();
@@ -1063,6 +1064,9 @@ $("scannerFile").addEventListener("change",event=>{
   catch(error){persistenceNote=" · browser storage unavailable: "+error.message;}
   renderScannerFieldAvailability(imported,{filename:file.name,importedAtUtc});
   const groupSelect=$("scannerGroup");const option=groupSelect.querySelector('option[value="imported"]')||document.createElement("option");option.value="imported";option.textContent="Imported local CSV";if(!option.parentElement)groupSelect.append(option);groupSelect.value="imported";renderScanner();renderMorningReport();
+  // The latest import wins: the Red Zone stops reading the automatic scan until Feed Red Zone is turned on again.
+  try{localStorage.setItem("mcc.autoScanFeedsRedZone.v1","false");}catch{/* preference lasts until reload */}
+  if(typeof syncAutoScanFeedButton==="function")syncAutoScanFeedButton();
   const renderedRows=$("scannerRows")?.querySelectorAll("tr").length??0;
   const redZoneCards=$("redZoneGrid")?.querySelectorAll(".redzone-card").length??0;
   const redZoneSymbols=[...($("redZoneGrid")?.querySelectorAll(".redzone-card h3")??[])].map(node=>node.textContent).filter(Boolean);
@@ -2590,3 +2594,113 @@ $("overnightReadyShadowRefresh")?.addEventListener("click",async()=>{
   body.append(readyEl("p","muted small",data.note));
  }catch(error){body.textContent="Shadow log failed: "+error.message;}
 });
+
+/// MODULE: MCC automatic scan (2026-11-16, Intraday step 2.a)
+/// PURPOSE: Shows the server-side automatic scan (operator TOS scans 1, 2A, 2B, Momentum Pivot, D on free Alpaca data),
+/// optionally feeds the Red Zone, and records side-by-side comparisons with TOS watchlist imports. Discovery only.
+const AUTO_SCAN_FEED_KEY="mcc.autoScanFeedsRedZone.v1";
+let latestAutoScan=null;
+/// <summary>Formats an instant as Arizona time. Called by the automatic-scan renderers.</summary>
+function autoScanAz(value){const d=new Date(value);return Number.isNaN(d.getTime())?"time unknown":d.toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit",second:"2-digit"})+" AZ";}
+/// <summary>True when the operator chose to feed the Red Zone from the automatic scan (browser preference). Called on load and after each scan.</summary>
+function autoScanFeedsRedZone(){try{return localStorage.getItem(AUTO_SCAN_FEED_KEY)==="true";}catch{return false;}}
+/// <summary>Converts flagged scan candidates into Red Zone rows (score = scans passed). Called after each scan when feeding is on.</summary>
+function autoScanRows(run){
+ return (run?.candidates||[]).filter(c=>c.flagged).map(c=>{
+  const passed=(c.scanners||[]).filter(s=>s.result==="PASS").map(s=>s.code);
+  return {symbol:c.universe.symbol,score:c.momentumPassCount+(passed.includes("D")?0.5:0),status:"MCC AUTO · "+(passed.join(" ")||"—"),
+   extension:"DATA?",freshness:"5m bar "+(c.latestBarAgeSeconds==null?"age unknown":Math.round(c.latestBarAgeSeconds)+"s after close"),
+   reason:"MCC automatic scan passed: "+(passed.join(", ")||"none")+". Tags: "+(c.tags||[]).join(", ")+". Discovery only; not entry permission."};
+ });
+}
+/// <summary>Points the Red Zone at the automatic scan or back. Called by the Feed Red Zone button and after each scan.</summary>
+function applyAutoScanFeed(){
+ const button=$("autoScanFeedRedZone"),on=autoScanFeedsRedZone(),group=$("scannerGroup");
+ scannerData.mccAuto=autoScanRows(latestAutoScan);
+ if(group){
+  let option=group.querySelector('option[value="mccAuto"]');
+  if(!option){option=document.createElement("option");option.value="mccAuto";option.textContent="MCC automatic scan";group.append(option);}
+  if(on&&group.value!=="mccAuto"){group.value="mccAuto";suppressNextRedZoneAlert=true;}
+  if(group.value==="mccAuto"){renderScanner();renderMorningReport();}
+ }
+ syncAutoScanFeedButton();
+}
+/// <summary>Shows ON when the Red Zone currently reads the automatic scan. Called after any Red Zone source change, including a TOS import.</summary>
+function syncAutoScanFeedButton(){
+ const button=$("autoScanFeedRedZone"),active=$("scannerGroup")?.value==="mccAuto";
+ if(button){button.textContent=active?"Feed Red Zone: ON":"Feed Red Zone: OFF";button.setAttribute("aria-pressed",String(active));button.title=active?"The Red Zone shows the top 4 flagged by the automatic scan (most scans passed first).":"The Red Zone uses your TOS import or another source.";}
+}
+/// <summary>Renders the scan status, the flagged table and the source list. Called after each load.</summary>
+function renderAutoScan(run){
+ const status=$("autoScanStatus"),table=$("autoScanTable"),sources=$("autoScanSourceList");
+ if(!status||!table)return;
+ if(!run){status.textContent="Automatic scan: no run yet. It starts during the regular session (07:30–14:00 AZ, standard time), or click Scan now.";table.replaceChildren();return;}
+ const errors=(run.sources||[]).filter(s=>!s.ok);
+ status.textContent="Last scan "+autoScanAz(run.completedAtUtc)+" · "+run.status+(run.statusDetail?" ("+run.statusDetail+")":"")+" · universe "+run.universeCount+" · bars evaluated "+run.evaluatedCount+" · flagged "+run.flaggedCount+" · prior close: "+run.priorCloseSource+(errors.length?" · "+errors.length+" source error(s): see Sources":"");
+ const flagged=(run.candidates||[]).filter(c=>c.flagged).slice(0,40);
+ if(!flagged.length){table.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"No symbol passes a scan right now (fresh bars, not excluded)."}));}
+ else{
+  const t=document.createElement("table");t.className="auto-scan-table";
+  t.innerHTML="<thead><tr><th>#</th><th>Symbol</th><th>Last</th><th>% chg</th><th>Day vol</th><th>1</th><th>2A</th><th>2B</th><th>PIV</th><th>D</th><th>Tags</th></tr></thead>";
+  const body=document.createElement("tbody");
+  flagged.forEach((c,i)=>{
+   const tr=document.createElement("tr"),u=c.universe;
+   const cell=(text,cls)=>{const td=document.createElement("td");if(cls)td.className=cls;td.textContent=text;tr.append(td);return td;};
+   cell(String(i+1));const sym=cell(u.symbol);sym.style.fontWeight="800";
+   cell(u.lastPrice==null?"DATA?":"$"+Number(u.lastPrice).toFixed(2),"num");
+   cell(u.percentChange==null?"DATA?":(Number(u.percentChange)>=0?"+":"")+Number(u.percentChange).toFixed(2)+"%","num");
+   cell(u.consolidatedDayVolume==null?"DATA?":Number(u.consolidatedDayVolume).toLocaleString("en-US"),"num");
+   for(const code of ["1","2A","2B","PIV","D"]){
+    const s=(c.scanners||[]).find(x=>x.code===code),td=document.createElement("td"),chip=document.createElement("span");
+    const r=s?.result||"UNKNOWN";chip.className="scan-chip "+r.toLowerCase();chip.textContent=r==="PASS"?"✓":r==="FAIL"?"·":"?";
+    chip.title=(s?.name||code)+": "+r+"\n"+(s?.conditions||[]).map(x=>(x.passed===true?"✓ ":x.passed===false?"✗ ":"? ")+x.label+(x.usesIexVolume?" (IEX volume, approximate)":"")).join("\n");
+    td.append(chip);tr.append(td);
+   }
+   const tags=document.createElement("td");
+   for(const tag of (c.tags||[]).filter(x=>!["1","2A","2B","PIV","D"].includes(x))){const span=document.createElement("span");span.className="auto-scan-tag"+(/APPROX|GAPS/.test(tag)?" warn":"");span.textContent=tag;tags.append(span);}
+   tr.append(tags);body.append(tr);
+  });
+  t.append(body);table.replaceChildren(t);
+ }
+ if(sources)sources.textContent=(run.sources||[]).map(s=>s.source+" ["+s.feed+"]: "+(s.ok?"OK, "+s.items+" items":"FAILED "+(s.httpStatus??"")+" "+(s.error||""))).join(" · ")+" — "+(run.notes||"");
+}
+/// <summary>Loads the latest automatic scan (refresh=true asks the server to run one if the last is over 60 s old). Called on load, by Scan now and every 60 s.</summary>
+async function loadAutoScan(refresh=false){
+ if($("mode")?.value==="overnight")return;
+ const status=$("autoScanStatus");
+ if(refresh&&status)status.textContent="Scanning… (screeners, IEX prices and 5m bars; this can take 10–30 seconds)";
+ try{
+  const response=await fetch("/api/scanner/auto-momentum"+(refresh?"?refresh=true":""),{cache:"no-store",headers:{Accept:"application/json"}});
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
+  latestAutoScan=body;renderAutoScan(body);applyAutoScanFeed();
+ }catch(error){if(status)status.textContent="Automatic scan unavailable: "+error.message+". Is MCC running (MCC.ps1 status)?"+(latestAutoScan?.completedAtUtc?" The table below is from the last good scan at "+autoScanAz(latestAutoScan.completedAtUtc)+".":"");}
+}
+/// <summary>Shows the latest side-by-side result per session. Called on load and after a comparison is recorded.</summary>
+async function loadAutoScanComparison(){
+ const node=$("autoScanComparison");if(!node)return;
+ try{
+  const response=await fetch("/api/scanner/auto-momentum/tos-comparison",{cache:"no-store"});if(!response.ok)return;
+  const body=await response.json(),sessions=body.sessions||[];
+  if(!sessions.length)return;
+  const c=sessions[0];
+  node.textContent="Side-by-side with TOS: "+sessions.length+"/"+(body.targetSessions||5)+" sessions recorded. Latest ("+c.sessionDate+", "+autoScanAz(c.recordedAtUtc)+"): your TOS list "+c.tosSymbols.length+" · MCC also flagged "+c.flaggedByMcc.length+(c.flaggedByMcc.length?" ("+c.flaggedByMcc.join(", ")+")":"")+" · MCC saw but did not flag "+c.seenButNotFlagged.length+(c.seenButNotFlagged.length?" ("+c.seenButNotFlagged.join(", ")+")":"")+" · not in MCC's free universe "+c.notInMccUniverse.length+(c.notInMccUniverse.length?" ("+c.notInMccUniverse.join(", ")+")":"")+" · flagged only by MCC "+c.flaggedOnlyByMcc.length+". Based on "+c.scanRunsThatSession+" scan runs that session.";
+ }catch{/* report unavailable: leave the instruction text */}
+}
+/// <summary>Records a TOS-vs-MCC comparison for an Intraday TOS import. Called by the CSV import handler.</summary>
+async function recordAutoScanComparison(symbols,fileName){
+ try{
+  const response=await fetch("/api/scanner/auto-momentum/tos-comparison",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({symbols,fileName})});
+  if(response.ok)await loadAutoScanComparison();
+ }catch{/* comparison is optional; the import itself already succeeded */}
+}
+$("autoScanRefresh")?.addEventListener("click",()=>void loadAutoScan(true));
+$("autoScanFeedRedZone")?.addEventListener("click",()=>{
+ const next=$("scannerGroup")?.value!=="mccAuto";
+ try{localStorage.setItem(AUTO_SCAN_FEED_KEY,String(next));}catch{/* preference lasts until reload */}
+ if(!next&&$("scannerGroup")?.value==="mccAuto"){const group=$("scannerGroup");group.value=scannerData.imported?.length?"imported":"momentum";renderScanner();renderMorningReport();}
+ applyAutoScanFeed();
+});
+$("scannerGroup")?.addEventListener("change",()=>applyAutoScanFeed());
+void loadAutoScan(false);void loadAutoScanComparison();
+window.setInterval(()=>{if(document.visibilityState==="visible")void loadAutoScan(false);},60000);

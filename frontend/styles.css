@@ -1812,6 +1812,7 @@ body.boring-overnight-mode [data-step-overnight]::before{content:attr(data-step-
 #mcc-static-0049-main>*{order:50}
 /* INTRADAY MOMENTUM: 1.2 morning, 2.a import, 2.b-2.c discovery, 3 exclusions, 4 Red Zone, 5 focus, 7 records */
 body:not(.boring-overnight-mode) #morningBriefDetails{order:1}
+body:not(.boring-overnight-mode) #auto-scan{order:2}
 body:not(.boring-overnight-mode) #scanner-import{order:2}
 body:not(.boring-overnight-mode) #discoveryTools{order:3}
 body:not(.boring-overnight-mode) #exclusions-section{order:4}
@@ -1836,6 +1837,7 @@ body.boring-overnight-mode #quick-start{order:10}
 /* Intraday-only panels are hidden in Boring Overnight */
 body.boring-overnight-mode #morningBriefDetails,
 body.boring-overnight-mode #discoveryTools,
+body.boring-overnight-mode #auto-scan,
 body.boring-overnight-mode #decision-layout,
 body.boring-overnight-mode #opportunity-status{display:none!important}
 /* Overnight scanner field-availability report is meaningless for an intraday watchlist */
@@ -1880,3 +1882,19 @@ body.boring-overnight-mode #redZoneStateLegend,body.boring-overnight-mode #redZo
 .classification.state-tone-runner{color:var(--green);background:none}
 .classification.state-tone-wait{color:#c4cede;background:none}
 .classification.state-tone-data{color:var(--muted);background:none;border:0}
+
+/* MCC automatic scan panel (2026-11-16, Intraday step 2.a) */
+.auto-scan-panel{padding:14px}
+.auto-scan-table-wrap{overflow-x:auto;margin:8px 0}
+.auto-scan-table{width:100%;border-collapse:collapse;font-size:12px}
+.auto-scan-table th,.auto-scan-table td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.auto-scan-table th{color:var(--muted);font-weight:700}
+.auto-scan-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.scan-chip{display:inline-block;min-width:34px;text-align:center;border-radius:6px;padding:1px 5px;font-weight:800;font-size:11px;border:1px solid var(--line)}
+.scan-chip.pass{background:rgba(105,216,163,.18);border-color:var(--green);color:var(--green)}
+.scan-chip.fail{color:#6f7d92}
+.scan-chip.unknown{border-style:dashed;color:var(--muted)}
+.auto-scan-tag{display:inline-block;margin-right:4px;font-size:10px;color:var(--muted)}
+.auto-scan-tag.warn{color:var(--yellow)}
+.auto-scan-sources summary{cursor:pointer;color:var(--muted);font-size:12px}
+#autoScanFeedRedZone[aria-pressed="true"]{border-color:var(--green);color:var(--green);font-weight:800}

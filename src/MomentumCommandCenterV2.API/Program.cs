@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Any;
 using MomentumCommandCenterV2.API.Hosting;
 using MomentumCommandCenterV2.API.MarketData;
+using MomentumCommandCenterV2.API.MarketData.AutoScan;
 using MomentumCommandCenterV2.API.MorningBrief;
 using MomentumCommandCenterV2.Application.Interfaces;
 using MomentumCommandCenterV2.Application.Services;
@@ -61,6 +62,17 @@ builder.Services.AddHttpClient<AlpacaScannerDiscoverySource>(client =>
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
     client.Timeout = TimeSpan.FromSeconds(15);
 });
+// Automatic momentum scanner (2026-11-16): free Alpaca screeners + IEX 5m bars + delayed-SIP prior Daily close.
+builder.Services.AddHttpClient<AlpacaAutoScanClient>(client =>
+{
+    client.BaseAddress = new Uri("https://data.alpaca.markets/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+builder.Services.AddSingleton(sp => new AutoMomentumScanService(
+    sp.GetRequiredService<AlpacaAutoScanClient>(),
+    sp.GetRequiredService<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>(),
+    sp.GetRequiredService<ILogger<AutoMomentumScanService>>()));
+builder.Services.AddHostedService<AutoMomentumScanWorker>();
 builder.Services.AddHttpClient<AlpacaNewsClient>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -534,6 +546,30 @@ app.MapGet("/api/market-data/collector/status", (MomentumCommandCenterV2.API.Mar
     Results.Ok(worker.Snapshot()))
 .WithSummary("Show background historical collector state")
 .WithDescription("Configure MarketData:Collector:Symbols as a comma- or semicolon-separated list to enable. Collector polls overlapping recent 1m/5m windows, persists idempotently, and retries via provider adapter. It is not a market-wide scanner or websocket.");
+
+app.MapGet("/api/scanner/auto-momentum", async (bool? refresh, AutoMomentumScanService scanService, CancellationToken ct) =>
+{
+    var run = refresh == true || scanService.Latest is null
+        ? await scanService.RunIfDueAsync(TimeSpan.FromSeconds(60), ct)
+        : scanService.Latest;
+    return Results.Ok(run);
+})
+.WithSummary("Automatic momentum scan (operator TOS scans 1, 2A, 2B, Momentum Pivot, D) on free Alpaca data")
+.WithDescription("Returns the latest automatic scan run. refresh=true runs a new scan when the latest is older than 60 seconds. The background worker runs every MarketData:AutoScan:IntervalSeconds (default 120) during the regular session. Universe: Alpaca most-actives (volume, trades) and top gainers; live price from IEX; prior close from completed delayed-SIP Daily bars; 5m bar conditions on IEX (volume conditions approximate). Discovery only: never READY or an order instruction.");
+
+app.MapPost("/api/scanner/auto-momentum/tos-comparison", async (AutoScanComparisonRequest request, AutoMomentumScanService scanService, CancellationToken ct) =>
+{
+    var symbols = (request.Symbols ?? Array.Empty<string>()).Select(x => (x ?? "").Trim().ToUpperInvariant()).Where(x => x.Length > 0).Distinct().ToArray();
+    if (symbols.Length == 0 || symbols.Length > 500 || symbols.Any(x => !IsValidSymbol(x)))
+        return Results.BadRequest(new { error = "Provide 1–500 valid symbols from the imported TOS watchlist." });
+    return Results.Ok(await scanService.RecordTosComparisonAsync(symbols, request.FileName, DateTimeOffset.UtcNow, ct));
+})
+.WithSummary("Record a side-by-side comparison of a TOS watchlist import with the automatic scan")
+.WithDescription("Compares the imported TOS symbols with every symbol the automatic scan flagged or evaluated during the same Eastern session, and appends the result to auto-momentum-tos-comparisons.jsonl.");
+
+app.MapGet("/api/scanner/auto-momentum/tos-comparison", async (AutoMomentumScanService scanService, CancellationToken ct) =>
+    Results.Ok(new { sessions = await scanService.GetComparisonReportAsync(ct), targetSessions = 5 }))
+.WithSummary("Side-by-side report: latest TOS-vs-MCC comparison per session");
 
 app.MapGet("/api/market-data/live-assessment", async (
     string symbol,
@@ -2058,3 +2094,10 @@ static List<DateTimeOffset> FindGaps(IReadOnlyList<MarketBar> bars, TimeSpan int
     }
     return gaps;
 }
+
+/// <summary>
+/// TYPE: AutoScanComparisonRequest
+/// PURPOSE: Body of POST /api/scanner/auto-momentum/tos-comparison: the imported TOS watchlist symbols and file name.
+/// WHEN CALLED: Sent by the Dashboard after a TOS CSV import in INTRADAY MOMENTUM.
+/// </summary>
+public sealed record AutoScanComparisonRequest(IReadOnlyList<string>? Symbols, string? FileName);
