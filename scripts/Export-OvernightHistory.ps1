@@ -143,8 +143,10 @@ foreach ($symbol in $Symbols) {
     $perSymbol.Add([pscustomobject]@{
         symbol = $r.symbol; feed = $r.feed; feedCoverage = $r.feedCoverage; requestStatus = $r.requestStatus
         expectedSessions = $r.expectedSessionCount; sessions = $r.sessionCount; pairs = @($r.pairs).Count
-        missingSessionDates = @($r.missingSessionDates); pairsSkippedForMissingSessions = $r.pairsSkippedForMissingSessions })
-    Write-Host ("  {0,-6} {1} pairs, {2} missing sessions, feed {3}" -f $r.symbol, @($r.pairs).Count, @($r.missingSessionDates).Count, $r.feed)
+        missingSessionDates = @($r.missingSessionDates); pairsSkippedForMissingSessions = $r.pairsSkippedForMissingSessions
+        firstObservedSessionDate = $r.firstObservedSessionDate; preListingSessions = $r.preListingSessionCount })
+    $listed = if ($r.preListingSessionCount -gt 0) { " (listed {0}; {1} earlier sessions not yet listed)" -f $r.firstObservedSessionDate, $r.preListingSessionCount } else { "" }
+    Write-Host ("  {0,-6} {1} pairs, {2} missing sessions, feed {3}{4}" -f $r.symbol, @($r.pairs).Count, @($r.missingSessionDates).Count, $r.feed, $listed)
     Start-Sleep -Milliseconds $DelayMilliseconds
 }
 
@@ -162,7 +164,8 @@ $pooled | Export-Csv -LiteralPath (Join-Path $runDir "weekday-pooled.csv") -NoTy
     createdAtUtc = (Get-Date).ToUniversalTime().ToString("o"); mccSourceSha = $health.sourceSha
     scannerCsv = $ScannerCsv; scannerArchive = $archived; days = $Days; symbolsRequested = $Symbols.Count
     symbolsSucceeded = $perSymbol.Count; consolidatedSymbols = $consolidated.Count; pairRows = $pairs.Count
-    errors = @($errors); perSymbol = @($perSymbol)
+    # .ToArray(): PowerShell 5.1 throws "Argument types do not match" for @(List[T]) inside a hashtable literal.
+    errors = $errors.ToArray(); perSymbol = $perSymbol.ToArray()
     note = "RESEARCH ONLY. Overnight return = next open / buy close - 1 (completed Daily bars, split-adjusted). Pooled stats use consolidated (SIP) symbols only. Weekday effects are hypotheses, not signals. Data stored outside the repository until Alpaca's storage terms are reviewed."
 } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $runDir "manifest.json") -Encoding UTF8
 

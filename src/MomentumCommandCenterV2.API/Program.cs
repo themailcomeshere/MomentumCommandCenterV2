@@ -366,7 +366,7 @@ app.MapGet("/api/market-data/catalyst-assessment", async (string symbol, int? lo
 app.MapGet("/api/market-session/clock", () =>
     Results.Ok(MomentumCommandCenterV2.API.MarketData.MarketSessionClock.GetSnapshot(DateTimeOffset.UtcNow)))
 .WithSummary("Get the current US-equities session phase and countdown target")
-.WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and MCC_US_EQUITIES_CALENDAR_V2. The maintained calendar does not model unscheduled exchange closures.");
+.WithDescription("Returns the next regular close, after-hours end, or regular open using America/New_York and the MCC US equities calendar (rule-based holidays plus a maintained list of unscheduled closures).");
 
 app.MapGet("/api/providers/status", (IEnumerable<IMarketDataProvider> providers, IConfiguration configuration) =>
     Results.Ok(providers.Select(p =>
@@ -1257,7 +1257,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
                 useDelayedSip
                     ? provider.ProviderName + " delayed historical SIP 1m close/open history + live " + historyAlpaca!.ConfiguredFeed + " 1m/5m technical assessment"
                     : provider.ProviderName + " 1m history + live 1m/5m technical assessment",
-                provider.ProviderName, actualFeed, "MCC_US_EQUITIES_CALENDAR_V2",
+                provider.ProviderName, actualFeed, MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar.Version,
                 captureSourceTimestamps, captureInputs,
                 new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryAudit(
                     history.RequiredWindow, history.RequestedPairCount, history.ValidPairCount,
@@ -1393,7 +1393,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
 })
 .WithName("CaptureBoringOvernightTwentySessionHistory")
 .WithSummary("Fetch, persist, and calculate the latest 20 regular close/open Overnight pairs")
-.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 completed historical boundaries plus a separate current Overnight interval using MCC_US_EQUITIES_CALENDAR_V2, fetches and persists raw observations, and returns historical metrics/missing pairs plus current interval state (PENDING, MISSING or OBSERVED). The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
+.WithDescription("POST JSON: { \"symbol\": \"RTO\", \"providerName\": \"Alpaca\", \"requiredWindow\": 20 }. Uses the configured provider/feed and 1-minute bars. The server generates 20 completed historical boundaries plus a separate current Overnight interval using the MCC US equities calendar, fetches and persists raw observations, and returns historical metrics/missing pairs plus current interval state (PENDING, MISSING or OBSERVED). The 20-session capture is separate from GTC_EXT sell-target research. It is evidence capture only, not a READY decision.")
 .ProducesProblem(422)
 .ProducesProblem(503);
 

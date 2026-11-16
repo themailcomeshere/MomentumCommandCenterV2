@@ -1,0 +1,11 @@
+# MCC INTRADAY · 5M TREND  (watchlist column, 2026-11-16)
+# SETTINGS: Aggregation = 5 min. Extended hours OFF.
+# VALUE: how many of the 3 trend conditions in scans 1 and Pivot hold:
+#   close > EMA9, EMA9 > EMA20, EMA20 > SMA50   (3 = full alignment)
+# Green 3/3, yellow 2/3, grey otherwise. Not yet compiled in Thinkorswim.
+def ema9 = ExpAverage(close, 9);
+def ema20 = ExpAverage(close, 20);
+def sma50 = Average(close, 50);
+plot TrendCount = (if close > ema9 then 1 else 0) + (if ema9 > ema20 then 1 else 0) + (if ema20 > sma50 then 1 else 0);
+AddLabel(yes, if TrendCount == 3 then "TREND 3/3" else if TrendCount == 2 then "TREND 2/3" else if TrendCount == 1 then "TREND 1/3" else "TREND 0/3", Color.BLACK);
+AssignBackgroundColor(if TrendCount == 3 then Color.GREEN else if TrendCount == 2 then Color.YELLOW else Color.GRAY);

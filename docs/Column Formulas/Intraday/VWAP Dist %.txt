@@ -1,0 +1,7 @@
+# MCC INTRADAY · VWAP DIST %  (watchlist column, 2026-11-16)
+# SETTINGS: Aggregation = 5 min (any intraday works). Extended hours OFF.
+# VALUE: % distance of the last price from today's session VWAP.
+# Above VWAP is one condition of scans 1, 2A, 2B and Momentum Pivot.
+# Green above VWAP, red below. Not yet compiled in Thinkorswim.
+plot VwapDistPct = (close / VWAP() - 1) * 100;
+AssignBackgroundColor(if VwapDistPct > 0 then Color.DARK_GREEN else Color.DARK_RED);

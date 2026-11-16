@@ -817,7 +817,9 @@ function renderOvernightTopFourEvidence(results){
   const dailyCoverage=d?[d.feedCoverage||"UNKNOWN",(d.validSessionCount??0)+"/20 sessions",d.dataFresh===true?"FRESH":"NOT FRESH"].join(" · "):"UNKNOWN";
   const catalystResult=evidence.catalystError?"ERROR":c?.status||"UNKNOWN";
   const coverage=c?(c.coverageComplete===true?"COMPLETE":"INCOMPLETE / UNKNOWN"):"UNKNOWN";
-  tr.append(cell(symbol),cell(dailyResult),cell(dailyCoverage),cell(evidence.dailyError),cell(catalystResult),cell(articles.length),cell(coverage),cell(evidence.catalystError));
+  // An absent error is "none", not UNKNOWN (UNKNOWN stays for genuinely missing values). 2026-11-16.
+  const errorCell=(error,succeeded)=>cell(error?error:succeeded?"none":null);
+  tr.append(cell(symbol),cell(dailyResult),cell(dailyCoverage),errorCell(evidence.dailyError,!!d),cell(catalystResult),cell(articles.length),cell(coverage),errorCell(evidence.catalystError,!!c));
   tr.className=evidence.dailyError||evidence.catalystError?"qualification-blocked":"qualification-pending";return tr;
  }));
 }

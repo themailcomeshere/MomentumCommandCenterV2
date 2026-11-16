@@ -1,0 +1,9 @@
+# MCC INTRADAY · 5M RVOL  (watchlist column, 2026-11-16)
+# SETTINGS: Aggregation = 5 min. Extended hours OFF.
+# VALUE: this 5-minute bar's volume / simple average of the last 20 bars
+# (including this one), the volume-surge measure used by your scans:
+#   1.5x = scans 1, 2B and Pivot; 2.0x = scan 2A.
+# Green 2.0+, yellow 1.5-2.0, grey under 1.5. The current bar is still forming,
+# so the value grows during the bar. Not yet compiled in Thinkorswim.
+plot Rvol = volume / Average(volume, 20);
+AssignBackgroundColor(if Rvol >= 2 then Color.GREEN else if Rvol >= 1.5 then Color.YELLOW else Color.GRAY);

@@ -58,6 +58,28 @@ public sealed class OvernightHistoryAnalyzerTests
         Assert.DoesNotContain(r.Pairs, p => p.BuySessionDate == Week[1] && p.NextSessionDate == Week[3]);
     }
 
+    /// <summary>PURPOSE: Sessions before the first bar are pre-listing, not missing; later gaps stay missing. WHEN CALLED: By xUnit.</summary>
+    [Fact]
+    public void LeadingAbsence_IsPreListingNotMissing()
+    {
+        var sessions = new[] { S(Week[2], 101, 103), S(Week[3], 103, 104), S(Week[5], 106, 106) };
+        var r = OvernightHistoryAnalyzer.Analyze(Wrap(Week, sessions));
+
+        Assert.Equal(Week[2], r.FirstObservedSessionDate);
+        Assert.Equal(2, r.PreListingSessionCount);
+        Assert.Equal(new[] { Week[4] }, r.MissingSessionDates);
+        Assert.Equal(4, r.ExpectedSessionCount);
+        Assert.Single(r.Pairs);                                         // only Wed -> Thu
+    }
+
+    /// <summary>PURPOSE: 2025-01-09 (unscheduled closure) is not a trading session. WHEN CALLED: By xUnit.</summary>
+    [Fact]
+    public void Calendar_KnowsUnscheduledClosure()
+    {
+        Assert.False(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2025, 1, 9)));
+        Assert.True(UsEquitiesSessionCalendar.IsTradingSession(new DateOnly(2025, 1, 8)));
+    }
+
     /// <summary>PURPOSE: Statistics: win rate, mean, median, sample std dev and t-stat. WHEN CALLED: By xUnit.</summary>
     [Fact]
     public void Stats_AreComputedCorrectly()

@@ -1,0 +1,10 @@
+# MCC INTRADAY · 5M TRIGGER  (watchlist column, 2026-11-16)
+# SETTINGS: Aggregation = 5 min. Extended hours OFF.
+# VALUE: 2 = breakout above the highest high of the prior 20 bars (scans 2A, 2B, Pivot),
+#        1 = VWAP reclaim (closed back above VWAP after being at or below it; Pivot),
+#        0 = neither.  Not yet compiled in Thinkorswim.
+def breakout = close > Highest(high[1], 20);
+def reclaim = close > VWAP() and close[1] <= VWAP()[1];
+plot Trigger = if breakout then 2 else if reclaim then 1 else 0;
+AddLabel(yes, if breakout then "BREAKOUT" else if reclaim then "RECLAIM" else "-", Color.BLACK);
+AssignBackgroundColor(if breakout then Color.GREEN else if reclaim then Color.CYAN else Color.GRAY);

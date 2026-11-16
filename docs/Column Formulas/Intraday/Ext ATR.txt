@@ -1,0 +1,8 @@
+# MCC INTRADAY · EXT ATR  (watchlist column, 2026-11-16)
+# SETTINGS: Aggregation = 1 min. Extended hours OFF.
+# VALUE: |close - VWAP| / simple 14-bar average true range, the same
+# extension formula as MCC's 1M assessment and your installed 1M study.
+# Green under 1.0, yellow 1.0-2.0, red 2.0+ (MCC's danger threshold: do not chase).
+# Not yet compiled in Thinkorswim.
+plot ExtAtr = AbsValue(close - VWAP()) / Average(TrueRange(high, close, low), 14);
+AssignBackgroundColor(if ExtAtr >= 2 then Color.RED else if ExtAtr >= 1 then Color.YELLOW else Color.DARK_GREEN);

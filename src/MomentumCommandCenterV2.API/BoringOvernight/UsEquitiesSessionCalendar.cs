@@ -8,7 +8,17 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public static class UsEquitiesSessionCalendar
 {
-    public const string Version = "MCC_US_EQUITIES_CALENDAR_V2";
+    public const string Version = "MCC_US_EQUITIES_CALENDAR_V3";
+
+    /// <summary>
+    /// Unscheduled full-day NYSE/Nasdaq closures that the holiday rules cannot derive. V3 (2026-11-16) adds
+    /// 2025-01-09 (national day of mourning for President Carter), found as the single missing Daily session
+    /// for 50 of 50 symbols in the overnight-history export. Append only, with a source.
+    /// </summary>
+    private static readonly HashSet<DateOnly> UnscheduledClosures = new()
+    {
+        new DateOnly(2025, 1, 9)
+    };
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
 
     public static IReadOnlyList<OvernightSessionBoundary> BuildRecentBoundaries(
@@ -102,6 +112,7 @@ public static class UsEquitiesSessionCalendar
 
     private static bool IsMarketHoliday(DateOnly date)
     {
+        if (UnscheduledClosures.Contains(date)) return true;
         var year = date.Year;
         var newYears = new DateOnly(year, 1, 1);
         // NYSE does not observe New Year's Day on the preceding Friday when

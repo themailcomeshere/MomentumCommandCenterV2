@@ -50,6 +50,8 @@ public sealed record OvernightHistoryResult(
     int SessionCount,
     IReadOnlyList<DateOnly> MissingSessionDates,
     int PairsSkippedForMissingSessions,
+    DateOnly? FirstObservedSessionDate,
+    int PreListingSessionCount,
     IReadOnlyList<OvernightWeekdayStats> ByWeekday,
     OvernightWeekdayStats AllNights,
     IReadOnlyList<OvernightPair> Pairs,
@@ -74,7 +76,13 @@ public static class OvernightHistoryAnalyzer
     public static OvernightHistoryResult Analyze(DailyRecentSessions sessions)
     {
         var byDate = sessions.Sessions.ToDictionary(s => s.SessionDate);
-        var expected = sessions.ExpectedSessionDates.OrderBy(d => d).ToArray();
+        // Expected sessions before the first observed bar are treated as "not yet listed" (an IPO or new listing),
+        // not as missing data. Gaps after the first bar remain missing and are never bridged.
+        DateOnly? firstObserved = sessions.Sessions.Count == 0 ? null : sessions.Sessions.Min(s => s.SessionDate);
+        var allExpected = sessions.ExpectedSessionDates.OrderBy(d => d).ToArray();
+        var preListing = firstObserved is null ? 0 : allExpected.Count(d => d < firstObserved.Value);
+        var expected = firstObserved is null ? allExpected : allExpected.Where(d => d >= firstObserved.Value).ToArray();
+        var missing = sessions.MissingSessionDates.Where(d => firstObserved is null || d >= firstObserved.Value).OrderBy(d => d).ToArray();
         var pairs = new List<OvernightPair>();
         var skipped = 0;
         for (var i = 1; i < expected.Length; i++)
@@ -92,8 +100,8 @@ public static class OvernightHistoryAnalyzer
 
         var byWeekday = WeekdayOrder.Select(day => Stats(day, pairs.Where(p => p.BuyWeekday == day).Select(p => p.ReturnPct).ToArray())).ToArray();
         return new OvernightHistoryResult(sessions.Symbol, sessions.Provider, sessions.Feed, sessions.FeedCoverage, sessions.Adjustment,
-            sessions.RequestStatus, sessions.RetrievedAtUtc, expected.Length, sessions.Sessions.Count, sessions.MissingSessionDates,
-            skipped, byWeekday, Stats("All", pairs.Select(p => p.ReturnPct).ToArray()), pairs,
+            sessions.RequestStatus, sessions.RetrievedAtUtc, expected.Length, sessions.Sessions.Count, missing,
+            skipped, firstObserved, preListing, byWeekday, Stats("All", pairs.Select(p => p.ReturnPct).ToArray()), pairs,
             "RESEARCH ONLY. Overnight return = next regular-session open / buy-session close - 1 (Daily bars). Weekday = the buy session's weekday; Friday pairs span the weekend. " +
             "With many symbols and 5 weekdays tested, about 1 in 20 groups shows |t| near 2 by chance: treat weekday effects as hypotheses to confirm out of sample, never as a signal. " +
             (sessions.FeedCoverage == "CONSOLIDATED_SIP" ? "Source: consolidated SIP Daily (delayed historical query)." : "Source is NOT consolidated (IEX partial): diagnostic only."));
