@@ -14,7 +14,7 @@
 
 | Item | Value |
 |---|---|
-| Latest code head | `0962645`, CI `43967346459` SUCCESS; Claude local 495/495 (Debug; the Release output was locked by the running MCC) |
+| Latest code head | `1ca8a9d`, CI `43972669673` SUCCESS; Claude local 497/497 (Debug; the Release output was locked by the running MCC) |
 | Operator's running MCC | `dd80170` (started 14:47 AZ); needs a restart to get `83949cf`, `f693f4e`, `0962645` |
 | Dashboard cache keys | `?v=20261116-ready-review-v1` |
 | READY mode | Shadow; sessions logged from 2026-11-16 |
@@ -43,6 +43,21 @@
 - **V3 Edge parity:** MCC's SIP-based Edge score equals the TOS Overnight Score export exactly for PRU 61.23, AFL 60.07, VOYA 56.86, MET 55.97, HQY 56.45.
 - **MCC V3 Boringness:** PRU 79.30, AFL 78.35, MET 74.86, HQY 72.79, VOYA 71.33.
 - **Late window, 14:51 AZ:** PRU passed QUALIFICATION. VOYA was BLOCKED on 5D not above 20D, a real rule failure.
+
+## Evening update (2026-11-16)
+
+- **Fixes (`1ca8a9d`):**
+  - Export script crash (PowerShell 5.1 manifest bug).
+  - 2025-01-09 closure added to the calendar (V3).
+  - Pre-listing sessions reported separately from missing ones.
+  - The Top 4 evidence table shows "none" instead of UNKNOWN for no error.
+  - Intraday watchlist columns added (`docs/Column Formulas/Intraday/`).
+- **V3:** compiled in Thinkorswim (operator screenshot); parity with MCC on 5 symbols (Edge identical, Boringness within 0.01).
+- **History findings:** [Overnight-History-Findings-20261116.md](Research/Overnight-History-Findings-20261116.md).
+  - The scanner's edge gates gave a next-night win of 53.4% vs a 49.7% base rate over 2 years.
+  - No per-stock weekday effect.
+- **Answered:** sort the TOS Overnight scan by V3 Boringness and take V3 Status CANDIDATE rows; the TOS Overnight scanner is still needed; intraday watchlist columns recommended (Operator Guide §C).
+- **Open:** Scanner 1's aggregation (the operator runs it manually; read the `D`/`5m` button on each Study row).
 
 ## Operator answers recorded today
 
