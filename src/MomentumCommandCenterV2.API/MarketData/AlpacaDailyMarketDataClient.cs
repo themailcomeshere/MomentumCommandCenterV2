@@ -87,12 +87,13 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
 
     /// <summary>
     /// METHOD: FetchAsync
-    /// PURPOSE: Requests 60 calendar days of 1Day bars ending at endUtc on one feed, with retry for transient failures.
-    /// WHEN CALLED: By GetMetricsAsync for the primary (and, after a SIP refusal, the fallback) request.
+    /// PURPOSE: Requests <paramref name="calendarDays"/> (default 60) calendar days of 1Day bars ending at endUtc on one
+    /// feed, with retry for transient failures. 1,000 bars per request covers about 4 years of daily bars.
+    /// WHEN CALLED: By GetMetricsAsync, GetRecentSessionsAsync and GetDailyHistoryAsync.
     /// </summary>
-    private async Task<(HttpStatusCode Status, string Body)> FetchAsync(string symbol, string feed, DateTimeOffset endUtc, string adjustment, CancellationToken ct)
+    private async Task<(HttpStatusCode Status, string Body)> FetchAsync(string symbol, string feed, DateTimeOffset endUtc, string adjustment, CancellationToken ct, int calendarDays = 60)
     {
-        var start = endUtc.AddDays(-60).UtcDateTime.ToString("O");
+        var start = endUtc.AddDays(-calendarDays).UtcDateTime.ToString("O");
         var end = endUtc.UtcDateTime.ToString("O");
         using var request = new HttpRequestMessage(HttpMethod.Get,
             $"v2/stocks/{Uri.EscapeDataString(symbol.ToUpperInvariant())}/bars?timeframe=1Day&start={Uri.EscapeDataString(start)}&end={Uri.EscapeDataString(end)}&limit=1000&feed={Uri.EscapeDataString(feed)}&adjustment={adjustment}&sort=asc");
@@ -182,31 +183,7 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         if (sessionCount is < 1 or > 35)
             throw new ArgumentOutOfRangeException(nameof(sessionCount), "sessionCount must be 1-35 (60 calendar days are requested).");
 
-        string feed, body, status;
-        var cutoff = nowUtc;
-        if (UsesDelayedSip)
-        {
-            cutoff = nowUtc - SipDelay;
-            var (sipStatus, sipBody) = await FetchAsync(symbol, "sip", cutoff, adjustment, ct);
-            if (sipStatus == HttpStatusCode.OK) { feed = "sip"; body = sipBody; status = "SIP_DELAYED_HISTORICAL_OK"; }
-            else if (IsSipRefusal(sipStatus, sipBody))
-            {
-                var (fallbackStatus, fallbackBody) = await FetchAsync(symbol, _feed, nowUtc, adjustment, ct);
-                if (fallbackStatus != HttpStatusCode.OK)
-                    throw new HttpRequestException($"Alpaca Daily bars returned {(int)fallbackStatus}: {Trim(fallbackBody)}", null, fallbackStatus);
-                feed = _feed; body = fallbackBody; cutoff = nowUtc;
-                status = $"SIP_REFUSED_FELL_BACK_TO_{_feed.ToUpperInvariant()}: {(int)sipStatus} {Trim(sipBody)}";
-            }
-            else throw new HttpRequestException($"Alpaca Daily SIP bars returned {(int)sipStatus}: {Trim(sipBody)}", null, sipStatus);
-        }
-        else
-        {
-            var (plainStatus, plainBody) = await FetchAsync(symbol, _feed, nowUtc, adjustment, ct);
-            if (plainStatus != HttpStatusCode.OK)
-                throw new HttpRequestException($"Alpaca Daily bars returned {(int)plainStatus}: {Trim(plainBody)}", null, plainStatus);
-            feed = _feed; body = plainBody; status = "CONFIGURED_FEED";
-        }
-
+        var (feed, body, status, cutoff) = await FetchWithFeedRulesAsync(symbol, nowUtc, adjustment, 60, ct);
         var (newYorkNow, today, completedBySession) = ParseCompletedSessions(symbol, body, cutoff);
         var expected = ExpectedSessionDates(LatestExpectedSession(newYorkNow, today), sessionCount);
         var sessions = expected.Where(completedBySession.ContainsKey)
@@ -215,6 +192,71 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
         return new DailyRecentSessions(symbol.ToUpperInvariant(), "Alpaca", feed,
             feed.Equals("sip", StringComparison.OrdinalIgnoreCase) ? "CONSOLIDATED_SIP" : "IEX_PARTIAL",
             adjustment, nowUtc, status, expected, expected.Where(d => !completedBySession.ContainsKey(d)).ToArray(), sessions);
+    }
+
+    /// <summary>
+    /// METHOD: GetDailyHistoryAsync
+    /// PURPOSE: Returns every expected completed Daily session from about <paramref name="calendarDays"/> calendar days
+    /// ago to the latest completed session, with missing sessions listed (never backfilled). Same feed rules as
+    /// GetMetricsAsync: delayed historical SIP when DailyFeed=sip_delayed (completed Daily bars, an allowed use),
+    /// otherwise the configured feed, labelled.
+    /// WHEN CALLED: By GET /api/research/overnight-history.
+    /// </summary>
+    public async Task<DailyRecentSessions> GetDailyHistoryAsync(string symbol, DateTimeOffset nowUtc, int calendarDays, string adjustment, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret))
+            throw new ProviderNotConfiguredException("Daily Alpaca data requires server-side API credentials.");
+        if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
+            !symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
+            throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
+        if (nowUtc.Offset != TimeSpan.Zero)
+            throw new ArgumentException("nowUtc must use UTC.", nameof(nowUtc));
+        if (adjustment is not ("all" or "split"))
+            throw new ArgumentException("adjustment must be 'all' or 'split'.", nameof(adjustment));
+        if (calendarDays is < 30 or > 1460)
+            throw new ArgumentOutOfRangeException(nameof(calendarDays), "calendarDays must be 30-1460 (one request of at most 1,000 Daily bars).");
+
+        var (feed, body, status, cutoff) = await FetchWithFeedRulesAsync(symbol, nowUtc, adjustment, calendarDays, ct);
+        var (newYorkNow, today, completedBySession) = ParseCompletedSessions(symbol, body, cutoff);
+        var latest = LatestExpectedSession(newYorkNow, today);
+        var first = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(cutoff.AddDays(-calendarDays), Eastern).Date).AddDays(1);
+        var expected = new List<DateOnly>();
+        for (var date = first; date <= latest; date = date.AddDays(1))
+            if (UsEquitiesSessionCalendar.IsTradingSession(date)) expected.Add(date);
+        var sessions = expected.Where(completedBySession.ContainsKey)
+            .Select(date => { var item = completedBySession[date]; return new DailySessionObservation(date, item.Bar.TimestampUtc, item.Bar.Open, item.Bar.High, item.Bar.Low, item.Bar.Close, item.Bar.Volume); })
+            .ToArray();
+        return new DailyRecentSessions(symbol.ToUpperInvariant(), "Alpaca", feed,
+            feed.Equals("sip", StringComparison.OrdinalIgnoreCase) ? "CONSOLIDATED_SIP" : "IEX_PARTIAL",
+            adjustment, nowUtc, status, expected, expected.Where(d => !completedBySession.ContainsKey(d)).ToArray(), sessions);
+    }
+
+    /// <summary>
+    /// METHOD: FetchWithFeedRulesAsync
+    /// PURPOSE: One Daily request under the feed rules: delayed historical SIP (end = now - 16 min) when DailyFeed=sip_delayed,
+    /// falling back to the configured feed on a SIP refusal (status labelled); otherwise the configured feed.
+    /// Returns the feed, body, request status and the completion cutoff.
+    /// WHEN CALLED: By GetRecentSessionsAsync and GetDailyHistoryAsync.
+    /// </summary>
+    private async Task<(string Feed, string Body, string Status, DateTimeOffset Cutoff)> FetchWithFeedRulesAsync(
+        string symbol, DateTimeOffset nowUtc, string adjustment, int calendarDays, CancellationToken ct)
+    {
+        if (UsesDelayedSip)
+        {
+            var cutoff = nowUtc - SipDelay;
+            var (sipStatus, sipBody) = await FetchAsync(symbol, "sip", cutoff, adjustment, ct, calendarDays);
+            if (sipStatus == HttpStatusCode.OK) return ("sip", sipBody, "SIP_DELAYED_HISTORICAL_OK", cutoff);
+            if (!IsSipRefusal(sipStatus, sipBody))
+                throw new HttpRequestException($"Alpaca Daily SIP bars returned {(int)sipStatus}: {Trim(sipBody)}", null, sipStatus);
+            var (fallbackStatus, fallbackBody) = await FetchAsync(symbol, _feed, nowUtc, adjustment, ct, calendarDays);
+            if (fallbackStatus != HttpStatusCode.OK)
+                throw new HttpRequestException($"Alpaca Daily bars returned {(int)fallbackStatus}: {Trim(fallbackBody)}", null, fallbackStatus);
+            return (_feed, fallbackBody, $"SIP_REFUSED_FELL_BACK_TO_{_feed.ToUpperInvariant()}: {(int)sipStatus} {Trim(sipBody)}", nowUtc);
+        }
+        var (plainStatus, plainBody) = await FetchAsync(symbol, _feed, nowUtc, adjustment, ct, calendarDays);
+        if (plainStatus != HttpStatusCode.OK)
+            throw new HttpRequestException($"Alpaca Daily bars returned {(int)plainStatus}: {Trim(plainBody)}", null, plainStatus);
+        return (_feed, plainBody, "CONFIGURED_FEED", nowUtc);
     }
 
     /// <summary>

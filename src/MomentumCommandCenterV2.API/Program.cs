@@ -252,6 +252,30 @@ app.MapGet("/api/market-data/daily/cross-check", async (string symbol, AlpacaDai
     }
 }).WithName("GetDailySourceCrossCheck");
 
+app.MapGet("/api/research/overnight-history", async (string symbol, int? days, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    var calendarDays = days ?? 730;
+    if (calendarDays is < 30 or > 1460)
+        return Results.BadRequest(new { error = "days must be 30-1460 calendar days." });
+    try
+    {
+        var sessions = await dailyClient.GetDailyHistoryAsync(symbol, DateTimeOffset.UtcNow, calendarDays, "split", ct);
+        return Results.Ok(MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryAnalyzer.Analyze(sessions));
+    }
+    catch (ProviderNotConfiguredException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Daily market-data provider not configured", detail: ex.Message);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily provider request failed", detail: ex.Message);
+    }
+})
+.WithSummary("Research: overnight history and weekday statistics for one symbol")
+.WithDescription("Overnight return = next regular-session open / buy-session close - 1 from completed Daily bars (delayed historical SIP when DailyFeed=sip_delayed; split-adjusted), for about `days` calendar days (default 730). Returns every pair, statistics by the buy session's weekday and for all nights, and missing sessions (never bridged). RESEARCH ONLY: never READY or a trade instruction. Used by scripts/Export-OvernightHistory.ps1.");
+
 app.MapGet("/api/boring-overnight/v3-column", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
 {
     if (!IsValidSymbol(symbol))
