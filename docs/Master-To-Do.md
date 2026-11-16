@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-16. Repository moved to D: (§2a). Next operator actions reordered for the intraday core. Automatic scanner on free data (§2b). Red Zone state colours and alerts added (§2b). Operator walkthrough: the intraday workflow is the daily core. Added step numbers to the Dashboard, colour-coded ranking reasons, and a numbered workflow map with gap analysis (§2b). Boring Overnight READY runs in shadow mode.
+**Updated:** 2026-11-16. V3 Boring Overnight Thinkorswim columns built (§2). Repository moved to D: (§2a). Next operator actions reordered for the intraday core. Automatic scanner on free data (§2b). Red Zone state colours and alerts added (§2b). Operator walkthrough: the intraday workflow is the daily core. Added step numbers to the Dashboard, colour-coded ranking reasons, and a numbered workflow map with gap analysis (§2b). Boring Overnight READY runs in shadow mode.
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
 **Current handoff:** [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md)
@@ -56,7 +56,8 @@ The full, click-by-click sequence is in the [current handoff](NewChatHandoff-202
 7. Tell Claude Scanner 1's timeframe (daily or 5m) (§2b).
 8. Catalyst batch 1: label `D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv`, dry-run, then `-Submit` (§7).
 9. `MCC.ps1 stop`, `Backup-MccData.ps1` (now writes to `D:\source\repos\MCC-Backups`), staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle (§8, §9).
-10. Optional: Massive free key and `daily/cross-check?symbol=RTO` (§6).
+10. Install the **V3 Edge / V3 Boringness / V3 Status** columns in Thinkorswim, then after 14:16 AZ compare five symbols with `/api/boring-overnight/v3-column` (§2, [Boring-Overnight-V3-Columns-20261116.md](Engineering/Boring-Overnight-V3-Columns-20261116.md)).
+11. Optional: Massive free key and `daily/cross-check?symbol=RTO` (§6).
 
 ---
 
@@ -114,7 +115,10 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Operator]** Close/open history on delayed SIP: **approved** 2026-11-14.
 - [x] **[Repo]** `6fe6446`: capture-history uses delayed SIP for the 20 pairs, while live 1M/5M stays on IEX and is checked against that feed. The current interval is judged as of now − 16 min. Bug fix: `currentOvernightPct` was never filled (it is now the latest completed pair's return). 6 tests. Runtime 2026-11-14: RTO 20/20 (win rate 60%, 20D +0.44%, 5D +0.12%) and CRBG 20/20 (80%, +0.72%, +0.68%). Both fail "5D > 20D"; the remaining DATA? inputs are live-session fields only.
 - [ ] **[Operator]** In-session READY run (Monday 13:00–14:00 AZ): check READY for your candidates, sign off the catalyst check, and confirm the cards. Shadow sessions start counting from that day.
-- [ ] **[Repo]** Build the V3 Boring Overnight watchlist column/study. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
+- [x] **[Repo]** (`bb8db35`, CI `43933040879` SUCCESS, 477/477) V3 Boring Overnight Thinkorswim columns **V3 Edge**, **V3 Boringness**, **V3 Status** (`docs/Column Formulas/V3/`, MCC-V3-BORING-0.1). Edge = the installed Overnight Score formula, unchanged, plus its three edge gates; Boringness = BORING-0.1-PROVISIONAL point maps, kept separate; Status = CANDIDATE / WATCH / BLOCKED / DATA?, never READY. C# reference `BoringOvernightV3Calculator` (54 tests, hand-computed fixture) and parity endpoint `GET /api/boring-overnight/v3-column?symbol=` (21 completed SIP Daily sessions, split-adjusted). Install, definitions and parity steps: [Boring-Overnight-V3-Columns-20261116.md](Engineering/Boring-Overnight-V3-Columns-20261116.md). Not compiled in Thinkorswim; endpoint not yet run against live Alpaca data.
+- [ ] **[Operator]** Compile the three V3 columns in Thinkorswim (Aggregation D, extended hours off) and record compiled yes/no per column, or the exact compiler message.
+- [ ] **[Operator]** V3 parity: after 14:16 AZ (standard time), compare the three columns with `/api/boring-overnight/v3-column` for five symbols; report both sets of values.
+- [ ] **[Operator]** V3 decisions: (a) should a price of exactly $5.00 pass (contract) or block (MCC evaluator, current)? (b) confirm the 5D component above +3.00 pp falls from 3 to 0 points at +5.00 pp (Claude's interpretation); (c) freeze or change the provisional point maps after labelled historical cases.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
 
 ## 2a. Repository location (moved 2026-11-16)

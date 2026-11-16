@@ -139,6 +139,8 @@ The supplied active scanner formulas are fully specified and the independent cal
 
 The inactive Boring Winner remains inactive pending approval and chronological source-qualified validation.
 
+**2026-11-16:** the buy/sell semantics were frozen on 2026-11-14 ([READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md)), so the V3 columns were built as daily-gap triage columns: [Boring-Overnight-V3-Columns-20261116.md](Engineering/Boring-Overnight-V3-Columns-20261116.md). They do not change the eight installed columns or the Overnight Score formula.
+
 
 ## November 10 — Boring Winner daily OHLC export clarification
 
