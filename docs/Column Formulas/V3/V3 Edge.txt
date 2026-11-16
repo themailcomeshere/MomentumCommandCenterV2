@@ -1,0 +1,57 @@
+# ============================================================
+# MCC V3 EDGE  (version MCC-V3-BORING-0.1)
+# Thinkorswim custom watchlist column.
+# SETTINGS: Aggregation = D (daily). Extended hours OFF.
+# C# reference: BoringOvernightV3Calculator (OvernightEdgeScore, EdgeGatesPass).
+# STATUS: Not yet compiled in Thinkorswim. Repository text is not proof of compilation.
+#
+# VALUE (sortable): Overnight Edge Score = the installed "Overnight Score"
+#   formula, unchanged: win20*50 + avg20*1000 + median20*1000
+#   + (avg5 - avg20)*1000 + aboveSMA20*10. It is a ranking heuristic,
+#   not a probability.
+# TEXT: "EDGE OK" when all three historical edge gates pass, otherwise
+#   the first failing gate:
+#   WIN<60   = fewer than 60% of the last 20 overnight returns were > 0
+#   AVG<0.10 = 20-session mean overnight return below +0.10%
+#   5D<=20D  = 5-session mean not strictly above the 20-session mean
+#   DATA?    = fewer than 21 daily bars loaded
+# Overnight return r = open / close[1] - 1 (today's open vs prior close).
+# During the session the current daily bar is included (same as the
+# installed columns). This column is never READY and never an order.
+# ============================================================
+
+def r = open / close[1] - 1;
+def enoughHistory = !IsNaN(close[20]);
+
+def win20 = Average(if r > 0 then 1 else 0, 20);
+def avg20 = Average(r, 20);
+def median20 = Median(r, 20);
+def avg5 = Average(r, 5);
+def aboveSma20 = close > Average(close, 20);
+
+def edgeScore = win20 * 50
+    + avg20 * 1000
+    + median20 * 1000
+    + (avg5 - avg20) * 1000
+    + (if aboveSma20 then 10 else 0);
+
+def failWin = win20 < 0.60;
+def failMean = avg20 < 0.001;
+def fail5d = avg5 <= avg20;
+def edgePass = !failWin and !failMean and !fail5d;
+
+plot EdgeValue = if enoughHistory then edgeScore else Double.NaN;
+
+AddLabel(yes,
+    if !enoughHistory then "DATA? <21 BARS"
+    else AsText(edgeScore, NumberFormat.TWO_DECIMAL_PLACES) + " " +
+        (if edgePass then "EDGE OK"
+         else if failWin then "WIN<60"
+         else if failMean then "AVG<0.10"
+         else "5D<=20D"),
+    Color.BLACK);
+
+AssignBackgroundColor(
+    if !enoughHistory then Color.GRAY
+    else if edgePass then Color.GREEN
+    else Color.RED);

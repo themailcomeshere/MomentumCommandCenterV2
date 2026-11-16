@@ -252,6 +252,28 @@ app.MapGet("/api/market-data/daily/cross-check", async (string symbol, AlpacaDai
     }
 }).WithName("GetDailySourceCrossCheck");
 
+app.MapGet("/api/boring-overnight/v3-column", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    try
+    {
+        var sessions = await dailyClient.GetRecentSessionsAsync(symbol, DateTimeOffset.UtcNow,
+            MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightV3Calculator.MinimumBars, "split", ct);
+        return Results.Ok(MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightV3ColumnEvaluation.FromSessions(sessions));
+    }
+    catch (ProviderNotConfiguredException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Daily market-data provider not configured", detail: ex.Message);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily provider request failed", detail: ex.Message);
+    }
+})
+.WithSummary("V3 Boring Overnight column values from MCC's Daily source (parity reference for the Thinkorswim V3 columns)")
+.WithDescription("Calculates the V3 Edge, Boringness and Status columns (MCC-V3-BORING-0.1, BORING-0.1-PROVISIONAL) from the latest 21 completed Alpaca SIP Daily sessions (split-adjusted, delayed historical query). A missing session or a non-consolidated feed returns DATA?. Never READY: catalyst, exclusion list, freshness and 5M permission are checked by the READY evaluator. Compare with Thinkorswim after the regular close.");
+
 app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
 {
     if (!IsValidSymbol(symbol))

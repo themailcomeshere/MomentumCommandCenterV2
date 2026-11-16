@@ -1,0 +1,179 @@
+# ============================================================
+# MCC V3 STATUS  (version MCC-V3-BORING-0.1)
+# Thinkorswim custom watchlist column.
+# SETTINGS: Aggregation = D (daily). Extended hours OFF.
+# C# reference: BoringOvernightV3Calculator (Status, StatusCode, Reasons).
+# STATUS: Not yet compiled in Thinkorswim. Repository text is not proof of compilation.
+#
+# VALUE (sortable): 3 CANDIDATE, 2 WATCH, 1 BLOCKED, 0 DATA?
+# TEXT: status + primary reason (+n = further reasons; MCC lists them all).
+#
+# This column NEVER shows READY. CANDIDATE means every Thinkorswim-computable
+# V3 gate passed; the symbol still needs MCC's READY check (catalyst sign-off,
+# exclusion list, data freshness, 5M permission, buy window). Not an order.
+#
+# BLOCKED (hard gates, checked in this order):
+#   PRICE<=5     close is $5.00 or less (MCC evaluator: price must be above $5)
+#   AVGVOL<500K  average volume of the prior 20 sessions below 500,000
+#   WIN<60       fewer than 60% of the last 20 overnight returns were > 0
+#   AVG<0.10     20-session mean overnight return below +0.10%
+#   5D<=20D      5-session mean not strictly above the 20-session mean
+#   BELOW SMA20  close not above the 20-session simple average close
+# WATCH (current-day cautions, checked in this order):
+#   ON>=3%       today's overnight return (open vs prior close) is 3% or more
+#   5D>=5%       5-session mean overnight return is 5% or more
+#   5D JUMP      5D mean minus 20D mean is 3 percentage points or more
+#   RANGE>1.5ATR today's high-low range / prior close exceeds 1.5 x ATR%
+#                (ATR = simple mean of the prior 14 true ranges / prior close)
+#   VOL>=3X      today's volume is 3x or more the prior 20-session average
+#                (during the session today's volume is partial, so this
+#                 only triggers on clearly abnormal volume)
+#   BORING<60    Boringness Score below 60 (same formula as V3 Boringness)
+# DATA?: fewer than 21 daily bars loaded.
+# ============================================================
+
+script Lerp {
+    input x = 0.0;
+    input x0 = 0.0;
+    input y0 = 0.0;
+    input x1 = 1.0;
+    input y1 = 0.0;
+    plot value = y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+}
+
+def r = open / close[1] - 1;
+def enoughHistory = !IsNaN(close[20]) and !IsNaN(volume[20]);
+
+# ---------- Edge metrics (same as V3 Edge) ----------
+def win20 = Average(if r > 0 then 1 else 0, 20);
+def avg20 = Average(r, 20);
+def median20 = Median(r, 20);
+def avg5 = Average(r, 5);
+def aboveSma20 = close > Average(close, 20);
+def avgVolumePrior20 = Average(volume[1], 20);
+
+# ---------- Boringness (same as V3 Boringness) ----------
+def winPct = win20 * 100;
+def medianPct = median20 * 100;
+def meanPct = avg20 * 100;
+def diffPp = (avg5 - avg20) * 100;
+def consistencyPct = Average(if r >= 0 and r <= 0.02 then 1 else 0, 20) * 100;
+def volatilityPct = Sqrt(Max(0, Average(r * r, 20) - avg20 * avg20)) * 100;
+def price = close;
+
+def ptsWin =
+    if winPct <= 60 then 0
+    else if winPct <= 70 then Lerp(winPct, 60, 0, 70, 10)
+    else if winPct <= 80 then Lerp(winPct, 70, 10, 80, 18)
+    else if winPct <= 90 then Lerp(winPct, 80, 18, 90, 25)
+    else 25;
+def ptsMedian =
+    if medianPct <= 0 then 0
+    else if medianPct <= 0.10 then Lerp(medianPct, 0, 0, 0.10, 8)
+    else if medianPct <= 0.25 then Lerp(medianPct, 0.10, 8, 0.25, 14)
+    else if medianPct <= 0.50 then Lerp(medianPct, 0.25, 14, 0.50, 20)
+    else 20;
+def ptsMean =
+    if meanPct < 0.10 then 0
+    else if meanPct <= 0.25 then Lerp(meanPct, 0.10, 5, 0.25, 10)
+    else if meanPct <= 0.50 then Lerp(meanPct, 0.25, 10, 0.50, 15)
+    else if meanPct <= 1.00 then Lerp(meanPct, 0.50, 15, 1.00, 10)
+    else if meanPct <= 1.50 then Lerp(meanPct, 1.00, 10, 1.50, 5)
+    else if meanPct <= 2.00 then Lerp(meanPct, 1.50, 5, 2.00, 0)
+    else 0;
+def ptsFiveDay =
+    if diffPp <= 0 then 0
+    else if diffPp <= 0.10 then Lerp(diffPp, 0, 5, 0.10, 7)
+    else if diffPp <= 0.50 then Lerp(diffPp, 0.10, 7, 0.50, 10)
+    else if diffPp <= 1.00 then Lerp(diffPp, 0.50, 10, 1.00, 7)
+    else if diffPp <= 3.00 then Lerp(diffPp, 1.00, 7, 3.00, 3)
+    else if diffPp <= 5.00 then Lerp(diffPp, 3.00, 3, 5.00, 0)
+    else 0;
+def ptsConsistency =
+    if consistencyPct <= 60 then 0
+    else if consistencyPct <= 70 then Lerp(consistencyPct, 60, 0, 70, 5)
+    else if consistencyPct <= 80 then Lerp(consistencyPct, 70, 5, 80, 8)
+    else if consistencyPct <= 90 then Lerp(consistencyPct, 80, 8, 90, 10)
+    else 10;
+def ptsVolatility =
+    if volatilityPct <= 0.25 then 10
+    else if volatilityPct <= 0.50 then Lerp(volatilityPct, 0.25, 10, 0.50, 8)
+    else if volatilityPct <= 1.00 then Lerp(volatilityPct, 0.50, 8, 1.00, 5)
+    else if volatilityPct <= 1.50 then Lerp(volatilityPct, 1.00, 5, 1.50, 2)
+    else if volatilityPct <= 2.00 then Lerp(volatilityPct, 1.50, 2, 2.00, 0)
+    else 0;
+def ptsVolume =
+    if avgVolumePrior20 < 500000 then 0
+    else if avgVolumePrior20 <= 750000 then Lerp(avgVolumePrior20, 500000, 1, 750000, 2)
+    else if avgVolumePrior20 <= 1000000 then Lerp(avgVolumePrior20, 750000, 2, 1000000, 3)
+    else if avgVolumePrior20 <= 2000000 then Lerp(avgVolumePrior20, 1000000, 3, 2000000, 5)
+    else 5;
+def ptsPrice =
+    if price <= 5 then 0
+    else if price <= 10 then Lerp(price, 5, 0, 10, 1)
+    else if price <= 25 then Lerp(price, 10, 1, 25, 3)
+    else if price <= 50 then Lerp(price, 25, 3, 50, 5)
+    else 5;
+def boringness = ptsWin + ptsMedian + ptsMean + ptsFiveDay
+    + ptsConsistency + ptsVolatility + ptsVolume + ptsPrice;
+
+# ---------- Current-day inputs ----------
+def atrPct = Average(TrueRange(high, close, low)[1], 14) / close[1] * 100;
+def rangePct = (high - low) / close[1] * 100;
+def volumeRatio = volume / avgVolumePrior20;
+
+# ---------- Gates and cautions ----------
+def gPrice = close <= 5;
+def gVolume = avgVolumePrior20 < 500000;
+def gWin = win20 < 0.60;
+def gMean = avg20 < 0.001;
+def gFiveDay = avg5 <= avg20;
+def gSma = !aboveSma20;
+def blockedCount = gPrice + gVolume + gWin + gMean + gFiveDay + gSma;
+
+def wOn = r * 100 >= 3;
+def wFiveDayHigh = avg5 * 100 >= 5;
+def wJump = diffPp >= 3;
+def wRange = rangePct > atrPct * 1.5;
+def wVolume = volumeRatio >= 3;
+def wBoring = boringness < 60;
+def watchCount = wOn + wFiveDayHigh + wJump + wRange + wVolume + wBoring;
+
+def statusCode =
+    if !enoughHistory then 0
+    else if blockedCount > 0 then 1
+    else if watchCount > 0 then 2
+    else 3;
+def extraReasons = blockedCount + watchCount - 1;
+
+plot StatusValue = statusCode;
+
+AddLabel(yes,
+    (if statusCode == 0 then "DATA? <21 BARS"
+     else if statusCode == 1 then "BLOCKED " +
+        (if gPrice then "PRICE<=5"
+         else if gVolume then "AVGVOL<500K"
+         else if gWin then "WIN<60"
+         else if gMean then "AVG<0.10"
+         else if gFiveDay then "5D<=20D"
+         else "BELOW SMA20")
+     else if statusCode == 2 then "WATCH " +
+        (if wOn then "ON>=3%"
+         else if wFiveDayHigh then "5D>=5%"
+         else if wJump then "5D JUMP"
+         else if wRange then "RANGE>1.5ATR"
+         else if wVolume then "VOL>=3X"
+         else "BORING<60")
+     else "CANDIDATE > MCC READY")
+    + (if statusCode == 0 or statusCode == 3 then ""
+       else if extraReasons == 1 then " +1"
+       else if extraReasons == 2 then " +2"
+       else if extraReasons >= 3 then " +3+"
+       else ""),
+    Color.BLACK);
+
+AssignBackgroundColor(
+    if statusCode == 3 then Color.GREEN
+    else if statusCode == 2 then Color.YELLOW
+    else if statusCode == 1 then Color.LIGHT_RED
+    else Color.GRAY);

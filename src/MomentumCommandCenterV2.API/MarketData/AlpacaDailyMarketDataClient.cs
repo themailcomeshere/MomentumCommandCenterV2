@@ -113,71 +113,13 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
     private static DailyMarketMetrics Build(string symbol, string feed, string adjustment, string body,
         DateTimeOffset nowUtc, DateTimeOffset dataCutoffUtc, string? sipRequestStatus)
     {
-
-        using var document = JsonDocument.Parse(body);
-        var root = document.RootElement;
-        if (!root.TryGetProperty("bars", out var bars))
-            throw new InvalidOperationException($"Alpaca Daily response is missing the 'bars' property (root JSON kind: {root.ValueKind}).");
-
-        // Alpaca's single-symbol response is normally an array. Some response envelopes
-        // key the array by symbol; accept only the requested symbol and preserve empty/null
-        // as an explicit no-observation result rather than converting it into an API 502.
-        if (bars.ValueKind == JsonValueKind.Object)
-        {
-            if (!bars.TryGetProperty(symbol.ToUpperInvariant(), out var symbolBars))
-                bars = JsonSerializer.SerializeToElement(Array.Empty<object>());
-            else if (symbolBars.ValueKind == JsonValueKind.Array || symbolBars.ValueKind == JsonValueKind.Null)
-                bars = symbolBars;
-            else
-                throw new InvalidOperationException($"Alpaca Daily response bars.{symbol.ToUpperInvariant()} has unexpected JSON kind {symbolBars.ValueKind}.");
-        }
-        else if (bars.ValueKind == JsonValueKind.Null)
-        {
-            bars = JsonSerializer.SerializeToElement(Array.Empty<object>());
-        }
-        else if (bars.ValueKind != JsonValueKind.Array)
-        {
-            throw new InvalidOperationException($"Alpaca Daily response bars has unexpected JSON kind {bars.ValueKind} for symbol {symbol.ToUpperInvariant()}.");
-        }
-
-        var parsed = bars.EnumerateArray().Select(item => new DailyBar(
-                item.GetProperty("t").GetDateTimeOffset(),
-                item.GetProperty("o").GetDouble(),
-                item.GetProperty("h").GetDouble(),
-                item.GetProperty("l").GetDouble(),
-                item.GetProperty("c").GetDouble(),
-                item.GetProperty("v").GetInt64()))
-            .OrderBy(x => x.TimestampUtc)
-            .GroupBy(x => x.TimestampUtc)
-            .Select(group => group.First())
-            .ToArray();
-
-        var newYorkNow = TimeZoneInfo.ConvertTime(dataCutoffUtc, Eastern);
-        var today = DateOnly.FromDateTime(newYorkNow.Date);
-        var completedBySession = parsed
-            .Where(bar => bar.TimestampUtc <= dataCutoffUtc)
-            .Select(bar => new { Bar = bar, SessionDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(bar.TimestampUtc, Eastern).Date) })
-            .Where(item => UsEquitiesSessionCalendar.IsTradingSession(item.SessionDate))
-            .Where(item => item.SessionDate < today ||
-                (item.SessionDate == today && newYorkNow.TimeOfDay >= UsEquitiesSessionCalendar.GetRegularClose(item.SessionDate).ToTimeSpan()))
-            .GroupBy(item => item.SessionDate)
-            .ToDictionary(group => group.Key, group => group.Last());
+        var (newYorkNow, today, completedBySession) = ParseCompletedSessions(symbol, body, dataCutoffUtc);
 
         // Build the exact latest 20 expected sessions from MCC's versioned calendar.
         // A missing session is a data-quality gap, not a zero-volume day or a reason to
         // reach farther back and silently change the rolling window.
-        var latestExpected = today;
-        if (!UsEquitiesSessionCalendar.IsTradingSession(latestExpected) ||
-            newYorkNow.TimeOfDay < UsEquitiesSessionCalendar.GetRegularClose(latestExpected).ToTimeSpan())
-        {
-            do { latestExpected = latestExpected.AddDays(-1); }
-            while (!UsEquitiesSessionCalendar.IsTradingSession(latestExpected));
-        }
-
-        var expectedDates = new List<DateOnly>(20);
-        for (var date = latestExpected; expectedDates.Count < 20; date = date.AddDays(-1))
-            if (UsEquitiesSessionCalendar.IsTradingSession(date)) expectedDates.Add(date);
-        expectedDates.Reverse();
+        var latestExpected = LatestExpectedSession(newYorkNow, today);
+        var expectedDates = ExpectedSessionDates(latestExpected, 20);
 
         var present = expectedDates.Where(completedBySession.ContainsKey).ToArray();
         var latest = completedBySession.TryGetValue(latestExpected, out var latestBar) ? latestBar : null;
@@ -219,6 +161,153 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
             latestExpected, expectedDates, missingSessionDates, sessionObservations, sipRequestStatus);
     }
 
+    /// <summary>
+    /// METHOD: GetRecentSessionsAsync
+    /// PURPOSE: Returns the latest <paramref name="sessionCount"/> expected completed sessions (calendar-driven,
+    /// missing sessions listed, never backfilled) using the same feed rules as <see cref="GetMetricsAsync"/>:
+    /// delayed historical SIP when DailyFeed=sip_delayed, falling back to the configured feed (labelled) on refusal.
+    /// WHEN CALLED: By the V3 Boring Overnight column endpoint, which needs 21 sessions (20 returns).
+    /// </summary>
+    public async Task<DailyRecentSessions> GetRecentSessionsAsync(string symbol, DateTimeOffset nowUtc, int sessionCount, string adjustment, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(_key) || string.IsNullOrWhiteSpace(_secret))
+            throw new ProviderNotConfiguredException("Daily Alpaca data requires server-side API credentials.");
+        if (string.IsNullOrWhiteSpace(symbol) || symbol.Length > 8 ||
+            !symbol.All(c => char.IsAsciiLetterOrDigit(c) || c is '.' or '-'))
+            throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
+        if (nowUtc.Offset != TimeSpan.Zero)
+            throw new ArgumentException("nowUtc must use UTC.", nameof(nowUtc));
+        if (adjustment is not ("all" or "split"))
+            throw new ArgumentException("adjustment must be 'all' or 'split'.", nameof(adjustment));
+        if (sessionCount is < 1 or > 35)
+            throw new ArgumentOutOfRangeException(nameof(sessionCount), "sessionCount must be 1-35 (60 calendar days are requested).");
+
+        string feed, body, status;
+        var cutoff = nowUtc;
+        if (UsesDelayedSip)
+        {
+            cutoff = nowUtc - SipDelay;
+            var (sipStatus, sipBody) = await FetchAsync(symbol, "sip", cutoff, adjustment, ct);
+            if (sipStatus == HttpStatusCode.OK) { feed = "sip"; body = sipBody; status = "SIP_DELAYED_HISTORICAL_OK"; }
+            else if (IsSipRefusal(sipStatus, sipBody))
+            {
+                var (fallbackStatus, fallbackBody) = await FetchAsync(symbol, _feed, nowUtc, adjustment, ct);
+                if (fallbackStatus != HttpStatusCode.OK)
+                    throw new HttpRequestException($"Alpaca Daily bars returned {(int)fallbackStatus}: {Trim(fallbackBody)}", null, fallbackStatus);
+                feed = _feed; body = fallbackBody; cutoff = nowUtc;
+                status = $"SIP_REFUSED_FELL_BACK_TO_{_feed.ToUpperInvariant()}: {(int)sipStatus} {Trim(sipBody)}";
+            }
+            else throw new HttpRequestException($"Alpaca Daily SIP bars returned {(int)sipStatus}: {Trim(sipBody)}", null, sipStatus);
+        }
+        else
+        {
+            var (plainStatus, plainBody) = await FetchAsync(symbol, _feed, nowUtc, adjustment, ct);
+            if (plainStatus != HttpStatusCode.OK)
+                throw new HttpRequestException($"Alpaca Daily bars returned {(int)plainStatus}: {Trim(plainBody)}", null, plainStatus);
+            feed = _feed; body = plainBody; status = "CONFIGURED_FEED";
+        }
+
+        var (newYorkNow, today, completedBySession) = ParseCompletedSessions(symbol, body, cutoff);
+        var expected = ExpectedSessionDates(LatestExpectedSession(newYorkNow, today), sessionCount);
+        var sessions = expected.Where(completedBySession.ContainsKey)
+            .Select(date => { var item = completedBySession[date]; return new DailySessionObservation(date, item.Bar.TimestampUtc, item.Bar.Open, item.Bar.High, item.Bar.Low, item.Bar.Close, item.Bar.Volume); })
+            .ToArray();
+        return new DailyRecentSessions(symbol.ToUpperInvariant(), "Alpaca", feed,
+            feed.Equals("sip", StringComparison.OrdinalIgnoreCase) ? "CONSOLIDATED_SIP" : "IEX_PARTIAL",
+            adjustment, nowUtc, status, expected, expected.Where(d => !completedBySession.ContainsKey(d)).ToArray(), sessions);
+    }
+
+    /// <summary>
+    /// METHOD: ParseCompletedSessions
+    /// PURPOSE: Parses a Daily bars body and keeps one bar per trading session whose close is at or before
+    /// <paramref name="dataCutoffUtc"/> (the current session only after its scheduled regular close).
+    /// WHEN CALLED: By <see cref="Build"/> and <see cref="GetRecentSessionsAsync"/>.
+    /// </summary>
+    private static (DateTime NewYorkNow, DateOnly Today, Dictionary<DateOnly, CompletedSession> CompletedBySession) ParseCompletedSessions(
+        string symbol, string body, DateTimeOffset dataCutoffUtc)
+    {
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("bars", out var bars))
+            throw new InvalidOperationException($"Alpaca Daily response is missing the 'bars' property (root JSON kind: {root.ValueKind}).");
+
+        // Alpaca's single-symbol response is normally an array. Some response envelopes
+        // key the array by symbol; accept only the requested symbol and preserve empty/null
+        // as an explicit no-observation result rather than converting it into an API 502.
+        if (bars.ValueKind == JsonValueKind.Object)
+        {
+            if (!bars.TryGetProperty(symbol.ToUpperInvariant(), out var symbolBars))
+                bars = JsonSerializer.SerializeToElement(Array.Empty<object>());
+            else if (symbolBars.ValueKind == JsonValueKind.Array || symbolBars.ValueKind == JsonValueKind.Null)
+                bars = symbolBars;
+            else
+                throw new InvalidOperationException($"Alpaca Daily response bars.{symbol.ToUpperInvariant()} has unexpected JSON kind {symbolBars.ValueKind}.");
+        }
+        else if (bars.ValueKind == JsonValueKind.Null)
+        {
+            bars = JsonSerializer.SerializeToElement(Array.Empty<object>());
+        }
+        else if (bars.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException($"Alpaca Daily response bars has unexpected JSON kind {bars.ValueKind} for symbol {symbol.ToUpperInvariant()}.");
+        }
+
+        var parsed = bars.EnumerateArray().Select(item => new DailyBar(
+                item.GetProperty("t").GetDateTimeOffset(),
+                item.GetProperty("o").GetDouble(),
+                item.GetProperty("h").GetDouble(),
+                item.GetProperty("l").GetDouble(),
+                item.GetProperty("c").GetDouble(),
+                item.GetProperty("v").GetInt64()))
+            .OrderBy(x => x.TimestampUtc)
+            .GroupBy(x => x.TimestampUtc)
+            .Select(group => group.First())
+            .ToArray();
+
+        var newYorkNow = TimeZoneInfo.ConvertTime(dataCutoffUtc, Eastern).DateTime;
+        var today = DateOnly.FromDateTime(newYorkNow.Date);
+        var completedBySession = parsed
+            .Where(bar => bar.TimestampUtc <= dataCutoffUtc)
+            .Select(bar => new CompletedSession(bar, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(bar.TimestampUtc, Eastern).Date)))
+            .Where(item => UsEquitiesSessionCalendar.IsTradingSession(item.SessionDate))
+            .Where(item => item.SessionDate < today ||
+                (item.SessionDate == today && newYorkNow.TimeOfDay >= UsEquitiesSessionCalendar.GetRegularClose(item.SessionDate).ToTimeSpan()))
+            .GroupBy(item => item.SessionDate)
+            .ToDictionary(group => group.Key, group => group.Last());
+        return (newYorkNow, today, completedBySession);
+    }
+
+    /// <summary>
+    /// METHOD: LatestExpectedSession
+    /// PURPOSE: The latest trading session that has closed as of the Eastern clock (today only after its close).
+    /// WHEN CALLED: By <see cref="Build"/> and <see cref="GetRecentSessionsAsync"/>.
+    /// </summary>
+    private static DateOnly LatestExpectedSession(DateTime newYorkNow, DateOnly today)
+    {
+        var latestExpected = today;
+        if (!UsEquitiesSessionCalendar.IsTradingSession(latestExpected) ||
+            newYorkNow.TimeOfDay < UsEquitiesSessionCalendar.GetRegularClose(latestExpected).ToTimeSpan())
+        {
+            do { latestExpected = latestExpected.AddDays(-1); }
+            while (!UsEquitiesSessionCalendar.IsTradingSession(latestExpected));
+        }
+        return latestExpected;
+    }
+
+    /// <summary>
+    /// METHOD: ExpectedSessionDates
+    /// PURPOSE: The <paramref name="count"/> trading sessions ending at <paramref name="latestExpected"/>, ascending.
+    /// WHEN CALLED: By <see cref="Build"/> and <see cref="GetRecentSessionsAsync"/>.
+    /// </summary>
+    private static List<DateOnly> ExpectedSessionDates(DateOnly latestExpected, int count)
+    {
+        var expectedDates = new List<DateOnly>(count);
+        for (var date = latestExpected; expectedDates.Count < count; date = date.AddDays(-1))
+            if (UsEquitiesSessionCalendar.IsTradingSession(date)) expectedDates.Add(date);
+        expectedDates.Reverse();
+        return expectedDates;
+    }
+
     private async Task<HttpResponseMessage> SendWithRetryAsync(HttpRequestMessage request, CancellationToken ct)
     {
         for (var attempt = 1; ; attempt++)
@@ -244,6 +333,9 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
     }
 
     private sealed record DailyBar(DateTimeOffset TimestampUtc, double Open, double High, double Low, double Close, long Volume);
+
+    /// <summary>One completed Daily bar keyed to its Eastern session date.</summary>
+    private sealed record CompletedSession(DailyBar Bar, DateOnly SessionDate);
 }
 
 public sealed record DailyMarketMetrics(
@@ -280,3 +372,20 @@ public sealed record DailySessionObservation(
     double Low,
     double Close,
     long Volume);
+
+/// <summary>
+/// TYPE: DailyRecentSessions
+/// PURPOSE: The latest N expected completed Daily sessions with feed provenance and any missing session dates.
+/// WHEN CALLED: Returned by <see cref="AlpacaDailyMarketDataClient.GetRecentSessionsAsync"/>.
+/// </summary>
+public sealed record DailyRecentSessions(
+    string Symbol,
+    string Provider,
+    string Feed,
+    string FeedCoverage,
+    string Adjustment,
+    DateTimeOffset RetrievedAtUtc,
+    string RequestStatus,
+    IReadOnlyList<DateOnly> ExpectedSessionDates,
+    IReadOnlyList<DateOnly> MissingSessionDates,
+    IReadOnlyList<DailySessionObservation> Sessions);
