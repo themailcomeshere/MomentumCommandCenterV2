@@ -1898,3 +1898,7 @@ body.boring-overnight-mode #redZoneStateLegend,body.boring-overnight-mode #redZo
 .auto-scan-tag.warn{color:var(--yellow)}
 .auto-scan-sources summary{cursor:pointer;color:var(--muted);font-size:12px}
 #autoScanFeedRedZone[aria-pressed="true"]{border-color:var(--green);color:var(--green);font-weight:800}
+
+/* READY card (2026-11-16): untested limit and qualification notes */
+.ready-limit-untested{color:var(--yellow)}
+.ready-notes{list-style:none;padding-left:0;margin:6px 0}

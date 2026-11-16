@@ -1,12 +1,34 @@
 namespace MomentumCommandCenterV2.API.BoringOvernight;
 
 /// <summary>
+/// TYPE: BoringOvernightEvaluationMode
+/// PURPOSE: Which qualification rules apply (operator decision 2026-11-16).
+/// Full = original rules (5M permission YES and 5M structure BULLISH required).
+/// ReadyFinalHour = READY in the final regular hour: 5M permission/structure are informational notes; intraday data
+/// must still be fresh and present; the V2 end-of-day "Exit/SELL" (from 15:55 ET) is a note, not a stock signal.
+/// ReadyLate = READY in the late window (regular close to close + 60 min): only Daily data must be fresh; intraday
+/// 1M/5M, extension and volume checks are not evaluated after the close and are shown as notes.
+/// WHEN CALLED: Passed to <see cref="BoringOvernightEvaluator.Evaluate"/>.
+/// </summary>
+public enum BoringOvernightEvaluationMode
+{
+    Full,
+    ReadyFinalHour,
+    ReadyLate
+}
+
+/// <summary>
 /// Evaluates explicit Boring Overnight qualification inputs. It never places orders
 /// and never substitutes missing values with estimates.
 /// </summary>
 public static class BoringOvernightEvaluator
 {
-    public static BoringOvernightEvaluation Evaluate(BoringOvernightEvaluationRequest r)
+    /// <summary>
+    /// PURPOSE: Applies the qualification gates for the given mode. Missing required inputs give DATA?, failed hard gates
+    /// BLOCKED, cautions WATCH, otherwise READY (eligibility only, never an order).
+    /// WHEN CALLED: POST /api/boring-overnight/evaluate (Full), capture history (Full) and the READY evaluator (Ready modes).
+    /// </summary>
+    public static BoringOvernightEvaluation Evaluate(BoringOvernightEvaluationRequest r, BoringOvernightEvaluationMode mode = BoringOvernightEvaluationMode.Full)
     {
         // Reject malformed numeric payloads before any comparison. NaN bypasses ordinary
         // range comparisons, and Infinity can otherwise accidentally satisfy some gates.
@@ -47,9 +69,14 @@ public static class BoringOvernightEvaluator
         var missing = new List<string>();
         var blockers = new List<string>();
         var warnings = new List<string>();
+        var notes = new List<string>();
+        var late = mode == BoringOvernightEvaluationMode.ReadyLate;
+        var momentumRequired = mode == BoringOvernightEvaluationMode.Full;
 
-        if (r.DataFresh is null) missing.Add("dataFresh");
-        else if (!r.DataFresh.Value) blockers.Add("Market/metric data is stale.");
+        // Late window: intraday bars stop updating at the regular close, so only the Daily data must be fresh.
+        var fresh = late ? r.DailyDataFresh ?? r.DataFresh : r.DataFresh;
+        if (fresh is null) missing.Add(late ? "dailyDataFresh" : "dataFresh");
+        else if (!fresh.Value) blockers.Add(late ? "Daily data is stale." : "Market/metric data is stale.");
 
         if (r.Excluded is null) missing.Add("excluded");
         else if (r.Excluded.Value) blockers.Add("Symbol is on the excluded list.");
@@ -89,24 +116,54 @@ public static class BoringOvernightEvaluator
         else if (r.CatalystStatus.Equals("RISK", StringComparison.OrdinalIgnoreCase))
             blockers.Add("Material catalyst/event risk requires rejection or explicit manual review.");
 
-        if (r.FiveMinutePermission is null) missing.Add("fiveMinutePermission");
-        else if (!r.FiveMinutePermission.Value) blockers.Add("5M permission is NO.");
+        if (momentumRequired)
+        {
+            if (r.FiveMinutePermission is null) missing.Add("fiveMinutePermission");
+            else if (!r.FiveMinutePermission.Value) blockers.Add("5M permission is NO.");
 
-        if (string.IsNullOrWhiteSpace(r.FiveMinuteStructure)) missing.Add("fiveMinuteStructure");
-        else if (!r.FiveMinuteStructure.Equals("BULLISH", StringComparison.OrdinalIgnoreCase))
-            blockers.Add("5M structure is not BULLISH.");
+            if (string.IsNullOrWhiteSpace(r.FiveMinuteStructure)) missing.Add("fiveMinuteStructure");
+            else if (!r.FiveMinuteStructure.Equals("BULLISH", StringComparison.OrdinalIgnoreCase))
+                blockers.Add("5M structure is not BULLISH.");
+        }
+        else
+        {
+            // Operator decision 2026-11-16: intraday momentum permission is not required for a Boring Overnight hold.
+            notes.Add(r.FiveMinutePermission switch
+            {
+                true => "5M permission YES (informational).",
+                false => "5M permission NO (informational; not required for Boring Overnight READY).",
+                null => late ? "5M permission not evaluated after the regular close (informational)." : "5M permission unavailable (informational)."
+            });
+            notes.Add(string.IsNullOrWhiteSpace(r.FiveMinuteStructure)
+                ? "5M structure unavailable (informational)."
+                : $"5M structure {r.FiveMinuteStructure} (informational).");
+        }
 
-        if (string.IsNullOrWhiteSpace(r.OneMinuteState)) missing.Add("oneMinuteState");
+        if (string.IsNullOrWhiteSpace(r.OneMinuteState))
+        {
+            if (late) notes.Add("1M state not evaluated after the regular close.");
+            else missing.Add("oneMinuteState");
+        }
+        else if (!momentumRequired && r.OneMinuteState.StartsWith("Exit", StringComparison.OrdinalIgnoreCase))
+            notes.Add("1M shows the V2 end-of-day exit window (from 15:55 ET); that is a clock rule, not a signal about this stock.");
         else if (r.OneMinuteState.Contains("GET OUT", StringComparison.OrdinalIgnoreCase) ||
                  r.OneMinuteState.Contains("SELL", StringComparison.OrdinalIgnoreCase) ||
                  r.OneMinuteState.Contains("BLOCK", StringComparison.OrdinalIgnoreCase))
             blockers.Add("1M state indicates SELL/GET OUT/BLOCK; do not qualify an entry.");
 
-        if (r.ExtensionAtr is null) missing.Add("extensionAtr");
+        if (r.ExtensionAtr is null)
+        {
+            if (late) notes.Add("1M extension not evaluated after the regular close.");
+            else missing.Add("extensionAtr");
+        }
         else if (r.ExtensionAtr.Value >= 2.0)
             warnings.Add("1M extension is at or above the 2.0 ATR danger threshold.");
 
-        if (r.CurrentVolumeVsAverage is null) missing.Add("currentVolumeVsAverage");
+        if (r.CurrentVolumeVsAverage is null)
+        {
+            if (late) notes.Add("Intraday relative volume not evaluated after the regular close.");
+            else missing.Add("currentVolumeVsAverage");
+        }
         else if (r.CurrentVolumeVsAverage.Value >= 3.0)
             warnings.Add("Current volume is at least 3x its reference average; investigate an abnormal session.");
 
@@ -136,7 +193,8 @@ public static class BoringOvernightEvaluator
 
         return new BoringOvernightEvaluation(r.Symbol.ToUpperInvariant(), status,
             status == "READY", reasons, uniqueBlockers, uniqueWarnings, uniqueMissing,
-            "No order was submitted. READY means only that the supplied snapshot passed this version of the qualification rules.");
+            "No order was submitted. READY means only that the supplied snapshot passed this version of the qualification rules.",
+            notes.Distinct().ToArray(), mode.ToString());
     }
 }
 
@@ -160,7 +218,8 @@ public sealed record BoringOvernightEvaluationRequest(
     double? ExtensionAtr,
     double? CurrentVolumeVsAverage,
     double? DailyRangePct,
-    double? AtrPct);
+    double? AtrPct,
+    bool? DailyDataFresh = null);
 
 public sealed record BoringOvernightEvaluation(
     string Symbol,
@@ -170,4 +229,6 @@ public sealed record BoringOvernightEvaluation(
     IReadOnlyList<string> Blockers,
     IReadOnlyList<string> Warnings,
     IReadOnlyList<string> MissingInputs,
-    string Disclaimer);
+    string Disclaimer,
+    IReadOnlyList<string>? Notes = null,
+    string? Mode = null);

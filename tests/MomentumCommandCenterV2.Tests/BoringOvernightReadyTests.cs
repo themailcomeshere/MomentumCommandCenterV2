@@ -85,18 +85,114 @@ public sealed class BoringOvernightReadyTests
         Assert.Equal("DATA?", BoringOvernightReadyEvaluator.Evaluate(Inputs() with { Excluded = null }).Status);
     }
 
-    /// <summary>A failed walk-forward is NOT_READY; incomplete history is DATA?; no limit is ever shown.</summary>
+    /// <summary>
+    /// Operator decision 2026-11-16: without a tested target (walk-forward failed, history incomplete, evidence error) the
+    /// untested +0.5% heuristic is applied to the latest trade, READY is allowed and labelled LIMIT UNTESTED.
+    /// </summary>
     [Fact]
-    public void SellEvidenceFailuresWithholdTheLimit()
+    public void UntestedSellEvidence_UsesHeuristicAndLabelsIt()
     {
-        var walkForwardFail = Inputs() with { SellLimit = Sell("BLOCKED", null, ("WALK_FORWARD_VALIDATION", false)) };
-        var historyMissing = Inputs() with { SellLimit = Sell("BLOCKED", null, ("HISTORY_40_OF_40", false)) };
-        var a = BoringOvernightReadyEvaluator.Evaluate(walkForwardFail);
-        var b = BoringOvernightReadyEvaluator.Evaluate(historyMissing);
-        Assert.Equal("NOT_READY", a.Status);
-        Assert.Null(a.CalculatedLimitSell);
-        Assert.Equal("DATA?", b.Status);
-        Assert.Null(b.CalculatedLimitSell);
+        var walkForwardFail = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { SellLimit = Sell("BLOCKED", null, ("WALK_FORWARD_VALIDATION", false)) });
+        var historyMissing = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { SellLimit = Sell("BLOCKED", null, ("HISTORY_40_OF_40", false)) });
+        var evidenceError = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { SellLimit = null, SellLimitError = "HttpRequestException: test" });
+
+        foreach (var r in new[] { walkForwardFail, historyMissing, evidenceError })
+        {
+            Assert.Equal("READY", r.Status);
+            Assert.Equal(50.25m, r.CalculatedLimitSell);            // 50.00 x 1.005
+            Assert.Equal(0.5m, r.TargetReturnPct);
+            Assert.Equal("UNTESTED_HEURISTIC", r.LimitBasis);
+            Assert.Contains("LIMIT UNTESTED", r.SignalLabel);
+            Assert.Contains(r.Warnings, w => w.Contains("UNTESTED", StringComparison.Ordinal));
+        }
+        Assert.Contains("WALK_FORWARD_VALIDATION", walkForwardFail.Gates.Single(g => g.Code == "SELL_LIMIT").Detail);
+    }
+
+    /// <summary>A tested target keeps its own basis and label (no UNTESTED).</summary>
+    [Fact]
+    public void TestedSellEvidence_UsesTestedTarget()
+    {
+        var r = BoringOvernightReadyEvaluator.Evaluate(Inputs());
+
+        Assert.Equal("READY", r.Status);
+        Assert.Equal(50.39m, r.CalculatedLimitSell);                // 50.00 x 1.0078
+        Assert.Equal("TESTED_P50", r.LimitBasis);
+        Assert.DoesNotContain("UNTESTED", r.SignalLabel);
+    }
+
+    /// <summary>Operator decision 2026-11-16: 5M permission NO / structure NOT_BULLISH are notes in READY, not blockers.</summary>
+    [Fact]
+    public void FiveMinuteMomentum_IsInformationalForReady()
+    {
+        var at = InWindow;
+        var snapshot = Snapshot(at.AddMinutes(-2)) with
+        {
+            EvaluationRequest = Snapshot(at).EvaluationRequest with { FiveMinutePermission = false, FiveMinuteStructure = "NOT_BULLISH" }
+        };
+        var r = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { Snapshot = snapshot });
+
+        Assert.Equal("READY", r.Status);
+        Assert.Contains(r.QualificationNotes!, n => n.Contains("5M permission NO", StringComparison.Ordinal));
+        // The Full mode (other screens) keeps the original momentum rule.
+        Assert.Equal("BLOCKED", BoringOvernightEvaluator.Evaluate(snapshot.EvaluationRequest with { CatalystStatus = "CLEAR" }).Status);
+    }
+
+    /// <summary>The V2 end-of-day "Exit/SELL" (from 15:55 ET) is a clock rule, not a stock signal; a real SELL still blocks.</summary>
+    [Fact]
+    public void EndOfDayExit_IsNoteButRealSellBlocks()
+    {
+        var at = Et(BuyDay, 15, 57);
+        Snapshot1M(at, "Exit/SELL", out var eod);
+        Snapshot1M(at, "ConfirmedWeakness/SELL", out var weak);
+
+        Assert.Equal("READY", BoringOvernightReadyEvaluator.Evaluate(eod).Status);
+        Assert.Equal("BLOCKED", BoringOvernightReadyEvaluator.Evaluate(weak).Status);
+    }
+
+    /// <summary>Late window (close to close + 60 min): Daily freshness only; trade at/below the regular close is READY.</summary>
+    [Fact]
+    public void LateWindow_TradeAtOrBelowClose_IsReady()
+    {
+        var r = BoringOvernightReadyEvaluator.Evaluate(LateInputs(49.90m, 50.00m));
+
+        Assert.Equal("READY", r.Status);
+        Assert.Equal("LATE", r.EntryWindow);
+        Assert.Contains("LATE WINDOW (LMT EXT)", r.SignalLabel);
+        Assert.Equal(GatePass, r.Gates.Single(g => g.Code == "LATE_ENTRY_PRICE").State);
+        Assert.Contains(r.QualificationNotes!, n => n.Contains("after the regular close", StringComparison.Ordinal));
+        Assert.Equal(Et(BuyDay, 17, 0), r.LateBuyDeadlineUtc);
+    }
+
+    /// <summary>Late window: an after-hours trade above the regular close is WATCH (NOT_READY), never READY.</summary>
+    [Fact]
+    public void LateWindow_TradeAboveClose_IsWatch()
+    {
+        var r = BoringOvernightReadyEvaluator.Evaluate(LateInputs(50.20m, 50.00m));
+
+        Assert.Equal("NOT_READY", r.Status);
+        Assert.Equal("WATCH — AFTER-HOURS UP 0.40%", r.SignalLabel);
+    }
+
+    /// <summary>Late window without a regular-close reference is DATA?.</summary>
+    [Fact]
+    public void LateWindow_NoCloseReference_IsData()
+    {
+        var r = BoringOvernightReadyEvaluator.Evaluate(LateInputs(49.90m, null));
+
+        Assert.Equal("DATA?", r.Status);
+        Assert.Equal("DATA?", r.Gates.Single(g => g.Code == "LATE_ENTRY_PRICE").State);
+    }
+
+    /// <summary>After close + 60 minutes the window is closed and the buy session moves to the next day.</summary>
+    [Fact]
+    public void AfterLateDeadline_WindowIsClosed()
+    {
+        var at = Et(BuyDay, 17, 5);
+        var clock = MarketSessionClock.GetSnapshot(at);
+
+        Assert.False(clock.OvernightBuyWindowOpen);
+        Assert.False(clock.OvernightLateBuyWindowOpen);
+        Assert.Equal(BuyDay.AddDays(1), clock.OvernightBuySessionDate);
     }
 
     /// <summary>A latest trade older than 2 minutes (or none) cannot be used for the limit: DATA?.</summary>
@@ -183,14 +279,16 @@ public sealed class BoringOvernightReadyTests
         Assert.Throws<ArgumentException>(() => CatalystAttestationStore.CreateRecord(new("TEST", new[] { "TWITTER" }, null), InWindow));
         Assert.Throws<ArgumentException>(() => CatalystAttestationStore.CreateRecord(new("TEST", new[] { "OTHER" }, null), InWindow));
         Assert.Throws<ArgumentException>(() => CatalystAttestationStore.CreateRecord(new("TEST", new[] { "SEC_EDGAR" }, null), Et(new DateOnly(2026, 11, 14), 12, 0))); // Saturday
-        Assert.Throws<ArgumentException>(() => CatalystAttestationStore.CreateRecord(new("TEST", new[] { "SEC_EDGAR" }, null), Et(BuyDay, 16, 5)));  // after deadline
+        Assert.Throws<ArgumentException>(() => CatalystAttestationStore.CreateRecord(new("TEST", new[] { "SEC_EDGAR" }, null), Et(BuyDay, 17, 5)));  // after the late deadline
+        var late = CatalystAttestationStore.CreateRecord(new("TEST", new[] { "SEC_EDGAR" }, null), Et(BuyDay, 16, 5)); // late window: accepted
+        Assert.Equal(Et(BuyDay, 17, 0), late.ExpiresAtUtc);
 
         var record = CatalystAttestationStore.CreateRecord(new("test", new[] { "sec_edgar", "SCHWAB_NEWS" }, null), InWindow);
         Assert.Equal("TEST", record.Symbol);
         Assert.Equal(BuyDay, record.BuySessionDate);
-        Assert.Equal(Et(BuyDay, 16, 0), record.ExpiresAtUtc);
-        Assert.True(CatalystAttestationStore.IsValidFor(record, "TEST", BuyDay, Et(BuyDay, 15, 59)));
-        Assert.False(CatalystAttestationStore.IsValidFor(record, "TEST", BuyDay, Et(BuyDay, 16, 0)));
+        Assert.Equal(Et(BuyDay, 17, 0), record.ExpiresAtUtc);                     // late deadline (2026-11-16 decision)
+        Assert.True(CatalystAttestationStore.IsValidFor(record, "TEST", BuyDay, Et(BuyDay, 16, 59)));
+        Assert.False(CatalystAttestationStore.IsValidFor(record, "TEST", BuyDay, Et(BuyDay, 17, 0)));
     }
 
     /// <summary>The store appends and returns the valid sign-off for the session (temp file).</summary>
@@ -203,7 +301,7 @@ public sealed class BoringOvernightReadyTests
             var store = new CatalystAttestationStore(path);
             await store.AppendAsync(new("TEST", new[] { "COMPANY_IR" }, "checked IR page"), InWindow, CancellationToken.None);
             var valid = await store.GetValidAsync("TEST", BuyDay, InWindow.AddMinutes(1), CancellationToken.None);
-            var none = await store.GetValidAsync("TEST", BuyDay, Et(BuyDay, 16, 1), CancellationToken.None);
+            var none = await store.GetValidAsync("TEST", BuyDay, Et(BuyDay, 17, 1), CancellationToken.None);
             Assert.NotNull(valid);
             Assert.Equal("checked IR page", valid!.Note);
             Assert.Null(none);
@@ -251,6 +349,44 @@ public sealed class BoringOvernightReadyTests
     }
 
     // ---------- helpers ----------
+
+    private const string GatePass = BoringOvernightReadyEvaluator.GatePass;
+
+    /// <summary>Inputs in the final hour with a given 1M state on the snapshot.</summary>
+    private static void Snapshot1M(DateTimeOffset at, string oneMinuteState, out ReadyInputs inputs)
+    {
+        var snapshot = Snapshot(at.AddMinutes(-2)) with
+        {
+            EvaluationRequest = Snapshot(at).EvaluationRequest with { OneMinuteState = oneMinuteState }
+        };
+        inputs = Inputs(at) with { Snapshot = snapshot };
+    }
+
+    /// <summary>
+    /// Inputs at 16:30 ET (late window): intraday data stale/missing after the close, Daily data fresh, a sign-off valid
+    /// until 17:00 ET, and the given after-hours trade and regular-close reference.
+    /// </summary>
+    private static ReadyInputs LateInputs(decimal trade, decimal? regularClose)
+    {
+        var at = Et(BuyDay, 16, 30);
+        var snapshot = Snapshot(at.AddMinutes(-2)) with
+        {
+            EvaluationRequest = Snapshot(at).EvaluationRequest with
+            {
+                DataFresh = false, DailyDataFresh = true, FiveMinutePermission = null, FiveMinuteStructure = null,
+                OneMinuteState = null, ExtensionAtr = null, CurrentVolumeVsAverage = null
+            }
+        };
+        return Inputs(at) with
+        {
+            Snapshot = snapshot,
+            Attestation = Signoff() with { ExpiresAtUtc = Et(BuyDay, 17, 0) },
+            LiveTradePrice = trade,
+            LiveTradeTimestampUtc = at.AddSeconds(-30),
+            RegularCloseReference = regularClose,
+            RegularCloseReferenceSource = regularClose is null ? null : "test"
+        };
+    }
 
     private static ReadyInputs Inputs(DateTimeOffset? now = null)
     {

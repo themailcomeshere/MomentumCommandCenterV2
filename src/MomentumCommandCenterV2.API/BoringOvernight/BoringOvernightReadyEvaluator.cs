@@ -5,9 +5,11 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// <summary>
 /// TYPE: BoringOvernightReadyEvaluator
 /// PURPOSE: Pure READY decision for one symbol, per docs/Engineering/Boring-Overnight-READY-Semantics-20261114.md.
-/// READY requires, inside the buy window: a fresh qualification snapshot whose hard gates all pass (status READY, not
-/// WATCH), no exclusion match, the catalyst gate, and an issued research sell limit. Nothing is imputed; any missing
-/// evidence is DATA?. MCC never submits an order; READY is decision support for the operator's own order.
+/// READY requires, inside the final-hour or late buy window: a fresh qualification snapshot whose hard gates all pass
+/// (status READY, not WATCH), no exclusion match, the catalyst gate, a fresh trade price for the sell limit and, in the
+/// late window, an after-hours price at or below the regular close. Operator decisions 2026-11-16: 5M momentum is
+/// informational; an untested sell limit uses the operator's heuristic and is labelled LIMIT UNTESTED; a late window runs
+/// until close + 60 minutes. Nothing is imputed; any missing evidence is DATA?. MCC never submits an order.
 /// WHEN CALLED: By BoringOvernightReadyService for each evaluation, and by unit tests.
 /// </summary>
 public static class BoringOvernightReadyEvaluator
@@ -38,13 +40,22 @@ public static class BoringOvernightReadyEvaluator
         var gates = new List<ReadyGate>();
         var warnings = new List<string>();
         var actions = new List<string>();
+        var qualificationNotes = new List<string>();
 
-        // 1. Buy window.
-        var windowOpen = input.Clock.OvernightBuyWindowOpen;
+        // 1. Buy window: final regular hour, or the late after-hours window (close to close + 60 min).
+        var finalHourOpen = input.Clock.OvernightBuyWindowOpen;
+        var lateOpen = input.Clock.OvernightLateBuyWindowOpen && !finalHourOpen;
+        var windowOpen = finalHourOpen || lateOpen;
+        var entryWindow = finalHourOpen ? "FINAL_HOUR" : lateOpen ? "LATE" : "CLOSED";
         gates.Add(new("BUY_WINDOW", windowOpen ? GatePass : GateNotYet,
-            windowOpen
-                ? $"Buy window open until {input.Clock.OvernightBuyDeadlineUtc:O}."
-                : $"Buy window for {input.Clock.OvernightBuySessionDate:yyyy-MM-dd} opens {input.Clock.OvernightBuyWindowStartUtc:O} and closes {input.Clock.OvernightBuyDeadlineUtc:O}."));
+            finalHourOpen
+                ? $"Final-hour buy window open until the regular close {input.Clock.OvernightBuyDeadlineUtc:O}; a late window follows until {input.Clock.OvernightLateBuyDeadlineUtc:O}."
+                : lateOpen
+                    ? $"LATE buy window (after-hours) open until {input.Clock.OvernightLateBuyDeadlineUtc:O}. Use a LMT EXT order. The historical edge is measured from the regular close."
+                    : $"Buy window for {input.Clock.OvernightBuySessionDate:yyyy-MM-dd} opens {input.Clock.OvernightBuyWindowStartUtc:O}; final hour until {input.Clock.OvernightBuyDeadlineUtc:O}, late window until {input.Clock.OvernightLateBuyDeadlineUtc:O}."));
+
+        var tradeFresh = input.LiveTradePrice is > 0 && input.LiveTradeTimestampUtc is { } tradeAt &&
+            tradeAt <= input.NowUtc && input.NowUtc - tradeAt <= MaxLiveTradeAge;
 
         // 2-3. Fresh snapshot and qualification.
         var snapshot = input.Snapshot;
@@ -68,9 +79,11 @@ public static class BoringOvernightReadyEvaluator
         if (snapshot is not null)
         {
             var request = snapshot.EvaluationRequest with { CatalystStatus = CatalystDeferred, Excluded = input.Excluded };
-            var qualification = BoringOvernightEvaluator.Evaluate(request);
+            var qualificationMode = lateOpen ? BoringOvernightEvaluationMode.ReadyLate : BoringOvernightEvaluationMode.ReadyFinalHour;
+            var qualification = BoringOvernightEvaluator.Evaluate(request, qualificationMode);
+            qualificationNotes.AddRange(qualification.Notes ?? Array.Empty<string>());
             var detail = qualification.Status == "READY"
-                ? "All qualification hard gates passed (price/SMA20, ADV20, overnight win rate and averages, 5M permission and structure, 1M state, data freshness)."
+                ? "All qualification hard gates passed (price >= $5 and above SMA20, ADV20, overnight win rate and averages, data freshness, 1M not SELL). 5M momentum is informational."
                 : string.Join(" ", qualification.Reasons);
             var state = qualification.Status switch
             {
@@ -91,6 +104,26 @@ public static class BoringOvernightReadyEvaluator
             null => new("EXCLUSION", GateData, "Exclusion watchlist could not be read.")
         });
 
+        // 4b. Late window: the after-hours price must not be above the regular close (the edge is measured from the close).
+        decimal? lateMovePct = null;
+        if (lateOpen)
+        {
+            if (input.RegularCloseReference is not > 0)
+                gates.Add(new("LATE_ENTRY_PRICE", GateData, "The regular-session close reference is unavailable, so the after-hours price cannot be checked."));
+            else if (!tradeFresh)
+                gates.Add(new("LATE_ENTRY_PRICE", GateData,
+                    $"No trade in the last {MaxLiveTradeAge.TotalMinutes:0} minutes to compare with the regular close {input.RegularCloseReference:0.00} (after-hours IEX trades can be sparse)."));
+            else
+            {
+                lateMovePct = decimal.Round((input.LiveTradePrice!.Value / input.RegularCloseReference.Value - 1m) * 100m, 2);
+                gates.Add(input.LiveTradePrice!.Value <= input.RegularCloseReference.Value
+                    ? new("LATE_ENTRY_PRICE", GatePass,
+                        $"After-hours trade {input.LiveTradePrice:0.00} is at or below the regular close {input.RegularCloseReference:0.00} ({lateMovePct:+0.00;-0.00;0.00}%; {input.RegularCloseReferenceSource ?? "source unknown"}).")
+                    : new("LATE_ENTRY_PRICE", GateFail,
+                        $"After-hours already up {lateMovePct:+0.00}% vs the regular close {input.RegularCloseReference:0.00}: part of the overnight edge is used up. WATCH, do not chase."));
+            }
+        }
+
         // 5. Catalyst.
         var catalyst = ReadyCatalystGate.Evaluate(snapshot?.CatalystEvidence, input.HumanReviews, input.Attestation,
             symbol, input.Clock.OvernightBuySessionDate, input.NowUtc);
@@ -98,39 +131,41 @@ public static class BoringOvernightReadyEvaluator
         warnings.AddRange(catalyst.Warnings);
         actions.AddRange(catalyst.Actions);
 
-        // 6. Sell limit. The tested target % comes from the SIP history / walk-forward evidence. During the buy window
-        // the day's close does not exist yet, so the limit is applied to the latest trade (the price the operator buys at),
-        // which must be at most MaxLiveTradeAge old. Nothing is computed from a stale or missing price.
+        // 6. Sell limit. A tested target % comes from the SIP history / walk-forward evidence. Without one (operator decision
+        // 2026-11-16) the operator's heuristic +UntestedLimitPct is used and labelled LIMIT UNTESTED; it no longer blocks
+        // READY. Either way the limit is applied to the latest trade (at most MaxLiveTradeAge old); nothing is computed
+        // from a stale or missing price.
         var sell = input.SellLimit;
         decimal? limit = null, referenceClose = null, targetPct = null;
-        if (sell is null)
+        string? limitBasis = null;
+        var tested = sell is { Status: "PROVISIONAL", TargetReturnPct: not null };
+        var untestedReason = sell is null
+            ? input.SellLimitError ?? "sell-limit evidence was not evaluated"
+            : "failed required gates: " + (sell.Gates.Where(g => g.Required && !g.Passed).Select(g => g.Code).DefaultIfEmpty("SELL_LIMIT_CALCULATION").Aggregate((a, b) => a + ", " + b));
+        if (tested && tradeFresh)
         {
-            gates.Add(new("SELL_LIMIT", GateData, input.SellLimitError ?? "Sell-limit evidence was not evaluated."));
+            targetPct = sell!.TargetReturnPct;
+            referenceClose = input.LiveTradePrice;
+            limit = decimal.Round(input.LiveTradePrice!.Value * (1m + targetPct!.Value / 100m), 2, MidpointRounding.AwayFromZero);
+            limitBasis = $"TESTED_P{sell.TargetQuantilePct}";
+            gates.Add(new("SELL_LIMIT", GatePass,
+                $"Limit {limit:0.00} = latest trade {input.LiveTradePrice:0.00} at {input.LiveTradeTimestampUtc:O} ({input.LiveTradeFeed ?? "feed unknown"}) x (1 + {targetPct:0.####}%). Target is P{sell.TargetQuantilePct} of the 20 training sessions; walk-forward passed. Re-check against your actual fill price."));
+        }
+        else if (tradeFresh && input.UntestedLimitPct > 0m)
+        {
+            targetPct = input.UntestedLimitPct;
+            referenceClose = input.LiveTradePrice;
+            limit = decimal.Round(input.LiveTradePrice!.Value * (1m + targetPct.Value / 100m), 2, MidpointRounding.AwayFromZero);
+            limitBasis = "UNTESTED_HEURISTIC";
+            gates.Add(new("SELL_LIMIT", GatePass,
+                $"LIMIT UNTESTED: {limit:0.00} = latest trade {input.LiveTradePrice:0.00} ({input.LiveTradeFeed ?? "feed unknown"}) x (1 + {targetPct:0.####}%), your heuristic. No tested target ({untestedReason})."));
+            warnings.Add($"Sell limit is UNTESTED: +{targetPct:0.####}% heuristic, not a tested target ({untestedReason}).");
         }
         else
         {
-            targetPct = sell.TargetReturnPct;
-            var failedRequired = sell.Gates.Where(g => g.Required && !g.Passed).Select(g => g.Code).ToArray();
-            var tradeFresh = input.LiveTradePrice is > 0 && input.LiveTradeTimestampUtc is { } tradeAt &&
-                tradeAt <= input.NowUtc && input.NowUtc - tradeAt <= MaxLiveTradeAge;
-            if (sell.Status == "PROVISIONAL" && targetPct is not null && tradeFresh)
-            {
-                referenceClose = input.LiveTradePrice;
-                limit = decimal.Round(input.LiveTradePrice!.Value * (1m + targetPct.Value / 100m), 2, MidpointRounding.AwayFromZero);
-                gates.Add(new("SELL_LIMIT", GatePass,
-                    $"Limit {limit:0.00} = latest trade {input.LiveTradePrice:0.00} at {input.LiveTradeTimestampUtc:O} ({input.LiveTradeFeed ?? "feed unknown"}) x (1 + {targetPct:0.####}%). Target is P{sell.TargetQuantilePct} of the 20 training sessions; walk-forward passed. Re-check against your actual fill price."));
-            }
-            else if (sell.Status == "PROVISIONAL" && targetPct is not null)
-            {
-                gates.Add(new("SELL_LIMIT", GateData,
-                    $"Target +{targetPct:0.####}% is tested, but no trade price from the last {MaxLiveTradeAge.TotalMinutes:0} minutes is available to apply it to."));
-            }
-            else
-            {
-                var historyIncomplete = failedRequired.Contains("HISTORY_40_OF_40") || failedRequired.Contains("REFERENCE_CLOSE");
-                gates.Add(new("SELL_LIMIT", historyIncomplete ? GateData : GateFail,
-                    $"No tested target. Failed required gates: {(failedRequired.Length == 0 ? "SELL_LIMIT_CALCULATION" : string.Join(", ", failedRequired))}."));
-            }
+            gates.Add(new("SELL_LIMIT", GateData, tested
+                ? $"Target +{sell!.TargetReturnPct:0.####}% is tested, but no trade price from the last {MaxLiveTradeAge.TotalMinutes:0} minutes is available to apply it to."
+                : $"No trade price from the last {MaxLiveTradeAge.TotalMinutes:0} minutes to apply the +{input.UntestedLimitPct:0.####}% heuristic to; no tested target ({untestedReason})."));
         }
 
         var status = gates.Any(g => g.State == GateBlocked) ? "BLOCKED"
@@ -141,14 +176,19 @@ public static class BoringOvernightReadyEvaluator
 
         var liveAllowed = input.RequestedMode == "live" && input.LoggedShadowSessions >= MinimumShadowSessions;
         var effectiveMode = liveAllowed ? "live" : "shadow";
+        var onlyLateMoveFails = status == "NOT_READY" &&
+            gates.Where(g => g.State == GateFail).All(g => g.Code == "LATE_ENTRY_PRICE");
         var label = status switch
         {
             "READY" => effectiveMode == "live" ? "READY — BUY WINDOW OPEN" : "READY (SHADOW — not yet validated)",
             "OUTSIDE_BUY_WINDOW" => "ALL GATES PASS — OUTSIDE BUY WINDOW",
+            "NOT_READY" when onlyLateMoveFails => $"WATCH — AFTER-HOURS UP {lateMovePct:0.00}%",
             "NOT_READY" => "NOT READY",
             "BLOCKED" => "BLOCKED",
             _ => "DATA?"
         };
+        if (status == "READY" && lateOpen) label += " · LATE WINDOW (LMT EXT)";
+        if (status is "READY" or "OUTSIDE_BUY_WINDOW" && limitBasis == "UNTESTED_HEURISTIC") label += " · LIMIT UNTESTED";
         var modeNote = input.RequestedMode == "live" && !liveAllowed
             ? $"Live mode requested but only {input.LoggedShadowSessions} of {MinimumShadowSessions} shadow sessions are logged; staying in shadow."
             : effectiveMode == "shadow"
@@ -159,7 +199,8 @@ public static class BoringOvernightReadyEvaluator
             modeNote, input.NowUtc, input.Clock.OvernightBuySessionDate, input.Clock.OvernightSellSessionDate,
             input.Clock.OvernightBuyWindowStartUtc, input.Clock.OvernightBuyDeadlineUtc,
             limit, referenceClose, targetPct, catalyst.State, gates, warnings.Distinct().ToArray(), actions.Distinct().ToArray(),
-            "READY is decision support only. MCC never submits an order; position size is the operator's decision. The limit is a research target from SIP history (a touch is not a fill).");
+            "READY is decision support only. MCC never submits an order; position size is the operator's decision. A tested limit is a research target from SIP history; an UNTESTED limit is the operator's heuristic. A touch is not a fill.",
+            entryWindow, input.Clock.OvernightLateBuyDeadlineUtc, limitBasis, qualificationNotes.Distinct().ToArray());
     }
 
     /// <summary>Gate states.</summary>
@@ -284,7 +325,10 @@ public sealed record ReadyInputs(
     int LoggedShadowSessions,
     decimal? LiveTradePrice = null,
     DateTimeOffset? LiveTradeTimestampUtc = null,
-    string? LiveTradeFeed = null);
+    string? LiveTradeFeed = null,
+    decimal? RegularCloseReference = null,
+    string? RegularCloseReferenceSource = null,
+    decimal UntestedLimitPct = 0.5m);
 
 /// <summary>
 /// TYPE: ReadySellEvidence
@@ -338,4 +382,8 @@ public sealed record ReadyEvaluation(
     IReadOnlyList<ReadyGate> Gates,
     IReadOnlyList<string> Warnings,
     IReadOnlyList<string> RequiredActions,
-    string Disclaimer);
+    string Disclaimer,
+    string EntryWindow = "CLOSED",
+    DateTimeOffset LateBuyDeadlineUtc = default,
+    string? LimitBasis = null,
+    IReadOnlyList<string>? QualificationNotes = null);

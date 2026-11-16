@@ -18,10 +18,19 @@ public sealed record MarketSessionClockSnapshot(
     bool OvernightEvaluationOpen, DateTimeOffset OvernightBuyWindowStartUtc,
     bool OvernightBuyWindowOpen, DateOnly OvernightBuySessionDate, DateOnly OvernightSellSessionDate,
     DateTimeOffset OvernightSellWindowStartUtc, DateTimeOffset OvernightSellWindowEndUtc,
-    string OvernightScheduleNote);
+    string OvernightScheduleNote,
+    DateTimeOffset OvernightLateBuyDeadlineUtc = default,
+    bool OvernightLateBuyWindowOpen = false);
 
 public static class MarketSessionClock
 {
+    /// <summary>
+    /// Late buy window after the regular close (operator decision 2026-11-16): READY may still be evaluated until
+    /// close + 60 minutes (17:00 ET on a normal day = 15:00 AZ in standard time, 14:00 AZ in daylight time).
+    /// The buy session stays today until the late window ends.
+    /// </summary>
+    public static readonly TimeSpan LateBuyWindow = TimeSpan.FromMinutes(60);
+
     private static readonly TimeZoneInfo Eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
     private static readonly TimeZoneInfo Phoenix = TimeZoneInfo.FindSystemTimeZoneById("America/Phoenix");
     private static readonly TimeOnly PreMarketStart = new(4, 0), RegularOpen = new(9, 30), AfterHoursEnd = new(20, 0);
@@ -63,13 +72,16 @@ public static class MarketSessionClock
         var sellEndUtc = ToUtc(Eastern, sellSession, SellWindowEnd);
         var evaluationOpen = nowUtc >= evaluationStartUtc && nowUtc < buyDeadlineUtc;
         var buyWindowOpen = evaluationOpen;
+        var lateDeadlineUtc = buyDeadlineUtc + LateBuyWindow;
+        var lateOpen = nowUtc >= buyDeadlineUtc && nowUtc < lateDeadlineUtc;
 
         return new MarketSessionClockSnapshot(
             phase, label, ToUtc(Eastern, phase == "CLOSED" ? nextSession : today, targetTime),
             nowUtc, targetEvent, "America/New_York", UsEquitiesSessionCalendar.Version,
             evaluationStartUtc, buyDeadlineUtc, evaluationOpen, buyStartUtc, buyWindowOpen,
             buySession, sellSession, sellStartUtc, sellEndUtc,
-            "Candidate research and purchase: final 60 minutes of the regular session, ending at the regular-session close. Overnight measurement then includes Buy Day after-hours and Sell Day premarket. Next-session GTC_EXT window: 7:00 AM–8:00 PM Eastern. Schedule only; broker eligibility and fills are not verified.");
+            "Candidate research and purchase: final 60 minutes of the regular session, plus a late after-hours window until 60 minutes after the close (LMT EXT order; the historical edge is measured from the regular close). Overnight measurement includes Buy Day after-hours and Sell Day premarket. Next-session GTC_EXT window: 7:00 AM–8:00 PM Eastern. Schedule only; broker eligibility and fills are not verified.",
+            lateDeadlineUtc, lateOpen);
     }
 
     private static DateOnly FindNextBuySession(DateOnly today, TimeOnly easternTime)
@@ -79,7 +91,7 @@ public static class MarketSessionClock
         {
             if (!UsEquitiesSessionCalendar.IsTradingSession(candidate) ||
                 candidate.DayOfWeek is DayOfWeek.Friday or DayOfWeek.Saturday or DayOfWeek.Sunday) continue;
-            if (candidate == today && easternTime >= UsEquitiesSessionCalendar.GetRegularClose(candidate)) continue;
+            if (candidate == today && easternTime >= UsEquitiesSessionCalendar.GetRegularClose(candidate).Add(LateBuyWindow)) continue;
             return candidate;
         }
         throw new InvalidOperationException("Could not find the next Monday–Thursday Boring Overnight buy session.");

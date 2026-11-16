@@ -37,6 +37,14 @@ public sealed class BoringOvernightReadyService(
         int.TryParse(configuration["BoringOvernight:ReadyTargetQuantilePct"], out var q) && q is >= 1 and <= 99 ? q : 50;
 
     /// <summary>
+    /// Untested sell-limit heuristic in percent (operator decision 2026-11-16; default +0.5%). Used only when no tested
+    /// target exists; the card labels it LIMIT UNTESTED. Setting: BoringOvernight:UntestedLimitPct (0.05-5).
+    /// </summary>
+    private decimal UntestedLimitPct =>
+        decimal.TryParse(configuration["BoringOvernight:UntestedLimitPct"], System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture, out var pct) && pct is >= 0.05m and <= 5m ? pct : 0.5m;
+
+    /// <summary>
     /// METHOD: EvaluateAsync
     /// PURPOSE: Builds the READY evaluation for one symbol at nowUtc and logs it when the buy window is open.
     /// WHEN CALLED: Each READY evaluation request.
@@ -74,12 +82,34 @@ public sealed class BoringOvernightReadyService(
         catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException or ProviderNotConfiguredException)
         { logger.LogWarning(ex, "Latest trade unavailable during READY for {Symbol}", symbol); }
 
+        // Late window: the regular-session close reference is the last regular-session 1m bar on the configured feed,
+        // the same feed as the latest trade, so the after-hours comparison is like for like.
+        decimal? regularClose = null;
+        string? regularCloseSource = null;
+        if (clock.OvernightLateBuyWindowOpen && !clock.OvernightBuyWindowOpen)
+        {
+            try
+            {
+                var closeUtc = clock.OvernightBuyDeadlineUtc;
+                var bars = await alpaca.GetBarsAsync(symbol, TimeSpan.FromMinutes(1), closeUtc.AddMinutes(-15), closeUtc, ct);
+                var lastRegular = bars.Where(b => b.Timestamp < closeUtc).OrderBy(b => b.Timestamp).LastOrDefault();
+                if (lastRegular is not null && lastRegular.Close > 0)
+                {
+                    regularClose = (decimal)lastRegular.Close;
+                    regularCloseSource = $"Alpaca {lastRegular.Feed ?? alpaca.ConfiguredFeed} last regular-session 1m bar {lastRegular.Timestamp:O}";
+                }
+            }
+            catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or ArgumentException or TaskCanceledException or ProviderNotConfiguredException)
+            { logger.LogWarning(ex, "Regular-close reference unavailable during late READY for {Symbol}", symbol); }
+        }
+
         var loggedSessions = ReadyShadowSummary.CountLoggedSessions(await shadowLog.GetAllAsync(ct));
         var evaluation = BoringOvernightReadyEvaluator.Evaluate(new ReadyInputs(
             symbol, nowUtc, clock, snapshot, excluded, reviews, attestation, sellLimit, sellLimitError,
-            RequestedMode, loggedSessions, trade?.Price, trade?.TimestampUtc, trade?.Feed));
+            RequestedMode, loggedSessions, trade?.Price, trade?.TimestampUtc, trade?.Feed,
+            regularClose, regularCloseSource, UntestedLimitPct));
 
-        if (clock.OvernightBuyWindowOpen)
+        if (clock.OvernightBuyWindowOpen || clock.OvernightLateBuyWindowOpen)
             await shadowLog.AppendAsync(evaluation, ct);
         return evaluation;
     }

@@ -51,12 +51,13 @@ public sealed class CatalystAttestationStore(string? path = null)
 
         var clock = MarketSessionClock.GetSnapshot(nowUtc);
         var todayEastern = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(nowUtc, Eastern).DateTime);
-        if (clock.OvernightBuySessionDate != todayEastern || nowUtc >= clock.OvernightBuyDeadlineUtc)
+        // The late buy window (operator decision 2026-11-16) extends sign-off acceptance and validity to close + 60 min.
+        if (clock.OvernightBuySessionDate != todayEastern || nowUtc >= clock.OvernightLateBuyDeadlineUtc)
             throw new ArgumentException(
-                $"A catalyst sign-off is accepted only on the buy-session day before the buy deadline. Next buy session: {clock.OvernightBuySessionDate:yyyy-MM-dd}.");
+                $"A catalyst sign-off is accepted only on the buy-session day before the late buy deadline (close + 60 min). Next buy session: {clock.OvernightBuySessionDate:yyyy-MM-dd}.");
 
         return new CatalystAttestation(Guid.NewGuid().ToString("N"), symbol, clock.OvernightBuySessionDate,
-            sources, note, nowUtc, clock.OvernightBuyDeadlineUtc);
+            sources, note, nowUtc, clock.OvernightLateBuyDeadlineUtc);
     }
 
     /// <summary>

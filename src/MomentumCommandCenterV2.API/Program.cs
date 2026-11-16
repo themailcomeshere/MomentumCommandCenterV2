@@ -1189,6 +1189,8 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             DataFresh = dailyMetrics is null || oneMinuteFresh is null || fiveMinuteFresh is null
                 ? null
                 : dailyMetrics.DataFresh && intradayFresh,
+            // Daily-only freshness for the READY late window (after the close intraday bars stop updating).
+            DailyDataFresh = dailyMetrics?.DataFresh,
             CatalystStatus = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryEvaluationService.ResolveCatalystStatus(
                 catalystAssessment?.Status, catalystAssessment?.ArticleCount, catalystAssessment?.CoverageComplete),
             FiveMinutePermission = technical.FiveMinutePermission,

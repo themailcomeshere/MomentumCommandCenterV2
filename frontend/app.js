@@ -2504,15 +2504,18 @@ function renderReadyCard(result,captureNote){
  const head=readyEl("div","ready-head");
  head.append(readyEl("strong","ready-symbol",result.symbol),readyEl("span","ready-label",result.signalLabel||result.status));
  card.append(head);
+ const untested=result.limitBasis==="UNTESTED_HEURISTIC";
  const limit=result.calculatedLimitSell!=null
-  ?"Limit sell (GTC_EXT): $"+Number(result.calculatedLimitSell).toFixed(2)+" · from latest trade $"+Number(result.referencePrice).toFixed(2)+" + "+Number(result.targetReturnPct).toFixed(2)+"% · re-check against your fill"
+  ?"Limit sell (GTC_EXT): $"+Number(result.calculatedLimitSell).toFixed(2)+(untested?" · LIMIT UNTESTED — your +"+Number(result.targetReturnPct).toFixed(2)+"% heuristic":" · tested target +"+Number(result.targetReturnPct).toFixed(2)+"%")+" on latest trade $"+Number(result.referencePrice).toFixed(2)+" · re-check against your fill"
   :"Limit sell: DATA? — not issued";
- card.append(readyEl("p","ready-limit",limit));
- card.append(readyEl("p","muted small","Buy session "+result.buySessionDate+" · window "+readyAz(result.buyWindowStartUtc)+" – "+readyAz(result.buyDeadlineUtc)+" · sell session "+result.sellSessionDate+" · checked "+readyAz(result.evaluatedAtUtc)+(captureNote?" · "+captureNote:"")));
+ card.append(readyEl("p","ready-limit"+(untested?" ready-limit-untested":""),limit));
+ const late=result.entryWindow==="LATE";
+ card.append(readyEl("p","muted small","Buy session "+result.buySessionDate+" · final hour "+readyAz(result.buyWindowStartUtc)+" – "+readyAz(result.buyDeadlineUtc)+" · late window (after-hours, LMT EXT) until "+readyAz(result.lateBuyDeadlineUtc)+(late?" · NOW IN LATE WINDOW":"")+" · sell session "+result.sellSessionDate+" · checked "+readyAz(result.evaluatedAtUtc)+(captureNote?" · "+captureNote:"")));
  const gates=readyEl("ul","ready-gates");
  (result.gates||[]).forEach(g=>{const li=readyEl("li","ready-gate gate-"+String(g.state).replace(/[^A-Z_]/gi,""));li.append(readyEl("span","gate-state",g.state),readyEl("span","gate-code",g.code),readyEl("span","gate-detail",g.detail));gates.append(li);});
  card.append(gates);
  if((result.warnings||[]).length){const w=readyEl("ul","ready-warnings");result.warnings.forEach(x=>w.append(readyEl("li",null,"⚠ "+x)));card.append(w);}
+ if((result.qualificationNotes||[]).length){const n=readyEl("ul","ready-notes muted small");result.qualificationNotes.forEach(x=>n.append(readyEl("li",null,"ℹ "+x)));card.append(n);}
  if((result.requiredActions||[]).length){const a=readyEl("ul","ready-actions");result.requiredActions.forEach(x=>a.append(readyEl("li",null,"→ "+x)));card.append(a);}
  if(result.catalystState!=="OPERATOR_ATTESTED"&&result.catalystState!=="BLOCKED"){
   const form=readyEl("form","ready-signoff");
@@ -2574,7 +2577,7 @@ $("overnightReadyAuto")?.addEventListener("change",event=>{
  if(readyState.autoTimer){clearInterval(readyState.autoTimer);readyState.autoTimer=null;}
  if(!event.target.checked)return;
  readyState.autoTimer=setInterval(async()=>{
-  try{const r=await fetch("/api/market-session/clock",{cache:"no-store",headers:{Accept:"application/json"}});const clock=await r.json();if(clock&&clock.overnightBuyWindowOpen===true)await runReadyCheck();}catch{}
+  try{const r=await fetch("/api/market-session/clock",{cache:"no-store",headers:{Accept:"application/json"}});const clock=await r.json();if(clock&&(clock.overnightBuyWindowOpen===true||clock.overnightLateBuyWindowOpen===true))await runReadyCheck();}catch{}
  },120000);
 });
 $("overnightReadyShadowRefresh")?.addEventListener("click",async()=>{
