@@ -14,9 +14,9 @@
 
 | Item | Value |
 |---|---|
-| Latest code head | `1ca8a9d`, CI `43972669673` SUCCESS; Claude local 497/497 (Debug; the Release output was locked by the running MCC) |
+| Latest code head | `703bf03`, CI `43977782652` SUCCESS; Claude local 501/501 (Debug; the Release output was locked by the running MCC) |
 | Operator's running MCC | `dd80170` (started 14:47 AZ); needs a restart to get `83949cf`, `f693f4e`, `0962645` |
-| Dashboard cache keys | `?v=20261116-ready-review-v1` |
+| Dashboard cache keys | `?v=20261116-history-button-v1` |
 | READY mode | Shadow; sessions logged from 2026-11-16 |
 | Session times (standard time) | Regular 07:30–14:00 AZ; buy 13:00–14:00 AZ; late window 14:00–15:00 AZ; GTC_EXT sell next day 05:00–18:00 AZ |
 
@@ -58,6 +58,13 @@
   - No per-stock weekday effect.
 - **Answered:** sort the TOS Overnight scan by V3 Boringness and take V3 Status CANDIDATE rows; the TOS Overnight scanner is still needed; intraday watchlist columns recommended (Operator Guide §C).
 - **Open:** Scanner 1's aggregation (the operator runs it manually; read the `D`/`5m` button on each Study row).
+
+## Night update (2026-11-16, `703bf03`, CI `43977782652`)
+
+- **History export button** in the Dashboard header: amber = not run today, green = done today. Server-side export; the script still works and counts toward the status.
+- **V3 Rank** plain-number sort column, because TOS greys out labelled columns in "Sorted by".
+- **Scanner 1 is 5m** (operator); the **intraday watchlist columns compiled** (operator).
+- **Operator plan:** intraday checks tomorrow morning.
 
 ## Operator answers recorded today
 

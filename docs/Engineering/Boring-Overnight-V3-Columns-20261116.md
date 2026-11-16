@@ -16,6 +16,7 @@
 | **V3 Edge** | Overnight Edge Score: your installed **Overnight Score** formula, unchanged | `EDGE OK`, or the first failing edge gate: `WIN<60`, `AVG<0.10`, `5D<=20D` | Historical ability to produce positive overnight returns |
 | **V3 Boringness** | Boringness Score 0–100 | Score plus band: `PERFECT` (90+), `VERY GOOD` (80+), `POSSIBLE` (70+), `AGGRESSIVE` (60+), `REJECT` | How controlled and repeatable the overnight profile is. Kept separate from Edge, as the spec requires |
 | **V3 Status** | 3 CANDIDATE, 2 WATCH, 1 BLOCKED, 0 DATA? | Status, primary reason, `+n` for further reasons | Triage before MCC's READY check |
+| **V3 Rank** (added 2026-11-16) | Status × 100 + Boringness | none (plain number) | **Sort key** for the scan's "Sorted by" list, which greys out the labelled columns. Descending = CANDIDATEs first by Boringness |
 
 - **V3 Status never shows READY.** `CANDIDATE` means every gate Thinkorswim can compute has passed.
 - The symbol still needs MCC's **READY check** (BORING OVERNIGHT workspace, step 4). That check covers catalyst sign-off, the exclusion list, data freshness, 5M permission and the buy window.

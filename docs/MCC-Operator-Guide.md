@@ -1,6 +1,6 @@
 # MCC Operator Guide — daily use
 
-**Updated:** 2026-11-16 (code head `1ca8a9d`). This is the single page for using MCC day to day. Step numbers match the blue badges on the Dashboard. The detailed map is in [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md).
+**Updated:** 2026-11-16 (code head `703bf03`). This is the single page for using MCC day to day. Step numbers match the blue badges on the Dashboard. The detailed map is in [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md).
 
 **Times are Arizona time.** In **standard time** (early November to mid-March, now) the regular session is **07:30–14:00 AZ**. In **daylight time** subtract one hour from every time below (06:30–13:00 AZ).
 
@@ -114,7 +114,9 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 
 **After 14:16 AZ (research, optional, about 5 minutes):**
 
-13. `.\scripts\Export-OvernightHistory.ps1` (MCC running). It reads your newest `*WatchListScanner*.csv` from Documents, archives it to `D:\source\repos\MCC-Data\scanner-exports`, and writes 2-year overnight history plus weekday statistics to `D:\source\repos\MCC-Data\overnight-history\<time>\`. Research only.
+13. Click **History export** in the Dashboard header (next to Morning Command Brief). It exports 2-year overnight history and weekday statistics for your imported scan to `D:\source\repos\MCC-Data` (about a minute).
+    - **Amber:** not run today. **Blue:** running. **Green "History ✓ time":** done today.
+    - Hover for the summary. The script `.\scripts\Export-OvernightHistory.ps1` does the same and also counts. Research only.
 14. V3 parity, until done: open `http://localhost:53360/api/boring-overnight/v3-column?symbol=PRU` and compare with the TOS V3 columns.
 
 **Next day, 05:00–18:00 AZ (GTC_EXT sell window):** the limit order works on its own. The shadow log (**4 READY → Shadow log and Day 2 outcomes**) records whether the limit was touched.
@@ -125,10 +127,10 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 
 | Tool | Still needed? | How to use it |
 |---|---|---|
-| **TOS Overnight scanner** | **Yes.** MCC has no full-market daily scan (TOS scans about 15,500 stocks) | Show the **V3 Edge / V3 Boringness / V3 Status** columns. **Sort by V3 Boringness (descending)** and look only at rows where V3 Status says **CANDIDATE**. Export, then use **1 Import TOS CSV** in BORING OVERNIGHT. You don't need to add the symbols to a watchlist. If clicking the V3 Boringness header doesn't sort numerically (Thinkorswim may sort labelled columns as text), sort by **Overnight Score** (= V3 Edge) and read V3 Boringness by eye. |
+| **TOS Overnight scanner** | **Yes.** MCC has no full-market daily scan (TOS scans about 15,500 stocks) | Show the **V3 Edge / V3 Boringness / V3 Status** columns. Add the **V3 Rank** column and set **Sorted by → Custom Quotes → V3 Rank → Descending**: CANDIDATEs come first, best Boringness on top (300–400 = CANDIDATE, 200s WATCH, 100s BLOCKED). The labelled V3 columns can't be chosen in "Sorted by", because Thinkorswim greys out text-label columns. Export, then use **1 Import TOS CSV** in BORING OVERNIGHT. You don't need to add the symbols to a watchlist. |
 | **TOS intraday scans 1, 2A, 2B, Pivot, D** | **For now, as the benchmark.** MCC 2.a runs the same rules automatically on free data | Keep running them until the 5-session comparison (step 2.b) shows how much MCC misses. Then decide whether to keep them. |
 | **TOS intraday watchlist** | Yes, for charts | Columns, left to right: Symbol, Last, % Change, Volume, **VWAP Dist %**, **5M Trend**, **5M RVOL**, **5M Trigger**, **Ext ATR**. Files and install steps: `docs/Column Formulas/Intraday/README.md`. A candidate row is green across VWAP Dist / Trend 3/3 / RVOL / Trigger with Ext ATR not red. |
-| **Scan aggregation** | — | Each **Study** row in a TOS scan has an aggregation button at its right: `D` = daily bars, `5m` = 5-minute bars. Scanner 1 (Momentum Hunter) doesn't say which it uses; read that button and tell Claude. |
+| **Scan aggregation** | — | Each **Study** row in a TOS scan has an aggregation button at its right: `D` = daily bars, `5m` = 5-minute bars. All your intraday scans, including Scanner 1, use `5m` (confirmed 2026-11-16). |
 
 **What the history says (2026-11-16):**
 - When your scanner's rules fired over the past 2 years, the next night won about **53%**, not the 60–80% the 20-night columns show.
