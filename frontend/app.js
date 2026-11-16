@@ -999,7 +999,7 @@ $("scannerFile").addEventListener("change",event=>{
   }).filter(item=>item.symbol);
   if(!imported.length){$("scannerSource").textContent="Import rejected: header found, but no rows with a Symbol/Ticker value were present.";return;}
   scannerData.imported=imported;
-  const importStatus=$("overnightImportStatus");if(importStatus)importStatus.textContent="Imported "+imported.length+" symbols from "+file.name+". Boring shortlist and Daily audit symbols updated.";
+  const importStatus=$("overnightImportStatus");if(importStatus)importStatus.textContent="Imported "+imported.length+" symbols from "+file.name+" at "+new Date().toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ ("+($("mode")?.value==="overnight"?"BORING OVERNIGHT":"INTRADAY MOMENTUM")+" workspace). Red Zone, quality-ranking pool, Boring shortlist and Daily audit symbols updated.";
   overnightLiveEvidence.clear();
   populateDailyAuditFromOvernightTop20();
   const importedSymbols=new Set(imported.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
@@ -1034,6 +1034,7 @@ if(restoredScannerImport?.rows?.length){
  const stamp=restoredScannerImport.importedAtUtc?new Date(restoredScannerImport.importedAtUtc).toLocaleString():"previous session";
  renderScannerFieldAvailability(restoredScannerImport.rows,restoredScannerImport);
  $("scannerSource").textContent=`Restored ${restoredScannerImport.rows.length} local rows from ${restoredScannerImport.filename||"CSV"} · imported ${stamp}`;
+ const restoredStatus=$("overnightImportStatus");if(restoredStatus)restoredStatus.textContent=`Current import: ${restoredScannerImport.rows.length} symbols from ${restoredScannerImport.filename||"CSV"} (imported ${stamp}). Import a new file to replace it.`;
 }
 
 
@@ -1190,23 +1191,26 @@ function renderOvernightRedZone(){
 function renderMorningReport(){
  if($("mode")?.value==="overnight"){renderOvernightRedZone();return;}
  const grid=$("redZoneGrid");if(!grid)return;
+ // Restore the intraday Red Zone heading; renderOvernightRedZone() rewrites it when the Overnight workspace is shown.
+ const intradayEyebrow=document.querySelector("#red-zone .eyebrow");if(intradayEyebrow)intradayEyebrow.textContent="TOP CANDIDATES · MULTI-PANE MONITOR";
+ const intradayTitle=$("mcc-static-0072-h2");if(intradayTitle)intradayTitle.textContent="Red Zone";
+ const intradayStatus=$("redZoneManageStatus");if(intradayStatus&&/boring/i.test(intradayStatus.textContent))intradayStatus.textContent="Red Zone shows up to four symbols from your imported TOS watchlist or pins. Technical card assessments refresh every 15 seconds.";
  redZoneAssessmentRefreshers=[];
  const group=$("scannerGroup")?.value||"momentum";
  const sourceRows=Array.isArray(scannerData[group])?scannerData[group]:[];
  const state=readRedZoneState();
  const bySymbol=new Map(sourceRows.filter(x=>x&&x.symbol).map(x=>[String(x.symbol).toUpperCase(),x]));
  const pinnedRows=state.pinned.map(symbol=>bySymbol.get(symbol)||({symbol,score:"DATA?",status:"MANUAL — REVIEW",extension:"DATA?",freshness:"UNKNOWN",reason:"Manually pinned candidate. Source data, 5M Permission, and 1M execution are not established."}));
- const importedMetric=value=>{const raw=String(value??"").trim();if(!raw||/^(loading|data\?|—|n\/a)$/i.test(raw))return null;const n=Number(raw.replace("%","").trim());return Number.isFinite(n)?n:null;};
- const rankedSourceRows=group==="imported"?sourceRows.filter(item=>{
-  const m=item.overnightMetrics||{},onWin=importedMetric(m.onWin),avgOn=importedMetric(m.avgOn),fiveDay=importedMetric(m.fiveDayOn),currentOn=importedMetric(m.currentOn),above20=importedMetric(m.above20Sma);
-  return onWin!==null&&onWin>=60&&avgOn!==null&&avgOn>=0.10&&fiveDay!==null&&fiveDay>avgOn&&currentOn!==null&&currentOn<3&&above20===1;
- }):sourceRows;
- const sortedRows=rankedSourceRows.slice().sort((a,b)=>{
+ // INTRADAY MOMENTUM (2026-11-16): imported rows are the operator's TOS watchlist. They are NOT filtered by the
+ // Boring Overnight historical rules (that filter left the intraday Red Zone empty for a normal watchlist export).
+ // Rows with a numeric Score column sort first by score; rows without one keep the TOS watchlist order.
+ const originalIndex=new Map(sourceRows.map((row,index)=>[row,index]));
+ const sortedRows=sourceRows.slice().sort((a,b)=>{
   const sa=Number(a.score),sb=Number(b.score);
   if(Number.isFinite(sa)!==Number.isFinite(sb))return Number.isFinite(sb)-Number.isFinite(sa);
   const av=Number.isFinite(sa)?(group==="live"?Math.abs(sa):sa):-Infinity;
   const bv=Number.isFinite(sb)?(group==="live"?Math.abs(sb):sb):-Infinity;
-  return bv-av||String(a.symbol).localeCompare(String(b.symbol));
+  return bv-av||(originalIndex.get(a)-originalIndex.get(b));
  });
  const dismissed=new Set(state.dismissed);
  const pinnedSet=new Set(state.pinned);
@@ -1231,7 +1235,7 @@ function renderMorningReport(){
  $("morningTopCount").textContent=String(ranked.length);
  $("reportSubtitle").textContent=state.mode==="manual"
   ?"Manual mode · pinned symbols in your saved order · pins and dismissals are preserved when switching modes."
-  :(group==="imported"?"Automatic preview · top four by supplied Overnight Score among historical-gate passes · NOT a calibrated live Opportunity Quality rank · current price, 20D volume, catalyst and chart gates remain separate.":"Automatic preview · sorted by supplied scanner score · NOT a calibrated live Opportunity Quality rank.");
+  :(group==="imported"?"Automatic preview · first four of your imported TOS watchlist (by a Score column when the file has one, otherwise in watchlist order) · use 4.1 Rank quality pool for a live ranking · not trade permission.":"Automatic preview · sorted by supplied scanner score · NOT a calibrated live Opportunity Quality rank.");
  grid.replaceChildren(...(ranked.length?ranked.map((item,index)=>{
   const card=document.createElement("article");card.className="redzone-card";
   const top=document.createElement("div");top.className="redzone-card-top";

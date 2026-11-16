@@ -1726,8 +1726,8 @@ body.boring-overnight-mode #mcc-static-0087-article{display:none!important}
 /* Boring Overnight workflow: hide unrelated intraday scanner controls. */
 body.boring-overnight-mode #scanner-workbench{display:none!important}
 body.boring-overnight-mode #toggleRedZoneSound,body.boring-overnight-mode #rankOpportunityPool{display:none!important}
-body.boring-overnight-mode .overnight-import-strip{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;padding:14px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:rgba(35,57,83,.22)}
-body.boring-overnight-mode .overnight-import-strip>div p{margin:4px 0 0}
+.overnight-import-strip{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;padding:14px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:rgba(35,57,83,.22)}
+.overnight-import-strip>div p{margin:4px 0 0}
 body.boring-overnight-mode #overnightImportStatus{grid-column:1/-1}
 .overnight-workflow-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:12px 0 18px;counter-reset:overnight-step}
 .overnight-workflow-steps li{display:grid;gap:4px;padding:10px;border:1px solid var(--line);border-radius:10px;counter-increment:overnight-step}
@@ -1804,3 +1804,47 @@ body.boring-overnight-mode [data-step-overnight]::before{content:attr(data-step-
 .quality-title.quality-DATA{color:var(--muted)}
 .quality-title.quality-READY{color:var(--green)}
 .quality-title.quality-WATCH{color:var(--yellow)}
+
+/* Layout order by workflow step (2026-11-16, docs/Engineering/MCC-Workflow-Steps.md).
+   Blocks are shared between modes, so each mode orders them with flexbox `order`.
+   Anything not listed keeps order 50 and falls to the end. */
+#mcc-static-0049-main{display:flex;flex-direction:column}
+#mcc-static-0049-main>*{order:50}
+/* INTRADAY MOMENTUM: 1.2 morning, 2.a import, 2.b-2.c discovery, 3 exclusions, 4 Red Zone, 5 focus, 7 records */
+body:not(.boring-overnight-mode) #morningBriefDetails{order:1}
+body:not(.boring-overnight-mode) #scanner-import{order:2}
+body:not(.boring-overnight-mode) #discoveryTools{order:3}
+body:not(.boring-overnight-mode) #exclusions-section{order:4}
+body:not(.boring-overnight-mode) #morning-command{order:5}
+body:not(.boring-overnight-mode) #main-chart-section{order:6}
+body:not(.boring-overnight-mode) #decision-layout{order:7}
+body:not(.boring-overnight-mode) #data-integrations{order:8}
+body:not(.boring-overnight-mode) #provider-comparison{order:9}
+body:not(.boring-overnight-mode) #dashboard-feedback{order:10}
+body:not(.boring-overnight-mode) #quick-start{order:11}
+/* BORING OVERNIGHT: 1 import, 2.1 shortlist, 2.2 exclusions, 2.3-2.6 qualification, 3.1 chart, 3.2-6.2 workspace, 6.3 providers */
+body.boring-overnight-mode #scanner-import{order:1}
+body.boring-overnight-mode #morning-command{order:2}
+body.boring-overnight-mode #exclusions-section{order:3}
+body.boring-overnight-mode #overnight-qualification{order:4}
+body.boring-overnight-mode #main-chart-section{order:5}
+body.boring-overnight-mode #overnightPanel{order:6}
+body.boring-overnight-mode #provider-comparison{order:7}
+body.boring-overnight-mode #data-integrations{order:8}
+body.boring-overnight-mode #dashboard-feedback{order:9}
+body.boring-overnight-mode #quick-start{order:10}
+/* Intraday-only panels are hidden in Boring Overnight */
+body.boring-overnight-mode #morningBriefDetails,
+body.boring-overnight-mode #discoveryTools,
+body.boring-overnight-mode #decision-layout,
+body.boring-overnight-mode #opportunity-status{display:none!important}
+/* Overnight scanner field-availability report is meaningless for an intraday watchlist */
+body:not(.boring-overnight-mode) #scannerFieldAvailability{display:none!important}
+.scanner-import-panel{padding:0 14px}
+.integration-grid.integration-single{grid-template-columns:minmax(0,1fr)}
+.discovery-tools{margin-top:14px;padding:0}
+.discovery-tools>summary{cursor:pointer;list-style:none;padding:14px 16px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.discovery-tools>summary::-webkit-details-marker{display:none}
+.discovery-tools>summary:before{content:"+";font-weight:700;color:var(--blue)}
+.discovery-tools[open]>summary:before{content:"−"}
+.discovery-tools #scanner-workbench{margin:0 14px 14px}
