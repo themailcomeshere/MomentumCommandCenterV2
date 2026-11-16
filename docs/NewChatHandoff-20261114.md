@@ -78,7 +78,7 @@
    - In the Red Zone header, click **Rank quality pool · top 50**. After hours every card is DATA? with `DataStale, OutsideRegularSession`.
    - Exclusion test: in **EXCLUSIONS**, add one ranked symbol with a reason. Rank again: the card must read `QUALITY — EXCLUDED`. Remove the symbol.
 3. **Daily audit:** switch to BORING OVERNIGHT and run the Daily data audit for `RTO,EVR,CRBG`. Each row must show `Alpaca / sip · delayed historical SIP`, 20/20, FRESH and `QUALIFICATION USABLE`. Take a screenshot.
-4. **Catalyst batch 1:** open `Documents\MCC-Reviews\catalyst-queue-20261114-200253.csv` in Excel. Label the rows you review (Label + Notes of at least 40 characters of article facts), save as CSV, then:
+4. **Catalyst batch 1:** open `D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv` in Excel. Label the rows you review (Label + Notes of at least 40 characters of article facts), save as CSV, then:
    ```powershell
    .\scripts\Submit-CatalystReviews.ps1 -Path "D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv"
    .\scripts\Submit-CatalystReviews.ps1 -Path "<same path>" -Submit

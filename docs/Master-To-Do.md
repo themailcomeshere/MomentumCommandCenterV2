@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-16. Automatic scanner on free data (§2b). Red Zone state colours and alerts added (§2b). Operator walkthrough: the intraday workflow is the daily core. Added step numbers to the Dashboard, colour-coded ranking reasons, and a numbered workflow map with gap analysis (§2b). Boring Overnight READY runs in shadow mode.
+**Updated:** 2026-11-16. Repository moved to D: (§2a). Next operator actions reordered for the intraday core. Automatic scanner on free data (§2b). Red Zone state colours and alerts added (§2b). Operator walkthrough: the intraday workflow is the daily core. Added step numbers to the Dashboard, colour-coded ranking reasons, and a numbered workflow map with gap analysis (§2b). Boring Overnight READY runs in shadow mode.
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
 **Current handoff:** [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md)
@@ -24,7 +24,7 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `b3ca453` (Daily tolerance): local 370/370. Exact-head CI run `43642242199` SUCCESS.
 - [x] `02e88a3` (READY backend `8365f7e` + Dashboard panel; ATR informational `4eafc9b`): local 392/392. Exact-head CI run `43644529920` SUCCESS.
 - [x] `6fe6446` (latest code head, close/open history on SIP): local Release tests run by Claude: **398/398** passed. Exact-head CI run `43646185327` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 398+ tests.
+- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 423+ tests (Claude, 2026-11-16, from D:: 423/423).
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -44,18 +44,19 @@ Schwab and broker reconciliation stay parked at the bottom.
 
 The full, click-by-click sequence is in the [current handoff](NewChatHandoff-20261114.md).
 
-**Weekend (market closed; all of these work after hours):**
-1. Answer the five open READY questions in [READY semantics](Engineering/Boring-Overnight-READY-Semantics-20261114.md).
-2. Pull, run `.\scripts\Get-Latest-And-Test.ps1`, then `.\scripts\MCC.ps1 start`, `start` again (refused), `status`, and about 15 s later `.\scripts\MCC.ps1 warmup`.
-3. Dashboard (Ctrl+F5). The **Rank quality pool · top 50** button exists **only in INTRADAY MOMENTUM** (it is hidden in Boring Overnight, `styles.css:1728`), so switch the WORKSPACE first. Run the ranking (after hours every row is DATA? with `DataStale, OutsideRegularSession`); do the exclusion test; Field availability export (Boring Overnight); Network order.
-4. Daily audit: confirm the panel now shows `Alpaca / sip · delayed historical SIP` and `QUALIFICATION USABLE` for RTO, EVR, CRBG.
-5. Catalyst batch 1: label the 60-row sheet `Documents\MCC-Reviews\catalyst-queue-20261114-200253.csv`, dry-run, then `-Submit` ([sample plan](Validation/Catalyst-Sample-Plan-20261114.md)).
-6. Optional: create a free Massive account, add the key to user secrets, and run `GET /api/market-data/daily/cross-check?symbol=RTO`.
-7. `MCC.ps1 stop`, `Backup-MccData.ps1`, staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle.
+**During a regular session (07:30–14:00 AZ in standard time; buy window 13:00–14:00 AZ). All from `D:\source\repos\MomentumCommandCenterV2`:**
+1. Start: `.\scripts\Get-Latest-And-Test.ps1` (record SHA and totals, expect 423+), `.\scripts\MCC.ps1 start`, about 15 s later `.\scripts\MCC.ps1 warmup`.
+2. INTRADAY MOMENTUM → **2.a Automatic momentum scan**: status `COMPLETED`, no FAILED source under **Sources, feeds and limits** (§2b).
+3. INTRADAY MOMENTUM → TOS watchlist export → **2.b Import TOS CSV**: records side-by-side session 1 of 5 (§2b).
+4. INTRADAY MOMENTUM → **4 Red Zone**: **Enable sound alerts**; compare one card's colour/state with the TOS 1M/5M labels; **Mark holding** on a stock you own (§2b).
+5. INTRADAY MOMENTUM → **4.1 Rank quality pool · top 50**: rows classify instead of DATA?; reason colours visible (§3).
+6. 13:00–14:00 AZ, BORING OVERNIGHT → **4 READY check** for your candidates; sign off catalysts; shadow session 1 of 10 (§2).
 
-**Monday regular session (07:30–14:00 Arizona in standard time; the buy window is 13:00–14:00):**
-8. Ranking again (Intraday Momentum): rows should classify instead of DATA?.
-9. CRBG live assessment and **Fetch / retry 20-session** capture (Section 2), including the capture-history POST Network check.
+**Any time (market closed is fine):**
+7. Tell Claude Scanner 1's timeframe (daily or 5m) (§2b).
+8. Catalyst batch 1: label `D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv`, dry-run, then `-Submit` (§7).
+9. `MCC.ps1 stop`, `Backup-MccData.ps1` (now writes to `D:\source\repos\MCC-Backups`), staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle (§8, §9).
+10. Optional: Massive free key and `daily/cross-check?symbol=RTO` (§6).
 
 ---
 
@@ -113,7 +114,7 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Operator]** Close/open history on delayed SIP: **approved** 2026-11-14.
 - [x] **[Repo]** `6fe6446`: capture-history uses delayed SIP for the 20 pairs, while live 1M/5M stays on IEX and is checked against that feed. The current interval is judged as of now − 16 min. Bug fix: `currentOvernightPct` was never filled (it is now the latest completed pair's return). 6 tests. Runtime 2026-11-14: RTO 20/20 (win rate 60%, 20D +0.44%, 5D +0.12%) and CRBG 20/20 (80%, +0.72%, +0.68%). Both fail "5D > 20D"; the remaining DATA? inputs are live-session fields only.
 - [ ] **[Operator]** In-session READY run (Monday 13:00–14:00 AZ): check READY for your candidates, sign off the catalyst check, and confirm the cards. Shadow sessions start counting from that day.
-- [ ] **[Repo]** Build the V3 Boring Overnight watchlist column/study. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
+- [ ] **[Repo]** Build the V3 Boring Overnight watchlist column/study. Keep the Overnight Edge and Boringness scores separate; TOS compilation and parity are required.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
 
 ## 2a. Repository location (moved 2026-11-16)
@@ -122,14 +123,14 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Operator]** D: tested by the operator 2026-11-16 ("D: works"); Visual Studio now has the D: solution open.
 - [x] **[Repo]** 2026-11-16: `C:\Users\jampo\OneDrive\Documentos\MCC-Backups` and `\MCC-Reviews` sent to the Recycle Bin (operator approval). Not permanently deleted; OneDrive keeps its own recycle-bin copy.
 - [x] **[Repo]** 2026-11-16 (operator request): loose MCC files from `C:\Users\jampo\OneDrive\Documentos` moved to `D:\source\repos\MCC-Documents`: 18 watchlist/scanner CSVs, 52 `StrategyReports_*.csv`, `TTE_ExportAttempt.csv`, 3 `MCC_*.txt` studies, `MCC Workflow.txt`, `Response.txt`, `ChatResponse.md`, `chatRules.md`, `thinkscript.md`, and the `ToS` study folder (10 files). SHA-256 identical before the originals were sent to the Recycle Bin. `rules.md` and `abpNetDevRules.md` moved too (operator request, same check). Only personal files remain in Documentos.
-- [ ] **[Operator]** Remove `C:\Users\jampo\source\repos\MomentumCommandCenterV2`: the Recycle Bin move failed with "in use" because the Claude session working in that folder holds it open (about 4 files had already gone to the Recycle Bin). Close that session, then delete the folder in File Explorer (it goes to the Recycle Bin). Empty the Recycle Bin to free the space on C:.
+- [x] **[Operator]** `C:\Users\jampo\source\repos\MomentumCommandCenterV2` removed by the operator 2026-11-16 (confirmed absent by Claude). The Recycle Bin was emptied 2026-11-16 after checking it held only the 84 MCC items from the move, each with a verified D: copy.
 
 ## 2b. Intraday workflow alignment (operator walkthrough 2026-11-16)
 
 Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md).
 - [x] **[Repo]** (`6b74cdf`, CI `43889621585` SUCCESS, 398/398) Step numbers on the Dashboard for both modes (INTRADAY 0–7, OVERNIGHT 0–6). They are `data-step-*` attributes; each mode shows only its own badges. Verified in the browser pane (static preview): 18 intraday and 21 overnight badges render, in page order.
 - [x] **[Repo]** (`037a9ce`, CI `43894502837` SUCCESS, 398/398) TOS CSV import available in INTRADAY MOMENTUM (2026-11-16, operator choice). It is one shared **Import a Thinkorswim CSV** bar (Intraday 2.a / Overnight 1); the latest import feeds the Red Zone, ranking pool, shortlist and Daily audit. **Bug fixed:** the Intraday Red Zone filtered imports with the Boring Overnight rules, so a normal watchlist gave 0 cards; it now takes the first four by Score, or in TOS watchlist order. Browser-pane check with a synthetic 5-row watchlist: Red Zone shows the first 4 in order, Overnight still shows its own shortlist rules.
-- [x] **[Repo]** Both layouts reordered by step number with per-mode CSS `order` (2026-11-16). Intraday reads 1.2 → 2.a → 2.b–2.c (Discovery tools, collapsed) → 3 → 4 Red Zone → 5 → 7. Overnight reads 1 → 2.1–2.6 → 3 → 4 READY → 6. Intraday-only panels are hidden in Overnight. **Also fixed:** the Red Zone kept the Overnight heading after switching back to Intraday. Browser-pane check: block and badge order correct in both modes, no script errors.
+- [x] **[Repo]** Both layouts reordered by step number with per-mode CSS `order` (2026-11-16). Intraday reads 1.2 → 2.a → 2.b → 2.c–2.d (Discovery tools, collapsed) → 3 → 4 Red Zone → 5 → 7 (2.a automatic scan added in `a942074`; the import moved to 2.b). Overnight reads 1 → 2.1–2.6 → 3 → 4 READY → 6. Intraday-only panels are hidden in Overnight. **Also fixed:** the Red Zone kept the Overnight heading after switching back to Intraday. Browser-pane check: block and badge order correct in both modes, no script errors.
 - [x] **[Repo]** (`8a27531`, CI `43909053318` SUCCESS, 410/410) Red Zone state colours matching the installed TOS study labels: WAIT grey, PREPARE TO BUY yellow, EXECUTION READY green, RUNNER green, RUNNER WANING / PREPARE TO SELL yellow, SELL / GET OUT red, DATA? dashed. Each card has a coloured state banner with the step 6.a/6.b/6.c hint, a legend, and a transition log in AZ time. Distinct sounds for PREPARE TO BUY, EXECUTION READY, RUNNER WANING / PREPARE TO SELL and SELL / GET OUT. No sound on first load or when leaving DATA?. **Found while building:** the live engine always ran with `hasPosition=false`, so sell-side states could never appear. Fix: the assessment also returns `heldPositionDecision`, used when the operator clicks **Mark holding** on a card (browser only; no broker data). SWING RECLAIM / SWING ZONE (orange) and EXECUTION EXPIRED have no equivalent in the V2 engine and are not shown. Browser-pane check with a stubbed API: colours, the HOLDING switch and 3 transitions with the right sounds; no script errors.
 - [ ] **[Operator]** Live check of the state colours during the regular session (07:30–14:00 AZ, standard time): compare at least one card's MCC state with the TOS 1M/5M labels on the same symbol, and test **Mark holding** on a position you hold.
 - [x] **[Repo]** (`a942074`, CI `43913313796` SUCCESS, 423/423) Automatic scanner on free data (operator decision 2026-11-16: build free first, compare with TOS). Runs scans 1, 2A, 2B, Momentum Pivot and D as written, every 2 min during the session. Universe: Alpaca most-actives (volume, trades) + top gainers. Prices: IEX. Prior close: delayed SIP Daily. 5m conditions: IEX bars; volume conditions labelled approximate. Dashboard panel at Intraday **2.a**, with a **Feed Red Zone** toggle and a TOS side-by-side comparison recorded on each Intraday TOS import. Design and limits: [MCC-Auto-Scanner-20261116.md](Engineering/MCC-Auto-Scanner-20261116.md). Browser-pane check with a stubbed API: table, Red Zone feed, comparison post, import takes the Red Zone back, panel hidden in Overnight; no script errors. **Not run against live Alpaca data.**
@@ -194,7 +195,7 @@ Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-
 - [ ] **[Operator]** Verify generic-rationale rejection at runtime on the latest build.
 - [ ] **[Operator]** Keep ENOV/ARDT and other unsupported articles UNCERTAIN.
 - [x] **[Repo]** Sample tooling (`0596df6`): `catalyst-assessment?lookbackHours=` (1–720, default 24 unchanged); `scripts/New-CatalystReviewQueue.ps1` (many symbols, skips reviewed articles, deterministic stratified sample); `scripts/Submit-CatalystReviews.ps1` (local dry run, `-Submit` appends). Plan and targets: [Catalyst-Sample-Plan-20261114.md](Validation/Catalyst-Sample-Plan-20261114.md).
-- [ ] **[Operator]** Batch 1: label `Documents\MCC-Reviews\catalyst-queue-20261114-200253.csv` (60 articles, 51 symbols, 14 days; predicted RISK 11 / MATERIAL 25 / UNCLASSIFIED 24), then submit. Targets: ≥ 120 evaluable labels, ≥ 40 positive, ≥ 40 negative, ≥ 3 weekly batches. The current store has 7 records and no negatives.
+- [ ] **[Operator]** Batch 1: label `D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv` (60 articles, 51 symbols, 14 days; predicted RISK 11 / MATERIAL 25 / UNCLASSIFIED 24), then submit. Targets: ≥ 120 evaluable labels, ≥ 40 positive, ≥ 40 negative, ≥ 3 weekly batches. The current store has 7 records and no negatives.
 - [ ] **[Repo]** Blind re-review mode for intra-rater agreement, so a second label by the same reviewer is stored separately and not as a conflict.
 - [ ] **[Repo — blocked]** Per-class precision/recall, FP/FN and coverage, once that sample exists.
 
