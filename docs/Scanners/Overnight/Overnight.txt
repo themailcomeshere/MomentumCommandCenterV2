@@ -1,0 +1,79 @@
+# ============================================
+# OVERNIGHT SCANNER V3
+# USE WITH STOCK HACKER AGGREGATION = DAY
+# ============================================
+
+# --------------------------------------------
+# OVERNIGHT RETURN
+# Previous day's close -> today's open
+# --------------------------------------------
+
+def overnightReturn =
+    if close[1] != 0
+    then (open / close[1]) - 1
+    else 0;
+
+
+# --------------------------------------------
+# 20-DAY OVERNIGHT STATISTICS
+# --------------------------------------------
+
+def overnightWins =
+    Sum(
+        if overnightReturn > 0
+        then 1
+        else 0,
+        20
+    );
+
+def overnightWinRate =
+    overnightWins / 20;
+
+def avgOvernight20 =
+    Average(overnightReturn, 20);
+
+
+# --------------------------------------------
+# 5-DAY OVERNIGHT PERFORMANCE
+# --------------------------------------------
+
+def avgOvernight5 =
+    Average(overnightReturn, 5);
+
+
+# --------------------------------------------
+# 20-DAY AVERAGE VOLUME
+# --------------------------------------------
+
+def avgVolume20 =
+    Average(volume, 20);
+
+
+# --------------------------------------------
+# DAILY BULLISH TREND
+# --------------------------------------------
+
+def dailySMA20 =
+    Average(close, 20);
+
+
+# --------------------------------------------
+# FINAL CONDITIONS
+# --------------------------------------------
+
+def sufficientLiquidity =
+    avgVolume20 > 500000;
+
+def overnightEdge =
+    overnightWinRate >= 0.60
+    and avgOvernight20 >= 0.001
+    and avgOvernight5 > avgOvernight20;
+
+def bullishDailyTrend =
+    close > dailySMA20;
+
+
+plot scan =
+    sufficientLiquidity
+    and overnightEdge
+    and bullishDailyTrend;

@@ -1,0 +1,6 @@
+### RSI Momentum ###
+# 5m #
+
+def rsi = RSI(length = 14);
+
+plot scan = rsi > 55;

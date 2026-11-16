@@ -1,0 +1,2 @@
+## 5m ##
+volume / SimpleMovingAvg(volume, 20) >= 2.0

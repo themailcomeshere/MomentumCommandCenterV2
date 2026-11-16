@@ -1,0 +1,10 @@
+### Trend Alignment ###
+
+def ema9 = ExpAverage(close, 9);
+def ema20 = ExpAverage(close, 20);
+def sma50 = Average(close, 50);
+
+plot scan =
+    close > ema9 and
+    ema9 > ema20 and
+    ema20 > sma50;

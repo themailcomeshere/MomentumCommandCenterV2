@@ -1,0 +1,11 @@
+## 5m ##
+def avgVolume = Average(volume, 20);
+
+def relativeVolume = volume / avgVolume;
+
+def volumeAcceleration =
+    volume > volume[1] * 1.5;
+
+plot scan =
+    relativeVolume > 2
+    and volumeAcceleration;

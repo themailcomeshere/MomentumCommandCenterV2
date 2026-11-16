@@ -1,0 +1,4 @@
+# Condition
+Stock / Last / min:3.00 / max:500.00
+Stock / Volume / min:250,000
+Stock / % change / min: +2.99%

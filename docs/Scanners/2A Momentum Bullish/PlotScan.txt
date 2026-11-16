@@ -1,0 +1,2 @@
+## 5m ##
+plot scan = close is greater than vwap;

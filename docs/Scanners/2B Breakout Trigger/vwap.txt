@@ -1,0 +1,16 @@
+## 5m ##
+def vwap = VWAP();
+def ema9 = ExpAverage(close, 9);
+def ema20 = ExpAverage(close, 20);
+
+def avgVol = Average(volume, 20);
+def volumeSurge = volume > avgVol * 1.5;
+
+def breakout = close > Highest(high[1], 20);
+
+plot scan =
+    close > vwap and
+    close > ema9 and
+    ema9 > ema20 and
+    volumeSurge and
+    breakout;

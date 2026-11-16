@@ -1,0 +1,12 @@
+### Breakout OR VWAP Reclaim ###
+# 5m #
+
+def breakout =
+    close > Highest(high[1], 20);
+
+def reclaim =
+    close > VWAP() and
+    close[1] <= VWAP()[1];
+
+plot scan =
+    breakout or reclaim;

@@ -1,0 +1,3 @@
+# Condition
+Stock / Last / min:3.50 / max:500.00
+Stock / Volume / min:500,000

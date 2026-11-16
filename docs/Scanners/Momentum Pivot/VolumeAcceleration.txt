@@ -1,0 +1,7 @@
+### Volume Acceleration ###
+# 5m #
+
+def avgVol = Average(volume, 20);
+
+plot scan =
+    volume > avgVol * 1.50;

@@ -1,0 +1,2 @@
+# Condition
+Stock / Last / min:4.00 / max: <blank>

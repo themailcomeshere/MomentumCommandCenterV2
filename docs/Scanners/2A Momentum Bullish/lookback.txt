@@ -1,0 +1,7 @@
+## 5m ##
+def lookback = 20;
+
+def priorHigh = Highest(high[1], lookback);
+
+plot scan =
+    close > priorHigh;

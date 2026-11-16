@@ -1,0 +1,4 @@
+### Price Above VWAP ###
+# 5m #
+
+plot scan = close > VWAP();
