@@ -1902,3 +1902,7 @@ body.boring-overnight-mode #redZoneStateLegend,body.boring-overnight-mode #redZo
 /* READY card (2026-11-16): untested limit and qualification notes */
 .ready-limit-untested{color:var(--yellow)}
 .ready-notes{list-style:none;padding-left:0;margin:6px 0}
+
+/* READY late window: operator-entered after-hours price (2026-11-16) */
+.ready-operator-price{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.ready-operator-price .ready-price{width:110px}

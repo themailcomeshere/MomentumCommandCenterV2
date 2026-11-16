@@ -2470,7 +2470,7 @@ $("historicalReplayForm")?.addEventListener("submit",async event=>{
 /// render the signal, the limit, every gate, warnings, required actions and the catalyst sign-off form.
 /// SAFETY: Decision support only. Sound plays only in effective LIVE mode, only on a new READY, and only after the
 /// operator enabled it with a click. No order is submitted.
-const readyState={soundEnabled:false,audio:null,lastStatus:{},autoTimer:null,running:false};
+const readyState={soundEnabled:false,audio:null,lastStatus:{},autoTimer:null,running:false,operatorPrices:{}};
 function readyEl(tag,cls,text){const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined&&text!==null)node.textContent=String(text);return node;}
 function readyAz(iso){if(!iso)return "DATA?";try{return new Date(iso).toLocaleString("en-US",{timeZone:"America/Phoenix",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+" AZ";}catch{return String(iso);}}
 function readySymbols(){
@@ -2506,7 +2506,7 @@ function renderReadyCard(result,captureNote){
  card.append(head);
  const untested=result.limitBasis==="UNTESTED_HEURISTIC";
  const limit=result.calculatedLimitSell!=null
-  ?"Limit sell (GTC_EXT): $"+Number(result.calculatedLimitSell).toFixed(2)+(untested?" · LIMIT UNTESTED — your +"+Number(result.targetReturnPct).toFixed(2)+"% heuristic":" · tested target +"+Number(result.targetReturnPct).toFixed(2)+"%")+" on latest trade $"+Number(result.referencePrice).toFixed(2)+" · re-check against your fill"
+  ?"Limit sell (GTC_EXT): $"+Number(result.calculatedLimitSell).toFixed(2)+(untested?" · LIMIT UNTESTED — your +"+Number(result.targetReturnPct).toFixed(2)+"% heuristic":" · tested target +"+Number(result.targetReturnPct).toFixed(2)+"%")+" on entry price $"+Number(result.referencePrice).toFixed(2)+" (see SELL_LIMIT for its source) · re-check against your fill"
   :"Limit sell: DATA? — not issued";
  card.append(readyEl("p","ready-limit"+(untested?" ready-limit-untested":""),limit));
  const late=result.entryWindow==="LATE";
@@ -2516,6 +2516,24 @@ function renderReadyCard(result,captureNote){
  card.append(gates);
  if((result.warnings||[]).length){const w=readyEl("ul","ready-warnings");result.warnings.forEach(x=>w.append(readyEl("li",null,"⚠ "+x)));card.append(w);}
  if((result.qualificationNotes||[]).length){const n=readyEl("ul","ready-notes muted small");result.qualificationNotes.forEach(x=>n.append(readyEl("li",null,"ℹ "+x)));card.append(n);}
+ // Late window: the free IEX feed has no after-hours trades, so the operator types the after-hours price from TOS/Schwab.
+ if(result.entryWindow==="LATE"){
+  const pf=readyEl("form","ready-operator-price");
+  pf.append(readyEl("strong",null,"Your after-hours price (from TOS/Schwab): "));
+  const input=document.createElement("input");input.type="number";input.step="0.01";input.min="0.01";input.placeholder="e.g. 122.85";input.value=readyState.operatorPrices[result.symbol]??"";input.className="ready-price";
+  const go=readyEl("button",null,"Re-check with this price");go.type="submit";
+  const pm=readyEl("span","muted small"," The free data feed has no after-hours trades. Re-checks reuse this price until you change it.");
+  pf.append(input,go,pm);
+  pf.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const price=Number(input.value);
+   if(!Number.isFinite(price)||price<=0){pm.textContent=" Enter a positive price.";return;}
+   readyState.operatorPrices[result.symbol]=price;go.disabled=true;pm.textContent=" Re-checking…";
+   try{const updated=await readyPost("/api/boring-overnight/ready/evaluate",{symbol:result.symbol,operatorPrice:price});handleReadyResult(updated,"operator price "+price.toFixed(2));}
+   catch(error){pm.textContent=" Not checked: "+error.message;go.disabled=false;}
+  });
+  card.append(pf);
+ }
  if((result.requiredActions||[]).length){const a=readyEl("ul","ready-actions");result.requiredActions.forEach(x=>a.append(readyEl("li",null,"→ "+x)));card.append(a);}
  if(result.catalystState!=="OPERATOR_ATTESTED"&&result.catalystState!=="BLOCKED"){
   const form=readyEl("form","ready-signoff");
@@ -2533,7 +2551,7 @@ function renderReadyCard(result,captureNote){
    try{
     await readyPost("/api/boring-overnight/catalyst-attestations",{symbol:result.symbol,sourcesChecked:sources,note:note.value});
     msg.textContent="Saved. Re-checking…";
-    const updated=await readyPost("/api/boring-overnight/ready/evaluate",{symbol:result.symbol});
+    const updated=await readyPost("/api/boring-overnight/ready/evaluate",{symbol:result.symbol,operatorPrice:readyState.operatorPrices[result.symbol]??null});
     handleReadyResult(updated,"sign-off saved");
    }catch(error){msg.textContent="Not saved: "+error.message;submit.disabled=false;}
   });
@@ -2566,7 +2584,7 @@ async function runReadyCheck(){
    try{await readyPost("/api/boring-overnight/capture-history",{symbol,providerName:"Alpaca",requiredWindow:20});}
    catch(error){captureNote="capture failed: "+error.message;}
    if(status)status.textContent="Checking READY for "+symbol+"…";
-   try{const result=await readyPost("/api/boring-overnight/ready/evaluate",{symbol});if(result.status==="READY")ready++;handleReadyResult(result,captureNote);}
+   try{const result=await readyPost("/api/boring-overnight/ready/evaluate",{symbol,operatorPrice:readyState.operatorPrices[symbol]??null});if(result.status==="READY")ready++;handleReadyResult(result,captureNote);}
    catch(error){const host=$("overnightReadyCards");if(host){const c=readyEl("article","ready-card ready-DATA");c.dataset.symbol=symbol;c.append(readyEl("strong",null,symbol+" — check failed: "+error.message));const old=[...host.children].find(x=>x.dataset.symbol===symbol);if(old)old.replaceWith(c);else host.append(c);}}
   }
   if(status)status.textContent="Checked "+symbols.length+" symbol(s) at "+readyAz(new Date().toISOString())+": "+ready+" READY. No order was sent.";

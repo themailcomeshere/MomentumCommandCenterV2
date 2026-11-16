@@ -1381,11 +1381,13 @@ app.MapPost("/api/boring-overnight/ready/evaluate", async (
 {
     if (!IsValidSymbol(request.Symbol))
         return Results.BadRequest(new { error = "symbol must be 1-8 letters, digits, dot, or hyphen." });
-    return Results.Ok(await readyService.EvaluateAsync(request.Symbol, DateTimeOffset.UtcNow, ct));
+    if (request.OperatorPrice is { } operatorPrice && (operatorPrice <= 0m || operatorPrice > 100_000m))
+        return Results.BadRequest(new { error = "operatorPrice must be a positive price." });
+    return Results.Ok(await readyService.EvaluateAsync(request.Symbol, DateTimeOffset.UtcNow, ct, request.OperatorPrice));
 })
 .WithName("EvaluateBoringOvernightReady")
 .WithSummary("Evaluate the Boring Overnight READY signal for one symbol")
-.WithDescription("POST { \"symbol\": \"RTO\" }. Uses the latest capture-history snapshot (must be at most 10 minutes old), the exclusion list, catalyst reviews and today's operator sign-off, the SIP sell-window evidence and the latest trade. In-window evaluations are logged to the shadow log. Decision support only; no order is submitted.");
+.WithDescription("POST { \"symbol\": \"RTO\", \"operatorPrice\": 25.10 }. operatorPrice is optional: in the late (after-hours) window, where the free IEX feed has no trades, it is the after-hours price the operator reads in Thinkorswim/Schwab and is labelled OPERATOR-ENTERED. Uses the latest capture-history snapshot (must be at most 10 minutes old), the exclusion list, catalyst reviews and today's operator sign-off, the SIP sell-window evidence and the latest trade. In-window evaluations are logged to the shadow log. Decision support only; no order is submitted.");
 
 app.MapGet("/api/boring-overnight/ready/shadow-log", async (
     MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightReadyService readyService,

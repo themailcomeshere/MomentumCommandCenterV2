@@ -183,6 +183,38 @@ public sealed class BoringOvernightReadyTests
         Assert.Equal("DATA?", r.Gates.Single(g => g.Code == "LATE_ENTRY_PRICE").State);
     }
 
+    /// <summary>
+    /// Late window with no feed trade (the free IEX feed has none after hours): an operator-entered price at/below the
+    /// close is READY with a limit on that price; above the close is WATCH; without it the gate is DATA?.
+    /// </summary>
+    [Fact]
+    public void LateWindow_OperatorPrice_IsUsedWhenNoFeedTrade()
+    {
+        var noTrade = LateInputs(49.90m, 50.00m) with { LiveTradePrice = null, LiveTradeTimestampUtc = null };
+
+        var below = BoringOvernightReadyEvaluator.Evaluate(noTrade with { OperatorPrice = 49.80m });
+        var above = BoringOvernightReadyEvaluator.Evaluate(noTrade with { OperatorPrice = 50.30m });
+        var none = BoringOvernightReadyEvaluator.Evaluate(noTrade);
+
+        Assert.Equal("READY", below.Status);
+        Assert.Equal(50.19m, below.CalculatedLimitSell);              // tested target: 49.80 x 1.0078 = 50.188 -> 50.19
+        Assert.Equal("TESTED_P50", below.LimitBasis);
+        Assert.Contains("OPERATOR-ENTERED", below.Gates.Single(g => g.Code == "SELL_LIMIT").Detail);
+        Assert.Contains(below.Warnings, w => w.Contains("typed in by the operator", StringComparison.Ordinal));
+        Assert.Equal("WATCH — AFTER-HOURS UP 0.60%", above.SignalLabel);
+        Assert.Equal("DATA?", none.Status);
+    }
+
+    /// <summary>An operator price is ignored in the final hour, where the feed has trades.</summary>
+    [Fact]
+    public void FinalHour_OperatorPrice_IsIgnored()
+    {
+        var r = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { LiveTradePrice = null, OperatorPrice = 49.00m });
+
+        Assert.Equal("DATA?", r.Status);
+        Assert.Null(r.CalculatedLimitSell);
+    }
+
     /// <summary>After close + 60 minutes the window is closed and the buy session moves to the next day.</summary>
     [Fact]
     public void AfterLateDeadline_WindowIsClosed()

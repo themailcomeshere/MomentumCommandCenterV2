@@ -49,7 +49,7 @@ public sealed class BoringOvernightReadyService(
     /// PURPOSE: Builds the READY evaluation for one symbol at nowUtc and logs it when the buy window is open.
     /// WHEN CALLED: Each READY evaluation request.
     /// </summary>
-    public async Task<ReadyEvaluation> EvaluateAsync(string symbol, DateTimeOffset nowUtc, CancellationToken ct)
+    public async Task<ReadyEvaluation> EvaluateAsync(string symbol, DateTimeOffset nowUtc, CancellationToken ct, decimal? operatorPrice = null)
     {
         symbol = symbol.Trim().ToUpperInvariant();
         var clock = MarketSessionClock.GetSnapshot(nowUtc);
@@ -107,7 +107,7 @@ public sealed class BoringOvernightReadyService(
         var evaluation = BoringOvernightReadyEvaluator.Evaluate(new ReadyInputs(
             symbol, nowUtc, clock, snapshot, excluded, reviews, attestation, sellLimit, sellLimitError,
             RequestedMode, loggedSessions, trade?.Price, trade?.TimestampUtc, trade?.Feed,
-            regularClose, regularCloseSource, UntestedLimitPct));
+            regularClose, regularCloseSource, UntestedLimitPct, operatorPrice));
 
         if (clock.OvernightBuyWindowOpen || clock.OvernightLateBuyWindowOpen)
             await shadowLog.AppendAsync(evaluation, ct);
@@ -168,7 +168,7 @@ public sealed class BoringOvernightReadyService(
 /// PURPOSE: Request body for POST /api/boring-overnight/ready/evaluate.
 /// WHEN CALLED: Bound by the endpoint.
 /// </summary>
-public sealed record ReadyEvaluateRequest(string Symbol);
+public sealed record ReadyEvaluateRequest(string Symbol, decimal? OperatorPrice = null);
 
 /// <summary>
 /// TYPE: ReadyShadowReport

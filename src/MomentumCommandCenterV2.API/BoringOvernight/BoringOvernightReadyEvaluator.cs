@@ -56,6 +56,16 @@ public static class BoringOvernightReadyEvaluator
 
         var tradeFresh = input.LiveTradePrice is > 0 && input.LiveTradeTimestampUtc is { } tradeAt &&
             tradeAt <= input.NowUtc && input.NowUtc - tradeAt <= MaxLiveTradeAge;
+        // Late window: the free IEX feed carries no after-hours trades (checked 2026-11-16: zero 16:00-17:00 ET bars
+        // even for SPY). The operator may enter the after-hours price read in Thinkorswim/Schwab; it is used only when
+        // no fresh feed trade exists and is labelled OPERATOR-ENTERED.
+        var useOperatorPrice = lateOpen && !tradeFresh && input.OperatorPrice is > 0;
+        decimal? entryPrice = tradeFresh ? input.LiveTradePrice : useOperatorPrice ? input.OperatorPrice : null;
+        var entrySource = tradeFresh
+            ? $"latest trade {input.LiveTradePrice:0.00} at {input.LiveTradeTimestampUtc:O} ({input.LiveTradeFeed ?? "feed unknown"})"
+            : useOperatorPrice ? $"OPERATOR-ENTERED after-hours price {input.OperatorPrice:0.00} (from Thinkorswim/Schwab, {input.NowUtc:O})" : null;
+        if (useOperatorPrice)
+            warnings.Add($"Price {input.OperatorPrice:0.00} was typed in by the operator (no after-hours trade on the free feed). Re-check it before ordering.");
 
         // 2-3. Fresh snapshot and qualification.
         var snapshot = input.Snapshot;
@@ -110,17 +120,17 @@ public static class BoringOvernightReadyEvaluator
         {
             if (input.RegularCloseReference is not > 0)
                 gates.Add(new("LATE_ENTRY_PRICE", GateData, "The regular-session close reference is unavailable, so the after-hours price cannot be checked."));
-            else if (!tradeFresh)
+            else if (entryPrice is null)
                 gates.Add(new("LATE_ENTRY_PRICE", GateData,
-                    $"No trade in the last {MaxLiveTradeAge.TotalMinutes:0} minutes to compare with the regular close {input.RegularCloseReference:0.00} (after-hours IEX trades can be sparse)."));
+                    $"No after-hours price: the free IEX feed has no after-hours trades. Type the after-hours price from Thinkorswim/Schwab into the card to compare it with the regular close {input.RegularCloseReference:0.00}."));
             else
             {
-                lateMovePct = decimal.Round((input.LiveTradePrice!.Value / input.RegularCloseReference.Value - 1m) * 100m, 2);
-                gates.Add(input.LiveTradePrice!.Value <= input.RegularCloseReference.Value
+                lateMovePct = decimal.Round((entryPrice.Value / input.RegularCloseReference.Value - 1m) * 100m, 2);
+                gates.Add(entryPrice.Value <= input.RegularCloseReference.Value
                     ? new("LATE_ENTRY_PRICE", GatePass,
-                        $"After-hours trade {input.LiveTradePrice:0.00} is at or below the regular close {input.RegularCloseReference:0.00} ({lateMovePct:+0.00;-0.00;0.00}%; {input.RegularCloseReferenceSource ?? "source unknown"}).")
+                        $"After-hours price ({entrySource}) is at or below the regular close {input.RegularCloseReference:0.00} ({lateMovePct:+0.00;-0.00;0.00}%; {input.RegularCloseReferenceSource ?? "source unknown"}).")
                     : new("LATE_ENTRY_PRICE", GateFail,
-                        $"After-hours already up {lateMovePct:+0.00}% vs the regular close {input.RegularCloseReference:0.00}: part of the overnight edge is used up. WATCH, do not chase."));
+                        $"After-hours already up {lateMovePct:+0.00}% vs the regular close {input.RegularCloseReference:0.00} ({entrySource}): part of the overnight edge is used up. WATCH, do not chase."));
             }
         }
 
@@ -142,30 +152,32 @@ public static class BoringOvernightReadyEvaluator
         var untestedReason = sell is null
             ? input.SellLimitError ?? "sell-limit evidence was not evaluated"
             : "failed required gates: " + (sell.Gates.Where(g => g.Required && !g.Passed).Select(g => g.Code).DefaultIfEmpty("SELL_LIMIT_CALCULATION").Aggregate((a, b) => a + ", " + b));
-        if (tested && tradeFresh)
+        if (tested && entryPrice is not null)
         {
             targetPct = sell!.TargetReturnPct;
-            referenceClose = input.LiveTradePrice;
-            limit = decimal.Round(input.LiveTradePrice!.Value * (1m + targetPct!.Value / 100m), 2, MidpointRounding.AwayFromZero);
+            referenceClose = entryPrice;
+            limit = decimal.Round(entryPrice.Value * (1m + targetPct!.Value / 100m), 2, MidpointRounding.AwayFromZero);
             limitBasis = $"TESTED_P{sell.TargetQuantilePct}";
             gates.Add(new("SELL_LIMIT", GatePass,
-                $"Limit {limit:0.00} = latest trade {input.LiveTradePrice:0.00} at {input.LiveTradeTimestampUtc:O} ({input.LiveTradeFeed ?? "feed unknown"}) x (1 + {targetPct:0.####}%). Target is P{sell.TargetQuantilePct} of the 20 training sessions; walk-forward passed. Re-check against your actual fill price."));
+                $"Limit {limit:0.00} = {entrySource} x (1 + {targetPct:0.####}%). Target is P{sell.TargetQuantilePct} of the 20 training sessions; walk-forward passed. Re-check against your actual fill price."));
         }
-        else if (tradeFresh && input.UntestedLimitPct > 0m)
+        else if (entryPrice is not null && input.UntestedLimitPct > 0m)
         {
             targetPct = input.UntestedLimitPct;
-            referenceClose = input.LiveTradePrice;
-            limit = decimal.Round(input.LiveTradePrice!.Value * (1m + targetPct.Value / 100m), 2, MidpointRounding.AwayFromZero);
+            referenceClose = entryPrice;
+            limit = decimal.Round(entryPrice.Value * (1m + targetPct.Value / 100m), 2, MidpointRounding.AwayFromZero);
             limitBasis = "UNTESTED_HEURISTIC";
             gates.Add(new("SELL_LIMIT", GatePass,
-                $"LIMIT UNTESTED: {limit:0.00} = latest trade {input.LiveTradePrice:0.00} ({input.LiveTradeFeed ?? "feed unknown"}) x (1 + {targetPct:0.####}%), your heuristic. No tested target ({untestedReason})."));
+                $"LIMIT UNTESTED: {limit:0.00} = {entrySource} x (1 + {targetPct:0.####}%), your heuristic. No tested target ({untestedReason})."));
             warnings.Add($"Sell limit is UNTESTED: +{targetPct:0.####}% heuristic, not a tested target ({untestedReason}).");
         }
         else
         {
             gates.Add(new("SELL_LIMIT", GateData, tested
                 ? $"Target +{sell!.TargetReturnPct:0.####}% is tested, but no trade price from the last {MaxLiveTradeAge.TotalMinutes:0} minutes is available to apply it to."
-                : $"No trade price from the last {MaxLiveTradeAge.TotalMinutes:0} minutes to apply the +{input.UntestedLimitPct:0.####}% heuristic to; no tested target ({untestedReason})."));
+                : lateOpen
+                    ? $"No after-hours price to apply the +{input.UntestedLimitPct:0.####}% heuristic to: type the price from Thinkorswim/Schwab into the card. No tested target ({untestedReason})."
+                    : $"No trade price from the last {MaxLiveTradeAge.TotalMinutes:0} minutes to apply the +{input.UntestedLimitPct:0.####}% heuristic to; no tested target ({untestedReason})."));
         }
 
         var status = gates.Any(g => g.State == GateBlocked) ? "BLOCKED"
@@ -328,7 +340,8 @@ public sealed record ReadyInputs(
     string? LiveTradeFeed = null,
     decimal? RegularCloseReference = null,
     string? RegularCloseReferenceSource = null,
-    decimal UntestedLimitPct = 0.5m);
+    decimal UntestedLimitPct = 0.5m,
+    decimal? OperatorPrice = null);
 
 /// <summary>
 /// TYPE: ReadySellEvidence
