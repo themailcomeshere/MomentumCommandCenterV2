@@ -50,7 +50,15 @@ public sealed record V3ColumnResult(
     decimal? BoringnessScore,
     string? BoringnessBand,
     IReadOnlyList<V3ScoreComponent> BoringnessComponents,
-    string Note);
+    string Note)
+{
+    /// <summary>
+    /// PURPOSE: The value of the Thinkorswim "V3 Rank" sort column: StatusCode x 100 + Boringness (0 for DATA?), so a
+    /// descending sort lists CANDIDATE first, ordered by Boringness.
+    /// WHEN CALLED: Serialized with every result (added 2026-11-16).
+    /// </summary>
+    public decimal RankValue => StatusCode == 0 || BoringnessScore is null ? 0m : StatusCode * 100m + BoringnessScore.Value;
+}
 
 /// <summary>
 /// TYPE: BoringOvernightV3Calculator

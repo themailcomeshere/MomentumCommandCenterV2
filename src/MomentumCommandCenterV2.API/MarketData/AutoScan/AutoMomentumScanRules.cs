@@ -138,7 +138,7 @@ public static class AutoMomentumScanRules
 
     /// <summary>
     /// PURPOSE: Evaluates the five scans for one symbol. "Last" price and day volume come from the universe row; every
-    /// bar condition uses the latest completed 5m bar. Scanner 1's files state no timeframe; 5m is assumed (as the others).
+    /// bar condition uses the latest completed 5m bar. Scanner 1 runs on 5m bars (confirmed by the operator 2026-11-16, like the others).
     /// WHEN CALLED: Once per symbol per scan run.
     /// </summary>
     public static IReadOnlyList<AutoScanScannerResult> EvaluateScanners(AutoScanUniverseRow row, AutoScanIndicators x)

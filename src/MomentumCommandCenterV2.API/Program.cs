@@ -73,6 +73,11 @@ builder.Services.AddSingleton(sp => new AutoMomentumScanService(
     sp.GetRequiredService<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>(),
     sp.GetRequiredService<ILogger<AutoMomentumScanService>>()));
 builder.Services.AddHostedService<AutoMomentumScanWorker>();
+// Research history export (2026-11-16): one-button daily export from the Dashboard; data outside the repository.
+builder.Services.AddSingleton(sp => new MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryExportService(
+    MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryExportService.ResolveDataRoot(
+        builder.Configuration["Research:DataRoot"], builder.Environment.ContentRootPath),
+    (symbol, days, ct) => sp.GetRequiredService<AlpacaDailyMarketDataClient>().GetDailyHistoryAsync(symbol, DateTimeOffset.UtcNow, days, "split", ct)));
 builder.Services.AddHttpClient<AlpacaNewsClient>(client =>
 {
     client.BaseAddress = new Uri("https://data.alpaca.markets/");
@@ -251,6 +256,28 @@ app.MapGet("/api/market-data/daily/cross-check", async (string symbol, AlpacaDai
         return Results.Problem(statusCode: StatusCodes.Status502BadGateway, title: "Daily cross-check provider error", detail: ex.Message);
     }
 }).WithName("GetDailySourceCrossCheck");
+
+app.MapPost("/api/research/overnight-history/export", async (
+    MomentumCommandCenterV2.API.BoringOvernight.HistoryExportRequest request,
+    MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryExportService exportService,
+    CancellationToken ct) =>
+{
+    try
+    {
+        var run = await exportService.RunAsync(request, DateTimeOffset.UtcNow, Environment.GetEnvironmentVariable("MCC_SOURCE_SHA"), ct);
+        return run is null
+            ? Results.Conflict(new { error = "An export is already running. Wait for it to finish." })
+            : Results.Ok(run);
+    }
+    catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+    catch (IOException ex) { return Results.Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Could not write the export files", detail: ex.Message); }
+})
+.WithSummary("Research: run the daily overnight-history export (Dashboard button)")
+.WithDescription("Same output as scripts/Export-OvernightHistory.ps1: for the posted symbols (the imported TOS scanner), about `days` (default 730) of completed SIP Daily history per symbol, written to <DataRoot>/overnight-history/<UTC stamp>/ (pairs.csv, weekday-by-symbol.csv, weekday-pooled.csv, manifest.json), and the imported scanner rows to <DataRoot>/scanner-exports/. DataRoot = Research:DataRoot or the MCC-Data folder next to the repository. One run at a time. Research only.");
+
+app.MapGet("/api/research/overnight-history/export-status", (MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryExportService exportService) =>
+    Results.Ok(exportService.GetStatus(DateTimeOffset.UtcNow)))
+.WithSummary("Research: whether today's overnight-history export has run (Dashboard or script)");
 
 app.MapGet("/api/research/overnight-history", async (string symbol, int? days, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
 {

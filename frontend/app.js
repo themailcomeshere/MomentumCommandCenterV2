@@ -2755,3 +2755,55 @@ $("autoScanFeedRedZone")?.addEventListener("click",()=>{
 $("scannerGroup")?.addEventListener("change",()=>applyAutoScanFeed());
 void loadAutoScan(false);void loadAutoScanComparison();
 window.setInterval(()=>{if(document.visibilityState==="visible")void loadAutoScan(false);},60000);
+
+/// MODULE: Daily overnight-history export button (2026-11-16)
+/// PURPOSE: One click runs the research export (same output as scripts/Export-OvernightHistory.ps1) for the symbols of the
+/// current TOS scanner import. The header button is amber until an export (button or script) exists for today's Eastern
+/// date, then green with the time; blue while running; red on failure. Research only; nothing is traded.
+const historyState={running:false,status:null,error:null,needsImport:false};
+/// <summary>Formats an instant as Arizona time. Called by the history button.</summary>
+function historyAz(iso){try{return new Date(iso).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ";}catch{return "";}}
+/// <summary>Sets the history button's colour, text and tooltip from the current state. Called after every status change.</summary>
+function renderHistoryButton(){
+ const b=$("historyExportButton");if(!b)return;
+ b.classList.remove("history-done","history-pending","history-running","history-error");
+ const rows=Array.isArray(scannerData.imported)?scannerData.imported.length:0;
+ if(historyState.running){b.classList.add("history-running");b.textContent="History export · running…";b.title="Fetching 2 years of daily history for "+rows+" symbols (about a minute).";return;}
+ if(historyState.needsImport){b.classList.add("history-pending");b.textContent="History export · import a scan first";b.title="Import a TOS scanner CSV first (Import TOS CSV bar), then click again.";return;}
+ if(historyState.error){b.classList.add("history-error");b.textContent="History export · failed";b.title=historyState.error;return;}
+ const s=historyState.status,latest=s?.latest;
+ if(s?.ranToday&&latest){
+  b.classList.add("history-done");b.textContent="History ✓ "+historyAz(latest.createdAtUtc);
+  const all=(latest.pooled||[]).find(p=>p.buyWeekday==="All");
+  b.title="Today's export is done ("+latest.source+"): "+latest.symbolsSucceeded+"/"+latest.symbolsRequested+" symbols, "+latest.pairRows+" overnight pairs"+(all?", all-nights win "+all.winRatePct+"%":"")+". Saved in "+latest.folder+". Click to run again.";
+ }else{
+  b.classList.add("history-pending");b.textContent="History export · not run today";
+  b.title="Not run today yet. Best after 14:16 AZ (standard time) so today's session is included. Uses the imported TOS scanner CSV ("+rows+" symbols)."+(latest?" Last run: "+new Date(latest.createdAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"})+" AZ.":"");
+ }
+}
+/// <summary>Reads whether today's export has run. Called on load and every 60 seconds.</summary>
+async function loadHistoryStatus(){
+ try{
+  const r=await fetch("/api/research/overnight-history/export-status",{cache:"no-store",headers:{Accept:"application/json"}});
+  if(r.status===404){historyState.error="This MCC version has no history export. Stop MCC, run Get-Latest-And-Test.ps1, start MCC.";}
+  else if(r.ok){historyState.status=await r.json();historyState.error=null;historyState.running=historyState.running||historyState.status.running===true;}
+ }catch{/* MCC not reachable: keep the last state */}
+ renderHistoryButton();
+}
+$("historyExportButton")?.addEventListener("click",async()=>{
+ if(historyState.running)return;
+ const imported=Array.isArray(scannerData.imported)?scannerData.imported:[];
+ if(!imported.length){historyState.needsImport=true;renderHistoryButton();return;}
+ historyState.needsImport=false;
+ let fileName=null;try{fileName=JSON.parse(localStorage.getItem("mcc.scannerImport.v1")||"null")?.filename||null;}catch{fileName=null;}
+ const rows=imported.map(row=>{const m=row.overnightMetrics||{};return {symbol:row.symbol,score:row.score==null?null:String(row.score),status:row.status??null,onWin:m.onWin??null,avgOn:m.avgOn??null,medianOn:m.medianOn??null,fiveDayOn:m.fiveDayOn??null,onMomentum:m.onMomentum??null,currentOn:m.currentOn??null,above20Sma:m.above20Sma??null};});
+ historyState.running=true;historyState.error=null;renderHistoryButton();
+ try{
+  const r=await fetch("/api/research/overnight-history/export",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({symbols:imported.map(x=>x.symbol),scannerFileName:fileName,scannerRows:rows,days:730})});
+  const body=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(body.error||body.detail||("HTTP "+r.status));
+  historyState.running=false;await loadHistoryStatus();
+ }catch(error){historyState.running=false;historyState.error="Export failed: "+error.message;renderHistoryButton();}
+});
+void loadHistoryStatus();
+window.setInterval(()=>{if(!historyState.running)void loadHistoryStatus();},60000);

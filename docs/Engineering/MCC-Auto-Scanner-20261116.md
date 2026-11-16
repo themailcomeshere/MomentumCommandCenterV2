@@ -49,7 +49,7 @@
 1. **Universe:** a stock that is in neither the top-100 most-active lists nor the top-50 gainers is never scanned. TOS scans the whole market.
 2. **Volume-surge conditions use IEX volume**, a small share of total volume, so they can differ from TOS in either direction.
 3. **Completed bars only.** TOS also evaluates the forming bar, so MCC can flag up to one bar (5 min) later. The first result of the day appears after about 07:35 AZ.
-4. **Scanner 1's timeframe is not stated** in its files; MCC assumes 5m like the others. *Operator to confirm.*
+4. **Scanner 1's timeframe:** 5m, confirmed by the operator 2026-11-16 (all Study rows show 5m), so MCC matches it.
 5. **Extended hours:** regular-session bars only. This assumes the TOS scans have extended hours off.
 
 ## Side-by-side with TOS (5-session evaluation)

@@ -325,7 +325,7 @@ public sealed class AutoMomentumScanService
         "Discovery only, not READY or an order instruction. Thresholds are the operator's TOS scans as written (docs/Scanners). " +
         "Universe = Alpaca most-actives (volume, trades; top 100 each) + top 50 gainers: stocks outside those lists are not scanned. " +
         "Day volume is consolidated (screener); bar volume conditions use IEX 5m bars and are approximate (IEX_VOLUME_APPROX). " +
-        "Only completed 5m bars are used; Thinkorswim also evaluates the forming bar. Scanner 1's timeframe is not stated in its files; 5m is assumed.";
+        "Only completed 5m bars are used; Thinkorswim also evaluates the forming bar. All five scans use 5m bars (Scanner 1 confirmed by the operator 2026-11-16).";
 }
 
 /// <summary>

@@ -70,6 +70,7 @@ public sealed class BoringOvernightV3CalculatorTests
         Assert.Equal(5m, points["price"], 4);
         Assert.Equal(68.5333m, r.BoringnessScore!.Value, 3);
         Assert.Equal("AGGRESSIVE", r.BoringnessBand);
+        Assert.Equal(368.5333m, r.RankValue, 3);                       // CANDIDATE (3) x 100 + 68.5333
     }
 
     /// <summary>PURPOSE: Fewer than 21 bars is DATA? with no metrics. WHEN CALLED: By xUnit.</summary>
