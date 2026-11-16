@@ -26,9 +26,11 @@ How to read a number: `2` is a phase, `2.1` a step inside it, and `2.a` / `2.b` 
 | **4** | **Red Zone: best 1–4, auto-refreshing** | **TOP CANDIDATES · Red Zone** | during session | Built: automatic mode takes the first four imported symbols (by a Score column if present, otherwise TOS watchlist order); cards refresh every 15 s |
 | 4.1 | Live ranking of the imported pool | **Rank quality pool · top 50** | during session | Built |
 | 4.2 | Pin a symbol | **Add a symbol** | any time | Built |
+| 4.3 | Read each card's colour (WAIT grey / PREPARE TO BUY yellow / EXECUTION READY green / RUNNER green / RUNNER WANING, PREPARE TO SELL yellow / SELL, GET OUT red / DATA? dashed) | coloured banner on each Red Zone card | during session | **Built 2026-11-16**; turn on **Enable sound alerts** for transition sounds |
+| 4.4 | Mark a stock you bought as holding | **Mark holding** button on the card | after you buy in Schwab | **Built 2026-11-16**; sell-side states appear only on HOLDING cards |
 | **5** | **Focus one symbol and read its state** | | | |
 | 5.1 | Symbol chart | **FOCUSED SYMBOL** | during session | Built |
-| 5.2 | Live classification | **LIVE OPPORTUNITY CLASSIFICATION** | during session | Built; states shown as text, not TOS colours |
+| 5.2 | Live classification | **LIVE OPPORTUNITY CLASSIFICATION** | during session | Built; same label and colour as the Red Zone card |
 | 5.3 | Why this classification? | **DECISION EXPLANATION** | during session | Built |
 | 5.4 | 5M authority → 1M execution | **TIMEFRAME HANDOFF** | during session | Built |
 | **6** | **Act in Schwab** (6.a EXECUTION READY → limit buy; 6.b RUNNER WANING / PREPARE TO SELL → limit sell; 6.c SELL - BREAKDOWN / GET OUT → sell now) | Schwab | during session | Manual by design |
@@ -67,7 +69,7 @@ Hidden in Boring Overnight (intraday-only): morning snapshot, Discovery tools, d
 |---|---|---|
 | MCC scans for you (scanners 1, 2A, 2B, Momentum Pivot, D) and builds the watchlist | Candidates come from your TOS watchlist CSV import (now in both modes), Alpaca's top-50 movers list, or symbols you type | Your scanner formulas (`docs/Scanners/`) are **not** implemented in MCC, and MCC has no market-wide universe to run them over |
 | Red Zone = best 4 right now, auto-refreshing | Automatic mode exists; it ranks the imported scanner score or Alpaca discoveries, and cards refresh every 15 s | Good mechanics; the input quality is limited by the gap above |
-| Clear colour-coded states: heating up / EXECUTION READY / winding down / sell now | MCC computes 9 states (`SignalState`: NoTrade, PrepareBuy, Buy, Runner, RunnerWaning, PrepareSell, ConfirmedWeakness, Breakdown, Exit) and shows them as text, with 3 generic colours | Your TOS studies colour each state. 1M: WAIT grey, PREPARE yellow, EXECUTION READY green, EXECUTION EXPIRED yellow, SWING RECLAIM orange, PREPARE TO SELL yellow, all SELL/GET OUT states red. 5M: RUNNER RISING/RUNNER green, RUNNER WANING yellow, SWING ZONE orange. MCC does not mirror those colours, and does not alert per state change |
+| Clear colour-coded states: heating up / EXECUTION READY / winding down / sell now | **Built 2026-11-16:** cards coloured like the TOS labels, with transition sounds; sell-side states need **Mark holding**. Before that, MCC computed 9 states (`SignalState`: NoTrade, PrepareBuy, Buy, Runner, RunnerWaning, PrepareSell, ConfirmedWeakness, Breakdown, Exit) and shows them as text, with 3 generic colours | Your TOS studies colour each state. 1M: WAIT grey, PREPARE yellow, EXECUTION READY green, EXECUTION EXPIRED yellow, SWING RECLAIM orange, PREPARE TO SELL yellow, all SELL/GET OUT states red. 5M: RUNNER RISING/RUNNER green, RUNNER WANING yellow, SWING ZONE orange. MCC does not mirror those colours, and does not alert per state change |
 | States match your installed TOS studies | MCC's V2 engine reproduces the studies' logic from Alpaca bars | Parity with the installed 1M/5M studies is **not evidenced** (To-Do §5) |
 | Live data good enough to trade on | Live 1M/5M bars are **IEX** (partial exchange coverage); recent SIP is refused (HTTP 403) | IEX volume and RVOL differ from TOS. A full-market live scanner needs a live consolidated feed. Data not found in sources for a free option: the reviewed paid options are Alpaca Algo Trader Plus ($99/month) and Massive Stocks Advanced ($199/month), prices checked 2026-11-14 |
 
@@ -77,7 +79,7 @@ Hidden in Boring Overnight (intraday-only): morning snapshot, Discovery tools, d
 
 1. ~~Intraday import~~: done 2026-11-16.
 2. ~~Reorder both layouts~~: done 2026-11-16.
-3. **State colours and alerts on Red Zone cards:** mirror the TOS colours above, and add per-transition alerts (e.g. a sound when a symbol turns PREPARE TO BUY or EXECUTION READY, a different one for SELL).
+3. ~~State colours and alerts on Red Zone cards~~: done 2026-11-16 (`8a27531`). Not mirrored: SWING RECLAIM / SWING ZONE (orange) and EXECUTION EXPIRED, which the V2 engine does not compute.
 4. **Automatic scanning:** implement scanners 1, 2A, 2B, Momentum Pivot and D as MCC rules. This first needs a decision on the live data source, because IEX cannot reproduce TOS volume-based scans.
 5. **1M/5M parity evidence** against the installed studies.
 
