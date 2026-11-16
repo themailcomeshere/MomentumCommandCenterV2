@@ -1781,3 +1781,26 @@ body.boring-overnight-mode #overnightImportStatus{grid-column:1/-1}
 .ready-shadow-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
 .ready-shadow-table th,.ready-shadow-table td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
 @media (max-width:640px){.ready-gate{grid-template-columns:64px minmax(0,1fr)}.ready-gate .gate-detail{grid-column:1/-1}}
+
+/* Workflow step numbers (2026-11-16). Each mode shows only its own numbering; see docs/Engineering/MCC-Workflow-Steps.md. */
+body:not(.boring-overnight-mode) [data-step-intraday]::before,
+body.boring-overnight-mode [data-step-overnight]::before{
+ display:inline-block;margin-right:6px;padding:0 6px;border-radius:6px;
+ background:var(--blue);color:var(--bg);font-weight:800;font-size:.72rem;line-height:1.5;letter-spacing:0;vertical-align:middle;
+}
+body:not(.boring-overnight-mode) [data-step-intraday]::before{content:attr(data-step-intraday)}
+body.boring-overnight-mode [data-step-overnight]::before{content:attr(data-step-overnight)}
+
+/* Opportunity Quality reason chips (2026-11-16) */
+.reason-chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.reason-chip{display:inline-block;padding:1px 7px;border-radius:999px;border:1px solid var(--line);font-size:.78rem;line-height:1.5}
+.reason-blocked{background:rgba(255,136,136,.16);border-color:var(--red);color:var(--red)}
+.reason-data{background:rgba(152,168,192,.12);border-color:var(--muted);color:var(--muted)}
+.reason-caution{background:rgba(242,203,118,.14);border-color:var(--yellow);color:var(--yellow)}
+.reason-good{background:rgba(105,216,163,.14);border-color:var(--green);color:var(--green)}
+.reason-neutral{color:var(--text)}
+.reason-legend{opacity:.85}
+.quality-title.quality-BLOCKED{color:var(--red)}
+.quality-title.quality-DATA{color:var(--muted)}
+.quality-title.quality-READY{color:var(--green)}
+.quality-title.quality-WATCH{color:var(--yellow)}

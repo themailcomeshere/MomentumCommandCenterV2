@@ -55,6 +55,13 @@
   - The live 1M/5M inputs are empty until the session opens.
 - **Session-time correction:** in November the regular session is 07:30–14:00 AZ, not 06:30–13:00.
 
+## Update 2026-11-16 — operator walkthrough
+
+- The operator's **daily core is INTRADAY MOMENTUM from 07:30 AZ**: TOS scanners 1, 2A, 2B, Momentum Pivot and D → Watchlist → charts → act on states in Schwab. The goal is for MCC to scan automatically, keep a 1–4 symbol Red Zone, and show colour-coded states. Boring Overnight is the secondary, nightly workflow.
+- Added: step-number badges in both modes, colour-coded ranking reasons, and [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md), a numbered map that lists the layout problems and gaps with a proposed order of work.
+- Key gaps: no TOS CSV import in Intraday mode; layout order runs backwards; states are not coloured like the TOS studies; scanners not implemented; live data is IEX only.
+- Operator Step 3 result: the exclusion test passed (the `EXCLUDED_WATCHLIST` reason appeared, and disappeared after removal).
+
 ## Operator sequence
 
 **Weekend**

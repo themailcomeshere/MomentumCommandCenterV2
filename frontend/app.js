@@ -1335,17 +1335,40 @@ $("rankOpportunityPool")?.addEventListener("click",async()=>{
    const metrics=document.createElement("p");metrics.className="muted small";
    const value=x=>x==null?"DATA?":Number(x).toFixed(2);
    metrics.textContent="RVOL "+value(item.relativeVolume)+" · 30×1M range/ATR "+value(item.recentRangeInAtr)+" · prior-high distance/ATR "+value(item.resistanceDistanceInAtr)+" · 1M entry "+(item.entryAllowed==null?"UNKNOWN":item.entryAllowed?"READY":"NOT READY");
-   const reasons=document.createElement("p");reasons.className="small";reasons.textContent=(item.reasons||[]).join(" · ")||"No reason codes returned.";
+   // Reason codes as colour-coded chips: red = blocks the candidate, grey = data missing/stale/after hours,
+   // amber = caution (weakens the setup), green = supportive. Unknown codes stay neutral.
+   const reasons=document.createElement("p");reasons.className="small reason-chips";
+   const reasonList=item.reasons||[];
+   if(!reasonList.length)reasons.textContent="No reason codes returned.";
+   reasonList.forEach(code=>{const chip=document.createElement("span");chip.className="reason-chip reason-"+qualityReasonTone(code);chip.textContent=code;chip.title=qualityReasonTitle(code);reasons.append(chip);});
+   title.classList.add("quality-title","quality-"+String(item.status||item.classification||"UNKNOWN").replace(/[^A-Za-z]/g,"").toUpperCase());
    const stamp=x=>x?new Date(x).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit",second:"2-digit"})+" AZ":"UNKNOWN";
    const provenance=document.createElement("p");provenance.className="muted small";
    provenance.textContent="Source "+(item.provider||"UNKNOWN")+" / "+(item.feed||"UNKNOWN")+" · 1M bar "+stamp(item.oneMinuteSourceTimestampUtc)+" · 5M bar "+stamp(item.fiveMinuteSourceTimestampUtc)+" · evaluated "+stamp(item.evaluatedAtUtc)+(item.excluded?" · EXCLUSION WATCHLIST — BLOCKED":"");
    card.append(title,metrics,reasons,provenance);return card;
   });
-  if(host)host.replaceChildren(...(cards.length?cards:[Object.assign(document.createElement("p"),{className:"muted small",textContent:"No ranking results returned."})]));
+  const legend=document.createElement("p");legend.className="small reason-chips reason-legend";
+  [["blocked","Blocks"],["data","Data missing / stale / after hours"],["caution","Caution"],["good","Supportive"]].forEach(([tone,label])=>{const chip=document.createElement("span");chip.className="reason-chip reason-"+tone;chip.textContent=label;legend.append(chip);});
+  if(host)host.replaceChildren(...(cards.length?[legend,...cards]:[Object.assign(document.createElement("p"),{className:"muted small",textContent:"No ranking results returned."})]));
   if(status)status.textContent="Ranked "+ranked.length+" of "+imported.length+" imported symbols ("+(payload.excludedCount??0)+" excluded, "+(payload.dataUnknownCount??0)+" DATA?"+(payload.exclusionListChecked===false?"; EXCLUSION LIST NOT CHECKED: "+(payload.exclusionError||"unknown error"):"")+"). Pool scope: top "+symbols.length+" by imported Overnight Score. Diagnostic ordering only; not calibrated, not market-wide, and never overrides 5M/1M eligibility. DATA? candidates remain visible.";
  }catch(error){if(status)status.textContent="Opportunity Quality ranking failed: "+error.message;}
  finally{if(button)button.disabled=false;}
 });
+/// PURPOSE: Colour tone for an Opportunity Quality reason code (blocked, data, caution, good, neutral).
+/// WHEN CALLED: Rendering each ranking card's reason chips.
+function qualityReasonTone(code){
+ const c=String(code||"");
+ if(c==="EXCLUDED_WATCHLIST"||c==="EntryNotEligible")return "blocked";
+ if(c==="DataMissing"||c==="DataStale"||c==="OutsideRegularSession")return "data";
+ if(["LowRelativeVolume","MomentumNotConfirmed","LimitedRecentRange","ResistanceTooClose","EntryExtended","ExecutionEventInactive"].includes(c))return "caution";
+ if(["StrongParticipation","MomentumConfirmed","AdequateMovementCapacity"].includes(c))return "good";
+ return "neutral";
+}
+/// PURPOSE: Plain-English tooltip for a reason code.
+/// WHEN CALLED: Rendering each reason chip.
+function qualityReasonTitle(code){
+ return ({EXCLUDED_WATCHLIST:"On your exclusion watchlist — blocked",EntryNotEligible:"V2 entry not eligible",DataMissing:"Required bars or metrics missing",DataStale:"Latest bars are too old",OutsideRegularSession:"Outside the regular session",LowRelativeVolume:"Relative volume below the threshold",MomentumNotConfirmed:"1M momentum not confirmed",LimitedRecentRange:"Little recent range relative to ATR",ResistanceTooClose:"Prior high is close above",EntryExtended:"Price is extended from its base",ExecutionEventInactive:"No active 1M execution event",StrongParticipation:"Strong relative volume",MomentumConfirmed:"1M momentum confirmed",AdequateMovementCapacity:"Room to move relative to ATR"})[code]||"Reason code";
+}
 $("exportMorningReport")?.addEventListener("click",()=>{
  const group=$("scannerGroup")?.value||"momentum";
  const rows=Array.isArray(scannerData[group])?scannerData[group]:[];
