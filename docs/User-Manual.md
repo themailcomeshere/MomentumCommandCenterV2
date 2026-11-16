@@ -1,3 +1,5 @@
+> **For daily use, read [MCC-Operator-Guide.md](MCC-Operator-Guide.md)** (both workspaces, current step numbers, 2026-11-16). This file is an older engineering log.
+
 ## Editing the dashboard in Visual Studio
 
 The editable browser frontend is in the repository-root frontend folder. I added these files to the solution as a visible **frontend** Solution Items folder, so expand that folder in Solution Explorer:

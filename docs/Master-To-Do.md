@@ -1,9 +1,10 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-16. READY changed (§2): 5M momentum informational, LIMIT UNTESTED heuristic, late buy window to 15:00 AZ. V3 Boring Overnight Thinkorswim columns built (§2). Repository moved to D: (§2a). Next operator actions reordered for the intraday core. Automatic scanner on free data (§2b). Red Zone state colours and alerts added (§2b). Operator walkthrough: the intraday workflow is the daily core. Added step numbers to the Dashboard, colour-coded ranking reasons, and a numbered workflow map with gap analysis (§2b). Boring Overnight READY runs in shadow mode.
+**Updated:** 2026-11-16 (evening). Late-window typed price and inline catalyst labels on READY cards (§2); overnight history research capture (§2c); [operator guide](MCC-Operator-Guide.md) and [layout/live-readiness assessment](Engineering/MCC-Layout-and-Live-Readiness-20261116.md). READY changed (§2): 5M momentum informational, LIMIT UNTESTED heuristic, late buy window to 15:00 AZ. V3 Boring Overnight Thinkorswim columns built (§2). Repository moved to D: (§2a). Next operator actions reordered for the intraday core. Automatic scanner on free data (§2b). Red Zone state colours and alerts added (§2b). Operator walkthrough: the intraday workflow is the daily core. Added step numbers to the Dashboard, colour-coded ranking reasons, and a numbered workflow map with gap analysis (§2b). Boring Overnight READY runs in shadow mode.
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
-**Current handoff:** [NewChatHandoff-20261114.md](NewChatHandoff-20261114.md)
+**Current handoff:** [NewChatHandoff-20261116.md](NewChatHandoff-20261116.md) (previous: [20261114](NewChatHandoff-20261114.md))
+**How to use MCC daily:** [MCC-Operator-Guide.md](MCC-Operator-Guide.md)
 **Full dated history (Nov 6 – Nov 13 morning):** [Master-To-Do-History-20261113.md](archive/Master-To-Do-History-20261113.md) · older: [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)
 **Detail:** [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md) · [P2/P3 Execution Plan](Engineering/P2-P3-Execution-Plan-20261110.md) · [Interactive Windows Operation](Engineering/Interactive-Windows-Operation.md) · [Boring Overnight Control Contract](Engineering/Boring-Overnight-Control-Contract-20261113.md) · [Provider Runtime Inventory](Engineering/Market-Data-Provider-Runtime-Inventory-20261113.md) · [Technical Workflow](Technical-Workflow.md) · [Runtime Acceptance Runbook](Runtime-Acceptance-Runbook.md) · [Catalyst Human Review](Catalyst-Human-Review-Workflow.md)
 
@@ -24,7 +25,8 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `b3ca453` (Daily tolerance): local 370/370. Exact-head CI run `43642242199` SUCCESS.
 - [x] `02e88a3` (READY backend `8365f7e` + Dashboard panel; ATR informational `4eafc9b`): local 392/392. Exact-head CI run `43644529920` SUCCESS.
 - [x] `6fe6446` (latest code head, close/open history on SIP): local Release tests run by Claude: **398/398** passed. Exact-head CI run `43646185327` SUCCESS.
-- [ ] **[Operator]** Pull the latest head, run `.\scripts\Get-Latest-And-Test.ps1`, and record the SHA and totals. Expect 423+ tests (Claude, 2026-11-16, from D:: 423/423).
+- [x] Code heads 2026-11-16, all exact-head CI SUCCESS: `d2eebe4` `43962877084` · `83949cf` `43966282027` · `f693f4e` `43966910541` · `0962645` `43967346459` (latest). Claude local tests 495/495 in Debug (the Release output was locked by the operator's running MCC).
+- [ ] **[Operator]** Stop MCC, run `.\scripts\Get-Latest-And-Test.ps1`, record the SHA and totals (expect 495+), start MCC.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -44,20 +46,15 @@ Schwab and broker reconciliation stay parked at the bottom.
 
 The full, click-by-click sequence is in the [current handoff](NewChatHandoff-20261114.md).
 
-**During a regular session (07:30–14:00 AZ in standard time; buy window 13:00–14:00 AZ). All from `D:\source\repos\MomentumCommandCenterV2`:**
-1. Start: `.\scripts\Get-Latest-And-Test.ps1` (record SHA and totals, expect 423+), `.\scripts\MCC.ps1 start`, about 15 s later `.\scripts\MCC.ps1 warmup`.
-2. INTRADAY MOMENTUM → **2.a Automatic momentum scan**: status `COMPLETED`, no FAILED source under **Sources, feeds and limits** (§2b).
-3. INTRADAY MOMENTUM → TOS watchlist export → **2.b Import TOS CSV**: records side-by-side session 1 of 5 (§2b).
-4. INTRADAY MOMENTUM → **4 Red Zone**: **Enable sound alerts**; compare one card's colour/state with the TOS 1M/5M labels; **Mark holding** on a stock you own (§2b).
-5. INTRADAY MOMENTUM → **4.1 Rank quality pool · top 50**: rows classify instead of DATA?; reason colours visible (§3).
-6. 13:00–14:00 AZ, BORING OVERNIGHT → **4 READY check** for your candidates; sign off catalysts; shadow session 1 of 10 (§2).
-
-**Any time (market closed is fine):**
-7. Tell Claude Scanner 1's timeframe (daily or 5m) (§2b).
-8. Catalyst batch 1: label `D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv`, dry-run, then `-Submit` (§7).
-9. `MCC.ps1 stop`, `Backup-MccData.ps1` (now writes to `D:\source\repos\MCC-Backups`), staged `Restore-MccData.ps1`, sign-out test, then `New-ReleaseEvidence.ps1` and commit the bundle (§8, §9).
-10. Install the **V3 Edge / V3 Boringness / V3 Status** columns in Thinkorswim, then after 14:16 AZ compare five symbols with `/api/boring-overnight/v3-column` (§2, [Boring-Overnight-V3-Columns-20261116.md](Engineering/Boring-Overnight-V3-Columns-20261116.md)).
-11. Optional: Massive free key and `daily/cross-check?symbol=RTO` (§6).
+Daily routine for both workspaces: [MCC-Operator-Guide.md](MCC-Operator-Guide.md). Open items, in order (standard time; subtract 1 hour in daylight time; all from `D:\source\repos\MomentumCommandCenterV2`):
+1. Before 07:30 AZ: `MCC.ps1 stop`, `Get-Latest-And-Test.ps1` (expect 495+), `MCC.ps1 start`, `MCC.ps1 warmup`; Ctrl+F5.
+2. INTRADAY MOMENTUM, from 07:35 AZ: **2.a Automatic momentum scan** shows `COMPLETED`, no FAILED source (§2b). Report the status line.
+3. INTRADAY MOMENTUM: TOS watchlist export → **2.b Import TOS CSV** (side-by-side session 1 of 5) (§2b).
+4. INTRADAY MOMENTUM: **4 Red Zone** colours vs TOS 1M/5M labels on one symbol; **Mark holding** on a stock you own (§2b).
+5. BORING OVERNIGHT, 12:30–13:00 AZ: import the Overnight scan; **2.4 Use Boring Top 20 → Validate Daily data**.
+6. BORING OVERNIGHT, 13:00–14:00 AZ: **4 READY check** for 1–3 picks; label the listed articles **on the card**; sign off; report the cards (§2). Late window to 15:00 AZ: type the after-hours price from TOS on the card.
+7. After 14:16 AZ: `.\scripts\Export-OvernightHistory.ps1` (§2c) and send Claude the pooled weekday table it prints; V3 parity check (§2).
+8. Any time: tell Claude Scanner 1's timeframe (§2b); install/recompile the V3 columns (§2); catalyst batch 1 (§7); backup (§8).
 
 ---
 
@@ -116,7 +113,10 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Repo]** `6fe6446`: capture-history uses delayed SIP for the 20 pairs, while live 1M/5M stays on IEX and is checked against that feed. The current interval is judged as of now − 16 min. Bug fix: `currentOvernightPct` was never filled (it is now the latest completed pair's return). 6 tests. Runtime 2026-11-14: RTO 20/20 (win rate 60%, 20D +0.44%, 5D +0.12%) and CRBG 20/20 (80%, +0.72%, +0.68%). Both fail "5D > 20D"; the remaining DATA? inputs are live-session fields only.
 - [x] **[Operator]** In-session READY run 2026-11-16 13:18–13:49 AZ (PRU, AFL, VOYA, MET; 72 shadow-log entries): all BLOCKED or DATA?. Cause (replayed from the capture snapshots): QUALIFICATION blocked by "5M permission NO / 5M structure NOT_BULLISH" while every overnight gate passed; CATALYST needed review labels (PRU 1, VOYA 2, MET 1 article); SELL_LIMIT had no tested target.
 - [x] **[Repo]** (`d2eebe4`, CI `43962877084` SUCCESS, 489/489) READY decisions 10–12 ([decision record](Engineering/Boring-Overnight-READY-Semantics-20261114.md)): 5M momentum is informational (1M SELL still blocks; end-of-day Exit/SELL is a note); without a tested target READY uses the +0.5% heuristic labelled **LIMIT UNTESTED**; late buy window until close + 60 min (15:00 AZ standard time) with the LATE_ENTRY_PRICE guard (after-hours trade at or below the regular close) and sign-off valid to the late deadline. Dashboard READY card shows the limit basis, the late deadline and the notes (browser-pane check with a stubbed result). Not yet run live.
-- [ ] **[Operator]** Next session: restart MCC on the new head, label the pending catalyst articles in 2.6, then run the READY check in the final hour and, if needed, the late window. Report the cards.
+- [x] **[Operator]** Late-window check 2026-11-16 14:51–14:52 AZ (PRU, VOYA) on `dd80170`: LATE_ENTRY_PRICE and SELL_LIMIT DATA? ("no trade in the last 2 minutes"); CATALYST FAIL (articles unlabelled); VOYA BLOCKED on 5D not above 20D (a real rule failure). QUALIFICATION passed for PRU in the late window.
+- [x] **[Repo]** Diagnosis (Claude, live MCC, 2026-11-16): the free IEX feed returned **zero** 16:00–17:00 ET 1m bars for PRU, AFL, VOYA, MET and SPY, so no after-hours trade can ever be found. Fix `83949cf` (CI `43966282027`): in the late window READY accepts the operator-typed after-hours price from TOS/Schwab (labelled OPERATOR-ENTERED, ignored in the final hour).
+- [x] **[Repo]** The 2.6 review queue only lists articles for the active top-four group, so other READY symbols could not be labelled. Fix `0962645` (CI `43967346459`): each READY card lists its unreviewed/UNCERTAIN articles with a label menu and notes box (40+ characters), saved through the review API. Browser-pane checks with stubbed APIs for both fixes.
+- [ ] **[Operator]** Next session: restart MCC on `0962645`+, run the READY check in the final hour (and the late window with a typed price if needed), label articles on the card, sign off. Report the cards.
 - [x] **[Repo]** (`bb8db35`, CI `43933040879` SUCCESS, 477/477) V3 Boring Overnight Thinkorswim columns **V3 Edge**, **V3 Boringness**, **V3 Status** (`docs/Column Formulas/V3/`, MCC-V3-BORING-0.1). Edge = the installed Overnight Score formula, unchanged, plus its three edge gates; Boringness = BORING-0.1-PROVISIONAL point maps, kept separate; Status = CANDIDATE / WATCH / BLOCKED / DATA?, never READY. C# reference `BoringOvernightV3Calculator` (54 tests, hand-computed fixture) and parity endpoint `GET /api/boring-overnight/v3-column?symbol=` (21 completed SIP Daily sessions, split-adjusted). Install, definitions and parity steps: [Boring-Overnight-V3-Columns-20261116.md](Engineering/Boring-Overnight-V3-Columns-20261116.md). Not compiled in Thinkorswim; endpoint not yet run against live Alpaca data.
 - [ ] **[Operator]** Compile the three V3 columns in Thinkorswim (Aggregation D, extended hours off) and record compiled yes/no per column, or the exact compiler message. First attempt (2026-11-16): V3 Boringness and V3 Status failed with `TooComplexException`; both rewritten without the helper script (same values). Re-paste both and report.
 - [ ] **[Operator]** V3 parity: after 14:16 AZ (standard time), compare the three columns with `/api/boring-overnight/v3-column` for five symbols; report both sets of values. Partial evidence 2026-11-16 (Claude, live MCC `56867ed`, SIP Daily): the V3 **Edge** score equals the operator's 13:11 AZ TOS **Overnight Score** export exactly for PRU 61.23, AFL 60.07, VOYA 56.86, MET 55.97, HQY 56.45 (win/avg/median also equal). V3 Boringness (MCC): PRU 79.30, AFL 78.35, MET 74.86, HQY 72.79, VOYA 71.33, all CANDIDATE. The TOS V3 columns themselves are not yet compared.
@@ -132,6 +132,13 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Repo]** 2026-11-16 (operator request): loose MCC files from `C:\Users\jampo\OneDrive\Documentos` moved to `D:\source\repos\MCC-Documents`: 18 watchlist/scanner CSVs, 52 `StrategyReports_*.csv`, `TTE_ExportAttempt.csv`, 3 `MCC_*.txt` studies, `MCC Workflow.txt`, `Response.txt`, `ChatResponse.md`, `chatRules.md`, `thinkscript.md`, and the `ToS` study folder (10 files). SHA-256 identical before the originals were sent to the Recycle Bin. `rules.md` and `abpNetDevRules.md` moved too (operator request, same check). Only personal files remain in Documentos.
 - [x] **[Operator]** `C:\Users\jampo\source\repos\MomentumCommandCenterV2` removed by the operator 2026-11-16 (confirmed absent by Claude). The Recycle Bin was emptied 2026-11-16 after checking it held only the 84 MCC items from the move, each with a verified D: copy.
 
+## 2c. Research history (started 2026-11-16)
+
+Purpose: build our own history to test hypotheses (weekday effects, whether the scanner rules predict the next night, Boringness calibration). Research only; never READY.
+- [x] **[Repo]** (`f693f4e`, CI `43966910541`) `GET /api/research/overnight-history` (up to 1,460 days of completed Daily bars on delayed SIP, split-adjusted; pairs not formed across missing sessions) and `scripts/Export-OvernightHistory.ps1`. The script reads the newest TOS scanner CSV, archives it to `D:\source\repos\MCC-Data\scanner-exports`, and writes `pairs.csv`, `weekday-by-symbol.csv`, `weekday-pooled.csv` and `manifest.json` under `MCC-Data\overnight-history\<time>\`. Data is kept **outside the repository** until Alpaca's storage terms are reviewed (§6). Script verified against the live MCC up to the endpoint check (it read 50 symbols from the 13:11 export); the end-to-end run needs the restarted MCC.
+- [ ] **[Operator]** Run `Export-OvernightHistory.ps1` after each Overnight scan (after 14:16 AZ) so that daily scanner snapshots accumulate; send Claude the pooled weekday table from the first run.
+- [ ] **[Repo]** After 2+ weeks of snapshots: test (a) weekday effects across the pooled 2-year history, with a multiple-comparison correction, and (b) whether the scanner's 20-day rules predicted next-night returns out of sample. Report before any rule changes.
+
 ## 2b. Intraday workflow alignment (operator walkthrough 2026-11-16)
 
 Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-Steps.md).
@@ -143,6 +150,8 @@ Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-
 - [x] **[Repo]** (`a942074`, CI `43913313796` SUCCESS, 423/423) Automatic scanner on free data (operator decision 2026-11-16: build free first, compare with TOS). Runs scans 1, 2A, 2B, Momentum Pivot and D as written, every 2 min during the session. Universe: Alpaca most-actives (volume, trades) + top gainers. Prices: IEX. Prior close: delayed SIP Daily. 5m conditions: IEX bars; volume conditions labelled approximate. Dashboard panel at Intraday **2.a**, with a **Feed Red Zone** toggle and a TOS side-by-side comparison recorded on each Intraday TOS import. Design and limits: [MCC-Auto-Scanner-20261116.md](Engineering/MCC-Auto-Scanner-20261116.md). Browser-pane check with a stubbed API: table, Red Zone feed, comparison post, import takes the Red Zone back, panel hidden in Overnight; no script errors. **Not run against live Alpaca data.**
 - [ ] **[Operator]** First live session: confirm the panel fills at about 07:35 AZ (standard time), with no FAILED source under **Sources, feeds and limits** (most-actives on the free plan is unconfirmed). Confirm Scanner 1's timeframe (daily or 5m).
 - [ ] **[Operator]** Side-by-side: import your TOS watchlist in INTRADAY MOMENTUM once per session for 5 sessions; MCC records the overlap automatically.
+- [x] **[Repo]** Layout and live-readiness assessment written: [MCC-Layout-and-Live-Readiness-20261116.md](Engineering/MCC-Layout-and-Live-Readiness-20261116.md) (Intraday cockpit, Overnight desk table, TOS stays for orders and as the chart authority until parity). Operator guide for both workspaces: [MCC-Operator-Guide.md](MCC-Operator-Guide.md).
+- [ ] **[Operator]** Decide which layout changes to make (the operator plans to edit `index.html` personally); ask Claude for any part.
 - [ ] **[Operator]** After 5 sessions, decide: stay free, buy live consolidated data (Alpaca Algo Trader Plus $99/month or Massive Stocks Advanced $199/month, prices checked 2026-11-14), and/or approve the proposed rule improvements (merge scans, same-time-of-day RVOL, time-adjusted volume, unified thresholds).
 
 ## 3. Opportunity Quality
