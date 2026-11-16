@@ -1,6 +1,7 @@
 # New Chat Handoff — 2026-11-14
 
 **Branch:** `feature/opportunity-quality-classification` (never `master`)
+**Location (moved 2026-11-16):** repository `D:\source\repos\MomentumCommandCenterV2`; backups `D:\source\repos\MCC-Backups`; catalyst review sheets `D:\source\repos\MCC-Reviews`. MCC runtime data stays in `%LOCALAPPDATA%\MomentumCommandCenterV2`.
 **Checklist:** [Master-To-Do.md](Master-To-Do.md), the single authoritative list
 **Rules:** [CLAUDE.md](../CLAUDE.md). The SIP rule was amended 2026-11-14: delayed historical SIP for completed Daily bars and for the GTC_EXT sell-window and 20-pair close/open 1m history. Live, stream and recent data stay on IEX.
 **Decision record:** [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Boring-Overnight-READY-Semantics-20261114.md)
@@ -79,7 +80,7 @@
 3. **Daily audit:** switch to BORING OVERNIGHT and run the Daily data audit for `RTO,EVR,CRBG`. Each row must show `Alpaca / sip · delayed historical SIP`, 20/20, FRESH and `QUALIFICATION USABLE`. Take a screenshot.
 4. **Catalyst batch 1:** open `Documents\MCC-Reviews\catalyst-queue-20261114-200253.csv` in Excel. Label the rows you review (Label + Notes of at least 40 characters of article facts), save as CSV, then:
    ```powershell
-   .\scripts\Submit-CatalystReviews.ps1 -Path "$env:USERPROFILE\OneDrive\Documentos\MCC-Reviews\catalyst-queue-20261114-200253.csv"
+   .\scripts\Submit-CatalystReviews.ps1 -Path "D:\source\repos\MCC-Reviews\catalyst-queue-20261114-200253.csv"
    .\scripts\Submit-CatalystReviews.ps1 -Path "<same path>" -Submit
    ```
 5. **Optional Massive cross-check:** create a free account at massive.com yourself, then:

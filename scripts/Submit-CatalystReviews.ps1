@@ -10,7 +10,7 @@
     may reject a row; rejected rows are listed with the server's reason.
 
 .EXAMPLE
-    .\scripts\Submit-CatalystReviews.ps1 -Path "$env:USERPROFILE\Documents\MCC-Reviews\catalyst-queue-....csv"
+    .\scripts\Submit-CatalystReviews.ps1 -Path "D:\source\repos\MCC-Reviews\catalyst-queue-....csv"
     .\scripts\Submit-CatalystReviews.ps1 -Path "...csv" -Submit
 #>
 [CmdletBinding()]

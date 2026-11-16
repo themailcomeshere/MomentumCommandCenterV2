@@ -12,7 +12,7 @@
     resolves now (honoring MCC_*_PATH overrides) and re-hashed. Nothing is deleted.
 
 .EXAMPLE
-    .\scripts\Restore-MccData.ps1 -BackupPath "$HOME\Documents\MCC-Backups\mcc-backup-20261113-180000"
+    .\scripts\Restore-MccData.ps1 -BackupPath "D:\source\repos\MCC-Backups\mcc-backup-20261116-143127"
     .\scripts\Restore-MccData.ps1 -BackupPath <folder> -ToLive
 #>
 [CmdletBinding()]

@@ -12,11 +12,14 @@
 .EXAMPLE
     .\scripts\MCC.ps1 stop
     .\scripts\Backup-MccData.ps1
-    .\scripts\Backup-MccData.ps1 -Destination D:\MCC-Backups
+    .\scripts\Backup-MccData.ps1 -Destination E:\MCC-Backups
+
+    Default destination (2026-11-16): the MCC-Backups folder next to the repository folder,
+    e.g. D:\source\repos\MCC-Backups for D:\source\repos\MomentumCommandCenterV2.
 #>
 [CmdletBinding()]
 param(
-    [string]$Destination = (Join-Path ([Environment]::GetFolderPath("MyDocuments")) "MCC-Backups"),
+    [string]$Destination = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "MCC-Backups"),
     [int]$Port = 53360,
     [switch]$AllowRunning
 )

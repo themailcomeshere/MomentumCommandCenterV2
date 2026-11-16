@@ -20,7 +20,8 @@ param(
     # Text file with one symbol per line (or comma/space separated).
     [string]$SymbolFile,
     [int]$Port = 53360,
-    [string]$OutFile = (Join-Path ([Environment]::GetFolderPath("MyDocuments")) ("MCC-Reviews\catalyst-queue-" + (Get-Date).ToUniversalTime().ToString("yyyyMMdd-HHmmss") + ".csv")),
+    # Default (2026-11-16): the MCC-Reviews folder next to the repository folder, e.g. D:\source\repos\MCC-Reviews.
+    [string]$OutFile = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) ("MCC-Reviews\catalyst-queue-" + (Get-Date).ToUniversalTime().ToString("yyyyMMdd-HHmmss") + ".csv")),
     # Pause between symbols to stay well under provider rate limits.
     [int]$DelayMilliseconds = 400,
 
