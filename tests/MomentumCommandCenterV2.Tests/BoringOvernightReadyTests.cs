@@ -389,6 +389,30 @@ public sealed class BoringOvernightReadyTests
         finally { if (File.Exists(path)) File.Delete(path); }
     }
 
+    /// <summary>The READY result carries a display copy of the snapshot's history and Daily inputs (values copied, nulls
+    /// kept); without a snapshot there is none. Synthetic snapshot. WHEN CALLED: By xUnit.</summary>
+    [Fact]
+    public void HistorySummaryCopiesSnapshotValues()
+    {
+        var withHistory = Snapshot(InWindow) with
+        {
+            HistoricalCompleteness = new BoringOvernightHistoryAudit(20, 20, 19, 1, false, false, "INCOMPLETE")
+        };
+        var r = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { Snapshot = withHistory });
+
+        Assert.NotNull(r.History);
+        Assert.Equal(19, r.History!.ValidPairs);
+        Assert.Equal(20, r.History.RequiredPairs);
+        Assert.Equal(70, r.History.WinRatePct);
+        Assert.Equal(0.3, r.History.AveragePct20);
+        Assert.Equal(0.4, r.History.AveragePct5);
+        Assert.Equal(0.2, r.History.MedianPct20);
+        Assert.Equal(50, r.History.Close);
+        Assert.Equal(45, r.History.Sma20);
+        Assert.Equal(1_000_000, r.History.AverageDailyVolume20);
+        Assert.Null(BoringOvernightReadyEvaluator.Evaluate(Inputs() with { Snapshot = null }).History);
+    }
+
     // ---------- shadow summary ----------
 
     /// <summary>Outcomes: TOUCHED / NOT_TOUCHED from the complete Day 2 window, PENDING before it ends or before capture,

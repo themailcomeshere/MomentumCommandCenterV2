@@ -4415,3 +4415,6 @@ details.optin-details[open]{padding-bottom:10px}
 /* READY card: late-window READY is observe-only (2026-11-17) */
 .ready-card.ready-late-observe{border-color:var(--yellow);background:rgba(242,203,118,.06)}
 .ready-card.ready-late-observe .ready-label{color:var(--yellow)}
+
+/* READY card history line (2026-11-17) */
+.ready-history{margin:2px 0 6px;font-size:12px;font-weight:700;color:var(--text);line-height:1.4}

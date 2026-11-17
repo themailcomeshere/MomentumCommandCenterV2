@@ -235,7 +235,23 @@ public static class BoringOvernightReadyEvaluator
             limit, referenceClose, targetPct, catalyst.State, gates, warnings.Distinct().ToArray(), actions.Distinct().ToArray(),
             "READY is decision support only. MCC never submits an order; position size is the operator's decision. A tested limit is a research target from SIP history; an UNTESTED limit is the operator's heuristic. A touch is not a fill.",
             entryWindow, input.Clock.OvernightLateBuyDeadlineUtc, limitBasis, qualificationNotes.Distinct().ToArray(),
-            catalyst.ReviewArticles ?? Array.Empty<ReadyReviewArticle>());
+            catalyst.ReviewArticles ?? Array.Empty<ReadyReviewArticle>(),
+            HistorySummary(snapshot));
+    }
+
+    /// <summary>
+    /// PURPOSE: The snapshot's 20-pair history and Daily hard-gate inputs for display on the READY card, so a DATA? card
+    /// still shows what is known (operator request 2026-11-17). Values are copied, never computed or filled here; null
+    /// stays null. Display only: no gate reads it.
+    /// WHEN CALLED: By Evaluate.
+    /// </summary>
+    public static ReadyHistorySummary? HistorySummary(BoringOvernightCandidateSnapshot? snapshot)
+    {
+        if (snapshot is null) return null;
+        var r = snapshot.EvaluationRequest;
+        return new ReadyHistorySummary(snapshot.AsOfUtc, snapshot.HistoricalCompleteness?.ValidPairCount,
+            snapshot.HistoricalCompleteness?.RequiredWindow, r.OvernightWinRatePct, r.AverageOvernightPct20,
+            r.AverageOvernightPct5, r.MedianOvernightPct20, r.Price, r.Sma20, r.AverageDailyVolume20);
     }
 
     /// <summary>Gate states.</summary>
@@ -439,4 +455,23 @@ public sealed record ReadyEvaluation(
     DateTimeOffset LateBuyDeadlineUtc = default,
     string? LimitBasis = null,
     IReadOnlyList<string>? QualificationNotes = null,
-    IReadOnlyList<ReadyReviewArticle>? ArticlesToReview = null);
+    IReadOnlyList<ReadyReviewArticle>? ArticlesToReview = null,
+    ReadyHistorySummary? History = null);
+
+/// <summary>
+/// TYPE: ReadyHistorySummary
+/// PURPOSE: Display copy of the snapshot's history and Daily inputs: valid/required close-to-open pairs, 20-pair win rate,
+/// 20D and 5D average and 20D median overnight return (percent), Daily close, SMA20 and 20-session average volume.
+/// WHEN CALLED: Built by BoringOvernightReadyEvaluator.HistorySummary; shown on the Dashboard READY card.
+/// </summary>
+public sealed record ReadyHistorySummary(
+    DateTimeOffset AsOfUtc,
+    int? ValidPairs,
+    int? RequiredPairs,
+    double? WinRatePct,
+    double? AveragePct20,
+    double? AveragePct5,
+    double? MedianPct20,
+    double? Close,
+    double? Sma20,
+    double? AverageDailyVolume20);

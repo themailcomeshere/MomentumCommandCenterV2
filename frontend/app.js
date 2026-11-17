@@ -2550,6 +2550,31 @@ async function readyPost(url,body){
  if(!response.ok)throw new Error((data&&(data.error||data.detail||data.title))||("HTTP "+response.status));
  return data;
 }
+/// <summary>
+/// One glanceable line with the snapshot's history and Daily inputs (2026-11-17, operator request), so a DATA? card still
+/// shows what is known. ✓/✗ marks use the published hard-gate thresholds (win >= 60%, 20D avg >= 0.10%, 5D > 20D,
+/// close > SMA20 and >= $5, 20D avg volume >= 500,000); display only, the server's gates decide. Missing values read DATA?.
+/// Called by renderReadyCard.
+/// </summary>
+function readyHistoryLine(h){
+ if(!h)return null;
+ const num=v=>typeof v==="number"&&Number.isFinite(v);
+ const pct=v=>num(v)?(v>=0?"+":"")+v.toFixed(2)+"%":"DATA?";
+ const mark=(ok,v)=>num(v)?(ok?" ✓":" ✗"):"";
+ const vol=v=>!num(v)?"DATA?":v>=1e6?(v/1e6).toFixed(2)+"M":Math.round(v/1e3)+"K";
+ const parts=[
+  "Win "+(num(h.winRatePct)?h.winRatePct.toFixed(0)+"%":"DATA?")+mark(h.winRatePct>=60,h.winRatePct),
+  "20D "+pct(h.averagePct20)+mark(h.averagePct20>=0.10,h.averagePct20),
+  "5D "+pct(h.averagePct5)+mark(num(h.averagePct20)&&h.averagePct5>h.averagePct20,h.averagePct5),
+  "median "+pct(h.medianPct20),
+  "close "+(num(h.close)?h.close.toFixed(2):"DATA?")+" vs SMA20 "+(num(h.sma20)?h.sma20.toFixed(2):"DATA?")+mark(num(h.sma20)&&h.close>h.sma20&&h.close>=5,h.close),
+  "avg vol "+vol(h.averageDailyVolume20)+mark(h.averageDailyVolume20>=500000,h.averageDailyVolume20)
+ ];
+ const pairs=num(h.validPairs)?h.validPairs+"/"+(h.requiredPairs??20)+" nights":"nights DATA?";
+ const p=readyEl("p","ready-history","History ("+pairs+", as of "+readyAz(h.asOfUtc)+"): "+parts.join(" · "));
+ p.title="From the 20-night capture snapshot (SIP). ✓/✗ use the published thresholds for display; the READY gates decide.";
+ return p;
+}
 /// <summary>True when the result is for a buy session other than the check's own Eastern date (after the late deadline,
 /// a weekend, or a holiday). Mirrors the server's sign-off rule. Called by renderReadyCard.</summary>
 function readyIsNextSession(result){
@@ -2571,6 +2596,7 @@ function renderReadyCard(result,captureNote){
  card.append(readyEl("p","ready-limit"+(untested?" ready-limit-untested":""),limit));
  const late=result.entryWindow==="LATE";
  card.append(readyEl("p","muted small","Buy session "+result.buySessionDate+" · final hour "+readyAz(result.buyWindowStartUtc)+" – "+readyAz(result.buyDeadlineUtc)+" · late window (after-hours, LMT EXT) until "+readyAz(result.lateBuyDeadlineUtc)+(late?" · NOW IN LATE WINDOW":"")+" · sell session "+result.sellSessionDate+" · checked "+readyAz(result.evaluatedAtUtc)+(captureNote?" · "+captureNote:"")));
+ const historyLine=readyHistoryLine(result.history);if(historyLine)card.append(historyLine);
  // 2026-11-17: after the late deadline (or on a non-session day) MCC evaluates the NEXT buy session. The server only
  // accepts a sign-off on the buy-session day itself, so say so up front and hide the form instead of failing on click.
  const nextSession=readyIsNextSession(result);
