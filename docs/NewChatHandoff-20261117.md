@@ -85,6 +85,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - Already-labelled articles now show a **Change label** drop-down on the card. AFL's MATERIAL_RISK label (Mizuho) is the operator's to keep or change.
 
+## WAITING FOR BUY WINDOW; workflow section folded
+
+- After the close, CSQR/SVV/HIG read WAITING FOR BUY WINDOW (blue) instead of DATA?; AFL stays BLOCKED. The Overnight workflow section shows only the four bubbles and READY; diagnostics are toggles.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

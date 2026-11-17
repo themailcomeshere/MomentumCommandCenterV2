@@ -105,7 +105,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 4. **Exclusions** and **Catalysts** (BORING OVERNIGHT: left-dock buttons): check that nothing on the shortlist should be excluded or has a pending readout. A ⚑ card is blocked at READY (gate PENDING_BINARY_CATALYST).
 5. **2.3 Candidate qualification:** read the **Boring** chips (your Top 4) and the counts row. The one-row heading has **Boring Top 4 / My Top 4**, **Choose My Top 4** (drop-down picker), **Fetch Daily + catalyst** and **ⓘ**.
 6. **Optional, closed by default (click to open; MCC remembers):** **All imported rows** (the full table), **2.4 Daily Data Audit**, **2.5 Top 4 evidence**, **2.6 Catalyst review queue and label guide**. None is needed for READY: step 4 fetches its own 20-session history, Daily data and news, and READY cards label articles inline.
-7. **Fetch Daily + catalyst** (2.3 heading) is optional too: every **Check READY now** fetches its own 20-session history, Daily data and news.
+7. In **BORING OVERNIGHT · WORKFLOW**, only the four step bubbles and **4 READY check** are open; **3 Single-symbol diagnostics** (3.2–3.7) and **6.2 Thinkorswim Daily OHLC reference** are closed-by-default toggles. **Fetch Daily + catalyst** (2.3 heading) is optional too: every **Check READY now** fetches its own 20-session history, Daily data and news.
 
 **13:00–14:00 AZ (buy window): 4 READY check**
 
@@ -119,7 +119,8 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 10. **Read the card label:**
     - **READY (SHADOW — not yet validated)**: every gate passes;
     - **· LIMIT UNTESTED**: the limit is your +0.5% heuristic, not a tested target;
-    - **NOT READY / BLOCKED / DATA?**: read the red or grey gates; the arrows (→) say what to do.
+    - **WAITING FOR BUY WINDOW** (blue): outside the buy windows, and the only missing inputs are ones the live session fills (1-minute state, extension, volume, a live trade for the sell limit). Nothing is wrong; check again in the window;
+    - **NOT READY / BLOCKED / DATA?**: read the red or grey gates; the arrows (→) say what to do. **BLOCKED** always shows first (for example negative news you labelled MATERIAL_RISK). **DATA?** now means a real gap (for example missing history).
 11. **Act in Schwab:**
     - buy with a limit order;
     - then place the **GTC_EXT limit sell** at the card's limit, re-checked against your actual fill.
