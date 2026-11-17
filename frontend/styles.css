@@ -4418,3 +4418,8 @@ details.optin-details[open]{padding-bottom:10px}
 
 /* READY card history line (2026-11-17) */
 .ready-history{margin:2px 0 6px;font-size:12px;font-weight:700;color:var(--text);line-height:1.4}
+
+/* READY card: change an existing article label (2026-11-17) */
+.ready-change-label{margin:4px 0;font-size:12px}
+.ready-change-label>summary{cursor:pointer;color:var(--muted);font-weight:700}
+.ready-change-label>summary:hover{color:var(--blue)}

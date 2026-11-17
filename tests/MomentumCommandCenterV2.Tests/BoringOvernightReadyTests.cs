@@ -310,6 +310,27 @@ public sealed class BoringOvernightReadyTests
         Assert.Equal("BLOCKED", result.State);
     }
 
+    /// <summary>
+    /// Change label (2026-11-17): an already-labelled article is returned in LabelledArticles with its current label (not
+    /// in ReviewArticles), and a newer NON_MATERIAL label replaces an older MATERIAL_RISK so the block lifts. Synthetic data.
+    /// </summary>
+    [Fact]
+    public void LabelledArticlesAreReturnedAndNewestLabelWins()
+    {
+        var blocked = ReadyCatalystGate.Evaluate(Evidence(Article("a1", "MATERIAL"), Article("a2", "MATERIAL")),
+            new[] { Review("a1", "MATERIAL_RISK") }, Signoff(), "TEST", BuyDay, InWindow);
+        Assert.Equal("BLOCKED", blocked.State);
+        var labelled = Assert.Single(blocked.LabelledArticles!);
+        Assert.Equal(("a1", "MATERIAL_RISK"), (labelled.Id, labelled.CurrentLabel));
+        Assert.Equal("a2", Assert.Single(blocked.ReviewArticles!).Id);
+
+        var relabelled = ReadyCatalystGate.Evaluate(Evidence(Article("a1", "MATERIAL")),
+            new[] { Review("a1", "MATERIAL_RISK", InWindow.AddHours(-2)), Review("a1", "NON_MATERIAL", InWindow.AddHours(-1)) },
+            Signoff(), "TEST", BuyDay, InWindow);
+        Assert.Equal("OPERATOR_ATTESTED", relabelled.State);
+        Assert.Equal("NON_MATERIAL", Assert.Single(relabelled.LabelledArticles!).CurrentLabel);
+    }
+
     /// <summary>MATERIAL_EVENT: earnings/FDA or unknown type block; analyst action / M&amp;A pass with a warning.</summary>
     [Theory]
     [InlineData("EARNINGS_OR_GUIDANCE", "BLOCKED")]

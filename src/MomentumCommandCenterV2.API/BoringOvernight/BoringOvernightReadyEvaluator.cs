@@ -236,7 +236,8 @@ public static class BoringOvernightReadyEvaluator
             "READY is decision support only. MCC never submits an order; position size is the operator's decision. A tested limit is a research target from SIP history; an UNTESTED limit is the operator's heuristic. A touch is not a fill.",
             entryWindow, input.Clock.OvernightLateBuyDeadlineUtc, limitBasis, qualificationNotes.Distinct().ToArray(),
             catalyst.ReviewArticles ?? Array.Empty<ReadyReviewArticle>(),
-            HistorySummary(snapshot));
+            HistorySummary(snapshot),
+            catalyst.LabelledArticles ?? Array.Empty<ReadyReviewArticle>());
     }
 
     /// <summary>
@@ -301,11 +302,17 @@ public static class ReadyCatalystGate
         var blocked = new List<string>();
         var needsReview = new List<string>();
         var reviewArticles = new List<ReadyReviewArticle>();
+        // 2026-11-17 (operator request): articles that already carry a final label are returned too, so the READY card can
+        // offer "Change label". Labels stay append-only; the newest label per article is the one the gate reads.
+        var labelledArticles = new List<ReadyReviewArticle>();
         var warnings = new List<string>();
         foreach (var article in evidence.Articles)
         {
             latest.TryGetValue(Key(article.Id, article.Url), out var label);
             var headline = article.Headline.Length > 120 ? article.Headline[..120] + "…" : article.Headline;
+            if (label is not null and not "UNCERTAIN")
+                labelledArticles.Add(new ReadyReviewArticle(article.Id, article.Headline, article.Url, article.PublishedAtUtc,
+                    article.Severity, article.Categories ?? Array.Empty<string>(), evidence.Provider, evidence.RuleSetVersion, label));
             switch (label)
             {
                 case "MATERIAL_RISK":
@@ -339,11 +346,11 @@ public static class ReadyCatalystGate
 
         if (blocked.Count > 0)
             return new("BLOCKED", BoringOvernightReadyEvaluator.GateBlocked, string.Join(" ", blocked), warnings,
-                Array.Empty<string>(), reviewArticles);
+                Array.Empty<string>(), reviewArticles, labelledArticles);
         if (needsReview.Count > 0)
             return new("NEEDS_REVIEW", BoringOvernightReadyEvaluator.GateFail,
                 $"{needsReview.Count} article(s) need a human review label first.", warnings,
-                needsReview.Select(h => $"Review and label: \"{h}\" (label it on this card).").ToArray(), reviewArticles);
+                needsReview.Select(h => $"Review and label: \"{h}\" (label it on this card).").ToArray(), reviewArticles, labelledArticles);
 
         var newsSummary = evidence.Articles.Count == 0
             ? "No news returned in the window (UNKNOWN, not CLEAR)."
@@ -351,11 +358,11 @@ public static class ReadyCatalystGate
         if (attestation is null || !CatalystAttestationStore.IsValidFor(attestation, symbol, buySessionDate, nowUtc))
             return new("NEEDS_SIGNOFF", BoringOvernightReadyEvaluator.GateFail,
                 $"{newsSummary} Operator sign-off for {buySessionDate:yyyy-MM-dd} is required.", warnings,
-                new[] { "Sign off the catalyst check (tick the sources you checked)." });
+                new[] { "Sign off the catalyst check (tick the sources you checked)." }, null, labelledArticles);
 
         return new("OPERATOR_ATTESTED", BoringOvernightReadyEvaluator.GatePass,
             $"{newsSummary} CATALYST: OPERATOR-ATTESTED at {attestation.AttestedAtUtc:O} ({string.Join(", ", attestation.SourcesChecked)}); expires {attestation.ExpiresAtUtc:O}.",
-            warnings, Array.Empty<string>());
+            warnings, Array.Empty<string>(), null, labelledArticles);
     }
 
     private static string Key(string? articleId, string? url) =>
@@ -414,12 +421,14 @@ public sealed record ReadyGate(string Code, string State, string Detail);
 /// WHEN CALLED: Produced by ReadyCatalystGate.
 /// </summary>
 public sealed record ReadyCatalystResult(string State, string GateState, string Detail,
-    IReadOnlyList<string> Warnings, IReadOnlyList<string> Actions, IReadOnlyList<ReadyReviewArticle>? ReviewArticles = null);
+    IReadOnlyList<string> Warnings, IReadOnlyList<string> Actions, IReadOnlyList<ReadyReviewArticle>? ReviewArticles = null,
+    IReadOnlyList<ReadyReviewArticle>? LabelledArticles = null);
 
 /// <summary>
 /// TYPE: ReadyReviewArticle
-/// PURPOSE: An article on a READY card that still needs a human label (unreviewed or UNCERTAIN), with what the
-/// Dashboard needs to post the review to /api/market-data/catalyst-reviews.
+/// PURPOSE: An article on a READY card, with what the Dashboard needs to post a review to /api/market-data/catalyst-reviews:
+/// either one that still needs a label (unreviewed or UNCERTAIN; ArticlesToReview) or, since 2026-11-17, one that already
+/// has a final label and can be relabelled (LabelledArticles; CurrentLabel holds the newest label).
 /// WHEN CALLED: Produced by ReadyCatalystGate; rendered by the READY card (added 2026-11-16).
 /// </summary>
 public sealed record ReadyReviewArticle(string? Id, string Headline, string? Url, DateTimeOffset? PublishedAtUtc,
@@ -456,7 +465,8 @@ public sealed record ReadyEvaluation(
     string? LimitBasis = null,
     IReadOnlyList<string>? QualificationNotes = null,
     IReadOnlyList<ReadyReviewArticle>? ArticlesToReview = null,
-    ReadyHistorySummary? History = null);
+    ReadyHistorySummary? History = null,
+    IReadOnlyList<ReadyReviewArticle>? LabelledArticles = null);
 
 /// <summary>
 /// TYPE: ReadyHistorySummary
