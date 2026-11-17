@@ -25,6 +25,16 @@ try {
         throw "Run this script from a MomentumCommandCenterV2 repository checkout."
     }
 
+    # A running MCC API locks the Release DLLs and the build fails with MSB3021 "file is being used by another
+    # process". Detect it first and stop with the fix instead (added 2026-11-16).
+    $releaseDir = Join-Path $repoRoot "src\MomentumCommandCenterV2.API\bin\Release"
+    $running = @(Get-CimInstance Win32_Process -Filter "Name = 'dotnet.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -and $_.CommandLine.IndexOf($releaseDir, [StringComparison]::OrdinalIgnoreCase) -ge 0 })
+    if ($running.Count -gt 0) {
+        $ids = ($running | ForEach-Object { $_.ProcessId }) -join ", "
+        throw "MCC is still running (PID $ids) and locks the Release build. Run .\scripts\MCC.ps1 stop, then run this script again."
+    }
+
     $dirty = @(git status --porcelain)
     if ($LASTEXITCODE -ne 0) { throw "Unable to read Git working-tree status." }
     if ($dirty.Count -gt 0) {
