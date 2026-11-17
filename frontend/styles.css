@@ -4364,6 +4364,9 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
     font-size: 20px !important;
     font-weight: bold;
 }
+#overnightReadyEvaluate {
+    font-weight: bold;
+}
 .qual-pop {
     position: relative
 }
