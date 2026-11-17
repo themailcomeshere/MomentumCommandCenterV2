@@ -211,8 +211,9 @@ public sealed class AlpacaDailyMarketDataClient(HttpClient client, IConfiguratio
             throw new ArgumentException("Symbol must be 1-8 letters, digits, dot, or hyphen.", nameof(symbol));
         if (nowUtc.Offset != TimeSpan.Zero)
             throw new ArgumentException("nowUtc must use UTC.", nameof(nowUtc));
-        if (adjustment is not ("all" or "split"))
-            throw new ArgumentException("adjustment must be 'all' or 'split'.", nameof(adjustment));
+        // "raw" (unadjusted) added 2026-11-17 for the Daily-open fallback, which must match the unadjusted 1m bars.
+        if (adjustment is not ("all" or "split" or "raw"))
+            throw new ArgumentException("adjustment must be 'all', 'split', or 'raw'.", nameof(adjustment));
         if (calendarDays is < 30 or > 1460)
             throw new ArgumentOutOfRangeException(nameof(calendarDays), "calendarDays must be 30-1460 (one request of at most 1,000 Daily bars).");
 

@@ -2620,8 +2620,8 @@ function renderReadyCard(result,captureNote){
   form.append(readyEl("strong",null,"Catalyst sign-off for "+result.buySessionDate+" — tick what you checked:"));
   [["SCHWAB_NEWS","Schwab news"],["SEC_EDGAR","SEC EDGAR filings"],["COMPANY_IR","Company investor relations"],["OTHER","Other (name it in the note)"]].forEach(([value,label])=>{
    const l=readyEl("label","inline-check");const box=document.createElement("input");box.type="checkbox";box.value=value;l.append(box,document.createTextNode(" "+label));form.append(l);});
-  const note=document.createElement("input");note.placeholder="Optional note (required for Other)";note.maxLength=300;note.className="ready-note";
-  const submit=readyEl("button",null,"Sign off: nothing material");submit.type="submit";
+  const note=document.createElement("input");note.placeholder="Note (optional; required for Other), e.g. good news you saw";note.maxLength=300;note.className="ready-note";
+  const submit=readyEl("button",null,"Sign off: nothing blocking");submit.type="submit";
   const msg=readyEl("span","muted small","");
   form.append(note,submit,msg);
   form.addEventListener("submit",async event=>{

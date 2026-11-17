@@ -5,7 +5,7 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 
 /// <summary>
 /// TYPE: CatalystAttestationStore
-/// PURPOSE: Append-only operator catalyst sign-offs ("I checked these sources; nothing material") for one symbol and
+/// PURPOSE: Append-only operator catalyst sign-offs ("I checked these sources; nothing blocking") for one symbol and
 /// one Boring Overnight buy session. A sign-off never relabels news as CLEAR; READY shows it as OPERATOR-ATTESTED.
 /// Operator decision 2026-11-14: tick at least one source (Schwab news, SEC EDGAR, company IR, other); a note is
 /// optional except that OTHER needs a note naming the source. A sign-off is valid only on the buy-session date (Eastern)

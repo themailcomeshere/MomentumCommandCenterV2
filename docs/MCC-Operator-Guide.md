@@ -116,7 +116,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - tick **Re-check every 2 min during the buy windows**.
 9. **Catalyst, on each card:**
    - for every article listed, open it, choose a label, write 40+ characters of facts and click **Save label**;
-   - then tick the sources you checked and click **Sign off: nothing material**.
+   - then tick the sources you checked and click **Sign off: nothing blocking**. Good news (an upgrade, a target raise) is not blocking: say so in the note.
 10. **Read the card label:**
     - **READY (SHADOW — not yet validated)**: every gate passes;
     - **· LIMIT UNTESTED**: the limit is your +0.5% heuristic, not a tested target;

@@ -1174,6 +1174,32 @@ app.MapPost("/api/boring-overnight/capture-history", async (
         var history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
             request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow);
 
+        // Operator decision 2026-11-17: when a 09:30 SIP minute bar does not exist (no trade in that minute; HIG
+        // 2026-10-21), use the unadjusted SIP Daily bar's open for that session. Only for SIP history, only with
+        // unadjusted Daily bars on SIP (the 1m bars are unadjusted), and only after the Daily close of the previous
+        // session matches the 15:59 minute close (see the calculator). A Daily refusal or IEX fallback leaves it missing.
+        string? dailyOpenFallbackStatus = null;
+        if (history.Missing.Any(m => m.ReasonCode == "NEXT_SESSION_OPEN_MISSING")
+            && string.Equals(actualFeed, "sip", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var rawDaily = await dailyClient.GetDailyHistoryAsync(request.Symbol.Trim().ToUpperInvariant(), captureStartedAtUtc, 60, "raw", ct);
+                if (rawDaily.Feed.Equals("sip", StringComparison.OrdinalIgnoreCase))
+                {
+                    history = MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightHistoryCalculator.Calculate(
+                        request.Symbol, provider.ProviderName, actualFeed, observations, boundaries, request.RequiredWindow,
+                        rawDaily.Sessions.ToDictionary(x => x.SessionDate));
+                    dailyOpenFallbackStatus = "DAILY_OPEN_FALLBACK_APPLIED_WHERE_BASIS_MATCHED";
+                }
+                else dailyOpenFallbackStatus = "DAILY_OPEN_FALLBACK_REFUSED: Daily bars were not SIP (" + rawDaily.RequestStatus + ")";
+            }
+            catch (Exception ex) when (ex is HttpRequestException or ProviderNotConfiguredException or ArgumentException or System.Text.Json.JsonException)
+            {
+                dailyOpenFallbackStatus = "DAILY_OPEN_FALLBACK_UNAVAILABLE: " + ex.Message;
+            }
+        }
+
         // Persist an auditable input snapshot on every explicit 20-session capture.
         // History comes from exact persisted 1m pairs; Daily and catalyst evidence are
         // independently fetched and fail closed. IEX Daily fields remain diagnostic only.
@@ -1372,6 +1398,7 @@ app.MapPost("/api/boring-overnight/capture-history", async (
             provider = provider.ProviderName,
             feed = actualFeed,
             historyFeedMode = feedPlan.Mode,
+            dailyOpenFallbackStatus,
             historyAsOfUtc,
             technicalFeed = technicalExpectedFeed,
             timeframe = "1m",

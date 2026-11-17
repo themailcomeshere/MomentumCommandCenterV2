@@ -9,13 +9,34 @@ namespace MomentumCommandCenterV2.API.BoringOvernight;
 /// </summary>
 public static class BoringOvernightHistoryCalculator
 {
+    /// <summary>Reference kind for a next-session open taken from the 09:30 one-minute bar.</summary>
+    public const string OneMinuteOpenKind = "ONE_MINUTE_BAR_OPEN_PROXY";
+
+    /// <summary>Reference kind for a next-session open taken from the unadjusted SIP Daily bar (operator decision 2026-11-17).</summary>
+    public const string DailyOpenKind = "DAILY_BAR_OPEN_SIP_RAW";
+
+    /// <summary>Largest allowed gap between the Daily close and the 15:59 one-minute close of the previous session before
+    /// the Daily open is refused as a different price basis (for example a split or adjusted bars). The Daily close includes
+    /// the closing auction, so a small difference is normal.</summary>
+    public const decimal DailyBasisTolerancePct = 1.0m;
+
+    /// <summary>
+    /// PURPOSE: Builds the close-to-next-open pairs for the given boundaries and the rolling metrics when every pair exists.
+    /// When the 09:30 one-minute bar is missing and <paramref name="dailyOpenFallback"/> holds unadjusted consolidated (SIP)
+    /// Daily bars for both sessions of the pair, the Daily bar's open is used instead (operator decision 2026-11-17, HIG
+    /// 2026-10-21 had no 09:30 SIP minute bar). The Daily open is the session's first consolidated price, not a nearby bar,
+    /// and the pair is labelled DAILY_BAR_OPEN_SIP_RAW. It is refused if the Daily close of the previous session differs
+    /// from the 15:59 minute close by more than DailyBasisTolerancePct.
+    /// WHEN CALLED: By capture-history and the explicit history endpoints.
+    /// </summary>
     public static BoringOvernightHistoryResult Calculate(
         string symbol,
         string provider,
         string? feed,
         IReadOnlyCollection<MarketBarObservation> observations,
         IReadOnlyList<OvernightSessionBoundary> boundaries,
-        int requiredWindow = 20)
+        int requiredWindow = 20,
+        IReadOnlyDictionary<DateOnly, DailySessionObservation>? dailyOpenFallback = null)
     {
         if (string.IsNullOrWhiteSpace(symbol)) throw new ArgumentException("Symbol is required.", nameof(symbol));
         if (string.IsNullOrWhiteSpace(provider)) throw new ArgumentException("Provider is required.", nameof(provider));
@@ -65,14 +86,35 @@ public static class BoringOvernightHistoryCalculator
                 missing.Add(new(boundary.NextSessionDate, "PREVIOUS_SESSION_CLOSE_MISSING", boundary.PreviousCloseBarTimestampUtc));
                 continue;
             }
-            if (!latestByTimestamp.TryGetValue(boundary.NextOpenBarTimestampUtc, out var openObservation))
+            var close = (decimal)closeObservation.Bar.Close;
+            decimal open;
+            string openObservationId, openKind;
+            if (latestByTimestamp.TryGetValue(boundary.NextOpenBarTimestampUtc, out var openObservation))
+            {
+                open = (decimal)openObservation.Bar.Open;
+                openObservationId = openObservation.ObservationId;
+                openKind = OneMinuteOpenKind;
+            }
+            else if (dailyOpenFallback is not null
+                && dailyOpenFallback.TryGetValue(boundary.NextSessionDate, out var nextDaily)
+                && dailyOpenFallback.TryGetValue(boundary.PreviousSessionDate, out var previousDaily))
+            {
+                var dailyClose = (decimal)previousDaily.Close;
+                if (close <= 0 || dailyClose <= 0 || Math.Abs(dailyClose / close - 1m) * 100m > DailyBasisTolerancePct)
+                {
+                    missing.Add(new(boundary.NextSessionDate, "NEXT_SESSION_OPEN_MISSING_DAILY_BASIS_MISMATCH", boundary.NextOpenBarTimestampUtc));
+                    continue;
+                }
+                open = (decimal)nextDaily.Open;
+                openObservationId = "DAILY:" + boundary.NextSessionDate.ToString("yyyy-MM-dd");
+                openKind = DailyOpenKind;
+            }
+            else
             {
                 missing.Add(new(boundary.NextSessionDate, "NEXT_SESSION_OPEN_MISSING", boundary.NextOpenBarTimestampUtc));
                 continue;
             }
 
-            var close = (decimal)closeObservation.Bar.Close;
-            var open = (decimal)openObservation.Bar.Open;
             if (close <= 0 || open <= 0)
             {
                 missing.Add(new(boundary.NextSessionDate, "NON_POSITIVE_BOUNDARY_PRICE", close <= 0
@@ -89,8 +131,8 @@ public static class BoringOvernightHistoryCalculator
                 open,
                 (open / close - 1m) * 100m,
                 closeObservation.ObservationId,
-                openObservation.ObservationId,
-                "ONE_MINUTE_BAR_OPEN_PROXY",
+                openObservationId,
+                openKind,
                 false));
         }
 
@@ -99,6 +141,10 @@ public static class BoringOvernightHistoryCalculator
         var enoughHistory = returns.Count >= requiredWindow;
         var window = returns.TakeLast(requiredWindow).ToArray();
         var lastFive = returns.TakeLast(5).ToArray();
+        var dailyOpenDates = returns.Where(x => x.NextOpenReferenceKind == DailyOpenKind)
+            .Select(x => x.NextSessionDate.ToString("yyyy-MM-dd")).ToArray();
+        var dailyOpenNote = dailyOpenDates.Length == 0 ? string.Empty
+            : $" DAILY OPEN USED for {string.Join(", ", dailyOpenDates)}: no 09:30 one-minute bar, so the unadjusted SIP Daily bar's open was used (operator decision 2026-11-17).";
 
         return new BoringOvernightHistoryResult(
             normalizedSymbol,
@@ -120,8 +166,8 @@ public static class BoringOvernightHistoryCalculator
             returns,
             missing,
             complete && enoughHistory
-                ? "Calculated from previous regular-session close through the next regular-session 09:30 one-minute bar Open. This interval spans Day 1 after-hours and Day 2 premarket in its net endpoint return, but does not reconstruct the path or eligible-window extrema. The 09:30 bar Open is a first-minute bar-open proxy, not a verified official opening-auction print. Provider truth, exchange-calendar correctness, corporate-action adjustment, and source coverage still require independent validation."
-                : "INCOMPLETE_HISTORY: no rolling metric is emitted unless every requested pair exists and the required history count is met.");
+                ? "Calculated from previous regular-session close through the next regular-session 09:30 one-minute bar Open. This interval spans Day 1 after-hours and Day 2 premarket in its net endpoint return, but does not reconstruct the path or eligible-window extrema. The 09:30 bar Open is a first-minute bar-open proxy, not a verified official opening-auction print. Provider truth, exchange-calendar correctness, corporate-action adjustment, and source coverage still require independent validation." + dailyOpenNote
+                : "INCOMPLETE_HISTORY: no rolling metric is emitted unless every requested pair exists and the required history count is met." + dailyOpenNote);
     }
 
     private static decimal Median(IEnumerable<decimal> values)
