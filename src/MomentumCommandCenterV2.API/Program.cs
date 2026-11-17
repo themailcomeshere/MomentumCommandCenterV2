@@ -73,6 +73,10 @@ builder.Services.AddSingleton(sp => new AutoMomentumScanService(
     sp.GetRequiredService<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>(),
     sp.GetRequiredService<ILogger<AutoMomentumScanService>>()));
 builder.Services.AddHostedService<AutoMomentumScanWorker>();
+// Header market chip (2026-11-16): SPY/QQQ trend from the live assessment + official event schedule. Awareness only.
+builder.Services.AddSingleton(sp => new MarketRegimeService(
+    sp.GetRequiredService<LiveSymbolAssessmentService>(),
+    Path.Combine(builder.Environment.ContentRootPath, "App_Data", "macro-events.json")));
 // Research history export (2026-11-16): one-button daily export from the Dashboard; data outside the repository.
 builder.Services.AddSingleton(sp => new MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryExportService(
     MomentumCommandCenterV2.API.BoringOvernight.OvernightHistoryExportService.ResolveDataRoot(
@@ -643,6 +647,10 @@ app.MapPost("/api/scanner/auto-momentum/tos-comparison", async (AutoScanComparis
 app.MapGet("/api/scanner/auto-momentum/tos-comparison", async (AutoMomentumScanService scanService, CancellationToken ct) =>
     Results.Ok(new { sessions = await scanService.GetComparisonReportAsync(ct), targetSessions = 5 }))
 .WithSummary("Side-by-side report: latest TOS-vs-MCC comparison per session");
+
+app.MapGet("/api/market/regime", async (MarketRegimeService regime, CancellationToken ct) => Results.Ok(await regime.GetAsync(ct)))
+.WithSummary("Header market chip: SPY/QQQ trend (RISK_ON / MIXED / RISK_OFF / CLOSED / DATA?) and scheduled-event flag")
+.WithDescription("MCC-REGIME-0.1. Per symbol: 5m close vs session VWAP and EMA9 vs EMA20 from the live assessment (IEX). Overall: both bullish = RISK_ON, both bearish = RISK_OFF, otherwise MIXED; outside the regular session CLOSED. Event flag from App_Data/macro-events.json (official FOMC/BLS schedules): TODAY or NEXT_SESSION. Awareness only; no MCC gate reads it. Cached 30 s.");
 
 app.MapGet("/api/market-data/live-assessment", async (
     string symbol,

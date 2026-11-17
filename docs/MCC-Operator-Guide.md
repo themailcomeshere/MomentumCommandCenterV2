@@ -23,6 +23,16 @@
 
 **Header (one slim row, pinned at the top):**
 - title, **Morning Command Brief**, **History export**, the market clock;
+- **Market chip:**
+  - **▲ RISK-ON** (green): SPY and QQQ both trade above VWAP with EMA9 above EMA20.
+  - **▼ RISK-OFF** (red): both are below VWAP with EMA9 below EMA20.
+  - **◆ MIXED** (amber): anything in between.
+  - **· closed** outside the regular session.
+  - **· DATA?** when the data is stale.
+  - Hover over the chip to see the inputs. It is awareness only, not a signal.
+- **⚑ event flag** (shown only when one applies):
+  - CPI, FOMC or the Jobs report **today** (red) or **next session** (amber; an overnight hold is exposed to it).
+  - Times are shown in Arizona time;
 - in BORING OVERNIGHT, one buy-window countdown: Buy window in → Buy window · closes in → Late window (LMT EXT) · ends in → CLOSED;
 - **SYSTEM READINESS** (click to drop down the details).
 
@@ -47,7 +57,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - After your TOS scans, export the TOS Watchlist and import it here.
    - This records the side-by-side comparison with 2.a; once per session is enough.
    - The import takes over the Red Zone; click **Feed Red Zone** again to switch back.
-5. **Exclusions** (button in the left dock, the number = excluded symbols): opens the list in a pop-up; add a symbol you never want suggested.
+5. **EXCLUSIONS · API-BACKED** panel (INTRADAY MOMENTUM step 3; expand it): add a symbol you never want suggested.
 6. **4 Red Zone:**
    - Click **Enable sound alerts** once.
    - Each card's banner colour is its state:
@@ -87,7 +97,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - 5D > 20D;
    - today's gap under 3%;
    - above the 20-day SMA.
-4. **Exclusions** (left dock button): check that nothing on the shortlist should be excluded.
+4. **EXCLUSIONS · API-BACKED** panel (BORING OVERNIGHT step 2.2; expand it): check that nothing on the shortlist should be excluded.
 5. **2.3 Qualification table:** all candidates with reasons.
 6. **2.4 Daily Data Audit:**
    - click **Use Boring Top 20**, then **Validate Daily data**;

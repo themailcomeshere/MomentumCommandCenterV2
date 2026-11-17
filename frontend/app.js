@@ -1658,14 +1658,28 @@ async function loadMorningBrief(force=false) {
 }
 // Morning Brief loads on demand from its modal; it must not block dashboard startup.
 
-/// MODULE: Morning Command Brief modal (2026-11-16: the only Morning Brief view; the page panel was removed)
-/// PURPOSE: Opens the modal and loads the live API brief into it. Export downloads that API brief as JSON.
+/// MODULE: Morning Command Brief modal
+/// PURPOSE: Opens the modal and shows the live API brief. Works with either markup: when the page still has the
+/// #morning-brief panel (operator commit 528aa1d restored it), the brief renders there and is copied into the modal
+/// without ids; when the panel is absent, the brief renders straight into the modal. Export downloads the API brief as JSON.
 /// SAFETY: Read-only market snapshot; no trading decision is inferred.
 const morningBriefDialog=$("morningBriefDialog");
+/// <summary>Copies the page panel's brief into the modal when the panel exists. Called on open and after each load.</summary>
+function renderMorningBriefModal(){
+ const source=$("morning-brief"),host=$("morningBriefModalContent");
+ if(!source||!host)return;
+ const clone=source.cloneNode(true);
+ clone.removeAttribute("id");
+ clone.querySelector(".section-heading")?.remove();
+ clone.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
+ clone.querySelectorAll("button").forEach(button=>button.remove());
+ host.replaceChildren(clone);
+}
 $("openMorningBrief")?.addEventListener("click",()=>{
  if(!morningBriefDialog||morningBriefDialog.open)return;
+ renderMorningBriefModal();
  morningBriefDialog.showModal();
- if(!morningBriefCache||Date.now()-morningBriefLoadedAt>=60000)void loadMorningBrief(true);
+ if(!morningBriefCache||Date.now()-morningBriefLoadedAt>=60000)void loadMorningBrief(true).then(renderMorningBriefModal);
 });
 $("closeMorningBrief")?.addEventListener("click",()=>morningBriefDialog?.close());
 $("exportMorningReportModal")?.addEventListener("click",async()=>{
@@ -2815,3 +2829,44 @@ $("historyExportButton")?.addEventListener("click",async()=>{
 });
 void loadHistoryStatus();
 window.setInterval(()=>{if(!historyState.running)void loadHistoryStatus();},60000);
+
+/// MODULE: Header market chip (2026-11-16, MCC-REGIME-0.1)
+/// PURPOSE: One glanceable colour for the market's mood (SPY and QQQ: 5m close vs VWAP and EMA9 vs EMA20) plus a badge for a
+/// scheduled high-impact event today or before the next session (official FOMC/BLS dates). Awareness only: no MCC gate
+/// reads it, and it is never a trade signal.
+/// <summary>Formats a UTC instant as Arizona time. Called by the market chip.</summary>
+function regimeAz(iso){try{return new Date(iso).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ";}catch{return "";}}
+/// <summary>Short text for one event (label, day, Arizona time when the source gives one). Called by the market chip.</summary>
+function regimeEventText(e,when){return e.label+(e.tentative?" (tentative)":"")+(when?" "+when:"")+(e.atUtc?" "+regimeAz(e.atUtc):"");}
+/// <summary>Short badge text: kind (CPI / FOMC / Jobs report), day and Arizona time. Called by the market chip.</summary>
+function regimeEventShort(e,when){return ({CPI:"CPI",FOMC:"FOMC",JOBS:"Jobs report"})[e.kind]||e.label;}
+/// <summary>Loads /api/market/regime and paints the chip and the event badge. Called on load and every 60 seconds.</summary>
+async function loadMarketRegime(){
+ const chip=$("marketRegimeChip"),badge=$("marketEventBadge");if(!chip)return;
+ const yn=v=>v===true?"yes":v===false?"no":"?";
+ try{
+  const r=await fetch("/api/market/regime",{cache:"no-store",headers:{Accept:"application/json"}});
+  if(r.status===404){chip.textContent="Market · update MCC";chip.className="regime-chip regime-data";chip.title="This MCC version has no market chip. Stop MCC, run Get-Latest-And-Test.ps1, start MCC.";if(badge)badge.hidden=true;return;}
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const d=await r.json();
+  const map={RISK_ON:["Market ▲ RISK-ON","regime-on"],MIXED:["Market ◆ MIXED","regime-mixed"],RISK_OFF:["Market ▼ RISK-OFF","regime-off"],CLOSED:["Market · closed","regime-data"],"DATA?":["Market · DATA?","regime-data"]};
+  const [text,cls]=map[d.status]||["Market · "+d.status,"regime-data"];
+  chip.textContent=text;chip.className="regime-chip "+cls;
+  chip.title=(d.symbols||[]).map(s=>s.symbol+": "+s.state+" · above VWAP "+yn(s.closeAboveVwap)+" · EMA9>EMA20 "+yn(s.ema9AboveEma20)+(s.lastClose!=null?" · last "+Number(s.lastClose).toFixed(2):"")).join("\n")+
+   "\nBoth bullish = RISK-ON, both bearish = RISK-OFF, otherwise MIXED ("+(d.rulesVersion||"rules")+"). Checked "+regimeAz(d.evaluatedAtUtc)+". Awareness only; not a trade signal."+
+   ((d.upcomingEvents||[]).length?"\nNext 14 days: "+d.upcomingEvents.map(e=>regimeEventText(e,e.date)).join(" · "):"");
+  if(badge){
+   const flagged=d.eventsFlagged||[];
+   if(d.eventRisk==="NONE"||!flagged.length){badge.hidden=true;}
+   else{
+    const when=d.eventRisk==="TODAY"?"today":"next session";
+    badge.hidden=false;
+    badge.textContent="⚑ "+regimeEventShort(flagged[0])+" "+when+(flagged[0].atUtc?" "+regimeAz(flagged[0].atUtc):"")+(flagged.length>1?" +"+(flagged.length-1):"");
+    badge.className="event-badge "+(d.eventRisk==="TODAY"?"event-today":"event-next");
+    badge.title=flagged.map(e=>regimeEventText(e,e.date)).join("\n")+(d.eventRisk==="NEXT_SESSION"?"\nAn overnight hold is exposed to this release.":"")+"\nSource: official FOMC/BLS schedules (App_Data/macro-events.json).";
+   }
+  }
+ }catch(error){chip.textContent="Market · DATA?";chip.className="regime-chip regime-data";chip.title="Market chip unavailable: "+error.message;}
+}
+void loadMarketRegime();
+window.setInterval(()=>{if(document.visibilityState==="visible")void loadMarketRegime();},60000);

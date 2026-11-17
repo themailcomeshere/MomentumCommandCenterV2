@@ -4339,3 +4339,13 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 .prototype-exclusions .exclusion-count{min-width:18px;padding:0 5px;border-radius:999px;background:rgba(255,136,136,.18);color:var(--red);font-size:10px;line-height:16px}
 .exclusions-dialog{width:min(640px,94vw)}
 .exclusions-dialog .exclusions-list-wrap{max-height:50vh;overflow:auto}
+
+/* Header market chip + event badge (2026-11-16) */
+.regime-chip,.event-badge{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:800;line-height:1.3;white-space:nowrap;cursor:default}
+.regime-chip.regime-on{background:var(--green);border-color:var(--green);color:#06210f}
+.regime-chip.regime-mixed{background:rgba(242,203,118,.14);border-color:var(--yellow);color:var(--yellow)}
+.regime-chip.regime-off{background:var(--red);border-color:var(--red);color:#2a0606}
+.regime-chip.regime-data{color:var(--muted);border-style:dashed}
+.event-badge.event-today{background:rgba(255,136,136,.16);border-color:var(--red);color:var(--red)}
+.event-badge.event-next{background:rgba(242,203,118,.14);border-color:var(--yellow);color:var(--yellow)}
+#mcc-header h1{flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important}

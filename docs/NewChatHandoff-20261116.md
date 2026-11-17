@@ -66,6 +66,12 @@
 - **Scanner 1 is 5m** (operator); the **intraday watchlist columns compiled** (operator).
 - **Operator plan:** intraday checks tomorrow morning.
 
+## Late-night update (2026-11-16)
+
+- **Market chip** in the header: `GET /api/market/regime`, `MarketRegime.cs`, `App_Data/macro-events.json` (official FOMC/BLS dates), MCC-REGIME-0.1. Awareness only.
+- **Operator commit `528aa1d`** restored the Morning Brief page panel and the Exclusions page panel (no dock button). The Morning Brief modal copies the panel again and works with either markup.
+- **Open:** the header title is 35 px (operator edit?), so the header is 103 px with the chip. Not changed by Claude.
+
 ## Operator answers recorded today
 
 - Price gate: $5.00 passes.
