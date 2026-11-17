@@ -34,7 +34,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 
 **Before the open (about 07:15 AZ):**
 1. Start MCC (above). Open the Dashboard and set WORKSPACE = **INTRADAY MOMENTUM**.
-2. **1.2 Morning Command Brief** (collapsed panel at the top): expand it for the market snapshot if you want it.
+2. **Morning Command Brief** (button in the header): optional market lay of the land in a pop-up. It is awareness only; MCC's decisions do not use it.
 
 **From 07:35 AZ (first completed 5-minute bar):**
 
@@ -47,7 +47,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - After your TOS scans, export the TOS Watchlist and import it here.
    - This records the side-by-side comparison with 2.a; once per session is enough.
    - The import takes over the Red Zone; click **Feed Red Zone** again to switch back.
-5. **3 Exclusions** (collapsed): add a symbol you never want suggested.
+5. **Exclusions** (button in the left dock, the number = excluded symbols): opens the list in a pop-up; add a symbol you never want suggested.
 6. **4 Red Zone:**
    - Click **Enable sound alerts** once.
    - Each card's banner colour is its state:
@@ -87,7 +87,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - 5D > 20D;
    - today's gap under 3%;
    - above the 20-day SMA.
-4. **2.2 Exclusions:** check that nothing on the shortlist should be excluded.
+4. **Exclusions** (left dock button): check that nothing on the shortlist should be excluded.
 5. **2.3 Qualification table:** all candidates with reasons.
 6. **2.4 Daily Data Audit:**
    - click **Use Boring Top 20**, then **Validate Daily data**;

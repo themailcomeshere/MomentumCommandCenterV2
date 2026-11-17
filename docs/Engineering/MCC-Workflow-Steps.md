@@ -17,13 +17,13 @@ How to read a number: `2` is a phase, `2.1` a step inside it, and `2.a` / `2.b` 
 | 0.3 | Data and system health | Header **SYSTEM READINESS** | always | Built |
 | **1** | **Morning context** | | | |
 | 1.1 | Morning brief (dialog) | Header button **Morning Command Brief** | 07:30 | Partial |
-| 1.2 | Morning snapshot (collapsed panel) | **Morning Command Brief** panel, top of page | 07:30 | Partial |
+| 1.2 | ~~Morning snapshot panel~~ | removed 2026-11-16; the header button (1.1) opens the same brief in a pop-up | — | Removed |
 | **2** | **Load candidates** (choose any) | | | |
 | 2.a | MCC automatic scan (your scans 1, 2A, 2B, Pivot, D on free data); **Feed Red Zone** sends the top flagged symbols to the Red Zone | **Automatic momentum scan** panel, near the top | runs every 2 min, 07:30–14:00 AZ | **Built 2026-11-16** ([design and limits](MCC-Auto-Scanner-20261116.md)) |
 | 2.b | Import your TOS Watchlist CSV (also records the side-by-side comparison with 2.a) | **Import a Thinkorswim CSV** bar | after your TOS scans, any time | Built (shared with Overnight step 1) |
 | 2.c | Alpaca top movers / API symbol scan | **Discovery tools** (collapsed) → **SCANNER WORKBENCH** | optional | Partial: top-50 movers only |
 | 2.d | Local watchlist | **Discovery tools** → **WATCHLIST** | optional | Built (browser only) |
-| **3** | **Exclusions** | **EXCLUSIONS · API-BACKED** (collapsed) | as needed | Built |
+| **3** | **Exclusions** | **Exclusions** button in the left dock (pop-up; badge = count) | as needed | Built (moved to the dock 2026-11-16) |
 | **4** | **Red Zone: best 1–4, auto-refreshing** | **TOP CANDIDATES · Red Zone** | during session | Built: automatic mode takes the first four imported symbols (by a Score column if present, otherwise TOS watchlist order); cards refresh every 15 s |
 | 4.1 | Live ranking of the imported pool | **Rank quality pool · top 50** | during session | Built |
 | 4.2 | Pin a symbol | **Add a symbol** | any time | Built |
@@ -45,7 +45,7 @@ How to read a number: `2` is a phase, `2.1` a step inside it, and `2.a` / `2.b` 
 | **1** | **Import the TOS Overnight scanner CSV** | **Import a Thinkorswim CSV** bar (same bar as Intraday 2.b) | before 13:00 | Built |
 | **2** | **Shortlist and qualify** | | | |
 | 2.1 | Historical shortlist | Red Zone (labelled **BORING OVERNIGHT · HISTORICAL SHORTLIST**) | after import | Built |
-| 2.2 | Exclusion watchlist | **EXCLUSIONS** | as needed | Built |
+| 2.2 | Exclusion watchlist | **Exclusions** button in the left dock (pop-up) | as needed | Built |
 | 2.3 | Candidate qualification table (Boring Top 4 / My Top 4) | **BORING OVERNIGHT · QUALIFICATION** | after import | Built |
 | 2.4 | Daily data audit | **Daily Data Audit** | after import | Built |
 | 2.5 | Daily + catalyst evidence for the Top 4 | **Top 4 live evidence** | after import | Built |

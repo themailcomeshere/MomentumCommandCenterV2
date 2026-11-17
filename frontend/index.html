@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261116-compact-header-v2" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261116-dock-modals-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -474,13 +474,13 @@
                 </label>
                 <span class="prototype-workspace-label" id="prototype-workspace-label">BORING OVERNIGHT</span>
             </div>
-            <span class="prototype-workspace-caption" id="prototype-workspace-state" data-step-intraday="0.1" data-step-overnight="0.1">WORKSPACE</span>
+            <span class="prototype-workspace-caption" id="prototype-workspace-state">WORKSPACE</span>
         </div>
         <select id="mode" class="prototype-mode-source" aria-hidden="true" tabindex="-1">
             <option value="momentum" id="prototype-mode-momentum">Intraday Momentum</option>
             <option value="overnight" id="prototype-mode-overnight">Boring Overnight</option>
         </select>
-        <button id="openQuickStart" class="prototype-quick-start" type="button">Quick Start</button><button id="reset" class="prototype-reset" type="button">Reset</button>
+        <button id="openExclusions" class="prototype-exclusions" type="button" title="Symbols MCC must never suggest (API-backed list)">Exclusions <span id="exclusionCountBadge" class="exclusion-count">…</span></button><button id="openQuickStart" class="prototype-quick-start" type="button">Quick Start</button><button id="reset" class="prototype-reset" type="button">Reset</button>
     </aside>
     <header class="topbar" id="mcc-header">
         <div class="topbar-layout" id="mcc-static-0009-div">
@@ -796,17 +796,6 @@
             </section>
             <p class="notice">A historical pass is not READY. Price must be at least $5 and 20D average daily volume must be &gt;= 500,000 on complete SIP data. RISK_PRESENT blocks; material, unclassified or incomplete catalyst coverage requires manual review. This provisional classifier never clears a catalyst, so READY remains 0. 5M authority / 1M execution evidence is still not connected. This panel will not substitute missing values with zero.</p>
         </section>
-        <section id="exclusions-section" class="integration-grid integration-single" aria-label="Exclusion watchlist">
-            <article class="panel" id="mcc-static-0297-article">
-                <details id="exclusionsDetails">
-                    <summary class="section-heading"><div><div class="eyebrow" data-step-intraday="3" data-step-overnight="2.2">EXCLUSIONS · API-BACKED</div><h2>MCC exclusion watchlist</h2></div><span class="chip">Expand / collapse</span></summary>
-                    <div class="section-heading"><div></div><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button></div>
-                    <form id="exclusionForm" class="watchlist-form"><input id="exclusionSymbol" maxlength="8" placeholder="Ticker (e.g. TTE)" aria-label="Symbol to exclude" required><input id="exclusionReason" maxlength="200" placeholder="Reason (optional)" aria-label="Exclusion reason"><button type="submit" id="mcc-static-0302-button">Add exclusion</button></form>
-                    <p id="exclusionStatus" class="muted">Loading local MCC exclusions…</p><div class="exclusions-list-wrap"><ul id="exclusionRows" class="watchlist"></ul></div>
-                    <p class="notice" id="mcc-static-0303-p">This list is persisted by MCC and used by the Boring Overnight evaluator. It does not sync with Thinkorswim's personal watchlist. Keep both lists aligned manually until a supported import/sync path is verified.</p>
-                </details>
-            </article>
-        </section>
         <section id="data-integrations" class="integration-grid integration-single" aria-label="Thinkorswim StrategyReport upload">
             <article class="panel" id="mcc-static-0304-article">
                 <div class="section-heading" id="mcc-static-0305-div"><div id="mcc-static-0306-div"><div class="eyebrow" id="mcc-static-0307-div" data-step-intraday="7.1">THINKORSWIM · CSV</div><h2 id="mcc-static-0308-h2">StrategyReport upload</h2></div></div>
@@ -840,21 +829,6 @@
             <p id="providerCompareNotice" class="notice">When hosted by MomentumCommandCenterV2.API, the comparison requests both configured REST adapters and persists returned raw bars. Direct-file preview has no API connection. Empty fields remain unknown, not zero or no-trade evidence.</p>
         </section>
 
-        <details id="morningBriefDetails" class="morning-brief-details">
-            <summary id="mcc-static-0373-summary"><span id="mcc-static-0374-span"><strong id="mcc-static-0375-strong" data-step-intraday="1.2">Morning Command Brief</strong><small id="mcc-static-0376-small">Expand for the latest market snapshot, movers, sector proxies, and source limitations</small></span><span class="chip" id="mcc-static-0377-span">COLLAPSED BY DEFAULT</span></summary>
-            <section id="morning-brief" class="panel morning-report" aria-labelledby="morningReportTitle">
-                <div class="section-heading" id="mcc-static-0378-div"><div id="mcc-static-0379-div"><div class="eyebrow" id="mcc-static-0380-div">MORNING REPORT · TARGET WORKFLOW</div><h2 id="morningReportTitle">Market snapshot</h2><p id="reportSubtitle" class="muted">Report preview · local browser time</p></div><div class="report-actions" id="mcc-static-0381-div"><span class="chip warning-chip" id="mcc-static-0382-span">DEMO · NO LIVE SCANNER</span><button id="exportMorningReport" type="button">Export report JSON</button></div></div>
-                <div class="report-banner" id="mcc-static-0383-div"><span class="readiness-dot blocked" id="mcc-static-0384-span"></span><div id="mcc-static-0385-div"><strong id="overnightServiceState">Overnight collection is NOT RUNNING</strong><p id="overnightServiceDetail">Leaving this static HTML page open does not scan markets or collect new data. A supported provider, running service, persistence, and freshness checks must be implemented first.</p></div></div>
-                <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p id="mcc-static-0386-p">API market observations: NOT CONNECTED in static preview.</p></div>
-                <div class="morning-summary-grid" id="mcc-static-0387-div">
-                    <article id="mcc-static-0388-article"><span class="eyebrow" id="mcc-static-0389-span">SCANNER FEED</span><strong id="mcc-static-0390-strong">Not connected</strong><small id="mcc-static-0391-small">Provider not selected</small></article>
-                    <article id="mcc-static-0392-article"><span class="eyebrow" id="mcc-static-0393-span">WATCHLIST</span><strong id="morningWatchCount">0</strong><small id="mcc-static-0394-small">Browser-local symbols only</small></article>
-                    <article id="mcc-static-0395-article"><span class="eyebrow" id="mcc-static-0396-span">TOP CANDIDATES</span><strong id="morningTopCount">0</strong><small id="mcc-static-0397-small">Demo/import rows only</small></article>
-                    <article id="mcc-static-0398-article"><span class="eyebrow" id="mcc-static-0399-span">BORING OVERNIGHT</span><strong id="mcc-static-0400-strong">NOT CALCULATED</strong><small id="mcc-static-0401-small">Pipeline not wired</small></article>
-                </div>
-                <p class="notice" id="mcc-static-0402-p">Arizona time does not observe daylight saving time. The report must eventually show Arizona time plus the correct Eastern market/session context. This preview has no market feed, so it cannot establish current session status or quote freshness.</p>
-            </section>
-        </details>
 
         <section id="dashboard-feedback" class="panel feedback-panel">
             <div class="section-heading" id="mcc-static-0403-div"><div id="mcc-static-0404-div"><div class="eyebrow" id="mcc-static-0405-div" data-step-intraday="7.3">PRODUCT FEEDBACK</div><h2 id="mcc-static-0406-h2">Dashboard notes</h2></div><span class="muted" id="mcc-static-0407-span">Saved in this browser only</span></div>
@@ -868,9 +842,19 @@
             <p class="notice" id="mcc-static-0425-p">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
         </section>
         <section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
+        <dialog id="exclusionsDialog" class="morning-brief-dialog exclusions-dialog" aria-labelledby="exclusionsDialogTitle">
+            <div class="section-heading"><div><div class="eyebrow">EXCLUSIONS · API-BACKED</div><h2 id="exclusionsDialogTitle">MCC exclusion watchlist</h2></div><div class="report-actions"><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button><button id="closeExclusions" type="button" class="quiet-button">Close</button></div></div>
+                    
+                    <form id="exclusionForm" class="watchlist-form"><input id="exclusionSymbol" maxlength="8" placeholder="Ticker (e.g. TTE)" aria-label="Symbol to exclude" required><input id="exclusionReason" maxlength="200" placeholder="Reason (optional)" aria-label="Exclusion reason"><button type="submit" id="mcc-static-0302-button">Add exclusion</button></form>
+                    <p id="exclusionStatus" class="muted">Loading local MCC exclusions…</p><div class="exclusions-list-wrap"><ul id="exclusionRows" class="watchlist"></ul></div>
+                    <p class="notice" id="mcc-static-0303-p">This list is persisted by MCC and used by the Boring Overnight evaluator. It does not sync with Thinkorswim's personal watchlist. Keep both lists aligned manually until a supported import/sync path is verified.</p>
+        </dialog>
         <dialog id="morningBriefDialog" class="morning-brief-dialog" aria-labelledby="morningBriefDialogTitle">
             <div class="section-heading" id="mcc-static-0426-div"><div id="mcc-static-0427-div"><div class="eyebrow" id="mcc-static-0428-div">MORNING REPORT · LIVE API SNAPSHOT</div><h2 id="morningBriefDialogTitle">Morning Command Brief</h2></div><div class="report-actions" id="mcc-static-0429-div"><button id="exportMorningReportModal" type="button" class="quiet-button">Export report JSON</button><button id="closeMorningBrief" type="button" class="quiet-button">Close</button></div></div>
-            <div id="morningBriefModalContent" class="morning-brief-modal-content"><p class="muted" id="mcc-static-0430-p">Loading the latest API-backed brief…</p></div>
+            <div id="morningBriefModalContent" class="morning-brief-modal-content">
+                <div class="report-banner"><span class="readiness-dot demo"></span><div><strong id="overnightServiceState">Morning Brief API: loading…</strong><p id="overnightServiceDetail" class="muted small">Requesting the latest API snapshot.</p></div></div>
+                <div id="morningApiSnapshot" class="morning-api-snapshot" aria-live="polite"><p class="muted">Loading the latest API-backed brief…</p></div>
+            </div>
             <p class="notice" id="mcc-static-0431-p">Partial market snapshot only. Missing inputs remain DATA NOT FOUND IN SOURCES; this is not a trade instruction.</p>
         </dialog>
         <dialog id="quickStartDialog" class="quick-start-dialog" aria-labelledby="quickStartTitle">
@@ -897,7 +881,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261116-compact-header-v2" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261116-dock-modals-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

@@ -1261,7 +1261,7 @@ function renderOvernightRedZone(){
  const ranked=selected.filter((item,index,all)=>all.findIndex(x=>String(x.symbol||"").toUpperCase()===String(item.symbol||"").toUpperCase())===index).slice(0,4);
  const title=$("mcc-static-0072-h2");if(title)title.textContent="Boring Overnight Shortlist";const subtitle=$("reportSubtitle");if(subtitle)subtitle.textContent=state.mode==="manual"?"Manual shortlist · pinned symbols in saved order. Missing historical metrics remain DATA?.":"Automatic shortlist · existing historical scanner checks, ranked by median ON, then win rate and distribution consistency. Extreme current gaps are excluded from this display shortlist. Research only; not trade permission.";
  const eyebrow=document.querySelector("#red-zone .eyebrow");if(eyebrow)eyebrow.textContent="BORING OVERNIGHT · HISTORICAL SHORTLIST";const modeButton=$("toggleRedZoneMode");if(modeButton){modeButton.textContent=state.mode==="manual"?"Mode: Manual":"Mode: Automatic";modeButton.setAttribute("aria-pressed",String(state.mode==="manual"));modeButton.title="Automatic mode shows the boring-profile shortlist; manual mode shows pinned symbols.";}
- $("morningTopCount").textContent=String(ranked.length);
+ const topCount=$("morningTopCount");if(topCount)topCount.textContent=String(ranked.length);
  const cards=ranked.map((item,index)=>{const m=item.overnightMetrics||{},card=document.createElement("article");card.className="redzone-card overnight-redzone-card";const top=document.createElement("div");top.className="redzone-card-top";const rank=document.createElement("span");rank.className="rank-pill";rank.textContent="#"+(index+1);const status=document.createElement("span");status.className="chip";status.textContent=state.mode==="manual"?"MANUAL · REVIEW":"SHORTLISTED · REVIEW";top.append(rank,status);const symbol=document.createElement("h3");symbol.textContent=item.symbol;const score=document.createElement("div");score.className="redzone-score";score.textContent="Overnight Score: "+(item.score??"DATA?");const metrics=document.createElement("dl");metrics.className="overnight-redzone-metrics";for(const [label,value] of [["ON Win",m.onWin],["20D Avg ON",m.avgOn],["Median ON",m.medianOn],["5D ON",m.fiveDayOn],["ON Momentum",m.onMomentum],["Current ON",m.currentOn],["Above 20 SMA",m.above20Sma]]){const wrap=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=label;dd.textContent=value??"DATA?";wrap.append(dt,dd);metrics.append(wrap);}const actions=document.createElement("div");actions.className="redzone-actions";const focus=document.createElement("button");focus.type="button";focus.className="quiet-button";focus.textContent="Open in Main Chart";focus.addEventListener("click",()=>{const input=$("symbol");if(input){input.value=item.symbol;input.dispatchEvent(new Event("change",{bubbles:true}));input.scrollIntoView({behavior:"smooth",block:"center"});}});const manage=document.createElement("button");manage.type="button";manage.className="quiet-button";manage.textContent=state.mode==="manual"?"Remove pin":"Dismiss";manage.addEventListener("click",()=>{const current=readRedZoneState(),ticker=String(item.symbol).toUpperCase();if(current.mode==="manual")current.pinned=current.pinned.filter(x=>x!==ticker);else current.dismissed=[...new Set([...current.dismissed,ticker])];writeRedZoneState(current);});actions.append(focus,manage);card.append(top,symbol,score,metrics,actions);return card;});
  grid.replaceChildren(...(cards.length?cards:[Object.assign(document.createElement("article"),{className:"redzone-empty",textContent:rows.length?"No candidates meet the boring-profile shortlist rules. Review imported metrics and qualification.":"Import an Overnight Scanner CSV above to populate this shortlist."})]));previousRedZoneSymbols=new Set(ranked.map(x=>String(x.symbol||"").toUpperCase()));const status=$("redZoneManageStatus");if(status)status.textContent=ranked.length?"Boring Overnight shortlist: "+ranked.map(x=>x.symbol).join(", ")+". Intraday V2 permission and 5M/1M execution are not used in this workspace.":"No boring-profile candidates currently meet the shortlist display rules.";
 }
@@ -1309,7 +1309,7 @@ function renderMorningReport(){
   if(added.length){playRedZoneAlert();const soundButton=$("toggleRedZoneSound");if(soundButton)soundButton.title="New Red Zone priority stock: "+added.join(", ");}
  }
  previousRedZoneSymbols=currentSymbols;suppressNextRedZoneAlert=false;
- $("morningTopCount").textContent=String(ranked.length);
+ const topCount=$("morningTopCount");if(topCount)topCount.textContent=String(ranked.length);
  $("reportSubtitle").textContent=state.mode==="manual"
   ?"Manual mode · pinned symbols in your saved order · pins and dismissals are preserved when switching modes."
   :(group==="imported"?"Automatic preview · first four of your imported TOS watchlist (by a Score column when the file has one, otherwise in watchlist order) · use 4.1 Rank quality pool for a live ranking · not trade permission.":"Automatic preview · sorted by supplied scanner score · NOT a calibrated live Opportunity Quality rank.");
@@ -1464,13 +1464,6 @@ function qualityReasonTone(code){
 function qualityReasonTitle(code){
  return ({EXCLUDED_WATCHLIST:"On your exclusion watchlist — blocked",EntryNotEligible:"V2 entry not eligible",DataMissing:"Required bars or metrics missing",DataStale:"Latest bars are too old",OutsideRegularSession:"Outside the regular session",LowRelativeVolume:"Relative volume below the threshold",MomentumNotConfirmed:"1M momentum not confirmed",LimitedRecentRange:"Little recent range relative to ATR",ResistanceTooClose:"Prior high is close above",EntryExtended:"Price is extended from its base",ExecutionEventInactive:"No active 1M execution event",StrongParticipation:"Strong relative volume",MomentumConfirmed:"1M momentum confirmed",AdequateMovementCapacity:"Room to move relative to ATR"})[code]||"Reason code";
 }
-$("exportMorningReport")?.addEventListener("click",()=>{
- const group=$("scannerGroup")?.value||"momentum";
- const rows=Array.isArray(scannerData[group])?scannerData[group]:[];
- const report={reportGeneratedAt:new Date().toISOString(),clockSource:"browser-local-clock; not market-data timestamp",mode:"PREVIEW_ONLY",liveScannerConnected:false,overnightCollectionRunning:false,provider:"NOT_SELECTED",scannerGroup:group,watchlist:readWatchlist(),topCandidates:rows.slice().sort((a,b)=>(Number(b.score)||-Infinity)-(Number(a.score)||-Infinity)).slice(0,4),boringOvernight:{status:"NOT_CALCULATED"},disclaimer:"Local demo/import data only. No live market data, scanner, 5M permission, 1M execution, or validated ranking is connected."};
- const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download="mcc-morning-report-preview.json";a.click();URL.revokeObjectURL(url);
-});
 renderMorningReport();
 
 
@@ -1623,9 +1616,11 @@ async function loadMorningBrief(force=false) {
    if (!response.ok) throw new Error("HTTP " + response.status);
    const report = await response.json();
    morningBriefCache=report;morningBriefLoadedAt=Date.now();
-   $("overnightServiceState").textContent = "Morning Brief API: " + report.status;
-   $("overnightServiceDetail").textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"}) + " Arizona. Benchmark bars, Alpaca mover observations, sector ETF proxies, and unclassified news headlines are source data only; no trading decision is inferred.";
-   $("reportSubtitle").textContent = "API report generated " + new Date(report.generatedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"}) + " Arizona · source timestamps retained in response";
+   // 2026-11-16: the brief now renders straight into its modal. It no longer writes #reportSubtitle, which was a
+   // duplicate id and overwrote the Red Zone subtitle whenever the brief loaded.
+   const serviceState=$("overnightServiceState"),serviceDetail=$("overnightServiceDetail");
+   if(serviceState)serviceState.textContent = "Morning Brief API: " + report.status;
+   if(serviceDetail)serviceDetail.textContent = "Generated " + new Date(report.generatedAtUtc).toLocaleString("en-US",{timeZone:"America/Phoenix"}) + " Arizona. Benchmark bars, Alpaca mover observations, sector ETF proxies, and unclassified news headlines are source data only; no trading decision is inferred.";
    const market = report.marketLandscape || [];
    const lines = market.map(item => {
     const obs = (item.observations || []).map(o => o.provider + ": " + (o.latest ? formatBar(o.latest) : (o.status || "DATA?"))).join(" | ");
@@ -1653,8 +1648,9 @@ async function loadMorningBrief(force=false) {
    }
    return report;
   } catch(error) {
-   $("overnightServiceState").textContent = "Morning Brief API: NOT CONNECTED";
-   $("overnightServiceDetail").textContent = "Morning Brief request failed: "+error.message+". Direct file preview remains demo-only.";
+   const serviceState=$("overnightServiceState"),serviceDetail=$("overnightServiceDetail");
+   if(serviceState)serviceState.textContent = "Morning Brief API: NOT CONNECTED";
+   if(serviceDetail)serviceDetail.textContent = "Morning Brief request failed: "+error.message+".";
    return null;
   }
  })();
@@ -1662,29 +1658,28 @@ async function loadMorningBrief(force=false) {
 }
 // Morning Brief loads on demand from its modal; it must not block dashboard startup.
 
-/// MODULE: Morning Command Brief modal
-/// PURPOSE: Reuse the same live API brief in the header modal and the collapsed full-width footer section.
-/// SAFETY: The modal is a read-only snapshot; export delegates to the existing JSON export action.
+/// MODULE: Morning Command Brief modal (2026-11-16: the only Morning Brief view; the page panel was removed)
+/// PURPOSE: Opens the modal and loads the live API brief into it. Export downloads that API brief as JSON.
+/// SAFETY: Read-only market snapshot; no trading decision is inferred.
 const morningBriefDialog=$("morningBriefDialog");
-function renderMorningBriefModal(){
- const source=$("morning-brief"),host=$("morningBriefModalContent");
- if(!source||!host)return;
- const clone=source.cloneNode(true);
- clone.removeAttribute("id");
- clone.querySelector(".section-heading")?.remove();
- clone.querySelectorAll("[id]").forEach(node=>node.removeAttribute("id"));
- clone.querySelectorAll("button").forEach(button=>button.remove());
- host.replaceChildren(clone);
-}
 $("openMorningBrief")?.addEventListener("click",()=>{
  if(!morningBriefDialog||morningBriefDialog.open)return;
- renderMorningBriefModal();
  morningBriefDialog.showModal();
- if(!morningBriefCache||Date.now()-morningBriefLoadedAt>=60000)
-  void loadMorningBrief(true).then(renderMorningBriefModal);
+ if(!morningBriefCache||Date.now()-morningBriefLoadedAt>=60000)void loadMorningBrief(true);
 });
 $("closeMorningBrief")?.addEventListener("click",()=>morningBriefDialog?.close());
-$("exportMorningReportModal")?.addEventListener("click",()=>$("exportMorningReport")?.click());
+$("exportMorningReportModal")?.addEventListener("click",async()=>{
+ const report=morningBriefCache||await loadMorningBrief(true);
+ if(!report){const d=$("overnightServiceDetail");if(d)d.textContent="Nothing to export: the Morning Brief API did not return a report.";return;}
+ const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="mcc-morning-brief-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(url);
+});
+
+/// MODULE: Exclusions modal (2026-11-16: moved from a page panel to the left dock)
+/// PURPOSE: The dock button opens the API-backed exclusion list in a modal; its badge shows how many symbols are excluded.
+const exclusionsDialog=$("exclusionsDialog");
+$("openExclusions")?.addEventListener("click",()=>{if(!exclusionsDialog||exclusionsDialog.open)return;exclusionsDialog.showModal();void refreshExclusions();$("exclusionSymbol")?.focus();});
+$("closeExclusions")?.addEventListener("click",()=>exclusionsDialog?.close());
 
 /* API-backed exclusion watchlist and StrategyReport upload. */
 let latestStrategyReportJson = null;
@@ -1714,8 +1709,10 @@ async function refreshExclusions() {
    return li;
   }));
   status.textContent = data.count + " excluded symbol(s) · API-backed MCC list";
+  const badge=$("exclusionCountBadge");if(badge)badge.textContent=String(data.count);
  } catch (e) {
   status.textContent = "Exclusion API unavailable: " + e.message + ". Serve this page through the MCC API.";
+  const badge=$("exclusionCountBadge");if(badge)badge.textContent="?";
  }
 }
 $("refreshExclusions")?.addEventListener("click", refreshExclusions);
