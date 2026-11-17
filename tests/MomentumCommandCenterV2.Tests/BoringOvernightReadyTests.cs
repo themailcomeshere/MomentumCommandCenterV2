@@ -461,6 +461,44 @@ public sealed class BoringOvernightReadyTests
         Assert.Null(BoringOvernightReadyEvaluator.Evaluate(Inputs() with { Snapshot = null }).History);
     }
 
+    /// <summary>
+    /// EARNINGS gate (2026-11-17): BLOCKED for a report after the buy-day close, on the buy day with no time, between
+    /// the sessions, or before the sell-day open; PASS for a buy-day morning report (with a warning), a sell-day evening
+    /// report, or no listing; DATA? when the calendar is unavailable or a date is missing. Synthetic data.
+    /// </summary>
+    [Theory]
+    [InlineData(0, "AFTER_CLOSE", "BLOCKED")]
+    [InlineData(0, "NOT_SUPPLIED", "BLOCKED")]
+    [InlineData(1, "BEFORE_OPEN", "BLOCKED")]
+    [InlineData(1, "NOT_SUPPLIED", "BLOCKED")]
+    [InlineData(0, "BEFORE_OPEN", "PASS")]
+    [InlineData(1, "AFTER_CLOSE", "PASS")]
+    public void EarningsGate(int dayOffset, string timing, string expected)
+    {
+        var sell = BuyDay.AddDays(1);
+        var days = EarningsDays(BuyDay, sell, (BuyDay.AddDays(dayOffset), "TEST", timing), (BuyDay, "OTHER", EarningsTiming.AfterClose));
+        var (gate, warning) = EarningsOvernightGate.Evaluate("TEST", BuyDay, sell, days, null);
+        Assert.Equal(expected, gate.State);
+        if (dayOffset == 0 && timing == EarningsTiming.BeforeOpen) Assert.Contains("already out", warning);
+    }
+
+    /// <summary>EARNINGS gate: not listed = PASS; calendar error or a missing date = DATA?; a BLOCKED gate makes READY BLOCKED.</summary>
+    [Fact]
+    public void EarningsGate_NotListedErrorsAndReadyBlocked()
+    {
+        var sell = BuyDay.AddDays(1);
+        Assert.Equal("PASS", EarningsOvernightGate.Evaluate("TEST", BuyDay, sell, EarningsDays(BuyDay, sell), null).Gate.State);
+        Assert.Equal("DATA?", EarningsOvernightGate.Evaluate("TEST", BuyDay, sell, null, "HTTP 503").Gate.State);
+        Assert.Equal("DATA?", EarningsOvernightGate.Evaluate("TEST", BuyDay, sell, EarningsDays(BuyDay, BuyDay), null).Gate.State);
+
+        var inputs = Inputs();
+        var reporting = inputs with { EarningsDays = EarningsDays(inputs.Clock.OvernightBuySessionDate, inputs.Clock.OvernightSellSessionDate,
+            (inputs.Clock.OvernightBuySessionDate, "TEST", EarningsTiming.AfterClose)) };
+        var r = BoringOvernightReadyEvaluator.Evaluate(reporting);
+        Assert.Equal("BLOCKED", r.Status);
+        Assert.Contains("Earnings overnight", r.Gates.Single(g => g.Code == "EARNINGS").Detail);
+    }
+
     // ---------- shadow summary ----------
 
     /// <summary>Outcomes: TOUCHED / NOT_TOUCHED from the complete Day 2 window, PENDING before it ends or before capture,
@@ -564,9 +602,19 @@ public sealed class BoringOvernightReadyTests
     private static ReadyInputs Inputs(DateTimeOffset? now = null)
     {
         var at = now ?? InWindow;
-        return new ReadyInputs("TEST", at, MarketSessionClock.GetSnapshot(at), Snapshot(at.AddMinutes(-2)), false,
+        var clock = MarketSessionClock.GetSnapshot(at);
+        return new ReadyInputs("TEST", at, clock, Snapshot(at.AddMinutes(-2)), false,
             Array.Empty<CatalystHumanReviewRecord>(), Signoff(), Sell("PROVISIONAL", 0.78m), null, "shadow", 0,
-            50.00m, at.AddSeconds(-30), "iex");
+            50.00m, at.AddSeconds(-30), "iex", EarningsDays: EarningsDays(clock.OvernightBuySessionDate, clock.OvernightSellSessionDate));
+    }
+
+    /// <summary>Empty earnings calendar days from buy to sell date, plus optional rows. Synthetic test data.</summary>
+    private static IReadOnlyList<EarningsDay> EarningsDays(DateOnly from, DateOnly to, params (DateOnly Date, string Symbol, string Timing)[] rows)
+    {
+        var days = new List<EarningsDay>();
+        for (var d = from; d <= to; d = d.AddDays(1))
+            days.Add(new EarningsDay(d, rows.Where(r => r.Date == d).Select(r => new EarningsRow(r.Symbol, r.Symbol + " Inc", r.Timing, 1e9m, null, null)).ToArray(), "test", InWindow));
+        return days;
     }
 
     private static BoringOvernightCandidateSnapshot Snapshot(DateTimeOffset asOf) => new(

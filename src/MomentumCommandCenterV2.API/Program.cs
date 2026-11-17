@@ -116,6 +116,15 @@ builder.Services.AddSingleton(_ => new MomentumCommandCenterV2.API.BoringOvernig
 builder.Services.AddSingleton(_ => new MomentumCommandCenterV2.API.BoringOvernight.ReadyShadowLogStore());
 builder.Services.AddTransient<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightReadyService>();
 builder.Services.AddSingleton<MorningBriefSnapshotStore>();
+// Earnings calendar (operator request 2026-11-17): public Nasdaq calendar, only the date is sent. Nasdaq rejects
+// requests without a browser-like User-Agent.
+builder.Services.AddHttpClient(EarningsCalendarService.HttpClientName, client =>
+{
+    client.BaseAddress = new Uri("https://api.nasdaq.com/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+});
+builder.Services.AddSingleton<EarningsCalendarService>();
 builder.Services.AddHttpClient<YahooFinanceQuoteClient>(client =>
 {
     client.BaseAddress = new Uri("https://query1.finance.yahoo.com/");
@@ -649,6 +658,27 @@ app.MapPost("/api/scanner/auto-momentum/tos-comparison", async (AutoScanComparis
 app.MapGet("/api/scanner/auto-momentum/tos-comparison", async (AutoMomentumScanService scanService, CancellationToken ct) =>
     Results.Ok(new { sessions = await scanService.GetComparisonReportAsync(ct), targetSessions = 5 }))
 .WithSummary("Side-by-side report: latest TOS-vs-MCC comparison per session");
+
+app.MapGet("/api/market/earnings/week", async (string? date, EarningsCalendarService earnings, CancellationToken ct) =>
+{
+    var now = DateTimeOffset.UtcNow;
+    DateOnly anchor;
+    if (string.IsNullOrWhiteSpace(date)) anchor = EarningsCalendarService.EasternDate(now);
+    else if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out anchor))
+        return Results.BadRequest(new { error = "date must be yyyy-MM-dd." });
+    var monday = anchor.AddDays(-(((int)anchor.DayOfWeek + 6) % 7));
+    var days = new List<object>();
+    for (var i = 0; i < 5; i++)
+    {
+        var d = monday.AddDays(i);
+        try { var day = await earnings.GetDayAsync(d, now, ct); days.Add(new { date = d, rows = day.Rows, error = (string?)null }); }
+        catch (Exception ex) when (ex is HttpRequestException or System.Text.Json.JsonException or TaskCanceledException)
+        { days.Add(new { date = d, rows = Array.Empty<EarningsRow>(), error = ex.Message }); }
+    }
+    return Results.Ok(new { weekOf = monday, todayEastern = EarningsCalendarService.EasternDate(now), source = "Nasdaq earnings calendar (api.nasdaq.com, unofficial public feed)", days });
+})
+.WithSummary("Earnings calendar for the Monday-Friday week containing date (default today, Eastern)")
+.WithDescription("Every report Nasdaq lists per day: symbol, name, timing (BEFORE_OPEN / AFTER_CLOSE / NOT_SUPPLIED), market cap, EPS estimate. Cached 2 h (24 h for past dates). A day that fails carries an error instead of rows. Also used by the READY EARNINGS gate.");
 
 app.MapGet("/api/market/regime", async (MarketRegimeService regime, CancellationToken ct) => Results.Ok(await regime.GetAsync(ct)))
 .WithSummary("Header market chip: SPY/QQQ trend (RISK_ON / MIXED / RISK_OFF / CLOSED / DATA?) and scheduled-event flag")

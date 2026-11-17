@@ -3065,3 +3065,69 @@ window.setInterval(()=>{if(document.visibilityState==="visible")void refreshPend
  const body=$("overnightQualificationRows"),label=$("optinQualTableLabel");
  if(body&&label){const paint=()=>{const n=[...body.rows].filter(r=>!r.querySelector("td[colspan]")).length;label.textContent=n?"All imported rows ("+n+")":"All imported rows";};new MutationObserver(paint).observe(body,{childList:true});paint();}
 })();
+
+/// MODULE: Earnings calendar (2026-11-17, operator request)
+/// PURPOSE: Left-dock Earnings button + week modal (Mon–Fri, today highlighted) from GET /api/market/earnings/week.
+/// Shows companies of $40B+ plus "your symbols" (imported scan, READY Symbols box, Red Zone cards); the dock badge counts
+/// your symbols reporting this week. READY blocking happens server-side (gate EARNINGS).
+const earningsDialog=$("earningsDialog");
+let earningsWeekOffset=0;
+/// <summary>Symbols the operator is watching right now. Called when painting the week and the badge.</summary>
+function earningsWatchedSymbols(){
+ const set=new Set();
+ (Array.isArray(scannerData?.imported)?scannerData.imported:[]).forEach(x=>{const s=String(x.symbol||"").trim().toUpperCase();if(s)set.add(s);});
+ String($("overnightReadySymbols")?.value||"").split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean).forEach(s=>set.add(s));
+ document.querySelectorAll("#redZoneGrid .redzone-card h3").forEach(h=>{const s=h.textContent.trim().toUpperCase();if(s)set.add(s);});
+ return set;
+}
+/// <summary>A date (YYYY-MM-DD, Eastern) in the week at the given offset from today. Called by refreshEarnings.</summary>
+function earningsAnchorDate(offset){
+ const today=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+ const d=new Date(today+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+offset*7);return d.toISOString().slice(0,10);
+}
+/// <summary>Loads the week and repaints the modal and badge. Called on load, every 30 min, on open, and on week changes.</summary>
+async function refreshEarnings(){
+ const status=$("earningsStatus"),host=$("earningsWeek"),badge=$("earningsCountBadge");
+ try{
+  const res=await fetch("/api/market/earnings/week?date="+earningsAnchorDate(earningsWeekOffset),{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const data=await res.json(),watched=earningsWatchedSymbols(),showAll=!!$("earningsShowAll")?.checked;
+  const timing={BEFORE_OPEN:["before open","pre"],AFTER_CLOSE:["after close","post"],NOT_SUPPLIED:["time n/a","na"]};
+  let watchedCount=0;const cols=[];
+  (data.days||[]).forEach(day=>{
+   const date=String(day.date),isToday=date===String(data.todayEastern);
+   const col=document.createElement("div");col.className="earnings-day"+(isToday?" today":"");
+   const weekday=new Date(date+"T12:00:00Z").toLocaleDateString("en-US",{weekday:"short",timeZone:"UTC"});
+   col.append(readyEl("p","earnings-day-head",weekday+" "+date.slice(5)+(isToday?" · today":"")));
+   const rows=(day.rows||[]).slice().sort((a,b)=>(b.marketCap||0)-(a.marketCap||0));
+   const mine=rows.filter(r=>watched.has(String(r.symbol).toUpperCase()));watchedCount+=mine.length;
+   const shown=showAll?rows:rows.filter(r=>(r.marketCap||0)>=4e10||watched.has(String(r.symbol).toUpperCase()));
+   shown.forEach(r=>{
+    const line=document.createElement("div");line.className="earnings-row";
+    const sym=readyEl("b",null,r.symbol);sym.title=r.name+(r.epsForecast?" · EPS est "+r.epsForecast:"")+(r.marketCap?" · cap $"+Math.round(r.marketCap/1e9)+"B":"");
+    const [label,cls]=timing[r.timing]||timing.NOT_SUPPLIED;
+    line.append(sym,readyEl("span","earnings-tag "+cls,label));
+    if(watched.has(String(r.symbol).toUpperCase()))line.append(readyEl("span","earnings-tag mine","yours"));
+    col.append(line);
+   });
+   if(!shown.length)col.append(readyEl("p","muted small",day.error?"Calendar unavailable":"None shown"));
+   col.append(readyEl("p","muted small",day.error?"Error: "+day.error:rows.length+" reports total"));
+   cols.push(col);
+  });
+  if(host)host.replaceChildren(...cols);
+  if(badge&&earningsWeekOffset===0){badge.textContent=String(watchedCount);badge.classList.toggle("has-items",watchedCount>0);}
+  const title=$("earningsDialogTitle");if(title)title.textContent=earningsWeekOffset===0?"Earnings this week":"Earnings, week of "+String(data.weekOf);
+  if(status)status.textContent=(watchedCount?watchedCount+" of your symbols report this week. ":"None of your symbols report this week. ")+"Source: "+data.source+".";
+ }catch(error){
+  if(badge&&earningsWeekOffset===0)badge.textContent="?";
+  if(status)status.textContent="Earnings calendar unavailable: "+error.message+(error.message.includes("404")?". Restart MCC on the latest version.":".");
+ }
+}
+$("openEarnings")?.addEventListener("click",()=>{if(!earningsDialog||earningsDialog.open)return;earningsWeekOffset=0;earningsDialog.showModal();void refreshEarnings();});
+$("closeEarnings")?.addEventListener("click",()=>earningsDialog?.close());
+$("earningsPrev")?.addEventListener("click",()=>{earningsWeekOffset--;void refreshEarnings();});
+$("earningsNext")?.addEventListener("click",()=>{earningsWeekOffset++;void refreshEarnings();});
+$("earningsThisWeek")?.addEventListener("click",()=>{earningsWeekOffset=0;void refreshEarnings();});
+$("earningsShowAll")?.addEventListener("change",()=>void refreshEarnings());
+void refreshEarnings();
+window.setInterval(()=>{if(document.visibilityState==="visible"&&!earningsDialog?.open){earningsWeekOffset=0;void refreshEarnings();}},1800000);

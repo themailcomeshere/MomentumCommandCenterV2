@@ -4427,3 +4427,21 @@ details.optin-details[open]{padding-bottom:10px}
 /* READY card: waiting for the buy window (2026-11-17) */
 .ready-card.ready-waiting{border-color:var(--blue)}
 .ready-card.ready-waiting .ready-label{color:var(--blue)}
+
+/* Earnings calendar: dock badge and week modal (2026-11-17) */
+.prototype-earnings .earnings-count{background:rgba(131,184,255,.12);color:var(--muted)}
+.prototype-earnings .earnings-count.has-items{background:rgba(242,203,118,.2);color:var(--yellow)}
+.earnings-dialog{width:min(980px,96vw)}
+.earnings-controls{margin:0 0 6px}
+.earnings-week{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:6px 0 10px}
+.earnings-day{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.earnings-day.today{border:2px solid var(--blue);background:rgba(131,184,255,.06)}
+.earnings-day-head{margin:0 0 6px;font-size:12px;color:var(--muted)}
+.earnings-day.today .earnings-day-head{color:var(--blue);font-weight:800}
+.earnings-day.today .earnings-row b{font-weight:900}
+.earnings-row{display:flex;align-items:center;gap:6px;font-size:13px;margin:3px 0;flex-wrap:wrap}
+.earnings-tag{font-size:10px;padding:1px 6px;border-radius:6px;white-space:nowrap}
+.earnings-tag.pre{background:rgba(242,203,118,.18);color:var(--yellow)}
+.earnings-tag.post{background:rgba(131,184,255,.18);color:var(--blue)}
+.earnings-tag.na{background:rgba(255,255,255,.06);color:var(--muted)}
+.earnings-tag.mine{background:rgba(255,120,120,.18);color:#ff9a9a}

@@ -25,6 +25,7 @@ public sealed class BoringOvernightReadyService(
     IThinkorswimAtrObservationStore atrStore,
     AlpacaMarketDataAdapter alpaca,
     ReadyShadowLogStore shadowLog,
+    EarningsCalendarService earningsCalendar,
     ILogger<BoringOvernightReadyService> logger)
 {
     // One delayed-SIP sell-window capture per symbol per latest completed sell session (process-wide).
@@ -110,11 +111,16 @@ public sealed class BoringOvernightReadyService(
             { logger.LogWarning(ex, "Regular-close reference unavailable during late READY for {Symbol}", symbol); }
         }
 
+        // Earnings overnight gate (2026-11-17): every calendar date from the buy session through the sell session.
+        var (earningsDays, earningsError) = await earningsCalendar.GetRangeAsync(
+            clock.OvernightBuySessionDate, clock.OvernightSellSessionDate, nowUtc, ct);
+
         var loggedSessions = ReadyShadowSummary.CountLoggedSessions(await shadowLog.GetAllAsync(ct));
         var evaluation = BoringOvernightReadyEvaluator.Evaluate(new ReadyInputs(
             symbol, nowUtc, clock, snapshot, excluded, reviews, attestation, sellLimit, sellLimitError,
             RequestedMode, loggedSessions, trade?.Price, trade?.TimestampUtc, trade?.Feed,
-            regularClose, regularCloseSource, UntestedLimitPct, operatorPrice, pendingCatalyst, pendingUnreadable));
+            regularClose, regularCloseSource, UntestedLimitPct, operatorPrice, pendingCatalyst, pendingUnreadable,
+            earningsDays, earningsError));
 
         if (clock.OvernightBuyWindowOpen || clock.OvernightLateBuyWindowOpen)
             await shadowLog.AppendAsync(evaluation, ct);

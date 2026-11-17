@@ -132,6 +132,13 @@ public static class BoringOvernightReadyEvaluator
         else
             gates.Add(new("PENDING_BINARY_CATALYST", GatePass, "Not on the pending binary-catalyst list."));
 
+        // 4b. Earnings overnight (operator decision 2026-11-17): a scheduled report between the buy-day close and the
+        // sell-day open is a known overnight gap risk, so READY is BLOCKED. Source: Nasdaq earnings calendar.
+        var earnings = EarningsOvernightGate.Evaluate(symbol, input.Clock.OvernightBuySessionDate, input.Clock.OvernightSellSessionDate,
+            input.EarningsDays, input.EarningsError);
+        gates.Add(earnings.Gate);
+        if (earnings.Warning is not null) warnings.Add(earnings.Warning);
+
         // 4b. Late window: the after-hours price must not be above the regular close (the edge is measured from the close).
         decimal? lateMovePct = null;
         if (lateOpen)
@@ -409,7 +416,9 @@ public sealed record ReadyInputs(
     decimal UntestedLimitPct = 0.5m,
     decimal? OperatorPrice = null,
     PendingCatalystEntry? PendingCatalyst = null,
-    bool PendingCatalystListUnreadable = false);
+    bool PendingCatalystListUnreadable = false,
+    IReadOnlyList<EarningsDay>? EarningsDays = null,
+    string? EarningsError = null);
 
 /// <summary>
 /// TYPE: ReadySellEvidence
@@ -500,3 +509,56 @@ public sealed record ReadyHistorySummary(
     double? Close,
     double? Sma20,
     double? AverageDailyVolume20);
+
+/// <summary>
+/// TYPE: EarningsOvernightGate
+/// PURPOSE: READY gate EARNINGS (operator decision 2026-11-17, after ENR reported the morning after it could have been
+/// bought). With buy-session date B and sell-session date S, BLOCKED when the symbol reports: on B after the close or with
+/// no time supplied (could be after the close); on any date strictly between B and S; or on S before the open or with no
+/// time supplied. A report on B before the open is already priced: PASS with a warning. A report on S after the close is
+/// after the sell: PASS. Not listed: PASS, naming the source (coverage not guaranteed). Calendar unavailable or a date
+/// missing: DATA? (fail closed).
+/// WHEN CALLED: By BoringOvernightReadyEvaluator.Evaluate.
+/// </summary>
+public static class EarningsOvernightGate
+{
+    /// <summary>PURPOSE: Applies the rules above. WHEN CALLED: Once per READY evaluation.</summary>
+    public static (ReadyGate Gate, string? Warning) Evaluate(string symbol, DateOnly buyDate, DateOnly sellDate,
+        IReadOnlyList<EarningsDay>? days, string? error)
+    {
+        const string code = "EARNINGS";
+        if (days is null)
+            return (new(code, BoringOvernightReadyEvaluator.GateData,
+                "Earnings calendar unavailable" + (error is null ? "" : $": {error}") + ". Check the company's IR events page."), null);
+        for (var d = buyDate; d <= sellDate; d = d.AddDays(1))
+            if (!days.Any(x => x.Date == d))
+                return (new(code, BoringOvernightReadyEvaluator.GateData, $"Earnings calendar has no data for {d:yyyy-MM-dd}."), null);
+
+        var blocked = new List<string>();
+        string? warning = null;
+        foreach (var day in days.Where(x => x.Date >= buyDate && x.Date <= sellDate).OrderBy(x => x.Date))
+        {
+            foreach (var row in day.Rows.Where(r => r.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)))
+            {
+                var when = row.Timing switch
+                {
+                    EarningsTiming.BeforeOpen => "before the open",
+                    EarningsTiming.AfterClose => "after the close",
+                    _ => "time not supplied"
+                };
+                var what = $"{row.Symbol} reports {day.Date:yyyy-MM-dd} ({when})";
+                if (day.Date == buyDate && row.Timing == EarningsTiming.BeforeOpen)
+                    warning = $"{what}: already out before this buy session, so priced in. Check the reaction before buying.";
+                else if (day.Date == sellDate && row.Timing == EarningsTiming.AfterClose)
+                    continue; // after the sell
+                else
+                    blocked.Add(what);
+            }
+        }
+        if (blocked.Count > 0)
+            return (new(code, BoringOvernightReadyEvaluator.GateBlocked,
+                $"Earnings overnight: {string.Join("; ", blocked)}. An overnight hold would carry the report. Source: Nasdaq earnings calendar."), warning);
+        return (new(code, BoringOvernightReadyEvaluator.GatePass,
+            $"No report listed from {buyDate:yyyy-MM-dd} to {sellDate:yyyy-MM-dd} on the Nasdaq earnings calendar (coverage not guaranteed; your IR check still applies)."), warning);
+    }
+}
