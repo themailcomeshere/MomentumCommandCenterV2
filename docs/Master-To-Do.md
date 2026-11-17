@@ -54,7 +54,7 @@ Daily routine for both workspaces: [MCC-Operator-Guide.md](MCC-Operator-Guide.md
 5. BORING OVERNIGHT, 12:30–13:00 AZ: import the Overnight scan; **2.4 Use Boring Top 20 → Validate Daily data**.
 6. BORING OVERNIGHT, 13:00–14:00 AZ: **4 READY check** for 1–3 picks; label the listed articles **on the card**; sign off; report the cards (§2). Late window to 15:00 AZ: type the after-hours price from TOS on the card.
 7. After 14:16 AZ: click **History export** in the Dashboard header (it turns green when today's export is done; the script still works too) (§2c).
-8. Any time: add the **V3 Rank** column (`docs/Column Formulas/V3/V3 Rank.txt`) to the Overnight scan and set **Sorted by → Custom Quotes → V3 Rank → Descending** (§2); catalyst batch 1 (§7); backup (§8).
+8. Any time: catalyst batch 1 (§7); backup (§8). (V3 Rank sorting: done 2026-11-16.)
 
 ---
 
@@ -122,7 +122,7 @@ Decision record: [Boring-Overnight-READY-Semantics-20261114.md](Engineering/Bori
 - [x] **[Operator]** V3 parity, 5 symbols (operator screenshot vs Claude's MCC run on SIP Daily, 2026-11-16): Edge identical (PRU 61.23, AFL 60.07, VOYA 56.86, MET 55.97, HQY 56.45); Boringness within 0.01 (TOS / MCC: PRU 79.30/79.30, AFL 78.34/78.35, VOYA 71.32/71.33, MET 74.86/74.86, HQY 72.79/72.79, rounding); Status CANDIDATE on both for all five.
 - [x] **[Operator]** TOS "Sorted by → Custom Quotes" greys out V3 Edge / V3 Boringness / V3 Status (and the operator's STATUS and Reason columns): all use text labels (AddLabel), while sortable columns like Overnight Score are plain numbers (reported 2026-11-16).
 - [x] **[Repo]** (`703bf03`) **V3 Rank** sort column `docs/Column Formulas/V3/V3 Rank.txt`: plain number = status × 100 + Boringness (300–400 = CANDIDATE by Boringness, 200s WATCH, 100s BLOCKED, 0 DATA?). Same formulas as V3 Status, no label or colour. `V3ColumnResult.RankValue` gives the same value on the MCC side.
-- [ ] **[Operator]** Add V3 Rank to the Overnight scan, confirm it compiles and is selectable in **Sorted by**, and that descending puts the CANDIDATEs first.
+- [x] **[Operator]** V3 Rank compiles in Thinkorswim and sorts correctly as the scan's "Sorted by" column (operator 2026-11-16).
 - [x] **[Operator]** Price gate decided 2026-11-16: **exactly $5.00 passes**, only prices below $5 block. Applied in `3e6d986` (CI `43933741671` SUCCESS, 482/482) to the READY evaluator, the V3 calculator, the V3 Status column and the Dashboard Daily gate, with $4.99 / $5.00 boundary tests. Recompile **V3 Status** in Thinkorswim if it was already installed.
 - [ ] **[Operator]** V3 decisions: (b) confirm the 5D component above +3.00 pp falls from 3 to 0 points at +5.00 pp (Claude's interpretation); (c) freeze or change the provisional point maps after labelled historical cases.
 - [ ] **[Operator]** Validate Boring Winner on chronological source-qualified samples and confirm the TOS Daily aggregation and extended-hours semantics. It remains RESEARCH ONLY.
