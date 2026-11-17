@@ -4379,3 +4379,13 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 .scan-status-chip.bad{background:var(--red);border-color:var(--red);color:#2a0606}
 .auto-scan-sources summary{font-weight:800!important;color:var(--text)!important}
 .auto-scan-sources summary:hover,.auto-scan-sources summary:focus-visible{color:var(--blue)!important}
+
+/* Pending binary catalysts: dock button, modal form, card flag (2026-11-17) */
+.prototype-catalysts .catalyst-count{background:rgba(242,203,118,.12);color:var(--muted)}
+.prototype-catalysts .catalyst-count.has-items{background:rgba(242,203,118,.2);color:var(--yellow)}
+.catalyst-form{display:grid;grid-template-columns:1fr;gap:6px;margin:0 0 10px}
+.catalyst-form #catalystSymbol{max-width:140px;text-transform:uppercase}
+.catalyst-form button{justify-self:start}
+.catalyst-rows li{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.catalyst-rows a{color:var(--blue)}
+.catalyst-flag{margin:2px 0 6px;padding:3px 8px;border:1px solid var(--yellow);border-radius:8px;background:rgba(242,203,118,.12);color:var(--yellow);font-size:11px;font-weight:800;line-height:1.35}

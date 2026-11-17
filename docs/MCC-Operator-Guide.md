@@ -58,6 +58,10 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - This records the side-by-side comparison with 2.a; once per session is enough.
    - The import takes over the Red Zone; click **Feed Red Zone** again to switch back.
 5. **Exclusions** (INTRADAY MOMENTUM: left-dock button, the number = excluded symbols): opens the list in a pop-up; add a symbol you never want suggested.
+   - **Catalysts** (left-dock button below it, in both workspaces): the list of pending binary events, such as trial readouts or FDA decisions.
+     - Add the symbol, the event, and the expected window as the source states it.
+     - Listed symbols show **⚑ Binary catalyst pending** on Red Zone cards and can never reach READY in BORING OVERNIGHT.
+     - Click **Remove (readout public)** once the result is out.
 6. **4 Red Zone:**
    - Click **Enable sound alerts** once.
    - Each card's banner colour is its state:
@@ -98,7 +102,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - 5D > 20D;
    - today's gap under 3%;
    - above the 20-day SMA.
-4. **Exclusions** (BORING OVERNIGHT: left-dock button): check that nothing on the shortlist should be excluded.
+4. **Exclusions** and **Catalysts** (BORING OVERNIGHT: left-dock buttons): check that nothing on the shortlist should be excluded or has a pending readout. A ⚑ card is blocked at READY (gate PENDING_BINARY_CATALYST).
 5. **2.3 Qualification table:** all candidates with reasons. The one-row heading has **Boring Top 4 / My Top 4**, **Choose My Top 4** (drop-down picker), **Fetch Daily + catalyst** and **ⓘ** for how the panel works.
 6. **2.4 Daily Data Audit:**
    - click **Use Boring Top 20**, then **Validate Daily data**;

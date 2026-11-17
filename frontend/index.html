@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261117-permission-latch-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261117-catalysts-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -480,7 +480,7 @@
             <option value="momentum" id="prototype-mode-momentum">Intraday Momentum</option>
             <option value="overnight" id="prototype-mode-overnight">Boring Overnight</option>
         </select>
-        <button id="openExclusions" class="prototype-exclusions" type="button" title="Symbols MCC must never suggest (API-backed list)">Exclusions <span id="exclusionCountBadge" class="exclusion-count">…</span></button><button id="openQuickStart" class="prototype-quick-start" type="button">Quick Start</button><button id="reset" class="prototype-reset" type="button">Reset</button>
+        <button id="openExclusions" class="prototype-exclusions" type="button" title="Symbols MCC must never suggest (API-backed list)">Exclusions <span id="exclusionCountBadge" class="exclusion-count">…</span></button><button id="openCatalysts" class="prototype-exclusions prototype-catalysts" type="button" title="Pending binary catalysts (trial readouts, FDA decisions): blocked from Boring Overnight READY, flagged on Red Zone cards">Catalysts <span id="catalystCountBadge" class="exclusion-count catalyst-count">…</span></button><button id="openQuickStart" class="prototype-quick-start" type="button">Quick Start</button><button id="reset" class="prototype-reset" type="button">Reset</button>
     </aside>
     <header class="topbar" id="mcc-header">
         <div class="topbar-layout" id="mcc-static-0009-div">
@@ -843,6 +843,19 @@
             <p class="notice" id="mcc-static-0425-p">Notes stay in this browser's local storage until exported or cleared. They are not uploaded to GitHub or sent to ChatGPT.</p>
         </section>
         <section id="quick-start" class="quick-start-footer" aria-label="Quick start guide"><button id="openQuickStartFooter" type="button" class="quiet-button">Open Quick Start Guide</button></section>
+        <dialog id="catalystsDialog" class="morning-brief-dialog exclusions-dialog" aria-labelledby="catalystsDialogTitle">
+            <div class="section-heading"><div><div class="eyebrow">PENDING BINARY CATALYSTS · API-BACKED</div><h2 id="catalystsDialogTitle">Readouts and decisions still to come</h2></div><div class="report-actions"><button id="refreshCatalysts" type="button" class="quiet-button">Refresh</button><button id="closeCatalysts" type="button" class="quiet-button">Close</button></div></div>
+            <form id="catalystForm" class="catalyst-form">
+                <input id="catalystSymbol" maxlength="8" placeholder="Ticker (e.g. SLS)" aria-label="Symbol" required>
+                <input id="catalystEvent" maxlength="200" placeholder="Event (e.g. Phase 3 REGAL topline)" aria-label="Event" required>
+                <input id="catalystWindow" maxlength="80" placeholder="Expected window as the source states it (e.g. Q4 2026)" aria-label="Expected window" required>
+                <input id="catalystSource" maxlength="500" type="url" placeholder="Source URL (optional)" aria-label="Source URL">
+                <input id="catalystNotes" maxlength="500" placeholder="Notes (optional)" aria-label="Notes">
+                <button type="submit">Add catalyst</button>
+            </form>
+            <p id="catalystStatus" class="muted">Loading pending catalysts…</p><div class="exclusions-list-wrap"><ul id="catalystRows" class="watchlist catalyst-rows"></ul></div>
+            <p class="notice">A listed symbol is <b>BLOCKED</b> from Boring Overnight READY (gate PENDING_BINARY_CATALYST) and shows ⚑ on Red Zone cards. Entries never expire, because readouts slip: remove one only after the result is public. If no window is published, write "Data not found in sources."</p>
+        </dialog>
         <dialog id="exclusionsDialog" class="morning-brief-dialog exclusions-dialog" aria-labelledby="exclusionsDialogTitle">
             <div class="section-heading"><div><div class="eyebrow">EXCLUSIONS · API-BACKED</div><h2 id="exclusionsDialogTitle">MCC exclusion watchlist</h2></div><div class="report-actions"><button id="refreshExclusions" type="button" class="quiet-button">Refresh</button><button id="closeExclusions" type="button" class="quiet-button">Close</button></div></div>
                     
@@ -882,7 +895,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261117-permission-latch-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261117-catalysts-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

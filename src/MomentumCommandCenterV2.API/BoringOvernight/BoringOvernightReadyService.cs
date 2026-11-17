@@ -18,6 +18,7 @@ public sealed class BoringOvernightReadyService(
     IConfiguration configuration,
     BoringOvernightCandidateSnapshotStore snapshotStore,
     ExclusionWatchlistStore exclusionStore,
+    PendingCatalystStore pendingCatalystStore,
     CatalystHumanReviewStore reviewStore,
     CatalystAttestationStore attestationStore,
     IMarketBarObservationStore barStore,
@@ -60,6 +61,12 @@ public sealed class BoringOvernightReadyService(
         try { excluded = (await exclusionStore.GetAsync(ct)).Any(x => x.Symbol.Equals(symbol, StringComparison.OrdinalIgnoreCase)); }
         catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException)
         { excluded = null; logger.LogWarning(ex, "Exclusion list unreadable during READY for {Symbol}", symbol); }
+
+        PendingCatalystEntry? pendingCatalyst = null;
+        var pendingUnreadable = false;
+        try { pendingCatalyst = await pendingCatalystStore.FindAsync(symbol, ct); }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or System.Text.Json.JsonException or UnauthorizedAccessException)
+        { pendingUnreadable = true; logger.LogWarning(ex, "Pending-catalyst list unreadable during READY for {Symbol}", symbol); }
 
         var reviews = await reviewStore.GetLatestAsync(symbol, 500, ct);
         var attestation = await attestationStore.GetValidAsync(symbol, clock.OvernightBuySessionDate, nowUtc, ct);
@@ -107,7 +114,7 @@ public sealed class BoringOvernightReadyService(
         var evaluation = BoringOvernightReadyEvaluator.Evaluate(new ReadyInputs(
             symbol, nowUtc, clock, snapshot, excluded, reviews, attestation, sellLimit, sellLimitError,
             RequestedMode, loggedSessions, trade?.Price, trade?.TimestampUtc, trade?.Feed,
-            regularClose, regularCloseSource, UntestedLimitPct, operatorPrice));
+            regularClose, regularCloseSource, UntestedLimitPct, operatorPrice, pendingCatalyst, pendingUnreadable));
 
         if (clock.OvernightBuyWindowOpen || clock.OvernightLateBuyWindowOpen)
             await shadowLog.AppendAsync(evaluation, ct);

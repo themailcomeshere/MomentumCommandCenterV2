@@ -2896,3 +2896,68 @@ window.setInterval(()=>{if(document.visibilityState==="visible")void loadMarketR
 function closeQualificationPopovers(except){document.querySelectorAll("details.qual-pop[open]").forEach(d=>{if(d!==except)d.open=false;});}
 document.addEventListener("click",event=>closeQualificationPopovers(event.target instanceof Element?event.target.closest("details.qual-pop"):null));
 document.addEventListener("keydown",event=>{if(event.key==="Escape")closeQualificationPopovers(null);});
+
+/// MODULE: Pending binary catalysts (2026-11-17, operator request after the SLS Phase 3 spike)
+/// PURPOSE: Left-dock button + modal for the operator-maintained list of pending binary catalysts, and a ⚑ flag on any
+/// Red Zone card whose symbol is listed. READY blocking happens server-side (gate PENDING_BINARY_CATALYST).
+let pendingCatalysts=new Map();
+const catalystsDialog=$("catalystsDialog");
+/// <summary>Adds, updates, or removes the ⚑ line under the symbol on every Red Zone card. Called after each load and whenever the grid re-renders.</summary>
+function applyPendingCatalystFlags(){
+ document.querySelectorAll("#redZoneGrid .redzone-card").forEach(card=>{
+  const heading=card.querySelector("h3");if(!heading)return;
+  const entry=pendingCatalysts.get(heading.textContent.trim().toUpperCase());
+  let flag=card.querySelector(".catalyst-flag");
+  if(!entry){flag?.remove();return;}
+  if(!flag){flag=document.createElement("div");flag.className="catalyst-flag";heading.after(flag);}
+  const text="⚑ Binary catalyst pending: "+entry.event+" · expected "+entry.expectedWindow;
+  if(flag.textContent!==text)flag.textContent=text;
+  flag.title=(entry.notes?entry.notes+"\n":"")+(entry.sourceUrl?"Source: "+entry.sourceUrl+"\n":"")+"Boring Overnight READY is blocked for this symbol. Intraday: awareness only.";
+ });
+}
+/// <summary>Loads the list, repaints the modal rows, the dock badge, and the card flags. Called on load, every 60 s, on open, and after edits.</summary>
+async function refreshPendingCatalysts(){
+ const status=$("catalystStatus"),list=$("catalystRows"),badge=$("catalystCountBadge");
+ try{
+  const response=await fetch("/api/watchlists/pending-catalysts",{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  const data=await response.json(),entries=data.catalysts||[];
+  pendingCatalysts=new Map(entries.map(e=>[String(e.symbol).toUpperCase(),e]));
+  if(badge){badge.textContent=String(entries.length);badge.classList.toggle("has-items",entries.length>0);}
+  if(list)list.replaceChildren(...entries.map(entry=>{
+   const li=document.createElement("li"),detail=document.createElement("span");
+   const strong=document.createElement("strong");strong.textContent=entry.symbol;
+   detail.append(strong," — "+entry.event+" · expected "+entry.expectedWindow+(entry.notes?" · "+entry.notes:"")+" ");
+   if(entry.sourceUrl&&/^https?:\/\//i.test(entry.sourceUrl)){const a=document.createElement("a");a.href=entry.sourceUrl;a.target="_blank";a.rel="noopener noreferrer";a.textContent="source";detail.append(a);}
+   const remove=document.createElement("button");remove.type="button";remove.className="quiet-button";remove.textContent="Remove (readout public)";
+   remove.addEventListener("click",async()=>{
+    remove.disabled=true;
+    try{const res=await fetch("/api/watchlists/pending-catalysts/"+encodeURIComponent(entry.symbol),{method:"DELETE"});if(!res.ok)throw new Error("HTTP "+res.status);await refreshPendingCatalysts();}
+    catch(e){if(status)status.textContent="Could not remove "+entry.symbol+": "+e.message;remove.disabled=false;}
+   });
+   li.append(detail,remove);return li;
+  }));
+  if(status)status.textContent=entries.length+" pending catalyst(s) · API-backed MCC list";
+ }catch(error){
+  if(badge)badge.textContent="?";
+  if(status)status.textContent="Pending-catalyst API unavailable: "+error.message+(error.message.includes("404")?". Restart MCC on the latest version.":".");
+ }
+ applyPendingCatalystFlags();
+}
+$("openCatalysts")?.addEventListener("click",()=>{if(!catalystsDialog||catalystsDialog.open)return;catalystsDialog.showModal();void refreshPendingCatalysts();$("catalystSymbol")?.focus();});
+$("closeCatalysts")?.addEventListener("click",()=>catalystsDialog?.close());
+$("refreshCatalysts")?.addEventListener("click",()=>void refreshPendingCatalysts());
+$("catalystForm")?.addEventListener("submit",async event=>{
+ event.preventDefault();
+ const status=$("catalystStatus"),body={symbol:$("catalystSymbol").value.trim().toUpperCase(),event:$("catalystEvent").value.trim(),expectedWindow:$("catalystWindow").value.trim(),sourceUrl:$("catalystSource").value.trim()||null,notes:$("catalystNotes").value.trim()||null};
+ try{
+  const res=await fetch("/api/watchlists/pending-catalysts",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(body)});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.error||("HTTP "+res.status));
+  $("catalystForm").reset();await refreshPendingCatalysts();
+  if(status)status.textContent="Added "+data.added+". "+status.textContent;
+ }catch(e){if(status)status.textContent="Could not add: "+e.message;}
+});
+{const grid=$("redZoneGrid");if(grid)new MutationObserver(()=>applyPendingCatalystFlags()).observe(grid,{childList:true,subtree:true});}
+void refreshPendingCatalysts();
+window.setInterval(()=>{if(document.visibilityState==="visible")void refreshPendingCatalysts();},60000);

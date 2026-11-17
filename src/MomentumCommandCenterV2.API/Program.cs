@@ -31,7 +31,8 @@ builder.Services.AddSwaggerGen(options =>
             tag = "Scanner & Discovery";
         else if (path == "/api/market-data/collector/status")
             tag = "Collection & Operations";
-        else if (path == "/api/watchlists/exclusions" || path.StartsWith("/api/watchlists/exclusions/", StringComparison.OrdinalIgnoreCase))
+        else if (path == "/api/watchlists/exclusions" || path.StartsWith("/api/watchlists/exclusions/", StringComparison.OrdinalIgnoreCase) ||
+                 path == "/api/watchlists/pending-catalysts" || path.StartsWith("/api/watchlists/pending-catalysts/", StringComparison.OrdinalIgnoreCase))
             tag = "Watchlists & Exclusions";
         else if (path.StartsWith("/api/strategy-report/", StringComparison.OrdinalIgnoreCase))
             tag = "Strategy Reports";
@@ -108,6 +109,7 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaScannerDisco
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MomentumCommandCenterV2.API.MarketData.MarketDataCollectionWorker>());
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.ExclusionWatchlistStore>();
+builder.Services.AddSingleton<MomentumCommandCenterV2.API.Watchlists.PendingCatalystStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightCandidateSnapshotStore>();
 builder.Services.AddSingleton<MomentumCommandCenterV2.API.BoringOvernight.ThinkorswimDailyGapReferenceStore>();
 builder.Services.AddSingleton(_ => new MomentumCommandCenterV2.API.BoringOvernight.CatalystAttestationStore());
@@ -2134,6 +2136,36 @@ app.MapDelete("/api/watchlists/exclusions/{symbol}", async (string symbol, Momen
 })
 .WithSummary("Remove a symbol from MCC's exclusion watchlist")
 .WithDescription("Example: DELETE /api/watchlists/exclusions/TTE. This only edits MCC's local list; it does not remove anything from Thinkorswim.");
+
+app.MapGet("/api/watchlists/pending-catalysts", async (MomentumCommandCenterV2.API.Watchlists.PendingCatalystStore store, CancellationToken ct) =>
+{
+    var entries = await store.GetAsync(ct);
+    return Results.Ok(new { count = entries.Count, catalysts = entries });
+})
+.WithSummary("List pending binary catalysts")
+.WithDescription("Operator-maintained list (App_Data/pending-catalysts.json, git-ignored). A listed symbol is BLOCKED from Boring Overnight READY (gate PENDING_BINARY_CATALYST) and flagged on intraday Red Zone cards. Entries never expire; remove them after the readout.");
+
+app.MapPost("/api/watchlists/pending-catalysts", async (MomentumCommandCenterV2.API.Watchlists.PendingCatalystStore store, MomentumCommandCenterV2.API.Watchlists.AddPendingCatalystRequest request, CancellationToken ct) =>
+{
+    if (request is null || !IsValidSymbol(request.Symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    if (string.IsNullOrWhiteSpace(request.Event) || request.Event.Length > 200) return Results.BadRequest(new { error = "event is required (max 200 characters), for example \"Phase 3 REGAL topline\"." });
+    if (string.IsNullOrWhiteSpace(request.ExpectedWindow) || request.ExpectedWindow.Length > 80) return Results.BadRequest(new { error = "expectedWindow is required (max 80 characters), as the source states it, for example \"Q4 2026\". Write \"Data not found in sources.\" if no window is published." });
+    if (request.SourceUrl is { Length: > 0 } url && (url.Length > 500 || !Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")))
+        return Results.BadRequest(new { error = "sourceUrl must be an http(s) URL of at most 500 characters." });
+    if (request.Notes is { Length: > 500 }) return Results.BadRequest(new { error = "notes must be at most 500 characters." });
+    var entries = await store.AddAsync(request, DateTimeOffset.UtcNow, ct);
+    return Results.Ok(new { added = request.Symbol.Trim().ToUpperInvariant(), count = entries.Count, catalysts = entries });
+})
+.WithSummary("Add or replace a pending binary catalyst")
+.WithDescription("Example request: { \"symbol\": \"SLS\", \"event\": \"Phase 3 REGAL topline\", \"expectedWindow\": \"Q4 2026\", \"sourceUrl\": \"https://...\", \"notes\": \"80th event reached 2026-10-28\" }.");
+
+app.MapDelete("/api/watchlists/pending-catalysts/{symbol}", async (string symbol, MomentumCommandCenterV2.API.Watchlists.PendingCatalystStore store, CancellationToken ct) =>
+{
+    if (!IsValidSymbol(symbol)) return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    var entries = await store.RemoveAsync(symbol, ct);
+    return Results.Ok(new { removed = symbol.ToUpperInvariant(), count = entries.Count, catalysts = entries });
+})
+.WithSummary("Remove a pending binary catalyst (after the readout)");
 
 static MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightDailyEvidence? ToDailyEvidence(DailyMarketMetrics? metrics) =>
     metrics is null ? null : new MomentumCommandCenterV2.API.BoringOvernight.BoringOvernightDailyEvidence(

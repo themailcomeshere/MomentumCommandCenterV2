@@ -4,3 +4,7 @@ obj/
 TestResults/
 *.user
 *.suo
+
+# Operator-maintained pending binary catalysts (2026-11-17); never commit operator edits.
+src/MomentumCommandCenterV2.API/App_Data/pending-catalysts.json
+src/MomentumCommandCenterV2.API/App_Data/pending-catalysts.json.tmp

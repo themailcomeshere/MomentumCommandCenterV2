@@ -1,4 +1,5 @@
 using MomentumCommandCenterV2.API.MarketData;
+using MomentumCommandCenterV2.API.Watchlists;
 
 namespace MomentumCommandCenterV2.API.BoringOvernight;
 
@@ -113,6 +114,18 @@ public static class BoringOvernightReadyEvaluator
             false => new("EXCLUSION", GatePass, "Not on the exclusion watchlist."),
             null => new("EXCLUSION", GateData, "Exclusion watchlist could not be read.")
         });
+
+        // 4a. Pending binary catalyst (operator list, 2026-11-17): an overnight hold through a binary readout is not boring.
+        if (input.PendingCatalystListUnreadable)
+            gates.Add(new("PENDING_BINARY_CATALYST", GateData, "The pending-catalyst list could not be read."));
+        else if (input.PendingCatalyst is { } pending)
+        {
+            gates.Add(new("PENDING_BINARY_CATALYST", GateBlocked,
+                $"Pending binary catalyst: {pending.Event} (expected {pending.ExpectedWindow}). An overnight hold would be exposed to it."));
+            actions.Add("Remove the symbol from Catalysts (left dock) only after the readout is public.");
+        }
+        else
+            gates.Add(new("PENDING_BINARY_CATALYST", GatePass, "Not on the pending binary-catalyst list."));
 
         // 4b. Late window: the after-hours price must not be above the regular close (the edge is measured from the close).
         decimal? lateMovePct = null;
@@ -347,7 +360,9 @@ public sealed record ReadyInputs(
     decimal? RegularCloseReference = null,
     string? RegularCloseReferenceSource = null,
     decimal UntestedLimitPct = 0.5m,
-    decimal? OperatorPrice = null);
+    decimal? OperatorPrice = null,
+    PendingCatalystEntry? PendingCatalyst = null,
+    bool PendingCatalystListUnreadable = false);
 
 /// <summary>
 /// TYPE: ReadySellEvidence

@@ -38,6 +38,13 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - **TOS extended hours:** ON. IEX pre-market volume is too thin to reproduce TOS's VWAP (SLS 20.47 with pre-market vs TOS 22.76). Operator decision pending: options (a), (b), (c) in the To-Do.
 - **SLS spike:** a binary Phase 3 readout. Not predictable from price or volume; the window was public. [Research/SLS-Spike-20261117.md](Research/SLS-Spike-20261117.md). Proposals: a pending-catalyst list and a pre-market gap watch.
 
+## Pending binary-catalyst list (built, operator approval)
+
+- **Where:** a **Catalysts** dock button and modal, and `/api/watchlists/pending-catalysts`. The data file `App_Data/pending-catalysts.json` is git-ignored.
+- **Effect:** BLOCKS Boring Overnight READY (`PENDING_BINARY_CATALYST`) and flags Red Zone cards with ⚑.
+- **Needs:** an MCC restart.
+- **Found on the way:** `exclusions-watchlist.json` is committed, so operator exclusions dirty the tree and block `Get-Latest-And-Test.ps1`. A fix is proposed, waiting on the operator's OK.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

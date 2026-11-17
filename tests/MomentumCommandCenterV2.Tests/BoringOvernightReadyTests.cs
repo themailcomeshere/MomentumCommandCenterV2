@@ -86,6 +86,30 @@ public sealed class BoringOvernightReadyTests
     }
 
     /// <summary>
+    /// A pending binary catalyst (operator list, 2026-11-17) BLOCKS READY with gate PENDING_BINARY_CATALYST and names the
+    /// event; an unreadable list is DATA?; no entry passes. Synthetic entry.
+    /// </summary>
+    [Fact]
+    public void PendingBinaryCatalystBlocksAndUnreadableListIsData()
+    {
+        var entry = new MomentumCommandCenterV2.API.Watchlists.PendingCatalystEntry(
+            "TEST", "Phase 3 topline", "Q4 2026", "https://example.test/release", null, InWindow.AddDays(-3));
+
+        var blocked = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { PendingCatalyst = entry });
+        Assert.Equal("BLOCKED", blocked.Status);
+        var gate = Assert.Single(blocked.Gates, g => g.Code == "PENDING_BINARY_CATALYST");
+        Assert.Equal(BoringOvernightReadyEvaluator.GateBlocked, gate.State);
+        Assert.Contains("Phase 3 topline", gate.Detail);
+        Assert.Contains("Q4 2026", gate.Detail);
+
+        var unreadable = BoringOvernightReadyEvaluator.Evaluate(Inputs() with { PendingCatalystListUnreadable = true });
+        Assert.Equal("DATA?", unreadable.Status);
+
+        var clear = BoringOvernightReadyEvaluator.Evaluate(Inputs());
+        Assert.Equal(BoringOvernightReadyEvaluator.GatePass, Assert.Single(clear.Gates, g => g.Code == "PENDING_BINARY_CATALYST").State);
+    }
+
+    /// <summary>
     /// Operator decision 2026-11-16: without a tested target (walk-forward failed, history incomplete, evidence error) the
     /// untested +0.5% heuristic is applied to the latest trade, READY is allowed and labelled LIMIT UNTESTED.
     /// </summary>
