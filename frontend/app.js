@@ -2550,6 +2550,12 @@ async function readyPost(url,body){
  if(!response.ok)throw new Error((data&&(data.error||data.detail||data.title))||("HTTP "+response.status));
  return data;
 }
+/// <summary>True when the result is for a buy session other than the check's own Eastern date (after the late deadline,
+/// a weekend, or a holiday). Mirrors the server's sign-off rule. Called by renderReadyCard.</summary>
+function readyIsNextSession(result){
+ if(!result?.buySessionDate||!result?.evaluatedAtUtc)return false;
+ try{const eastern=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(result.evaluatedAtUtc));return eastern!==String(result.buySessionDate);}catch{return false;}
+}
 function renderReadyCard(result,captureNote){
  const card=readyEl("article","ready-card ready-"+String(result.status||"DATA").replace(/[^A-Z_]/gi,""));
  card.dataset.symbol=result.symbol;
@@ -2563,6 +2569,13 @@ function renderReadyCard(result,captureNote){
  card.append(readyEl("p","ready-limit"+(untested?" ready-limit-untested":""),limit));
  const late=result.entryWindow==="LATE";
  card.append(readyEl("p","muted small","Buy session "+result.buySessionDate+" · final hour "+readyAz(result.buyWindowStartUtc)+" – "+readyAz(result.buyDeadlineUtc)+" · late window (after-hours, LMT EXT) until "+readyAz(result.lateBuyDeadlineUtc)+(late?" · NOW IN LATE WINDOW":"")+" · sell session "+result.sellSessionDate+" · checked "+readyAz(result.evaluatedAtUtc)+(captureNote?" · "+captureNote:"")));
+ // 2026-11-17: after the late deadline (or on a non-session day) MCC evaluates the NEXT buy session. The server only
+ // accepts a sign-off on the buy-session day itself, so say so up front and hide the form instead of failing on click.
+ const nextSession=readyIsNextSession(result);
+ if(nextSession){
+  const weekday=(()=>{try{return new Date(result.buySessionDate+"T12:00:00Z").toLocaleDateString("en-US",{weekday:"long",timeZone:"UTC"});}catch{return "";}})();
+  card.append(readyEl("p","ready-next-session","⏭ Today's buy windows are closed. This check is for the next buy session, "+weekday+" "+result.buySessionDate+": final hour "+readyAz(result.buyWindowStartUtc)+" – "+readyAz(result.buyDeadlineUtc)+", late window until "+readyAz(result.lateBuyDeadlineUtc)+". Catalyst sign-off opens that day. Come back after that day's Overnight scan and click Check READY now again."));
+ }
  const gates=readyEl("ul","ready-gates");
  (result.gates||[]).forEach(g=>{const li=readyEl("li","ready-gate gate-"+String(g.state).replace(/[^A-Z_]/gi,""));li.append(readyEl("span","gate-state",g.state),readyEl("span","gate-code",g.code),readyEl("span","gate-detail",g.detail));gates.append(li);});
  card.append(gates);
@@ -2586,7 +2599,8 @@ function renderReadyCard(result,captureNote){
   });
   card.append(pf);
  }
- if((result.requiredActions||[]).length){const a=readyEl("ul","ready-actions");result.requiredActions.forEach(x=>a.append(readyEl("li",null,"→ "+x)));card.append(a);}
+ const actions=(result.requiredActions||[]).filter(x=>!(nextSession&&/^sign off/i.test(String(x))));
+ if(actions.length){const a=readyEl("ul","ready-actions");actions.forEach(x=>a.append(readyEl("li",null,"→ "+x)));card.append(a);}
  // Inline catalyst review (2026-11-16): label each unreviewed article here instead of the 2.6 queue,
  // which only lists articles for the active top-four group. Labels are append-only research data.
  (result.articlesToReview||[]).forEach(article=>{
@@ -2615,7 +2629,7 @@ function renderReadyCard(result,captureNote){
   });
   card.append(f);
  });
- if(result.catalystState!=="OPERATOR_ATTESTED"&&result.catalystState!=="BLOCKED"){
+ if(!nextSession&&result.catalystState!=="OPERATOR_ATTESTED"&&result.catalystState!=="BLOCKED"){
   const form=readyEl("form","ready-signoff");
   form.append(readyEl("strong",null,"Catalyst sign-off for "+result.buySessionDate+" — tick what you checked:"));
   [["SCHWAB_NEWS","Schwab news"],["SEC_EDGAR","SEC EDGAR filings"],["COMPANY_IR","Company investor relations"],["OTHER","Other (name it in the note)"]].forEach(([value,label])=>{

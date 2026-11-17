@@ -60,6 +60,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - HIG had 19 of 20 close/open pairs: no SIP 09:30 ET minute bar on 2026-10-21. Operator chose "Yes, use Daily open": capture-history now uses the unadjusted SIP Daily open for a missing 09:30 bar, with a 1% close-basis check. HIG could not reach READY before the 15:00 AZ late deadline.
 - Sign-off button now reads **Sign off: nothing blocking**.
 
+## CSQR after the deadline (15:01 AZ)
+
+- Not a data gap: CSQR's history was complete. The check ran after the 15:00 AZ late deadline, so it was for 2026-11-18 and the sign-off was refused. The READY card now says so with a banner and hides the sign-off until the buy day.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

@@ -4392,3 +4392,6 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 
 /* Import / fetch warning when the Overnight CSV lacks the ON columns (2026-11-17) */
 .import-warning{color:var(--yellow);font-weight:700}
+
+/* READY card: next buy session banner (2026-11-17) */
+.ready-next-session{margin:4px 0 8px;padding:6px 10px;border:1px solid var(--blue);border-radius:8px;background:rgba(120,170,255,.10);color:var(--text);font-weight:700;font-size:12px;line-height:1.4}
