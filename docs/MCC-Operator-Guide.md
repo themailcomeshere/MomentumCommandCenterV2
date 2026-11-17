@@ -70,6 +70,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
      - **DATA?** dashed.
    - **4.1 Rank quality pool · top 50**: a live quality ranking of the imported list.
    - **4.2 Add a symbol → Pin to Red Zone**: keep a symbol on screen.
+   - Each card's gate line reads **5M Permission: YES (TOS latch since h:mm AZ)** or **NO · reason**. This is the same latch as your TOS 5m study: once granted, it stays YES through a pullback until 2 bars close below VWAP with EMA9 under EMA20. The **V2 5M score n/6** above it is alignment only.
    - **Mode: Automatic / Manual**: switch between the automatic top 4 and your pins.
 7. **5 Focused symbol:** click a card to load its chart, classification, decision explanation and 5M→1M handoff.
 8. **6 Act in Schwab/TOS:**

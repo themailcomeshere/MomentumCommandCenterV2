@@ -43,3 +43,39 @@ Operator screenshot: TOS charts (SLS 5 D 5m, SLS 1 D 5m, SLS Today 1m) beside th
 
 - Within TOS, the 5m chart reads 5M STATE: PREPARE TO BUY / STRUCTURE: NEUTRAL, while the 1m chart's 5M labels read PREPARE TO SELL / TRANSITIONING. The 1m study's secondary-aggregation 5M values differ from the 5m study at the same moment.
 - RVOL: TOS shows the current partial bar's volume vs average (0.01); MCC shows a same-slot completed-bar ratio (8.17×). Different definitions; not comparable.
+
+## Fix: TOS latch ported into MCC (2026-11-17, operator approval "Yes, port it")
+
+- **Code:** `FiveMinutePermissionLatch` (Core). The study's PERMISSION STATE is ported line for line:
+  - raw condition, structural damage over 2 bars, major failure over 2 bars, EOD window, latch;
+  - block codes 0–8, from the study's permissionBlockCode.
+- **Engine:** `V2SignalEngine` uses the latch value when the caller supplies it. The 6-condition score stays on the card as an alignment diagnostic only.
+- **Callers:** the live assessment and the historical replay both run the latch over every completed 5m bar (`LiveSymbolTechnicalCalculator.PermissionSeries`). A unit test proves that series equals `Calculate()` exactly at every index.
+- **Daily restart:** the latch starts at NO on each Eastern date, which models the operator's "1 D" 5m chart.
+- **EOD window, as installed:** 18:55 ET in daylight time, 19:55 ET in standard time.
+  - The study's comment calls this 15:55 AZ. That is true in daylight time only; in standard time 15:55 AZ is 17:55 ET.
+  - The EOD window never falls inside the regular session either way.
+
+### Replay on real bars (CLAUDE.md requirement)
+
+SLS 5m IEX bars, 2026-10-27 to 2026-11-17 16:10 UTC (1,153 bars, fetched from MCC `/api/market-data/bars`, kept outside the repo). Today's regular-session rows:
+
+| AZ bar | close | MCC VWAP | EMA9 | EMA20 | RSI | latch | transition | old score rule |
+|---|---|---|---|---|---|---|---|---|
+| 07:30 | 21.515 | 22.478 | 23.889 | 20.454 | 57.0 | no | NOT_GRANTED (code 4) | no (4) |
+| 08:05 | 20.525 | 20.512 | 20.877 | 20.015 | 54.3 | no | NOT_GRANTED (code 5) | YES (5) |
+| 08:35 | 20.225 | 20.290 | 19.994 | 19.839 | 53.8 | no | NOT_GRANTED (code 4) | YES (5) |
+| 08:40 | 20.305 | 20.290 | 20.056 | 19.883 | 54.1 | **YES** | GRANTED | YES (6) |
+| 08:55 | 20.000 | 20.307 | 20.201 | 20.015 | 52.3 | **YES** | HELD | **no (4)** |
+| 09:00 | 20.250 | 20.306 | 20.211 | 20.037 | 53.3 | YES | HELD | YES (5) |
+| 09:10 | 20.800 | 20.311 | 20.375 | 20.150 | 55.5 | YES | RAW_YES | YES (6) |
+
+- **At the 08:55 bar** (the latest completed bar behind the operator's ~09:00 screenshot): the latch reads **YES (HELD)**, matching TOS **5M PERMISSION: YES**. The old rule read NO.
+- **Where the old rule was looser:** it granted at 08:05 and 08:35 without the raw condition. At 08:05 the close was below EMA9; at 08:35 it was below VWAP.
+
+### Still different from TOS
+
+- **VWAP:** MCC uses regular-session IEX volume. TOS `vwap(DAY)` includes pre-market when the chart shows it. Pending the operator's chart-setting check.
+- **Pre-market bars:** IEX had pre-market bars from 06:30 AZ. With no session bars yet, MCC's VWAP equals the close, so the latch cannot grant in pre-market. TOS may have.
+- **Indicator seeding:** EMA and RSI seeding differ from TOS `ExpAverage` / `RSI`. The effect decays over 21 days of history and was not measured.
+

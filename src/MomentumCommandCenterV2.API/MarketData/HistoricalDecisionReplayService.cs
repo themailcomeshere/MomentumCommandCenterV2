@@ -105,8 +105,11 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             };
         }
 
+        // Same 5M gate as the live assessment: the installed TOS study's permission latch over all replayed 5m bars.
+        var latch = FiveMinutePermissionLatch.Evaluate(LiveSymbolTechnicalCalculator.PermissionSeries(fiveBars));
+        var latchPermission = latch.Latest is { } step && step.Timestamp == fiveBars[^1].Timestamp ? step.Permission : (bool?)null;
         var snapshot = new CommandCenterSnapshot(
-            asOfUtc, normalizedSymbol, one, five, MarketPhase.RegularSession, previousFive);
+            asOfUtc, normalizedSymbol, one, five, MarketPhase.RegularSession, previousFive, latchPermission);
         var result = new V2SignalEngine().Evaluate(snapshot, hasPosition);
         return new
         {
@@ -115,7 +118,8 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             feed,
             asOfUtc,
             status = "REPLAYED",
-            calculationVersion = "V2SignalEngine-default-config",
+            calculationVersion = "V2SignalEngine-default-config + " + FiveMinutePermissionLatch.RulesVersion,
+            fiveMinutePermissionLatch = latch.Latest is null ? null : new { latch.Latest.Permission, latch.Latest.Transition, latch.Latest.BlockCode, blockLabel = FiveMinutePermissionLatch.BlockLabel(latch.Latest.BlockCode), latch.GrantedSinceUtc },
             hasPosition,
             oneMinuteBars = oneBars.Length,
             fiveMinuteBars = fiveBars.Length,

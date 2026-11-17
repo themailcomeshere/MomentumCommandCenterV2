@@ -366,6 +366,13 @@ function sourceFreshness(label,ageSeconds){
 }
 function humanizeSignalState(value){return String(value||"UNKNOWN").replace(/([a-z])([A-Z])/g,"$1 $2").replaceAll("_"," ").toUpperCase();}
 function formatMetric(value,digits=2,suffix=""){return value===null||value===undefined||!Number.isFinite(Number(value))?"UNKNOWN":Number(value).toFixed(digits)+suffix;}
+/// <summary>"YES (TOS latch since 8:35 AM AZ)" / "NO · persistent structural damage …" / "UNKNOWN" for a live assessment's 5M permission. Called by the Red Zone card gate line.</summary>
+function permissionLatchText(five,decision){
+ const value=five?.scoreBreakdown?.permission??decision?.fiveMinutePermission,latch=five?.permissionLatch;
+ if(value===true)return "YES"+(latch?.grantedSinceUtc?" (TOS latch since "+new Date(latch.grantedSinceUtc).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ)":" (TOS latch)");
+ if(value===false)return "NO"+(latch?.blockLabel?" · "+latch.blockLabel:"");
+ return "UNKNOWN";
+}
 function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
  if(!node)return;
  const rawScore=scoreBreakdown?.score;
@@ -376,7 +383,9 @@ function setV2ScoreDisplay(node,scoreBreakdown,decision,evaluationStatus){
  const band=score<=2?"score-low":score<=4?"score-mid":"score-high";
  node.className="redzone-score "+band;
  const marker=score<=2?"✕ ":score>=5?"✓ ":"";
- const suffix=entryReady?" · EXECUTION READY":score>=5?(decision?" · 5M PERMISSION; CHECK 1M STATE":" · 5M PERMISSION; 1M NOT EVALUATED"):score<=2?" · LOW ALIGNMENT":" · PARTIAL ALIGNMENT";
+ // 2026-11-17: 5M permission is the TOS latch (scoreBreakdown.permission), not score >= 5; the score is alignment only.
+ const permitted=scoreBreakdown?.permission===true;
+ const suffix=entryReady?" · EXECUTION READY":permitted?(decision?" · 5M PERMISSION; CHECK 1M STATE":" · 5M PERMISSION; 1M NOT EVALUATED"):score<=2?" · LOW ALIGNMENT":score>=5?" · ALIGNED; NO 5M PERMISSION YET":" · PARTIAL ALIGNMENT";
  node.textContent=marker+"V2 5M score: "+score+"/6"+suffix;
 }
 async function refreshDecisionExplanation(){
@@ -1214,7 +1223,7 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   reasonNode.textContent=(lowParticipation?decisionReason+" Low participation: 5M same-time-of-day RVOL is below the existing V2 threshold.":decisionReason)+
    " "+qualitySummary+
    " Provisional diagnostic only; does not override V2 Permission/entry state.";
-  gateNode.textContent="5M Permission: "+((five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===true?"YES":(five.scoreBreakdown?.permission??decision?.fiveMinutePermission)===false?"NO":"UNKNOWN")+
+  gateNode.textContent="5M Permission: "+permissionLatchText(five,decision)+
    " · 1M execution: "+(decision?.oneMinuteExecution||"UNKNOWN");
   drawPriceLine(chartNode,one.chartBars||[],symbol);
  }catch(error){

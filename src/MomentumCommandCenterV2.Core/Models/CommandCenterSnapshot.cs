@@ -28,7 +28,9 @@ namespace MomentumCommandCenterV2.Core.Models;
 /// </summary>
 /// <summary>
 /// METHOD: CommandCenterSnapshot
-/// PURPOSE: Implements CommandCenterSnapshot for this component.
+/// PURPOSE: Implements CommandCenterSnapshot for this component. FiveMinutePermission, when supplied, is the latched
+/// 5M permission from <see cref="FiveMinutePermissionLatch"/> (installed TOS study) and is the entry gate; when null
+/// the engine falls back to the legacy stateless "score >= 5 of 6" rule.
 /// WHEN CALLED: Called by the workflow or caller that requests CommandCenterSnapshot.
 /// </summary>
 public sealed record CommandCenterSnapshot(
@@ -37,4 +39,5 @@ public sealed record CommandCenterSnapshot(
     BarSnapshot OneMinute,
     BarSnapshot FiveMinute,
     MarketPhase Phase,
-    BarSnapshot? PreviousFiveMinute = null);
+    BarSnapshot? PreviousFiveMinute = null,
+    bool? FiveMinutePermission = null);

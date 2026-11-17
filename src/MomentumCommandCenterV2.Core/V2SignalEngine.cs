@@ -132,7 +132,13 @@ public sealed class V2SignalEngine
             reasons.Add("5M RVOL supportive");
         }
 
-        var fivePermission = score >= 5;
+        // 2026-11-17 (operator decision): the installed TOS study's latched 5M permission is the gate when the caller
+        // supplies it; the stateless score >= 5 rule remains only as the fallback for callers without bar history.
+        var fivePermission = snapshot.FiveMinutePermission ?? score >= 5;
+        if (snapshot.FiveMinutePermission.HasValue)
+        {
+            reasons.Insert(0, fivePermission ? "5M permission YES (TOS latch)" : "5M permission NO (TOS latch)");
+        }
 
         // =========================================================
         // 5M STRUCTURE

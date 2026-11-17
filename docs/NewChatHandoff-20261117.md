@@ -21,11 +21,17 @@ Today is US standard time: regular session 07:30–14:00 AZ, Overnight buy windo
 Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 1. **Permission:** TOS 5M permission is a latch; MCC is a stateless 5-of-6 score. A real definitional gap.
-   - Proposed fix: port the latch with parity tests.
-   - Waiting on operator approval, because it changes Red Zone entry gating.
+   - Fixed: the latch is ported (operator approved; see the next section).
 2. **VWAP:** TOS reads 22.76, MCC 20.31. Likely TOS includes extended hours.
    - Operator to check the chart setting.
    - Then decide which session MCC's VWAP should cover.
+
+## 5M permission latch ported (operator approval "Yes, port it")
+
+- **What changed:** MCC's 5M Permission is now the installed TOS study's latch (`FiveMinutePermissionLatch`), used by the live assessment and the replay. The 6-of-6 score is a diagnostic only.
+- **Replay on SLS:** YES (HELD) at 08:55 AZ, matching TOS. Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
+- **Needs:** an MCC restart (API change), then the operator's side-by-side check of the gate line against TOS.
+- **Still open:** the VWAP session window (pre-market) and the study's standard-time EOD input (1955 vs 1755).
 
 ## Operator answers recorded today
 

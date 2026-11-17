@@ -126,6 +126,12 @@ public sealed class LiveSymbolAssessmentService(
                 ? LiveSymbolTechnicalCalculator.Calculate(fiveMinute, fiveMinute.Count - 2, TimeSpan.FromMinutes(5), previousRvol.Value ?? 0m)
                 : null;
 
+            // 5M permission = the installed TOS study's latch, run over every completed 5m bar (operator decision 2026-11-17).
+            var latch = fiveMinute.Count >= 50
+                ? FiveMinutePermissionLatch.Evaluate(LiveSymbolTechnicalCalculator.PermissionSeries(fiveMinute))
+                : null;
+            var latchLatest = latch?.Latest is { } latestStep && latestStep.Timestamp == fiveMinute[^1].Timestamp ? latestStep : null;
+
             var oneLatest = oneMinute.LastOrDefault();
             var fiveLatest = fiveMinute.LastOrDefault();
             var oneCloseAt = oneLatest?.Timestamp.AddMinutes(1);
@@ -173,7 +179,8 @@ public sealed class LiveSymbolAssessmentService(
                     one,
                     five,
                     MarketPhase.RegularSession,
-                    previousFive);
+                    previousFive,
+                    latchLatest?.Permission);
                 decision = new V2SignalEngine().Evaluate(snapshot, false);
                 heldDecision = new V2SignalEngine().Evaluate(snapshot, true);
                 evaluationStatus = "EVALUATED";
@@ -195,13 +202,13 @@ public sealed class LiveSymbolAssessmentService(
                 new { key = "rsiSupportive", label = $"5M RSI >= {scoringConfig.MinRsi:0}", passed = five is null ? (bool?)null : five.Rsi >= scoringConfig.MinRsi },
                 new { key = "rvolSupportive", label = $"5M RVOL >= {scoringConfig.MinRvol:0.00}", passed = rvol.Value.HasValue ? rvol.Value.Value >= scoringConfig.MinRvol : (bool?)null }
             };
-            // 5M Permission is an independent authority score. Do not make its
-            // availability depend on 1M freshness/history or the combined decision.
+            // The 6-condition score stays as an alignment diagnostic. 5M Permission is the TOS latch (no RVOL input),
+            // shown only for a fresh latest 5m bar; it does not depend on 1M freshness/history or the combined decision.
             var fiveMinuteScore = five is not null && fiveFresh && rvol.Value.HasValue
                 ? V2SignalEngine.CalculateFiveMinuteScore(five, scoringConfig)
                 : (int?)null;
-            var fiveMinutePermission = fiveMinuteScore.HasValue
-                ? fiveMinuteScore.Value >= 5
+            var fiveMinutePermission = five is not null && fiveFresh && latchLatest is not null
+                ? latchLatest.Permission
                 : (bool?)null;
 
 
@@ -320,9 +327,27 @@ public sealed class LiveSymbolAssessmentService(
                         score = fiveMinuteScore,
                         maxScore = 6,
                         permissionThreshold = 5,
+                        legacyScorePermission = fiveMinuteScore.HasValue ? fiveMinuteScore.Value >= 5 : (bool?)null,
                         permission = fiveMinutePermission,
+                        permissionRule = "TOS latch (installed 5M study); the score is an alignment diagnostic only",
                         status = fiveMinuteScore.HasValue ? "CURRENT" : "UNKNOWN",
                         criteria = scoreCriteria
+                    },
+                    permissionLatch = latchLatest is null ? null : new
+                    {
+                        rulesVersion = FiveMinutePermissionLatch.RulesVersion,
+                        permission = latchLatest.Permission,
+                        transition = latchLatest.Transition,
+                        blockCode = latchLatest.BlockCode,
+                        blockLabel = FiveMinutePermissionLatch.BlockLabel(latchLatest.BlockCode),
+                        raw = latchLatest.Raw,
+                        structuralDamage = latchLatest.StructuralDamage,
+                        structuralDamagePersistent = latchLatest.StructuralDamagePersistent,
+                        majorFailurePersistent = latchLatest.MajorFailurePersistent,
+                        eodWindow = latchLatest.EodWindow,
+                        grantedSinceUtc = latch!.GrantedSinceUtc,
+                        barTimestampUtc = latchLatest.Timestamp,
+                        note = "Port of the installed TOS 5M study PERMISSION STATE: set by close > VWAP, close > EMA9, EMA9 >= EMA20, RSI >= 50; held until 2 bars of structural damage (close < VWAP and EMA9 < EMA20), 2 bars of major failure, or the study's EOD window; restarts at NO on each Eastern date (1 D chart). VWAP is MCC's regular-session IEX VWAP, which can differ from TOS."
                     }
                 },
                 opportunityQuality = new
@@ -453,6 +478,94 @@ public static class LiveSymbolTechnicalCalculator
             macdSignal,
             atr,
             extension);
+    }
+
+    /// <summary>
+    /// PURPOSE: Builds the 5M permission-latch inputs for every bar from index 49 on in one O(n) pass. Each value equals
+    /// what <see cref="Calculate"/> returns for that index (same EMA seeding, RSI smoothing, SMA window, session VWAP,
+    /// and the same decimal operation order), so the latch sees exactly the indicators MCC displays.
+    /// WHEN CALLED: By the live assessment and the historical replay before <see cref="FiveMinutePermissionLatch.Evaluate"/>.
+    /// </summary>
+    public static IReadOnlyList<PermissionLatchBar> PermissionSeries(IReadOnlyList<MarketBar> bars)
+    {
+        var result = new List<PermissionLatchBar>(Math.Max(0, bars.Count - 49));
+        if (bars.Count < 50) return result;
+
+        var closes = bars.Select(x => (decimal)x.Close).ToArray();
+        var ema9 = EmaRunning(closes, 9);
+        var ema20 = EmaRunning(closes, 20);
+        var rsi = RsiRunning(closes, 14);
+
+        DateOnly? vwapDate = null;
+        decimal pv = 0m, volume = 0m;
+        for (var i = 0; i < bars.Count; i++)
+        {
+            var bar = bars[i];
+            var local = TimeZoneInfo.ConvertTime(bar.Timestamp, Eastern);
+            var date = DateOnly.FromDateTime(local.DateTime);
+            if (date != vwapDate) { vwapDate = date; pv = 0m; volume = 0m; }
+            if (SessionSlot(local, 1) is not null)
+            {
+                volume += bar.Volume;
+                pv += (((decimal)bar.High + (decimal)bar.Low + (decimal)bar.Close) / 3m) * bar.Volume;
+            }
+            if (i < 49) continue;
+
+            var vwap = volume <= 0m ? closes[i] : pv / volume;
+            decimal sum = 0m;
+            for (var j = i - 49; j <= i; j++) sum += closes[j];
+            result.Add(new PermissionLatchBar(bar.Timestamp, closes[i], vwap, ema9[i], ema20[i], sum / 50m, rsi[i]));
+        }
+        return result;
+    }
+
+    /// <summary>EMA value at every index, identical to <see cref="Ema"/> applied to closes[0..i]. Called by PermissionSeries.</summary>
+    private static decimal[] EmaRunning(IReadOnlyList<decimal> values, int period)
+    {
+        var result = new decimal[values.Count];
+        if (values.Count < period) return result;
+        var ema = values.Take(period).Average();
+        result[period - 1] = ema;
+        var multiplier = 2m / (period + 1m);
+        for (var i = period; i < values.Count; i++)
+        {
+            ema = (values[i] - ema) * multiplier + ema;
+            result[i] = ema;
+        }
+        return result;
+    }
+
+    /// <summary>RSI value at every index, identical to <see cref="Rsi"/> applied to closes[0..i]. Called by PermissionSeries.</summary>
+    private static decimal[] RsiRunning(IReadOnlyList<decimal> closes, int period)
+    {
+        var result = new decimal[closes.Count];
+        for (var i = 0; i < Math.Min(closes.Count, period + 1); i++) result[i] = 50m;
+        if (closes.Count <= period) return result;
+        decimal averageGain = 0m, averageLoss = 0m;
+        for (var i = 1; i <= period; i++)
+        {
+            var change = closes[i] - closes[i - 1];
+            averageGain += Math.Max(0m, change);
+            averageLoss += Math.Max(0m, -change);
+        }
+        averageGain /= period;
+        averageLoss /= period;
+        result[period] = RsiFrom(averageGain, averageLoss);
+        for (var i = period + 1; i < closes.Count; i++)
+        {
+            var change = closes[i] - closes[i - 1];
+            averageGain = (averageGain * (period - 1) + Math.Max(0m, change)) / period;
+            averageLoss = (averageLoss * (period - 1) + Math.Max(0m, -change)) / period;
+            result[i] = RsiFrom(averageGain, averageLoss);
+        }
+        return result;
+    }
+
+    private static decimal RsiFrom(decimal averageGain, decimal averageLoss)
+    {
+        if (averageLoss == 0m) return averageGain == 0m ? 50m : 100m;
+        var relativeStrength = averageGain / averageLoss;
+        return 100m - 100m / (1m + relativeStrength);
     }
 
     /// <summary>
