@@ -51,6 +51,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - A test import by Claude in INTRADAY MOMENTUM appended a fake TOS-vs-MCC comparison line (AFL, J, SB, UNFI); it was removed, and the operator's 10:00 MarketMovers comparison is today's latest again.
 - The operator kept `exclusions-watchlist.json` tracked ("Not now"); exclusion edits still dirty the tree.
 
+## READY box checked SPY (~14:05 AZ)
+
+- An empty READY **Symbols** box fell back to the focused symbol (SPY). It now fills from the active Top 4 group, with a **Use Top 4** button. The 14:02 export had `loading` in V3 Rank for 8 rows (CSQR, GTY, CON, HUM, PGR, FOX, ELV): TOS exported before those values finished; the ON columns were complete.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

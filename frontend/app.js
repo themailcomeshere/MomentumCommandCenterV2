@@ -678,8 +678,8 @@ function updateOvernightShortlistMode(){
  if(button){button.textContent="Fetch Daily + catalyst";button.title=overnightShortlistMode==="mcc"?"Fetch Daily + catalyst for Boring Top 4":"Fetch Daily + catalyst for My Top 4";}
  if(active)active.textContent=overnightShortlistMode==="mcc"?"Active group: Boring Top 4 · median-first historical profile":"Active group: My Top 4 · "+(overnightManualSymbols.length===4?overnightManualSymbols.join(", "):"select four symbols");
 }
-$("overnightShortlistMcc")?.addEventListener("click",()=>{overnightShortlistMode="mcc";saveOvernightShortlists();updateOvernightShortlistMode();renderMorningReport();});
-$("overnightShortlistManual")?.addEventListener("click",()=>{if(overnightManualSymbols.length!==4)return;overnightShortlistMode="manual";saveOvernightShortlists();updateOvernightShortlistMode();renderMorningReport();});
+$("overnightShortlistMcc")?.addEventListener("click",()=>{overnightShortlistMode="mcc";saveOvernightShortlists();updateOvernightShortlistMode();syncReadySymbolsFromTopFour();renderMorningReport();});
+$("overnightShortlistManual")?.addEventListener("click",()=>{if(overnightManualSymbols.length!==4)return;overnightShortlistMode="manual";saveOvernightShortlists();updateOvernightShortlistMode();syncReadySymbolsFromTopFour();renderMorningReport();});
 async function fetchOvernightTopFourEvidence(){
  const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];const button=$("overnightQualRefreshMarket"),status=$("overnightQualificationStatus");
  if(!rows.length){if(status)status.textContent="Import the Overnight Scanner CSV first.";return;}
@@ -897,7 +897,7 @@ async function renderOvernightQualification(){
  const body=$("overnightQualificationRows");
  if(!body)return;
  const rows=Array.isArray(scannerData.imported)?scannerData.imported:[];
- renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();
+ renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();if(typeof syncReadySymbolsFromTopFour==="function")syncReadySymbolsFromTopFour();
  const setText=(id,value)=>{const node=$(id);if(node)node.textContent=String(value);};
  setText("overnightQualImported",rows.length);
  if(!rows.length){
@@ -2510,9 +2510,25 @@ const readyState={soundEnabled:false,audio:null,lastStatus:{},autoTimer:null,run
 function readyEl(tag,cls,text){const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined&&text!==null)node.textContent=String(text);return node;}
 function readyAz(iso){if(!iso)return "DATA?";try{return new Date(iso).toLocaleString("en-US",{timeZone:"America/Phoenix",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+" AZ";}catch{return String(iso);}}
 function readySymbols(){
- const raw=($("overnightReadySymbols")?.value||"").trim()||($("overnightSymbol")?.value||"").trim();
+ // 2026-11-17: no fallback to the focused symbol (it is SPY by default, so an empty box checked SPY). Empty box = active Top 4 group.
+ const box=$("overnightReadySymbols");if(box&&!box.value.trim())syncReadySymbolsFromTopFour(true);
+ const raw=(box?.value||"").trim();
  return [...new Set(raw.split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(x=>/^[A-Z0-9.-]{1,8}$/.test(x)))].slice(0,8);
 }
+/// <summary>The active Top 4 group's symbols (Boring Top 4, or My Top 4 when selected and complete). Called by the READY box sync.</summary>
+function activeTopFourSymbols(){
+ if(overnightShortlistMode==="manual"&&overnightManualSymbols.length===4)return overnightManualSymbols.slice();
+ return getBoringOvernightCandidateRows(4).map(x=>String(x.symbol||"").trim().toUpperCase()).filter(Boolean);
+}
+var readyAutoFilledValue="";
+/// <summary>Fills the READY symbol box from the active Top 4 group when it is empty or still holds MCC's own last fill (never overwrites typed symbols unless force). Called after import, group switch, the Use Top 4 button, and an empty Check READY.</summary>
+function syncReadySymbolsFromTopFour(force=false){
+ const box=$("overnightReadySymbols");if(!box)return;
+ const current=box.value.trim();if(!force&&current&&current!==readyAutoFilledValue)return;
+ const symbols=activeTopFourSymbols();if(!symbols.length)return;
+ box.value=readyAutoFilledValue=symbols.join(", ");
+}
+$("overnightReadyUseTopFour")?.addEventListener("click",()=>syncReadySymbolsFromTopFour(true));
 function playReadyAlert(){
  if(!readyState.soundEnabled)return;
  try{

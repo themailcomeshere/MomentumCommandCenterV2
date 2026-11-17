@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261117-overnight-cols-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261117-ready-top4-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -677,7 +677,7 @@
                 <div class="section-heading"><div><div class="eyebrow" data-step-overnight="4">BORING OVERNIGHT · READY SIGNAL</div><h3 id="overnightReadyTitle">READY check</h3></div><span id="overnightReadyMode" class="chip">Mode: not checked</span></div>
                 <p class="muted small">Checks every READY rule for each symbol: a fresh 20-session capture, qualification (5M momentum is shown but not required), exclusion list, catalyst (your sign-off) and the sell limit (a tested target, or <b>LIMIT UNTESTED</b> = your +0.5% heuristic). Buy windows: the final regular hour (13:00–14:00 Arizona in standard time) and a <b>late after-hours window</b> until 15:00 Arizona (LMT EXT order; READY only if the after-hours price is at or below the regular close). Decision support only — no order is ever sent.</p>
                 <div class="overnight-controls">
-                    <label>Symbols <input id="overnightReadySymbols" placeholder="RTO, CRBG" maxlength="80" aria-describedby="overnightReadyStatus"></label>
+                    <label>Symbols <input id="overnightReadySymbols" placeholder="Filled from the active Top 4 group" maxlength="80" aria-describedby="overnightReadyStatus"></label><button id="overnightReadyUseTopFour" type="button" class="quiet-button" title="Replace the symbols with the active Top 4 group (Boring Top 4, or My Top 4 when selected)">Use Top 4</button>
                     <button id="overnightReadyEvaluate" type="button">Check READY now</button>
                     <label class="inline-check"><input id="overnightReadyAuto" type="checkbox"> Re-check every 2 min during the buy windows</label>
                     <button id="overnightReadySound" type="button" class="quiet-button" aria-pressed="false">Enable READY sound</button>
@@ -895,7 +895,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261117-overnight-cols-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261117-ready-top4-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>
