@@ -33,6 +33,11 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - **Needs:** an MCC restart (API change), then the operator's side-by-side check of the gate line against TOS.
 - **Still open:** the VWAP session window (pre-market) and the study's standard-time EOD input (1955 vs 1755).
 
+## Later today
+
+- **TOS extended hours:** ON. IEX pre-market volume is too thin to reproduce TOS's VWAP (SLS 20.47 with pre-market vs TOS 22.76). Operator decision pending: options (a), (b), (c) in the To-Do.
+- **SLS spike:** a binary Phase 3 readout. Not predictable from price or volume; the window was public. [Research/SLS-Spike-20261117.md](Research/SLS-Spike-20261117.md). Proposals: a pending-catalyst list and a pre-market gap watch.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.
