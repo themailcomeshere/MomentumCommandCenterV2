@@ -81,6 +81,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - Cards now show nights, win %, 20D, 5D, median, close vs SMA20, avg volume with ✓/✗. Live replay 15:32 AZ: CSQR, SVV, HIG, AFL all 20/20 with every history mark ✓; AFL BLOCKED by the operator's MATERIAL_RISK label (Mizuho target $117 → $118).
 
+## Change label on READY cards
+
+- Already-labelled articles now show a **Change label** drop-down on the card. AFL's MATERIAL_RISK label (Mizuho) is the operator's to keep or change.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

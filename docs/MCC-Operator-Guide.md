@@ -114,6 +114,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - **Re-check every 2 min during the buy windows** is on by default (MCC remembers if you untick it). It runs only inside the buy windows and skips any card you are typing in, so your notes are never wiped.
 9. **Catalyst, on each card:**
    - for every article listed, open it, choose a label, write 40+ characters of facts and click **Save label**;
+   - to fix an earlier label, open **Change label · LABEL · headline** under the article list, choose the new label, write the facts and click **Save label** (the newest label counts);
    - then tick the sources you checked and click **Sign off: nothing blocking**. Good news (an upgrade, a target raise) is not blocking: say so in the note.
 10. **Read the card label:**
     - **READY (SHADOW — not yet validated)**: every gate passes;
