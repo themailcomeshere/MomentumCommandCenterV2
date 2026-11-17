@@ -33,6 +33,8 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 - Operator click-path instructions MUST name the Dashboard WORKSPACE mode (INTRADAY MOMENTUM / BORING OVERNIGHT) for every step, and every named control MUST be checked as visible in that mode (some are hidden by `body.boring-overnight-mode` CSS). Added 2026-11-14 after the rank button was unreachable from the steps given.
 - Arizona times MUST be converted from America/New_York for the date in question (Arizona has no DST: regular session is 06:30–13:00 AZ in daylight time, 07:30–14:00 AZ in standard time). State which applies. Added 2026-11-14.
 - Operator steps MUST name the exact field each value goes into and what fills it ("the **Symbols** box in 4 READY check; MCC fills it from Boring Top 4"), never "enter your picks". Before handing over a workflow, run it end to end in the browser pane with the operator's real file and confirm each named control does what the step says. Added 2026-11-17 after an empty READY box silently checked SPY.
+- Closing replies list **What I did** before **What changed** / **How it works**. Added 2026-11-17 (operator preference).
+- Any summary of an operator flow, even a one-line one ("import → check chips → READY"), MUST be written as numbered click steps naming the workspace, the step number, and each control, and MUST say which steps are optional. Added 2026-11-17 after "check the Boring chips" left the operator unsure whether Fetch Daily + catalyst was required.
 - <!-- Add your additional Markdown rules here. -->
 
 ## Trading-data guardrails

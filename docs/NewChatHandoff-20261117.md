@@ -72,6 +72,11 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - Operator decision: buy in the final hour; a late-window READY is logged with its Day 2 outcome but labelled "do not buy", always shadow, amber card. Revisit after about 20 late signals.
 
+## Auto re-check default; DATA? after the close
+
+- **Re-check every 2 min** is now on by default and skips cards being typed in. Fetch Daily + catalyst is optional. DATA? after the close is expected (live-session fields only).
+- New rules: "What I did" comes before "What changed"; flow summaries are numbered click steps with optional steps marked.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

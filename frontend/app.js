@@ -2661,20 +2661,30 @@ function handleReadyResult(result,captureNote){
  const card=renderReadyCard(result,captureNote);
  const existing=[...host.children].find(x=>x.dataset.symbol===result.symbol);
  if(existing)existing.replaceWith(card);else host.append(card);
+ // 2026-11-17: anything typed into a card (label notes, sign-off note, after-hours price) marks it dirty, so the
+ // automatic re-check skips that card instead of re-rendering it and wiping the text. A save re-renders it clean.
+ card.addEventListener("input",()=>{card.dataset.dirty="1";});
  const mode=$("overnightReadyMode");
  if(mode)mode.textContent="Mode: "+String(result.effectiveMode||"shadow").toUpperCase()+(result.requestedMode==="live"&&result.effectiveMode!=="live"?" (live requested)":"")+" · "+result.loggedShadowSessions+"/10 shadow sessions logged";
  const previous=readyState.lastStatus[result.symbol];
  readyState.lastStatus[result.symbol]=result.status;
  if(result.status==="READY"&&previous!=="READY"&&result.effectiveMode==="live")playReadyAlert();
 }
-async function runReadyCheck(){
+/// <summary>True when the operator is typing in this symbol's card (focus inside it, or unsaved text). Called by the automatic re-check.</summary>
+function readyCardBusy(symbol){
+ const card=[...($("overnightReadyCards")?.children||[])].find(x=>x.dataset.symbol===symbol);
+ return !!card&&(card.dataset.dirty==="1"||card.contains(document.activeElement));
+}
+async function runReadyCheck(auto=false){
  if(readyState.running)return;
  const symbols=readySymbols();const status=$("overnightReadyStatus");
  if(!symbols.length){if(status)status.textContent="Enter at least one valid symbol.";return;}
  readyState.running=true;const button=$("overnightReadyEvaluate");if(button)button.disabled=true;
  let ready=0;
  try{
+  const skipped=[];
   for(const symbol of symbols){
+   if(auto&&readyCardBusy(symbol)){skipped.push(symbol);continue;}
    if(status)status.textContent="Capturing 20-session history and live inputs for "+symbol+"…";
    let captureNote="capture OK";
    try{await readyPost("/api/boring-overnight/capture-history",{symbol,providerName:"Alpaca",requiredWindow:20});}
@@ -2683,17 +2693,22 @@ async function runReadyCheck(){
    try{const result=await readyPost("/api/boring-overnight/ready/evaluate",{symbol,operatorPrice:readyState.operatorPrices[symbol]??null});if(result.status==="READY")ready++;handleReadyResult(result,captureNote);}
    catch(error){const host=$("overnightReadyCards");if(host){const c=readyEl("article","ready-card ready-DATA");c.dataset.symbol=symbol;c.append(readyEl("strong",null,symbol+" — check failed: "+error.message));const old=[...host.children].find(x=>x.dataset.symbol===symbol);if(old)old.replaceWith(c);else host.append(c);}}
   }
-  if(status)status.textContent="Checked "+symbols.length+" symbol(s) at "+readyAz(new Date().toISOString())+": "+ready+" READY. No order was sent.";
+  if(status)status.textContent=(auto?"Auto re-check: ":"")+"Checked "+(symbols.length-skipped.length)+" symbol(s) at "+readyAz(new Date().toISOString())+": "+ready+" READY. No order was sent."+(skipped.length?" Skipped while you type: "+skipped.join(", ")+" (save or click Check READY now).":"");
  }finally{readyState.running=false;if(button)button.disabled=false;}
 }
 $("overnightReadyEvaluate")?.addEventListener("click",()=>void runReadyCheck());
+// 2026-11-17 (operator question): the automatic re-check is ON by default and the choice is remembered per browser.
+// It runs only while a buy window is open and skips any card you are typing in.
+const READY_AUTO_KEY="mcc.readyAutoRecheck.v1";
 $("overnightReadyAuto")?.addEventListener("change",event=>{
+ try{localStorage.setItem(READY_AUTO_KEY,String(event.target.checked));}catch{}
  if(readyState.autoTimer){clearInterval(readyState.autoTimer);readyState.autoTimer=null;}
  if(!event.target.checked)return;
  readyState.autoTimer=setInterval(async()=>{
-  try{const r=await fetch("/api/market-session/clock",{cache:"no-store",headers:{Accept:"application/json"}});const clock=await r.json();if(clock&&(clock.overnightBuyWindowOpen===true||clock.overnightLateBuyWindowOpen===true))await runReadyCheck();}catch{}
+  try{const r=await fetch("/api/market-session/clock",{cache:"no-store",headers:{Accept:"application/json"}});const clock=await r.json();if(clock&&(clock.overnightBuyWindowOpen===true||clock.overnightLateBuyWindowOpen===true))await runReadyCheck(true);}catch{}
  },120000);
 });
+{const box=$("overnightReadyAuto");if(box){let on=true;try{const v=localStorage.getItem(READY_AUTO_KEY);if(v!==null)on=v==="true";}catch{}box.checked=on;if(on)box.dispatchEvent(new Event("change"));}}
 $("overnightReadyShadowRefresh")?.addEventListener("click",async()=>{
  const body=$("overnightReadyShadowBody");if(!body)return;
  body.textContent="Loading shadow log (may fetch Day 2 SIP history)…";
