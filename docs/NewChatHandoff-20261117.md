@@ -93,6 +93,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - New **Earnings** dock modal (Nasdaq calendar, today highlighted) and READY gate EARNINGS: a report between the buy-day close and the sell-day open blocks READY. NVIDIA reported 2026-11-17 after the close (~14:20 AZ).
 
+## 6.3 Data provider diagnostics folded
+
+- Closed-by-default toggle; it is only for the paid-data decision. Massive has no key configured.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.
