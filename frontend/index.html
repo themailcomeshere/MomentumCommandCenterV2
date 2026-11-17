@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261116-qual-heading-v4" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261117-scan-status-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -520,7 +520,7 @@
             <p id="autoScanStatus" class="muted small" role="status">Automatic scan: not loaded yet.</p>
             <div id="autoScanTable" class="auto-scan-table-wrap"></div>
             <p id="autoScanComparison" class="muted small" role="status">Side-by-side with TOS: import your TOS watchlist (2.b) during the session to record a comparison. Target: 5 sessions.</p>
-            <details id="autoScanSources" class="auto-scan-sources"><summary>Sources, feeds and limits</summary><div id="autoScanSourceList" class="small muted">Not loaded.</div></details>
+            <details id="autoScanSources" class="auto-scan-sources"><summary>Sources, feeds, and limits</summary><div id="autoScanSourceList" class="small muted">Not loaded.</div></details>
         </section>
         <section id="scanner-import" class="panel scanner-import-panel" aria-label="Thinkorswim CSV import">
             <div class="overnight-import-strip scanner-import-strip"><div><strong data-step-intraday="2.b" data-step-overnight="1">Import a Thinkorswim CSV</strong><p class="muted small"><b>Intraday:</b> after dragging your scanner results into your TOS Watchlist, export the Watchlist and import it here; it feeds the Red Zone and the quality ranking. <b>Boring Overnight:</b> import the Overnight scanner export; it also feeds the shortlist, qualification table and Daily audit. The latest import replaces the previous one.</p></div><label class="file-button" for="scannerFile">Import TOS CSV</label><input id="scannerFile" class="visually-hidden" type="file" accept=".csv,text/csv"><span id="overnightImportStatus" class="muted small" role="status">No Thinkorswim CSV imported in this session.</span><details id="scannerFieldAvailability" class="field-availability" hidden></details></div>
@@ -882,7 +882,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261116-qual-heading-v4" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261117-scan-status-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

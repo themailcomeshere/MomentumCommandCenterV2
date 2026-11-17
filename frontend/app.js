@@ -2703,13 +2703,23 @@ function syncAutoScanFeedButton(){
  const button=$("autoScanFeedRedZone"),active=$("scannerGroup")?.value==="mccAuto";
  if(button){button.textContent=active?"Feed Red Zone: ON":"Feed Red Zone: OFF";button.setAttribute("aria-pressed",String(active));button.title=active?"The Red Zone shows the top 4 flagged by the automatic scan (most scans passed first).":"The Red Zone uses your TOS import or another source.";}
 }
+/// <summary>Colour class for the automatic-scan status: ok (COMPLETED and under 5 minutes old in session), warn (source errors or stale), bad (failed / not configured / no universe). Called by renderAutoScan.</summary>
+function autoScanStatusClass(status,ageMinutes,regularSession){
+ if(status==="COMPLETED")return regularSession!==false&&ageMinutes>5?"warn":"ok";
+ if(status==="COMPLETED_WITH_SOURCE_ERRORS")return "warn";
+ return "bad";
+}
 /// <summary>Renders the scan status, the flagged table and the source list. Called after each load.</summary>
 function renderAutoScan(run){
  const status=$("autoScanStatus"),table=$("autoScanTable"),sources=$("autoScanSourceList");
  if(!status||!table)return;
  if(!run){status.textContent="Automatic scan: no run yet. It starts during the regular session (07:30–14:00 AZ, standard time), or click Scan now.";table.replaceChildren();return;}
  const errors=(run.sources||[]).filter(s=>!s.ok);
- status.textContent="Last scan "+autoScanAz(run.completedAtUtc)+" · "+run.status+(run.statusDetail?" ("+run.statusDetail+")":"")+" · universe "+run.universeCount+" · bars evaluated "+run.evaluatedCount+" · flagged "+run.flaggedCount+" · prior close: "+run.priorCloseSource+(errors.length?" · "+errors.length+" source error(s): see Sources":"");
+ // 2026-11-17: the status word is a colour chip (green COMPLETED, amber with source errors or stale, red failed).
+ const scanAgeMin=run.completedAtUtc?(Date.now()-new Date(run.completedAtUtc).getTime())/60000:Infinity;
+ const statusChip=document.createElement("span");statusChip.className="scan-status-chip "+autoScanStatusClass(run.status,scanAgeMin,run.regularSession);
+ statusChip.textContent=run.status+(run.regularSession!==false&&scanAgeMin>5&&run.status==="COMPLETED"?" · STALE "+Math.round(scanAgeMin)+" min":"");
+ status.replaceChildren("Last scan "+autoScanAz(run.completedAtUtc)+" ",statusChip,(run.statusDetail?" ("+run.statusDetail+")":"")+" · universe "+run.universeCount+" · bars evaluated "+run.evaluatedCount+" · flagged "+run.flaggedCount+" · prior close: "+run.priorCloseSource+(errors.length?" · "+errors.length+" source error(s): see Sources":""));
  const flagged=(run.candidates||[]).filter(c=>c.flagged).slice(0,40);
  if(!flagged.length){table.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"No symbol passes a scan right now (fresh bars, not excluded)."}));}
  else{
@@ -2747,7 +2757,7 @@ async function loadAutoScan(refresh=false){
   const body=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(body.detail||body.error||("HTTP "+response.status));
   latestAutoScan=body;renderAutoScan(body);applyAutoScanFeed();
- }catch(error){if(status)status.textContent="Automatic scan unavailable: "+error.message+". Is MCC running (MCC.ps1 status)?"+(latestAutoScan?.completedAtUtc?" The table below is from the last good scan at "+autoScanAz(latestAutoScan.completedAtUtc)+".":"");}
+ }catch(error){if(status)status.replaceChildren(Object.assign(document.createElement("span"),{className:"scan-status-chip bad",textContent:"UNAVAILABLE"})," "+error.message+". Is MCC running (MCC.ps1 status)?"+(latestAutoScan?.completedAtUtc?" The table below is from the last good scan at "+autoScanAz(latestAutoScan.completedAtUtc)+".":""));}
 }
 /// <summary>Shows the latest side-by-side result per session. Called on load and after a comparison is recorded.</summary>
 async function loadAutoScanComparison(){

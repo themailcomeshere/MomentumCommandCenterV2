@@ -20,3 +20,7 @@ You carefully provide accurate, factual, thoughtful answers, and excel at reason
 
 
     
+## MCC Dashboard rules (added 2026-11-17)
+
+- ALWAYS parse-check `frontend/app.js` after every edit and before reporting or committing. MCC serves `frontend/` straight from disk, so a syntax error breaks the live Dashboard on its next reload. Node is not installed: in the browser pane run `new Function(await (await fetch("/app.js?nocache="+Date.now())).text())` on the static preview and expect no exception. Added after two unclosed `replaceChildren(` calls.
+- ALWAYS use the Oxford comma in Dashboard text and docs ("Sources, feeds, and limits"). Operator preference, 2026-11-17.

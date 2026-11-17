@@ -4371,3 +4371,11 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 #overnight-qualification .overnight-shortlist-picker{max-width:none;max-height:280px;grid-template-columns:repeat(5,minmax(52px,1fr))}
 .qual-sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #overnight-qualification .overnight-shortlist-lists{gap:8px}
+
+/* 2.a scan status chip + clickable Sources summary (2026-11-17) */
+.scan-status-chip{display:inline-block;padding:1px 7px;border:1px solid var(--line);border-radius:999px;font-weight:800;font-size:11px;line-height:1.4;color:var(--text)}
+.scan-status-chip.ok{background:var(--green);border-color:var(--green);color:#06210f}
+.scan-status-chip.warn{background:rgba(242,203,118,.14);border-color:var(--yellow);color:var(--yellow)}
+.scan-status-chip.bad{background:var(--red);border-color:var(--red);color:#2a0606}
+.auto-scan-sources summary{font-weight:800!important;color:var(--text)!important}
+.auto-scan-sources summary:hover,.auto-scan-sources summary:focus-visible{color:var(--blue)!important}
