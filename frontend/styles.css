@@ -1918,3 +1918,41 @@ body.boring-overnight-mode #redZoneStateLegend,body.boring-overnight-mode #redZo
 .history-export.history-done{border-color:var(--green);color:#06210f;background:var(--green)}
 .history-export.history-running{border-color:var(--blue);color:var(--blue);background:rgba(131,184,255,.12)}
 .history-export.history-error{border-color:var(--red);color:var(--red);background:rgba(255,136,136,.12)}
+
+/* =====================================================================
+   Compact header (2026-11-16, operator request: minimal, glanceable).
+   One slim sticky row: title · Morning Brief · History export · clock ·
+   (Overnight only: buy-window countdowns) · System readiness chip.
+   Readiness opens as a drop-down instead of pushing the page down.
+   Overrides the older layered .topbar rules above, so it must stay last.
+   ===================================================================== */
+#mcc-header.topbar{position:sticky;top:0;z-index:50;padding-top:6px!important;padding-bottom:6px!important;margin-top:0!important;margin-bottom:0!important;min-height:0!important;background:var(--bg);border-bottom:1px solid var(--line)}
+#mcc-header .topbar-layout{display:flex!important;flex-direction:row!important;align-items:center!important;gap:10px;flex-wrap:wrap;grid-template-columns:none!important;margin:0!important;padding:0!important}
+#mcc-header .topbar-brand{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:10px;flex:0 1 auto!important;width:auto!important;max-width:100%;min-width:0;flex-wrap:wrap;margin:0!important;padding:0!important}
+#mcc-header .topbar-title-row{display:flex;align-items:center;gap:6px;margin:0!important}
+#mcc-header h1{font-size:15px!important;line-height:1.2!important;margin:0 4px 0 0!important;white-space:nowrap;letter-spacing:0!important}
+#mcc-header .quiet-button{padding:3px 9px!important;font-size:11px!important;line-height:1.3!important;min-height:0!important}
+#mcc-header [data-step-intraday]::before,#mcc-header [data-step-overnight]::before{display:none!important}
+#mcc-header .topbar-tools:empty{display:none!important}
+/* Clock: label + countdown on one line; the time-zone/calendar detail line is hidden */
+#mcc-header .market-session-clock{display:flex!important;align-items:baseline;gap:6px;flex-wrap:wrap;width:auto!important;max-width:none!important;min-height:0!important;margin:0!important;padding:3px 10px!important;border:1px solid var(--line);border-radius:8px;background:transparent!important;grid-template-columns:none!important}
+#mcc-header #marketSessionLabel{font-size:11px!important;color:var(--muted);white-space:nowrap}
+#mcc-header #marketSessionCountdown{font-size:14px!important;line-height:1.2!important;font-variant-numeric:tabular-nums;white-space:nowrap}
+#mcc-header #marketSessionDetail{display:none!important}
+/* Overnight countdowns: only in BORING OVERNIGHT, inline; schedule lines hidden (the READY card shows the windows) */
+#mcc-header .market-session-overnight{display:none!important}
+body.boring-overnight-mode #mcc-header .market-session-overnight{display:flex!important;align-items:baseline;gap:6px;flex-wrap:wrap;margin:0 0 0 4px!important;padding:0 0 0 10px!important;border-left:1px solid var(--line);grid-template-columns:none!important;background:transparent!important}
+body.boring-overnight-mode #mcc-header .market-session-overnight span{font-size:11px!important;color:var(--muted);white-space:nowrap}
+body.boring-overnight-mode #mcc-header .market-session-overnight strong{font-size:13px!important;line-height:1.2!important;font-variant-numeric:tabular-nums;white-space:nowrap}
+#mcc-header #overnightBuyWindowSchedule,#mcc-header #overnightSellWindowSchedule,#mcc-header #overnightEvaluationLabel,#mcc-header #overnightEvaluationCountdown{display:none!important}
+/* System readiness: a small chip; the grid opens as an overlay */
+#mcc-header .topbar-readiness{flex:0 0 auto!important;width:auto!important;min-width:0!important;margin:0 0 0 auto!important;padding:3px 10px!important;border-radius:8px;position:relative;background:transparent!important}
+#mcc-header .topbar-readiness-heading{margin:0!important;gap:8px;cursor:pointer;list-style:none}
+#mcc-header .topbar-readiness-heading::-webkit-details-marker{display:none}
+#mcc-header .topbar-readiness .eyebrow{font-size:10px!important;margin:0!important}
+#mcc-header .topbar-readiness-heading .chip{padding:2px 8px!important;font-size:10px!important}
+#mcc-header .topbar-readiness[open] .readiness-grid{position:absolute;right:0;top:calc(100% + 6px);width:min(760px,94vw);z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;box-shadow:0 10px 28px rgba(0,0,0,.5)}
+@media (max-width:700px){
+ #mcc-header.topbar{position:static}
+ #mcc-header .topbar-readiness{margin-left:0!important}
+}

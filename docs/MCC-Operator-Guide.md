@@ -21,6 +21,11 @@
 | Status / stop | `.\scripts\MCC.ps1 status` · `.\scripts\MCC.ps1 stop` |
 | Backup (MCC stopped) | `.\scripts\Backup-MccData.ps1` (goes to `D:\source\repos\MCC-Backups`) |
 
+**Header (one slim row, pinned at the top):**
+- title, **Morning Command Brief**, **History export**, the market clock;
+- in BORING OVERNIGHT, one buy-window countdown: Buy window in → Buy window · closes in → Late window (LMT EXT) · ends in → CLOSED;
+- **SYSTEM READINESS** (click to drop down the details).
+
 Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or **BORING OVERNIGHT**. Each workspace shows only its own panels and step numbers.
 
 ---

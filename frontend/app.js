@@ -63,6 +63,7 @@ let overnightBuySessionDate = null;
 let overnightSellSessionDate = null;
 let overnightMarketPhase = "UNKNOWN";
 let overnightEvaluationOpen = false;
+let overnightLateBuyDeadlineUtc = null;
 let marketSessionRefreshInFlight = false;
 async function refreshMarketSessionClock(){
  if(marketSessionRefreshInFlight)return;
@@ -87,6 +88,9 @@ async function refreshMarketSessionClock(){
   overnightSellSessionDate=data.overnightSellSessionDate||null;
   overnightMarketPhase=String(data.phase||"UNKNOWN").toUpperCase();
   overnightEvaluationOpen=data.overnightEvaluationOpen===true;
+  const lateDeadline=new Date(data.overnightLateBuyDeadlineUtc);
+  // Late buy window (close + 60 min, 2026-11-16); older APIs omit it, so it stays null.
+  overnightLateBuyDeadlineUtc=Number.isNaN(lateDeadline.getTime())||lateDeadline.getTime()<=0?null:lateDeadline.getTime();
   const label=$("marketSessionLabel"),detail=$("marketSessionDetail");
   if(label)label.textContent=data.label||"Until Market opens";
   if(detail)detail.textContent=(data.exchangeTimeZone||"America/New_York")+" · "+(data.targetEvent||"NEXT SESSION TRANSITION")+" · "+(data.calendarVersion||"CALENDAR UNKNOWN");
@@ -115,21 +119,28 @@ function renderMarketSessionCountdown(){
  const now=Date.now(),evaluationWindowOpen=overnightEvaluationTargetUtc!==null&&overnightBuyDeadlineUtc!==null&&now>=overnightEvaluationTargetUtc&&now<overnightBuyDeadlineUtc;
  if(evaluationLabel)evaluationLabel.textContent=evaluationWindowOpen?"Overnight candidate evaluation · OPEN":"Overnight candidate evaluation begins in";
  if(evaluationCountdown)evaluationCountdown.textContent=overnightEvaluationTargetUtc===null?"DATA?":(evaluationWindowOpen?"OPEN":formatCountdown(overnightEvaluationTargetUtc));
+ // Compact header (2026-11-16): one countdown that follows the buy window: before it, during it (urgency colours),
+ // the late after-hours window, then closed.
  if(buyCountdown){
   buyCountdown.classList.remove("countdown-normal","countdown-caution","countdown-urgent","countdown-critical","countdown-closed");
-  if(overnightMarketPhase==="REGULAR"&&overnightBuyDeadlineUtc!==null&&now<overnightBuyDeadlineUtc){
+  const lateOpen=overnightBuyDeadlineUtc!==null&&overnightLateBuyDeadlineUtc!==null&&now>=overnightBuyDeadlineUtc&&now<overnightLateBuyDeadlineUtc;
+  if(evaluationWindowOpen){
    const secondsLeft=Math.max(0,Math.ceil((overnightBuyDeadlineUtc-now)/1000));
-   buyCountdown.textContent=formatCountdown(overnightBuyDeadlineUtc)+" remaining";
-   buyCountdown.classList.add(secondsLeft<=600?"countdown-critical":secondsLeft<=1800?"countdown-urgent":secondsLeft<=3600?"countdown-caution":"countdown-normal");
-   if(buyLabel)buyLabel.textContent="Time remaining in regular market";
+   buyCountdown.textContent=formatCountdown(overnightBuyDeadlineUtc);
+   buyCountdown.classList.add(secondsLeft<=600?"countdown-critical":secondsLeft<=1800?"countdown-urgent":"countdown-caution");
+   if(buyLabel)buyLabel.textContent="Buy window · closes in";
+  }else if(lateOpen){
+   buyCountdown.textContent=formatCountdown(overnightLateBuyDeadlineUtc);
+   buyCountdown.classList.add("countdown-urgent");
+   if(buyLabel)buyLabel.textContent="Late window (LMT EXT) · ends in";
   }else if(overnightEvaluationTargetUtc!==null&&now<overnightEvaluationTargetUtc){
-   buyCountdown.textContent="Opens in "+formatCountdown(overnightEvaluationTargetUtc);
+   buyCountdown.textContent=formatCountdown(overnightEvaluationTargetUtc);
    buyCountdown.classList.add("countdown-normal");
-   if(buyLabel)buyLabel.textContent="Final-hour Overnight evaluation begins in";
+   if(buyLabel)buyLabel.textContent="Buy window in";
   }else{
-   buyCountdown.textContent=overnightMarketPhase==="REGULAR"?"CLOSED":"Outside buy window";
+   buyCountdown.textContent="CLOSED";
    buyCountdown.classList.add("countdown-closed");
-   if(buyLabel)buyLabel.textContent="Overnight buy window";
+   if(buyLabel)buyLabel.textContent="Buy window";
   }
  }
  const buySchedule=$("overnightBuyWindowSchedule"),sellSchedule=$("overnightSellWindowSchedule");
