@@ -4389,3 +4389,6 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 .catalyst-rows li{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .catalyst-rows a{color:var(--blue)}
 .catalyst-flag{margin:2px 0 6px;padding:3px 8px;border:1px solid var(--yellow);border-radius:8px;background:rgba(242,203,118,.12);color:var(--yellow);font-size:11px;font-weight:800;line-height:1.35}
+
+/* Import / fetch warning when the Overnight CSV lacks the ON columns (2026-11-17) */
+.import-warning{color:var(--yellow);font-weight:700}

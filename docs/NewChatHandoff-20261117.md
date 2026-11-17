@@ -45,6 +45,12 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - **Needs:** an MCC restart.
 - **Found on the way:** `exclusions-watchlist.json` is committed, so operator exclusions dirty the tree and block `Get-Latest-And-Test.ps1`. A fix is proposed, waiting on the operator's OK.
 
+## Overnight import without ON columns (12:52 AZ)
+
+- The 12:42 Overnight export had the intraday columns plus V3 Rank, so Boring Top 4 was empty and Fetch did nothing visible. MCC now warns at import and on Fetch; the Operator Guide lists the eight ON columns the import needs.
+- A test import by Claude in INTRADAY MOMENTUM appended a fake TOS-vs-MCC comparison line (AFL, J, SB, UNFI); it was removed, and the operator's 10:00 MarketMovers comparison is today's latest again.
+- The operator kept `exclusions-watchlist.json` tracked ("Not now"); exclusion edits still dirty the tree.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

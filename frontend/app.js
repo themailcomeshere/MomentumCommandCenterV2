@@ -689,7 +689,7 @@ async function fetchOvernightTopFourEvidence(){
  for(const item of sortedRows){const symbol=String(item.symbol||"").trim().toUpperCase();if(!symbol||seenSymbols.has(symbol))continue;seenSymbols.add(symbol);uniqueRows.push(item);}
  const ranked=uniqueRows;
  const selected=overnightShortlistMode==="manual"?overnightManualSymbols.map(symbol=>uniqueRows.find(item=>String(item.symbol||"").trim().toUpperCase()===symbol)).filter(Boolean):getBoringOvernightCandidateRows(4);
- if(selected.length!==4){if(status)status.textContent=overnightShortlistMode==="manual"?"Select exactly four symbols in My Top 4 before fetching.":"MCC could not identify four distinct imported candidates.";return;}
+ if(selected.length!==4){const warn=document.createElement("span");warn.className="import-warning";if(status)status.replaceChildren(warn);warn.textContent=overnightShortlistMode==="manual"?"Select exactly four symbols in My Top 4 before fetching.":(scannerData.importedHasOvernightColumns===false?"⚠ Nothing fetched: Boring Top 4 is empty because the imported CSV has no Overnight columns (ON Win %, AVG ON %, and the rest). Re-export with those columns, or open the picker, choose four symbols, click My Top 4, then Fetch again.":"⚠ Nothing fetched: MCC could not identify four distinct imported candidates. Use My Top 4 instead.");return;}
  if(button)button.disabled=true;if(status)status.textContent="Fetching Daily and catalyst evidence for "+(overnightShortlistMode==="manual"?"My Top 4":"MCC Top 4")+": "+selected.map(x=>x.symbol).join(", ")+"…";
  const results=await Promise.all(selected.map(async item=>{
   const symbol=String(item.symbol||"").trim().toUpperCase();
@@ -1069,6 +1069,9 @@ $("scannerFile").addEventListener("change",event=>{
   scannerData.imported=imported;
   if($("mode")?.value!=="overnight")void recordAutoScanComparison(imported.map(item=>item.symbol),file.name);
   const importStatus=$("overnightImportStatus");if(importStatus)importStatus.textContent="Imported "+imported.length+" symbols from "+file.name+" at "+new Date().toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ ("+($("mode")?.value==="overnight"?"BORING OVERNIGHT":"INTRADAY MOMENTUM")+" workspace). Red Zone, quality-ranking pool, Boring shortlist and Daily audit symbols updated.";
+  // 2026-11-17: an Overnight export without the ON columns imports, but every historical gate is DATA? and Boring Top 4 is empty. Say so at import.
+  scannerData.importedHasOvernightColumns=headers.includes("onwin");
+  if(importStatus){importStatus.classList.toggle("import-warning",!scannerData.importedHasOvernightColumns&&$("mode")?.value==="overnight");if(!scannerData.importedHasOvernightColumns&&$("mode")?.value==="overnight")importStatus.textContent+=" ⚠ This CSV has no Overnight columns (ON Win %, AVG ON %, Median ON %, 5D ON %, ON Momentum, Current ON %, Above 20 SMA, and Overnight Score), so Boring Top 4 stays empty. Re-export with those columns showing, or use My Top 4, or go straight to 4 READY check (it fetches its own 20-session Daily history).";}
   overnightLiveEvidence.clear();
   populateDailyAuditFromOvernightTop20();
   const importedSymbols=new Set(imported.map(item=>String(item.symbol||"").toUpperCase()).filter(Boolean));
