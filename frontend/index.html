@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261116-exclusions-dock-v2" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261116-qual-heading-v4" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -735,12 +735,13 @@
         </section>
         </details>
         <section id="overnight-qualification" class="panel overnight-qualification-panel">
-            <div class="section-heading">
-                <div>
-                    <div class="eyebrow" data-step-overnight="2.3">BORING OVERNIGHT · QUALIFICATION</div><h2>Candidate qualification</h2>
-                    <p class="muted">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import, switch between Boring Top 4 (historical profile; win-rate first) and My Top 4 (four symbols you select). Fetching retrieves adjusted Daily metrics and the preceding 24 hours of ticker news for exactly the active four; it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p>
+            <!-- 2026-11-16: compact one-row heading. The intro and the My Top 4 picker open as drop-downs. -->
+            <div class="section-heading qual-heading">
+                <div class="qual-title">
+                    <div class="eyebrow" data-step-overnight="2.3">BORING OVERNIGHT · QUALIFICATION</div><h2 class="qual-sr-only">Candidate qualification</h2>
+                    <details class="qual-pop qual-info"><summary title="How this panel works" aria-label="How this panel works">ⓘ</summary><div class="qual-pop-body"><p class="muted small">This is an MCC workflow, not another Thinkorswim scan. Historical gates are evaluated from the imported CSV. After import, switch between Boring Top 4 (historical profile; win-rate first) and My Top 4 (four symbols you select). Fetching retrieves adjusted Daily metrics and the preceding 24 hours of ticker news for exactly the active four; it does not refresh 1M/5M bars, clear catalysts, or produce READY. Other rows remain DATA?.</p></div></details>
                 </div>
-                <div class="overnight-shortlist-controls"><div class="overnight-shortlist-toggle" role="group" aria-label="Daily and catalyst candidate group"><button id="overnightShortlistMcc" type="button" class="quiet-button" aria-pressed="true">Boring Top 4</button><button id="overnightShortlistManual" type="button" class="quiet-button" aria-pressed="false" disabled>My Top 4</button></div><strong id="overnightShortlistActive" class="muted small">Active group: Boring Top 4 · win-rate-first historical profile</strong><p class="muted small">Select exactly four imported symbols for My Top 4. Your selection is saved in this browser and kept separate from Boring Top 4.</p><div class="overnight-shortlist-lists"><div><strong>Boring Top 4</strong><div id="overnightMccTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Import scanner CSV</span></div></div><div><strong>My selected Top 4</strong><div id="overnightMyTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Select four symbols below</span></div></div></div><div id="overnightManualTopFourPicker" class="overnight-shortlist-picker" aria-label="Select four personal candidates"></div><span id="overnightShortlistSummary" class="muted small">0/4 selected</span><button id="overnightQualRefreshMarket" type="button" class="quiet-button">Fetch Daily + catalyst for Boring Top 4</button></div>
+                <div class="overnight-shortlist-controls"><div class="overnight-shortlist-toggle" role="group" aria-label="Daily and catalyst candidate group"><button id="overnightShortlistMcc" type="button" class="quiet-button" aria-pressed="true">Boring Top 4</button><button id="overnightShortlistManual" type="button" class="quiet-button" aria-pressed="false" disabled>My Top 4</button></div><strong id="overnightShortlistActive" class="muted small qual-sr-only">Active group: Boring Top 4 · win-rate-first historical profile</strong><div class="overnight-shortlist-lists"><div><strong>Boring</strong><div id="overnightMccTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">Import scanner CSV</span></div></div><div><strong>Mine</strong><div id="overnightMyTopFourDisplay" class="overnight-shortlist-symbols"><span class="muted small">none selected</span></div></div></div><details class="qual-pop qual-picker"><summary>Choose My Top 4 · <span id="overnightShortlistSummary" class="muted small">0/4</span></summary><div class="qual-pop-body"><p class="muted small">Select exactly four imported symbols for My Top 4. Your selection is saved in this browser and kept separate from Boring Top 4.</p><div id="overnightManualTopFourPicker" class="overnight-shortlist-picker" aria-label="Select four personal candidates"></div></div></details><button id="overnightQualRefreshMarket" type="button" class="quiet-button" title="Fetch Daily + catalyst for Boring Top 4">Fetch Daily + catalyst</button></div>
             </div>
             <div class="overnight-qualification-summary">
                 <div><span>Imported</span><strong id="overnightQualImported">0</strong></div>
@@ -881,7 +882,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261116-exclusions-dock-v2" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261116-qual-heading-v4" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

@@ -657,16 +657,16 @@ function renderOvernightShortlistPicker(rows){
  for(const item of sortedRows){const symbol=String(item.symbol||"").trim().toUpperCase();if(!symbol||seenSymbols.has(symbol))continue;seenSymbols.add(symbol);uniqueRows.push(item);}
  const ranked=getBoringOvernightCandidateRows(4).map(x=>String(x.symbol||"").toUpperCase());
  const paint=(id,items,empty)=>{const host=$(id);if(!host)return;host.replaceChildren();(items.length?items:[]).forEach((symbol,index)=>{const tag=document.createElement("span");tag.className="overnight-shortlist-symbol";tag.textContent=(index+1)+". "+symbol;host.append(tag);});if(!items.length){const note=document.createElement("span");note.className="muted small";note.textContent=empty;host.append(note);}};
- paint("overnightMccTopFourDisplay",ranked,"No imported rows");paint("overnightMyTopFourDisplay",overnightManualSymbols,"Select four symbols below");
+ paint("overnightMccTopFourDisplay",ranked,"No imported rows");paint("overnightMyTopFourDisplay",overnightManualSymbols,"none selected");
  symbols.forEach(symbol=>{const label=document.createElement("label");label.className="overnight-shortlist-option";const input=document.createElement("input");input.type="checkbox";input.value=symbol;input.checked=overnightManualSymbols.includes(symbol);input.disabled=!input.checked&&overnightManualSymbols.length>=4;input.addEventListener("change",()=>{if(input.checked){if(overnightManualSymbols.length>=4){input.checked=false;return;}overnightManualSymbols.push(symbol);}else overnightManualSymbols=overnightManualSymbols.filter(x=>x!==symbol);saveOvernightShortlists();renderOvernightShortlistPicker(rows);updateOvernightShortlistMode();renderCatalystHumanReviewQueue();});const name=document.createElement("span");name.textContent=symbol;label.append(input,name);picker.append(label);});
- if(summary)summary.textContent=overnightManualSymbols.length+"/4 selected"+(overnightManualSymbols.length===4?"":" · select exactly four");
+ if(summary)summary.textContent=overnightManualSymbols.length+"/4"+(overnightManualSymbols.length===4?" ✓":"");
  const manual=$("overnightShortlistManual");if(manual)manual.disabled=overnightManualSymbols.length!==4;
 }
 function updateOvernightShortlistMode(){
  const mcc=$("overnightShortlistMcc"),manual=$("overnightShortlistManual"),button=$("overnightQualRefreshMarket"),active=$("overnightShortlistActive");
  if(mcc){mcc.setAttribute("aria-pressed",String(overnightShortlistMode==="mcc"));mcc.classList.toggle("active",overnightShortlistMode==="mcc");}
  if(manual){manual.setAttribute("aria-pressed",String(overnightShortlistMode==="manual"));manual.classList.toggle("active",overnightShortlistMode==="manual");manual.disabled=overnightManualSymbols.length!==4;}
- if(button)button.textContent=overnightShortlistMode==="mcc"?"Fetch Daily + catalyst for Boring Top 4":"Fetch Daily + catalyst for My Top 4";
+ if(button){button.textContent="Fetch Daily + catalyst";button.title=overnightShortlistMode==="mcc"?"Fetch Daily + catalyst for Boring Top 4":"Fetch Daily + catalyst for My Top 4";}
  if(active)active.textContent=overnightShortlistMode==="mcc"?"Active group: Boring Top 4 · median-first historical profile":"Active group: My Top 4 · "+(overnightManualSymbols.length===4?overnightManualSymbols.join(", "):"select four symbols");
 }
 $("overnightShortlistMcc")?.addEventListener("click",()=>{overnightShortlistMode="mcc";saveOvernightShortlists();updateOvernightShortlistMode();renderMorningReport();});
@@ -2870,3 +2870,10 @@ async function loadMarketRegime(){
 }
 void loadMarketRegime();
 window.setInterval(()=>{if(document.visibilityState==="visible")void loadMarketRegime();},60000);
+
+/// MODULE: Qualification drop-downs (2026-11-16)
+/// PURPOSE: The info and My Top 4 picker drop-downs in the compact qualification heading close on an outside click or Escape.
+/// <summary>Closes every open .qual-pop drop-down except the one passed. Called on document clicks and Escape.</summary>
+function closeQualificationPopovers(except){document.querySelectorAll("details.qual-pop[open]").forEach(d=>{if(d!==except)d.open=false;});}
+document.addEventListener("click",event=>closeQualificationPopovers(event.target instanceof Element?event.target.closest("details.qual-pop"):null));
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeQualificationPopovers(null);});

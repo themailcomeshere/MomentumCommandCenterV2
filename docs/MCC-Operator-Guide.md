@@ -98,7 +98,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - today's gap under 3%;
    - above the 20-day SMA.
 4. **Exclusions** (BORING OVERNIGHT: left-dock button): check that nothing on the shortlist should be excluded.
-5. **2.3 Qualification table:** all candidates with reasons.
+5. **2.3 Qualification table:** all candidates with reasons. The one-row heading has **Boring Top 4 / My Top 4**, **Choose My Top 4** (drop-down picker), **Fetch Daily + catalyst** and **ⓘ** for how the panel works.
 6. **2.4 Daily Data Audit:**
    - click **Use Boring Top 20**, then **Validate Daily data**;
    - expect `sip` / 20/20 / `QUALIFICATION USABLE`.

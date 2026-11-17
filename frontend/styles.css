@@ -4349,3 +4349,25 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 .event-badge.event-today{background:rgba(255,136,136,.16);border-color:var(--red);color:var(--red)}
 .event-badge.event-next{background:rgba(242,203,118,.14);border-color:var(--yellow);color:var(--yellow)}
 #mcc-header h1{flex:0 0 auto!important;width:auto!important;min-width:0!important;max-width:none!important}
+
+/* Compact qualification heading (2026-11-16): one row; intro and My Top 4 picker are drop-downs. */
+#overnight-qualification > .qual-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 14px;margin:0 0 8px}
+.qual-title{display:flex;align-items:center;gap:8px;min-width:0}
+.qual-title .eyebrow{margin:0}
+.qual-title h2{margin:0;font-size:15px;line-height:1.2;white-space:nowrap}
+#overnight-qualification .overnight-shortlist-controls{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px 10px;min-width:0}
+#overnight-qualification .overnight-shortlist-controls .quiet-button{padding:4px 9px;font-size:11px;line-height:1.3;min-height:0}
+#overnight-qualification .overnight-shortlist-lists{display:flex;flex-wrap:wrap;gap:10px;width:auto;max-width:none}
+#overnight-qualification .overnight-shortlist-lists>div{flex-direction:row;align-items:center;gap:5px}
+#overnight-qualification .overnight-shortlist-symbol{padding:2px 6px}
+.qual-pop{position:relative}
+.qual-pop>summary{list-style:none;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border:1px solid var(--line);border-radius:8px;font-size:11px;font-weight:700;line-height:1.3;color:var(--text);cursor:pointer;white-space:nowrap}
+.qual-pop>summary::-webkit-details-marker{display:none}
+.qual-pop>summary:hover,.qual-pop>summary:focus-visible,.qual-pop[open]>summary{border-color:var(--blue)}
+.qual-info>summary{padding:2px 7px;border-radius:999px;color:var(--muted)}
+.qual-pop-body{position:absolute;z-index:40;top:calc(100% + 6px);right:0;width:min(440px,90vw);padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.qual-info .qual-pop-body{left:0;right:auto}
+.qual-pop-body p{margin:0 0 8px}
+#overnight-qualification .overnight-shortlist-picker{max-width:none;max-height:280px;grid-template-columns:repeat(5,minmax(52px,1fr))}
+.qual-sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#overnight-qualification .overnight-shortlist-lists{gap:8px}
