@@ -89,6 +89,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - After the close, CSQR/SVV/HIG read WAITING FOR BUY WINDOW (blue) instead of DATA?; AFL stays BLOCKED. The Overnight workflow section shows only the four bubbles and READY; diagnostics are toggles.
 
+## Earnings calendar and READY gate EARNINGS
+
+- New **Earnings** dock modal (Nasdaq calendar, today highlighted) and READY gate EARNINGS: a report between the buy-day close and the sell-day open blocks READY. NVIDIA reported 2026-11-17 after the close (~14:20 AZ).
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

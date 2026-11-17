@@ -59,6 +59,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - The import takes over the Red Zone; click **Feed Red Zone** again to switch back.
 5. **Exclusions** (INTRADAY MOMENTUM: left-dock button, the number = excluded symbols): opens the list in a pop-up; add a symbol you never want suggested.
    - **Catalysts** (left-dock button below it, in both workspaces): the list of pending binary events, such as trial readouts or FDA decisions.
+   - **Earnings** (left-dock button below Catalysts, in both workspaces): this week's reports from the Nasdaq calendar, Monday to Friday with today highlighted; companies of $40B+ plus your symbols (imported scan, READY Symbols box, Red Zone cards), each tagged **before open** / **after close** / **time n/a**. The badge counts your symbols reporting this week. **‹ Prev / This week / Next ›** move between weeks; **Show every company** lists all reports. A report between the buy-day close and the sell-day open **BLOCKS** Boring Overnight READY (gate EARNINGS).
      - Add the symbol, the event, and the expected window as the source states it.
      - Listed symbols show **⚑ Binary catalyst pending** on Red Zone cards and can never reach READY in BORING OVERNIGHT.
      - Click **Remove (readout public)** once the result is out.
@@ -102,7 +103,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - 5D > 20D;
    - today's gap under 3%;
    - above the 20-day SMA.
-4. **Exclusions** and **Catalysts** (BORING OVERNIGHT: left-dock buttons): check that nothing on the shortlist should be excluded or has a pending readout. A ⚑ card is blocked at READY (gate PENDING_BINARY_CATALYST).
+4. **Exclusions**, **Catalysts** and **Earnings** (BORING OVERNIGHT: left-dock buttons): check that nothing on the shortlist should be excluded or has a pending readout. A ⚑ card is blocked at READY (gate PENDING_BINARY_CATALYST).
 5. **2.3 Candidate qualification:** read the **Boring** chips (your Top 4) and the counts row. The one-row heading has **Boring Top 4 / My Top 4**, **Choose My Top 4** (drop-down picker), **Fetch Daily + catalyst** and **ⓘ**.
 6. **Optional, closed by default (click to open; MCC remembers):** **All imported rows** (the full table), **2.4 Daily Data Audit**, **2.5 Top 4 evidence**, **2.6 Catalyst review queue and label guide**. None is needed for READY: step 4 fetches its own 20-session history, Daily data and news, and READY cards label articles inline.
 7. In **BORING OVERNIGHT · WORKFLOW**, only the four step bubbles and **4 READY check** are open; **3 Single-symbol diagnostics** (3.2–3.7) and **6.2 Thinkorswim Daily OHLC reference** are closed-by-default toggles. **Fetch Daily + catalyst** (2.3 heading) is optional too: every **Check READY now** fetches its own 20-session history, Daily data and news.
