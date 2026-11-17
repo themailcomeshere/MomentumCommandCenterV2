@@ -77,6 +77,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - **Re-check every 2 min** is now on by default and skips cards being typed in. Fetch Daily + catalyst is optional. DATA? after the close is expected (live-session fields only).
 - New rules: "What I did" comes before "What changed"; flow summaries are numbered click steps with optional steps marked.
 
+## READY card history line
+
+- Cards now show nights, win %, 20D, 5D, median, close vs SMA20, avg volume with ✓/✗. Live replay 15:32 AZ: CSQR, SVV, HIG, AFL all 20/20 with every history mark ✓; AFL BLOCKED by the operator's MATERIAL_RISK label (Mizuho target $117 → $118).
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.
