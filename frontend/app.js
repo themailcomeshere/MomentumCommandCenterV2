@@ -2994,3 +2994,16 @@ $("catalystForm")?.addEventListener("submit",async event=>{
 {const grid=$("redZoneGrid");if(grid)new MutationObserver(()=>applyPendingCatalystFlags()).observe(grid,{childList:true,subtree:true});}
 void refreshPendingCatalysts();
 window.setInterval(()=>{if(document.visibilityState==="visible")void refreshPendingCatalysts();},60000);
+
+/// MODULE: Opt-in Overnight panels (2026-11-17, operator request: streamlined flow, information on demand)
+/// PURPOSE: Remembers which optional panels (all imported rows, 2.4, 2.5, 2.6) the operator opened, and keeps the
+/// row count in the "All imported rows" summary current. Panels are closed by default; contents still update while closed.
+(()=>{
+ const key="mcc.optinPanels.v1";let saved={};try{saved=JSON.parse(localStorage.getItem(key)||"{}")||{};}catch{}
+ document.querySelectorAll("details.optin-details[id]").forEach(d=>{
+  if(saved[d.id]===true)d.open=true;
+  d.addEventListener("toggle",()=>{saved[d.id]=d.open;try{localStorage.setItem(key,JSON.stringify(saved));}catch{}});
+ });
+ const body=$("overnightQualificationRows"),label=$("optinQualTableLabel");
+ if(body&&label){const paint=()=>{const n=[...body.rows].filter(r=>!r.querySelector("td[colspan]")).length;label.textContent=n?"All imported rows ("+n+")":"All imported rows";};new MutationObserver(paint).observe(body,{childList:true});paint();}
+})();

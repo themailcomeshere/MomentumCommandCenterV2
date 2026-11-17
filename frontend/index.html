@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261117-ready-nextsession-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261117-optin-panels-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -750,14 +750,19 @@
                 <div><span>Excluded</span><strong id="overnightQualExcluded">DATA?</strong></div>
                 <div><span>Final READY</span><strong id="overnightQualReady">0</strong></div>
             </div>
-            <p class="muted small">Unknown / incomplete history means one or more required custom-expression metrics are unavailable. These rows are DATA? — not historical FAIL candidates. Inspect their History cells and source CSV values separately.</p>
             <p id="overnightQualificationStatus" class="muted" role="status">Import the Overnight Scanner CSV to evaluate the available historical gates.</p>
+            <details id="optinQualTable" class="optin-details">
+                <summary><span id="optinQualTableLabel">All imported rows</span> <span class="optin-hint">· ON metrics, history, exclusion, decision per symbol · optional</span></summary>
+            <p class="muted small">Unknown / incomplete history means one or more required custom-expression metrics are unavailable. These rows are DATA? — not historical FAIL candidates. Inspect their History cells and source CSV values separately.</p>
             <div class="table-wrap overnight-qualification-table">
                 <table>
                     <thead><tr><th>Symbol</th><th>ON Win %</th><th>20D Avg ON %</th><th>Median ON %</th><th>5D ON %</th><th>ON Momentum</th><th>Current ON %</th><th>Above 20 SMA</th><th>Overnight Score</th><th>History</th><th>Exclusion</th><th>Price</th><th>20D Avg Vol</th><th>Catalyst / coverage</th><th>Decision</th></tr></thead>
                     <tbody id="overnightQualificationRows"><tr><td colspan="15">No imported Overnight Scanner data.</td></tr></tbody>
                 </table>
             </div>
+            </details>
+            <details id="optinDailyAudit" class="optin-details">
+                <summary>2.4 Daily Data Audit <span class="optin-hint">· direct SIP Daily check for up to 20 symbols; READY runs its own · optional</span></summary>
             <section class="panel daily-data-audit" aria-label="Daily market data audit">
                 <div class="section-heading"><div><h3 data-step-overnight="2.4">Daily Data Audit</h3><p class="muted small">Direct API check for up to 20 symbols. Overnight CSV import fills this field with the top 20 unique symbols by Overnight Score. Observed metrics remain diagnostic unless the source is complete, fresh and consolidated SIP.</p></div></div>
                 <div class="watchlist-form">
@@ -773,11 +778,17 @@
                     </table>
                 </div>
             </section>
+            </details>
+            <details id="optinTopFourEvidence" class="optin-details">
+                <summary>2.5 Top 4 evidence <span class="optin-hint">· Daily and news results from Fetch Daily + catalyst · optional</span></summary>
             <section class="overnight-result" aria-labelledby="overnightTopFourEvidenceTitle">
                 <h3 id="overnightTopFourEvidenceTitle" data-step-overnight="2.5">Top 4 live evidence — every queried symbol</h3>
                 <p class="muted small">This table lists all four requests independently of article review cards. Daily errors, missing news and incomplete coverage remain explicit; no-news is UNKNOWN, not CLEAR.</p>
                 <div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Daily result</th><th>Daily feed / completeness</th><th>Daily error</th><th>Catalyst result</th><th>Articles</th><th>Catalyst coverage</th><th>Catalyst error</th></tr></thead><tbody id="overnightTopFourEvidenceRows"><tr><td colspan="8">Fetch Daily + catalyst for a Top 4 group to populate all four symbols.</td></tr></tbody></table></div>
             </section>
+            </details>
+            <details id="optinCatalystQueue" class="optin-details">
+                <summary>2.6 Catalyst review queue and label guide <span class="optin-hint">· READY cards label articles inline · optional</span></summary>
             <section id="catalystHumanReview" class="catalyst-human-review" aria-label="Human catalyst article review">
                 <div class="section-heading"><div><h3 data-step-overnight="2.6">Human catalyst review queue</h3><p class="muted small">Review source articles returned for the active top-four group. Labels are append-only research data; they never clear a catalyst or create READY.</p></div><span id="catalystReviewQueueCount" class="chip">0 articles</span></div>
                 <div class="catalyst-label-legend" aria-label="Human catalyst label definitions">
@@ -795,6 +806,7 @@
                 <div id="catalystReviewQueue" class="catalyst-review-queue"><p class="muted small">Fetch Daily + catalyst evidence to load articles for human review.</p></div>
                 <p id="catalystReviewStatus" class="muted small" role="status">No human reviews submitted in this session.</p>
             </section>
+            </details>
             <p class="notice">A historical pass is not READY. Price must be at least $5 and 20D average daily volume must be &gt;= 500,000 on complete SIP data. RISK_PRESENT blocks; material, unclassified or incomplete catalyst coverage requires manual review. This provisional classifier never clears a catalyst, so READY remains 0. 5M authority / 1M execution evidence is still not connected. This panel will not substitute missing values with zero.</p>
         </section>
         <section id="data-integrations" class="integration-grid integration-single" aria-label="Thinkorswim StrategyReport upload">
@@ -895,7 +907,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261117-ready-nextsession-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261117-optin-panels-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

@@ -103,16 +103,14 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - today's gap under 3%;
    - above the 20-day SMA.
 4. **Exclusions** and **Catalysts** (BORING OVERNIGHT: left-dock buttons): check that nothing on the shortlist should be excluded or has a pending readout. A ⚑ card is blocked at READY (gate PENDING_BINARY_CATALYST).
-5. **2.3 Qualification table:** all candidates with reasons. The one-row heading has **Boring Top 4 / My Top 4**, **Choose My Top 4** (drop-down picker), **Fetch Daily + catalyst** and **ⓘ** for how the panel works.
-6. **2.4 Daily Data Audit:**
-   - click **Use Boring Top 20**, then **Validate Daily data**;
-   - expect `sip` / 20/20 / `QUALIFICATION USABLE`.
-7. **2.5 Top 4 live evidence → 2.6 Human catalyst review queue:** news for the active top 4.
+5. **2.3 Candidate qualification:** read the **Boring** chips (your Top 4) and the counts row. The one-row heading has **Boring Top 4 / My Top 4**, **Choose My Top 4** (drop-down picker), **Fetch Daily + catalyst** and **ⓘ**.
+6. **Optional, closed by default (click to open; MCC remembers):** **All imported rows** (the full table), **2.4 Daily Data Audit**, **2.5 Top 4 evidence**, **2.6 Catalyst review queue and label guide**. None is needed for READY: step 4 fetches its own 20-session history, Daily data and news, and READY cards label articles inline.
+7. *(removed 2026-11-17: 2.4 and 2.5/2.6 are optional, see 6.)*
 
 **13:00–14:00 AZ (buy window): 4 READY check**
 
 8. **Pick and check:**
-   - type your picks into **Symbols** (e.g. `PRU,AFL`) and click **Check READY now**;
+   - the **Symbols** box is filled from your active Top 4 group after the import (or click **Use Top 4**); edit it if you want other symbols, then click **Check READY now**;
    - tick **Re-check every 2 min during the buy windows**.
 9. **Catalyst, on each card:**
    - for every article listed, open it, choose a label, write 40+ characters of facts and click **Save label**;

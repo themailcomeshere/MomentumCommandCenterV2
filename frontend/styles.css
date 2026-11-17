@@ -4395,3 +4395,10 @@ body.boring-overnight-mode #mcc-header .market-session-overnight {
 
 /* READY card: next buy session banner (2026-11-17) */
 .ready-next-session{margin:4px 0 8px;padding:6px 10px;border:1px solid var(--blue);border-radius:8px;background:rgba(120,170,255,.10);color:var(--text);font-weight:700;font-size:12px;line-height:1.4}
+
+/* Opt-in Overnight panels: closed by default, same content height when open (2026-11-17) */
+details.optin-details{margin:6px 0;border:1px solid var(--line);border-radius:10px;padding:0 10px}
+details.optin-details>summary{cursor:pointer;padding:7px 0;font-weight:800;color:var(--text);font-size:13px}
+details.optin-details>summary:hover,details.optin-details>summary:focus-visible{color:var(--blue)}
+details.optin-details>summary .optin-hint{font-weight:500;color:var(--muted);font-size:12px}
+details.optin-details[open]{padding-bottom:10px}

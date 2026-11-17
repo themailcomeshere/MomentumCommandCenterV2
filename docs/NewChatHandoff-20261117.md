@@ -64,6 +64,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - Not a data gap: CSQR's history was complete. The check ran after the 15:00 AZ late deadline, so it was for 2026-11-18 and the sign-off was refused. The READY card now says so with a banner and hides the sign-off until the buy day.
 
+## Opt-in Overnight panels
+
+- The full qualification table, 2.4, 2.5 and 2.6 are now closed-by-default toggles. The necessary flow is: import (1) → check Boring chips (2.3) → 4 READY check.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.
