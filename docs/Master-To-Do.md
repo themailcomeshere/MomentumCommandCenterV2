@@ -208,7 +208,7 @@ Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-
   - (b) Turn extended hours off on the TOS 5m/1m charts so both use regular-hours VWAP. This also changes your TOS study's behaviour.
   - (c) Approve a new delayed-SIP exception for pre-market 1m bars. The last 16 minutes before each request would still be missing, so it would not fully match.
 - [x] **[Repo]** SLS spike research (operator question 2026-11-17): a binary Phase 3 readout. The window was public (80th event about 2026-10-28, topline guided for Q4); the day and direction were not. No bullish precursor: −38% over the prior 3 weeks. Most of the move was pre-market. [SLS-Spike-20261117.md](Research/SLS-Spike-20261117.md).
-- [x] **[Repo]** Pending binary-catalyst list (operator approval 2026-11-17).
+- [x] **[Repo]** (`94fe1c4`, CI `44134827916`) Pending binary-catalyst list (operator approval 2026-11-17).
   - **Dock and modal:** a **Catalysts** button in the left dock, visible in INTRADAY MOMENTUM and BORING OVERNIGHT, opens a modal: symbol, event, expected window as the source states it, source URL, and notes.
   - **API:** `GET/POST/DELETE /api/watchlists/pending-catalysts`. The file `App_Data/pending-catalysts.json` is git-ignored.
   - **Effect:** a listed symbol is **BLOCKED** from Boring Overnight READY by gate `PENDING_BINARY_CATALYST`, and Red Zone cards show **⚑ Binary catalyst pending**. Intraday, the flag is awareness only.
