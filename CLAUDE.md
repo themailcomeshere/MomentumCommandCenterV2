@@ -17,6 +17,7 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 - ALWAYS work on `feature/opportunity-quality-classification`. NEVER commit to or modify `master`.
 - Commit and Push every time.
 - NEVER reset, discard or overwrite the user's local changes.
+- When an operator commit undoes something the operator asked for (for example a reverted file from a stale editor buffer), do not quietly keep it or quietly re-apply it. Name the commit and what it undid at the top of the reply, and ask with a yes/no button whether to re-apply. Added 2026-11-16 after `528aa1d` reverted the Exclusions dock button and the operator did not know.
 
 ## Build and test
 
