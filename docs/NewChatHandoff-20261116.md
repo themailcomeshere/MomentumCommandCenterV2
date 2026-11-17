@@ -69,8 +69,8 @@
 ## Late-night update (2026-11-16)
 
 - **Market chip** in the header: `GET /api/market/regime`, `MarketRegime.cs`, `App_Data/macro-events.json` (official FOMC/BLS dates), MCC-REGIME-0.1. Awareness only.
-- **Operator commit `528aa1d`** restored the Morning Brief page panel and the Exclusions page panel (no dock button). The Morning Brief modal copies the panel again and works with either markup.
-- **Resolved:** header title back to 15 px (operator decision); header 51 px with the chip.
+- **Operator commit `528aa1d`** reverted the Exclusions dock button and modal and the modal-only Morning Brief. Claude re-applied both at the operator's request. The Morning Brief modal works with or without the page panel.
+- **Title:** 35 px (operator commit `67e5bf0`, after a brief 15 px change); the header is 103 px with the chip.
 
 ## Operator answers recorded today
 
