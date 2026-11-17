@@ -410,6 +410,33 @@ public sealed class BoringOvernightReadyTests
         finally { if (File.Exists(path)) File.Delete(path); }
     }
 
+    /// <summary>
+    /// Outside the buy windows, DATA? caused only by session-only inputs (live 1M fields, staleness, no live trade for the
+    /// sell limit) reads WAITING FOR BUY WINDOW; a real gap (missing win rate) stays DATA?; BLOCKED keeps priority; inside
+    /// the window the same inputs stay DATA?. Status is DATA? in every waiting case. Synthetic data. WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void WaitingLabelOnlyForSessionOnlyGapsOutsideTheWindow()
+    {
+        var at = Et(BuyDay, 18, 0);
+        var liveGaps = Snapshot(at).EvaluationRequest with { DataFresh = false, OneMinuteState = null, ExtensionAtr = null, CurrentVolumeVsAverage = null };
+        ReadyInputs Case(BoringOvernightEvaluationRequest request, DateTimeOffset now) =>
+            Inputs(now) with { Snapshot = Snapshot(now.AddMinutes(-2)) with { EvaluationRequest = request }, LiveTradePrice = null, LiveTradeTimestampUtc = null };
+
+        var waiting = BoringOvernightReadyEvaluator.Evaluate(Case(liveGaps, at));
+        Assert.Equal("DATA?", waiting.Status);
+        Assert.Equal("WAITING FOR BUY WINDOW", waiting.SignalLabel);
+
+        var realGap = BoringOvernightReadyEvaluator.Evaluate(Case(liveGaps with { OvernightWinRatePct = null }, at));
+        Assert.Equal("DATA?", realGap.SignalLabel);
+
+        var blocked = BoringOvernightReadyEvaluator.Evaluate(Case(liveGaps, at) with { Excluded = true });
+        Assert.Equal("BLOCKED", blocked.SignalLabel);
+
+        var inWindow = BoringOvernightReadyEvaluator.Evaluate(Case(liveGaps, InWindow));
+        Assert.Equal("DATA?", inWindow.SignalLabel);
+    }
+
     /// <summary>The READY result carries a display copy of the snapshot's history and Daily inputs (values copied, nulls
     /// kept); without a snapshot there is none. Synthetic snapshot. WHEN CALLED: By xUnit.</summary>
     [Fact]

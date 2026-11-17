@@ -4423,3 +4423,7 @@ details.optin-details[open]{padding-bottom:10px}
 .ready-change-label{margin:4px 0;font-size:12px}
 .ready-change-label>summary{cursor:pointer;color:var(--muted);font-weight:700}
 .ready-change-label>summary:hover{color:var(--blue)}
+
+/* READY card: waiting for the buy window (2026-11-17) */
+.ready-card.ready-waiting{border-color:var(--blue)}
+.ready-card.ready-waiting .ready-label{color:var(--blue)}

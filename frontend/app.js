@@ -2616,7 +2616,9 @@ function readyReviewForm(result,article){
 function renderReadyCard(result,captureNote){
  // 2026-11-17: a late-window READY is observe-only, so it must not look like a green buy signal.
  const lateObserve=result.status==="READY"&&result.entryWindow==="LATE";
- const card=readyEl("article","ready-card "+(lateObserve?"ready-late-observe":"ready-"+String(result.status||"DATA").replace(/[^A-Z_]/gi,"")));
+ // 2026-11-17: "WAITING FOR BUY WINDOW" (DATA? only from session-only inputs) gets a calm style, not the DATA? one.
+ const waiting=result.signalLabel==="WAITING FOR BUY WINDOW";
+ const card=readyEl("article","ready-card "+(lateObserve?"ready-late-observe":waiting?"ready-waiting":"ready-"+String(result.status||"DATA").replace(/[^A-Z_]/gi,"")));
  card.dataset.symbol=result.symbol;
  const head=readyEl("div","ready-head");
  head.append(readyEl("strong","ready-symbol",result.symbol),readyEl("span","ready-label",result.signalLabel||result.status));

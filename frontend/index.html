@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261117-change-label-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261117-waiting-optin-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -607,6 +607,8 @@
         <section id="overnightPanel" data-section-id="overnight-analysis" class="panel hidden">
             <div class="section-heading" id="mcc-static-0124-div"><div id="mcc-static-0125-div"><div class="eyebrow" id="mcc-static-0126-div">BORING OVERNIGHT · WORKFLOW</div><h2 id="mcc-static-0127-h2">Overnight Candidate Workspace</h2></div><span class="chip" id="mcc-static-0128-span">Research only · no orders</span></div>
             <ol class="overnight-workflow-steps"><li><strong>Import</strong><span>Load the Watchlist Scanner export.</span></li><li><strong>Shortlist</strong><span>Review boring-profile candidates; extreme current gaps are excluded from the shortlist.</span></li><li><strong>Validate</strong><span>Run Daily Data Audit and fetch Daily + catalyst evidence for Boring Top 4.</span></li><li><strong>Diagnose</strong><span>Review Main Chart and evidence gates. Missing or partial data stays UNKNOWN/BLOCKED.</span></li></ol>
+            <details id="optinOvernightDiagnostics" class="optin-details">
+                <summary>3 Single-symbol diagnostics <span class="optin-hint">· Fetch &amp; analyze bars, 20-night capture, results, boundary audit, saved snapshots (3.2–3.7) · READY runs its own capture · optional</span></summary>
             <p class="notice" id="mcc-static-0129-p">This workflow requests the selected symbol's historical bars through the API, including after-hours timestamps when the provider returns them. Times below are Arizona local time. A request ending after 1:00 PM Arizona is allowed; returned coverage depends on provider/feed entitlement and available bars.</p>
             <form id="overnightBarsForm" class="overnight-controls">
                 <label id="mcc-static-0130-label">Symbol <input id="overnightSymbol" value="RTO" maxlength="8" required></label>
@@ -673,6 +675,7 @@
             <div class="section-heading overnight-snapshot-heading" id="mcc-static-0236-div"><div id="mcc-static-0237-div"><h3 id="mcc-static-0238-h3" data-step-overnight="3.7">Saved Overnight input snapshots</h3><p class="muted" id="mcc-static-0239-p">Read from <code id="mcc-static-0240-code">/api/boring-overnight/snapshots</code>. These are persisted evaluator inputs, not stored final decisions. Each 20-session capture now appends a snapshot automatically; incomplete history and missing current gates remain UNKNOWN.</p></div></div>
             <p id="overnightSnapshotStatus" class="muted" role="status">Saved input snapshots have not been loaded.</p>
             <div class="table-wrap" id="mcc-static-0241-div"><table id="mcc-static-0242-table"><thead id="mcc-static-0243-thead"><tr id="mcc-static-0244-tr"><th id="mcc-static-0245-th">Symbol</th><th id="mcc-static-0246-th">As of (UTC)</th><th id="mcc-static-0247-th">Recorded (UTC)</th><th id="mcc-static-0248-th">Provider / feed</th><th id="mcc-static-0249-th">Record type</th><th>Historical pairs</th><th>Daily metrics / source</th><th id="mcc-static-0250-th">Key gate inputs (not a decision)</th></tr></thead><tbody id="overnightSnapshotRows"><tr id="mcc-static-0251-tr"><td colspan="8" id="mcc-static-0252-td">No saved evaluations loaded yet.</td></tr></tbody></table></div>
+            </details>
             <section id="overnightReady" class="overnight-ready" aria-labelledby="overnightReadyTitle">
                 <div class="section-heading"><div><div class="eyebrow" data-step-overnight="4">BORING OVERNIGHT · READY SIGNAL</div><h3 id="overnightReadyTitle">READY check</h3></div><span id="overnightReadyMode" class="chip">Mode: not checked</span></div>
                 <p class="muted small">Checks every READY rule for each symbol: a fresh 20-session capture, qualification (5M momentum is shown but not required), exclusion list, catalyst (your sign-off) and the sell limit (a tested target, or <b>LIMIT UNTESTED</b> = your +0.5% heuristic). Buy windows: the final regular hour (13:00–14:00 Arizona in standard time) and a <b>late after-hours window</b> until 15:00 Arizona (LMT EXT order; READY only if the after-hours price is at or below the regular close). Decision support only — no order is ever sent.</p>
@@ -700,6 +703,8 @@
                     <p class="notice" id="mcc-static-0206-p">On 2026-10-28, 20:00 UTC was 16:00 EDT (regular close); later timestamps are post-market. Sparse IEX bars prove only that the feed returned those observations for that symbol/window. Empty results do not prove no trading or identify entitlement cause.</p>
                 </section>
             </details>
+            <details id="optinTosDailyReference" class="optin-details">
+                <summary>6.2 Thinkorswim Daily OHLC reference <span class="optin-hint">· parity check against a TOS Daily CSV · optional</span></summary>
             <section class="panel" aria-label="Thinkorswim daily gap reference import">
                 <div class="section-heading"><div><h3 data-step-overnight="6.2">Thinkorswim Daily OHLC reference</h3><p class="muted small">Import at least 21 daily OHLC bars for one symbol. Use the TOS chart Daily aggregation with Extended Hours OFF and corporate-action adjustment ON. This is a plain daily OHLC CSV, not the 1M/5M ATR StrategyReport; headers must be Date, Open, High, Low, Close. Chart timezone is recorded as America/Phoenix. MCC calculates the eight supplied scanner fields and separate Boring Winner research result. No Alpaca/IEX substitution is performed.</p></div></div>
                 <div class="watchlist-form">
@@ -714,6 +719,7 @@
                 <p id="tosDailyBoringWinnerStatus" class="muted small" role="status">Boring Winner: NOT CALCULATED · import at least 21 source-qualified TOS daily OHLC bars. This is a separate research flag, not a READY gate.</p>
                 <div class="table-wrap"><table><thead><tr><th>Column</th><th>TOS scanner CSV</th><th>MCC from TOS OHLC</th><th>Parity</th></tr></thead><tbody id="tosDailyReferenceRows"><tr><td colspan="4">No parity result.</td></tr></tbody></table></div>
             </section>
+            </details>
         </section>
         <details id="discoveryTools" class="panel discovery-tools">
             <summary class="discovery-tools-summary"><strong>Discovery tools</strong> <span class="muted small">Alpaca top movers, API symbol scan and your local watchlist (steps 2.c–2.d). Collapsed by default.</span></summary>
@@ -907,7 +913,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261117-change-label-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261117-waiting-optin-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

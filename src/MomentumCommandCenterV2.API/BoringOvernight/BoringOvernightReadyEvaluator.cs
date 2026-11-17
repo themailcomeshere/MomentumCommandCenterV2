@@ -87,6 +87,7 @@ public static class BoringOvernightReadyEvaluator
             gates.Add(new("QUALIFICATION_SNAPSHOT", GatePass, $"Snapshot {snapshot.SnapshotId} captured {snapshot.AsOfUtc:O}."));
         }
 
+        var qualificationWaitsForSession = false;
         if (snapshot is not null)
         {
             var request = snapshot.EvaluationRequest with { CatalystStatus = CatalystDeferred, Excluded = input.Excluded };
@@ -104,6 +105,10 @@ public static class BoringOvernightReadyEvaluator
                 _ => GateFail // WATCH: warnings present
             };
             gates.Add(new("QUALIFICATION", state, $"Qualification status {qualification.Status}. {detail}"));
+            // DATA? that only the regular session can fill (live 1M/5M inputs, staleness after the close).
+            qualificationWaitsForSession = qualification.Status == "DATA?"
+                && qualification.MissingInputs.All(m => LiveSessionInputs.Contains(m, StringComparer.OrdinalIgnoreCase))
+                && qualification.Blockers.All(b => b is "Market/metric data is stale.");
             warnings.AddRange(qualification.Warnings);
         }
 
@@ -215,6 +220,12 @@ public static class BoringOvernightReadyEvaluator
             "BLOCKED" => "BLOCKED",
             _ => "DATA?"
         };
+        // Operator request 2026-11-17: outside the buy windows a DATA? caused only by inputs that exist during the
+        // session (live 1M/5M fields, a live trade for the sell limit) reads WAITING FOR BUY WINDOW instead of DATA?.
+        // Status stays DATA? (nothing is evaluated as passing); BLOCKED and real data gaps keep their own labels.
+        if (status == "DATA?" && !windowOpen && gates.Where(g => g.State == GateData).All(g =>
+                (g.Code == "QUALIFICATION" && qualificationWaitsForSession) || g.Code == "SELL_LIMIT"))
+            label = "WAITING FOR BUY WINDOW";
         if (status == "READY" && lateObserveOnly)
         {
             label = "READY · LATE — OBSERVE ONLY (do not buy)";
@@ -254,6 +265,10 @@ public static class BoringOvernightReadyEvaluator
             snapshot.HistoricalCompleteness?.RequiredWindow, r.OvernightWinRatePct, r.AverageOvernightPct20,
             r.AverageOvernightPct5, r.MedianOvernightPct20, r.Price, r.Sma20, r.AverageDailyVolume20);
     }
+
+    /// <summary>Qualification inputs that exist only while the regular session is trading (used for the WAITING label).</summary>
+    private static readonly string[] LiveSessionInputs =
+        { "oneMinuteState", "extensionAtr", "currentVolumeVsAverage", "fiveMinutePermission", "fiveMinuteStructure", "dataFresh" };
 
     /// <summary>Gate states.</summary>
     public const string GatePass = "PASS", GateFail = "FAIL", GateBlocked = "BLOCKED", GateData = "DATA?", GateNotYet = "NOT_YET";
