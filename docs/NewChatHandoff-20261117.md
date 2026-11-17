@@ -1,0 +1,44 @@
+# New chat handoff: 2026-11-17
+
+Branch `feature/opportunity-quality-classification`. Background up to last night: [NewChatHandoff-20261116.md](NewChatHandoff-20261116.md). Checklist: [Master-To-Do.md](Master-To-Do.md). Daily routine: [MCC-Operator-Guide.md](MCC-Operator-Guide.md).
+
+Today is US standard time: regular session 07:30–14:00 AZ, Overnight buy window 13:00–14:00 AZ, late window to 15:00 AZ.
+
+## State at 09:10 AZ
+
+- **Running MCC:** API SHA `91b9178`. The Dashboard files are served from the working tree (`frontend/`), so frontend commits apply on Ctrl+F5 without a restart. API changes still need `MCC.ps1 stop` → `Get-Latest-And-Test.ps1` → `MCC.ps1 start`.
+- **Market chip:** **RISK-OFF** at 08:35 AZ (operator); the API agreed at 09:01 AZ.
+- **2.a automatic scan:** `COMPLETED` (operator). The status word is now a colour chip, and **Sources, feeds, and limits** is bold (`510ac1f`).
+- **Overnight commits since the last handoff:**
+  - `971ece3` market chip;
+  - `4b5dd6f` Exclusions dock button re-applied after operator commit `528aa1d`;
+  - `a362146` compact qualification heading;
+  - `007ea25` the update script stops early when MCC is running.
+  - The operator set the header title to 35 px (`67e5bf0`).
+
+## SLS parity finding (TOS 5M permission YES, MCC NO)
+
+Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
+
+1. **Permission:** TOS 5M permission is a latch; MCC is a stateless 5-of-6 score. A real definitional gap.
+   - Proposed fix: port the latch with parity tests.
+   - Waiting on operator approval, because it changes Red Zone entry gating.
+2. **VWAP:** TOS reads 22.76, MCC 20.31. Likely TOS includes extended hours.
+   - Operator to check the chart setting.
+   - Then decide which session MCC's VWAP should cover.
+
+## Operator answers recorded today
+
+- **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.
+- **Intraday watchlist columns:** unchanged. Symbol, Last, % Change, Volume, VWAP Dist %, 5M Trend, 5M RVOL, 5M Trigger, Ext ATR (`docs/Column Formulas/Intraday/`). These were compiled on 2026-11-16.
+- **Style:** Oxford comma in Dashboard text and docs (rule added to `docs/rules/htmlTailwindCssVanillaJavascriptCodingRules.md`).
+
+## New rules this session
+
+- CLAUDE.md: surface operator commits that undo requested work.
+- Frontend rules: parse-check `frontend/app.js` after every edit; MCC serves it live.
+
+## Uncertainties
+
+- The VWAP cause is inferred from the study code and the chart shading. The TOS chart setting was not seen.
+- The 1m study's 5M labels differ from the 5m study's at the same moment. Not investigated.
