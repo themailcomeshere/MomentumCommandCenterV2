@@ -53,7 +53,7 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 ## READY box checked SPY (~14:05 AZ)
 
-- An empty READY **Symbols** box fell back to the focused symbol (SPY). It now fills from the active Top 4 group, with a **Use Top 4** button. The 14:02 export had `loading` in V3 Rank for 8 rows (CSQR, GTY, CON, HUM, PGR, FOX, ELV): TOS exported before those values finished; the ON columns were complete.
+- An empty READY **Symbols** box fell back to the focused symbol (SPY). It now fills from the active Top 4 group, with a **Use Top 4** button. The 14:02 export had `loading` in V3 Rank for 7 rows (CSQR, GTY, CON, HUM, PGR, FOX, ELV): TOS exported before those values finished; the ON columns were complete.
 
 ## Operator answers recorded today
 
