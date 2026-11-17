@@ -52,7 +52,7 @@ public static class BoringOvernightReadyEvaluator
             finalHourOpen
                 ? $"Final-hour buy window open until the regular close {input.Clock.OvernightBuyDeadlineUtc:O}; a late window follows until {input.Clock.OvernightLateBuyDeadlineUtc:O}."
                 : lateOpen
-                    ? $"LATE buy window (after-hours) open until {input.Clock.OvernightLateBuyDeadlineUtc:O}. Use a LMT EXT order. The historical edge is measured from the regular close."
+                    ? $"LATE window (after-hours) open until {input.Clock.OvernightLateBuyDeadlineUtc:O}: OBSERVE ONLY (operator decision 2026-11-17). A READY here is logged with its Day 2 outcome but is not a buy signal; the historical edge is measured from the regular close."
                     : $"Buy window for {input.Clock.OvernightBuySessionDate:yyyy-MM-dd} opens {input.Clock.OvernightBuyWindowStartUtc:O}; final hour until {input.Clock.OvernightBuyDeadlineUtc:O}, late window until {input.Clock.OvernightLateBuyDeadlineUtc:O}."));
 
         var tradeFresh = input.LiveTradePrice is > 0 && input.LiveTradeTimestampUtc is { } tradeAt &&
@@ -200,7 +200,10 @@ public static class BoringOvernightReadyEvaluator
             : "READY";
 
         var liveAllowed = input.RequestedMode == "live" && input.LoggedShadowSessions >= MinimumShadowSessions;
-        var effectiveMode = liveAllowed ? "live" : "shadow";
+        // Operator decision 2026-11-17: an after-hours (late-window) READY is observe-only. It stays status READY so the
+        // shadow log records it with its Day 2 outcome, but it is always shadow (no sound, never live) and says "do not buy".
+        var lateObserveOnly = lateOpen;
+        var effectiveMode = liveAllowed && !lateObserveOnly ? "live" : "shadow";
         var onlyLateMoveFails = status == "NOT_READY" &&
             gates.Where(g => g.State == GateFail).All(g => g.Code == "LATE_ENTRY_PRICE");
         var label = status switch
@@ -212,9 +215,15 @@ public static class BoringOvernightReadyEvaluator
             "BLOCKED" => "BLOCKED",
             _ => "DATA?"
         };
-        if (status == "READY" && lateOpen) label += " · LATE WINDOW (LMT EXT)";
+        if (status == "READY" && lateObserveOnly)
+        {
+            label = "READY · LATE — OBSERVE ONLY (do not buy)";
+            actions.Add("Do not buy: an after-hours READY is observe-only (operator decision 2026-11-17). It is logged with its Day 2 outcome for comparison with final-hour signals.");
+        }
         if (status is "READY" or "OUTSIDE_BUY_WINDOW" && limitBasis == "UNTESTED_HEURISTIC") label += " · LIMIT UNTESTED";
-        var modeNote = input.RequestedMode == "live" && !liveAllowed
+        var modeNote = lateObserveOnly
+            ? "Late window: observe only. The check is logged with its Day 2 outcome and no sound plays (operator decision 2026-11-17)."
+            : input.RequestedMode == "live" && !liveAllowed
             ? $"Live mode requested but only {input.LoggedShadowSessions} of {MinimumShadowSessions} shadow sessions are logged; staying in shadow."
             : effectiveMode == "shadow"
                 ? "Shadow mode: the signal is logged with its Day 2 outcome and no sound plays. Switch BoringOvernight:ReadySignalMode to live after review."

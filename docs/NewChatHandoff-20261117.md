@@ -68,6 +68,10 @@ Details: [Validation/SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 
 - The full qualification table, 2.4, 2.5 and 2.6 are now closed-by-default toggles. The necessary flow is: import (1) → check Boring chips (2.3) → 4 READY check.
 
+## After-hours READY is observe-only
+
+- Operator decision: buy in the final hour; a late-window READY is logged with its Day 2 outcome but labelled "do not buy", always shadow, amber card. Revisit after about 20 late signals.
+
 ## Operator answers recorded today
 
 - **Scans:** no changes to the five intraday TOS scans during the 5-session side-by-side; changing them would void the comparison.

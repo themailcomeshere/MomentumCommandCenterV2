@@ -27,7 +27,8 @@ public sealed class ReadyShadowLogStore(string? path = null)
         var entry = new ReadyShadowEntry(Guid.NewGuid().ToString("N"), evaluation.Symbol, evaluation.BuySessionDate,
             evaluation.SellSessionDate, evaluation.EvaluatedAtUtc, evaluation.Status, evaluation.EffectiveMode,
             evaluation.CalculatedLimitSell, evaluation.ReferencePrice, evaluation.TargetReturnPct,
-            evaluation.Gates.Where(g => g.State != BoringOvernightReadyEvaluator.GatePass).Select(g => g.Code).ToArray());
+            evaluation.Gates.Where(g => g.State != BoringOvernightReadyEvaluator.GatePass).Select(g => g.Code).ToArray(),
+            evaluation.EntryWindow);
         await _gate.WaitAsync(ct);
         try
         {
@@ -106,7 +107,8 @@ public static class ReadyShadowSummary
                 }
                 return new ReadyShadowRow(g.Key.Symbol, g.Key.BuySessionDate, sellDate, ordered.Length,
                     firstReady is not null, firstReady?.EvaluatedAtUtc, firstReady?.CalculatedLimitSell,
-                    firstReady?.ReferencePrice, firstReady?.TargetReturnPct, ordered[^1].Status, outcome, high);
+                    firstReady?.ReferencePrice, firstReady?.TargetReturnPct, ordered[^1].Status, outcome, high,
+                    firstReady?.EntryWindow);
             })
             .OrderByDescending(r => r.BuySessionDate).ThenBy(r => r.Symbol)
             .ToArray();
@@ -129,7 +131,8 @@ public static class ReadyShadowSummary
 
 /// <summary>
 /// TYPE: ReadyShadowEntry
-/// PURPOSE: One logged in-window READY evaluation.
+/// PURPOSE: One logged in-window READY evaluation. EntryWindow (FINAL_HOUR / LATE / CLOSED; null in entries before
+/// 2026-11-17) separates actionable final-hour signals from observe-only late-window ones.
 /// WHEN CALLED: Written by ReadyShadowLogStore.
 /// </summary>
 public sealed record ReadyShadowEntry(
@@ -143,11 +146,13 @@ public sealed record ReadyShadowEntry(
     decimal? CalculatedLimitSell,
     decimal? ReferencePrice,
     decimal? TargetReturnPct,
-    IReadOnlyList<string> NonPassingGates);
+    IReadOnlyList<string> NonPassingGates,
+    string? EntryWindow = null);
 
 /// <summary>
 /// TYPE: ReadyShadowRow
-/// PURPOSE: Summary of one symbol and buy session, with the Day 2 outcome when signalled.
+/// PURPOSE: Summary of one symbol and buy session, with the Day 2 outcome when signalled. WindowAtFirstReady says
+/// whether the first READY came in the final hour or the observe-only late window (null for older entries).
 /// WHEN CALLED: Returned by ReadyShadowSummary.Build.
 /// </summary>
 public sealed record ReadyShadowRow(
@@ -162,4 +167,5 @@ public sealed record ReadyShadowRow(
     decimal? TargetReturnPct,
     string LastStatus,
     string Outcome,
-    decimal? Day2High);
+    decimal? Day2High,
+    string? WindowAtFirstReady = null);

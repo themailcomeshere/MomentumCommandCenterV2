@@ -2557,7 +2557,9 @@ function readyIsNextSession(result){
  try{const eastern=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(result.evaluatedAtUtc));return eastern!==String(result.buySessionDate);}catch{return false;}
 }
 function renderReadyCard(result,captureNote){
- const card=readyEl("article","ready-card ready-"+String(result.status||"DATA").replace(/[^A-Z_]/gi,""));
+ // 2026-11-17: a late-window READY is observe-only, so it must not look like a green buy signal.
+ const lateObserve=result.status==="READY"&&result.entryWindow==="LATE";
+ const card=readyEl("article","ready-card "+(lateObserve?"ready-late-observe":"ready-"+String(result.status||"DATA").replace(/[^A-Z_]/gi,"")));
  card.dataset.symbol=result.symbol;
  const head=readyEl("div","ready-head");
  head.append(readyEl("strong","ready-symbol",result.symbol),readyEl("span","ready-label",result.signalLabel||result.status));
@@ -2703,7 +2705,7 @@ $("overnightReadyShadowRefresh")?.addEventListener("click",async()=>{
   const table=readyEl("table","ready-shadow-table");const headRow=readyEl("tr");
   ["Buy day","Symbol","Checks","Signalled","Limit","Last status","Day 2 outcome","Day 2 high"].forEach(h=>headRow.append(readyEl("th",null,h)));
   const thead=readyEl("thead");thead.append(headRow);table.append(thead);const tbody=readyEl("tbody");
-  (data.rows||[]).forEach(r=>{const tr=readyEl("tr");[r.buySessionDate,r.symbol,r.evaluations,r.signalled?"READY "+readyAz(r.firstReadyAtUtc):"no",r.limitAtFirstReady!=null?Number(r.limitAtFirstReady).toFixed(2):"—",r.lastStatus,r.outcome,r.day2High!=null?Number(r.day2High).toFixed(2):"—"].forEach(v=>tr.append(readyEl("td",null,v)));tbody.append(tr);});
+  (data.rows||[]).forEach(r=>{const tr=readyEl("tr");[r.buySessionDate,r.symbol,r.evaluations,r.signalled?"READY "+readyAz(r.firstReadyAtUtc)+(r.windowAtFirstReady==="LATE"?" · LATE (observe only)":""):"no",r.limitAtFirstReady!=null?Number(r.limitAtFirstReady).toFixed(2):"—",r.lastStatus,r.outcome,r.day2High!=null?Number(r.day2High).toFixed(2):"—"].forEach(v=>tr.append(readyEl("td",null,v)));tbody.append(tr);});
   table.append(tbody);body.append(table);
   if((data.errors||[]).length)body.append(readyEl("p","notice","Errors: "+data.errors.join(" | ")));
   body.append(readyEl("p","muted small",data.note));

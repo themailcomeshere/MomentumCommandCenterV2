@@ -90,7 +90,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 
 ---
 
-## B. BORING OVERNIGHT (buy 13:00–14:00 AZ, late window to 15:00 AZ; sell next day)
+## B. BORING OVERNIGHT (buy 13:00–14:00 AZ; late window to 15:00 AZ is observe-only; sell next day)
 
 **About 12:30 AZ (prepare):**
 1. Set WORKSPACE = **BORING OVERNIGHT**. In TOS, run your **Overnight scanner** (optionally with the V3 Edge / V3 Boringness / V3 Status columns) and export it to CSV.
@@ -123,12 +123,12 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
     - buy with a limit order;
     - then place the **GTC_EXT limit sell** at the card's limit, re-checked against your actual fill.
 
-**14:00–15:00 AZ (late window, optional):**
+**14:00–15:00 AZ (late window): observe only, do not buy** (operator decision 2026-11-17)
 
-12. The card shows **NOW IN LATE WINDOW**.
-    - The free data feed has **no after-hours trades**, so type the after-hours price you see in TOS into **Your after-hours price** and click **Re-check with this price**.
-    - READY needs that price at or below the regular close; otherwise the card shows **WATCH — AFTER-HOURS UP x%**.
-    - Use a **LMT EXT** order.
+12. The card shows **NOW IN LATE WINDOW**. Buy in the final hour (13:00–14:00 AZ) instead.
+    - A late READY reads **READY · LATE — OBSERVE ONLY (do not buy)** on an amber card, never plays the sound, and is logged with its Day 2 outcome. The shadow log marks it **LATE (observe only)**.
+    - To record a late check anyway, type the after-hours price you see in TOS into **Your after-hours price** and click **Re-check with this price** (the free feed has no after-hours trades). Above the regular close the card shows **WATCH — AFTER-HOURS UP x%**.
+    - After about 20 logged late signals, compare their Day 2 outcomes with final-hour signals before deciding whether late READY should become actionable.
 
 **After 14:16 AZ (research, optional, about 5 minutes):**
 

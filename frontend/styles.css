@@ -4408,3 +4408,7 @@ details.optin-details>summary{cursor:pointer;padding:7px 0;font-weight:800;color
 details.optin-details>summary:hover,details.optin-details>summary:focus-visible{color:var(--blue)}
 details.optin-details>summary .optin-hint{font-weight:500;color:var(--muted);font-size:12px}
 details.optin-details[open]{padding-bottom:10px}
+
+/* READY card: late-window READY is observe-only (2026-11-17) */
+.ready-card.ready-late-observe{border-color:var(--yellow);background:rgba(242,203,118,.06)}
+.ready-card.ready-late-observe .ready-label{color:var(--yellow)}

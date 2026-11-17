@@ -173,15 +173,21 @@ public sealed class BoringOvernightReadyTests
         Assert.Equal("BLOCKED", BoringOvernightReadyEvaluator.Evaluate(weak).Status);
     }
 
-    /// <summary>Late window (close to close + 60 min): Daily freshness only; trade at/below the regular close is READY.</summary>
+    /// <summary>
+    /// Late window (close to close + 60 min): Daily freshness only; trade at/below the regular close is READY, but
+    /// observe-only (operator decision 2026-11-17): labelled "do not buy", always shadow even with live mode allowed.
+    /// </summary>
     [Fact]
-    public void LateWindow_TradeAtOrBelowClose_IsReady()
+    public void LateWindow_TradeAtOrBelowClose_IsReadyButObserveOnly()
     {
-        var r = BoringOvernightReadyEvaluator.Evaluate(LateInputs(49.90m, 50.00m));
+        var r = BoringOvernightReadyEvaluator.Evaluate(LateInputs(49.90m, 50.00m) with { RequestedMode = "live", LoggedShadowSessions = 10 });
 
         Assert.Equal("READY", r.Status);
         Assert.Equal("LATE", r.EntryWindow);
-        Assert.Contains("LATE WINDOW (LMT EXT)", r.SignalLabel);
+        Assert.StartsWith("READY · LATE — OBSERVE ONLY (do not buy)", r.SignalLabel);
+        Assert.Equal("shadow", r.EffectiveMode);
+        Assert.Contains(r.RequiredActions, a => a.StartsWith("Do not buy", StringComparison.Ordinal));
+        Assert.Contains("OBSERVE ONLY", r.Gates.Single(g => g.Code == "BUY_WINDOW").Detail);
         Assert.Equal(GatePass, r.Gates.Single(g => g.Code == "LATE_ENTRY_PRICE").State);
         Assert.Contains(r.QualificationNotes!, n => n.Contains("after the regular close", StringComparison.Ordinal));
         Assert.Equal(Et(BuyDay, 17, 0), r.LateBuyDeadlineUtc);
@@ -420,6 +426,27 @@ public sealed class BoringOvernightReadyTests
         var beforeEnd = ReadyShadowSummary.Build(entries, windows, Et(SellDay, 20, 10)).Single(r => r.Symbol == "AAA");
         Assert.Equal("PENDING", beforeEnd.Outcome);            // 20:00 ET + 16 min not reached
         Assert.Equal(1, ReadyShadowSummary.CountLoggedSessions(entries));
+    }
+
+    /// <summary>The summary keeps the window of the first READY, so observe-only late signals can be compared with
+    /// final-hour ones; older entries without a window stay null. Synthetic entries. WHEN CALLED: By xUnit.</summary>
+    [Fact]
+    public void ShadowSummaryKeepsWindowOfFirstReady()
+    {
+        var entries = new[]
+        {
+            Entry("AAA", "READY", 10.10m, InWindow) with { EntryWindow = "FINAL_HOUR" },
+            Entry("AAA", "READY", 10.00m, InWindow.AddMinutes(70)) with { EntryWindow = "LATE" },
+            Entry("BBB", "NOT_READY", null, InWindow) with { EntryWindow = "FINAL_HOUR" },
+            Entry("BBB", "READY", 20.20m, InWindow.AddMinutes(70)) with { EntryWindow = "LATE" },
+            Entry("CCC", "READY", 30.30m, InWindow),
+        };
+        var rows = ReadyShadowSummary.Build(entries, new Dictionary<(string, DateOnly), BoringOvernightSellWindowAudit>(), Et(SellDay, 20, 30))
+            .ToDictionary(r => r.Symbol);
+
+        Assert.Equal("FINAL_HOUR", rows["AAA"].WindowAtFirstReady);
+        Assert.Equal("LATE", rows["BBB"].WindowAtFirstReady);
+        Assert.Null(rows["CCC"].WindowAtFirstReady);
     }
 
     // ---------- helpers ----------
