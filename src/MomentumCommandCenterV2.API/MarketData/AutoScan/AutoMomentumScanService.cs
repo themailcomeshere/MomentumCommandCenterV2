@@ -16,7 +16,9 @@ public sealed record AutoScanCandidate(
     int MomentumPassCount,
     bool Flagged,
     bool Excluded,
-    double? LatestBarAgeSeconds);
+    double? LatestBarAgeSeconds,
+    IReadOnlyList<string>? ChaseReasons = null,
+    decimal? PercentFromOpen = null);
 
 /// <summary>
 /// TYPE: AutoScanRun
@@ -171,13 +173,7 @@ public sealed class AutoMomentumScanService
                 log.Add(new AutoScanSourceStatus("exclusion watchlist", "local", null, false, 0, ex.Message));
             }
 
-            var candidates = rows.Select(row => Evaluate(row, bars.TryGetValue(row.Symbol, out var list) ? list : new List<AutoScanBar>(), excluded.Contains(row.Symbol), nowUtc))
-                .OrderByDescending(c => c.Flagged)
-                .ThenByDescending(c => c.MomentumPassCount)
-                .ThenByDescending(c => c.Scanners.Any(s => s.Code == AutoMomentumScanRules.MarketMovers && s.Result == "PASS"))
-                .ThenByDescending(c => c.Universe.PercentChange ?? decimal.MinValue)
-                .ThenBy(c => c.Universe.Symbol, StringComparer.Ordinal)
-                .ToList();
+            var candidates = Rank(rows.Select(row => Evaluate(row, bars.TryGetValue(row.Symbol, out var list) ? list : new List<AutoScanBar>(), excluded.Contains(row.Symbol), nowUtc)));
 
             var status = log.Any(s => !s.Ok) ? "COMPLETED_WITH_SOURCE_ERRORS" : "COMPLETED";
             return new AutoScanRun(status, regular ? null : "Outside the regular session: bars are from the last session, so results are stale.",
@@ -190,6 +186,22 @@ public sealed class AutoMomentumScanService
             return Empty("FAILED", $"{ex.GetType().Name}: {ex.Message}", nowUtc, sessionDate, regular, log);
         }
     }
+
+    /// <summary>
+    /// PURPOSE: Orders candidates: flagged first; then not a chase (2026-11-18: gap fading, 10% off the high, or 1.5 ATR
+    /// above VWAP rank after every fresh candidate); then 5m scans passed; then scan D; then % move since today's open;
+    /// then % change vs the prior close; then symbol.
+    /// WHEN CALLED: By RunAsync and unit tests.
+    /// </summary>
+    public static List<AutoScanCandidate> Rank(IEnumerable<AutoScanCandidate> candidates) => candidates
+        .OrderByDescending(c => c.Flagged)
+        .ThenBy(c => c.ChaseReasons is { Count: > 0 })
+        .ThenByDescending(c => c.MomentumPassCount)
+        .ThenByDescending(c => c.Scanners.Any(s => s.Code == AutoMomentumScanRules.MarketMovers && s.Result == "PASS"))
+        .ThenByDescending(c => c.PercentFromOpen ?? decimal.MinValue)
+        .ThenByDescending(c => c.Universe.PercentChange ?? decimal.MinValue)
+        .ThenBy(c => c.Universe.Symbol, StringComparer.Ordinal)
+        .ToList();
 
     /// <summary>
     /// PURPOSE: Evaluates one universe row against its bars. Flagged = passes at least one scan (1, 2A, 2B, Pivot or D),
@@ -208,7 +220,11 @@ public sealed class AutoMomentumScanService
         if (excluded) tags.Add("EXCLUDED_WATCHLIST");
         var passCount = AutoMomentumScanRules.MomentumPassCount(scanners);
         var anyPass = scanners.Any(s => s.Result == "PASS");
-        return new AutoScanCandidate(row, indicators, scanners, tags, passCount, anyPass && fresh && !excluded, excluded, age);
+        var chase = AutoMomentumScanRules.ChaseReasons(row, indicators);
+        if (chase.Count > 0) tags.Add("CHASE");
+        tags.AddRange(chase);
+        return new AutoScanCandidate(row, indicators, scanners, tags, passCount, anyPass && fresh && !excluded, excluded, age,
+            chase, AutoMomentumScanRules.PercentFromOpen(row, indicators));
     }
 
     /// <summary>

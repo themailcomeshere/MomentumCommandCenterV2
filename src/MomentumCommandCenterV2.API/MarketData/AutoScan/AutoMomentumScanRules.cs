@@ -51,7 +51,10 @@ public sealed record AutoScanIndicators(
     long? PreviousVolume,
     decimal? AverageVolume20,
     decimal? PriorHigh20,
-    int MissingSlotsInLast50);
+    int MissingSlotsInLast50,
+    decimal? SessionOpen = null,
+    decimal? SessionHigh = null,
+    decimal? Atr14 = null);
 
 /// <summary>
 /// TYPE: AutoScanCondition
@@ -117,6 +120,20 @@ public static class AutoMomentumScanRules
         decimal? rsi = n >= 15 ? WilderRsi(closes, 14) : null;
         decimal? avgVol = n >= 20 ? bars.Skip(n - 20).Average(b => (decimal)b.Volume) : null;
         decimal? priorHigh = n >= 21 ? bars.Skip(n - 21).Take(20).Max(b => b.High) : null;
+        // Chase inputs (2026-11-18): today's regular-session open and high (bars from 09:30 ET on the latest bar's
+        // Eastern date; pre-market excluded) and a 14-bar 5m ATR. Null when today has no regular-session bar yet.
+        var today = EasternDate(bars[last].Timestamp);
+        var session = bars.Where(b => EasternDate(b.Timestamp) == today && IsRegularSessionBar(b.Timestamp)).ToArray();
+        decimal? sessionOpen = session.Length > 0 ? session[0].Open : null;
+        decimal? sessionHigh = session.Length > 0 ? session.Max(b => b.High) : null;
+        decimal? atr14 = null;
+        if (n >= 15)
+        {
+            var trs = new List<decimal>();
+            for (var i = n - 14; i < n; i++)
+                trs.Add(Math.Max(bars[i].High - bars[i].Low, Math.Max(Math.Abs(bars[i].High - bars[i - 1].Close), Math.Abs(bars[i].Low - bars[i - 1].Close))));
+            atr14 = trs.Average();
+        }
 
         return new AutoScanIndicators(
             n,
@@ -133,7 +150,43 @@ public static class AutoMomentumScanRules
             n >= 2 ? bars[last - 1].Volume : null,
             avgVol,
             priorHigh,
-            CountMissingSlots(bars, 50));
+            CountMissingSlots(bars, 50),
+            sessionOpen,
+            sessionHigh,
+            atr14);
+    }
+
+    /// <summary>Chase thresholds (operator approval 2026-11-18, "Yes, build it"; proposal replayed on SLS 2026-11-17).</summary>
+    public const decimal ChaseGapPercent = 10m, ChaseOffHighPercent = 10m, ChaseExtensionAtr = 1.5m;
+
+    /// <summary>
+    /// PURPOSE: Why a candidate looks like a chase (the move is already over or stretched). Codes:
+    ///  - GAP_FADING: % change vs the prior close is +10% or more and the price is below today's regular-session open
+    ///    (the move happened before the open and is fading; SLS 2026-11-17);
+    ///  - OFF_HIGH: the price is 10% or more below today's regular-session high;
+    ///  - EXTENDED: the price is 1.5 ATR(14, 5m) or more above session VWAP (MCC's extension warning level).
+    /// Unknown inputs add nothing (no code is guessed). Price = the live last trade, else the latest 5m close.
+    /// WHEN CALLED: Once per candidate by AutoMomentumScanService.Evaluate.
+    /// </summary>
+    public static IReadOnlyList<string> ChaseReasons(AutoScanUniverseRow row, AutoScanIndicators x)
+    {
+        var reasons = new List<string>();
+        var price = row.LastPrice ?? x.Close;
+        if (price is null) return reasons;
+        if (row.PercentChange is >= ChaseGapPercent && x.SessionOpen is > 0m && price.Value < x.SessionOpen.Value)
+            reasons.Add("GAP_FADING");
+        if (x.SessionHigh is > 0m && price.Value <= x.SessionHigh.Value * (1m - ChaseOffHighPercent / 100m))
+            reasons.Add("OFF_HIGH");
+        if (x.Vwap is not null && x.Atr14 is > 0m && (price.Value - x.Vwap.Value) / x.Atr14.Value >= ChaseExtensionAtr)
+            reasons.Add("EXTENDED");
+        return reasons;
+    }
+
+    /// <summary>PURPOSE: % move from today's regular-session open (today's momentum), or null. WHEN CALLED: Ranking and display.</summary>
+    public static decimal? PercentFromOpen(AutoScanUniverseRow row, AutoScanIndicators x)
+    {
+        var price = row.LastPrice ?? x.Close;
+        return price is null || x.SessionOpen is not > 0m ? null : Math.Round((price.Value / x.SessionOpen.Value - 1m) * 100m, 2);
     }
 
     /// <summary>
@@ -221,7 +274,8 @@ public static class AutoMomentumScanRules
     }
 
     /// <summary>
-    /// PURPOSE: Ranking key: number of 5m scans passed (1, 2A, 2B, Pivot), then D, then % change, then symbol.
+    /// PURPOSE: Ranking key part: number of 5m scans passed (1, 2A, 2B, Pivot). Full order (2026-11-18): flagged, not a
+    /// chase, this count, scan D, % move since today's open, % change, symbol.
     /// WHEN CALLED: By <see cref="AutoMomentumScanService"/> when ordering candidates.
     /// </summary>
     public static int MomentumPassCount(IReadOnlyList<AutoScanScannerResult> scanners) =>

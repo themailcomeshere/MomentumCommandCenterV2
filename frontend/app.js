@@ -2850,7 +2850,7 @@ function renderAutoScan(run){
  if(!flagged.length){table.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"No symbol passes a scan right now (fresh bars, not excluded)."}));}
  else{
   const t=document.createElement("table");t.className="auto-scan-table";
-  t.innerHTML="<thead><tr><th>#</th><th>Symbol</th><th>Last</th><th>% chg</th><th>Day vol</th><th>1</th><th>2A</th><th>2B</th><th>PIV</th><th>D</th><th>Tags</th></tr></thead>";
+  t.innerHTML="<thead><tr><th>#</th><th>Symbol</th><th>Last</th><th>% chg</th><th title="% move since today's regular-session open (today's momentum). Rows tagged CHASE rank after fresh candidates.">From open</th><th>Day vol</th><th>1</th><th>2A</th><th>2B</th><th>PIV</th><th>D</th><th>Tags</th></tr></thead>";
   const body=document.createElement("tbody");
   flagged.forEach((c,i)=>{
    const tr=document.createElement("tr"),u=c.universe;
@@ -2858,6 +2858,7 @@ function renderAutoScan(run){
    cell(String(i+1));const sym=cell(u.symbol);sym.style.fontWeight="800";
    cell(u.lastPrice==null?"DATA?":"$"+Number(u.lastPrice).toFixed(2),"num");
    cell(u.percentChange==null?"DATA?":(Number(u.percentChange)>=0?"+":"")+Number(u.percentChange).toFixed(2)+"%","num");
+   cell(c.percentFromOpen==null?"DATA?":(Number(c.percentFromOpen)>=0?"+":"")+Number(c.percentFromOpen).toFixed(2)+"%","num");
    cell(u.consolidatedDayVolume==null?"DATA?":Number(u.consolidatedDayVolume).toLocaleString("en-US"),"num");
    for(const code of ["1","2A","2B","PIV","D"]){
     const s=(c.scanners||[]).find(x=>x.code===code),td=document.createElement("td"),chip=document.createElement("span");
@@ -2866,7 +2867,11 @@ function renderAutoScan(run){
     td.append(chip);tr.append(td);
    }
    const tags=document.createElement("td");
-   for(const tag of (c.tags||[]).filter(x=>!["1","2A","2B","PIV","D"].includes(x))){const span=document.createElement("span");span.className="auto-scan-tag"+(/APPROX|GAPS/.test(tag)?" warn":"");span.textContent=tag;tags.append(span);}
+   for(const tag of (c.tags||[]).filter(x=>!["1","2A","2B","PIV","D"].includes(x))){const span=document.createElement("span");span.className="auto-scan-tag"+(/APPROX|GAPS/.test(tag)?" warn":"")+(/^(CHASE|GAP_FADING|OFF_HIGH|EXTENDED)$/.test(tag)?" chase":"");span.textContent=tag;
+    // 2026-11-18: explain the chase tags (the move is over or stretched; these rows rank after fresh candidates).
+    const chaseHelp={CHASE:"Ranked after fresh candidates: the move looks over or stretched.",GAP_FADING:"Up 10%+ on the day but below today's open: the move happened before the open and is fading.",OFF_HIGH:"10%+ below today's high.",EXTENDED:"1.5+ ATR (5m) above VWAP: stretched."};
+    if(chaseHelp[tag])span.title=chaseHelp[tag];tags.append(span);}
+   if((c.chaseReasons||[]).length)tr.classList.add("auto-scan-chase-row");
    tr.append(tags);body.append(tr);
   });
   t.append(body);table.replaceChildren(t);

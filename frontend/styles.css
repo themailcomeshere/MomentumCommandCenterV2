@@ -4460,3 +4460,8 @@ details.optin-details[open]{padding-bottom:10px}
 .position-actions{display:flex;gap:6px}
 .redzone-card.is-held{outline:2px solid var(--yellow);outline-offset:2px}
 #main-chart-section.is-held .main-chart-classification{outline:2px solid var(--yellow);outline-offset:2px}
+
+/* 2.a automatic scan: chase tags and demoted rows (2026-11-18) */
+.auto-scan-tag.chase{background:rgba(255,107,107,.18);color:#ff9a9a}
+.auto-scan-chase-row td{opacity:.62}
+.auto-scan-chase-row td:nth-child(2){text-decoration:line-through dotted}

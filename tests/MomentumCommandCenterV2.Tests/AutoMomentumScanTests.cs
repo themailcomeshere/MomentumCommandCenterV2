@@ -213,4 +213,70 @@ public sealed class AutoMomentumScanTests
         var bar = Assert.Single(into["AAA"]);
         Assert.Equal(2m, bar.Close);
     }
+
+    /// <summary>
+    /// PURPOSE: Chase rules (2026-11-18). An SLS-like gap that fades (open 24.11, sold to ~17, back to 20.60, +175% vs
+    /// the prior close) is GAP_FADING and OFF_HIGH; a fresh, choppy riser near its high is not a chase. Synthetic bars.
+    /// WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void ChaseReasons_GapFadingAndFreshMover()
+    {
+        var gap = new List<AutoScanBar>();
+        for (var i = 0; i < 30; i++)
+        {
+            var close = i < 6 ? 24.11m - 1.2m * i : 17m + 0.15m * (i - 6);   // 24.11 → ~18 → 20.60
+            var open = i == 0 ? 24.11m : close + 0.1m;
+            gap.Add(new AutoScanBar(SessionOpen.AddMinutes(5 * i), open, Math.Max(open, close) + 0.3m, Math.Min(open, close) - 0.3m, close, 50_000, null));
+        }
+        var gapRow = new AutoScanUniverseRow("GAPF", 20.60m, "iex_latest_trade", 5_000_000, 7.47m, "sip_delayed_daily", 175.77m, new[] { "TOP_GAINERS" });
+        var gapReasons = AutoMomentumScanRules.ChaseReasons(gapRow, AutoMomentumScanRules.ComputeIndicators(gap));
+        Assert.Contains("GAP_FADING", gapReasons);
+        Assert.Contains("OFF_HIGH", gapReasons);
+
+        var fresh = new List<AutoScanBar>();
+        for (var i = 0; i < 30; i++)
+        {
+            var close = 10m + 0.01m * i + (i % 2 == 0 ? 0.15m : -0.15m);
+            fresh.Add(new AutoScanBar(SessionOpen.AddMinutes(5 * i), close - 0.05m, close + 0.2m, close - 0.2m, close, 20_000, null));
+        }
+        var freshIndicators = AutoMomentumScanRules.ComputeIndicators(fresh);
+        Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: fresh[^1].Close, pct: 5m), freshIndicators));
+        Assert.Equal(10.10m, freshIndicators.SessionOpen);   // first bar: close 10.15, open close - 0.05
+        Assert.NotNull(freshIndicators.Atr14);
+    }
+
+    /// <summary>PURPOSE: EXTENDED when price is 1.5 ATR or more above VWAP; unknown inputs add nothing. WHEN CALLED: By xUnit.</summary>
+    [Fact]
+    public void ChaseReasons_ExtendedAndUnknown()
+    {
+        var x = new AutoScanIndicators(30, SessionOpen, 12m, 11.9m, 10m, 10m, null, null, null, null, null, null, null, null, 0,
+            SessionOpen: 9.5m, SessionHigh: 12.1m, Atr14: 1m);
+        Assert.Equal(new[] { "EXTENDED" }, AutoMomentumScanRules.ChaseReasons(Row(last: 11.6m, pct: 5m), x));      // (11.6-10)/1 = 1.6
+        Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: 11.4m, pct: 5m), x));                          // 1.4
+        var unknown = x with { SessionOpen = null, SessionHigh = null, Atr14 = null };
+        Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: 20m, pct: 50m), unknown));
+    }
+
+    /// <summary>
+    /// PURPOSE: Ranking: a flagged chase with a bigger % change ranks after a flagged fresh candidate; among fresh
+    /// candidates with equal scans, the larger move since the open ranks first. WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void Rank_ChasesAfterFreshCandidates()
+    {
+        AutoScanCandidate C(string symbol, decimal pct, decimal? fromOpen, params string[] chase) => new(
+            new AutoScanUniverseRow(symbol, 10m, "iex_latest_trade", 1_000_000, 9m, "sip_delayed_daily", pct, new[] { "TOP_GAINERS" }),
+            AutoMomentumScanRules.ComputeIndicators(new List<AutoScanBar>()),
+            new[] { new AutoScanScannerResult(AutoMomentumScanRules.MarketMovers, "D", "PASS", false, Array.Empty<AutoScanCondition>()) },
+            Array.Empty<string>(), 0, true, false, 60, chase, fromOpen);
+
+        var ranked = AutoMomentumScanService.Rank(new[]
+        {
+            C("SLSX", 175m, -15m, "GAP_FADING", "OFF_HIGH"),
+            C("SLOW", 4m, 1m),
+            C("FAST", 6m, 5m),
+        });
+        Assert.Equal(new[] { "FAST", "SLOW", "SLSX" }, ranked.Select(c => c.Universe.Symbol));
+    }
 }
