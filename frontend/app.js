@@ -231,7 +231,7 @@ const HELD_SYMBOLS_KEY="mcc.heldSymbols.v1";
 /// <summary>Reads the operator-declared HOLDING symbols (browser only; MCC has no broker position data). Called by every state view.</summary>
 function readHeldSymbols(){try{const value=JSON.parse(localStorage.getItem(HELD_SYMBOLS_KEY)||"[]");return new Set(Array.isArray(value)?value.map(x=>String(x).toUpperCase()):[]);}catch{return new Set();}}
 /// <summary>Marks or clears HOLDING for one symbol and forgets its last tone so the switch itself does not sound an alert. Called by the card toggle.</summary>
-function setHeldSymbol(symbol,held){const ticker=String(symbol||"").toUpperCase(),set=readHeldSymbols();if(held)set.add(ticker);else set.delete(ticker);try{localStorage.setItem(HELD_SYMBOLS_KEY,JSON.stringify([...set]));}catch{/* storage blocked: toggle lasts until reload */}previousRedZoneTone.delete(ticker);}
+function setHeldSymbol(symbol,held){const ticker=String(symbol||"").toUpperCase(),set=readHeldSymbols();if(held)set.add(ticker);else set.delete(ticker);try{localStorage.setItem(HELD_SYMBOLS_KEY,JSON.stringify([...set]));}catch{/* storage blocked: toggle lasts until reload */}previousRedZoneTone.delete(ticker);if(typeof renderPositionWatch==="function")void renderPositionWatch();}
 const RED_ZONE_TONE_HINTS={
  wait:"Wait · no setup yet.",
  prepare:"Heating up · 5M permission; waiting for 1M confirmation.",
@@ -249,9 +249,33 @@ const RED_ZONE_TONE_HINTS={
 function liveStateView(symbol,data){
  const held=readHeldSymbols().has(String(symbol||"").toUpperCase());
  const decision=held&&data?.heldPositionDecision?data.heldPositionDecision:(data?.decision||null);
- if(!decision)return{label:humanizeSignalState(data?.evaluationStatus||data?.status||"DATA?"),tone:"data",held,decision:null,hint:RED_ZONE_TONE_HINTS.data};
+ if(!decision){
+  // 2026-11-18 (operator request): a held stock whose 1M bar is stale on the free IEX feed (no IEX trade for a few
+  // minutes) but whose 5M bar is fresh shows its 5M state instead of "STALE MARKET DATA". Nothing is filled in for 1M.
+  if(held){const fiveOnly=heldFiveMinuteOnlyView(data);if(fiveOnly)return{...fiveOnly,held,decision:null};}
+  return{label:humanizeSignalState(data?.evaluationStatus||data?.status||"DATA?"),tone:"data",held,decision:null,hint:RED_ZONE_TONE_HINTS.data};
+ }
  const tone=decision.stateTone||(decision.entryAllowed===true?"ready":"data");
  return{label:decision.stateLabel||humanizeSignalState(decision.state),tone,held,decision,hint:RED_ZONE_TONE_HINTS[tone]||""};
+}
+/// <summary>
+/// Held stock, 1M stale but 5M fresh (2026-11-18): the 5M state from the ported TOS permission latch, labelled 5M ONLY.
+/// Structural damage or major failure (2 bars) = STRUCTURE BROKEN (sell tone); permission YES = TREND INTACT (runner);
+/// permission NO otherwise = PERMISSION LOST (waning). Returns null when the 5M bar is not fresh or the latch is
+/// missing, so the normal DATA view applies. Called by liveStateView.
+/// </summary>
+function heldFiveMinuteOnlyView(data){
+ if(data?.evaluationStatus!=="STALE_MARKET_DATA")return null;
+ const five=data.fiveMinute||{},latch=five.permissionLatch;
+ if(five.freshness!=="FRESH"||!latch||typeof latch.permission!=="boolean")return null;
+ const age=Number(data.oneMinute?.ageSeconds);
+ const quiet=Number.isFinite(age)?"1M: no IEX trade for "+Math.floor(age/60)+"m "+String(Math.round(age%60)).padStart(2,"0")+"s (the free feed sees only part of the volume; check TOS 1M).":"1M: no recent IEX bar; check TOS 1M.";
+ const since=latch.grantedSinceUtc?" since "+new Date(latch.grantedSinceUtc).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"})+" AZ":"";
+ if(latch.structuralDamagePersistent||latch.majorFailurePersistent)
+  return{label:"HOLDING · 5M STRUCTURE BROKEN",tone:"sell",fiveOnly:true,hint:"5M ONLY · "+(latch.blockLabel||"structural damage")+". Plan your exit. "+quiet};
+ if(latch.permission)
+  return{label:"HOLDING · 5M TREND INTACT",tone:"runner",fiveOnly:true,hint:"5M ONLY · permission YES"+since+". "+quiet};
+ return{label:"HOLDING · 5M PERMISSION LOST",tone:"waning",fiveOnly:true,hint:"5M ONLY · "+(latch.blockLabel||"permission NO")+". Plan or place your limit sell. "+quiet};
 }
 /// <summary>
 /// Records a state transition and sounds the matching alert. No alert on the first observation or when leaving DATA?
@@ -412,9 +436,10 @@ async function refreshDecisionExplanation(){
   if(transportLabel)transportLabel.textContent=one.sourceTransport==="ALPACA_WEBSOCKET_LATEST_BAR"?"ALPACA 1M WS / 5M REST · 15s UI REFRESH":"ALPACA REST · 15s UI REFRESH";
   const fiveMinutePermission=five.scoreBreakdown?.permission??decision?.fiveMinutePermission,permission=fiveMinutePermission===true?"YES":fiveMinutePermission===false?"NO":"UNKNOWN",execution=decision?.oneMinuteExecution||"UNKNOWN",ready=decision?.entryAllowed===true;
   const focusedView=liveStateView(symbol,data);
-  classification.textContent=focusedView.label+(focusedView.held?" · HOLDING":"");
+  classification.textContent=focusedView.label+(focusedView.held&&!/^HOLDING/.test(focusedView.label)?" · HOLDING":"");
+  $("main-chart-section")?.classList.toggle("is-held",!!focusedView.held);
   classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch")+" state-tone-"+focusedView.tone;
-  if(headline)headline.textContent=decision?.reason||data.evaluationReason||"No decision reason returned.";
+  if(headline)headline.textContent=focusedView.fiveOnly?focusedView.hint:(decision?.reason||data.evaluationReason||"No decision reason returned.");
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(5);
   const oneMinuteTimestamp=$("oneMinuteTimestamp");
   if(oneMinuteTimestamp){
@@ -1247,6 +1272,7 @@ function applyRedZoneCardState(symbol,statusNode,view){
  statusNode.textContent=view.held?"HOLDING":"WATCHING";
  statusNode.className="chip state-chip "+(view.held?"state-tone-runner":"state-tone-wait");
  if(!card)return;
+ card.classList.toggle("is-held",!!view.held);
  for(const name of [...card.classList])if(name.startsWith("card-tone-"))card.classList.remove(name);
  card.classList.add("card-tone-"+view.tone);
  const banner=card.querySelector(".redzone-state-banner");
@@ -3131,3 +3157,43 @@ $("earningsThisWeek")?.addEventListener("click",()=>{earningsWeekOffset=0;void r
 $("earningsShowAll")?.addEventListener("change",()=>void refreshEarnings());
 void refreshEarnings();
 window.setInterval(()=>{if(document.visibilityState==="visible"&&!earningsDialog?.open){earningsWeekOffset=0;void refreshEarnings();}},1800000);
+
+/// MODULE: Position watch (2026-11-18, operator request: held stocks get extra attention)
+/// PURPOSE: A gold strip at the top of Main Chart (INTRADAY MOMENTUM only) with one tile per stock marked HOLDING:
+/// state (including the 5M-only held view when IEX 1M is quiet), last 1M close, data age, Focus and Clear buttons.
+/// Refreshes every 20 s while visible. Held symbols are browser-only; MCC has no broker position data.
+let positionWatchRunning=false;
+/// <summary>Paints the strip from the live assessment of each held symbol. Called on load, every 20 s, and when HOLDING changes.</summary>
+async function renderPositionWatch(){
+ const host=$("positionWatch");if(!host||positionWatchRunning)return;
+ const held=[...readHeldSymbols()].sort();
+ if(!held.length||$("mode")?.value==="overnight"){host.hidden=true;host.replaceChildren();return;}
+ positionWatchRunning=true;
+ try{
+  const tiles=await Promise.all(held.map(async symbol=>{
+   const tile=document.createElement("div");tile.className="position-tile";tile.dataset.symbol=symbol;
+   const head=document.createElement("div");head.className="position-tile-head";
+   head.append(readyEl("strong",null,symbol),readyEl("span","position-tag","HOLDING"));
+   tile.append(head);
+   try{
+    const data=await fetchLiveAssessment(symbol),view=liveStateView(symbol,data),one=data.oneMinute||{},five=data.fiveMinute||{};
+    tile.classList.add("tone-"+view.tone);
+    tile.append(readyEl("p","position-state state-tone-"+view.tone,view.label.replace(/^HOLDING · /,"")));
+    const age=Number(one.ageSeconds),ageText=Number.isFinite(age)?(age<=120?"1M fresh":"1M quiet "+Math.floor(age/60)+"m "+String(Math.round(age%60)).padStart(2,"0")+"s"):"1M age ?";
+    tile.append(readyEl("p","position-meta",(one.close!=null?"$"+Number(one.close).toFixed(2):"price DATA?")+" · "+ageText+" · 5M "+(five.freshness||"?").toLowerCase()));
+    tile.title=view.hint||"";
+   }catch(error){tile.classList.add("tone-data");tile.append(readyEl("p","position-state","DATA UNAVAILABLE"),readyEl("p","position-meta",error.message));}
+   const actions=document.createElement("div");actions.className="position-actions";
+   const focus=readyEl("button","quiet-button","Focus");focus.type="button";
+   focus.addEventListener("click",()=>{const selector=$("symbol");if(!selector)return;if(selector.tagName==="SELECT"&&![...selector.options].some(o=>o.value===symbol)){const o=document.createElement("option");o.value=symbol;o.textContent=symbol;selector.append(o);}selector.value=symbol;render();void refreshFocusedPriceChart();});
+   const clear=readyEl("button","quiet-button","Clear");clear.type="button";clear.title="I no longer hold "+symbol;
+   clear.addEventListener("click",()=>{setHeldSymbol(symbol,false);writeRedZoneState(readRedZoneState());});
+   actions.append(focus,clear);tile.append(actions);
+   return tile;
+  }));
+  host.replaceChildren(readyEl("span","position-watch-title","POSITION WATCH"),...tiles);host.hidden=false;
+ }finally{positionWatchRunning=false;}
+}
+$("mode")?.addEventListener("change",()=>void renderPositionWatch());
+void renderPositionWatch();
+window.setInterval(()=>{if(document.visibilityState==="visible")void renderPositionWatch();},20000);

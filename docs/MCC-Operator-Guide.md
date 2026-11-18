@@ -83,7 +83,9 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - After you buy, click **Mark holding** on the card. Sell-side states then appear:
      - **RUNNER WANING / PREPARE TO SELL** → plan your limit sell;
      - **SELL / GET OUT** → sell.
-   - Click the button again after you sell.
+   - Click the button again after you sell (or **Clear** on its Position watch tile).
+   - **Position watch** (top of Main Chart, INTRADAY MOMENTUM): one gold tile per held stock with its state, last price, data age, **Focus** and **Clear**. Held Red Zone cards and a held Main Chart symbol get a gold outline.
+   - When IEX has had no trade in the last 2 minutes but the 5M bar is fresh, a held stock shows a **5M ONLY** state instead of STALE: **HOLDING · 5M TREND INTACT** (permission YES), **HOLDING · 5M PERMISSION LOST** (plan your sell) or **HOLDING · 5M STRUCTURE BROKEN** (2 bars below VWAP with EMA9 < EMA20; plan your exit). The line says how long IEX has been quiet; check TOS 1M.
 
 **Keep TOS open beside MCC:**
 - MCC's 1M/5M states aren't yet proven to match your installed TOS studies (To-Do §5).

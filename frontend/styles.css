@@ -4445,3 +4445,18 @@ details.optin-details[open]{padding-bottom:10px}
 .earnings-tag.post{background:rgba(131,184,255,.18);color:var(--blue)}
 .earnings-tag.na{background:rgba(255,255,255,.06);color:var(--muted)}
 .earnings-tag.mine{background:rgba(255,120,120,.18);color:#ff9a9a}
+
+/* Held stocks: position watch strip, gold outlines, 5M-only held view (2026-11-18) */
+.position-watch{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:0 0 10px;padding:8px;border:2px solid var(--yellow);border-radius:12px;background:rgba(242,203,118,.07)}
+.position-watch[hidden]{display:none}
+.position-watch-title{align-self:center;font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--yellow);margin-right:4px}
+.position-tile{min-width:190px;flex:0 1 240px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.position-tile.tone-runner{border-color:#58d68d}.position-tile.tone-waning{border-color:var(--yellow)}.position-tile.tone-sell{border-color:#ff6b6b}
+.position-tile-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.position-tile-head strong{font-size:18px}
+.position-tag{font-size:10px;font-weight:900;padding:1px 6px;border-radius:6px;background:rgba(242,203,118,.2);color:var(--yellow)}
+.position-state{margin:4px 0 2px;font-weight:900;font-size:13px}
+.position-meta{margin:0 0 4px;font-size:11px;color:var(--muted)}
+.position-actions{display:flex;gap:6px}
+.redzone-card.is-held{outline:2px solid var(--yellow);outline-offset:2px}
+#main-chart-section.is-held .main-chart-classification{outline:2px solid var(--yellow);outline-offset:2px}
