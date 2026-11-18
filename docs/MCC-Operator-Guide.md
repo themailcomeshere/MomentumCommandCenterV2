@@ -52,6 +52,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
    - The status line should read `COMPLETED`; it runs every 2 minutes, or click **Scan now**.
    - Check **Sources, feeds and limits** for any FAILED source.
    - The table shows symbols passing your scans 1 / 2A / 2B / PIV / D. Hover a ✓ / · / ? chip for the conditions.
+   - Order: scans passed, then **From open** (% move since today's open). A **CHASE** row (red tag, dimmed) ranks last: **GAP_FADING** = up 10%+ on the day but below today's open (the move happened before the open, like SLS on 2026-11-17); **OFF_HIGH** = 10%+ below today's high.
    - Click **Feed Red Zone** to send the top 4 to the Red Zone.
 4. **2.b Import TOS CSV** (bar below 2.a):
    - After your TOS scans, export the TOS Watchlist and import it here.

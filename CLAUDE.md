@@ -22,6 +22,7 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 ## Build and test
 
 - Operator verification: `.\scripts\Get-Latest-And-Test.ps1` from the repository root (Release build + full tests; reports the exact source SHA).
+- NEVER commit `frontend/app.js` without running the browser parse check (`docs/rules/htmlTailwindCssVanillaJavascriptCodingRules.md`) on the final file in the same step. HTML/attribute text inside a JS string literal must not reuse that literal's quote character. Added 2026-11-18 after `741806a` shipped a parse error (double quotes in a `title` inside a double-quoted string) and the Dashboard script did not run until `12f716d`.
 - A code-bearing head is verified only when exact-head CI and local Release tests pass. Browser, runtime, Thinkorswim compilation and data-source evidence are separate gates.
 
 ## Markdown rules
