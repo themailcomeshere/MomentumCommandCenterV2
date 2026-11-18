@@ -2,6 +2,20 @@
 
 Custom Thinkorswim watchlist columns that show, per symbol, which of your intraday scan conditions are true right now. **Not yet compiled in Thinkorswim.**
 
+## Two column sets (operator question 2026-11-18)
+
+Thinkorswim keeps separate column sets for **scan Search Results** (Stock Hacker) and for **watchlists**. They do different jobs:
+
+| | Intraday scan **Search Results** ("Intraday v1") | Intraday **Watchlist** |
+|---|---|---|
+| Job | Pick the few names worth watching out of many results | Monitor those few all session; this is the file you export to MCC **2.b** |
+| Rows | Dozens to hundreds; every custom column runs on every row (slow columns show `loading`) | A handful |
+| Sorting | **Sorted by → Custom Quotes** only lists plain-number columns: **5M RVOL**, **VWAP Dist %**, **Ext ATR**. **5M Trend** and **5M Trigger** are text labels and are greyed out there | Order you drag or sort in is the order MCC's **4 Red Zone** fills (first four, no Score column) |
+| Columns | Symbol, Last, % Change, Volume, 5M RVOL, VWAP Dist %, 5M Trend, 5M Trigger, Ext ATR. Sorted by **5M RVOL** descending | The same nine, plus your installed 1M/5M study labels if you have them as columns |
+| Never | ON / V3 columns (Overnight only) | ON / V3 columns |
+
+MCC reads only **Symbol** and row order from an Intraday import; the other columns are for your eyes.
+
 ## Recommended column order (left to right)
 
 1. **Symbol** (built in)
