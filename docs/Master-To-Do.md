@@ -55,6 +55,7 @@ Daily routine for both workspaces: [MCC-Operator-Guide.md](MCC-Operator-Guide.md
 6. BORING OVERNIGHT, 12:30–13:00 AZ: **1** click **Import TOS CSV** (Overnight columns showing; wait for V3 Rank to finish loading before exporting); **2.3** read the Boring Top 4 tags; **4** confirm the **Symbols** box (or click **Use Top 4**).
 7. BORING OVERNIGHT, 13:00–14:00 AZ: **4** click **Check READY now** (auto re-check every 2 min is on); label listed articles on the card; sign off with **Sign off: nothing blocking**; buy only on a green **READY** before 14:00 AZ. The 14:00–15:00 AZ late window is observe-only.
 8. After 14:16 AZ: click **History export** in the Dashboard header (§2c).
+9. Any time: catalyst batch 1 (§7); backup (§8). (V3 Rank sorting: done 2026-11-16.)
 
 ---
 
