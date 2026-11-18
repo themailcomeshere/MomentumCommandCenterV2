@@ -47,14 +47,14 @@ Schwab and broker reconciliation stay parked at the bottom.
 The full, click-by-click sequence is in the [current handoff](NewChatHandoff-20261117.md).
 
 Daily routine for both workspaces: [MCC-Operator-Guide.md](MCC-Operator-Guide.md). Open items, in order (standard time; subtract 1 hour in daylight time; all from `D:\source\repos\MomentumCommandCenterV2`):
-1. Before 07:30 AZ: `MCC.ps1 stop`, `Get-Latest-And-Test.ps1` (expect 501+, SHA `703bf03` or later), `MCC.ps1 start`, `MCC.ps1 warmup`; Ctrl+F5.
-2. INTRADAY MOMENTUM, from 07:35 AZ: **2.a Automatic momentum scan** shows `COMPLETED`, no FAILED source (§2b). Report the status line.
-3. INTRADAY MOMENTUM: TOS watchlist export → **2.b Import TOS CSV** (side-by-side session 1 of 5) (§2b).
-4. INTRADAY MOMENTUM: **4 Red Zone** colours vs TOS 1M/5M labels on one symbol; **Mark holding** on a stock you own (§2b).
-5. BORING OVERNIGHT, 12:30–13:00 AZ: **1** click **Import TOS CSV** (Overnight columns showing); **2.3** read the **Boring** chips; at 13:00 AZ **4** confirm the **Symbols** box (or click **Use Top 4**) and click **Check READY now**. (Fetch Daily + catalyst, 2.4, 2.5, 2.6 and the full table are optional since 2026-11-17.)
-6. BORING OVERNIGHT, 13:00–14:00 AZ: **4 READY check** for 1–3 picks; label the listed articles **on the card**; sign off; report the cards (§2). Late window to 15:00 AZ: type the after-hours price from TOS on the card.
-7. After 14:16 AZ: click **History export** in the Dashboard header (it turns green when today's export is done; the script still works too) (§2c).
-8. Any time: catalyst batch 1 (§7); backup (§8). (V3 Rank sorting: done 2026-11-16.)
+1. Before 07:30 AZ: `MCC.ps1 stop`, `Get-Latest-And-Test.ps1` (expect 541+, SHA `f847ca3` or later), `MCC.ps1 start`; Ctrl+F5. (2026-11-18: MCC already running `7fb58e9`; `f847ca3` is Dashboard-only, so Ctrl+F5 is enough.)
+2. INTRADAY MOMENTUM, from 07:35 AZ: **2.a Automatic momentum scan** shows `COMPLETED`, no FAILED source (§2b). 2026-11-18 08:11 AZ: COMPLETED, 192 universe, 110 evaluated, 21 flagged.
+3. INTRADAY MOMENTUM: TOS watchlist export → **2.b Import TOS CSV** (side-by-side session 2 of 5) (§2b).
+4. INTRADAY MOMENTUM: **4 Red Zone**: compare the **5M Permission** line and 1M/5M colours with TOS on 2–3 symbols; **Mark holding** on a stock you own (§2b).
+5. Left dock (either workspace): **Earnings** (your symbols reporting this week), **Catalysts**, **Exclusions**.
+6. BORING OVERNIGHT, 12:30–13:00 AZ: **1** click **Import TOS CSV** (Overnight columns showing; wait for V3 Rank to finish loading before exporting); **2.3** read the Boring Top 4 tags; **4** confirm the **Symbols** box (or click **Use Top 4**).
+7. BORING OVERNIGHT, 13:00–14:00 AZ: **4** click **Check READY now** (auto re-check every 2 min is on); label listed articles on the card; sign off with **Sign off: nothing blocking**; buy only on a green **READY** before 14:00 AZ. The 14:00–15:00 AZ late window is observe-only.
+8. After 14:16 AZ: click **History export** in the Dashboard header (§2c).
 
 ---
 
