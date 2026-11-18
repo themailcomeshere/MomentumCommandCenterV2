@@ -16,6 +16,7 @@ public sealed class LiveSymbolAssessmentService(
     IMarketBarObservationStore barStore,
     AlpacaMinuteBarStreamWorker streamWorker,
     IConfiguration configuration,
+    LiveSignalLogStore signalLog,
     ILogger<LiveSymbolAssessmentService> logger)
 {
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(10);
@@ -390,6 +391,30 @@ public sealed class LiveSymbolAssessmentService(
                     }
                 }
             };
+
+            // Live signal audit log (2026-11-18): one line per state change per symbol. Never blocks the assessment.
+            try
+            {
+                var (logPresent, logPossible) = LiveSymbolTechnicalCalculator.OneMinuteCoverage(oneMinute, evaluatedAt);
+                var reasonText = decision?.Reason ?? evaluationReason;
+                await signalLog.RecordAsync(new LiveSignalObservation(
+                    normalizedSymbol, evaluatedAt, evaluationStatus,
+                    decision is null ? null : LiveDecisionProjection.ToStateLabel(decision.State, decision.EntryAllowed).Label,
+                    decision?.EntryAllowed,
+                    heldDecision is null ? null : LiveDecisionProjection.ToStateLabel(heldDecision.State, heldDecision.EntryAllowed).Label,
+                    decision?.Score,
+                    latchLatest?.Permission,
+                    oneLatest is null ? null : (decimal)oneLatest.Close,
+                    logPossible > 0 ? logPresent : null,
+                    logPossible > 0 ? logPossible : null,
+                    oneLatest?.Timestamp, fiveLatest?.Timestamp,
+                    oneLatest?.Feed ?? fiveLatest?.Feed,
+                    reasonText is { Length: > 400 } ? reasonText[..400] : reasonText), DateTimeOffset.UtcNow, cancellationToken);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            {
+                logger.LogWarning(ex, "Live signal log write failed for {Symbol}", normalizedSymbol);
+            }
 
             _cache[cacheKey] = (evaluatedAt.Add(CacheLifetime), result);
             return result;

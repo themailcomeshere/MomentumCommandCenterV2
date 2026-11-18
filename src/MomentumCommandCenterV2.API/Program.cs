@@ -50,6 +50,7 @@ builder.Services.AddSingleton<MomentumCommandCenterV2.API.StrategyReports.IThink
 builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservationStore>();
 // Registered first so the one-time index rebuild starts before the other hosted workers.
 builder.Services.AddHostedService<JsonlMarketBarIndexWarmupService>();
+builder.Services.AddSingleton<LiveSignalLogStore>();
 builder.Services.AddSingleton<LiveSymbolAssessmentService>();
 builder.Services.AddSingleton<AlpacaMinuteBarStreamWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaMinuteBarStreamWorker>());
@@ -773,6 +774,21 @@ app.MapGet("/api/market-data/opportunity-quality/rank", async (
 .WithName("RankOpportunityQualityPool")
 .WithSummary("Rank an explicit candidate pool using diagnostic Opportunity Quality")
 .WithDescription("Provide 1–50 unique comma-separated symbols and optional providerName. Every supplied symbol is assessed with bounded concurrency. The response includes all candidates, including DATA? and BLOCKED, and uses a disclosed diagnostic ordering without a composite score or probability claim.");
+
+app.MapGet("/api/market-data/signal-log", async (string? date, string? symbol, LiveSignalLogStore signalLog, CancellationToken ct) =>
+{
+    DateOnly day;
+    if (string.IsNullOrWhiteSpace(date))
+        day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/New_York")).DateTime);
+    else if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", out day))
+        return Results.BadRequest(new { error = "date must be yyyy-MM-dd (Eastern trading date)." });
+    if (!string.IsNullOrWhiteSpace(symbol) && !IsValidSymbol(symbol))
+        return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    var entries = await signalLog.ReadAsync(day, symbol, ct);
+    return Results.Ok(new { date = day, symbol = symbol?.Trim().ToUpperInvariant(), count = entries.Count, file = signalLog.FilePath, entries });
+})
+.WithSummary("Audit log of live intraday signals: one line per state change per symbol (Eastern date)")
+.WithDescription("Written by every live assessment the Dashboard requests (Red Zone cards, Main Chart, Position watch). A line is added only when the no-position state (WAIT / PREPARE TO BUY / EXECUTION READY …), the holder state or the evaluation status changes; FIRST_SEEN marks the first observation after MCC starts. Includes price, 5M score and permission, 1M coverage of the last 15 minutes, bar times and the reason. Append-only JSONL in the MCC data folder.");
 
 app.MapGet("/api/market-data/replay", async (
     string? symbol,
