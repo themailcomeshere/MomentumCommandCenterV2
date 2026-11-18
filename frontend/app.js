@@ -2850,7 +2850,7 @@ function renderAutoScan(run){
  if(!flagged.length){table.replaceChildren(Object.assign(document.createElement("p"),{className:"muted small",textContent:"No symbol passes a scan right now (fresh bars, not excluded)."}));}
  else{
   const t=document.createElement("table");t.className="auto-scan-table";
-  t.innerHTML="<thead><tr><th>#</th><th>Symbol</th><th>Last</th><th>% chg</th><th title="% move since today's regular-session open (today's momentum). Rows tagged CHASE rank after fresh candidates.">From open</th><th>Day vol</th><th>1</th><th>2A</th><th>2B</th><th>PIV</th><th>D</th><th>Tags</th></tr></thead>";
+  t.innerHTML="<thead><tr><th>#</th><th>Symbol</th><th>Last</th><th>% chg</th><th title='% move since today&#39;s regular-session open (today&#39;s momentum). Rows tagged CHASE rank after fresh candidates.'>From open</th><th>Day vol</th><th>1</th><th>2A</th><th>2B</th><th>PIV</th><th>D</th><th>Tags</th></tr></thead>";
   const body=document.createElement("tbody");
   flagged.forEach((c,i)=>{
    const tr=document.createElement("tr"),u=c.universe;
