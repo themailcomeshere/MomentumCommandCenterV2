@@ -90,7 +90,7 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 
 **Thin data:** a card's freshness line showing **1M data x/15 min THIN** means fewer than 80% of the last 15 minutes had an IEX trade. MCC then shows **PREPARE TO BUY** instead of EXECUTION READY, because its 1-minute picture rests on a few prints; check TOS 1M. Sell signals are not affected.
 
-**Audit a signal:** open `http://localhost:53360/api/market-data/signal-log?symbol=MWH` (add `&date=YYYY-MM-DD` for another day). It lists every state change MCC showed for that symbol, with the time, price, coverage and reason. Only symbols the Dashboard was assessing are logged.
+**Audit a signal:** click **Signal log** in the left dock (either workspace; the badge counts today's EXECUTION READY lines). Pick the **Date (Eastern)**, type a **Symbol** or leave it blank, and untick **Signals only** to also see WAIT and data-only changes; hover a row for the reason. The same data is at `http://localhost:53360/api/market-data/signal-log?symbol=MWH` (add `&date=YYYY-MM-DD`). It lists every state change MCC showed for that symbol, with the time, price, coverage and reason. Only symbols the Dashboard was assessing are logged.
 
 **Keep TOS open beside MCC:**
 - MCC's 1M/5M states aren't yet proven to match your installed TOS studies (To-Do §5).

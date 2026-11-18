@@ -4468,3 +4468,15 @@ details.optin-details[open]{padding-bottom:10px}
 
 /* 1M coverage gate: thin IEX 1-minute data (2026-11-18) */
 .coverage-thin{color:var(--yellow);font-weight:700}
+
+/* Signal log: dock badge and audit modal (2026-11-18) */
+.prototype-signal-log .signal-log-count{background:rgba(131,184,255,.12);color:var(--muted)}
+.prototype-signal-log .signal-log-count.has-items{background:rgba(88,214,141,.2);color:#58d68d}
+.signal-log-dialog{width:min(1040px,96vw)}
+.signal-log-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 6px;font-size:12px}
+.signal-log-wrap{max-height:60vh;overflow:auto}
+.signal-log-table{font-size:12px;width:100%}
+.signal-log-table td,.signal-log-table th{padding:3px 8px;white-space:nowrap}
+.signal-log-table td.sl-ready{color:#58d68d;font-weight:800}
+.signal-log-table td.sl-prepare{color:var(--yellow);font-weight:700}
+.signal-log-table td.sl-sell{color:#ff8a8a;font-weight:800}

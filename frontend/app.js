@@ -3208,3 +3208,64 @@ async function renderPositionWatch(){
 $("mode")?.addEventListener("change",()=>void renderPositionWatch());
 void renderPositionWatch();
 window.setInterval(()=>{if(document.visibilityState==="visible")void renderPositionWatch();},20000);
+
+/// MODULE: Signal log (2026-11-18, operator request)
+/// PURPOSE: Left-dock button + modal over GET /api/market-data/signal-log: every live intraday state change MCC showed,
+/// newest first, filterable by Eastern date and symbol. The badge counts today's EXECUTION READY lines. Refreshes every
+/// 30 s while open.
+const signalLogDialog=$("signalLogDialog");
+let signalLogTimer=null;
+/// <summary>Today's Eastern date as YYYY-MM-DD. Called when the modal opens.</summary>
+function signalLogToday(){return new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());}
+/// <summary>Colour class for a state label (ready green, prepare/waning amber, sell red). Called per cell.</summary>
+function signalLogTone(label){const s=String(label||"");return /EXECUTION READY|RUNNER$/.test(s)?"ready":/SELL|GET OUT/.test(s)?"sell":/PREPARE|WANING/.test(s)?"prepare":"";}
+/// <summary>Loads and paints the log; also updates the badge for today. Called on open, Refresh, filter changes and the 30 s timer.</summary>
+async function refreshSignalLog(badgeOnly=false){
+ const status=$("signalLogStatus"),body=$("signalLogRows"),badge=$("signalLogCountBadge");
+ const date=badgeOnly?signalLogToday():($("signalLogDate")?.value||signalLogToday());
+ const symbol=badgeOnly?"":String($("signalLogSymbol")?.value||"").trim().toUpperCase();
+ try{
+  const params=new URLSearchParams({date});if(symbol)params.set("symbol",symbol);
+  const res=await fetch("/api/market-data/signal-log?"+params.toString(),{cache:"no-store",headers:{Accept:"application/json"}});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const data=await res.json(),entries=data.entries||[];
+  if(date===signalLogToday()&&!symbol&&badge){const ready=entries.filter(e=>e.observation?.state==="EXECUTION READY").length;badge.textContent=String(ready);badge.classList.toggle("has-items",ready>0);badge.title=ready+" EXECUTION READY line(s) today";}
+  if(badgeOnly||!body)return;
+  const signalsOnly=!!$("signalLogSignalsOnly")?.checked;
+  const shown=entries.slice().reverse().filter(e=>!signalsOnly||(e.observation?.state&&e.observation.state!=="WAIT")||/SELL|GET OUT|RUNNER|PREPARE/.test(e.observation?.heldState||""));
+  body.replaceChildren(...shown.map(e=>{
+   const o=e.observation||{},tr=document.createElement("tr");
+   const cell=(text,cls)=>{const td=document.createElement("td");td.textContent=text;if(cls)td.className=cls;tr.append(td);return td;};
+   cell(new Date(o.evaluatedAtUtc).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"2-digit",minute:"2-digit",second:"2-digit"}));
+   const sym=cell(o.symbol);sym.style.fontWeight="800";
+   cell(o.state||"—","sl-"+signalLogTone(o.state));
+   cell(o.heldState||"—","sl-"+signalLogTone(o.heldState));
+   cell(o.lastClose==null?"DATA?":"$"+Number(o.lastClose).toFixed(2),"num");
+   const cov=o.oneMinuteBarsPossible?o.oneMinuteBarsPresent+"/"+o.oneMinuteBarsPossible:"—";
+   cell(cov,o.oneMinuteBarsPossible&&o.oneMinuteBarsPresent*100<o.oneMinuteBarsPossible*80?"sl-prepare":"");
+   cell(o.fiveMinutePermission===true?"YES":o.fiveMinutePermission===false?"NO":"—");
+   cell((e.change==="FIRST_SEEN"?"FIRST_SEEN · ":"")+String(o.evaluationStatus||"").replaceAll("_"," "));
+   tr.title=(o.reason||"")+(o.oneMinuteBarUtc?"\n1M bar "+new Date(o.oneMinuteBarUtc).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"2-digit",minute:"2-digit"})+" AZ":"")+(o.feed?" · feed "+o.feed:"");
+   return tr;
+  }));
+  if(!shown.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=8;td.textContent=entries.length?"No signal changes with the current filter.":"Nothing logged for this date"+(symbol?" and symbol":"")+".";tr.append(td);body.append(tr);}
+  if(status)status.textContent=shown.length+" of "+entries.length+" line(s) · "+date+(symbol?" · "+symbol:"")+" · file: "+data.file;
+ }catch(error){
+  if(badge&&badgeOnly)badge.textContent="?";
+  if(status&&!badgeOnly)status.textContent="Signal log unavailable: "+error.message+(error.message.includes("404")?". Restart MCC on the latest version.":".");
+ }
+}
+$("openSignalLog")?.addEventListener("click",()=>{
+ if(!signalLogDialog||signalLogDialog.open)return;
+ const d=$("signalLogDate");if(d&&!d.value)d.value=signalLogToday();
+ signalLogDialog.showModal();void refreshSignalLog();
+ signalLogTimer=window.setInterval(()=>void refreshSignalLog(),30000);
+});
+signalLogDialog?.addEventListener("close",()=>{if(signalLogTimer){window.clearInterval(signalLogTimer);signalLogTimer=null;}});
+$("closeSignalLog")?.addEventListener("click",()=>signalLogDialog?.close());
+$("refreshSignalLog")?.addEventListener("click",()=>void refreshSignalLog());
+$("signalLogDate")?.addEventListener("change",()=>void refreshSignalLog());
+$("signalLogSymbol")?.addEventListener("input",()=>void refreshSignalLog());
+$("signalLogSignalsOnly")?.addEventListener("change",()=>void refreshSignalLog());
+void refreshSignalLog(true);
+window.setInterval(()=>{if(document.visibilityState==="visible"&&!signalLogDialog?.open)void refreshSignalLog(true);},60000);
