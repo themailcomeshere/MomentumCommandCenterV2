@@ -37,4 +37,8 @@ public sealed record V2Config(
     int SoftDeteriorationBars = 2,
 
     int EndOfDayExitHourEt = 15,
-    int EndOfDayExitMinuteEt = 55);
+    int EndOfDayExitMinuteEt = 55,
+
+    // 1M data coverage gate (operator decision 2026-11-18, after MWH): EXECUTION READY needs at least this share (percent)
+    // of the last 15 regular-session minutes to have a 1-minute bar. Liquid names have 15/15 on IEX; thin names 4–8/15.
+    int MinOneMinuteCoveragePercent = 80);

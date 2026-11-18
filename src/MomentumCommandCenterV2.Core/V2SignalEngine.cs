@@ -47,6 +47,20 @@ public sealed class V2SignalEngine
     }
 
     /// <summary>
+    /// PURPOSE: True when the snapshot reports 1-minute coverage below the configured share of possible minutes
+    /// (present * 100 &lt; possible * MinOneMinuteCoveragePercent). text = "8 of 15 minutes".
+    /// WHEN CALLED: By Evaluate before returning an entry (Buy) decision.
+    /// </summary>
+    public static bool OneMinuteCoverageThin(CommandCenterSnapshot snapshot, V2Config config, out string text)
+    {
+        text = "";
+        if (snapshot.OneMinuteBarsPresent is not int present || snapshot.OneMinuteBarsPossible is not int possible || possible <= 0)
+            return false;
+        text = $"{present} of {possible} minutes";
+        return present * 100 < possible * config.MinOneMinuteCoveragePercent;
+    }
+
+    /// <summary>
     /// PURPOSE: Calculate the independent six-condition 5M authority score.
     /// WHEN CALLED: Live assessment and decision evaluation need the same V2 score without 1M execution dependencies.
     /// IMPORTANT: Uses only completed 5M indicator inputs; freshness/history checks remain the caller's responsibility.
@@ -408,6 +422,25 @@ public sealed class V2SignalEngine
         // =========================================================
         // NO POSITION
         // =========================================================
+
+        // 1M data coverage gate (operator decision 2026-11-18, MWH): too few 1-minute bars in the last 15 minutes means
+        // the 1M EMAs/RSI/momentum rest on a handful of prints, so EXECUTION READY is withheld (PREPARE TO BUY instead).
+        // Exits never wait for coverage. Unknown coverage (callers that do not supply it) does not block.
+        if (freshBuy && OneMinuteCoverageThin(snapshot, _config, out var coverageText))
+        {
+            return Decision(
+                SignalState.PrepareBuy,
+                MomentumAction.PREPARE_BUY,
+                score,
+                BuildReason(
+                    $"Entry conditions met, but 1M coverage is thin ({coverageText}); EXECUTION READY withheld. Check TOS 1M.",
+                    reasons),
+                true,
+                false,
+                false,
+                false,
+                false, evaluation);
+        }
 
         // BUY is entry-only.
         if (freshBuy)

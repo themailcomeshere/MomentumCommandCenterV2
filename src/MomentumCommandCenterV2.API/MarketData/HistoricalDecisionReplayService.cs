@@ -108,8 +108,11 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
         // Same 5M gate as the live assessment: the installed TOS study's permission latch over all replayed 5m bars.
         var latch = FiveMinutePermissionLatch.Evaluate(LiveSymbolTechnicalCalculator.PermissionSeries(fiveBars));
         var latchPermission = latch.Latest is { } step && step.Timestamp == fiveBars[^1].Timestamp ? step.Permission : (bool?)null;
+        // Same 1M coverage gate input as the live assessment (2026-11-18).
+        var (coveragePresent, coveragePossible) = LiveSymbolTechnicalCalculator.OneMinuteCoverage(oneBars, asOfUtc);
         var snapshot = new CommandCenterSnapshot(
-            asOfUtc, normalizedSymbol, one, five, MarketPhase.RegularSession, previousFive, latchPermission);
+            asOfUtc, normalizedSymbol, one, five, MarketPhase.RegularSession, previousFive, latchPermission,
+            coveragePresent, coveragePossible);
         var result = new V2SignalEngine().Evaluate(snapshot, hasPosition);
         return new
         {
@@ -121,6 +124,7 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             calculationVersion = "V2SignalEngine-default-config + " + FiveMinutePermissionLatch.RulesVersion,
             fiveMinutePermissionLatch = latch.Latest is null ? null : new { latch.Latest.Permission, latch.Latest.Transition, latch.Latest.BlockCode, blockLabel = FiveMinutePermissionLatch.BlockLabel(latch.Latest.BlockCode), latch.GrantedSinceUtc },
             hasPosition,
+            oneMinuteCoverageLast15 = new { present = coveragePresent, possible = coveragePossible },
             oneMinuteBars = oneBars.Length,
             fiveMinuteBars = fiveBars.Length,
             oneMinuteSourceTimestampUtc = oneBars[^1].Timestamp,

@@ -173,6 +173,7 @@ public sealed class LiveSymbolAssessmentService(
             }
             else
             {
+                var (coveragePresent, coveragePossible) = LiveSymbolTechnicalCalculator.OneMinuteCoverage(oneMinute, evaluatedAt);
                 var snapshot = new CommandCenterSnapshot(
                     evaluatedAt,
                     normalizedSymbol,
@@ -180,7 +181,9 @@ public sealed class LiveSymbolAssessmentService(
                     five,
                     MarketPhase.RegularSession,
                     previousFive,
-                    latchLatest?.Permission);
+                    latchLatest?.Permission,
+                    coveragePresent,
+                    coveragePossible);
                 decision = new V2SignalEngine().Evaluate(snapshot, false);
                 heldDecision = new V2SignalEngine().Evaluate(snapshot, true);
                 evaluationStatus = "EVALUATED";
@@ -287,6 +290,9 @@ public sealed class LiveSymbolAssessmentService(
                 oneMinute = new
                 {
                     barCount = oneMinute.Count,
+                    coverageLast15 = LiveSymbolTechnicalCalculator.OneMinuteCoverage(oneMinute, evaluatedAt) is var cov
+                        ? new { present = cov.Present, possible = cov.Possible, thin = cov.Possible > 0 && cov.Present * 100 < cov.Possible * new V2Config().MinOneMinuteCoveragePercent }
+                        : null,
                     sourceTransport = oneMinuteFromWebSocket ? "ALPACA_WEBSOCKET_LATEST_BAR" : (oneLatest?.SourceTransport ?? "UNKNOWN"),
                     sourceTimestampUtc = oneLatest?.Timestamp,
                     completedAtUtc = oneCloseAt,
@@ -612,6 +618,22 @@ public static class LiveSymbolTechnicalCalculator
     /// PURPOSE: Determines whether the evaluation clock is inside the US regular equity session.
     /// WHEN CALLED: V2 intraday decisions are withheld outside 09:30–16:00 Eastern on weekdays.
     /// </summary>
+    /// <summary>
+    /// PURPOSE: 1-minute data coverage for the V2 coverage gate (2026-11-18): of the last 15 completed minutes before
+    /// asOf (the minute containing asOf is still forming), how many are regular-session minutes (possible) and how many
+    /// of those have a bar (present). In the first 15 minutes after 09:30 ET only session minutes count.
+    /// WHEN CALLED: By the live assessment and the historical replay before building the V2 snapshot.
+    /// </summary>
+    public static (int Present, int Possible) OneMinuteCoverage(IReadOnlyList<MarketBar> bars, DateTimeOffset asOf)
+    {
+        var end = new DateTimeOffset(asOf.UtcDateTime.Ticks - asOf.UtcDateTime.Ticks % TimeSpan.TicksPerMinute, TimeSpan.Zero);
+        var start = end.AddMinutes(-15);
+        var possible = 0;
+        for (var m = start; m < end; m = m.AddMinutes(1)) if (IsRegularSession(m)) possible++;
+        var present = bars.Select(b => b.Timestamp).Where(t => t >= start && t < end && IsRegularSession(t)).Distinct().Count();
+        return (present, possible);
+    }
+
     public static bool IsRegularSession(DateTimeOffset timestamp)
     {
         var local = TimeZoneInfo.ConvertTime(timestamp, Eastern);

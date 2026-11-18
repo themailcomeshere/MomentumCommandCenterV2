@@ -4465,3 +4465,6 @@ details.optin-details[open]{padding-bottom:10px}
 .auto-scan-tag.chase{background:rgba(255,107,107,.18);color:#ff9a9a}
 .auto-scan-chase-row td{opacity:.62}
 .auto-scan-chase-row td:nth-child(2){text-decoration:line-through dotted}
+
+/* 1M coverage gate: thin IEX 1-minute data (2026-11-18) */
+.coverage-thin{color:var(--yellow);font-weight:700}

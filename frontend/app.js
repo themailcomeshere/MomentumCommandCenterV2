@@ -384,6 +384,11 @@ async function fetchLiveAssessment(symbol){
  liveAssessmentInFlight.set(ticker,request);
  try{return await request;}finally{if(liveAssessmentInFlight.get(ticker)===request)liveAssessmentInFlight.delete(ticker);}
 }
+/// <summary>" · 1M data 8/15 min THIN" for the 1M coverage gate (2026-11-18): EXECUTION READY is withheld below 80%. Called by the freshness lines.</summary>
+function coverageText(cov){
+ if(!cov||!(cov.possible>0))return "";
+ return " · 1M data "+cov.present+"/"+cov.possible+" min"+(cov.thin?" THIN (no EXECUTION READY)":"");
+}
 function sourceFreshness(label,ageSeconds){
  if(!label)return "UNKNOWN";
  return label+(ageSeconds!==null&&ageSeconds!==undefined&&Number.isFinite(Number(ageSeconds))?" · "+Math.max(0,Number(ageSeconds)).toFixed(0)+"s":"");
@@ -457,7 +462,7 @@ async function refreshDecisionExplanation(){
   if(rvol)rvol.textContent=five.relativeVolume==null?"UNKNOWN":Number(five.relativeVolume).toFixed(2)+"×";
   if(extension)extension.textContent=one.extensionAtr==null?"DATA?":Number(one.extensionAtr).toFixed(2)+" ATR";
   if(eligibility)eligibility.textContent="5M permission: "+permission;
-  if(freshness)freshness.textContent="1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
+  if(freshness)freshness.textContent="1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds)+coverageText(one.coverageLast15);
   if(fiveState)fiveState.textContent="5M permission: "+permission+(decision?.fiveMinuteStructureBull===true?" · bullish structure":decision?.fiveMinuteStructureBull===false?" · structure not bullish":"");
   if(oneState)oneState.textContent="1M execution: "+execution+(ready?" · entry gate passed":"");
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
@@ -1228,7 +1233,8 @@ async function updateRedZoneCardAssessment(symbol,statusNode,scoreNode,extension
   setV2ScoreDisplay(scoreNode,five.scoreBreakdown,decision,data.evaluationStatus);
   const money=value=>value!==null&&value!==undefined&&Number.isFinite(Number(value))?"$"+Number(value).toFixed(3):"DATA?";
   extensionNode.textContent="1M close "+money(one.close)+" · Daily VWAP "+money(one.vwap)+" · ATR14 "+money(one.atr)+" · Extension "+(one.extensionAtr!==null&&one.extensionAtr!==undefined&&Number.isFinite(Number(one.extensionAtr))?Number(one.extensionAtr).toFixed(2)+" ATR":"DATA?");
-  freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds);
+  freshnessNode.textContent="Freshness: 1M "+sourceFreshness(one.freshness,one.ageSeconds)+" · 5M "+sourceFreshness(five.freshness,five.ageSeconds)+coverageText(one.coverageLast15);
+  freshnessNode.classList.toggle("coverage-thin",!!one.coverageLast15?.thin);
   const relativeVolume=Number(five.relativeVolume);
   const rvolCriterion=five.scoreBreakdown?.criteria?.find(item=>item.key==="rvolSupportive");
   const participationKnown=Number.isFinite(relativeVolume)&&typeof rvolCriterion?.passed==="boolean";

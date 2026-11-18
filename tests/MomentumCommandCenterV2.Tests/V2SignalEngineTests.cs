@@ -179,6 +179,34 @@ public sealed class V2SignalEngineTests
         Assert.False(V2SignalEngine.CalculateFiveMinuteScore(fourOfSix) >= 5);
     }
 
+    /// <summary>
+    /// METHOD: ThinOneMinuteCoverageWithholdsExecutionReady
+    /// PURPOSE: 1M coverage gate (2026-11-18, MWH): with every entry condition met, 8 of 15 minutes withholds BUY
+    /// (PREPARE TO BUY, entry not allowed, reason names the coverage); 12 of 15 (80%) and unknown coverage still BUY;
+    /// in the session's first minutes the share is of the session minutes only (4 of 5 = 80% passes, 3 of 5 does not);
+    /// a held position is unaffected (exits never wait for coverage). Synthetic fixtures.
+    /// WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void ThinOneMinuteCoverageWithholdsExecutionReady()
+    {
+        var baseSnapshot = Snapshot(StrongOne(), StrongFive());
+        var engine = new V2SignalEngine();
+
+        var thin = engine.Evaluate(baseSnapshot with { OneMinuteBarsPresent = 8, OneMinuteBarsPossible = 15 }, false);
+        Assert.Equal(SignalState.PrepareBuy, thin.State);
+        Assert.False(thin.EntryAllowed);
+        Assert.Contains("8 of 15 minutes", thin.Reason);
+
+        Assert.Equal(SignalState.Buy, engine.Evaluate(baseSnapshot with { OneMinuteBarsPresent = 12, OneMinuteBarsPossible = 15 }, false).State);
+        Assert.Equal(SignalState.Buy, engine.Evaluate(baseSnapshot, false).State);
+        Assert.Equal(SignalState.Buy, engine.Evaluate(baseSnapshot with { OneMinuteBarsPresent = 4, OneMinuteBarsPossible = 5 }, false).State);
+        Assert.Equal(SignalState.PrepareBuy, engine.Evaluate(baseSnapshot with { OneMinuteBarsPresent = 3, OneMinuteBarsPossible = 5 }, false).State);
+
+        var held = engine.Evaluate(baseSnapshot with { OneMinuteBarsPresent = 2, OneMinuteBarsPossible = 15 }, true);
+        Assert.Equal(engine.Evaluate(baseSnapshot, true).State, held.State);
+    }
+
     [Fact]
     /// <summary>
     /// METHOD: StrongAlignmentProducesBuy

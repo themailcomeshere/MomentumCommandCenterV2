@@ -40,4 +40,6 @@ public sealed record CommandCenterSnapshot(
     BarSnapshot FiveMinute,
     MarketPhase Phase,
     BarSnapshot? PreviousFiveMinute = null,
-    bool? FiveMinutePermission = null);
+    bool? FiveMinutePermission = null,
+    int? OneMinuteBarsPresent = null,
+    int? OneMinuteBarsPossible = null);
