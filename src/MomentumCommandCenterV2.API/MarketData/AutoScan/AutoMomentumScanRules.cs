@@ -53,8 +53,7 @@ public sealed record AutoScanIndicators(
     decimal? PriorHigh20,
     int MissingSlotsInLast50,
     decimal? SessionOpen = null,
-    decimal? SessionHigh = null,
-    decimal? Atr14 = null);
+    decimal? SessionHigh = null);
 
 /// <summary>
 /// TYPE: AutoScanCondition
@@ -121,19 +120,11 @@ public static class AutoMomentumScanRules
         decimal? avgVol = n >= 20 ? bars.Skip(n - 20).Average(b => (decimal)b.Volume) : null;
         decimal? priorHigh = n >= 21 ? bars.Skip(n - 21).Take(20).Max(b => b.High) : null;
         // Chase inputs (2026-11-18): today's regular-session open and high (bars from 09:30 ET on the latest bar's
-        // Eastern date; pre-market excluded) and a 14-bar 5m ATR. Null when today has no regular-session bar yet.
+        // Eastern date; pre-market excluded). Null when today has no regular-session bar yet.
         var today = EasternDate(bars[last].Timestamp);
         var session = bars.Where(b => EasternDate(b.Timestamp) == today && IsRegularSessionBar(b.Timestamp)).ToArray();
         decimal? sessionOpen = session.Length > 0 ? session[0].Open : null;
         decimal? sessionHigh = session.Length > 0 ? session.Max(b => b.High) : null;
-        decimal? atr14 = null;
-        if (n >= 15)
-        {
-            var trs = new List<decimal>();
-            for (var i = n - 14; i < n; i++)
-                trs.Add(Math.Max(bars[i].High - bars[i].Low, Math.Max(Math.Abs(bars[i].High - bars[i - 1].Close), Math.Abs(bars[i].Low - bars[i - 1].Close))));
-            atr14 = trs.Average();
-        }
 
         return new AutoScanIndicators(
             n,
@@ -152,19 +143,22 @@ public static class AutoMomentumScanRules
             priorHigh,
             CountMissingSlots(bars, 50),
             sessionOpen,
-            sessionHigh,
-            atr14);
+            sessionHigh);
     }
 
-    /// <summary>Chase thresholds (operator approval 2026-11-18, "Yes, build it"; proposal replayed on SLS 2026-11-17).</summary>
-    public const decimal ChaseGapPercent = 10m, ChaseOffHighPercent = 10m, ChaseExtensionAtr = 1.5m;
+    /// <summary>
+    /// Chase thresholds (operator approval 2026-11-18, "Yes, build it"; replayed on SLS 2026-11-17: CHASE in 61 of 61
+    /// steps). The proposed third rule, EXTENDED (1.5 ATR(14, 5m) above VWAP), was dropped after the live replay the
+    /// same day: it tagged 26 of 31 flagged stocks (AMZN 1.18% above VWAP measured 6.7 ATR) because midday 5m ATR is tiny.
+    /// Extension stays guarded by the Red Zone / READY 1M rule.
+    /// </summary>
+    public const decimal ChaseGapPercent = 10m, ChaseOffHighPercent = 10m;
 
     /// <summary>
-    /// PURPOSE: Why a candidate looks like a chase (the move is already over or stretched). Codes:
+    /// PURPOSE: Why a candidate looks like a chase (the move is already over). Codes:
     ///  - GAP_FADING: % change vs the prior close is +10% or more and the price is below today's regular-session open
     ///    (the move happened before the open and is fading; SLS 2026-11-17);
-    ///  - OFF_HIGH: the price is 10% or more below today's regular-session high;
-    ///  - EXTENDED: the price is 1.5 ATR(14, 5m) or more above session VWAP (MCC's extension warning level).
+    ///  - OFF_HIGH: the price is 10% or more below today's regular-session high.
     /// Unknown inputs add nothing (no code is guessed). Price = the live last trade, else the latest 5m close.
     /// WHEN CALLED: Once per candidate by AutoMomentumScanService.Evaluate.
     /// </summary>
@@ -177,8 +171,6 @@ public static class AutoMomentumScanRules
             reasons.Add("GAP_FADING");
         if (x.SessionHigh is > 0m && price.Value <= x.SessionHigh.Value * (1m - ChaseOffHighPercent / 100m))
             reasons.Add("OFF_HIGH");
-        if (x.Vwap is not null && x.Atr14 is > 0m && (price.Value - x.Vwap.Value) / x.Atr14.Value >= ChaseExtensionAtr)
-            reasons.Add("EXTENDED");
         return reasons;
     }
 

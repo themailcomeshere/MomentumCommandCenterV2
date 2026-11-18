@@ -188,8 +188,8 @@ public sealed class AutoMomentumScanService
     }
 
     /// <summary>
-    /// PURPOSE: Orders candidates: flagged first; then not a chase (2026-11-18: gap fading, 10% off the high, or 1.5 ATR
-    /// above VWAP rank after every fresh candidate); then 5m scans passed; then scan D; then % move since today's open;
+    /// PURPOSE: Orders candidates: flagged first; then not a chase (2026-11-18: gap fading or 10% off the high rank
+    /// after every fresh candidate); then 5m scans passed; then scan D; then % move since today's open;
     /// then % change vs the prior close; then symbol.
     /// WHEN CALLED: By RunAsync and unit tests.
     /// </summary>

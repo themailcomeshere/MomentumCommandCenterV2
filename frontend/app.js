@@ -2867,9 +2867,9 @@ function renderAutoScan(run){
     td.append(chip);tr.append(td);
    }
    const tags=document.createElement("td");
-   for(const tag of (c.tags||[]).filter(x=>!["1","2A","2B","PIV","D"].includes(x))){const span=document.createElement("span");span.className="auto-scan-tag"+(/APPROX|GAPS/.test(tag)?" warn":"")+(/^(CHASE|GAP_FADING|OFF_HIGH|EXTENDED)$/.test(tag)?" chase":"");span.textContent=tag;
+   for(const tag of (c.tags||[]).filter(x=>!["1","2A","2B","PIV","D"].includes(x))){const span=document.createElement("span");span.className="auto-scan-tag"+(/APPROX|GAPS/.test(tag)?" warn":"")+(/^(CHASE|GAP_FADING|OFF_HIGH)$/.test(tag)?" chase":"");span.textContent=tag;
     // 2026-11-18: explain the chase tags (the move is over or stretched; these rows rank after fresh candidates).
-    const chaseHelp={CHASE:"Ranked after fresh candidates: the move looks over or stretched.",GAP_FADING:"Up 10%+ on the day but below today's open: the move happened before the open and is fading.",OFF_HIGH:"10%+ below today's high.",EXTENDED:"1.5+ ATR (5m) above VWAP: stretched."};
+    const chaseHelp={CHASE:"Ranked after fresh candidates: the move looks over.",GAP_FADING:"Up 10%+ on the day but below today's open: the move happened before the open and is fading.",OFF_HIGH:"10%+ below today's high: the move has faded."};
     if(chaseHelp[tag])span.title=chaseHelp[tag];tags.append(span);}
    if((c.chaseReasons||[]).length)tr.classList.add("auto-scan-chase-row");
    tr.append(tags);body.append(tr);

@@ -243,18 +243,18 @@ public sealed class AutoMomentumScanTests
         var freshIndicators = AutoMomentumScanRules.ComputeIndicators(fresh);
         Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: fresh[^1].Close, pct: 5m), freshIndicators));
         Assert.Equal(10.10m, freshIndicators.SessionOpen);   // first bar: close 10.15, open close - 0.05
-        Assert.NotNull(freshIndicators.Atr14);
+        Assert.NotNull(freshIndicators.SessionHigh);
     }
 
-    /// <summary>PURPOSE: EXTENDED when price is 1.5 ATR or more above VWAP; unknown inputs add nothing. WHEN CALLED: By xUnit.</summary>
+    /// <summary>PURPOSE: OFF_HIGH at 10% below the session high; unknown inputs add nothing. WHEN CALLED: By xUnit.</summary>
     [Fact]
-    public void ChaseReasons_ExtendedAndUnknown()
+    public void ChaseReasons_OffHighAndUnknown()
     {
         var x = new AutoScanIndicators(30, SessionOpen, 12m, 11.9m, 10m, 10m, null, null, null, null, null, null, null, null, 0,
-            SessionOpen: 9.5m, SessionHigh: 12.1m, Atr14: 1m);
-        Assert.Equal(new[] { "EXTENDED" }, AutoMomentumScanRules.ChaseReasons(Row(last: 11.6m, pct: 5m), x));      // (11.6-10)/1 = 1.6
-        Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: 11.4m, pct: 5m), x));                          // 1.4
-        var unknown = x with { SessionOpen = null, SessionHigh = null, Atr14 = null };
+            SessionOpen: 9.5m, SessionHigh: 12m);
+        Assert.Equal(new[] { "OFF_HIGH" }, AutoMomentumScanRules.ChaseReasons(Row(last: 10.80m, pct: 5m), x));   // exactly 10% below 12
+        Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: 10.81m, pct: 5m), x));
+        var unknown = x with { SessionOpen = null, SessionHigh = null };
         Assert.Empty(AutoMomentumScanRules.ChaseReasons(Row(last: 20m, pct: 50m), unknown));
     }
 
