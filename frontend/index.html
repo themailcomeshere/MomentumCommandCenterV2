@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261118-quality-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261119-daychange-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -555,7 +555,7 @@
                     <article class="panel metric" id="mcc-static-0066-article"><div class="eyebrow" id="mcc-static-0067-div">ATR14</div><strong id="atr14">Loading…</strong><small id="atr14Detail">1M simple average True Range · last 14 returned ranges</small></article>
                     <article class="panel metric" id="mcc-static-0069-article"><div class="eyebrow">RELATIVE VOLUME</div><strong id="rvol">Loading…</strong><small id="rvolDetail">Intraday same-time 5M RVOL is not evaluated in Boring Overnight mode</small></article>
                     <article class="panel metric" id="mcc-static-0072-article"><div class="eyebrow" id="mcc-static-0073-div">ATR EXTENSION</div><strong id="extension">Loading…</strong><small id="extensionDetail">Historical |1M close − RTH VWAP| / 1M ATR14 · diagnostic only</small></article>
-                    <article class="panel metric metric-pending" id="mcc-metric-pending"><div class="eyebrow">ADDITIONAL METRIC</div><strong>—</strong><small>TBD · intentionally unassigned</small></article>
+                    <article class="panel metric" id="mcc-metric-day-change"><div class="eyebrow">DAY % CHANGE</div><strong id="dayChange">Loading…</strong><small id="dayChangeDetail">Latest 1M close vs prior session close (Daily bars)</small></article>
                 </section>
             </div>
         </section>
@@ -931,7 +931,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261118-quality-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261119-daychange-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

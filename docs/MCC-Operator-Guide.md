@@ -92,6 +92,8 @@ Switch workspaces with the left **WORKSPACE** toggle: **INTRADAY MOMENTUM** or *
 
 **Audit a signal:** click **Signal log** in the left dock (either workspace; the badge counts today's EXECUTION READY lines). Pick the **Date (Eastern)**, type a **Symbol** or leave it blank, and untick **Signals only** to also see WAIT and data-only changes; hover a row for the reason. The **Quality** column shows the grade at that moment.
 
+**DAY % CHANGE tile (INTRADAY MOMENTUM, Main Chart metric row):** latest 1M close vs the prior session's Daily close (delayed SIP; a fallback feed is labelled), green up / red down; the small line shows both prices, the 1M bar time in AZ and the prior session date. "(extended hours)" marks a pre/post-market 1M bar. DATA? when either price is missing. The metric row is hidden in BORING OVERNIGHT.
+
 **Hot or boring? (INTRADAY MOMENTUM):** when a no-position card or the Main Chart shows EXECUTION READY, MCC adds a grade: **QUALITY HIGH** (hot: 5M RVOL 2.5x+, momentum and range OK), **QUALITY MODERATE** (RVOL 1.5–2.5x), **QUALITY LOW** (ready but not exciting: RVOL under 1.5x, 1M momentum not confirmed, or the last 30 1M bars span under 1 ATR) or **EXTENDED** (late: 1.5+ ATR extended or a prior high within 0.5 ATR). The reason follows the step hint on the card. The grade is provisional and never changes EXECUTION READY; held stocks show the holder state instead. The same data is at `http://localhost:53360/api/market-data/signal-log?symbol=MWH` (add `&date=YYYY-MM-DD`). It lists every state change MCC showed for that symbol, with the time, price, coverage and reason. Only symbols the Dashboard was assessing are logged.
 
 **Keep TOS open beside MCC:**

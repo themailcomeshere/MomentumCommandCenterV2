@@ -463,6 +463,7 @@ async function refreshDecisionExplanation(){
   classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch")+" state-tone-"+focusedView.tone;
   if(headline)headline.textContent=focusedView.fiveOnly?focusedView.hint:(decision?.reason||data.evaluationReason||"No decision reason returned.")+(focusedView.quality?" "+focusedView.quality.why:"");
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(5);
+  void refreshDayChange(symbol,one.close,one.sourceTimestampUtc);
   const oneMinuteTimestamp=$("oneMinuteTimestamp");
   if(oneMinuteTimestamp){
    const sourceTime=one.sourceTimestampUtc?new Date(one.sourceTimestampUtc):null;
@@ -495,6 +496,7 @@ async function refreshDecisionExplanation(){
  }catch(error){
   classification.textContent="DATA UNAVAILABLE";classification.className="classification watch";
   if(headline)headline.textContent="Live assessment request failed: "+error.message;
+  void refreshDayChange(symbol,null,null);
   if(price)price.textContent="DATA?";if($("oneMinuteTimestamp"))$("oneMinuteTimestamp").textContent="Source timestamp unavailable";if(dailyVwap)dailyVwap.textContent="DATA?";if(atr14)atr14.textContent="DATA?";if(rvol)rvol.textContent="UNKNOWN";if(extension)extension.textContent="DATA?";
   if(eligibility)eligibility.textContent="5M permission: UNKNOWN";if(freshness)freshness.textContent="Freshness: UNKNOWN";
   if(fiveState)fiveState.textContent="5M permission: UNKNOWN";if(oneState)oneState.textContent="1M execution: UNKNOWN";
@@ -541,6 +543,7 @@ async function refreshOvernightPriceSummary(symbol){
   const extension=last&&dailyVwap!==null&&atr14!==null&&atr14>0?Math.abs(Number(last.close)-dailyVwap)/atr14:null;
   const fmt=x=>x===null||x===undefined||!Number.isFinite(Number(x))?"DATA?":Number(x).toFixed(4);
   if(price)price.textContent=last?"$"+fmt(last.close):"DATA? — NO 1M BAR";
+  void refreshDayChange(symbol,last?.close,last?.timestamp);
   if(oneMinuteTimestamp)oneMinuteTimestamp.textContent=last?"Last returned 1M bar · "+local(last.timestamp)+" Arizona · "+(d.provider||"UNKNOWN")+"/"+(d.feed||"UNKNOWN")+" · not a live quote":"Data not found in sources: no 1M bars returned.";
   if(priceDetail)priceDetail.textContent="Latest returned 1M bar close · historical research only; not an executable quote";
   if(dailyVwapNode)dailyVwapNode.textContent=dailyVwap===null?"DATA?":"$"+fmt(dailyVwap);
@@ -593,6 +596,7 @@ async function refreshOvernightPriceSummary(symbol){
   if(!isCurrent())return;
   const message=controller.signal.aborted?"Overnight historical metric request timed out after "+(OVERNIGHT_METRIC_TIMEOUT_MS/1000)+" seconds. Check the bars API and server diagnostics.":error.message;
   if(c)c.textContent="DATA?";if(p)p.textContent="DATA?";if(ct)ct.textContent="Historical price request failed · "+message;if(pt)pt.textContent="Historical price request failed · source timestamp unavailable";
+  void refreshDayChange(symbol,null,null);
   if(price)price.textContent="DATA?";if(oneMinuteTimestamp)oneMinuteTimestamp.textContent="Historical bar unavailable · "+message;
   if(dailyVwapNode)dailyVwapNode.textContent="DATA?";if(atr14Node)atr14Node.textContent="DATA?";if(rvolNode)rvolNode.textContent="NOT USED";if(extensionNode)extensionNode.textContent="DATA?";
   if(priceDetail)priceDetail.textContent=message;if(vwapDetail)vwapDetail.textContent=message;if(atrDetail)atrDetail.textContent=message;if(rvolDetail)rvolDetail.textContent="Intraday same-time 5M RVOL is intentionally not evaluated in Boring Overnight mode.";if(extensionDetail)extensionDetail.textContent=message;
@@ -3287,3 +3291,37 @@ $("signalLogSymbol")?.addEventListener("input",()=>void refreshSignalLog());
 $("signalLogSignalsOnly")?.addEventListener("change",()=>void refreshSignalLog());
 void refreshSignalLog(true);
 window.setInterval(()=>{if(document.visibilityState==="visible"&&!signalLogDialog?.open)void refreshSignalLog(true);},60000);
+
+/// MODULE: DAY % CHANGE tile (2026-11-19, operator request; replaces the unassigned ADDITIONAL METRIC tile)
+/// PURPOSE: (latest 1M close − prior session close) / prior session close, for the focused symbol in either workspace.
+/// The prior close is the latest completed Daily session dated before the 1M bar's Eastern date, from
+/// /api/market-data/daily?adjustment=split (delayed SIP when configured; an IEX fallback is labelled). Cached per symbol
+/// and Eastern date. Nothing is estimated: a missing bar or session shows DATA?.
+const dayChangeCache=new Map();
+let dayChangeSequence=0;
+/// <summary>Eastern YYYY-MM-DD and minute-of-day for a timestamp. Called by refreshDayChange.</summary>
+function dayChangeEastern(ts){const z=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(ts)).map(x=>[x.type,x.value]));return{date:z.year+"-"+z.month+"-"+z.day,minute:Number(z.hour)*60+Number(z.minute)};}
+/// <summary>Fills the DAY % CHANGE tile. Called after the 1M close is painted (intraday assessment and Overnight price summary).</summary>
+async function refreshDayChange(symbol,lastClose,lastBarUtc){
+ const node=$("dayChange"),detail=$("dayChangeDetail"),card=$("mcc-metric-day-change");if(!node)return;
+ const seq=++dayChangeSequence,sym=String(symbol||"").trim().toUpperCase(),close=Number(lastClose),barTime=new Date(lastBarUtc||NaN);
+ const paint=(text,tone,info)=>{if(seq!==dayChangeSequence)return;node.textContent=text;card?.classList.remove("day-up","day-down");if(tone)card?.classList.add(tone);if(detail)detail.textContent=info;};
+ if(!sym||lastClose==null||!Number.isFinite(close)||!Number.isFinite(barTime.getTime())){paint("DATA?","","Data not found in sources: no latest 1M close.");return;}
+ const bar=dayChangeEastern(barTime),key=sym+"|"+bar.date;
+ try{
+  let daily=dayChangeCache.get(key);
+  if(!daily){
+   const res=await fetch("/api/market-data/daily?"+new URLSearchParams({symbol:sym,adjustment:"split"}),{cache:"no-store",headers:{Accept:"application/json"}});
+   const body=await res.json().catch(()=>({}));
+   if(!res.ok)throw new Error(body.detail||body.title||body.error||("HTTP "+res.status));
+   daily=body;dayChangeCache.set(key,daily);
+  }
+  const prior=(Array.isArray(daily.sessions)?daily.sessions:[]).filter(s=>String(s.sessionDate)<bar.date&&Number.isFinite(Number(s.close))).sort((a,b)=>String(a.sessionDate).localeCompare(String(b.sessionDate))).at(-1);
+  if(!prior){paint("DATA?","","Data not found in sources: no completed Daily session before "+bar.date+".");return;}
+  const prev=Number(prior.close),pct=(close-prev)/prev*100;
+  const extended=bar.minute<570||bar.minute>=960?" (extended hours)":"";
+  const feed=String(daily.feed||"?").toUpperCase()+(daily.sipRequestStatus&&!/OK/.test(daily.sipRequestStatus)?" fallback":"");
+  const at=barTime.toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"numeric",minute:"2-digit"});
+  paint((pct>=0?"+":"")+pct.toFixed(2)+"%",pct>0?"day-up":pct<0?"day-down":"","$"+close.toFixed(2)+" · 1M bar "+at+" AZ"+extended+" vs $"+prev.toFixed(2)+" close "+prior.sessionDate+" · Daily "+feed);
+ }catch(error){paint("DATA?","","Daily prior close unavailable: "+error.message);}
+}

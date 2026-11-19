@@ -4488,3 +4488,7 @@ details.optin-details[open]{padding-bottom:10px}
 .signal-log-table td.sl-q-moderate{color:var(--text)}
 .signal-log-table td.sl-q-low{color:var(--muted)}
 .signal-log-table td.sl-q-extended{color:var(--yellow);font-weight:700}
+
+/* DAY % CHANGE tile (2026-11-19) */
+.prototype-page #opportunity-status #mcc-metric-day-change.day-up strong{color:#58d68d}
+.prototype-page #opportunity-status #mcc-metric-day-change.day-down strong{color:#ff8a8a}

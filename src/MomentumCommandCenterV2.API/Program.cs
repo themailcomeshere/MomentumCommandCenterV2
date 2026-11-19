@@ -341,13 +341,17 @@ app.MapGet("/api/boring-overnight/v3-column", async (string symbol, AlpacaDailyM
 .WithSummary("V3 Boring Overnight column values from MCC's Daily source (parity reference for the Thinkorswim V3 columns)")
 .WithDescription("Calculates the V3 Edge, Boringness and Status columns (MCC-V3-BORING-0.1, BORING-0.1-PROVISIONAL) from the latest 21 completed Alpaca SIP Daily sessions (split-adjusted, delayed historical query). A missing session or a non-consolidated feed returns DATA?. Never READY: catalyst, exclusion list, freshness and 5M permission are checked by the READY evaluator. Compare with Thinkorswim after the regular close.");
 
-app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
+app.MapGet("/api/market-data/daily", async (string symbol, string? adjustment, AlpacaDailyMarketDataClient dailyClient, CancellationToken ct) =>
 {
     if (!IsValidSymbol(symbol))
         return Results.BadRequest(new { error = "Symbol must be 1-8 letters, digits, dot, or hyphen." });
+    // 2026-11-19: optional adjustment=split for the Dashboard DAY % CHANGE tile (prior close not shifted by dividends).
+    var adj = string.IsNullOrWhiteSpace(adjustment) ? "all" : adjustment.Trim().ToLowerInvariant();
+    if (adj is not ("all" or "split"))
+        return Results.BadRequest(new { error = "adjustment must be all or split." });
     try
     {
-        var metrics = await dailyClient.GetMetricsAsync(symbol, DateTimeOffset.UtcNow, ct);
+        var metrics = await dailyClient.GetMetricsAsync(symbol, DateTimeOffset.UtcNow, ct, adj);
         return Results.Ok(metrics);
     }
     catch (ProviderNotConfiguredException ex)
@@ -376,7 +380,7 @@ app.MapGet("/api/market-data/daily", async (string symbol, AlpacaDailyMarketData
 })
 .WithName("GetDailyMarketMetrics")
 .WithSummary("Get adjusted Daily close, SMA20 and 20-session average volume")
-.WithDescription("Uses Alpaca 1Day bars with adjustment=all. SMA20 and average daily volume use the latest 20 completed regular sessions; the current session is excluded until 16:00 America/New_York. Fewer than 20 completed sessions returns null metrics. Feed entitlement, source coverage and adjustment parity require runtime validation.");
+.WithDescription("Uses Alpaca 1Day bars with adjustment=all (optional ?adjustment=split). SMA20 and average daily volume use the latest 20 completed regular sessions; the current session is excluded until 16:00 America/New_York. Fewer than 20 completed sessions returns null metrics. Feed entitlement, source coverage and adjustment parity require runtime validation.");
 
 app.MapGet("/api/market-data/catalyst-assessment", async (string symbol, int? lookbackHours, AlpacaCatalystAssessmentClient catalystClient, CancellationToken ct) =>
 {
