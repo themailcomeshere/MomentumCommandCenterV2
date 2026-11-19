@@ -85,7 +85,10 @@ public sealed class LiveSignalLogStore
 /// TYPE: LiveSignalObservation
 /// PURPOSE: What the live assessment showed for one symbol at one moment: evaluation status, no-position state label
 /// (WAIT / PREPARE TO BUY / EXECUTION READY …) and entry flag, holder state label, 5M score and permission, last 1M close,
-/// 1M coverage of the last 15 minutes, source bar times, feed and the decision reason (truncated to 400 characters).
+/// 1M coverage of the last 15 minutes, source bar times, feed, the decision reason (truncated to 400 characters) and the
+/// diagnostic opportunity-quality classification at that moment (ReadyHighOpportunity / ReadyModerate / ReadyBoring /
+/// ReadyExtended / WatchDeveloping / Blocked / DataUnknown; null on lines written before 2026-11-18). Quality is recorded
+/// on each line but is not part of the change key, so a quality flip alone does not write a line.
 /// WHEN CALLED: Built by LiveSymbolAssessmentService; stored by LiveSignalLogStore.
 /// </summary>
 public sealed record LiveSignalObservation(
@@ -103,7 +106,8 @@ public sealed record LiveSignalObservation(
     DateTimeOffset? OneMinuteBarUtc,
     DateTimeOffset? FiveMinuteBarUtc,
     string? Feed,
-    string? Reason);
+    string? Reason,
+    string? Quality = null);
 
 /// <summary>
 /// TYPE: LiveSignalLogEntry

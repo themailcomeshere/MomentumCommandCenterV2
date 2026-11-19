@@ -19,7 +19,8 @@ public sealed class LiveSignalLogStoreTests : IDisposable
 
     private static LiveSignalObservation Obs(string symbol, string at, string? state, string? held = "SELL - BREAKDOWN") => new(
         symbol, DateTimeOffset.Parse(at), "EVALUATED", state, state == "EXECUTION READY", held, 5, true, 28.13m, 8, 15,
-        DateTimeOffset.Parse(at).AddMinutes(-1), DateTimeOffset.Parse(at).AddMinutes(-5), "iex", "test reason");
+        DateTimeOffset.Parse(at).AddMinutes(-1), DateTimeOffset.Parse(at).AddMinutes(-5), "iex", "test reason",
+        state == "EXECUTION READY" ? "ReadyHighOpportunity" : "WatchDeveloping");
 
     /// <summary>PURPOSE: Change detection, persistence and filtering. WHEN CALLED: By xUnit.</summary>
     [Fact]
@@ -44,6 +45,28 @@ public sealed class LiveSignalLogStoreTests : IDisposable
         var mwhToday = await reopened.ReadAsync(new DateOnly(2026, 11, 18), "mwh", CancellationToken.None);
         Assert.Equal(new[] { "WAIT", "PREPARE TO BUY" }, mwhToday.Select(e => e.Observation.State));
         Assert.Equal(3, (await reopened.ReadAsync(new DateOnly(2026, 11, 18), null, CancellationToken.None)).Count);
-        Assert.Equal("EXECUTION READY", Assert.Single(await reopened.ReadAsync(new DateOnly(2026, 11, 19), "MWH", CancellationToken.None)).Observation.State);
+        var ready = Assert.Single(await reopened.ReadAsync(new DateOnly(2026, 11, 19), "MWH", CancellationToken.None)).Observation;
+        Assert.Equal("EXECUTION READY", ready.State);
+        Assert.Equal("ReadyHighOpportunity", ready.Quality);
+    }
+
+    /// <summary>
+    /// PURPOSE: A quality change alone does not write a line, and lines written before the Quality field existed still
+    /// read back (Quality null). WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public async Task QualityIsRecordedButNotPartOfTheChangeKey()
+    {
+        var store = new LiveSignalLogStore(_dir);
+        var now = DateTimeOffset.Parse("2026-11-18T15:30:00Z");
+        await store.RecordAsync(Obs("AVGO", "2026-11-18T15:28:00Z", "EXECUTION READY") with { Quality = "ReadyModerate" }, now, CancellationToken.None);
+        var flip = await store.RecordAsync(Obs("AVGO", "2026-11-18T15:29:00Z", "EXECUTION READY") with { Quality = "ReadyBoring" }, now, CancellationToken.None);
+        Assert.Null(flip);
+
+        await File.AppendAllTextAsync(store.FilePath,
+            "{\"loggedAtUtc\":\"2026-11-18T15:31:00+00:00\",\"change\":\"FIRST_SEEN\",\"previousKey\":null,\"observation\":{\"symbol\":\"OLD\",\"evaluatedAtUtc\":\"2026-11-18T15:31:00+00:00\",\"evaluationStatus\":\"EVALUATED\",\"state\":\"WAIT\"}}" + Environment.NewLine);
+        var entries = await store.ReadAsync(new DateOnly(2026, 11, 18), null, CancellationToken.None);
+        Assert.Equal("ReadyModerate", entries.Single(e => e.Observation.Symbol == "AVGO").Observation.Quality);
+        Assert.Null(entries.Single(e => e.Observation.Symbol == "OLD").Observation.Quality);
     }
 }

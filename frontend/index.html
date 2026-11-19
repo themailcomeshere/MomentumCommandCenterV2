@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" id="mcc-static-0004-meta">
     <title id="mcc-static-0005-title">Momentum Command Center — Workbench</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" id="mcc-static-0006-link">
-    <link rel="stylesheet" href="./styles.css?v=20261118-signallog-v1" id="mcc-static-0007-link">
+    <link rel="stylesheet" href="./styles.css?v=20261118-quality-v1" id="mcc-static-0007-link">
     <style id="prototype-layout-styles">
         /* Main Dashboard layout migrated from PrototypeIndex. */
         .prototype-page .prototype-dock {
@@ -869,7 +869,7 @@
             <div class="section-heading"><div><div class="eyebrow">LIVE SIGNAL AUDIT · SERVER LOG</div><h2 id="signalLogDialogTitle">Signal log</h2></div><div class="report-actions"><button id="refreshSignalLog" type="button" class="quiet-button">Refresh</button><button id="closeSignalLog" type="button" class="quiet-button">Close</button></div></div>
             <div class="signal-log-controls"><label>Date (Eastern) <input id="signalLogDate" type="date"></label><label>Symbol <input id="signalLogSymbol" maxlength="8" placeholder="All symbols" autocomplete="off"></label><label class="inline-check"><input id="signalLogSignalsOnly" type="checkbox" checked> Signals only (hide WAIT / data-only changes)</label></div>
             <p id="signalLogStatus" class="muted small" role="status">Loading…</p>
-            <div class="table-wrap signal-log-wrap"><table class="signal-log-table"><thead><tr><th>AZ time</th><th>Symbol</th><th>No position</th><th>If holding</th><th>Price</th><th>1M data</th><th>5M perm.</th><th>Status</th></tr></thead><tbody id="signalLogRows"></tbody></table></div>
+            <div class="table-wrap signal-log-wrap"><table class="signal-log-table"><thead><tr><th>AZ time</th><th>Symbol</th><th>No position</th><th title="Opportunity quality when V2 allowed the entry: HIGH = hot, LOW = ready but not exciting (provisional)">Quality</th><th>If holding</th><th>Price</th><th>1M data</th><th>5M perm.</th><th>Status</th></tr></thead><tbody id="signalLogRows"></tbody></table></div>
             <p class="notice">One line per state change per symbol, written by MCC while the Dashboard was checking that symbol (Red Zone, Main Chart, Position watch). Hover a row for the reason. FIRST_SEEN marks the first check after MCC started. Times are Arizona; the date is the Eastern trading date.</p>
         </dialog>
         <dialog id="earningsDialog" class="morning-brief-dialog exclusions-dialog earnings-dialog" aria-labelledby="earningsDialogTitle">
@@ -931,7 +931,7 @@
         </dialog>
         <footer id="mcc-static-0453-footer">Local scaffold · API-backed market-data diagnostics · No broker connection · No order placement</footer>
     </main>
-    <script src="./app.js?v=20261118-signallog-v1" id="mcc-static-0454-script"></script>
+    <script src="./app.js?v=20261118-quality-v1" id="mcc-static-0454-script"></script>
     <script id="prototype-ui-bridge">(() => { const mode = document.getElementById("mode"), toggle = document.getElementById("workspaceModeToggle"), state = document.getElementById("prototype-workspace-state"); if (!mode || !toggle) return; const sync = () => { toggle.checked = mode.value === "overnight"; toggle.setAttribute("aria-label", toggle.checked ? "Switch to Intraday Momentum workspace" : "Switch to Boring Overnight workspace"); if (state) state.textContent = "WORKSPACE"; }; toggle.addEventListener("change", () => { mode.value = toggle.checked ? "overnight" : "momentum"; mode.dispatchEvent(new Event("change", { bubbles: true })); sync(); }); mode.addEventListener("change", sync); document.getElementById("reset")?.addEventListener("click", sync); const symbol = document.getElementById("symbol"); symbol?.addEventListener("keydown", event => { if (event.key === "Enter") { event.preventDefault(); symbol.blur(); } }); sync(); })();</script>
 </body>
 </html>

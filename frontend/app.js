@@ -246,6 +246,20 @@ const RED_ZONE_TONE_HINTS={
 /// symbol HOLDING, otherwise the no-position decision. Returns the TOS-style label, tone and hint. Called by the Red
 /// Zone cards and the focused classification on every refresh.
 /// </summary>
+/// <summary>
+/// Opportunity-quality tag for a no-position EXECUTION READY state (2026-11-18, operator request): HIGH = hot,
+/// MODERATE, LOW = ready but not exciting, EXTENDED = late. The server grades only when V2 allows the entry, so any other
+/// classification returns null. Diagnostic and provisional: it never changes the V2 state. Called by liveStateView and
+/// the Signal log.
+/// </summary>
+const OPPORTUNITY_QUALITY_TAGS={ReadyHighOpportunity:["QUALITY HIGH","high"],ReadyModerate:["QUALITY MODERATE","moderate"],ReadyBoring:["QUALITY LOW","low"],ReadyExtended:["EXTENDED","extended"]};
+const OPPORTUNITY_QUALITY_REASON_TEXT={LowRelativeVolume:"5M RVOL under 1.5x",MomentumNotConfirmed:"1M momentum not confirmed",LimitedRecentRange:"last 30 1M bars span under 1 ATR",EntryExtended:"1.5+ ATR extended",ResistanceTooClose:"prior high within 0.5 ATR",StrongParticipation:"5M RVOL 2.5x+"};
+function opportunityQualityTag(classification,reasons){
+ const tag=OPPORTUNITY_QUALITY_TAGS[String(classification||"")];if(!tag)return null;
+ const why=(Array.isArray(reasons)?reasons:[]).map(r=>OPPORTUNITY_QUALITY_REASON_TEXT[r]).filter(Boolean);
+ const lead=tag[1]==="high"?"Hot: ":tag[1]==="low"?"Ready but not exciting: ":tag[1]==="extended"?"Late entry: ":"Moderate: ";
+ return{text:tag[0],kind:tag[1],why:lead+(why.length?why.join(", "):"RVOL 1.5–2.5x, momentum and range OK")+". Provisional grade; does not change the V2 state."};
+}
 function liveStateView(symbol,data){
  const held=readHeldSymbols().has(String(symbol||"").toUpperCase());
  const decision=held&&data?.heldPositionDecision?data.heldPositionDecision:(data?.decision||null);
@@ -256,7 +270,10 @@ function liveStateView(symbol,data){
   return{label:humanizeSignalState(data?.evaluationStatus||data?.status||"DATA?"),tone:"data",held,decision:null,hint:RED_ZONE_TONE_HINTS.data};
  }
  const tone=decision.stateTone||(decision.entryAllowed===true?"ready":"data");
- return{label:decision.stateLabel||humanizeSignalState(decision.state),tone,held,decision,hint:RED_ZONE_TONE_HINTS[tone]||""};
+ const label=decision.stateLabel||humanizeSignalState(decision.state);
+ const quality=!held&&decision.entryAllowed===true?opportunityQualityTag(data?.opportunityQuality?.classification,data?.opportunityQuality?.reasons):null;
+ if(quality)return{label:label+" · "+quality.text,tone,held,decision,quality,hint:(RED_ZONE_TONE_HINTS[tone]?RED_ZONE_TONE_HINTS[tone]+" ":"")+quality.why};
+ return{label,tone,held,decision,hint:RED_ZONE_TONE_HINTS[tone]||""};
 }
 /// <summary>
 /// Held stock, 1M stale but 5M fresh (2026-11-18): the 5M state from the ported TOS permission latch, labelled 5M ONLY.
@@ -444,7 +461,7 @@ async function refreshDecisionExplanation(){
   classification.textContent=focusedView.label+(focusedView.held&&!/^HOLDING/.test(focusedView.label)?" · HOLDING":"");
   $("main-chart-section")?.classList.toggle("is-held",!!focusedView.held);
   classification.className="classification "+(ready?"high":fiveMinutePermission?"boring":"watch")+" state-tone-"+focusedView.tone;
-  if(headline)headline.textContent=focusedView.fiveOnly?focusedView.hint:(decision?.reason||data.evaluationReason||"No decision reason returned.");
+  if(headline)headline.textContent=focusedView.fiveOnly?focusedView.hint:(decision?.reason||data.evaluationReason||"No decision reason returned.")+(focusedView.quality?" "+focusedView.quality.why:"");
   if(price)price.textContent=one.close==null?"DATA?":"$"+Number(one.close).toFixed(5);
   const oneMinuteTimestamp=$("oneMinuteTimestamp");
   if(oneMinuteTimestamp){
@@ -1282,7 +1299,7 @@ function applyRedZoneCardState(symbol,statusNode,view){
  for(const name of [...card.classList])if(name.startsWith("card-tone-"))card.classList.remove(name);
  card.classList.add("card-tone-"+view.tone);
  const banner=card.querySelector(".redzone-state-banner");
- if(banner){banner.className="redzone-state-banner state-tone-"+view.tone;banner.querySelector("strong").textContent=view.label;banner.querySelector("span").textContent=view.hint;}
+ if(banner){banner.className="redzone-state-banner state-tone-"+view.tone+(view.quality?" quality-"+view.quality.kind:"");banner.querySelector("strong").textContent=view.label;banner.querySelector("span").textContent=view.hint;}
  if(observeRedZoneState(symbol,view)){card.classList.remove("state-changed");void card.offsetWidth;card.classList.add("state-changed");}
 }
 async function refreshRedZoneAssessments(){
@@ -3239,6 +3256,7 @@ async function refreshSignalLog(badgeOnly=false){
    cell(new Date(o.evaluatedAtUtc).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"2-digit",minute:"2-digit",second:"2-digit"}));
    const sym=cell(o.symbol);sym.style.fontWeight="800";
    cell(o.state||"—","sl-"+signalLogTone(o.state));
+   const q=opportunityQualityTag(o.quality,null);cell(q?q.text.replace("QUALITY ",""):"—",q?"sl-q-"+q.kind:"");
    cell(o.heldState||"—","sl-"+signalLogTone(o.heldState));
    cell(o.lastClose==null?"DATA?":"$"+Number(o.lastClose).toFixed(2),"num");
    const cov=o.oneMinuteBarsPossible?o.oneMinuteBarsPresent+"/"+o.oneMinuteBarsPossible:"—";
@@ -3248,7 +3266,7 @@ async function refreshSignalLog(badgeOnly=false){
    tr.title=(o.reason||"")+(o.oneMinuteBarUtc?"\n1M bar "+new Date(o.oneMinuteBarUtc).toLocaleTimeString("en-US",{timeZone:"America/Phoenix",hour:"2-digit",minute:"2-digit"})+" AZ":"")+(o.feed?" · feed "+o.feed:"");
    return tr;
   }));
-  if(!shown.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=8;td.textContent=entries.length?"No signal changes with the current filter.":"Nothing logged for this date"+(symbol?" and symbol":"")+".";tr.append(td);body.append(tr);}
+  if(!shown.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=9;td.textContent=entries.length?"No signal changes with the current filter.":"Nothing logged for this date"+(symbol?" and symbol":"")+".";tr.append(td);body.append(tr);}
   if(status)status.textContent=shown.length+" of "+entries.length+" line(s) · "+date+(symbol?" · "+symbol:"")+" · file: "+data.file;
  }catch(error){
   if(badge&&badgeOnly)badge.textContent="?";

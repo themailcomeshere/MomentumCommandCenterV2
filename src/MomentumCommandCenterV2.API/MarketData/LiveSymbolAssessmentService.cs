@@ -409,7 +409,8 @@ public sealed class LiveSymbolAssessmentService(
                     logPossible > 0 ? logPossible : null,
                     oneLatest?.Timestamp, fiveLatest?.Timestamp,
                     oneLatest?.Feed ?? fiveLatest?.Feed,
-                    reasonText is { Length: > 400 } ? reasonText[..400] : reasonText), DateTimeOffset.UtcNow, cancellationToken);
+                    reasonText is { Length: > 400 } ? reasonText[..400] : reasonText,
+                    opportunityAssessment.Classification.ToString()), DateTimeOffset.UtcNow, cancellationToken);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
             {

@@ -4480,3 +4480,11 @@ details.optin-details[open]{padding-bottom:10px}
 .signal-log-table td.sl-ready{color:#58d68d;font-weight:800}
 .signal-log-table td.sl-prepare{color:var(--yellow);font-weight:700}
 .signal-log-table td.sl-sell{color:#ff8a8a;font-weight:800}
+
+/* Opportunity-quality tag on EXECUTION READY headlines and the Signal log (2026-11-18) */
+.redzone-state-banner.quality-high strong{text-shadow:0 0 10px rgba(88,214,141,.55)}
+.redzone-state-banner.quality-low strong,.redzone-state-banner.quality-extended strong{opacity:.85}
+.signal-log-table td.sl-q-high{color:#58d68d;font-weight:800}
+.signal-log-table td.sl-q-moderate{color:var(--text)}
+.signal-log-table td.sl-q-low{color:var(--muted)}
+.signal-log-table td.sl-q-extended{color:var(--yellow);font-weight:700}
