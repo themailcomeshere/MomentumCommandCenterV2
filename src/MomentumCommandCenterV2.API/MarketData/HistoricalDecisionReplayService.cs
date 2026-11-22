@@ -17,8 +17,11 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
         string? feed,
         DateTimeOffset asOfUtc,
         bool hasPosition,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int openingHoldMinutes = 0)
     {
+        if (!OpeningEntryHold.IsValidMinutes(openingHoldMinutes))
+            throw new ArgumentException($"openingHoldMinutes must be 0–{OpeningEntryHold.MaxMinutes}.");
         var normalizedSymbol = symbol.Trim().ToUpperInvariant();
         if (asOfUtc.Offset != TimeSpan.Zero)
             throw new ArgumentException("asOfUtc must be an ISO-8601 UTC timestamp ending in Z.");
@@ -113,7 +116,9 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
         var snapshot = new CommandCenterSnapshot(
             asOfUtc, normalizedSymbol, one, five, MarketPhase.RegularSession, previousFive, latchPermission,
             coveragePresent, coveragePossible);
-        var result = new V2SignalEngine().Evaluate(snapshot, hasPosition);
+        // Opening entry hold (2026-11-21): the caller passes the minutes so a replay can compare the hold on and off.
+        var result = new V2SignalEngine(new V2Config(OpeningEntryHoldMinutes: openingHoldMinutes)).Evaluate(snapshot, hasPosition);
+        var hold = OpeningEntryHold.Evaluate(asOfUtc, openingHoldMinutes);
         return new
         {
             symbol = normalizedSymbol,
@@ -121,7 +126,9 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             feed,
             asOfUtc,
             status = "REPLAYED",
-            calculationVersion = "V2SignalEngine-default-config + " + FiveMinutePermissionLatch.RulesVersion,
+            calculationVersion = "V2SignalEngine-default-config + " + FiveMinutePermissionLatch.RulesVersion +
+                $" + {OpeningEntryHold.RulesVersion}({openingHoldMinutes} min)",
+            openingHold = new { minutes = openingHoldMinutes, active = hold.Active, releaseUtc = hold.ReleaseUtc, withheldEntry = result.Evaluation?.OpeningHoldWithheld == true },
             fiveMinutePermissionLatch = latch.Latest is null ? null : new { latch.Latest.Permission, latch.Latest.Transition, latch.Latest.BlockCode, blockLabel = FiveMinutePermissionLatch.BlockLabel(latch.Latest.BlockCode), latch.GrantedSinceUtc },
             hasPosition,
             oneMinuteCoverageLast15 = new { present = coveragePresent, possible = coveragePossible },

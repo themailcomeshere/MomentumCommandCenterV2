@@ -44,6 +44,9 @@ public sealed class V2SignalEngine
     public V2SignalEngine(V2Config? config = null)
     {
         _config = config ?? new V2Config();
+        if (!OpeningEntryHold.IsValidMinutes(_config.OpeningEntryHoldMinutes))
+            throw new ArgumentOutOfRangeException(nameof(config), _config.OpeningEntryHoldMinutes,
+                $"OpeningEntryHoldMinutes must be 0–{OpeningEntryHold.MaxMinutes}.");
     }
 
     /// <summary>
@@ -422,6 +425,27 @@ public sealed class V2SignalEngine
         // =========================================================
         // NO POSITION
         // =========================================================
+
+        // Opening entry hold (operator request 2026-11-21): inside the first N minutes after the 09:30 ET open a fresh
+        // entry is withheld (PREPARE TO BUY) with an OPENING HOLD reason. The underlying conditions are kept in the
+        // evaluation context (OpeningHoldWithheld = true) so held entries can be studied later. Exits never wait.
+        if (freshBuy && _config.OpeningEntryHoldMinutes > 0 &&
+            OpeningEntryHold.Evaluate(snapshot.Timestamp, _config.OpeningEntryHoldMinutes) is { Active: true } hold)
+        {
+            return Decision(
+                SignalState.PrepareBuy,
+                MomentumAction.PREPARE_BUY,
+                score,
+                BuildReason(
+                    $"OPENING HOLD: entry conditions met inside the first {hold.Minutes} min after the 09:30 ET open; EXECUTION READY withheld until {OpeningEntryHold.FormatEasternAndArizona(hold.ReleaseUtc)}.",
+                    reasons),
+                true,
+                false,
+                false,
+                false,
+                false,
+                evaluation with { OpeningHoldWithheld = true });
+        }
 
         // 1M data coverage gate (operator decision 2026-11-18, MWH): too few 1-minute bars in the last 15 minutes means
         // the 1M EMAs/RSI/momentum rest on a handful of prints, so EXECUTION READY is withheld (PREPARE TO BUY instead).

@@ -3822,6 +3822,47 @@ body:not(.boring-overnight-mode) #scannerFieldAvailability {
         color: var(--muted)
     }
 
+/* Opening entry hold (2026-11-21): INTRADAY MOMENTUM only; Boring Overnight never uses it. */
+.opening-hold-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 8px 0;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 12px
+}
+
+    .opening-hold-bar label {
+        color: var(--muted);
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase
+    }
+
+    .opening-hold-bar select {
+        width: auto
+    }
+
+    .opening-hold-bar.active {
+        border-color: var(--yellow)
+    }
+
+        .opening-hold-bar.active .opening-hold-status {
+            color: var(--yellow);
+            font-weight: 700
+        }
+
+    .opening-hold-bar.error .opening-hold-status {
+        color: var(--red)
+    }
+
+body.boring-overnight-mode #openingHoldBar {
+    display: none
+}
+
 body.boring-overnight-mode #redZoneStateLegend, body.boring-overnight-mode #redZoneStateLog {
     display: none
 }

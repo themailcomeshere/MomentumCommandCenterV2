@@ -17,11 +17,18 @@ public sealed class LiveSymbolAssessmentService(
     AlpacaMinuteBarStreamWorker streamWorker,
     IConfiguration configuration,
     LiveSignalLogStore signalLog,
+    IntradaySettingsStore intradaySettings,
     ILogger<LiveSymbolAssessmentService> logger)
 {
     private static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(10);
     private readonly ConcurrentDictionary<string, (DateTimeOffset ExpiresAt, object Value)> _cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// PURPOSE: Drops every cached assessment so the next request re-evaluates with current settings.
+    /// WHEN CALLED: After the operator changes the opening hold (PUT /api/intraday/settings).
+    /// </summary>
+    public void InvalidateCache() => _cache.Clear();
 
     /// <summary>
     /// PURPOSE: Retrieves source bars, persists observations, computes indicators, and evaluates 5M permission / 1M execution.
@@ -142,6 +149,8 @@ public sealed class LiveSymbolAssessmentService(
             var oneFresh = oneAgeSeconds is >= 0 and <= 120;
             var fiveFresh = fiveAgeSeconds is >= 0 and <= 360;
             var regularSession = LiveSymbolTechnicalCalculator.IsRegularSession(evaluatedAt);
+            var holdMinutes = intradaySettings.Current.OpeningEntryHoldMinutes;
+            var openingHold = OpeningEntryHold.Evaluate(evaluatedAt, holdMinutes);
 
             SignalDecision? decision = null;
             // Operator-declared holding: the same snapshot evaluated with hasPosition=true so the Dashboard can show
@@ -185,8 +194,11 @@ public sealed class LiveSymbolAssessmentService(
                     latchLatest?.Permission,
                     coveragePresent,
                     coveragePossible);
-                decision = new V2SignalEngine().Evaluate(snapshot, false);
-                heldDecision = new V2SignalEngine().Evaluate(snapshot, true);
+                // Opening entry hold (operator setting, 2026-11-21) applies to fresh entries only; the held-position
+                // evaluation is identical with or without it because exits are never held.
+                var engine = new V2SignalEngine(new V2Config(OpeningEntryHoldMinutes: holdMinutes));
+                decision = engine.Evaluate(snapshot, false);
+                heldDecision = engine.Evaluate(snapshot, true);
                 evaluationStatus = "EVALUATED";
                 evaluationReason = "Calculated from completed Alpaca OHLCV bars using the existing V2SignalEngine. This is decision support, not an order instruction.";
             }
@@ -281,6 +293,21 @@ public sealed class LiveSymbolAssessmentService(
                 status,
                 evaluationStatus,
                 evaluationReason,
+                openingHold = new
+                {
+                    rulesVersion = OpeningEntryHold.RulesVersion,
+                    minutes = openingHold.Minutes,
+                    enabled = openingHold.Enabled,
+                    // Active only inside a real regular session (weekdays outside the holiday calendar).
+                    active = openingHold.Active && regularSession &&
+                             MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar.IsTradingSession(openingHold.EasternDate),
+                    regularOpenUtc = openingHold.RegularOpenUtc,
+                    releaseUtc = openingHold.ReleaseUtc,
+                    minutesRemaining = openingHold.MinutesRemaining,
+                    withheldEntry = decision?.Evaluation?.OpeningHoldWithheld == true,
+                    settingSource = intradaySettings.Current.Source,
+                    note = "Fresh entries only: inside the hold an entry that meets every condition is shown as PREPARE TO BUY (OPENING HOLD). Exits and held-position states are never delayed. Provisional operator setting; not validated against outcomes."
+                },
                 dataFresh = oneFresh && fiveFresh,
                 freshnessDiagnostics = new
                 {

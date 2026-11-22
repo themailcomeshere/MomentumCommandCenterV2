@@ -151,6 +151,83 @@ function renderMarketSessionCountdown(){
 void refreshMarketSessionClock();
 window.setInterval(renderMarketSessionCountdown,1000);
 window.setInterval(()=>{if(document.visibilityState==="visible")void refreshMarketSessionClock();},60000);
+/// <summary>
+/// Opening entry hold (2026-11-21, operator request; INTRADAY MOMENTUM only, hidden in BORING OVERNIGHT). Shows the
+/// setting and today's window in the Red Zone header and saves changes with PUT /api/intraday/settings. Inside the hold
+/// the API turns a qualifying EXECUTION READY into PREPARE TO BUY · OPENING HOLD; exits and HOLDING cards are never
+/// held. Times are converted from the API's UTC instants to America/Phoenix and America/New_York for the date in
+/// question (no fixed offset). Called on load, every 60 s (settings) and every 1 s (countdown).
+/// </summary>
+const openingHoldState={minutes:null,openUtc:NaN,releaseUtc:NaN,tradingSession:false,easternDate:null,loaded:false,error:null};
+/// <summary>"8:30 AM" in the given IANA zone. Called by renderOpeningHold and liveStateView.</summary>
+function openingHoldClock(stamp,zone){return new Date(stamp).toLocaleTimeString("en-US",{timeZone:zone,hour:"numeric",minute:"2-digit"});}
+/// <summary>Reads the hold setting and today's window from the API, then re-renders. Called on load, every 60 s and after a save.</summary>
+async function loadOpeningHold(){
+ try{
+  const response=await fetch("/api/intraday/settings",{cache:"no-store",headers:{Accept:"application/json"}});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
+  const today=data.today||{};
+  openingHoldState.minutes=Number(data.openingEntryHoldMinutes);
+  openingHoldState.openUtc=Date.parse(today.regularOpenUtc);
+  openingHoldState.releaseUtc=Date.parse(today.releaseUtc);
+  openingHoldState.tradingSession=today.tradingSession===true;
+  openingHoldState.easternDate=today.easternDate||null;
+  openingHoldState.loaded=true;
+  openingHoldState.error=null;
+  const select=$("openingHoldMinutes");
+  if(select&&document.activeElement!==select&&Number.isFinite(openingHoldState.minutes)){
+   if(![...select.options].some(option=>Number(option.value)===openingHoldState.minutes)){const option=document.createElement("option");option.value=String(openingHoldState.minutes);option.textContent=openingHoldState.minutes+" min";select.append(option);}
+   select.value=String(openingHoldState.minutes);
+  }
+ }catch(error){openingHoldState.error=error.message;}
+ renderOpeningHold();
+}
+/// <summary>Writes the hold status line: off, before the open, ACTIVE with a countdown, ended, or no session today. Called every second.</summary>
+function renderOpeningHold(){
+ const bar=$("openingHoldBar"),node=$("openingHoldStatus");
+ if(!bar||!node)return;
+ bar.classList.remove("active","error");
+ if(!openingHoldState.loaded){
+  if(openingHoldState.error){bar.classList.add("error");node.textContent="Opening hold: DATA? · "+openingHoldState.error;}
+  else node.textContent="Opening hold: loading…";
+  return;
+ }
+ const minutes=openingHoldState.minutes,open=openingHoldState.openUtc,release=openingHoldState.releaseUtc,now=Date.now();
+ const failed=openingHoldState.error?" · "+openingHoldState.error:"";
+ if(failed)bar.classList.add("error");
+ if(!(minutes>0)){node.textContent="Off · EXECUTION READY can appear from the 09:30 ET open"+failed;return;}
+ if(!Number.isFinite(open)||!Number.isFinite(release)){bar.classList.add("error");node.textContent=minutes+" min · DATA? · window times missing"+failed;return;}
+ const az=stamp=>openingHoldClock(stamp,"America/Phoenix"),et=stamp=>openingHoldClock(stamp,"America/New_York");
+ const span=az(open)+"–"+az(release)+" AZ ("+et(open)+"–"+et(release)+" ET)";
+ if(!openingHoldState.tradingSession){node.textContent=minutes+" min · no regular session on "+(openingHoldState.easternDate||"this date")+" ET"+failed;return;}
+ if(now<open){node.textContent=minutes+" min · today "+span+" · new entries held until "+az(release)+" AZ · exits never held"+failed;return;}
+ if(now<release){
+  bar.classList.add("active");
+  const left=Math.max(0,Math.ceil((release-now)/1000));
+  node.textContent="ACTIVE · new entries held until "+az(release)+" AZ ("+et(release)+" ET) · "+Math.floor(left/60)+"m "+String(left%60).padStart(2,"0")+"s left · exits never held"+failed;
+  return;
+ }
+ node.textContent=minutes+" min · ended "+az(release)+" AZ ("+et(release)+" ET) · EXECUTION READY allowed"+failed;
+}
+$("openingHoldMinutes")?.addEventListener("change",async event=>{
+ const select=event.target,minutes=Number(select.value),previous=openingHoldState.minutes,node=$("openingHoldStatus");
+ if(node)node.textContent="Saving opening hold…";
+ try{
+  const response=await fetch("/api/intraday/settings",{method:"PUT",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({openingEntryHoldMinutes:minutes})});
+  const data=await response.json();
+  if(!response.ok)throw new Error(data.detail||data.error||("HTTP "+response.status));
+  await loadOpeningHold();
+  $("refreshRedZone")?.click();
+ }catch(error){
+  if(Number.isFinite(previous))select.value=String(previous);
+  openingHoldState.error="save failed: "+error.message;
+  renderOpeningHold();
+ }
+});
+void loadOpeningHold();
+window.setInterval(renderOpeningHold,1000);
+window.setInterval(()=>{if(document.visibilityState==="visible")void loadOpeningHold();},60000);
 
 
 /// PURPOSE: Track dynamic WebSocket subscription requests before any startup refresh can run.
@@ -271,6 +348,12 @@ function liveStateView(symbol,data){
  }
  const tone=decision.stateTone||(decision.entryAllowed===true?"ready":"data");
  const label=decision.stateLabel||humanizeSignalState(decision.state);
+ // Opening entry hold (2026-11-21): every entry condition passed, but EXECUTION READY is withheld until the release time.
+ if(!held&&decision.openingHoldWithheld===true){
+  const release=Date.parse(data?.openingHold?.releaseUtc);
+  const until=Number.isFinite(release)?openingHoldClock(release,"America/Phoenix")+" AZ ("+openingHoldClock(release,"America/New_York")+" ET)":"the hold ends";
+  return{label:label+" · OPENING HOLD",tone,held,decision,hint:"Entry conditions met, but EXECUTION READY is withheld until "+until+" by the opening hold. Exits are never held."};
+ }
  const quality=!held&&decision.entryAllowed===true?opportunityQualityTag(data?.opportunityQuality?.classification,data?.opportunityQuality?.reasons):null;
  if(quality)return{label:label+" · "+quality.text,tone,held,decision,quality,hint:(RED_ZONE_TONE_HINTS[tone]?RED_ZONE_TONE_HINTS[tone]+" ":"")+quality.why};
  return{label,tone,held,decision,hint:RED_ZONE_TONE_HINTS[tone]||""};

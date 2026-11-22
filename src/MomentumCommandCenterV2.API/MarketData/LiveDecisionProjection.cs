@@ -57,6 +57,7 @@ public static class LiveDecisionProjection
             oneMinuteExecution = decision.EntryAllowed ? "CONFIRMED" :
                 decision.LongPermission ? "WAITING_FOR_1M_CONFIRMATION" : "BLOCKED_BY_5M_PERMISSION",
             entryAllowed = decision.EntryAllowed,
+            openingHoldWithheld = decision.Evaluation?.OpeningHoldWithheld == true,
             runnerAllowed = decision.RunnerAllowed,
             exitWarning = decision.ExitWarning,
             hardExit = decision.HardExit,

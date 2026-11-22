@@ -51,6 +51,7 @@ builder.Services.AddSingleton<IMarketBarObservationStore, JsonlMarketBarObservat
 // Registered first so the one-time index rebuild starts before the other hosted workers.
 builder.Services.AddHostedService<JsonlMarketBarIndexWarmupService>();
 builder.Services.AddSingleton<LiveSignalLogStore>();
+builder.Services.AddSingleton<IntradaySettingsStore>();
 builder.Services.AddSingleton<LiveSymbolAssessmentService>();
 builder.Services.AddSingleton<AlpacaMinuteBarStreamWorker>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AlpacaMinuteBarStreamWorker>());
@@ -779,6 +780,48 @@ app.MapGet("/api/market-data/opportunity-quality/rank", async (
 .WithSummary("Rank an explicit candidate pool using diagnostic Opportunity Quality")
 .WithDescription("Provide 1–50 unique comma-separated symbols and optional providerName. Every supplied symbol is assessed with bounded concurrency. The response includes all candidates, including DATA? and BLOCKED, and uses a disclosed diagnostic ordering without a composite score or probability claim.");
 
+app.MapGet("/api/intraday/settings", (IntradaySettingsStore store) =>
+{
+    var now = DateTimeOffset.UtcNow;
+    var settings = store.Current;
+    var hold = MomentumCommandCenterV2.Core.OpeningEntryHold.Evaluate(now, settings.OpeningEntryHoldMinutes);
+    var tradingSession = MomentumCommandCenterV2.API.BoringOvernight.UsEquitiesSessionCalendar.IsTradingSession(hold.EasternDate);
+    return Results.Ok(new
+    {
+        settings.OpeningEntryHoldMinutes,
+        settings.Source,
+        settings.UpdatedAtUtc,
+        maxOpeningEntryHoldMinutes = MomentumCommandCenterV2.Core.OpeningEntryHold.MaxMinutes,
+        rulesVersion = MomentumCommandCenterV2.Core.OpeningEntryHold.RulesVersion,
+        generatedAtUtc = now,
+        today = new
+        {
+            easternDate = hold.EasternDate,
+            tradingSession,
+            regularOpenUtc = hold.RegularOpenUtc,
+            releaseUtc = hold.ReleaseUtc,
+            active = hold.Active && tradingSession,
+            minutesRemaining = tradingSession ? hold.MinutesRemaining : 0
+        },
+        filePath = store.FilePath
+    });
+})
+.WithName("GetIntradaySettings")
+.WithSummary("Get the INTRADAY MOMENTUM opening entry hold")
+.WithDescription("OpeningEntryHoldMinutes = minutes after the 09:30 ET open during which EXECUTION READY is withheld (shown as PREPARE TO BUY · OPENING HOLD). 0 = off. Exits are never held. Source is OPERATOR_SETTING (saved from the Dashboard) or APPSETTINGS_DEFAULT (MarketData:Intraday:OpeningEntryHoldMinutes). 'today' uses the MCC US-equities holiday calendar.");
+
+app.MapPut("/api/intraday/settings", async (IntradaySettingsUpdate request, IntradaySettingsStore store, LiveSymbolAssessmentService assessmentService, CancellationToken ct) =>
+{
+    if (request.OpeningEntryHoldMinutes is not int minutes || !MomentumCommandCenterV2.Core.OpeningEntryHold.IsValidMinutes(minutes))
+        return Results.BadRequest(new { error = $"openingEntryHoldMinutes is required and must be 0–{MomentumCommandCenterV2.Core.OpeningEntryHold.MaxMinutes}." });
+    var saved = await store.SetOpeningEntryHoldAsync(minutes, DateTimeOffset.UtcNow, ct);
+    assessmentService.InvalidateCache();
+    return Results.Ok(saved);
+})
+.WithName("UpdateIntradaySettings")
+.WithSummary("Set the INTRADAY MOMENTUM opening entry hold")
+.WithDescription("Body: { \"openingEntryHoldMinutes\": 0–120 }. Saved to %LOCALAPPDATA%\\MomentumCommandCenterV2\\intraday-settings.json and applied to the next live assessment (the 10-second assessment cache is cleared). Does not change Boring Overnight.");
+
 app.MapGet("/api/market-data/signal-log", async (string? date, string? symbol, LiveSignalLogStore signalLog, CancellationToken ct) =>
 {
     DateOnly day;
@@ -800,7 +843,9 @@ app.MapGet("/api/market-data/replay", async (
     string? providerName,
     string? feed,
     bool? hasPosition,
+    int? openingHoldMinutes,
     IMarketBarObservationStore barStore,
+    IntradaySettingsStore intradaySettings,
     CancellationToken cancellationToken) =>
 {
     if (string.IsNullOrWhiteSpace(symbol))
@@ -815,14 +860,15 @@ app.MapGet("/api/market-data/replay", async (
     {
         var service = new HistoricalDecisionReplayService(barStore);
         var result = await service.ReplayAsync(
-            symbol, providerName ?? "Alpaca", feed, asOfUtc.Value, hasPosition ?? false, cancellationToken);
+            symbol, providerName ?? "Alpaca", feed, asOfUtc.Value, hasPosition ?? false, cancellationToken,
+            openingHoldMinutes ?? intradaySettings.Current.OpeningEntryHoldMinutes);
         return Results.Ok(result);
     }
     catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
     catch (InvalidDataException ex) { return Results.Problem(ex.Message, statusCode: 500); }
 })
 .WithSummary("Replay a historical V2 decision from persisted 1m/5m OHLCV")
-.WithDescription("Query parameters: symbol and asOfUtc (UTC timestamp ending in Z) are required; providerName (default Alpaca), feed, and hasPosition (default false) are optional. Missing required query parameters return HTTP 400. Uses only stored completed bars at or before asOfUtc and the current V2SignalEngine/default configuration. It does not fetch missing bars, infer historical broker positions, or submit orders.");
+.WithDescription("Query parameters: symbol and asOfUtc (UTC timestamp ending in Z) are required; providerName (default Alpaca), feed, and hasPosition (default false) and openingHoldMinutes (0–120; default = the operator's current Intraday opening hold) are optional. Missing required query parameters return HTTP 400. Uses only stored completed bars at or before asOfUtc and the current V2SignalEngine/default configuration plus the opening hold. It does not fetch missing bars, infer historical broker positions, or submit orders.");
 
 app.MapGet("/api/market-data/yahoo-extended-hours", async (
     string symbol,
@@ -2295,3 +2341,10 @@ static List<DateTimeOffset> FindGaps(IReadOnlyList<MarketBar> bars, TimeSpan int
 /// WHEN CALLED: Sent by the Dashboard after a TOS CSV import in INTRADAY MOMENTUM.
 /// </summary>
 public sealed record AutoScanComparisonRequest(IReadOnlyList<string>? Symbols, string? FileName);
+
+/// <summary>
+/// TYPE: IntradaySettingsUpdate
+/// PURPOSE: Body of PUT /api/intraday/settings. OpeningEntryHoldMinutes is nullable so a missing value returns HTTP 400.
+/// WHEN CALLED: Bound by the endpoint.
+/// </summary>
+public sealed record IntradaySettingsUpdate(int? OpeningEntryHoldMinutes);

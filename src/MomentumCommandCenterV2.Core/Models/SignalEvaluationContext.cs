@@ -21,7 +21,9 @@
 // =========================================================
 /// <summary>
 /// MODEL: SignalEvaluationContext
-/// PURPOSE: Preserves the technical conditions and ATR extension used by one signal evaluation.
+/// PURPOSE: Preserves the technical conditions and ATR extension used by one signal evaluation. OpeningHoldWithheld is
+/// true when every fresh-entry condition passed but the opening entry hold turned EXECUTION READY into PREPARE TO BUY,
+/// so later analysis can compare held entries against what happened after the hold.
 /// WHEN CALLED: Constructed by V2SignalEngine and consumed by diagnostics and historical validation.
 /// </summary>
 public sealed record SignalEvaluationContext(
@@ -36,4 +38,5 @@ public sealed record SignalEvaluationContext(
     bool OneMinuteMomentumWeak,
     decimal AtrExtension,
     bool Extended,
-    bool HardExtended);
+    bool HardExtended,
+    bool OpeningHoldWithheld = false);
