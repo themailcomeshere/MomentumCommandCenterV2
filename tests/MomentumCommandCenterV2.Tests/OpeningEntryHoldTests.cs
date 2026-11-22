@@ -140,6 +140,27 @@ public sealed class OpeningEntryHoldTests
     }
 
     /// <summary>
+    /// PURPOSE: The committed appsettings default is 15 minutes (operator decision 2026-11-21 after the evidence review)
+    /// and a store built from it holds 09:30–09:45 ET; 09:45 ET is EXECUTION READY again.
+    /// WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void CommittedDefaultIsFifteenMinutes()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !dir.EnumerateFiles("*.sln").Any()) dir = dir.Parent;
+        Assert.NotNull(dir);
+        var appsettings = Path.Combine(dir!.FullName, "src", "MomentumCommandCenterV2.API", "appsettings.json");
+        using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(appsettings));
+        var minutes = json.RootElement.GetProperty("MarketData").GetProperty("Intraday").GetProperty("OpeningEntryHoldMinutes").GetInt32();
+        Assert.Equal(15, minutes);
+
+        Assert.Equal(SignalState.PrepareBuy, Engine(minutes).Evaluate(EntrySnapshot(StandardOpen.AddMinutes(14)), false).State);
+        Assert.Equal(SignalState.Buy, Engine(minutes).Evaluate(EntrySnapshot(StandardOpen.AddMinutes(15)), false).State);
+        Assert.Contains("until 09:45 ET (07:45 AZ)", Engine(minutes).Evaluate(EntrySnapshot(StandardOpen.AddMinutes(5)), false).Reason);
+    }
+
+    /// <summary>
     /// PURPOSE: The settings store starts from the configured default, persists the operator's value across instances,
     /// refuses out-of-range values and ignores a corrupt file.
     /// WHEN CALLED: By xUnit.

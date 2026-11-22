@@ -46,5 +46,6 @@ public sealed record V2Config(
     // Opening entry hold (operator request 2026-11-21): minutes after the 09:30 ET open during which a fresh entry is
     // shown as PREPARE TO BUY (OPENING HOLD) instead of EXECUTION READY. 0 = off. Exits are never held. The engine
     // default is 0 so replays and tests are unchanged unless a caller passes the operator setting; the API passes the
-    // operator's Dashboard setting (default MarketData:Intraday:OpeningEntryHoldMinutes).
+    // operator's Dashboard setting (default MarketData:Intraday:OpeningEntryHoldMinutes = 15, operator decision
+    // 2026-11-21 after the evidence review in docs/Research/Opening-Hold-Evidence-20261121.md).
     int OpeningEntryHoldMinutes = 0);
