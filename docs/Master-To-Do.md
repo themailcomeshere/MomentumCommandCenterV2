@@ -26,7 +26,7 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `02e88a3` (READY backend `8365f7e` + Dashboard panel; ATR informational `4eafc9b`): local 392/392. Exact-head CI run `43644529920` SUCCESS.
 - [x] `6fe6446` (latest code head, close/open history on SIP): local Release tests run by Claude: **398/398** passed. Exact-head CI run `43646185327` SUCCESS.
 - [x] Code heads 2026-11-16, all exact-head CI SUCCESS: `d2eebe4` `43962877084` · `83949cf` `43966282027` · `f693f4e` `43966910541` · `0962645` `43967346459` · `1ca8a9d` `43972669673` · `703bf03` `43977782652` (latest). Claude local tests 501/501 in Debug (the Release output was locked by the operator's running MCC).
-- [x] `b05bb98` (opening entry hold, 2026-11-21): exact-head CI run `44988045554` SUCCESS, 556/556 tests, 0 warnings. No local .NET SDK in Claude's session; local Release tests not run by Claude.
+- [x] `0a2160f` (opening hold default 15 min, 2026-11-21): exact-head CI run `44989563619` SUCCESS, 557/557 tests, 0 warnings. Earlier `b05bb98` (hold built): CI `44988045554`, 556/556. No local .NET SDK in Claude's session; local Release tests not run by Claude.
 - [ ] **[Operator]** Stop MCC, run `.\scripts\Get-Latest-And-Test.ps1`, record the SHA and totals (expect 501+), start MCC.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
