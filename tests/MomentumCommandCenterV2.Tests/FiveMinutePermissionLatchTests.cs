@@ -11,7 +11,7 @@ namespace MomentumCommandCenterV2.Tests;
 /// TYPE: FiveMinutePermissionLatchTests
 /// PURPOSE: Verifies the port of the installed TOS 5M study's PERMISSION STATE latch: grant on the raw condition, hold
 /// through a pullback below VWAP while EMA9 >= EMA20 (the SLS case from 2026-11-17), release on 2 bars of structural
-/// damage or major failure, the study's EOD window and DST rule, the daily restart, block codes, the O(n) indicator
+/// damage or major failure, the study's EOD window (15:55 ET) and DST rule, the daily restart, block codes, the O(n) indicator
 /// series matching LiveSymbolTechnicalCalculator.Calculate exactly, and the engine using the supplied latch value.
 /// All bars are synthetic test data.
 /// WHEN CALLED: Run by xUnit during the test suite.
@@ -85,21 +85,36 @@ public sealed class FiveMinutePermissionLatchTests
         Assert.True(result.Latest.StructuralDamagePersistent);
     }
 
-    /// <summary>PURPOSE: EOD window as installed: 19:55 ET in standard time, 18:55 ET in daylight time. WHEN CALLED: By xUnit.</summary>
+    /// <summary>PURPOSE: EOD window (5M study V4.1.8, operator decision 2026-11-22): 15:55 ET in standard and daylight time, matching the V2 engine's EOD GET OUT. WHEN CALLED: By xUnit.</summary>
     [Fact]
-    public void EodWindowFollowsInstalledStudy()
+    public void EodWindowIsFifteenFiftyFiveEastern()
     {
         var rules = new PermissionLatchConfig();
-        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T19:50:00-05:00"), rules));
-        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T19:55:00-05:00"), rules));
-        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-07-15T18:50:00-04:00"), rules));
-        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-07-15T18:55:00-04:00"), rules));
-        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T15:55:00-05:00"), rules));
+        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T15:50:00-05:00"), rules));
+        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T15:55:00-05:00"), rules));
+        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T17:55:00-05:00"), rules));
+        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-07-15T15:50:00-04:00"), rules));
+        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-07-15T15:55:00-04:00"), rules));
+        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-18T08:00:00-05:00"), rules));
 
-        var bars = new[] { Raw(0), new PermissionLatchBar(DateTimeOffset.Parse("2026-11-17T19:55:00-05:00"), 12m, 11m, 11.5m, 11m, 10m, 55m) };
+        var engineEod = new V2Config();
+        Assert.Equal(engineEod.EndOfDayExitHourEt * 100 + engineEod.EndOfDayExitMinuteEt, rules.EodEasternStandardHhmm);
+        Assert.Equal(engineEod.EndOfDayExitHourEt * 100 + engineEod.EndOfDayExitMinuteEt, rules.EodEasternDaylightHhmm);
+
+        var bars = new[] { Raw(0), new PermissionLatchBar(DateTimeOffset.Parse("2026-11-17T15:55:00-05:00"), 12m, 11m, 11.5m, 11m, 10m, 55m) };
         var result = FiveMinutePermissionLatch.Evaluate(bars);
         Assert.Equal("RELEASED_EOD", result.Latest!.Transition);
         Assert.Equal(1, result.Latest.BlockCode);
+    }
+
+    /// <summary>PURPOSE: The installed V4.1.7 inputs (18:55 / 19:55 ET) still work when passed explicitly. WHEN CALLED: By xUnit.</summary>
+    [Fact]
+    public void InstalledV417EodInputsStillConfigurable()
+    {
+        var installed = new PermissionLatchConfig(EodEasternDaylightHhmm: 1855, EodEasternStandardHhmm: 1955);
+        Assert.False(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T19:50:00-05:00"), installed));
+        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-11-17T19:55:00-05:00"), installed));
+        Assert.True(FiveMinutePermissionLatch.IsEodWindow(DateTimeOffset.Parse("2026-07-15T18:55:00-04:00"), installed));
     }
 
     /// <summary>PURPOSE: The study's date-based DST rule for 2026 (Mar 8 and Nov 1 are the switch Sundays). WHEN CALLED: By xUnit.</summary>

@@ -1,7 +1,31 @@
 # ============================================================
 # MOMENTUM COMMAND CENTER V3.2
 # 1M COMMAND CENTER — EXTENDED HOURS
-# V14.4.11 — TIME-GATED BORING OVERNIGHT DECISION
+# V14.4.12 — MCC PARITY: EOD 15:55 ET, OPENING ENTRY HOLD, OVERNIGHT FINAL-HOUR STATUS
+#
+# V14.4.12 (2026-11-22). Built from the installed V14.4.10 source, not
+# from repository V14.4.11 (archived; never confirmed installed).
+#   1. EOD = 15:55 Eastern in daylight and standard time (operator decision
+#      option A), matching MCC's V2 engine EOD GET OUT and the 5M V4.1.8
+#      study. Arizona: 12:55 PM daylight time, 1:55 PM standard time.
+#   2. Opening entry hold (MCC b05bb98 / 0a2160f, default 15 minutes): for
+#      bars that start before RegularTradingStart + openingEntryHoldMinutes,
+#      a normal EXECUTION READY is withheld and shown as PREPARE with
+#      "OPENING HOLD"; AGG. BUY is withheld and shown as AGG. PREPARE TO BUY.
+#      Exits (PREPARE TO SELL, SELL, EOD) are never delayed. 0 = off.
+#   3. Boring Overnight final-hour status (MCC READY decisions 2026-11-14 and
+#      decision 10, d2eebe4): during the final regular hour (RegularTradingEnd
+#      - 60 min) a label shows the overnight buy window. Only a confirmed 1M
+#      SELL reads NO HOLD (red). Otherwise it reads DATA? - CHECK MCC READY
+#      (yellow), because the external overnight statistics, catalyst
+#      sign-off, exclusions and limit are not available to this study.
+#      5M permission/structure are shown as notes only. It is never green.
+#      The 15:55 ET intraday EOD GET OUT is a note for this decision.
+#   Not ported from V14.4.11: its 12:30-12:55 AZ decision window, its
+#   momentum hard gates for the overnight decision, its removal of the
+#   intraday EOD GET OUT state, and its debug-bubble line-break changes.
+#
+# V14.4.10 — ISOLATED AGGRESSIVE-LANE AUDIT MODE
 #
 # VERSION / SOURCE NOTES
 #   Built from the saved V14.4.8 BubbleLadder Fix source.
@@ -24,9 +48,8 @@
 #        candidate can be a valid aggressive trigger context; it is not
 #        itself permission. Normal 5M permission requirements remain intact.
 #     6. Preserves VWAP-margin, ATR-extension, structural-damage, major-failure,
-#        confirmed-weakness, swing/runner, and intraday entry-cutoff protections.
-#     7. Emits a time-gated Boring Overnight decision event at 12:55 Arizona;
-#        missing external qualification evidence is DATA? — NO HOLD, never green.
+#        confirmed-weakness, swing/runner, and EOD protections.
+#     (V14.4.8-V14.4.10 notes above are retained unchanged.)
 #
 # PURPOSE / TIMEFRAME AUTHORITY
 #   1M = EXECUTION / CONFIRMATION / TIMING / SHORT-TERM EXIT
@@ -116,20 +139,21 @@ input aggressiveMarginOver100 = 3.00;
 input requireMomentumAcceleration = yes;
 input extensionWarningATR = 1.50;
 input extensionDangerATR = 2.00;
-# Fixed Arizona session cutoff for this version.
-# The Eastern equivalents below are separate compile-time inputs because
-# SecondsFromTime()/SecondsTillTime() require constant HHMM arguments.
-def eodHourArizona = 15;
-def eodMinuteArizona = 55;
-input eodTimeEasternDaylight = 1855;
-input eodTimeEasternStandard = 1755;
-# Boring Overnight decision window: 12:30–12:55 PM Arizona, inclusive.
-# SecondsFromTime/SecondsTillTime use Eastern time, so translate Arizona
-# using the same DST calendar above: AZ is UTC-7 year-round.
-input overnightStartEasternDaylight = 1530;
-input overnightEndEasternDaylight = 1555;
-input overnightStartEasternStandard = 1430;
-input overnightEndEasternStandard = 1455;
+# EOD cutoff: 15:55 Eastern in daylight AND standard time (operator decision
+# 2026-11-22, option A). This matches MCC: the V2 engine's EOD GET OUT
+# (V2Config.EndOfDayExitHourEt/MinuteEt = 15:55 ET) and the MCC 5M permission
+# latch (TOS-5M-PERMISSION-LATCH-2). In Arizona that is 12:55 PM during US
+# daylight time and 1:55 PM during US standard time.
+# Previous installed values were 1855 / 1955 (intended 3:55 PM Arizona).
+# The two Eastern inputs are kept because SecondsFromTime()/SecondsTillTime()
+# require compile-time constant HHMM arguments.
+input eodTimeEasternDaylight = 1555;
+input eodTimeEasternStandard = 1555;
+# Opening entry hold, minutes after the regular open (MCC default 15).
+# 0 disables the hold.
+input openingEntryHoldMinutes = 15;
+# Boring Overnight final-hour status label and window-open bubble.
+input showOvernightWindowStatus = yes;
 # ============================================================
 # SESSION / TIMEZONE
 #
@@ -138,9 +162,9 @@ input overnightEndEasternStandard = 1455;
 # Eastern clock regardless of the chart's displayed timezone.
 #
 # Arizona remains UTC-7 year-round. Eastern is UTC-4 during US
-# daylight time and UTC-5 during standard time. Therefore an
-# Arizona 3:55 PM EOD corresponds to 6:55 PM Eastern during
-# daylight time and 5:55 PM Eastern during standard time.
+# daylight time and UTC-5 during standard time. Therefore the
+# 15:55 Eastern EOD is 12:55 PM Arizona during daylight time and
+# 1:55 PM Arizona during standard time.
 #
 # The DST dates are calculated from the US rules:
 #   - starts on the second Sunday in March
@@ -181,6 +205,12 @@ def eodTimeEastern =
     if easternDaylightTime
     then eodTimeEasternDaylight
     else eodTimeEasternStandard;
+# Arizona HHMM of the EOD, for the time diagnostics only (AZ = ET - 3 in
+# daylight time, ET - 2 in standard time). Display only; no gate uses it.
+def eodArizonaHhmm =
+    if easternDaylightTime
+    then eodTimeEasternDaylight - 300
+    else eodTimeEasternStandard - 200;
 # thinkScript requires SecondsTillTime()/SecondsFromTime() to receive
 # compile-time constant HHMM arguments. The two Eastern times are therefore
 # inputs (compile-time constants) and the DST branch selects between them.
@@ -199,17 +229,19 @@ def extendedSession =
     !regularSession;
 def eodExitWindow =
     afterEOD;
-# This is the decision window, not the late-session entry cutoff above.
-def overnightWindowStartReached =
-    if easternDaylightTime
-    then SecondsFromTime(overnightStartEasternDaylight) >= 0
-    else SecondsFromTime(overnightStartEasternStandard) >= 0;
-def overnightWindowEndNotPassed =
-    if easternDaylightTime
-    then SecondsTillTime(overnightEndEasternDaylight) >= 0
-    else SecondsTillTime(overnightEndEasternStandard) >= 0;
-def overnightDecisionWindow =
-    overnightWindowStartReached and overnightWindowEndNotPassed;
+# Opening entry hold: bars that START before open + N minutes (GetTime() is
+# the bar start, so with N = 15 the 09:44 ET bar is held and 09:45 is not,
+# the same as MCC's OpeningEntryHold test CommittedDefaultIsFifteenMinutes).
+def openingEntryHold =
+    openingEntryHoldMinutes > 0 and
+    regularSession and
+    GetTime() < RegularTradingStart(GetYYYYMMDD()) + openingEntryHoldMinutes * 60000;
+# Boring Overnight buy window: the final regular hour (15:00-16:00 ET on a
+# normal day; 1:00-2:00 PM AZ in standard time, 12:00-1:00 PM AZ in
+# daylight time). Uses RegularTradingEnd so no DST branch is needed.
+def overnightFinalHour =
+    regularSession and
+    GetTime() >= RegularTradingEnd(GetYYYYMMDD()) - 60 * 60000;
 # ============================================================
 # TIME DIAGNOSTICS
 #
@@ -228,7 +260,7 @@ def secondsTillEOD =
     else SecondsTillTime(eodTimeEasternStandard);
 AddLabel(
     showDebugLabels and showTimeDiagnostics,
-    "TIME AZ EOD=" + eodHourArizona + ":" + eodMinuteArizona +
+    "TIME AZ EOD=" + eodArizonaHhmm +
     " ET=" + eodTimeEastern +
     " DST=" + easternDaylightTime
 );
@@ -240,7 +272,7 @@ AddLabel(
 AddChartBubble(
     showTimeDiagnosticBubbles,
     high,
-    "AZ=" + eodHourArizona + ":" + eodMinuteArizona +
+    "AZ=" + eodArizonaHhmm +
     " ET=" + eodTimeEastern +
     " From=" + secondsFromEOD +
     " Till=" + secondsTillEOD +
@@ -981,9 +1013,16 @@ def executionInvalidated =
     or rsi < rsiWeak
     or macdBearish
     or bullishExtensionDanger;
-def finalExecutionReady =
+def executionReadyBeforeOpeningHold =
     executionReady and
     !executionInvalidated;
+# V14.4.12: every READY condition met, but inside the opening entry hold.
+def openingHoldWithheldReady =
+    executionReadyBeforeOpeningHold and
+    openingEntryHold;
+def finalExecutionReady =
+    executionReadyBeforeOpeningHold and
+    !openingEntryHold;
 
 # ============================================================
 # 1M AGGRESSIVE EXECUTION LANE
@@ -1018,13 +1057,14 @@ def aggressiveExecutionTrigger =
     );
 def aggressiveExecutionOpportunity =
     aggressiveExecutionEnvironment and
-    !finalExecutionReady;
+    !executionReadyBeforeOpeningHold;
 def aggressivePrepareToBuy =
     aggressiveExecutionOpportunity and
-    !aggressiveExecutionTrigger;
+    (!aggressiveExecutionTrigger or openingEntryHold);
 def aggressiveBuy =
     aggressiveExecutionOpportunity and
-    aggressiveExecutionTrigger;
+    aggressiveExecutionTrigger and
+    !openingEntryHold;
 def aggressivePrepareEvent =
     aggressivePrepareToBuy and
     !aggressivePrepareToBuy[1];
@@ -1057,6 +1097,7 @@ def aggressiveBuyEvent =
 #  17  = aggressive environment valid but no fresh 1M trigger
 #  18  = aggressive environment is not active for another reason
 #  19  = normal execution READY already active; orange lane suppressed
+#  20  = AGG. BUY conditions met inside the opening entry hold (V14.4.12)
 # ============================================================
 def aggressiveMomentumEvidence =
     price > ema9 or
@@ -1066,7 +1107,9 @@ def aggressiveMomentumEvidence =
     rvolHealthy;
 def aggressiveBlockCode =
     if eodExitWindow then 1
-    else if finalExecutionReady then 19
+    else if executionReadyBeforeOpeningHold then 19
+    else if openingEntryHold and aggressiveExecutionTrigger and
+            aggressiveExecutionEnvironment then 20
     else if !aggressivePriceWithinVWAPMargin then 2
     else if !fiveAggressiveStructure then 3
     else if !fiveAggressiveMomentum then 4
@@ -1117,6 +1160,7 @@ def executionSignalType =
 #   8 = price below Daily VWAP
 #   9 = RSI below weak threshold
 #  10 = MACD bearish
+#  11 = opening entry hold (all READY conditions met; V14.4.12)
 #
 # CANDIDATE BLOCK CODE
 #   0 = candidate environment active
@@ -1156,6 +1200,8 @@ def executionReadyBlockCode =
         9
     else if macdBearish then
         10
+    else if openingEntryHold then
+        11
     else
         0;
 def executionCandidateBlockCode =
@@ -1202,21 +1248,21 @@ AddChartBubble(
     high + atr * 8.0,
     "1M DBG\nP=" + fiveExecutionPermission +
     " C=" + executionCandidate +
-    " EVT=" + (if continuationExecutionEvent then "CONT"
+    "\nEVT=" + (if continuationExecutionEvent then "CONT"
                 else if candidateConfirmationEvent then "CONF"
                 else if freshExecutionEvent then "FRESH"
                 else if inTrendExecutionEvent then "INTR"
                 else "NONE") +
     " O=" + executionOpportunity +
-    " R=" + finalExecutionReady +
+    "\nR=" + finalExecutionReady +
     " AGE=" + executionAge +
     "\nEXT=" + Round(extensionATR, 2) +
     " BLK=" + executionReadyBlockCode +
-    " CB=" + executionCandidateBlockCode +
-    "\nRSI=" + Round(rsi, 1) +
-    " RVOL=" + Round(rvol, 2) +
+    "\nCB=" + executionCandidateBlockCode +
+    " RSI=" + Round(rsi, 1) +
+    "\nRVOL=" + Round(rvol, 2) +
     " VWAP=" + priceAboveVWAP +
-    " EMA20=" + (price > ema20),
+    "\nEMA20=" + (price > ema20),
     if finalExecutionReady then Color.GREEN
     else if executionOpportunity then Color.YELLOW
     else Color.WHITE,
@@ -1296,7 +1342,9 @@ def sellConfirmed =
 # FINAL 1M STATE
 # ============================================================
 def finalState =
-    if sellConfirmed then
+    if eodExitWindow then
+        EOD_GET_OUT
+    else if sellConfirmed then
         SELL
     else if prepareToSell then
         PREPARE_SELL
@@ -1304,6 +1352,8 @@ def finalState =
         SWING_RECLAIM
     else if finalExecutionReady then
         EXECUTION_READY
+    else if openingHoldWithheldReady then
+        PREPARE
     else if executionExpired then
         EXECUTION_EXPIRED
     else if prepareToBuy then
@@ -1318,6 +1368,7 @@ AddLabel(
     "1M STATE: " +
     (
         if finalState == WAIT then "WAIT"
+        else if finalState == PREPARE and openingHoldWithheldReady then "PREPARE - OPENING HOLD"
         else if finalState == PREPARE then "PREPARE"
         else if finalState == EXECUTION_READY then "EXECUTION READY"
         else if finalState == EXECUTION_EXPIRED then "EXECUTION EXPIRED"
@@ -1418,7 +1469,29 @@ AddLabel(
     "CONTINUATION CANDIDATE",
     Color.GREEN
 );
-# The EOD result label is emitted alongside the time-gated decision below.
+AddLabel(
+    showLabels and eodExitWindow,
+    "EOD: GET OUT",
+    Color.RED
+);
+AddLabel(
+    showLabels and openingEntryHold,
+    "OPENING HOLD: " + openingEntryHoldMinutes + " MIN - NO NEW ENTRY" +
+    (if openingHoldWithheldReady then " (READY WITHHELD)" else ""),
+    Color.YELLOW
+);
+# Boring Overnight status. Never green: the study cannot see the overnight
+# statistics, catalyst sign-off, exclusions or limit. Only a confirmed 1M
+# SELL blocks (MCC decision 10); 5M permission/structure are notes.
+AddLabel(
+    showLabels and showOvernightWindowStatus and overnightFinalHour,
+    "OVERNIGHT BUY WINDOW: " +
+    (if sellConfirmed then "1M SELL - NO HOLD"
+     else "DATA? - CHECK MCC READY") +
+    " | 5M PERM " + (if fivePermission and priceAboveVWAP then "YES" else "NO") + " (note)" +
+    (if eodExitWindow then " | EOD (note)" else ""),
+    if sellConfirmed then Color.RED else Color.YELLOW
+);
 # ============================================================
 # AGGRESSIVE LANE STATUS
 # ============================================================
@@ -1458,41 +1531,11 @@ def fiveBuyEvent =
     fiveState == FIVE_BUY and fiveState[1] != FIVE_BUY;
 def sellBubbleEvent =
     finalState == SELL and finalState[1] != SELL;
-# Evaluate chart-visible technical blockers at the final 1M bar of the
-# Arizona 12:30–12:55 decision window. External overnight statistics,
-# catalyst clearance, exclusions and source freshness are not available
-# to this ThinkScript study, so technical strength alone cannot produce HOLD.
-def overnightDecisionEvent =
-    overnightDecisionWindow and
-    (if easternDaylightTime
-     then SecondsTillTime(overnightEndEasternDaylight) == 0
-     else SecondsTillTime(overnightEndEasternStandard) == 0);
-def overnightTechnicalFail =
-    !fivePermission or
-    !priceAboveVWAP or
-    fiveBearishStack or
-    fiveStructuralDamagePersistent or
-    fiveMajorFailurePersistent or
-    fiveConfirmedWeakness or
-    fiveRunnerWaningPersistent or
-    extensionDanger or
-    sellConfirmed or
-    prepareToSell;
-def eodGetOutEvent =
-    overnightDecisionEvent and overnightTechnicalFail;
-def overnightDataEvent =
-    overnightDecisionEvent and !overnightTechnicalFail;
-
-AddLabel(
-    showLabels and eodGetOutEvent,
-    "EOD: GET OUT",
-    Color.RED
-);
-AddLabel(
-    showLabels and overnightDataEvent,
-    "OVERNIGHT: DATA? — NO HOLD",
-    Color.YELLOW
-);
+def openingHoldEvent =
+    openingHoldWithheldReady and !openingHoldWithheldReady[1];
+def overnightWindowOpenEvent =
+    showOvernightWindowStatus and
+    overnightFinalHour and !overnightFinalHour[1];
 def executionExpiredEvent =
     executionExpired and !executionExpired[1];
 def swingReclaimBubbleEvent =
@@ -1507,7 +1550,7 @@ def candidateBlockedBubbleEvent =
     executionCandidateBlockCode <= 10;
 
 def stateBubbleEvent =
-    readyEvent or executionExpiredEvent or eodGetOutEvent or overnightDataEvent or prepareToBuyEvent or
+    readyEvent or executionExpiredEvent or openingHoldEvent or overnightWindowOpenEvent or prepareToBuyEvent or
     prepareSellEvent or aggressivePrepareEvent or aggressiveBuyEvent or
     fivePrepareBuyEvent or fiveRunnerWaningEvent or sellBubbleEvent or
     fiveBuyEvent or candidateBlockedBubbleEvent or anyCandidateBubbleEvent or
@@ -1528,6 +1571,7 @@ def showCompositeBubble =
 def compositeBubbleBelow =
     swingReclaimBubbleEvent and
     !readyEvent and !executionExpiredEvent and !prepareToBuyEvent and
+    !openingHoldEvent and !overnightWindowOpenEvent and
     !prepareSellEvent and !aggressivePrepareEvent and !aggressiveBuyEvent and
     !fivePrepareBuyEvent and !fiveRunnerWaningEvent and !sellBubbleEvent and
     !fiveBuyEvent and !candidateBlockedBubbleEvent and !anyCandidateBubbleEvent;
@@ -1536,9 +1580,9 @@ AddChartBubble(
     showCompositeBubble,
     if compositeBubbleBelow then low - atr else high + atr,
     (
-    (if eodGetOutEvent then "EOD GET OUT\n" else "") +
-    (if overnightDataEvent then "DATA? — NO HOLD\n" else "") +
+    (if overnightWindowOpenEvent then "OVERNIGHT WINDOW OPEN\n" else "") +
     (if readyEvent then "EXECUTION READY\n" else "") +
+    (if openingHoldEvent then "OPENING HOLD (READY WITHHELD)\n" else "") +
     (if executionExpiredEvent then "EXECUTION EXPIRED\n" else "") +
     (if prepareToBuyEvent then "PREPARE TO BUY\n" else "") +
     (if prepareSellEvent then "PREPARE TO SELL\n" else "") +
@@ -1570,36 +1614,35 @@ AddChartBubble(
     (if showCompositeAggAudit then
         "AGG #" + aggressiveBlockCode +
         " M=" + aggressivePriceWithinVWAPMargin +
-        " S=" + fiveAggressiveStructure +
+        "\nS=" + fiveAggressiveStructure +
         " MOM=" + fiveAggressiveMomentum +
-        " SD=" + fiveStructuralDamagePersistent +
+        "\n SD=" + fiveStructuralDamagePersistent +
         " MF=" + fiveMajorFailurePersistent +
-        " CW=" + fiveConfirmedWeakness +
+        "\nCW=" + fiveConfirmedWeakness +
         " SW=" + fiveSwingZoneRaw +
         "\nSET=" + fiveSetupCandidate +
         " RUN=" + fiveRunnerStructure +
-        " VW=" + priceAboveVWAP +
+        "\nVW=" + priceAboveVWAP +
         " E20=" + (price > ema20) +
-        " E20R=" + ema20Rising +
+        "\nE20R=" + ema20Rising +
         " RSI=" + (rsi >= minimumExecutionRSI) +
-        " MOM1=" + aggressiveMomentumEvidence +
+        "\n MOM1=" + aggressiveMomentumEvidence +
         " EXT=" + bullishExtensionDanger +
         "\nENV=" + aggressiveExecutionEnvironment +
         " OPP=" + aggressiveExecutionOpportunity +
-        " TRIG=" + aggressiveExecutionTrigger +
+        "\nTRIG=" + aggressiveExecutionTrigger +
         " READY=" + finalExecutionReady +
-        " BUY=" + aggressiveBuy + "\n"
+        " \nBUY=" + aggressiveBuy + "\n"
      else "")
     ),
-    if eodGetOutEvent then Color.RED
-    else if overnightDataEvent then Color.YELLOW
-    else if readyEvent then Color.GREEN
+    if readyEvent then Color.GREEN
     else if sellBubbleEvent or (candidateBlockedBubbleEvent and
         (executionCandidateBlockCode == 1 or executionCandidateBlockCode == 2 or
          executionCandidateBlockCode == 4 or executionCandidateBlockCode == 5 or
          executionCandidateBlockCode == 8 or executionCandidateBlockCode == 9)) then Color.RED
     else if aggressiveBuyEvent then Color.ORANGE
     else if prepareToBuyEvent or prepareSellEvent or executionExpiredEvent or
+        openingHoldEvent or overnightWindowOpenEvent or
         fivePrepareBuyEvent or fiveRunnerWaningEvent then Color.YELLOW
     else if aggressivePrepareEvent then Color.ORANGE
     else if fiveBuyEvent then Color.GREEN

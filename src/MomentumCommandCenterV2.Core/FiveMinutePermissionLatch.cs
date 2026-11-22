@@ -18,18 +18,20 @@ public sealed record PermissionLatchBar(
 
 /// <summary>
 /// TYPE: PermissionLatchConfig
-/// PURPOSE: Inputs copied from the installed Thinkorswim 5M study (docs/Validation/Installed-5M-Study.txt):
-/// permissionFailureBars = 2, majorFailureBars = 2, minimumPermissionRSI = 50, eodTimeEasternDaylight = 1855,
-/// eodTimeEasternStandard = 1955. ReleaseAtNewEasternDate models the operator's "1 D" 5m chart, where the latch
-/// starts at NO on each day's first bar (CompoundValue initial value).
-/// WHEN CALLED: Passed to <see cref="FiveMinutePermissionLatch.Evaluate"/>; defaults are the installed study's values.
+/// PURPOSE: Inputs of the Thinkorswim 5M study (docs/Charts/5M/MainStudy.txt, V4.1.8): permissionFailureBars = 2,
+/// majorFailureBars = 2, minimumPermissionRSI = 50, eodTimeEasternDaylight = 1555, eodTimeEasternStandard = 1555.
+/// The EOD is 15:55 ET in both seasons (operator decision 2026-11-22, option A), the same as the V2 engine's
+/// EOD GET OUT (V2Config.EndOfDayExitHourEt/MinuteEt). The installed V4.1.7 values were 1855 / 1955.
+/// ReleaseAtNewEasternDate models the operator's "1 D" 5m chart, where the latch starts at NO on each day's first
+/// bar (CompoundValue initial value).
+/// WHEN CALLED: Passed to <see cref="FiveMinutePermissionLatch.Evaluate"/>; defaults are the V4.1.8 study's values.
 /// </summary>
 public sealed record PermissionLatchConfig(
     int PermissionFailureBars = 2,
     int MajorFailureBars = 2,
     decimal MinimumPermissionRsi = 50m,
-    int EodEasternDaylightHhmm = 1855,
-    int EodEasternStandardHhmm = 1955,
+    int EodEasternDaylightHhmm = 1555,
+    int EodEasternStandardHhmm = 1555,
     bool ReleaseAtNewEasternDate = true);
 
 /// <summary>
@@ -71,15 +73,16 @@ public sealed record PermissionLatchResult(
 /// majorFailureRaw      = close &lt; dailyVWAP and close &lt; ema9 and ema9 &lt; ema20 and ema20 &lt; sma50 (persistent = 2 bars)
 /// permission = eod ? 0 : majorFailurePersistent ? 0 : structuralDamagePersistent ? 0 : raw ? 1 : permission[1]
 /// </code>
-/// The EOD window follows the study as installed: at or after 18:55 ET in daylight time and 19:55 ET in standard
-/// time, with the study's own date-based DST rule. (Note: the study comment says this equals 15:55 Arizona; that
-/// holds for daylight time only. In standard time 15:55 AZ is 17:55 ET. The port keeps the installed value.)
+/// The EOD window is at or after 15:55 ET in daylight and standard time (5M study V4.1.8, operator decision
+/// 2026-11-22), matching the V2 engine's EOD GET OUT. That is 12:55 AZ in daylight time and 13:55 AZ in standard
+/// time. The study keeps its date-based DST branch, so both inputs remain configurable.
+/// Before 2026-11-22 the port used the installed V4.1.7 values (18:55 ET daylight / 19:55 ET standard).
 /// WHEN CALLED: By the live assessment and the historical replay before V2SignalEngine evaluates a snapshot.
 /// </summary>
 public static class FiveMinutePermissionLatch
 {
     /// <summary>Rules version shown wherever the latch result is reported.</summary>
-    public const string RulesVersion = "TOS-5M-PERMISSION-LATCH-1 (Installed-5M-Study)";
+    public const string RulesVersion = "TOS-5M-PERMISSION-LATCH-2 (5M study V4.1.8, EOD 15:55 ET)";
 
     private static readonly TimeZoneInfo Eastern = ResolveEastern();
 
@@ -150,7 +153,8 @@ public static class FiveMinutePermissionLatch
     }
 
     /// <summary>
-    /// PURPOSE: The study's afterEOD test: the bar's Eastern time is at or after 18:55 (daylight) or 19:55 (standard).
+    /// PURPOSE: The study's afterEOD test: the bar's Eastern time is at or after the configured EOD (15:55 ET by default
+    /// in both seasons).
     /// WHEN CALLED: Per bar by <see cref="Evaluate"/>; public for tests.
     /// </summary>
     public static bool IsEodWindow(DateTimeOffset easternTime, PermissionLatchConfig rules)

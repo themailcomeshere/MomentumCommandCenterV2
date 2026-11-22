@@ -1,9 +1,16 @@
-#V4.1.7 (Normal 5M Command Center) (10/7)
-
-
 # ============================================================
 # Momentum Command Center V3.2
 # 5M Command Center — Extended Hours
+# V4.1.8 — EOD 15:55 Eastern (MCC parity); otherwise unchanged from installed V4.1.7
+#
+# V4.1.8 (2026-11-22, operator decision option A)
+#   Only change: eodTimeEasternDaylight and eodTimeEasternStandard = 1555.
+#   The EOD window (permission release, FIVE_EOD_GET_OUT, "EOD: GET OUT")
+#   now starts at 15:55 ET in both seasons, the same time as MCC's V2 engine
+#   EOD GET OUT and the MCC 5M permission latch. Arizona: 12:55 PM in
+#   daylight time, 1:55 PM in standard time. Time-diagnostic labels show the
+#   Arizona HHMM. No permission, setup, runner, swing or sell rule changed.
+#
 # V4.1.7 — Targeted runner-waning protection + Arizona-time diagnostics + parallel aggressive entry lane
 #
 # PURPOSE OF THIS REVISION
@@ -123,13 +130,16 @@ input aggressiveMargin10To25 = 1.50;
 input aggressiveMargin25To50 = 2.00;
 input aggressiveMargin50To100 = 2.50;
 input aggressiveMarginOver100 = 3.00;
-# Fixed Arizona session cutoff for this version.
-# The Eastern equivalents below are separate compile-time inputs because
-# SecondsFromTime()/SecondsTillTime() require constant HHMM arguments.
-def eodHourArizona = 15;
-def eodMinuteArizona = 55;
-input eodTimeEasternDaylight = 1855;
-input eodTimeEasternStandard = 1755;
+# EOD cutoff: 15:55 Eastern in daylight AND standard time (operator decision
+# 2026-11-22, option A). This matches MCC: the V2 engine's EOD GET OUT
+# (V2Config.EndOfDayExitHourEt/MinuteEt = 15:55 ET) and the MCC 5M permission
+# latch (TOS-5M-PERMISSION-LATCH-2). In Arizona that is 12:55 PM during US
+# daylight time and 1:55 PM during US standard time.
+# Previous installed values were 1855 / 1955 (intended 3:55 PM Arizona).
+# The two Eastern inputs are kept because SecondsFromTime()/SecondsTillTime()
+# require compile-time constant HHMM arguments.
+input eodTimeEasternDaylight = 1555;
+input eodTimeEasternStandard = 1555;
 # ============================================================
 # SESSION / TIMEZONE
 #
@@ -138,9 +148,9 @@ input eodTimeEasternStandard = 1755;
 # Eastern clock regardless of the chart's displayed timezone.
 #
 # Arizona remains UTC-7 year-round. Eastern is UTC-4 during US
-# daylight time and UTC-5 during standard time. Therefore an
-# Arizona 3:55 PM EOD corresponds to 6:55 PM Eastern during
-# daylight time and 5:55 PM Eastern during standard time.
+# daylight time and UTC-5 during standard time. Therefore the
+# 15:55 Eastern EOD is 12:55 PM Arizona during daylight time and
+# 1:55 PM Arizona during standard time.
 #
 # The DST dates are calculated from the US rules:
 #   - starts on the second Sunday in March
@@ -181,6 +191,12 @@ def eodTimeEastern =
     if easternDaylightTime
     then eodTimeEasternDaylight
     else eodTimeEasternStandard;
+# Arizona HHMM of the EOD, for the time diagnostics only (AZ = ET - 3 in
+# daylight time, ET - 2 in standard time). Display only; no gate uses it.
+def eodArizonaHhmm =
+    if easternDaylightTime
+    then eodTimeEasternDaylight - 300
+    else eodTimeEasternStandard - 200;
 # thinkScript requires SecondsTillTime()/SecondsFromTime() to receive
 # compile-time constant HHMM arguments. The two Eastern times are therefore
 # inputs (compile-time constants) and the DST branch selects between them.
@@ -217,7 +233,7 @@ def secondsTillEOD =
     else SecondsTillTime(eodTimeEasternStandard);
 AddLabel(
     showDebugLabels and showTimeDiagnostics,
-    "TIME AZ EOD=" + eodHourArizona + ":" + eodMinuteArizona +
+    "TIME AZ EOD=" + eodArizonaHhmm +
     " ET=" + eodTimeEastern +
     " DST=" + easternDaylightTime
 );
@@ -229,7 +245,7 @@ AddLabel(
 AddChartBubble(
     showTimeDiagnosticBubbles,
     high,
-    "AZ=" + eodHourArizona + ":" + eodMinuteArizona +
+    "AZ=" + eodArizonaHhmm +
     " ET=" + eodTimeEastern +
     " From=" + secondsFromEOD +
     " Till=" + secondsTillEOD +
@@ -1195,15 +1211,13 @@ AddLabel(
         "NO",
     if swingBuyEnvironment then Color.GREEN else Color.GRAY
 );
-# The 5M study communicates the intraday entry cutoff only. The
-# overnight hold decision is emitted by the 1M study during its Arizona window.
 AddLabel(
     showLabels,
-    "ENTRY CUTOFF: " +
+    "EOD: " +
     if eodExitWindow then
-        "ACTIVE"
+        "GET OUT"
     else
-        "INACTIVE",
+        "ACTIVE",
     if eodExitWindow then Color.ORANGE else Color.GREEN
 );
 # ============================================================
