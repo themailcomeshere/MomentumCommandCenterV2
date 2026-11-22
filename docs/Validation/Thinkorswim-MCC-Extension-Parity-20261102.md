@@ -144,6 +144,8 @@ This is a source-level clock mismatch, not a confirmed explanation for any indiv
 
 **Disposition:** both studies need a targeted EOD-time parity correction before EOD/GET OUT behavior is trusted across DST. For the intended 3:55 PM Arizona cutoff, use 18:55 Eastern during US daylight time and 17:55 Eastern during US standard time. Implement the same calendar/DST rule in both studies, compile in thinkorswim, and test bars immediately before/at/after the cutoff on both sides of the DST transition. Do not change unrelated entry, runner, or exit-state thresholds in the same revision.
 
+> **Superseded 2026-11-22:** the operator chose an EOD of **15:55 ET in both seasons** (option A), matching MCC. The 3:55 PM Arizona target in this document no longer applies. See [Chart-Study-MCC-Parity-20261122.md](../Engineering/Chart-Study-MCC-Parity-20261122.md).
+
 
 ### V14.5.1 confirmation against V14.5 predecessor
 

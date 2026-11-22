@@ -1,9 +1,9 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-21 (22:26 AZ): opening entry hold default 60 → 15 min after evidence review (§2b). Earlier today: opening entry hold built (`b05bb98`). Previous update 2026-11-17 (09:10 AZ).
+**Updated:** 2026-11-22 (09:30 AZ): chart studies aligned with MCC — EOD 15:55 ET (option A), 1M opening hold, overnight final-hour status (§5, `0c96252`). Previous update 2026-11-21 (22:26 AZ): opening entry hold default 60 → 15 min (§2b).
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
-**Current handoff:** [NewChatHandoff-20261121.md](NewChatHandoff-20261121.md) (previous: [20261117](NewChatHandoff-20261117.md))
+**Current handoff:** [NewChatHandoff-20261122.md](NewChatHandoff-20261122.md) (previous: [20261121](NewChatHandoff-20261121.md))
 **How to use MCC daily:** [MCC-Operator-Guide.md](MCC-Operator-Guide.md)
 **Full dated history (Nov 6 – Nov 13 morning):** [Master-To-Do-History-20261113.md](archive/Master-To-Do-History-20261113.md) · older: [Master-To-Do-History-20261106.md](archive/Master-To-Do-History-20261106.md)
 **Detail:** [Active Engineering Backlog](Active-Engineering-Backlog-20261106.md) · [P2/P3 Execution Plan](Engineering/P2-P3-Execution-Plan-20261110.md) · [Interactive Windows Operation](Engineering/Interactive-Windows-Operation.md) · [Boring Overnight Control Contract](Engineering/Boring-Overnight-Control-Contract-20261113.md) · [Provider Runtime Inventory](Engineering/Market-Data-Provider-Runtime-Inventory-20261113.md) · [Technical Workflow](Technical-Workflow.md) · [Runtime Acceptance Runbook](Runtime-Acceptance-Runbook.md) · [Catalyst Human Review](Catalyst-Human-Review-Workflow.md)
@@ -27,7 +27,8 @@ This is the authoritative checklist. Each open item appears once. Every item is 
 - [x] `6fe6446` (latest code head, close/open history on SIP): local Release tests run by Claude: **398/398** passed. Exact-head CI run `43646185327` SUCCESS.
 - [x] Code heads 2026-11-16, all exact-head CI SUCCESS: `d2eebe4` `43962877084` · `83949cf` `43966282027` · `f693f4e` `43966910541` · `0962645` `43967346459` · `1ca8a9d` `43972669673` · `703bf03` `43977782652` (latest). Claude local tests 501/501 in Debug (the Release output was locked by the operator's running MCC).
 - [x] `0a2160f` (opening hold default 15 min, 2026-11-21): exact-head CI run `44989563619` SUCCESS, 557/557 tests, 0 warnings. Earlier `b05bb98` (hold built): CI `44988045554`, 556/556. No local .NET SDK in Claude's session; local Release tests not run by Claude.
-- [ ] **[Operator]** Stop MCC, run `.\scripts\Get-Latest-And-Test.ps1`, record the SHA and totals (expect 501+), start MCC.
+- [x] `0c96252` (5M latch EOD 15:55 ET + studies, 2026-11-22): exact-head CI run `45043823774` SUCCESS, 558/558 tests. No local .NET SDK in Claude's session.
+- [ ] **[Operator]** Stop MCC, run `.\scripts\Get-Latest-And-Test.ps1`, record the SHA and totals (expect `0c96252` or later, 558+), start MCC.
 - Browser, runtime, TOS compilation and data-source evidence remain separate gates (below).
 
 ## Priority directive (2026-11-11)
@@ -229,14 +230,20 @@ Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-
 
 ## 5. Thinkorswim parity
 
-- [ ] **[Operator]** Compile the exact current ATR V2 / 5m / 1m studies in TOS and retain the compiler result and chart settings.
+- [ ] **[Operator]** Compile and install **5M Main Study V4.1.8**, **5M Authority Diagnostic** and **1M Main Study V14.4.12** (`0c96252`) one at a time, using the steps in [Chart-Study-MCC-Parity-20261122.md](Engineering/Chart-Study-MCC-Parity-20261122.md). Record the compiler result and confirm the EOD inputs read 1555 / 1555 (saved inputs can override defaults). Send any compile error with its line number.
+- [ ] **[Operator]** Compile the exact current ATR V2 study in TOS and retain the compiler result and chart settings.
 - [ ] **[Operator]** Import matched TOS Daily OHLC exports and compare with the scanner CSV. No dedicated Boring Winner Daily OHLC export study exists yet.
 - [ ] **[Operator]** Reconcile the Daily range % and 14-session simple ATR % proxies against the exact TOS Daily study.
 - [ ] **[Operator]** Independent 1m continuity (EVR 1m had 13 gaps); revalidate any new gaps against source evidence.
 - [x] **[Repo]** SLS parity check 2026-11-17 (operator screenshot, ~09:00 AZ): TOS **5M PERMISSION: YES**, MCC **5M Permission: NO**. Cause confirmed from source: the TOS permission is a latch that stays YES until 2 bars of structural damage (price < VWAP and EMA9 < EMA20), major failure, or EOD. MCC uses a stateless 5-of-6 score. VWAP also differs (TOS 22.76 vs MCC 20.31), likely because TOS includes extended hours. Evidence: [SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - [x] **[Repo]** (`1694c2f`, CI `44124408737`) Ported the TOS 5M permission latch (operator approval 2026-11-17): `FiveMinutePermissionLatch` (Core) is now the entry gate in the live assessment and the replay. The 6-condition score is a diagnostic only. Card gate line: **5M Permission: YES (TOS latch since h:mm AZ)** or **NO · reason**. 14 tests, including exact series parity. Real-bar replay (SLS, today): YES (HELD) at the 08:55 AZ bar, matching TOS; the old rule read NO. Evidence: [SLS-Parity-20261117.md](Validation/SLS-Parity-20261117.md).
 - [ ] **[Operator]** Restart MCC on the latch head (API change), then compare the Red Zone gate line **5M Permission** with the TOS 5m chart label on 2–3 symbols during the session. Report any mismatch with symbol, AZ time and both values.
-- [ ] **[Operator]** The installed 5M study has `eodTimeEasternStandard = 1955`. Its comment says this equals 15:55 AZ, but in standard time 15:55 AZ is **17:55 ET**; daylight `1855` is correct. Decide whether to change the study input to `1755`. MCC keeps the installed value until then, and neither value falls inside the regular session.
+- [x] **[Operator]** EOD decided 2026-11-22: **option A, 15:55 ET in daylight and standard time** (12:55 AZ daylight / 13:55 AZ standard), the same as the V2 engine's EOD GET OUT. Supersedes the 3:55 PM Arizona target (1855 / 1755) and the installed 1855 / 1955. Decision record: [Chart-Study-MCC-Parity-20261122.md](Engineering/Chart-Study-MCC-Parity-20261122.md).
+- [x] **[Repo]** (`0c96252`, CI `45043823774` SUCCESS, 558/558) Applied option A and the study/MCC gaps found on 2026-11-22:
+  - `FiveMinutePermissionLatch` EOD defaults 1555 / 1555, `TOS-5M-PERMISSION-LATCH-2`; tests for both seasons and equality with `V2Config` EOD.
+  - 5M Main Study **V4.1.8** and 5M Authority Diagnostic, built from the installed V4.1.7 sources: EOD inputs only.
+  - 1M Main Study **V14.4.12**, built from installed V14.4.10: EOD 1555 / 1555; opening entry hold (`openingEntryHoldMinutes = 15`, READY → **PREPARE - OPENING HOLD**, AGG. BUY withheld, exits never delayed); Boring Overnight final-hour label (only a confirmed 1M SELL reads NO HOLD, otherwise **DATA? - CHECK MCC READY**; 5M permission and EOD are notes; never green).
+  - Repo 1M V14.4.11 (12:30–12:55 AZ window with momentum hard gates) and repo 5M V4.1.7 (1755) archived under `docs/archive/Charts/`. Not compiled in TOS.
 - [x] **[Operator]** TOS charts show extended hours: **ON** (operator, 2026-11-17).
 - [ ] **[Operator]** Decide the VWAP gap. Adding IEX pre-market bars barely helps: SLS today 20.31 → 20.47 vs TOS 22.76. IEX traded 41,375 pre-market shares vs 1.33M regular. Options:
   - (a) Keep MCC's regular-session VWAP and accept a gap-day mismatch (recommended; no new data).
@@ -255,7 +262,8 @@ Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-
 - [ ] **[Repo]** Pre-existing issue: `App_Data/exclusions-watchlist.json` is committed, so adding an exclusion makes the working tree dirty, and `Get-Latest-And-Test.ps1` then refuses to update. Proposed fix: untrack it and git-ignore it, keeping the operator's file in place. Needs operator OK.
 - [ ] **[Repo]** Proposal, not approved: a pre-market gap watch from about 06:00 AZ (IEX pre-market ±20% vs prior close, with the latest headline; detection only).
 - [ ] **[Operator]** Verify that 5m Permission is authoritative and 1m is for timing only. Export matched completed-bar state labels.
-- [ ] **[Operator]** Verify the Arizona-local EOD cutoff with bars before, at and after it (DST and standard time).
+- [ ] **[Operator]** After installing V4.1.8 / V14.4.12, run the Monday 2026-11-23 checks in [Chart-Study-MCC-Parity-20261122.md](Engineering/Chart-Study-MCC-Parity-20261122.md) (standard time): opening hold 07:30–07:44 AZ on the 1M chart vs **PREPARE TO BUY · OPENING HOLD** in INTRADAY MOMENTUM → 4 Red Zone; **OVERNIGHT WINDOW OPEN** at 13:00 AZ; **EOD: GET OUT** and 5M PERMISSION NO at 13:55 AZ on both charts vs the Red Zone gate line **5M Permission: NO · EOD exit window**. Repeat the 13:55 check once after DST starts (2027-03-14), when the EOD is 12:55 AZ.
+- [ ] **[Operator]** On the 2026-11-27 early close (13:00 ET), note whether the 1M **OVERNIGHT WINDOW OPEN** bubble appears at 12:00 ET (TOS `RegularTradingEnd` honours early closes) or 15:00 ET (it doesn't). Data not found in sources.
 
 ## 6. Data sources, parity and sell-limit gate
 

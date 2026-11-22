@@ -86,6 +86,8 @@ This audit reconciles all 138 unchecked Master-To-Do entries by workstream. Repe
 - [x] User accepted prior prototype title/clock/transport-label layout.
 - [x] Fixed prototype horizontal overflow at desktop (104px dock) and mobile (78px dock), commit `3aac28cf638228fd0901251e59969d08af248e17`.
 - [x] Corrected standard-time EOD constant to 17:55 Eastern in repository 1M and 5M chart-study copies; daylight remains 18:55 Eastern.
+
+> **Superseded 2026-11-22:** the operator chose an EOD of **15:55 ET in both seasons** (option A), matching MCC. The 3:55 PM Arizona target in this document no longer applies. See [Chart-Study-MCC-Parity-20261122.md](../Engineering/Chart-Study-MCC-Parity-20261122.md).
 - [x] Exact-head Actions run [41575143773](https://github.com/themailcomeshere/MomentumCommandCenterV2/actions/runs/41575143773) passed restore/build/test on `89b9fe73408cee06f0ddfedc1486b7038d335a2a`.
 
 ## 1. EOD parity — important source identity correction

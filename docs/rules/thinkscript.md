@@ -76,3 +76,13 @@ Thinkorswim rejects custom watchlist columns whose expression graph is too large
 - ALWAYS write piecewise-linear maps as clamped segment sums: `slope * (Max(lo, Min(hi, x)) - lo)` per segment. Do not use long `if … else if` chains.
 - ALWAYS compute each rolling statistic once in a `def` and reuse the `def`.
 - ALWAYS hand the operator one column at a time when complexity is uncertain, and state that a repository file is not proof of compilation.
+
+## 9. Study ↔ MCC engine parity (added 2026-11-22)
+
+The 5M and 1M studies previously had three different EOD times (installed 18:55/19:55 ET, repository 18:55/17:55 ET, MCC engine 15:55 ET), and the 1M had no opening hold after MCC added one.
+
+- ALWAYS keep the study EOD inputs (`eodTimeEasternDaylight`, `eodTimeEasternStandard`) equal to `V2Config.EndOfDayExitHourEt/MinuteEt` and `PermissionLatchConfig` EOD defaults. Operator decision 2026-11-22: **15:55 ET in both seasons** (12:55 AZ daylight, 13:55 AZ standard).
+- ALWAYS keep the 1M `openingEntryHoldMinutes` default equal to `MarketData:Intraday:OpeningEntryHoldMinutes` in `appsettings.json` (15 as of 2026-11-21).
+- When an MCC engine commit changes an entry, exit, EOD or session-window rule that a study also implements, ALWAYS update the matching study in the same task, or add an **[Operator]**/**[Repo]** parity item to `docs/Master-To-Do.md` §5 naming both sides.
+- NEVER give a study a Boring Overnight HOLD/READY signal. The study cannot see the overnight statistics, catalyst sign-off, exclusions or limit; it may show DATA? or a 1M SELL block only.
+- ALWAYS build a new study version from the source the operator has installed (`docs/Validation/Installed-*.txt`) unless the operator confirms a different file is installed, and archive superseded repository copies under `docs/archive/Charts/`.
