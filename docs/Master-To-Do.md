@@ -1,6 +1,6 @@
 # Momentum Command Center — Master To-Do
 
-**Updated:** 2026-11-25: studies compiled in TOS (operator report); 1M entry parity gap recorded (§5). Previous: 2026-11-22 (09:30 AZ): chart studies aligned with MCC — EOD 15:55 ET (option A), 1M opening hold, overnight final-hour status (§5, `0c96252`). Previous update 2026-11-21 (22:26 AZ): opening entry hold default 60 → 15 min (§2b).
+**Updated:** 2026-11-25: studies compiled in TOS (operator report); 1M entry parity gap recorded and replayed on NVDA/TSLA/PLTR (§5). Previous: 2026-11-22 (09:30 AZ): chart studies aligned with MCC — EOD 15:55 ET (option A), 1M opening hold, overnight final-hour status (§5, `0c96252`). Previous update 2026-11-21 (22:26 AZ): opening entry hold default 60 → 15 min (§2b).
 **Working branch:** `feature/opportunity-quality-classification` (do not modify `master`)
 **Main Dashboard:** `frontend/index.html` at `http://localhost:53360/` (PrototypeIndex is retired)
 **Current handoff:** [NewChatHandoff-20261122.md](NewChatHandoff-20261122.md) (previous: [20261121](NewChatHandoff-20261121.md))
@@ -263,13 +263,15 @@ Numbered map and gap analysis: [MCC-Workflow-Steps.md](Engineering/MCC-Workflow-
 - [ ] **[Repo]** Proposal, not approved: a pre-market gap watch from about 06:00 AZ (IEX pre-market ±20% vs prior close, with the latest headline; detection only).
 - [ ] **[Operator]** Verify that 5m Permission is authoritative and 1m is for timing only. Export matched completed-bar state labels.
 - [ ] **[Operator]** After installing V4.1.8 / V14.4.12, run the Monday 2026-11-23 checks in [Chart-Study-MCC-Parity-20261122.md](Engineering/Chart-Study-MCC-Parity-20261122.md) (standard time): opening hold 07:30–07:44 AZ on the 1M chart vs **PREPARE TO BUY · OPENING HOLD** in INTRADAY MOMENTUM → 4 Red Zone; **OVERNIGHT WINDOW OPEN** at 13:00 AZ; **EOD: GET OUT** and 5M PERMISSION NO at 13:55 AZ on both charts vs the Red Zone gate line **5M Permission: NO · EOD exit window**. Repeat the 13:55 check once after DST starts (2027-03-14), when the EOD is 12:55 AZ.
-- [ ] **[Repo]** 1M entry parity gap (source comparison by Claude 2026-11-25, `1023ba5`; not yet replayed on matched bars). The 5M latch, EOD and opening hold match; the 1M entry rules do not:
+- [ ] **[Repo]** 1M entry parity gap (source comparison by Claude 2026-11-25, `1023ba5`; replayed below). The 5M latch, EOD and opening hold match; the 1M entry rules do not:
   - **Trigger and window.** The study's READY needs a trigger event (fresh breakout over 10 bars, in-trend, continuation or confirmation) and lasts at most `executionWindowBars = 2` bars before EXECUTION EXPIRED, with rearm and cooldown. MCC's V2 `freshBuy` is a state check (5M latch + 5M bull structure + 1M close > VWAP and EMA9, EMA9 > EMA20, MACD ≥ signal, RSI ≥ 50) and stays EXECUTION READY for as long as it holds.
   - **Extension.** The study blocks READY at **2.00** ATR above VWAP (`extensionDangerATR`). MCC blocks at **2.25** (`V2Config.AtrExtensionHardExit`), and at 2.25 also SELLs a held position.
   - **RSI cap.** MCC blocks a fresh entry at RSI ≥ 78 (`MaxRsiForFreshEntry`). The study has no RSI cap.
   - **1M RVOL.** The study needs 1M RVOL ≥ 1.00 (`minimumExecutionRVOL`). The MCC 1M entry has no RVOL check.
   - **Study-only states.** AGG. BUY lane, SWING RECLAIM / SWING ZONE, EXECUTION EXPIRED. **MCC-only gates:** 1M coverage (thin IEX), opportunity-quality tag, CHASE (2.a scan only).
-  - Needs an operator decision on which side is the reference before either is changed. Then replay MCC with matched bars on 2–3 symbols and list the bars where the two disagree.
+  - [x] **[Repo]** Matched-bar replay 2026-11-25 (operator: "Replay first"): [OneMinute-Entry-Parity-Replay-20261125.md](Validation/OneMinute-Entry-Parity-Replay-20261125.md). NVDA, TSLA, PLTR, 2026-11-24 + 11-25 morning, IEX bars, MCC `1023ba5` replay vs a Python port of the V14.4.12 green lane (1M extension identical on all 1,624 minutes). MCC READY 35 min, study 32, both **14**. MCC only 21: trigger window 14, extension 2.00–2.25 ATR 6, opening-hold bar boundary 1. Study only 18: **the 1M study uses its own 5M permission, not the 5M study's latch** 9, MCC current 5M structure 7, MCC 1M close > EMA9 2. RSI 78 and 1M RVOL not hit.
+  - [ ] **[Operator]** Decide, using the replay: (1) which 5M permission gates the 1M READY (5M study latch, as MCC and the 5M chart, or the 1M study's own reconstruction); (2) READY as a 2-bar event (study) or a state (MCC); (3) extension block 2.00 or 2.25 ATR; (4) keep, port or drop MCC's current-5M-structure, 1M close > EMA9 and RSI 78 checks.
+  - [ ] **[Operator]** Optional: on the TOS 1M chart for 2026-11-24, check NVDA 10:32–10:34 AZ, TSLA 07:50–07:53 AZ and TSLA 07:57 AZ against the replay table (TOS uses consolidated bars, so small differences are expected).
 - [ ] **[Operator]** On the 2026-11-27 early close (13:00 ET), note whether the 1M **OVERNIGHT WINDOW OPEN** bubble appears at 12:00 ET (TOS `RegularTradingEnd` honours early closes) or 15:00 ET (it doesn't). Data not found in sources.
 
 ## 6. Data sources, parity and sell-limit gate
