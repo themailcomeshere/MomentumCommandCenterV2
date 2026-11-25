@@ -156,6 +156,7 @@ public sealed class LiveSymbolAssessmentService(
             // Operator-declared holding: the same snapshot evaluated with hasPosition=true so the Dashboard can show
             // RUNNER / RUNNER WANING / PREPARE TO SELL / SELL states. MCC has no broker position data (Schwab parked).
             SignalDecision? heldDecision = null;
+            ExecutionEventStep? executionWindow = null;
             string evaluationStatus;
             string evaluationReason;
             if (one is null || five is null || previousFive is null)
@@ -184,6 +185,8 @@ public sealed class LiveSymbolAssessmentService(
             else
             {
                 var (coveragePresent, coveragePossible) = LiveSymbolTechnicalCalculator.OneMinuteCoverage(oneMinute, evaluatedAt);
+                // 1M execution window (operator decision 2026-11-25): READY is a 2-bar event from the 1M study's triggers.
+                executionWindow = latch is null ? null : LiveSymbolTechnicalCalculator.LatestExecutionStep(oneMinute, fiveMinute, latch);
                 var snapshot = new CommandCenterSnapshot(
                     evaluatedAt,
                     normalizedSymbol,
@@ -193,7 +196,8 @@ public sealed class LiveSymbolAssessmentService(
                     previousFive,
                     latchLatest?.Permission,
                     coveragePresent,
-                    coveragePossible);
+                    coveragePossible,
+                    executionWindow);
                 // Opening entry hold (operator setting, 2026-11-21) applies to fresh entries only; the held-position
                 // evaluation is identical with or without it because exits are never held.
                 var engine = new V2SignalEngine(new V2Config(OpeningEntryHoldMinutes: holdMinutes));
@@ -307,6 +311,13 @@ public sealed class LiveSymbolAssessmentService(
                     withheldEntry = decision?.Evaluation?.OpeningHoldWithheld == true,
                     settingSource = intradaySettings.Current.Source,
                     note = "Fresh entries only: inside the hold an entry that meets every condition is shown as PREPARE TO BUY (OPENING HOLD). Exits and held-position states are never delayed. Provisional operator setting; not validated against outcomes."
+                },
+                executionWindow = new
+                {
+                    rulesVersion = OneMinuteExecutionEvents.RulesVersion,
+                    step = executionWindow,
+                    withheldEntry = decision?.Evaluation?.ExecutionWindowWithheld == true,
+                    note = "Fresh entries only (operator decision 2026-11-25): EXECUTION READY needs a new 1M trigger from the 1M study (FRESH, IN_TREND, CONTINUATION or CONFIRMATION) within the last 2 bars. Age 0 = trigger bar. Exits are never delayed."
                 },
                 dataFresh = oneFresh && fiveFresh,
                 freshnessDiagnostics = new
@@ -576,6 +587,125 @@ public static class LiveSymbolTechnicalCalculator
             result.Add(new PermissionLatchBar(bar.Timestamp, closes[i], vwap, ema9[i], ema20[i], sum / 50m, rsi[i]));
         }
         return result;
+    }
+
+    /// <summary>
+    /// METHOD: LatestExecutionStep
+    /// PURPOSE: The 1M study green-lane step for the latest 1m bar (null when there is not enough history), using MCC's
+    /// own 2.25 ATR extension limit until the operator decides the 2.00 vs 2.25 question.
+    /// WHEN CALLED: By the live assessment and the historical replay to fill CommandCenterSnapshot.ExecutionWindow.
+    /// </summary>
+    public static ExecutionEventStep? LatestExecutionStep(
+        IReadOnlyList<MarketBar> oneBars,
+        IReadOnlyList<MarketBar> fiveBars,
+        PermissionLatchResult latch)
+    {
+        // Extension: MCC's own hard limit (2.25 ATR) until the operator decides the 2.00 vs 2.25 question (decision 3).
+        var steps = ExecutionEventSeries(oneBars, fiveBars, latch,
+            new ExecutionEventConfig(ExtensionDangerAtr: new V2Config().AtrExtensionHardExit));
+        return steps.Count > 0 && steps[^1].Timestamp == oneBars[^1].Timestamp ? steps[^1] : null;
+    }
+
+    /// <summary>
+    /// METHOD: ExecutionEventSeries
+    /// PURPOSE: Runs the 1M study's green execution lane (<see cref="OneMinuteExecutionEvents"/>) over every completed 1m
+    /// bar from the 50th on, and returns one step per bar (the last step belongs to the latest 1m bar). 1M inputs use the
+    /// same formulas as <see cref="Calculate"/> (EMA9/20, RSI14, MACD 12/26/9, regular-session VWAP, SMA(TrueRange,14)
+    /// extension) plus RVOL = volume / SMA(volume, 50) as in the study. The 5M context for a 1m bar comes from the 5m bars
+    /// completed by that 1m bar's close and the 5M permission latch over them (operator decisions 2026-11-25).
+    /// WHEN CALLED: By the live assessment and the historical replay before building the CommandCenterSnapshot.
+    /// </summary>
+    public static IReadOnlyList<ExecutionEventStep> ExecutionEventSeries(
+        IReadOnlyList<MarketBar> oneBars,
+        IReadOnlyList<MarketBar> fiveBars,
+        PermissionLatchResult latch,
+        ExecutionEventConfig config)
+    {
+        if (oneBars.Count < 50) return Array.Empty<ExecutionEventStep>();
+
+        var closes = oneBars.Select(x => (decimal)x.Close).ToArray();
+        var ema9 = EmaRunning(closes, 9);
+        var ema20 = EmaRunning(closes, 20);
+        var rsi = RsiRunning(closes, 14);
+        var ema12 = EmaSeries(closes, 12);
+        var ema26 = EmaSeries(closes, 26);
+        var macdLine = closes.Select((_, i) => ema12[i] - ema26[i]).ToArray();
+        var macdSignal = EmaRunning(macdLine, 9);
+
+        var fiveCloses = fiveBars.Select(x => (decimal)x.Close).ToArray();
+        var f9 = EmaRunning(fiveCloses, 9);
+        var f20 = EmaRunning(fiveCloses, 20);
+        var fRsi = RsiRunning(fiveCloses, 14);
+        var f12 = EmaSeries(fiveCloses, 12);
+        var f26 = EmaSeries(fiveCloses, 26);
+        var fLine = fiveCloses.Select((_, i) => f12[i] - f26[i]).ToArray();
+        var fSignal = EmaRunning(fLine, 9);
+        var fSma50 = new decimal[fiveCloses.Length];
+        decimal fSum = 0m;
+        for (var i = 0; i < fiveCloses.Length; i++)
+        {
+            fSum += fiveCloses[i];
+            if (i >= 50) fSum -= fiveCloses[i - 50];
+            fSma50[i] = i >= 49 ? fSum / 50m : 0m;
+        }
+        var latchByTimestamp = latch.Steps.ToDictionary(s => s.Timestamp, s => s.Permission);
+
+        var eventBars = new List<ExecutionEventBar>(oneBars.Count - 49);
+        DateOnly? vwapDate = null;
+        decimal pv = 0m, sessionVolume = 0m, volumeSum = 0m, trueRangeSum = 0m;
+        var trueRanges = new decimal[oneBars.Count];
+        var fiveIndex = -1;
+        for (var i = 0; i < oneBars.Count; i++)
+        {
+            var bar = oneBars[i];
+            var local = TimeZoneInfo.ConvertTime(bar.Timestamp, Eastern);
+            var date = DateOnly.FromDateTime(local.DateTime);
+            if (date != vwapDate) { vwapDate = date; pv = 0m; sessionVolume = 0m; }
+            if (SessionSlot(local, 1) is not null)
+            {
+                sessionVolume += bar.Volume;
+                pv += (((decimal)bar.High + (decimal)bar.Low + (decimal)bar.Close) / 3m) * bar.Volume;
+            }
+            var previousClose = i > 0 ? closes[i - 1] : closes[i];
+            trueRanges[i] = Math.Max((decimal)bar.High - (decimal)bar.Low,
+                Math.Max(Math.Abs((decimal)bar.High - previousClose), Math.Abs((decimal)bar.Low - previousClose)));
+            trueRangeSum += trueRanges[i];
+            if (i >= 14) trueRangeSum -= trueRanges[i - 14];
+            volumeSum += bar.Volume;
+            if (i >= 50) volumeSum -= oneBars[i - 50].Volume;
+
+            // 5m bars completed by this 1m bar's close.
+            var oneCloseAt = bar.Timestamp.AddMinutes(1);
+            while (fiveIndex + 1 < fiveBars.Count && fiveBars[fiveIndex + 1].Timestamp.AddMinutes(5) <= oneCloseAt) fiveIndex++;
+            if (i < 49) continue;
+
+            var vwap = sessionVolume <= 0m ? closes[i] : pv / sessionVolume;
+            var atr = i + 1 >= 14 ? trueRangeSum / 14m : 0m;
+            var averageVolume = volumeSum / Math.Min(i + 1, 50);
+            var rvol = averageVolume > 0m ? bar.Volume / averageVolume : 0m;
+            var aboveVwap = closes[i] > vwap;
+
+            FiveMinuteExecutionContext five;
+            if (fiveIndex >= 52)
+            {
+                var recent = new List<FiveMinuteStudyBar>(4);
+                for (var k = fiveIndex; k > fiveIndex - 4; k--)
+                    recent.Add(new FiveMinuteStudyBar(fiveBars[k].Timestamp, fiveCloses[k], f9[k], f20[k], fSma50[k], fRsi[k], fLine[k], fSignal[k]));
+                var permission = latchByTimestamp.TryGetValue(fiveBars[fiveIndex].Timestamp, out var granted) && granted;
+                five = FiveMinuteExecutionContext.Evaluate(recent, permission, aboveVwap, config.RsiStrong, config.RsiWeak);
+            }
+            else
+            {
+                five = new FiveMinuteExecutionContext(false, false, false);
+            }
+
+            eventBars.Add(new ExecutionEventBar(
+                bar.Timestamp, (decimal)bar.Open, (decimal)bar.High, (decimal)bar.Low, closes[i], vwap,
+                ema9[i], ema20[i], rsi[i], macdLine[i], macdSignal[i], rvol,
+                V2SignalEngine.CalculateAtrExtension(closes[i], vwap, atr), five,
+                FiveMinutePermissionLatch.IsEodWindow(local, new PermissionLatchConfig())));
+        }
+        return OneMinuteExecutionEvents.Evaluate(eventBars, config);
     }
 
     /// <summary>EMA value at every index, identical to <see cref="Ema"/> applied to closes[0..i]. Called by PermissionSeries.</summary>

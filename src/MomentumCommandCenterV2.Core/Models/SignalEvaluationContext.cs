@@ -23,7 +23,9 @@
 /// MODEL: SignalEvaluationContext
 /// PURPOSE: Preserves the technical conditions and ATR extension used by one signal evaluation. OpeningHoldWithheld is
 /// true when every fresh-entry condition passed but the opening entry hold turned EXECUTION READY into PREPARE TO BUY,
-/// so later analysis can compare held entries against what happened after the hold.
+/// so later analysis can compare held entries against what happened after the hold. ExecutionWindowWithheld is true when
+/// every MCC fresh-entry condition passed but the 1M study's green lane had no READY window open on this bar (no new
+/// trigger in the last 2 bars, or the study's own READY conditions failed).
 /// WHEN CALLED: Constructed by V2SignalEngine and consumed by diagnostics and historical validation.
 /// </summary>
 public sealed record SignalEvaluationContext(
@@ -39,4 +41,5 @@ public sealed record SignalEvaluationContext(
     decimal AtrExtension,
     bool Extended,
     bool HardExtended,
-    bool OpeningHoldWithheld = false);
+    bool OpeningHoldWithheld = false,
+    bool ExecutionWindowWithheld = false);

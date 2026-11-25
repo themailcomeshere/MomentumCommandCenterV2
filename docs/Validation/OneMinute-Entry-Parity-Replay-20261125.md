@@ -115,10 +115,36 @@ Operator decision 2026-11-25: **the 5M study latch gates the 1M READY.** V14.4.1
 
 The 3 new MCC-only minutes (TSLA 07:54 and 10:19 AZ, PLTR 09:34 AZ) are the 5m-close timing above. The study can show READY one minute later if its trigger window is still open. The remaining disagreements are decisions 2–4. Per-minute list: [disagreements_v14413.json](OneMinute-Entry-Parity-20261125/disagreements_v14413.json); the V14.4.12 list is [disagreements_v14412.json](OneMinute-Entry-Parity-20261125/disagreements_v14412.json).
 
+## Decision 2 applied: MCC READY is a 2-bar event (2026-11-25)
+
+Operator decisions 2026-11-25: **READY is a 2-bar event**, and MCC uses **the study's own triggers** (operator choice "Port study triggers" over a simpler onset window).
+
+**What changed in MCC:**
+- `OneMinuteExecutionEvents` (Core) ports the V14.4.13 green lane: FRESH (10-bar breakout, VWAP/EMA9 reclaim, EMA9/VWAP retest), IN_TREND, CONTINUATION (pause, resume, cooldown) and CONFIRMATION triggers, candidate rearm after a 2-bar pause, the 2-bar window and the study's invalidation. `FiveMinuteExecutionContext` ports the 1M study's 5M inputs (latch permission, major failure, confirmed weakness, runner structure, swing zone) on completed 5m bars.
+- `LiveSymbolTechnicalCalculator.ExecutionEventSeries` runs it over every 1m bar in the live assessment and the replay. `V2SignalEngine` gives EXECUTION READY only when MCC's own conditions pass **and** the latest step is READY. Otherwise it returns PREPARE TO BUY with `ExecutionWindowWithheld = true`, and the Dashboard shows **PREPARE TO BUY · WAIT FOR 1M TRIGGER**. Exits and held positions are unchanged.
+- Extension: the window uses MCC's 2.25 ATR until decision 3.
+
+**Port check:** a harness ([harness/Program.cs](OneMinute-Entry-Parity-20261125/harness/Program.cs)) ran the new `HistoricalDecisionReplayService` at every minute on the same stored bars, copied from the running MCC. The C# window step equals the Python port (MCC timing: completed 5m bars, 2.25 ATR) on **all 1,674 minutes**. New MCC READY is 19 minutes (old 35); it is never READY on a minute where old MCC was not.
+
+**Against the TOS model** (Python port with Thinkorswim's developing 5m bar and 2.00 ATR):
+
+| | Old MCC vs V14.4.12 | Old MCC vs V14.4.13 | **New MCC vs V14.4.13** |
+|---|---|---|---|
+| Both READY | 14 | 11 | **11** |
+| MCC only: trigger window | 14 | 14 | **0** |
+| MCC only: extension 2.00–2.25 ATR | 6 | 6 | 3 |
+| MCC only: 5m timing (completed vs developing bar) | 0 | 3 | 4 |
+| MCC only: opening-hold bar boundary | 1 | 1 | 1 |
+| Study only: 5M permission source | 9 | 0 | 0 |
+| Study only: MCC current 5M structure | 7 | 7 | 7 |
+| Study only: MCC 1M close > EMA9 | 2 | 2 | 2 |
+
+What is left is decision 3 (3 minutes), decision 4 (9 minutes) and timing conventions (5 minutes). Per-minute list: [disagreements_mcc_window.json](OneMinute-Entry-Parity-20261125/disagreements_mcc_window.json).
+
 ## Decisions still needed (operator)
 
 1. ~~Which 5M permission gates the 1M READY?~~ **Decided 2026-11-25: the 5M study latch** (V14.4.13 above).
-2. **READY as an event or a state?** The study's 2-bar window, or MCC's "READY while conditions hold".
+2. ~~READY as an event or a state?~~ **Decided 2026-11-25: a 2-bar event with the study's triggers** (above).
 3. **Extension block:** 2.00 or 2.25 ATR.
 4. **MCC-only checks** (current 5M structure, 1M close > EMA9, RSI 78 cap): keep in MCC, add to the study, or drop.
 

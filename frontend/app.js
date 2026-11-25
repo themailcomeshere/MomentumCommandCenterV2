@@ -354,6 +354,10 @@ function liveStateView(symbol,data){
   const until=Number.isFinite(release)?openingHoldClock(release,"America/Phoenix")+" AZ ("+openingHoldClock(release,"America/New_York")+" ET)":"the hold ends";
   return{label:label+" · OPENING HOLD",tone,held,decision,hint:"Entry conditions met, but EXECUTION READY is withheld until "+until+" by the opening hold. Exits are never held."};
  }
+ // 1M execution window (2026-11-25): MCC conditions met, but no 1M study trigger in the last 2 bars (READY is an event).
+ if(!held&&decision.executionWindowWithheld===true){
+  return{label:label+" · WAIT FOR 1M TRIGGER",tone,held,decision,hint:"Entry conditions met, but EXECUTION READY needs a new 1M trigger (breakout, reclaim, retest, continuation or confirmation candle) and lasts 2 bars, as on the TOS 1M chart. Exits are never held."};
+ }
  const quality=!held&&decision.entryAllowed===true?opportunityQualityTag(data?.opportunityQuality?.classification,data?.opportunityQuality?.reasons):null;
  if(quality)return{label:label+" · "+quality.text,tone,held,decision,quality,hint:(RED_ZONE_TONE_HINTS[tone]?RED_ZONE_TONE_HINTS[tone]+" ":"")+quality.why};
  return{label,tone,held,decision,hint:RED_ZONE_TONE_HINTS[tone]||""};

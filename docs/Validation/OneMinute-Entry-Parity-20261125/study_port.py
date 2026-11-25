@@ -11,7 +11,9 @@ Modelling choices (stated in the evidence doc):
 - AGG. BUY lane, labels and bubbles are not ported.
 Usage: python -I study_port.py OUTDIR SYMBOL...  -> OUTDIR/study_<SYMBOL>.json"""
 import json, sys, os, bisect, urllib.request, datetime as dt
-LATCH = os.environ.get('LATCH') == '1'  # V14.4.13: 5M permission = the 5M study latch on completed 5m bars
+LATCH = os.environ.get('LATCH') == '1'
+FIVE_COMPLETED = os.environ.get('FIVE_COMPLETED') == '1'  # 5M layer on completed 5m bars only (MCC convention)
+TAG = os.environ.get('TAG', '')  # V14.4.13: 5M permission = the 5M study latch on completed 5m bars
 
 
 ET = dt.timezone(dt.timedelta(hours=-5))  # all dates 2026-11-17..25 are US standard time
@@ -19,7 +21,7 @@ BASE = "http://localhost:53360/api/market-data/stored-bars"
 P = dict(rsiLength=14, rsiBull=50, rsiStrong=55, rsiWeak=45, fast=9, slow=20, sma5=50, mf=12, ms=26, ml=9,
          rvolLength=50, minPermRSI=50, minSetupRVOL=1.00, permFailBars=2, majorFailBars=2, runnerWaningBars=2,
          breakoutLength=10, execWindowBars=2, candidateRearmBars=2, contLookback=4, contPauseReq=2,
-         contMinRSI=50, contCooldown=3, minExecRSI=50, minExecRVOL=1.00, extDanger=2.00, eodHHMM=1555, holdMin=15)
+         contMinRSI=50, contCooldown=3, minExecRSI=50, minExecRVOL=1.00, extDanger=float(os.environ.get('EXT', '2.00')), eodHHMM=1555, holdMin=15)
 
 def fetch(sym, tf, frm, to):
     url = f"{BASE}?symbol={sym}&fromUtc={frm}&toUtc={to}&provider=Alpaca&timeframe={tf}&limit=10000"
@@ -113,12 +115,12 @@ def run(sym, out):
         t = b["t"]; e = t.astimezone(ET); hhmm = e.hour * 100 + e.minute
         # 5M: closed 5m bars strictly before the bucket, developing bucket from 1m bars up to this minute
         bucket = t - dt.timedelta(minutes=t.minute % 5, seconds=t.second)
-        closed5 = [x for x in fiveStored if x["t"] < bucket][-400:]
+        closed5 = [x for x in fiveStored if (x["t"] + dt.timedelta(minutes=5) <= t + dt.timedelta(minutes=1) if FIVE_COMPLETED else x["t"] < bucket)][-400:]
         parts = [x for x in one[max(0, i - 4):i + 1] if x["t"] >= bucket]
         dev = dict(t=bucket, o=parts[0]["o"], h=max(p["h"] for p in parts), l=min(p["l"] for p in parts),
                    c=parts[-1]["c"], v=sum(p["v"] for p in parts))
         if len(closed5) < 60 or i < 60: continue
-        F = five_series(closed5, dev); k = len(F["c"]) - 1
+        F = five_series(closed5, None if FIVE_COMPLETED else dev); k = len(F["c"]) - 1
         def f(name, off=0): return F[name][k - off]
         price = c[i]
         eod = hhmm >= P["eodHHMM"]
@@ -139,7 +141,8 @@ def run(sym, out):
         S["fivePerm"] = 0 if (eod or majorPersist or dmgPersist) else (1 if bullPermRaw else S["fivePerm"])
         fivePerm = S["fivePerm"] == 1
         reconPerm = fivePerm
-        while L["j"] < len(fiveStored) and fiveStored[L["j"]]["t"] < bucket:
+        cutoff5 = (t + dt.timedelta(minutes=1) - dt.timedelta(minutes=5)) if FIVE_COMPLETED else bucket - dt.timedelta(microseconds=1)
+        while L["j"] < len(fiveStored) and fiveStored[L["j"]]["t"] <= cutoff5:
             j = L["j"]; L["j"] += 1; bt = fiveStored[j]["t"]; d5 = bt.astimezone(ET).date()
             if d5 != L["day"]: L.update(day=d5, perm=0, dmg=0, maj=0)
             v5 = vwap_at_end(bt)
@@ -217,7 +220,7 @@ def run(sym, out):
                              ("T" if inTrendEvent else "") + ("C" if contEvent else "") + ("K" if confEvent else ""),
                              age=S["execAge"], invalid=invalid, hold=hold, ready=final, readyBeforeHold=readyBeforeHold,
                              extDanger=bullExtDanger, macdBull=macdBull))
-    json.dump(rows, open(f"{out}/study{'_latch' if LATCH else ''}_{sym}.json", "w"))
+    json.dump(rows, open(f"{out}/study{'_latch' if LATCH else ''}{TAG}_{sym}.json", "w"))
     print(sym, len(rows), "RTH bars; study READY:", sum(r["ready"] for r in rows), flush=True)
 
 for s in sys.argv[2:]:

@@ -113,9 +113,11 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
         var latchPermission = latch.Latest is { } step && step.Timestamp == fiveBars[^1].Timestamp ? step.Permission : (bool?)null;
         // Same 1M coverage gate input as the live assessment (2026-11-18).
         var (coveragePresent, coveragePossible) = LiveSymbolTechnicalCalculator.OneMinuteCoverage(oneBars, asOfUtc);
+        // 1M execution window (operator decision 2026-11-25): the 1M study's green lane over the replayed 1m bars.
+        var executionWindow = LiveSymbolTechnicalCalculator.LatestExecutionStep(oneBars, fiveBars, latch);
         var snapshot = new CommandCenterSnapshot(
             asOfUtc, normalizedSymbol, one, five, MarketPhase.RegularSession, previousFive, latchPermission,
-            coveragePresent, coveragePossible);
+            coveragePresent, coveragePossible, executionWindow);
         // Opening entry hold (2026-11-21): the caller passes the minutes so a replay can compare the hold on and off.
         var result = new V2SignalEngine(new V2Config(OpeningEntryHoldMinutes: openingHoldMinutes)).Evaluate(snapshot, hasPosition);
         var hold = OpeningEntryHold.Evaluate(asOfUtc, openingHoldMinutes);
@@ -127,7 +129,8 @@ public sealed class HistoricalDecisionReplayService(IMarketBarObservationStore s
             asOfUtc,
             status = "REPLAYED",
             calculationVersion = "V2SignalEngine-default-config + " + FiveMinutePermissionLatch.RulesVersion +
-                $" + {OpeningEntryHold.RulesVersion}({openingHoldMinutes} min)",
+                $" + {OpeningEntryHold.RulesVersion}({openingHoldMinutes} min) + {OneMinuteExecutionEvents.RulesVersion}",
+            executionWindow,
             openingHold = new { minutes = openingHoldMinutes, active = hold.Active, releaseUtc = hold.ReleaseUtc, withheldEntry = result.Evaluation?.OpeningHoldWithheld == true },
             fiveMinutePermissionLatch = latch.Latest is null ? null : new { latch.Latest.Permission, latch.Latest.Transition, latch.Latest.BlockCode, blockLabel = FiveMinutePermissionLatch.BlockLabel(latch.Latest.BlockCode), latch.GrantedSinceUtc },
             hasPosition,

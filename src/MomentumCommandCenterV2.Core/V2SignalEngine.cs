@@ -426,6 +426,27 @@ public sealed class V2SignalEngine
         // NO POSITION
         // =========================================================
 
+        // 1M execution window (operator decision 2026-11-25): EXECUTION READY is a 2-bar event, as in the 1M study. When
+        // the caller supplies the study's green-lane step for the latest 1M bar and it is not READY (no new trigger in the
+        // last 2 bars, or the study's own READY conditions fail), the entry stays PREPARE TO BUY. Checked before the
+        // opening hold so OPENING HOLD keeps meaning "READY in every respect but the hold", as in the study.
+        if (freshBuy && snapshot.ExecutionWindow is { Ready: false } window)
+        {
+            return Decision(
+                SignalState.PrepareBuy,
+                MomentumAction.PREPARE_BUY,
+                score,
+                BuildReason(
+                    $"Entry conditions met, but no 1M execution window: {DescribeWindow(window)}; EXECUTION READY needs a new 1M trigger (2-bar window).",
+                    reasons),
+                true,
+                false,
+                false,
+                false,
+                false,
+                evaluation with { ExecutionWindowWithheld = true });
+        }
+
         // Opening entry hold (operator request 2026-11-21): inside the first N minutes after the 09:30 ET open a fresh
         // entry is withheld (PREPARE TO BUY) with an OPENING HOLD reason. The underlying conditions are kept in the
         // evaluation context (OpeningHoldWithheld = true) so held entries can be studied later. Exits never wait.
@@ -530,6 +551,19 @@ public sealed class V2SignalEngine
             false,
             false,
             false, evaluation);
+    }
+
+    /// <summary>
+    /// METHOD: DescribeWindow
+    /// PURPOSE: Short text for why the 1M study's green lane is not READY on this bar ("window expired 2 bars after an
+    /// IN_TREND trigger", "no 1M trigger", "study READY conditions fail").
+    /// WHEN CALLED: By Evaluate when the execution window withholds an entry.
+    /// </summary>
+    private static string DescribeWindow(ExecutionEventStep step)
+    {
+        if (step.WindowActive) return "study READY conditions fail (5M execution permission, EMA20, VWAP, RSI, MACD or extension)";
+        if (!step.Candidate) return "no 1M execution candidate (EMA20 not rising, below EMA20, or MACD/RSI)";
+        return "no new 1M trigger, or the 2-bar window expired";
     }
 
     /// <summary>
