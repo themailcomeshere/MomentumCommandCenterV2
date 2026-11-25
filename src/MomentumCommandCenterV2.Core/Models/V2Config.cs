@@ -34,6 +34,11 @@ public sealed record V2Config(
     decimal AtrExtensionWarning = 1.50m,
     decimal AtrExtensionHardExit = 2.25m,
 
+    // Entry extension block (operator decision 2026-11-25, study parity): a fresh entry is not EXECUTION READY when the
+    // 1M close is this many ATR or more from session VWAP, the 1M study's extensionDangerATR. Held positions still SELL
+    // only at AtrExtensionHardExit (2.25); exits are unchanged.
+    decimal AtrExtensionEntryBlock = 2.00m,
+
     int SoftDeteriorationBars = 2,
 
     int EndOfDayExitHourEt = 15,

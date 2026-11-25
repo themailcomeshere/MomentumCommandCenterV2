@@ -108,7 +108,7 @@ public sealed record ExecutionEventBar(
 /// <summary>
 /// TYPE: ExecutionEventConfig
 /// PURPOSE: Inputs of the 1M study's green lane (V14.4.13 defaults). ExtensionDangerAtr is the study's 2.00; MCC passes
-/// its own V2Config.AtrExtensionHardExit (2.25) until the operator decides the extension threshold (decision 3).
+/// V2Config.AtrExtensionEntryBlock, also 2.00 (operator decision 2026-11-25).
 /// WHEN CALLED: Passed to OneMinuteExecutionEvents.Evaluate.
 /// </summary>
 public sealed record ExecutionEventConfig(

@@ -592,7 +592,7 @@ public static class LiveSymbolTechnicalCalculator
     /// <summary>
     /// METHOD: LatestExecutionStep
     /// PURPOSE: The 1M study green-lane step for the latest 1m bar (null when there is not enough history), using MCC's
-    /// own 2.25 ATR extension limit until the operator decides the 2.00 vs 2.25 question.
+    /// V2Config.AtrExtensionEntryBlock (2.00 ATR, the study's extensionDangerATR; operator decision 2026-11-25).
     /// WHEN CALLED: By the live assessment and the historical replay to fill CommandCenterSnapshot.ExecutionWindow.
     /// </summary>
     public static ExecutionEventStep? LatestExecutionStep(
@@ -600,9 +600,9 @@ public static class LiveSymbolTechnicalCalculator
         IReadOnlyList<MarketBar> fiveBars,
         PermissionLatchResult latch)
     {
-        // Extension: MCC's own hard limit (2.25 ATR) until the operator decides the 2.00 vs 2.25 question (decision 3).
+        // Extension: the study's 2.00 ATR entry block (operator decision 2026-11-25), V2Config.AtrExtensionEntryBlock.
         var steps = ExecutionEventSeries(oneBars, fiveBars, latch,
-            new ExecutionEventConfig(ExtensionDangerAtr: new V2Config().AtrExtensionHardExit));
+            new ExecutionEventConfig(ExtensionDangerAtr: new V2Config().AtrExtensionEntryBlock));
         return steps.Count > 0 && steps[^1].Timestamp == oneBars[^1].Timestamp ? steps[^1] : null;
     }
 

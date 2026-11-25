@@ -141,11 +141,17 @@ Operator decisions 2026-11-25: **READY is a 2-bar event**, and MCC uses **the st
 
 What is left is decision 3 (3 minutes), decision 4 (9 minutes) and timing conventions (5 minutes). Per-minute list: [disagreements_mcc_window.json](OneMinute-Entry-Parity-20261125/disagreements_mcc_window.json).
 
+## Decision 3 applied: entry extension block 2.00 ATR (2026-11-25)
+
+Operator decision 2026-11-25: **2.00 ATR (the study's `extensionDangerATR`)**. `V2Config.AtrExtensionEntryBlock = 2.00` blocks a fresh entry, and the execution window uses the same value. A stock that passes everything else reads PREPARE TO BUY with "Entry conditions met, but 1M is x.xx ATR from VWAP (entry block 2.00)" (`EntryExtended`). Held positions still SELL only at **2.25** (`AtrExtensionHardExit`), so exits did not change. 1 test.
+
+Harness replay on the same bars: the C# window step still equals the Python port (MCC timing, 2.00) on all 1,674 minutes. MCC READY 15 minutes. Against the TOS model: both **11**, extension disagreements **3 → 0**. Left: 5m timing 3, opening-hold bar boundary 1, MCC current 5M structure 7, MCC 1M close > EMA9 2 (decision 4). List: [disagreements_mcc_ext200.json](OneMinute-Entry-Parity-20261125/disagreements_mcc_ext200.json).
+
 ## Decisions still needed (operator)
 
 1. ~~Which 5M permission gates the 1M READY?~~ **Decided 2026-11-25: the 5M study latch** (V14.4.13 above).
 2. ~~READY as an event or a state?~~ **Decided 2026-11-25: a 2-bar event with the study's triggers** (above).
-3. **Extension block:** 2.00 or 2.25 ATR.
+3. ~~Extension block: 2.00 or 2.25 ATR?~~ **Decided 2026-11-25: 2.00 ATR for entries** (above); held exit stays 2.25.
 4. **MCC-only checks** (current 5M structure, 1M close > EMA9, RSI 78 cap): keep in MCC, add to the study, or drop.
 
 ## Limits

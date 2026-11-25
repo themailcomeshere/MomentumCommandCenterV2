@@ -28,7 +28,7 @@ foreach (var sym in args.Skip(1))
             rows.Add(r);
         }
     }
-    File.WriteAllText(Path.Combine(dir, "outN", $"mccnew_{sym}.json"), JsonSerializer.Serialize(rows, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+    File.WriteAllText(Path.Combine(dir, Environment.GetEnvironmentVariable("OUTDIR") ?? "outN", $"mccnew_{sym}.json"), JsonSerializer.Serialize(rows, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
     Console.WriteLine($"{sym} {rows.Count}");
 }
 

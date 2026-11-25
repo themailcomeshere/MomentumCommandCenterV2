@@ -143,13 +143,42 @@ public sealed class OneMinuteExecutionEventsTests
     }
 
     /// <summary>PURPOSE: A snapshot where every MCC fresh-entry condition passes. WHEN CALLED: By the engine tests.</summary>
-    private static CommandCenterSnapshot EntrySnapshot(ExecutionEventStep? window)
+    private static CommandCenterSnapshot EntrySnapshot(ExecutionEventStep? window, decimal oneMinuteExtension = 0.5m)
     {
         var ts = DateTimeOffset.Parse("2026-11-18T16:00:00Z"); // 11:00 ET, after any opening hold
-        BarSnapshot Bar(decimal c, decimal v, decimal e9, decimal e20) =>
-            new(ts, c, c, c, c, 1_000_000, 3, v, e9, e20, 100, 60, 2, 1, 2, 0.5m);
-        return new CommandCenterSnapshot(ts, "TEST", Bar(110, 105, 108, 106), Bar(110, 100, 108, 105),
+        BarSnapshot Bar(decimal c, decimal v, decimal e9, decimal e20, decimal ext) =>
+            new(ts, c, c, c, c, 1_000_000, 3, v, e9, e20, 100, 60, 2, 1, 2, ext);
+        return new CommandCenterSnapshot(ts, "TEST", Bar(110, 105, 108, 106, oneMinuteExtension), Bar(110, 100, 108, 105, 0.5m),
             MarketPhase.RegularSession, ExecutionWindow: window);
+    }
+
+    /// <summary>
+    /// PURPOSE: Entry extension block at the study's 2.00 ATR (operator decision 2026-11-25): 1.99 is READY, 2.00 and 2.10
+    /// are PREPARE TO BUY with EntryExtended and the reason; a held position at 2.10 is not sold (held exit stays 2.25), at
+    /// 2.30 it is.
+    /// WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void EntryIsBlockedFromTwoAtrWhileHeldExitStaysAtTwoPointTwoFive()
+    {
+        var engine = new V2SignalEngine();
+        Assert.Equal(2.00m, new V2Config().AtrExtensionEntryBlock);
+
+        Assert.Equal(SignalState.Buy, engine.Evaluate(EntrySnapshot(null, 1.99m), false).State);
+
+        foreach (var ext in new[] { 2.00m, 2.10m })
+        {
+            var blocked = engine.Evaluate(EntrySnapshot(null, ext), false);
+            Assert.Equal(SignalState.PrepareBuy, blocked.State);
+            Assert.False(blocked.EntryAllowed);
+            Assert.True(blocked.Evaluation!.EntryExtended);
+            Assert.Contains("entry block 2.00", blocked.Reason);
+        }
+
+        Assert.NotEqual(SignalState.Breakdown, engine.Evaluate(EntrySnapshot(null, 2.10m), true).State);
+        var heldHard = engine.Evaluate(EntrySnapshot(null, 2.30m), true);
+        Assert.Equal(SignalState.Breakdown, heldHard.State);
+        Assert.Equal(MomentumAction.SELL, heldHard.Action);
     }
 
     /// <summary>PURPOSE: The engine gives EXECUTION READY only with an open window; without a window it is unchanged. WHEN CALLED: By xUnit.</summary>

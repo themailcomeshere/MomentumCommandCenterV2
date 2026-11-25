@@ -228,16 +228,25 @@ public sealed class V2SignalEngine
             Extended: extended,
             HardExtended: hardExtended);
 
+        // Entry extension block (operator decision 2026-11-25): the 1M study's 2.00 ATR, separate from the 2.25 held exit.
+        var entryExtended =
+            atrExtension >=
+            _config.AtrExtensionEntryBlock;
+
         // =========================================================
         // FRESH ENTRY
         // =========================================================
 
-        var freshBuy =
+        var freshBuyExceptExtension =
             fivePermission &&
             fiveStructureBull &&
             oneStructureBull &&
             oneMomentumPositive &&
-            one.Rsi < _config.MaxRsiForFreshEntry &&
+            one.Rsi < _config.MaxRsiForFreshEntry;
+
+        var freshBuy =
+            freshBuyExceptExtension &&
+            !entryExtended &&
             !hardExtended;
 
         // =========================================================
@@ -502,6 +511,24 @@ public sealed class V2SignalEngine
                 false,
                 false,
                 false);
+        }
+
+        // Every entry condition passes except the extension block: say so instead of "wait for 1M confirmation".
+        if (freshBuyExceptExtension && (entryExtended || hardExtended))
+        {
+            return Decision(
+                SignalState.PrepareBuy,
+                MomentumAction.PREPARE_BUY,
+                score,
+                BuildReason(
+                    $"Entry conditions met, but 1M is {atrExtension:0.00} ATR from VWAP (entry block {_config.AtrExtensionEntryBlock:0.00}); EXECUTION READY withheld.",
+                    reasons),
+                true,
+                false,
+                false,
+                false,
+                false,
+                evaluation with { EntryExtended = true });
         }
 
         // 5M is good, but 1M has not confirmed execution.
