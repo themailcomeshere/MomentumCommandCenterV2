@@ -23,6 +23,7 @@ Decision-support trading dashboard: ASP.NET Core API (`src/`), vanilla JS Dashbo
 
 - Operator verification: `.\scripts\Get-Latest-And-Test.ps1` from the repository root (Release build + full tests; reports the exact source SHA).
 - NEVER commit `frontend/app.js` without running the browser parse check (`docs/rules/htmlTailwindCssVanillaJavascriptCodingRules.md`) on the final file in the same step. HTML/attribute text inside a JS string literal must not reuse that literal's quote character. Added 2026-11-18 after `741806a` shipped a parse error (double quotes in a `title` inside a double-quoted string) and the Dashboard script did not run until `12f716d`.
+- NEVER stage with `git add -A` on a source folder (`src`, `tests`) without first reading `git status --short` for untracked build output. NEVER set an environment variable that MSBuild reads as a property (`OutDir`/`OUTDIR`, `Configuration`, `Platform`, `OutputPath`, `BaseOutputPath`) when running `dotnet build`/`run`/`test`; use a project-specific name. Added 2026-11-25 after a replay harness run with `OUTDIR=outE` built into `src/*/outE` and `19590ed` committed those binaries (removed in `158e3e5`).
 - A code-bearing head is verified only when exact-head CI and local Release tests pass. Browser, runtime, Thinkorswim compilation and data-source evidence are separate gates.
 
 ## Markdown rules
