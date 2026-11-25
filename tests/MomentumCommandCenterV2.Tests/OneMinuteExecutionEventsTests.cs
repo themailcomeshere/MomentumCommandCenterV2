@@ -206,6 +206,33 @@ public sealed class OneMinuteExecutionEventsTests
         Assert.NotEqual(SignalState.PrepareBuy, held.State);
     }
 
+    /// <summary>
+    /// PURPOSE: Decision 4 (operator 2026-11-25, "match the study"): with a READY study window, MCC's extra checks no longer
+    /// block the entry (1M close below EMA9, RSI 80, current 5M bar below EMA9); the 5M latch still does.
+    /// WHEN CALLED: By xUnit.
+    /// </summary>
+    [Fact]
+    public void WithAReadyWindowMccExtraChecksNoLongerBlockTheEntry()
+    {
+        var engine = new V2SignalEngine();
+        var ts = DateTimeOffset.Parse("2026-11-18T16:00:00Z");
+        var ready = new ExecutionEventStep(ts, true, "FRESH", 0, true, false, true);
+        var baseSnapshot = EntrySnapshot(ready);
+
+        var oneBelowEma9 = baseSnapshot with { OneMinute = baseSnapshot.OneMinute with { Ema9 = 111m } };
+        Assert.Equal(SignalState.Buy, engine.Evaluate(oneBelowEma9, false).State);
+        Assert.NotEqual(SignalState.Buy, engine.Evaluate(oneBelowEma9 with { ExecutionWindow = null }, false).State); // legacy rule still applies without a window
+
+        var rsi80 = baseSnapshot with { OneMinute = baseSnapshot.OneMinute with { Rsi = 80m } };
+        Assert.Equal(SignalState.Buy, engine.Evaluate(rsi80, false).State);
+
+        var fiveBelowEma9 = baseSnapshot with { FiveMinute = baseSnapshot.FiveMinute with { Ema9 = 111m }, FiveMinutePermission = true };
+        Assert.Equal(SignalState.Buy, engine.Evaluate(fiveBelowEma9, false).State);
+
+        var latchNo = baseSnapshot with { FiveMinutePermission = false };
+        Assert.NotEqual(SignalState.Buy, engine.Evaluate(latchNo, false).State);
+    }
+
     /// <summary>PURPOSE: The API series builder returns one step per 1m bar from the 50th, ending on the latest bar. WHEN CALLED: By xUnit.</summary>
     [Fact]
     public void SeriesBuilderReturnsAStepForTheLatestOneMinuteBar()

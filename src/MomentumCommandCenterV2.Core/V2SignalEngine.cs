@@ -237,12 +237,23 @@ public sealed class V2SignalEngine
         // FRESH ENTRY
         // =========================================================
 
-        var freshBuyExceptExtension =
+        // MCC's original state check. Used as the entry rule only when no 1M study window is supplied (tests, callers
+        // without 1M history), and otherwise only to explain a PREPARE TO BUY.
+        var legacyEntry =
             fivePermission &&
             fiveStructureBull &&
             oneStructureBull &&
             oneMomentumPositive &&
             one.Rsi < _config.MaxRsiForFreshEntry;
+
+        // Operator decision 2026-11-25 (decision 4, "match the study"): with the 1M study window supplied, a fresh entry is
+        // the study's EXECUTION READY on the 5M latch. MCC's extra checks (current 5M bar structure, 1M close > EMA9 and
+        // EMA9 > EMA20, 1M MACD/RSI >= 50, RSI < 78) no longer gate entries. MCC's own safety gates below still apply
+        // (opening hold, 1M data coverage, EOD); held-position management is unchanged.
+        var window = snapshot.ExecutionWindow;
+        var freshBuyExceptExtension = window is null
+            ? legacyEntry
+            : fivePermission && window.Ready;
 
         var freshBuy =
             freshBuyExceptExtension &&
@@ -435,27 +446,6 @@ public sealed class V2SignalEngine
         // NO POSITION
         // =========================================================
 
-        // 1M execution window (operator decision 2026-11-25): EXECUTION READY is a 2-bar event, as in the 1M study. When
-        // the caller supplies the study's green-lane step for the latest 1M bar and it is not READY (no new trigger in the
-        // last 2 bars, or the study's own READY conditions fail), the entry stays PREPARE TO BUY. Checked before the
-        // opening hold so OPENING HOLD keeps meaning "READY in every respect but the hold", as in the study.
-        if (freshBuy && snapshot.ExecutionWindow is { Ready: false } window)
-        {
-            return Decision(
-                SignalState.PrepareBuy,
-                MomentumAction.PREPARE_BUY,
-                score,
-                BuildReason(
-                    $"Entry conditions met, but no 1M execution window: {DescribeWindow(window)}; EXECUTION READY needs a new 1M trigger (2-bar window).",
-                    reasons),
-                true,
-                false,
-                false,
-                false,
-                false,
-                evaluation with { ExecutionWindowWithheld = true });
-        }
-
         // Opening entry hold (operator request 2026-11-21): inside the first N minutes after the 09:30 ET open a fresh
         // entry is withheld (PREPARE TO BUY) with an OPENING HOLD reason. The underlying conditions are kept in the
         // evaluation context (OpeningHoldWithheld = true) so held entries can be studied later. Exits never wait.
@@ -513,8 +503,9 @@ public sealed class V2SignalEngine
                 false);
         }
 
-        // Every entry condition passes except the extension block: say so instead of "wait for 1M confirmation".
-        if (freshBuyExceptExtension && (entryExtended || hardExtended))
+        // Every other entry condition passes, but the 1M close is at or beyond the 2.00 ATR entry block (with a study
+        // window, the window itself also refuses it; the trend checks then explain the PREPARE TO BUY).
+        if ((freshBuyExceptExtension || (window is { Ready: false } && legacyEntry)) && (entryExtended || hardExtended))
         {
             return Decision(
                 SignalState.PrepareBuy,
@@ -529,6 +520,26 @@ public sealed class V2SignalEngine
                 false,
                 false,
                 evaluation with { EntryExtended = true });
+        }
+
+        // 1M execution window (operator decision 2026-11-25): EXECUTION READY is a 2-bar event, as in the 1M study. MCC's
+        // trend checks pass but the study has no READY window open on this bar (no new trigger in the last 2 bars, or the
+        // study's own READY conditions fail): PREPARE TO BUY · WAIT FOR 1M TRIGGER on the Dashboard.
+        if (window is { Ready: false } && legacyEntry)
+        {
+            return Decision(
+                SignalState.PrepareBuy,
+                MomentumAction.PREPARE_BUY,
+                score,
+                BuildReason(
+                    $"Entry conditions met, but no 1M execution window: {DescribeWindow(window)}; EXECUTION READY needs a new 1M trigger (2-bar window).",
+                    reasons),
+                true,
+                false,
+                false,
+                false,
+                false,
+                evaluation with { ExecutionWindowWithheld = true });
         }
 
         // 5M is good, but 1M has not confirmed execution.

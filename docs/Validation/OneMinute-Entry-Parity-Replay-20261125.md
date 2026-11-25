@@ -147,12 +147,35 @@ Operator decision 2026-11-25: **2.00 ATR (the study's `extensionDangerATR`)**. `
 
 Harness replay on the same bars: the C# window step still equals the Python port (MCC timing, 2.00) on all 1,674 minutes. MCC READY 15 minutes. Against the TOS model: both **11**, extension disagreements **3 → 0**. Left: 5m timing 3, opening-hold bar boundary 1, MCC current 5M structure 7, MCC 1M close > EMA9 2 (decision 4). List: [disagreements_mcc_ext200.json](OneMinute-Entry-Parity-20261125/disagreements_mcc_ext200.json).
 
+## Decision 4 applied: MCC entry = the study's READY (2026-11-25)
+
+Operator decision 2026-11-25: **drop MCC's extra entry checks to match the study.** With the 1M study window supplied (live assessment and replay), a fresh entry in `V2SignalEngine` is now `5M latch AND study READY` (not extended). These checks no longer gate entries:
+- the current 5M bar (close above VWAP and EMA9, EMA9 above EMA20);
+- the 1M close above EMA9 with EMA9 above EMA20;
+- 1M MACD ≥ signal with RSI ≥ 50;
+- the RSI 78 cap.
+
+The study's READY has its own momentum rules (candidate RSI ≥ 50 and MACD bullish at the trigger; cancelled below RSI 45, MACD bearish, below EMA20 or VWAP).
+
+Still applied by MCC, because they are not study rules: the opening hold, the 1M data-coverage gate (thin IEX), end of day, and all held-position management. Without a window (tests, callers with no 1M history), MCC keeps its previous rule. When MCC's trend checks pass but the study window is closed, the card still reads **PREPARE TO BUY · WAIT FOR 1M TRIGGER**. 1 test.
+
+Harness replay on the same bars:
+- MCC equals the Python study port (MCC timing) on **1,673 of 1,674 minutes**. The one difference is the opening-hold bar boundary.
+- Against the TOS model: both READY **20**, study only **0**, MCC only **4**. Of the four, 3 are the 5m-bar timing (TSLA 07:54 and 07:55 AZ, PLTR 09:34 AZ) and 1 is the hold boundary (PLTR 07:44 AZ).
+
+List: [disagreements_mcc_match_study.json](OneMinute-Entry-Parity-20261125/disagreements_mcc_match_study.json).
+
+| | Start of day | Now |
+|---|---|---|
+| Both READY | 14 | **20** |
+| One side only | 39 | **4** (all timing conventions) |
+
 ## Decisions still needed (operator)
 
 1. ~~Which 5M permission gates the 1M READY?~~ **Decided 2026-11-25: the 5M study latch** (V14.4.13 above).
 2. ~~READY as an event or a state?~~ **Decided 2026-11-25: a 2-bar event with the study's triggers** (above).
 3. ~~Extension block: 2.00 or 2.25 ATR?~~ **Decided 2026-11-25: 2.00 ATR for entries** (above); held exit stays 2.25.
-4. **MCC-only checks** (current 5M structure, 1M close > EMA9, RSI 78 cap): keep in MCC, add to the study, or drop.
+4. ~~MCC-only checks: keep, add to the study, or drop?~~ **Decided 2026-11-25: drop (match the study)** (above).
 
 ## Limits
 
