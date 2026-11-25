@@ -16,7 +16,7 @@ def one(sym, t):
         "asOfUtc": t.strftime("%Y-%m-%dT%H:%M:%SZ"), "status": d.get("status"),
         "state": dec.get("state"), "action": dec.get("action"), "entryAllowed": dec.get("entryAllowed"),
         "reason": dec.get("reason"), "atrExtension": ev.get("atrExtension"), "hardExtended": ev.get("hardExtended"),
-        "fivePermission": ev.get("fiveMinutePermission"), "fiveStructureBull": ev.get("fiveMinuteStructureBull"),
+        "fivePermission": (d.get("fiveMinutePermissionLatch") or {}).get("permission"), "fiveStructureBull": ev.get("fiveMinuteStructureBull"),
         "oneStructureBull": ev.get("oneMinuteStructureBull"), "oneMomentumPositive": ev.get("oneMinuteMomentumPositive"),
         "openingHoldWithheld": ev.get("openingHoldWithheld"),
         "coverage": d.get("oneMinuteCoverageLast15"), "oneMinuteBarUtc": d.get("oneMinuteSourceTimestampUtc"),

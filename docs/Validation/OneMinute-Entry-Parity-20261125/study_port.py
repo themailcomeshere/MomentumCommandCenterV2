@@ -10,7 +10,8 @@ Modelling choices (stated in the evidence doc):
 - ExpAverage seeded with the first value; RSI = Wilder; ATR = SMA(TrueRange,14); RVOL = vol / SMA(vol,50).
 - AGG. BUY lane, labels and bubbles are not ported.
 Usage: python -I study_port.py OUTDIR SYMBOL...  -> OUTDIR/study_<SYMBOL>.json"""
-import json, sys, urllib.request, datetime as dt
+import json, sys, os, bisect, urllib.request, datetime as dt
+LATCH = os.environ.get('LATCH') == '1'  # V14.4.13: 5M permission = the 5M study latch on completed 5m bars
 
 
 ET = dt.timezone(dt.timedelta(hours=-5))  # all dates 2026-11-17..25 are US standard time
@@ -97,6 +98,13 @@ def run(sym, out):
         if is_rth(b["t"]): pv += (b["h"] + b["l"] + b["c"]) / 3 * b["v"]; vv += b["v"]
         vw.append(pv / vv if vv > 0 else b["c"])
 
+    # V14.4.13 latch inputs: completed stored 5m bars, Daily VWAP at each bar's last 1m bar
+    f5c = [x["c"] for x in fiveStored]; L9, L20, L50 = ema(f5c, P["fast"]), ema(f5c, P["slow"]), sma(f5c, P["sma5"])
+    LR = wilder_rsi(f5c, P["rsiLength"]); oneT = [x["t"] for x in one]
+    def vwap_at_end(bt):
+        j = bisect.bisect_left(oneT, bt + dt.timedelta(minutes=5)) - 1
+        return vw[j] if j >= 0 and oneT[j] >= bt else None
+    L = dict(j=0, perm=0, dmg=0, maj=0, day=None)
     # state carried bar to bar (thinkScript rec / [1] on 1M series)
     S = dict(fivePerm=0, prep=0, contArmed=0, contCool=P["contCooldown"], pauseCnt=0, everActive=0, execAge=-1)
     prev = {}
@@ -130,6 +138,20 @@ def run(sym, out):
         bullPermRaw = fBullCore and f("rsi") >= P["minPermRSI"] and not fBearStack
         S["fivePerm"] = 0 if (eod or majorPersist or dmgPersist) else (1 if bullPermRaw else S["fivePerm"])
         fivePerm = S["fivePerm"] == 1
+        reconPerm = fivePerm
+        while L["j"] < len(fiveStored) and fiveStored[L["j"]]["t"] < bucket:
+            j = L["j"]; L["j"] += 1; bt = fiveStored[j]["t"]; d5 = bt.astimezone(ET).date()
+            if d5 != L["day"]: L.update(day=d5, perm=0, dmg=0, maj=0)
+            v5 = vwap_at_end(bt)
+            if v5 is None: continue  # no 1m bar inside this 5m bar: VWAP at its end unknown, bar skipped
+            cl = f5c[j]
+            L["dmg"] = L["dmg"] + 1 if (cl < v5 and L9[j] < L20[j]) else 0
+            L["maj"] = L["maj"] + 1 if (cl < v5 and cl < L9[j] < L20[j] < L50[j]) else 0
+            if L["maj"] >= P["majorFailBars"] or L["dmg"] >= P["permFailBars"]: L["perm"] = 0
+            elif cl > v5 and cl > L9[j] and L9[j] >= L20[j] and LR[j] >= P["minPermRSI"]: L["perm"] = 1
+        if e.date() != L["day"] or eod: L["perm"] = 0 if eod else L["perm"]
+        latchPerm = L["perm"] == 1 and e.date() == L["day"]
+        if LATCH: fivePerm = latchPerm
         rsiW = lambda o: F["rsi"][k-o] < F["rsi"][k-o-1] and F["rsi"][k-o-1] <= F["rsi"][k-o-2]
         macdW = lambda o: F["mh"][k-o] < F["mh"][k-o-1] and F["mh"][k-o-1] < F["mh"][k-o-2]
         def waningRaw(o):
@@ -190,12 +212,12 @@ def run(sym, out):
         final = readyBeforeHold and not hold
         prev = dict(fresh=fresh, inTrendCand=inTrendCand, contQual=contQual, confRaw=confRaw, opp=opp, rearm=rearmNow)
         if is_rth(t) and t >= dt.datetime(2026, 11, 24, 14, 30, tzinfo=dt.timezone.utc):
-            rows.append(dict(barUtc=t.strftime("%Y-%m-%dT%H:%M:%SZ"), close=price, vwap=vw[i], ext=extATR, rsi=rsi[i], rvol=rvol[i],
+            rows.append(dict(latchPerm=latchPerm, reconPerm=reconPerm, barUtc=t.strftime("%Y-%m-%dT%H:%M:%SZ"), close=price, vwap=vw[i], ext=extATR, rsi=rsi[i], rvol=rvol[i],
                              fivePerm=fivePerm, fiveExecPerm=fiveExecPerm, cand=cand, trigger=("F" if freshEvent else "") +
                              ("T" if inTrendEvent else "") + ("C" if contEvent else "") + ("K" if confEvent else ""),
                              age=S["execAge"], invalid=invalid, hold=hold, ready=final, readyBeforeHold=readyBeforeHold,
                              extDanger=bullExtDanger, macdBull=macdBull))
-    json.dump(rows, open(f"{out}/study_{sym}.json", "w"))
+    json.dump(rows, open(f"{out}/study{'_latch' if LATCH else ''}_{sym}.json", "w"))
     print(sym, len(rows), "RTH bars; study READY:", sum(r["ready"] for r in rows), flush=True)
 
 for s in sys.argv[2:]:

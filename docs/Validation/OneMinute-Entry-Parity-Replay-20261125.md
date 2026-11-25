@@ -12,7 +12,7 @@ On the same bars, where do MCC's **EXECUTION READY** and the 1M study's green **
 - **Bars:** Alpaca IEX 1m and 5m bars, 2026-11-17 to 2026-11-25, fetched through `GET /api/market-data/bars` into the operator's bar store. Both sides read the same stored bars.
 - **MCC side:** `GET /api/market-data/replay?feed=iex` at every minute close (opening hold = the operator setting, 15 min). READY = `decision.entryAllowed`.
 - **Study side:** a Python port of the V14.4.12 green lane ([study_port.py](OneMinute-Entry-Parity-20261125/study_port.py)): the 1M study's own 5M reconstruction, fresh / in-trend / continuation / confirmation trigger events, rearm, cooldown, the 2-bar execution window, invalidation, the 2.00 ATR extension block and the opening hold. READY = `finalExecutionReady`. The AGG. BUY lane is not ported.
-- **Indicator check:** the port's 1M ATR extension equals MCC's on all 1,624 matched minutes (maximum difference 0.0000). VWAP, ATR and the close series are therefore identical on both sides, so the differences below come from rules, not data.
+- **Indicator check:** the port's 1M ATR extension equals MCC's on all 1,624 matched minutes where MCC reports it (MCC omits the evaluation block on READY minutes) (maximum difference 0.0000). VWAP, ATR and the close series are therefore identical on both sides, so the differences below come from rules, not data.
 - Scripts and the raw disagreement list: [OneMinute-Entry-Parity-20261125/](OneMinute-Entry-Parity-20261125/).
 
 ## Result
@@ -45,7 +45,7 @@ All disagreements are on 2026-11-24. Neither side gave READY on 2026-11-25 befor
 
 Not observed in this sample: RSI ≥ 78 (MCC-only block; TSLA peaked at 76.2) and 1M RVOL < 1.00 (study; it only gates the continuation path).
 
-### Every disagreement (AZ time, 2026-11-24)
+### Every disagreement with V14.4.12 (AZ time, 2026-11-24)
 
 | Symbol | AZ | Side | Close | Ext ATR | RSI | Cause(s) |
 |---|---|---|---|---|---|---|
@@ -89,9 +89,35 @@ Not observed in this sample: RSI ≥ 78 (MCC-only block; TSLA peaked at 76.2) an
 | PLTR | 09:43 | study only | 161.00 | 0.74 | 59.7 | MCC 5M structure |
 | PLTR | 09:45 | MCC only | 161.23 | 1.52 | 63.0 | Trigger window |
 
-## Decisions this needs (operator)
+## Decision 1 applied: 1M Main Study V14.4.13 (2026-11-25)
 
-1. **Which 5M permission gates the 1M READY?** The 5M study's latch (what MCC uses, and what the 5M chart shows), or the 1M study's own reconstruction. This is also a TOS-internal inconsistency between the 1M and 5M charts.
+Operator decision 2026-11-25: **the 5M study latch gates the 1M READY.** V14.4.13 (`docs/Charts/1M/MainStudy.txt`) replaces the 1M study's own 5M permission with the 5M Main Study V4.1.8 latch, advanced once per completed 5M bar (sampled on the first 1M bar of the next 5M bucket) and reset to NO at each new date. Nothing else changed. V14.4.12 is archived as `docs/archive/Charts/1M/MainStudy_V14.4.12.txt`.
+
+**Latch check:** the port of the V14.4.13 latch equals MCC's `fiveMinutePermissionLatch.permission` on 1,652 of 1,674 replayed minutes. All 22 differences are timing conventions, not rules:
+
+- 14 on the last minute of a 5m bucket (:x4 / :x9): MCC evaluates at the bucket close and already has that 5m bar; the study gets it on the next 1M bar. Same wall-clock moment.
+- 8 at 15:55–15:58 ET: the study releases at the 15:55 EOD; MCC's latch releases when the 15:55 5m bar completes (16:00). MCC's V2 EOD already blocks entries from 15:55, so READY is unaffected.
+
+**READY replay with V14.4.13:**
+
+| | V14.4.12 | V14.4.13 |
+|---|---|---|
+| MCC READY | 35 | 35 |
+| Study READY | 32 | 20 |
+| Both | 14 | 11 |
+| Study only: 5M permission source | 9 | **0** |
+| Study only: MCC current 5M structure | 7 | 7 |
+| Study only: MCC 1M close > EMA9 | 2 | 2 |
+| MCC only: trigger window | 14 | 14 |
+| MCC only: extension 2.00–2.25 ATR | 6 | 6 |
+| MCC only: 5m-close timing (:x4 / :x9) | 0 | 3 |
+| MCC only: opening-hold bar boundary | 1 | 1 |
+
+The 3 new MCC-only minutes (TSLA 07:54 and 10:19 AZ, PLTR 09:34 AZ) are the 5m-close timing above. The study can show READY one minute later if its trigger window is still open. The remaining disagreements are decisions 2–4. Per-minute list: [disagreements_v14413.json](OneMinute-Entry-Parity-20261125/disagreements_v14413.json); the V14.4.12 list is [disagreements_v14412.json](OneMinute-Entry-Parity-20261125/disagreements_v14412.json).
+
+## Decisions still needed (operator)
+
+1. ~~Which 5M permission gates the 1M READY?~~ **Decided 2026-11-25: the 5M study latch** (V14.4.13 above).
 2. **READY as an event or a state?** The study's 2-bar window, or MCC's "READY while conditions hold".
 3. **Extension block:** 2.00 or 2.25 ATR.
 4. **MCC-only checks** (current 5M structure, 1M close > EMA9, RSI 78 cap): keep in MCC, add to the study, or drop.

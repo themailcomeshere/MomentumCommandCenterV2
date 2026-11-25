@@ -1,7 +1,16 @@
 # ============================================================
 # MOMENTUM COMMAND CENTER V3.2
 # 1M COMMAND CENTER — EXTENDED HOURS
-# V14.4.12 — MCC PARITY: EOD 15:55 ET, OPENING ENTRY HOLD, OVERNIGHT FINAL-HOUR STATUS
+# V14.4.13 — 5M PERMISSION FROM THE 5M STUDY LATCH (MCC PARITY)
+#
+# V14.4.13 (2026-11-25). Built from V14.4.12 (installed by the operator
+# 2026-11-25, compiled with no errors). One change: fivePermission is the
+# 5M Main Study V4.1.8 permission latch (also MCC's FiveMinutePermissionLatch),
+# advanced once per completed 5M bar, instead of this study's own 5M
+# reconstruction. Operator decision 2026-11-25 after the matched-bar replay
+# (docs/Validation/OneMinute-Entry-Parity-Replay-20261125.md): 9 of 18
+# study-only READY minutes came from the reconstruction saying YES while the
+# 5M latch said NO. Everything else is unchanged from V14.4.12.
 #
 # V14.4.12 (2026-11-22). Built from the installed V14.4.10 source, not
 # from repository V14.4.11 (archived; never confirmed installed).
@@ -422,7 +431,7 @@ def fiveRetestEMA9 =
 #   latch. The reconstructed fiveState below currently prioritizes this
 #   setup before the PREPARE state, so a "5M BUY" bubble emitted by this
 #   1M study can appear while fivePermission / fiveExecutionPermission
-#   is false. Treat it as a reconstructed setup marker, NOT proof that
+#   is false. (V14.4.13: fivePermission is now the 5M study's latch.) Treat it as a reconstructed setup marker, NOT proof that
 #   the actual 5M Command Center granted executable permission.
 def fiveSetupCandidate =
     (
@@ -468,22 +477,73 @@ def fiveMajorFailurePersistent =
         if fiveMajorFailureRaw then 1 else 0,
         majorFailureBars
     ) >= majorFailureBars;
-def fivePermissionState =
-    CompoundValue(
-        1,
-        if eodExitWindow then
-            0
-        else if fiveMajorFailurePersistent then
-            0
-        else if fiveStructuralDamagePersistent then
-            0
-        else if fiveBullishPermissionRaw then
-            1
-        else
-            fivePermissionState[1],
+# ============================================================
+# V14.4.13: 5M PERMISSION = THE 5M STUDY'S LATCH
+#
+# Operator decision 2026-11-25: the 1M READY is gated by the
+# 5M Main Study V4.1.8 permission latch (the same latch MCC ports
+# in FiveMinutePermissionLatch), not by this study's own 5M
+# reconstruction. The latch advances once per COMPLETED 5M bar,
+# sampled on the first 1M bar of the next 5M bucket:
+#   set:     close > Daily VWAP, close > EMA9, EMA9 >= EMA20, RSI >= 50
+#   release: 2 bars of (close < VWAP and EMA9 < EMA20), 2 bars of
+#            (close < VWAP, close < EMA9, EMA9 < EMA20, EMA20 < SMA50),
+#            or the EOD window
+#   resets to NO at each new date (the operator's 5M chart is 1 D).
+# fiveBullishPermissionRaw, fiveStructuralDamagePersistent and
+# fiveMajorFailurePersistent above are still used by the runner,
+# swing, aggressive and failure layers; they no longer set permission.
+# ============================================================
+def fiveBucket = Floor(GetTime() / (5 * 60000));
+def newFiveBar = fiveBucket != fiveBucket[1];
+def newLatchDay = GetYYYYMMDD() != GetYYYYMMDD()[1];
+# Values of the 5M bar that has just completed (and Daily VWAP at its last minute).
+def latchClose = fiveClose[1];
+def latchEMA9 = fiveEMA9[1];
+def latchEMA20 = fiveEMA20[1];
+def latchSMA50 = fiveSMA50[1];
+def latchRSI = fiveRSI[1];
+def latchVWAP = dailyVWAP[1];
+def latchRaw =
+    latchClose > latchVWAP and
+    latchClose > latchEMA9 and
+    latchEMA9 >= latchEMA20 and
+    latchRSI >= minimumPermissionRSI;
+def latchDamage =
+    latchClose < latchVWAP and
+    latchEMA9 < latchEMA20;
+def latchMajor =
+    latchClose < latchVWAP and
+    latchClose < latchEMA9 and
+    latchEMA9 < latchEMA20 and
+    latchEMA20 < latchSMA50;
+rec latchDamageRun =
+    if newLatchDay then
         0
-    );
-def fivePermission = fivePermissionState == 1;
+    else if newFiveBar then
+        (if latchDamage then latchDamageRun[1] + 1 else 0)
+    else
+        latchDamageRun[1];
+rec latchMajorRun =
+    if newLatchDay then
+        0
+    else if newFiveBar then
+        (if latchMajor then latchMajorRun[1] + 1 else 0)
+    else
+        latchMajorRun[1];
+rec fiveLatchState =
+    if newLatchDay then
+        0
+    else if eodExitWindow then
+        0
+    else if newFiveBar then
+        (if latchMajorRun >= majorFailureBars then 0
+         else if latchDamageRun >= permissionFailureBars then 0
+         else if latchRaw then 1
+         else fiveLatchState[1])
+    else
+        fiveLatchState[1];
+def fivePermission = fiveLatchState == 1;
 # ============================================================
 # 5M RUNNER / WANING / SWING ZONE
 # ============================================================
