@@ -1,7 +1,17 @@
 # ============================================================
 # MOMENTUM COMMAND CENTER V3.2
 # 1M COMMAND CENTER — EXTENDED HOURS
-# V14.4.13 — 5M PERMISSION FROM THE 5M STUDY LATCH (MCC PARITY)
+# V14.4.14 — N/A GUARDS ON EVERY STATE (rec) VARIABLE
+#
+# V14.4.14 (2026-11-27). Built from V14.4.13 (installed by the operator).
+# On 2026-11-27 (day after the Thanksgiving holiday) the 1M chart showed no
+# bubbles and "1M STATE: GET OUT" without the EOD label. Debug labels showed
+# Cooldown=N/A and everything after it N/A: once a rec variable stored N/A
+# (a bar with no Daily VWAP or other input, such as holiday/overnight-session
+# bars or the first chart bar) it stayed N/A for the rest of the chart, and
+# an N/A inside the bubble condition hides every bubble. Each rec now treats
+# a missing input as "not met" and resets when its previous value is N/A.
+# No rule changed.
 #
 # V14.4.13 (2026-11-25). Built from V14.4.12 (installed by the operator
 # 2026-11-25, compiled with no errors). One change: fivePermission is the
@@ -517,29 +527,38 @@ def latchMajor =
     latchClose < latchEMA9 and
     latchEMA9 < latchEMA20 and
     latchEMA20 < latchSMA50;
+# V14.4.14 NaN guards: a missing value (first chart bar, holiday or
+# overnight-session bar without a Daily VWAP) counts as "not met", a new
+# date, or a reset, so a rec never stores N/A and stays stuck on it.
+def latchNewDayOK = if IsNaN(newLatchDay) then 1 else newLatchDay;
+def latchNewBarOK = if IsNaN(newFiveBar) then 0 else newFiveBar;
+def latchRawOK = if IsNaN(latchRaw) then 0 else latchRaw;
+def latchDamageOK = if IsNaN(latchDamage) then 0 else latchDamage;
+def latchMajorOK = if IsNaN(latchMajor) then 0 else latchMajor;
+def eodOK = if IsNaN(eodExitWindow) then 0 else eodExitWindow;
 rec latchDamageRun =
-    if newLatchDay then
+    if latchNewDayOK or IsNaN(latchDamageRun[1]) then
         0
-    else if newFiveBar then
-        (if latchDamage then latchDamageRun[1] + 1 else 0)
+    else if latchNewBarOK then
+        (if latchDamageOK then latchDamageRun[1] + 1 else 0)
     else
         latchDamageRun[1];
 rec latchMajorRun =
-    if newLatchDay then
+    if latchNewDayOK or IsNaN(latchMajorRun[1]) then
         0
-    else if newFiveBar then
-        (if latchMajor then latchMajorRun[1] + 1 else 0)
+    else if latchNewBarOK then
+        (if latchMajorOK then latchMajorRun[1] + 1 else 0)
     else
         latchMajorRun[1];
 rec fiveLatchState =
-    if newLatchDay then
+    if latchNewDayOK or IsNaN(fiveLatchState[1]) then
         0
-    else if eodExitWindow then
+    else if eodOK then
         0
-    else if newFiveBar then
+    else if latchNewBarOK then
         (if latchMajorRun >= majorFailureBars then 0
          else if latchDamageRun >= permissionFailureBars then 0
-         else if latchRaw then 1
+         else if latchRawOK then 1
          else fiveLatchState[1])
     else
         fiveLatchState[1];
@@ -847,12 +866,14 @@ def prepareToBuyInvalidated =
     or price < dailyVWAP
     or price < ema20
     or rsi < rsiWeak;
+def prepareInvalidOK = if IsNaN(prepareToBuyInvalidated) then 1 else prepareToBuyInvalidated;
+def prepareEnvOK = if IsNaN(prepareToBuyEnvironment) then 0 else prepareToBuyEnvironment;
 rec prepareToBuyState =
-    if eodExitWindow then
+    if eodOK or IsNaN(prepareToBuyState[1]) then
         0
-    else if prepareToBuyInvalidated then
+    else if prepareInvalidOK then
         0
-    else if prepareToBuyEnvironment then
+    else if prepareEnvOK then
         1
     else
         prepareToBuyState[1];
@@ -940,14 +961,17 @@ def continuationBaseEnvironment =
 # ============================================================
 # CONTINUATION: ARMED STATE
 # ============================================================
+def contBaseOK = if IsNaN(continuationBaseEnvironment) then 0 else continuationBaseEnvironment;
+def contResumeOK = if IsNaN(continuationResume) then 0 else continuationResume;
+def contPauseOK = if IsNaN(continuationPauseDetected) then 0 else continuationPauseDetected;
 rec continuationArmed =
-    if eodExitWindow then
+    if eodOK or IsNaN(continuationArmed[1]) then
         0
-    else if !continuationBaseEnvironment then
+    else if !contBaseOK then
         0
-    else if continuationResume then
+    else if contResumeOK then
         0
-    else if continuationPauseDetected then
+    else if contPauseOK then
         1
     else
         continuationArmed[1];
@@ -961,8 +985,11 @@ def continuationExecutionEventRaw =
 # ============================================================
 # CONTINUATION RE-ARM / COOLDOWN
 # ============================================================
+def contRawOK = if IsNaN(continuationExecutionEventRaw) then 0 else continuationExecutionEventRaw;
 rec continuationCooldownAge =
-    if continuationExecutionEventRaw then
+    if IsNaN(continuationCooldownAge[1]) then
+        continuationCooldownBars
+    else if contRawOK then
         0
     else if continuationCooldownAge[1] >= 0 then
         continuationCooldownAge[1] + 1
@@ -985,13 +1012,19 @@ def candidatePauseRaw =
     fiveExecutionPermission and
     priceAboveVWAP and
     price > ema20;
+def candidatePauseOK = if IsNaN(candidatePauseRaw) then 0 else candidatePauseRaw;
+def executionCandidateOK = if IsNaN(executionCandidate) then 0 else executionCandidate;
 rec candidatePauseCount =
-    if candidatePauseRaw then
+    if IsNaN(candidatePauseCount[1]) then
+        0
+    else if candidatePauseOK then
         candidatePauseCount[1] + 1
     else
         0;
 rec candidateEverActive =
-    if executionCandidate then
+    if IsNaN(candidateEverActive[1]) then
+        executionCandidateOK
+    else if executionCandidateOK then
         1
     else
         candidateEverActive[1];
@@ -1048,8 +1081,11 @@ def executionOpportunity =
 def newExecutionTrigger =
     executionOpportunity and
     !executionOpportunity[1];
+def newExecutionTriggerOK = if IsNaN(newExecutionTrigger) then 0 else newExecutionTrigger;
 rec executionAge =
-    if newExecutionTrigger then
+    if IsNaN(executionAge[1]) then
+        (if newExecutionTriggerOK then 0 else -1)
+    else if newExecutionTriggerOK then
         0
     else if executionAge[1] >= 0 and
             executionAge[1] < executionWindowBars then
