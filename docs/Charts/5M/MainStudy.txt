@@ -1,6 +1,13 @@
 # ============================================================
 # Momentum Command Center V3.2
 # 5M Command Center — Extended Hours
+# V4.1.9 — REGULAR-SESSION VWAP (MCC parity)
+#
+# V4.1.9 (2026-11-27, operator decision): dailyVWAP is the 09:30-16:00 ET
+#   session VWAP, the same as MCC, instead of vwap(period = DAY), which
+#   included pre-market trades on an extended-hours chart. The VWAP line
+#   plots only once the session has volume. Nothing else changed.
+#
 # V4.1.8 — EOD 15:55 Eastern (MCC parity); otherwise unchanged from installed V4.1.7
 #
 # V4.1.8 (2026-11-22, operator decision option A)
@@ -278,8 +285,40 @@ def sma50Falling =
 # ============================================================
 # VWAP
 # ============================================================
+# ============================================================
+# REGULAR-SESSION VWAP (MCC parity; operator decision 2026-11-27)
+# The same definition as MCC (LiveSymbolTechnicalCalculator.SessionVwap):
+# typical price (H+L+C)/3 x volume over bars that START from 09:30 up to
+# 16:00 Eastern, reset at each new date. Extended-hours bars stay on the
+# chart but never enter VWAP. Before the first 09:30 bar of the day there is
+# no session VWAP and, as in MCC, the bar's own close is used (so "price
+# above VWAP" is false pre-market). Replaces vwap(period = DAY), which
+# included pre-market trades when the chart shows extended hours (SLS
+# 2026-11-17: TOS 22.76 vs MCC 20.31). All inputs are N/A-guarded.
+# ============================================================
+def vwapBarInRth = SecondsFromTime(0930) >= 0 and SecondsTillTime(1600) > 0;
+def vwapBarInRthOK = if IsNaN(vwapBarInRth) then 0 else vwapBarInRth;
+def vwapTypical = (high + low + close) / 3;
+def vwapBarUsable = vwapBarInRthOK and !IsNaN(vwapTypical) and !IsNaN(volume);
+def vwapNewDay = GetYYYYMMDD() != GetYYYYMMDD()[1];
+def vwapNewDayOK = if IsNaN(vwapNewDay) then 1 else vwapNewDay;
+rec rthVolume =
+    if vwapNewDayOK or IsNaN(rthVolume[1]) then
+        (if vwapBarUsable then volume else 0)
+    else if vwapBarUsable then
+        rthVolume[1] + volume
+    else
+        rthVolume[1];
+rec rthPriceVolume =
+    if vwapNewDayOK or IsNaN(rthPriceVolume[1]) then
+        (if vwapBarUsable then vwapTypical * volume else 0)
+    else if vwapBarUsable then
+        rthPriceVolume[1] + vwapTypical * volume
+    else
+        rthPriceVolume[1];
+def rthVwapAvailable = rthVolume > 0;
 def dailyVWAP =
-    vwap(period = AggregationPeriod.DAY);
+    if rthVwapAvailable then rthPriceVolume / rthVolume else close;
 def priceAboveVWAP =
     price > dailyVWAP;
 def priceBelowVWAP =
@@ -1501,7 +1540,7 @@ AddLabel(
 # PLOTS
 # ============================================================
 plot VWAPLine =
-    dailyVWAP;
+    if rthVwapAvailable then dailyVWAP else Double.NaN;
 VWAPLine.SetDefaultColor(Color.WHITE);
 VWAPLine.SetLineWeight(2);
 plot EMA9Line =

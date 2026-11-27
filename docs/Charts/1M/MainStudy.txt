@@ -1,6 +1,15 @@
 # ============================================================
 # MOMENTUM COMMAND CENTER V3.2
 # 1M COMMAND CENTER — EXTENDED HOURS
+# V14.4.15 — REGULAR-SESSION VWAP (MCC parity)
+#
+# V14.4.15 (2026-11-27, operator decision). Built from V14.4.14 (installed,
+# compiled, bubbles confirmed 2026-11-27). dailyVWAP is the 09:30-16:00 ET
+# session VWAP, the same as MCC and the 5M V4.1.9 study, instead of
+# vwap(period = DAY). New optional line RthVWAPLine (input showRthVwapLine)
+# draws it, so it can be compared with the chart's own VWAP study (which
+# still includes pre-market). Nothing else changed.
+#
 # V14.4.14 — N/A GUARDS ON EVERY STATE (rec) VARIABLE
 #
 # V14.4.14 (2026-11-27). Built from V14.4.13 (installed by the operator).
@@ -173,6 +182,7 @@ input eodTimeEasternStandard = 1555;
 input openingEntryHoldMinutes = 15;
 # Boring Overnight final-hour status label and window-open bubble.
 input showOvernightWindowStatus = yes;
+input showRthVwapLine = yes;
 # ============================================================
 # SESSION / TIMEZONE
 #
@@ -309,8 +319,40 @@ def ema9Rising = ema9 > ema9[1];
 def ema20Rising = ema20 > ema20[1];
 def ema9Falling = ema9 < ema9[1];
 def ema20Falling = ema20 < ema20[1];
+# ============================================================
+# REGULAR-SESSION VWAP (MCC parity; operator decision 2026-11-27)
+# The same definition as MCC (LiveSymbolTechnicalCalculator.SessionVwap):
+# typical price (H+L+C)/3 x volume over bars that START from 09:30 up to
+# 16:00 Eastern, reset at each new date. Extended-hours bars stay on the
+# chart but never enter VWAP. Before the first 09:30 bar of the day there is
+# no session VWAP and, as in MCC, the bar's own close is used (so "price
+# above VWAP" is false pre-market). Replaces vwap(period = DAY), which
+# included pre-market trades when the chart shows extended hours (SLS
+# 2026-11-17: TOS 22.76 vs MCC 20.31). All inputs are N/A-guarded.
+# ============================================================
+def vwapBarInRth = SecondsFromTime(0930) >= 0 and SecondsTillTime(1600) > 0;
+def vwapBarInRthOK = if IsNaN(vwapBarInRth) then 0 else vwapBarInRth;
+def vwapTypical = (high + low + close) / 3;
+def vwapBarUsable = vwapBarInRthOK and !IsNaN(vwapTypical) and !IsNaN(volume);
+def vwapNewDay = GetYYYYMMDD() != GetYYYYMMDD()[1];
+def vwapNewDayOK = if IsNaN(vwapNewDay) then 1 else vwapNewDay;
+rec rthVolume =
+    if vwapNewDayOK or IsNaN(rthVolume[1]) then
+        (if vwapBarUsable then volume else 0)
+    else if vwapBarUsable then
+        rthVolume[1] + volume
+    else
+        rthVolume[1];
+rec rthPriceVolume =
+    if vwapNewDayOK or IsNaN(rthPriceVolume[1]) then
+        (if vwapBarUsable then vwapTypical * volume else 0)
+    else if vwapBarUsable then
+        rthPriceVolume[1] + vwapTypical * volume
+    else
+        rthPriceVolume[1];
+def rthVwapAvailable = rthVolume > 0;
 def dailyVWAP =
-    vwap(period = AggregationPeriod.DAY);
+    if rthVwapAvailable then rthPriceVolume / rthVolume else close;
 def priceAboveVWAP = price > dailyVWAP;
 def priceBelowVWAP = price < dailyVWAP;
 def rsi =
@@ -1897,3 +1939,10 @@ AddLabel(
 );
 
 # Aggressive-lane audit output is merged into the composite state bubble above.
+# ============================================================
+# V14.4.15: SESSION VWAP LINE (the VWAP every rule in this study uses)
+# ============================================================
+plot RthVWAPLine =
+    if showRthVwapLine and rthVwapAvailable then dailyVWAP else Double.NaN;
+RthVWAPLine.SetDefaultColor(Color.WHITE);
+RthVWAPLine.SetLineWeight(2);
